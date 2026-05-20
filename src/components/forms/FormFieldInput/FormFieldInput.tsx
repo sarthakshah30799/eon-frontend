@@ -1,14 +1,11 @@
+import type { InputHTMLAttributes } from 'react';
 import { useController } from 'react-hook-form';
 import { useFormContext } from 'react-hook-form';
 import { Input } from '../../ui';
 
-interface FormFieldInputProps {
+interface FormFieldInputProps extends InputHTMLAttributes<HTMLInputElement> {
   name: string;
   label?: string;
-  placeholder?: string;
-  type?: string;
-  disabled?: boolean;
-  className?: string;
 }
 
 export const FormFieldInput = ({
@@ -18,9 +15,10 @@ export const FormFieldInput = ({
   type = 'text',
   disabled = false,
   className = '',
+  ...rest
 }: FormFieldInputProps) => {
   const form = useFormContext();
-  
+
   const {
     field,
     fieldState: { error },
@@ -37,6 +35,7 @@ export const FormFieldInput = ({
       disabled={disabled}
       className={className}
       {...field}
+      {...rest}
       error={error?.message}
     />
   );

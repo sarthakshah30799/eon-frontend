@@ -10,7 +10,12 @@ export interface LoginResponse {
 export interface AuthError {
   message: string;
   code?: string;
-  details?: any;
+  details?: unknown;
+}
+
+export interface OtpFormData {
+  email: string;
+  otp: string;
 }
 
 export interface User {
@@ -19,4 +24,7 @@ export interface User {
   name?: string;
   avatar?: string;
   role?: string;
+  createdAt?: string;
+  lastLogin?: string;
+  status?: 'active' | 'inactive' | 'suspended';
 }

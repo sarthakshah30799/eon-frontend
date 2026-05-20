@@ -8,6 +8,11 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
+  otpLogin: (
+    countryCode: string,
+    mobileNumber: string,
+    otp: string
+  ) => Promise<void>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
 }
@@ -28,7 +33,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const currentUser = await authApi.getCurrentUser();
       setUser(currentUser);
-    } catch (error) {
+    } catch {
       setUser(null);
     } finally {
       setIsLoading(false);
@@ -37,6 +42,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (email: string, password: string) => {
     await authApi.login({ email, password });
+    await checkAuth();
+  };
+
+  const otpLogin = async (
+    countryCode: string,
+    mobileNumber: string,
+    otp: string
+  ) => {
+    await authApi.verifyOtp(countryCode, mobileNumber, otp);
     await checkAuth();
   };
 
@@ -51,6 +65,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line
     checkAuth();
   }, []);
 
@@ -59,6 +74,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isLoading,
     isAuthenticated,
     login,
+    otpLogin,
     logout,
     checkAuth,
   };
@@ -66,6 +82,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {

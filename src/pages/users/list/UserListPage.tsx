@@ -5,8 +5,12 @@ const UserListPage = () => {
   const { data: users, isLoading, error } = useListUser();
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow">
-      <UserList users={users} isLoading={isLoading} error={error?.message || null} />
+    <div className="rounded-lg border border-border-primary bg-surface-primary p-6 shadow">
+      <UserList
+        users={users}
+        isLoading={isLoading}
+        error={error?.message || null}
+      />
     </div>
   );
 };

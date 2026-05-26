@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -14,40 +14,37 @@ import {
   type VisibilityState,
   type RowSelectionState,
   type PaginationState,
-  type AccessorKeyColumnDef,
 } from '@tanstack/react-table';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { Button } from '../button1';
 
-const tableVariants = cva(
-  'w-full border-collapse',
-  {
-    variants: {
-      variant: {
-        default: 'border-gray-200',
-        striped: 'border-gray-200',
-        bordered: 'border-gray-300',
-      },
-      size: {
-        sm: 'text-sm',
-        md: 'text-base',
-        lg: 'text-lg',
-      },
+const tableVariants = cva('w-full border-collapse', {
+  variants: {
+    variant: {
+      default: 'border-border-primary',
+      striped: 'border-border-primary',
+      bordered: 'border-border-secondary',
     },
-    defaultVariants: {
-      variant: 'default',
-      size: 'md',
+    size: {
+      sm: 'text-sm',
+      md: 'text-base',
+      lg: 'text-lg',
     },
-  }
-);
+  },
+  defaultVariants: {
+    variant: 'default',
+    size: 'md',
+  },
+});
 
 export type TableColumnDef<T extends object> = ColumnDef<T> & {
   searchable?: boolean;
   filterable?: boolean;
-}
+};
 
 export interface TableProps<T extends object>
-  extends Omit<React.HTMLAttributes<HTMLTableElement>, 'children'>,
+  extends
+    Omit<React.HTMLAttributes<HTMLTableElement>, 'children'>,
     VariantProps<typeof tableVariants> {
   columns: TableColumnDef<T>[];
   data: T[];
@@ -97,6 +94,8 @@ function Table<T extends object>({
     pageSize,
   });
 
+  // TanStack Table returns functions that the React Compiler cannot safely memoize.
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data,
     columns,
@@ -106,24 +105,28 @@ function Table<T extends object>({
     getPaginationRowModel: getPaginationRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
-    onSortingChange: (updater) => {
-      const newSorting = typeof updater === 'function' ? updater(sorting) : updater;
+    onSortingChange: updater => {
+      const newSorting =
+        typeof updater === 'function' ? updater(sorting) : updater;
       setSorting(newSorting);
       onSortingChange?.(newSorting);
     },
-    onColumnFiltersChange: (updater) => {
-      const newFilters = typeof updater === 'function' ? updater(columnFilters) : updater;
+    onColumnFiltersChange: updater => {
+      const newFilters =
+        typeof updater === 'function' ? updater(columnFilters) : updater;
       setColumnFilters(newFilters);
       onColumnFiltersChange?.(newFilters);
     },
     onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: (updater) => {
-      const newSelection = typeof updater === 'function' ? updater(rowSelection) : updater;
+    onRowSelectionChange: updater => {
+      const newSelection =
+        typeof updater === 'function' ? updater(rowSelection) : updater;
       setRowSelection(newSelection);
       onRowSelectionChange?.(newSelection);
     },
-    onPaginationChange: (updater) => {
-      const newPagination = typeof updater === 'function' ? updater(pagination) : updater;
+    onPaginationChange: updater => {
+      const newPagination =
+        typeof updater === 'function' ? updater(pagination) : updater;
       setPagination(newPagination);
       onPaginationChange?.(newPagination);
     },
@@ -141,20 +144,19 @@ function Table<T extends object>({
     pageCount: Math.ceil(data.length / pagination.pageSize),
   });
 
-  const renderSkeleton = () => (
+  const renderSkeleton = () =>
     Array.from({ length: skeletonRows }).map((_, index) => (
       <tr key={`skeleton-${index}`} className="animate-pulse">
         {columns.map((_, colIndex) => (
           <td
             key={`skeleton-cell-${colIndex}`}
-            className="px-4 py-3 border-b border-gray-200"
+            className="px-4 py-3 border-b border-border-primary"
           >
-            <div className="h-4 bg-gray-200 rounded"></div>
+            <div className="h-4 rounded bg-surface-secondary"></div>
           </td>
         ))}
       </tr>
-    ))
-  );
+    ));
 
   return (
     <div className="space-y-4">
@@ -163,32 +165,42 @@ function Table<T extends object>({
         <div className="flex flex-wrap gap-4 items-center justify-between">
           {enableFiltering && (
             <div className="flex flex-wrap gap-2">
-              {table.getAllColumns()
-                .filter(column => column.getCanFilter() && column.id !== 'select' && column.id !== 'actions')
-                .map((column) => (
+              {table
+                .getAllColumns()
+                .filter(
+                  column =>
+                    column.getCanFilter() &&
+                    column.id !== 'select' &&
+                    column.id !== 'actions'
+                )
+                .map(column => (
                   <input
                     key={column.id}
                     type="text"
                     placeholder={`Filter ${column.columnDef.header?.toString() || column.id}...`}
                     value={(column.getFilterValue() as string) ?? ''}
-                    onChange={(e) => column.setFilterValue(e.target.value)}
-                    className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    onChange={e => column.setFilterValue(e.target.value)}
+                    className="rounded-md border border-border-secondary px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                   />
                 ))}
             </div>
           )}
-          
+
           {enableColumnVisibility && (
             <div className="flex gap-2">
-              {table.getAllColumns()
+              {table
+                .getAllColumns()
                 .filter(column => column.getCanHide())
-                .map((column) => (
-                  <label key={column.id} className="flex items-center gap-2 text-sm">
+                .map(column => (
+                  <label
+                    key={column.id}
+                    className="flex items-center gap-2 text-sm"
+                  >
                     <input
                       type="checkbox"
                       checked={column.getIsVisible()}
-                      onChange={(e) => column.toggleVisibility(e.target.checked)}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      onChange={e => column.toggleVisibility(e.target.checked)}
+                      className="rounded border-border-secondary text-primary-600 focus:ring-primary-500"
                     />
                     {column.id}
                   </label>
@@ -199,26 +211,34 @@ function Table<T extends object>({
       )}
 
       {/* Table */}
-      <div className="overflow-x-auto rounded-lg border border-gray-200">
-        <table className={tableVariants({ variant, size, className })} {...props}>
-          <thead className="bg-gray-50">
-            {table.getHeaderGroups().map((headerGroup) => (
+      <div className="overflow-x-auto rounded-lg border border-border-primary">
+        <table
+          className={tableVariants({ variant, size, className })}
+          {...props}
+        >
+          <thead className="bg-surface-secondary">
+            {table.getHeaderGroups().map(headerGroup => (
               <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
+                {headerGroup.headers.map(header => (
                   <th
                     key={header.id}
-                    className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200"
+                    className="border-b border-border-primary px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-tertiary"
                   >
                     {header.isPlaceholder ? null : (
                       <div
                         className={`${
-                          header.column.getCanSort() ? 'cursor-pointer select-none hover:text-gray-700' : ''
+                          header.column.getCanSort()
+                            ? 'cursor-pointer select-none hover:text-text-primary'
+                            : ''
                         } flex items-center gap-2`}
                         onClick={header.column.getToggleSortingHandler()}
                       >
-                        {flexRender(header.column.columnDef.header, header.getContext())}
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                         {enableSorting && header.column.getCanSort() && (
-                          <span className="text-gray-400">
+                          <span className="text-text-tertiary">
                             {{
                               asc: '↑',
                               desc: '↓',
@@ -232,25 +252,34 @@ function Table<T extends object>({
               </tr>
             ))}
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="divide-y divide-border-primary bg-surface-primary">
             {loading ? (
               renderSkeleton()
             ) : table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row, index) => (
                 <tr
                   key={row.id}
-                  className={`${variant === 'striped' && index % 2 === 1 ? 'bg-gray-50' : ''} hover:bg-gray-50`}
+                  className={`${variant === 'striped' && index % 2 === 1 ? 'bg-surface-secondary' : ''} hover:bg-surface-secondary`}
                 >
-                  {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  {row.getVisibleCells().map(cell => (
+                    <td
+                      key={cell.id}
+                      className="whitespace-nowrap px-4 py-3 text-sm text-text-primary"
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
                     </td>
                   ))}
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={columns.length} className="px-4 py-8 text-center text-gray-500">
+                <td
+                  colSpan={columns.length}
+                  className="px-4 py-8 text-center text-text-tertiary"
+                >
                   {emptyMessage}
                 </td>
               </tr>
@@ -262,7 +291,7 @@ function Table<T extends object>({
       {/* Pagination */}
       {enablePagination && (
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="text-sm text-gray-700">
+          <div className="text-sm text-text-secondary">
             Showing {table.getRowModel().rows.length} of {data.length} results
           </div>
           <div className="flex items-center gap-2">
@@ -275,9 +304,10 @@ function Table<T extends object>({
               Previous
             </Button>
             <div className="flex items-center gap-1">
-              <span className="text-sm text-gray-700">Page</span>
+              <span className="text-sm text-text-secondary">Page</span>
               <strong className="text-sm">
-                {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+                {table.getState().pagination.pageIndex + 1} of{' '}
+                {table.getPageCount()}
               </strong>
             </div>
             <Button
@@ -291,12 +321,12 @@ function Table<T extends object>({
           </div>
           <select
             value={table.getState().pagination.pageSize}
-            onChange={(e) => {
+            onChange={e => {
               table.setPageSize(Number(e.target.value));
             }}
-            className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="rounded-md border border-border-secondary px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
-            {[10, 20, 30, 40, 50].map((pageSize) => (
+            {[10, 20, 30, 40, 50].map(pageSize => (
               <option key={pageSize} value={pageSize}>
                 Show {pageSize}
               </option>
@@ -307,8 +337,9 @@ function Table<T extends object>({
 
       {/* Row Selection Info */}
       {enableRowSelection && Object.keys(rowSelection).length > 0 && (
-        <div className="text-sm text-gray-700">
-          {Object.keys(rowSelection).length} row{Object.keys(rowSelection).length !== 1 ? 's' : ''} selected
+        <div className="text-sm text-text-secondary">
+          {Object.keys(rowSelection).length} row
+          {Object.keys(rowSelection).length !== 1 ? 's' : ''} selected
         </div>
       )}
     </div>
@@ -317,4 +348,4 @@ function Table<T extends object>({
 
 Table.displayName = 'Table';
 
-export { Table, tableVariants };
+export { Table };

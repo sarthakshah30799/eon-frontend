@@ -3,21 +3,21 @@ import { LoginForm } from '../forms';
 
 export const LoginView: React.FC = () => {
   return (
-    <div className="min-h-screen bg-gray-100 flex">
+    <div className="flex min-h-screen bg-primary-50">
       {/* Left side - Image */}
-      <div className="hidden lg:block lg:w-1/2 xl:w-3/5 relative">
-        <div className="absolute inset-0 bg-linear-to-br from-blue-600 to-blue-800">
+      <div className="relative hidden lg:block lg:w-1/2 xl:w-3/5">
+        <div className="absolute inset-0 bg-sidebar-primary">
           <img
             src="/currency-exchange.jpg"
             alt="Currency Exchange"
             className="absolute inset-0 w-full h-full object-cover opacity-20"
           />
         </div>
-        <div className="relative flex flex-col justify-center items-center h-full px-12 text-white">
-          <h1 className="text-4xl xl:text-5xl font-bold mb-6 text-center">
+        <div className="relative flex h-full flex-col items-center justify-center px-12 text-text-inverse">
+          <h1 className="mb-6 text-center text-4xl font-bold xl:text-5xl">
             Global Currency Exchange
           </h1>
-          <p className="text-lg xl:text-xl text-center max-w-md leading-relaxed">
+          <p className="max-w-md text-center text-lg leading-relaxed xl:text-xl">
             Experience seamless currency trading with real-time rates, secure
             transactions, and global market access at your fingertips.
           </p>
@@ -39,13 +39,13 @@ export const LoginView: React.FC = () => {
       </div>
 
       {/* Right side - Login Form */}
-      <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 lg:px-8 bg-white">
+      <div className="flex flex-1 flex-col justify-center bg-surface-primary px-4 sm:px-6 lg:px-8">
         <div className="w-full">
           {/* Logo/Brand */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-full mb-4">
+            <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-primary-600">
               <svg
-                className="w-8 h-8 text-white"
+                className="h-8 w-8 text-text-inverse"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -58,10 +58,10 @@ export const LoginView: React.FC = () => {
                 />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-gray-900">
+            <h2 className="text-2xl font-bold text-text-primary">
               Sign in to your account
             </h2>
-            <p className="mt-2 text-sm text-gray-600">
+            <p className="mt-2 text-sm text-text-secondary">
               Access your currency trading dashboard
             </p>
           </div>
@@ -70,9 +70,9 @@ export const LoginView: React.FC = () => {
 
           {/* Mobile-only image section */}
           <div className="lg:hidden mt-8 text-center">
-            <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full mb-3">
+            <div className="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary-100">
               <svg
-                className="w-6 h-6 text-blue-600"
+                className="h-6 w-6 text-primary-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -85,7 +85,7 @@ export const LoginView: React.FC = () => {
                 />
               </svg>
             </div>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-text-tertiary">
               Trade 150+ currencies worldwide
             </p>
           </div>

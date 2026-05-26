@@ -20,7 +20,7 @@ export const FormFieldPassword = ({
   placeholder,
 }: FormFieldPasswordProps) => {
   const form = useFormContext();
-  
+
   const {
     field,
     fieldState: { error },

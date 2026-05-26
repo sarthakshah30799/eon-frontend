@@ -19,6 +19,17 @@ const UserEditPage = lazy(
 const UserDetailPage = lazy(
   () => import('../pages/users/detail/[id]/UserDetailPage')
 );
+const CompanyProfilePage = lazy(
+  () =>
+    import('../pages/master/system-setups/company-profile/[id]/CompanyProfilePage')
+);
+const MasterPagesPage = lazy(
+  () => import('../pages/master/system-setups/master-pages/MasterPagesPage')
+);
+const MasterPageResolverPage = lazy(
+  () =>
+    import('../pages/master/system-setups/master-pages/resolve/MasterPageResolverPage')
+);
 
 const router = createBrowserRouter([
   {
@@ -74,6 +85,30 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <UserDetailPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/master/system-setups/company-profile/:id',
+    element: (
+      <ProtectedLayout>
+        <CompanyProfilePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/master/system-setups/master-pages',
+    element: (
+      <ProtectedLayout>
+        <MasterPagesPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '*',
+    element: (
+      <ProtectedLayout>
+        <MasterPageResolverPage />
       </ProtectedLayout>
     ),
   },

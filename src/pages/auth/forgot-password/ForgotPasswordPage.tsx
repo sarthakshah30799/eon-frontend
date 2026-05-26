@@ -16,21 +16,21 @@ const ForgotPasswordPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
+    <div className="flex min-h-screen bg-primary-50">
       {/* Left side - Image */}
-      <div className="hidden lg:block lg:w-1/2 xl:w-3/5 relative">
-        <div className="absolute inset-0 bg-linear-to-br from-blue-600 to-blue-800">
+      <div className="relative hidden lg:block lg:w-1/2 xl:w-3/5">
+        <div className="absolute inset-0 bg-sidebar-primary">
           <img
             src="/currency-exchange.jpg"
             alt="Currency Exchange"
             className="absolute inset-0 w-full h-full object-cover opacity-20"
           />
         </div>
-        <div className="relative flex flex-col justify-center items-center h-full px-12 text-white">
-          <h1 className="text-4xl xl:text-5xl font-bold mb-6 text-center">
+        <div className="relative flex h-full flex-col items-center justify-center px-12 text-text-inverse">
+          <h1 className="mb-6 text-center text-4xl font-bold xl:text-5xl">
             Password Recovery
           </h1>
-          <p className="text-lg xl:text-xl text-center max-w-md leading-relaxed">
+          <p className="max-w-md text-center text-lg leading-relaxed xl:text-xl">
             Regain access to your account and continue experiencing seamless
             currency trading.
           </p>
@@ -38,11 +38,13 @@ const ForgotPasswordPage: React.FC = () => {
       </div>
 
       {/* Right side - Form */}
-      <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 lg:px-8 bg-white">
-        <div className="w-full max-w-md mx-auto">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-900">Reset Password</h2>
-            <p className="mt-2 text-sm text-gray-600">
+      <div className="flex flex-1 flex-col justify-center bg-surface-primary px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto w-full max-w-md">
+          <div className="mb-8 text-center">
+            <h2 className="text-3xl font-bold text-text-primary">
+              Reset Password
+            </h2>
+            <p className="mt-2 text-sm text-text-secondary">
               Enter your email address to receive a password reset link
             </p>
           </div>
@@ -64,10 +66,10 @@ const ForgotPasswordPage: React.FC = () => {
               </Button>
             </Form>
           ) : (
-            <div className="text-center space-y-4 bg-green-50 p-6 rounded-lg border border-green-200">
-              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
+            <div className="space-y-4 rounded-lg border border-success-500 bg-success-50 p-6 text-center">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary-100">
                 <svg
-                  className="h-6 w-6 text-green-600"
+                  className="h-6 w-6 text-primary-600"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -80,10 +82,10 @@ const ForgotPasswordPage: React.FC = () => {
                   />
                 </svg>
               </div>
-              <h3 className="text-lg font-medium text-green-800">
+              <h3 className="text-lg font-medium text-text-primary">
                 Check your email
               </h3>
-              <p className="text-sm text-green-700">
+              <p className="text-sm text-text-secondary">
                 We've sent a password reset link to <strong>{email}</strong>.
                 Please check your inbox.
               </p>
@@ -91,11 +93,11 @@ const ForgotPasswordPage: React.FC = () => {
           )}
 
           <div className="mt-8 text-center">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-text-secondary">
               Remember your password?{' '}
               <Link
                 to="/login"
-                className="font-medium text-blue-600 hover:text-blue-500"
+                className="font-medium text-primary-600 hover:text-primary-700"
               >
                 Back to Login
               </Link>

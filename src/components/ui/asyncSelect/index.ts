@@ -1,9 +1,9 @@
-export { default as AsyncSelect } from './AsyncSelect';
-export type { 
-  AsyncSelectProps, 
-  AsyncSelectOption, 
-  AsyncSelectGroupOption, 
-  AsyncSelectLoadOptions, 
-  AsyncSelectPaginationMeta, 
-  AsyncSelectResponse 
+export { AsyncSelect } from './AsyncSelect';
+export type {
+  AsyncSelectProps,
+  AsyncSelectOption,
+  AsyncSelectGroupOption,
+  AsyncSelectLoadOptions,
+  AsyncSelectPaginationMeta,
+  AsyncSelectResponse,
 } from './AsyncSelect';

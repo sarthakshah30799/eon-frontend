@@ -15,7 +15,7 @@ export const Link: React.FC<LinkProps> = ({
   return (
     <RouterLink
       to={to}
-      className={`font-medium text-blue-600 hover:text-blue-500 ${className}`}
+      className={`font-medium text-primary-600 hover:text-primary-700 ${className}`}
       {...props}
     >
       {children}

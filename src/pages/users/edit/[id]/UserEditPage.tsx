@@ -7,10 +7,12 @@ const UserEditPage = () => {
   const { handleSubmit, isPending, data: user } = useEditUser(id);
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow">
-      <h2 className="text-xl font-semibold mb-4">Edit User</h2>
-      <UserForm 
-        onSubmit={handleSubmit} 
+    <div className="rounded-lg border border-border-primary bg-surface-primary p-6 shadow">
+      <h2 className="mb-4 text-xl font-semibold text-text-primary">
+        Edit User
+      </h2>
+      <UserForm
+        onSubmit={handleSubmit}
         isLoading={isPending}
         defaultValues={{
           name: user?.name || '',

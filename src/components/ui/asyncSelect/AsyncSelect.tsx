@@ -71,6 +71,7 @@ export interface AsyncSelectProps
   pagination?: boolean;
   debounceDelay?: number;
   className?: string;
+  disabled?: boolean;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -200,25 +201,25 @@ const AsyncSelectComponent = React.forwardRef<any, AsyncSelectProps>(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       control: (base: any, state: any) => ({
         ...base,
-        borderColor: error ? '#ef4444' : base.borderColor,
+        borderColor: error ? 'var(--color-error-500)' : base.borderColor,
         '&:hover': {
           borderColor: error
-            ? '#ef4444'
+            ? 'var(--color-error-500)'
             : state.isFocused
-              ? '#3b82f6'
+              ? 'var(--color-primary-500)'
               : base.borderColor,
         },
         boxShadow: error
-          ? '0 0 0 1px #ef4444'
+          ? '0 0 0 1px var(--color-error-500)'
           : state.isFocused
-            ? '0 0 0 1px #3b82f6'
+            ? '0 0 0 1px var(--color-primary-500)'
             : base.boxShadow,
         minHeight: size === 'sm' ? '32px' : size === 'lg' ? '48px' : '40px',
       }),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       loadingIndicator: (base: any) => ({
         ...base,
-        color: '#3b82f6',
+        color: 'var(--color-primary-500)',
       }),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       menu: (base: any) => ({
@@ -243,10 +244,11 @@ const AsyncSelectComponent = React.forwardRef<any, AsyncSelectProps>(
             noOptionsMessage={({ inputValue }) =>
               inputValue ? 'No options found' : 'Start typing to search...'
             }
+            isDisabled={props.disabled}
             {...props}
           />
         </div>
-        {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+        {error && <p className="mt-1 text-sm text-error-600">{error}</p>}
       </div>
     );
   }

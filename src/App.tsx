@@ -1,16 +1,25 @@
-import { QueryProvider, AuthProvider } from './lib';
+import {
+  QueryProvider,
+  AuthProvider,
+  MasterPagesProvider,
+  ThemeProvider,
+} from './lib';
 import { Toaster } from 'react-hot-toast';
 import { AppRouter } from './router';
 
 function App() {
   return (
     <QueryProvider>
-      <AuthProvider>
-        <div className="min-h-screen bg-white text-gray-900">
-          <AppRouter />
-          <Toaster position="top-right" />
-        </div>
-      </AuthProvider>
+      <ThemeProvider>
+        <MasterPagesProvider>
+          <AuthProvider>
+            <div className="min-h-screen text-text-primary">
+              <AppRouter />
+              <Toaster position="top-right" />
+            </div>
+          </AuthProvider>
+        </MasterPagesProvider>
+      </ThemeProvider>
     </QueryProvider>
   );
 }

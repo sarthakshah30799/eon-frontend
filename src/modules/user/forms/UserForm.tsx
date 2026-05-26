@@ -1,7 +1,7 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { Input } from '@/components/ui/input1';
+import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button1';
 import { USER_TEXTS } from '@/constants';
 import { userSchema } from '../schema/userSchema';
@@ -12,7 +12,11 @@ interface UserFormProps {
   defaultValues?: { name?: string; email?: string };
 }
 
-export const UserForm = ({ onSubmit, isLoading = false, defaultValues }: UserFormProps) => {
+export const UserForm = ({
+  onSubmit,
+  isLoading = false,
+  defaultValues,
+}: UserFormProps) => {
   const {
     register,
     handleSubmit,

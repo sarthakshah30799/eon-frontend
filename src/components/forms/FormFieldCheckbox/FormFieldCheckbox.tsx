@@ -16,10 +16,8 @@ export const FormFieldCheckbox = ({
   className = '',
 }: FormFieldCheckboxProps) => {
   const form = useFormContext();
-  
-  const {
-    field,
-  } = useController({
+
+  const { field } = useController({
     name,
     control: form.control,
   });

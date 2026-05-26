@@ -6,17 +6,25 @@ const UserDetailPage = () => {
   const { data: user, isLoading } = useGetUser(id);
 
   if (isLoading) {
-    return <div className="text-center py-4">Loading user...</div>;
+    return (
+      <div className="py-4 text-center text-text-secondary">
+        Loading user...
+      </div>
+    );
   }
 
   if (!user) {
-    return <div className="text-center py-4">User not found</div>;
+    return (
+      <div className="py-4 text-center text-text-secondary">User not found</div>
+    );
   }
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow">
-      <h2 className="text-xl font-semibold mb-4">User Details</h2>
-      <div className="space-y-4">
+    <div className="rounded-lg border border-border-primary bg-surface-primary p-6 shadow">
+      <h2 className="mb-4 text-xl font-semibold text-text-primary">
+        User Details
+      </h2>
+      <div className="space-y-4 text-text-secondary">
         <div>
           <strong>Name:</strong> {user.name}
         </div>
@@ -24,10 +32,12 @@ const UserDetailPage = () => {
           <strong>Email:</strong> {user.email}
         </div>
         <div>
-          <strong>Created:</strong> {new Date(user.createdAt).toLocaleDateString()}
+          <strong>Created:</strong>{' '}
+          {new Date(user.createdAt).toLocaleDateString()}
         </div>
         <div>
-          <strong>Updated:</strong> {new Date(user.updatedAt).toLocaleDateString()}
+          <strong>Updated:</strong>{' '}
+          {new Date(user.updatedAt).toLocaleDateString()}
         </div>
       </div>
     </div>

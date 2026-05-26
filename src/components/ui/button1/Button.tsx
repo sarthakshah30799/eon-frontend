@@ -6,12 +6,17 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-blue-500 text-white hover:bg-blue-600 focus:ring-blue-500',
-        destructive: 'bg-red-500 text-white hover:bg-red-600 focus:ring-red-500',
-        outline: 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-blue-500',
-        secondary: 'bg-slate-500 text-white hover:bg-slate-600 focus:ring-slate-500',
-        ghost: 'text-gray-700 hover:bg-gray-100 focus:ring-gray-500',
-        link: 'text-blue-600 hover:text-blue-800 underline focus:ring-blue-500',
+        default:
+          'bg-primary-500 text-text-inverse hover:bg-primary-600 focus:ring-primary-500',
+        destructive:
+          'bg-error-500 text-text-inverse hover:bg-error-600 focus:ring-error-500',
+        outline:
+          'border border-border-secondary bg-surface-primary text-text-secondary hover:bg-surface-secondary focus:ring-primary-500',
+        secondary:
+          'bg-secondary-500 text-text-inverse hover:bg-secondary-600 focus:ring-secondary-500',
+        ghost:
+          'text-text-secondary hover:bg-surface-secondary focus:ring-secondary-500',
+        link: 'text-primary-600 hover:text-primary-700 underline focus:ring-primary-500',
       },
       size: {
         default: 'px-4 py-2',
@@ -28,13 +33,13 @@ const buttonVariants = cva(
 );
 
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+  extends
+    React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
-  asChild?: boolean;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  ({ className, variant, size, ...props }, ref) => {
     return (
       <button
         className={buttonVariants({ variant, size, className })}
@@ -47,4 +52,4 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
 Button.displayName = 'Button';
 
-export { Button, buttonVariants };
+export { Button };

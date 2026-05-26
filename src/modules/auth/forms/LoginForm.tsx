@@ -71,17 +71,17 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   return (
     <div className="w-full space-y-6">
       <div className="text-center">
-        <h2 className="text-3xl font-bold text-gray-900">{title}</h2>
-        <p className="mt-2 text-sm text-gray-600">{subtitle}</p>
+        <h2 className="text-3xl font-bold text-text-primary">{title}</h2>
+        <p className="mt-2 text-sm text-text-secondary">{subtitle}</p>
       </div>
 
-      <div className="flex p-1 space-x-1 bg-gray-100 rounded-xl">
+      <div className="flex space-x-1 rounded-xl bg-primary-100 p-1">
         <button
           type="button"
           className={`w-full py-2.5 text-sm font-medium leading-5 rounded-lg ${
             loginMethod === 'password'
-              ? 'bg-white text-blue-700 shadow-xs'
-              : 'text-gray-700 hover:bg-white/[0.12] hover:text-blue-600'
+              ? 'bg-surface-primary text-primary-700 shadow-xs'
+              : 'text-text-secondary hover:bg-surface-primary hover:text-primary-600'
           }`}
           onClick={() => setLoginMethod('password')}
         >
@@ -91,8 +91,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           type="button"
           className={`w-full py-2.5 text-sm font-medium leading-5 rounded-lg ${
             loginMethod === 'otp'
-              ? 'bg-white text-blue-700 shadow-xs'
-              : 'text-gray-700 hover:bg-white/[0.12] hover:text-blue-600'
+              ? 'bg-surface-primary text-primary-700 shadow-xs'
+              : 'text-text-secondary hover:bg-surface-primary hover:text-primary-600'
           }`}
           onClick={() => {
             setLoginMethod('otp');
@@ -198,7 +198,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           className="space-y-4"
         >
           <div className="text-center mb-4">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-text-secondary">
               Enter the OTP sent to {otpMobileData.countryCode}{' '}
               {otpMobileData.mobileNumber}
             </p>
@@ -240,7 +240,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
 
       {showSignupLink && (
         <div className="text-center">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-text-secondary">
             {AUTH_TEXTS.DONT_HAVE_ACCOUNT}{' '}
             <Link to="/signup">{AUTH_TEXTS.SIGN_UP}</Link>
           </p>

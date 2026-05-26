@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Input } from '../input1';
+import { Input } from '../input';
 import { Button } from '../button1';
 import { EyeIcon, EyeSlashIcon } from '../../../assets/icons';
 import { AUTH_TEXTS } from '../../../constants';
-import type { InputProps } from '../input1';
+import type { InputProps } from '../input';
 
 interface PasswordInputProps extends Omit<InputProps, 'type'> {
   showPasswordToggle?: boolean;
@@ -34,7 +34,9 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
           type="button"
           onClick={togglePasswordVisibility}
           className="absolute top-8 right-0"
-          aria-label={showPassword ? AUTH_TEXTS.HIDE_PASSWORD : AUTH_TEXTS.SHOW_PASSWORD}
+          aria-label={
+            showPassword ? AUTH_TEXTS.HIDE_PASSWORD : AUTH_TEXTS.SHOW_PASSWORD
+          }
         >
           {showPassword ? <EyeSlashIcon /> : <EyeIcon />}
         </Button>

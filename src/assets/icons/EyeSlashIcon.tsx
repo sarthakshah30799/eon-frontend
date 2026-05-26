@@ -4,7 +4,9 @@ interface EyeSlashIconProps {
   className?: string;
 }
 
-export const EyeSlashIcon: React.FC<EyeSlashIconProps> = ({ className = 'h-4 w-4' }) => {
+export const EyeSlashIcon: React.FC<EyeSlashIconProps> = ({
+  className = 'h-4 w-4',
+}) => {
   return (
     <svg
       className={className}

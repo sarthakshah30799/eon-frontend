@@ -5,7 +5,7 @@ export const UserCreatePage = () => {
   const { handleSubmit, isPending } = useCreateUser();
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow">
+    <div className="rounded-lg border border-border-primary bg-surface-primary p-6 shadow">
       <UserForm onSubmit={handleSubmit} isLoading={isPending} />
     </div>
   );

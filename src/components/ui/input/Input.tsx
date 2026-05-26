@@ -10,22 +10,14 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ className = '', type = 'text', label, error, ...props }, ref) => {
     return (
       <div className="space-y-2">
-        {label && (
-          <Label htmlFor={props.id}>
-            {label}
-          </Label>
-        )}
+        {label && <Label htmlFor={props.id}>{label}</Label>}
         <input
           type={type}
-          className={`block w-full px-3 py-2 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 ${error ? 'border-red-500' : ''} ${className}`}
+          className={`block w-full rounded-md border border-border-secondary bg-surface-primary px-3 py-2 text-text-primary shadow-sm placeholder:text-text-tertiary focus:border-primary-500 focus:ring-primary-500 ${error ? 'border-error-500' : ''} ${className}`}
           ref={ref}
           {...props}
         />
-        {error && (
-          <p className="mt-1 text-sm text-red-600">
-            {error}
-          </p>
-        )}
+        {error && <p className="mt-1 text-sm text-error-600">{error}</p>}
       </div>
     );
   }

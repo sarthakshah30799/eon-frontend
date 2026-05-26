@@ -1,9 +1,12 @@
 import React from 'react';
-import { Input } from '../input1';
+import { Input } from '../input';
 import { Label } from '../label';
-import type { InputProps } from '../input1';
+import type { InputProps } from '../input';
 
-interface CheckboxProps extends Omit<InputProps, 'type' | 'onChange' | 'label' | 'error'> {
+interface CheckboxProps extends Omit<
+  InputProps,
+  'type' | 'onChange' | 'label' | 'error'
+> {
   checked?: boolean;
   onChange?: (checked: boolean) => void;
   children?: React.ReactNode;
@@ -21,12 +24,15 @@ export const Checkbox: React.FC<CheckboxProps> = ({
       <Input
         type="checkbox"
         checked={checked}
-        onChange={(e) => onChange?.(e.target.checked)}
-        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+        onChange={e => onChange?.(e.target.checked)}
+        className="h-4 w-4 rounded border-border-secondary text-primary-600 focus:ring-primary-500"
         {...props}
       />
       {children && props.id && (
-        <Label htmlFor={props.id} className="ml-2 block text-sm text-gray-900">
+        <Label
+          htmlFor={props.id}
+          className="ml-2 block text-sm text-text-primary"
+        >
           {children}
         </Label>
       )}

@@ -1,0 +1,17 @@
+export const USER_ROLE_TEXTS = {
+  LIST_TITLE: 'User Role',
+  LIST_SUBTITLE: 'Manage roles, edit records, and keep access data organized.',
+  CREATE_ROLE: 'Create Role',
+  SAVE_CHANGES: 'Save Changes',
+  EDIT_ROLE: 'Edit Role',
+  FORM_SUBTITLE: 'Fill in the role details and save the record.',
+  LOADING_ROLES: 'Loading roles...',
+  EMPTY_STATE: 'No roles found. Create your first role.',
+  LIST_ERROR: 'Error loading roles',
+  CREATE_SUCCESS: 'Role created successfully!',
+  UPDATE_SUCCESS: 'Role updated successfully!',
+  DELETE_SUCCESS: 'Role deleted successfully!',
+  CREATE_ERROR: 'Failed to create role',
+  UPDATE_ERROR: 'Failed to update role',
+  DELETE_ERROR: 'Failed to delete role',
+} as const;

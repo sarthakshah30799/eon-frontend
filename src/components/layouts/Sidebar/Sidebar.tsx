@@ -50,7 +50,16 @@ const staticSections: SidebarSection[] = [
             label: 'Company Profile',
             path: '/master/system-setups/company-profile/1',
           },
-          { id: 'user-profile', label: 'User Profile' },
+          {
+            id: 'user-profile',
+            label: 'User Profile',
+            path: '/master/system-setups/user-profile',
+          },
+          {
+            id: 'user-role',
+            label: 'User Role',
+            path: '/master/system-setups/user-role',
+          },
         ],
       },
     ],

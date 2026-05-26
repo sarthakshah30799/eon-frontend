@@ -8,3 +8,4 @@ export * from './link';
 export * from './passwordInput';
 export * from './accordion';
 export * from './dropdown';
+export * from './datePicker';

@@ -26,6 +26,30 @@ const CompanyProfilePage = lazy(
 const MasterPagesPage = lazy(
   () => import('../pages/master/system-setups/master-pages/MasterPagesPage')
 );
+const UserProfileListPage = lazy(
+  () =>
+    import('../pages/master/system-setups/user-profile/list/UserProfileListPage')
+);
+const UserProfileCreatePage = lazy(
+  () =>
+    import('../pages/master/system-setups/user-profile/create/UserProfileCreatePage')
+);
+const UserProfileEditPage = lazy(
+  () =>
+    import('../pages/master/system-setups/user-profile/edit/[id]/UserProfileEditPage')
+);
+const UserRoleListPage = lazy(
+  () =>
+    import('../pages/master/system-setups/user-role/list/UserRoleListPage')
+);
+const UserRoleCreatePage = lazy(
+  () =>
+    import('../pages/master/system-setups/user-role/create/UserRoleCreatePage')
+);
+const UserRoleEditPage = lazy(
+  () =>
+    import('../pages/master/system-setups/user-role/edit/[id]/UserRoleEditPage')
+);
 const MasterPageResolverPage = lazy(
   () =>
     import('../pages/master/system-setups/master-pages/resolve/MasterPageResolverPage')
@@ -101,6 +125,54 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <MasterPagesPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/master/system-setups/user-profile',
+    element: (
+      <ProtectedLayout>
+        <UserProfileListPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/master/system-setups/user-profile/create',
+    element: (
+      <ProtectedLayout>
+        <UserProfileCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/master/system-setups/user-profile/edit/:id',
+    element: (
+      <ProtectedLayout>
+        <UserProfileEditPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/master/system-setups/user-role',
+    element: (
+      <ProtectedLayout>
+        <UserRoleListPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/master/system-setups/user-role/create',
+    element: (
+      <ProtectedLayout>
+        <UserRoleCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/master/system-setups/user-role/edit/:id',
+    element: (
+      <ProtectedLayout>
+        <UserRoleEditPage />
       </ProtectedLayout>
     ),
   },

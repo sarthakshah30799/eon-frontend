@@ -59,6 +59,7 @@ export interface TableProps<T extends object>
   onSortingChange?: (sorting: SortingState) => void;
   onColumnFiltersChange?: (filters: ColumnFiltersState) => void;
   onPaginationChange?: (pagination: PaginationState) => void;
+  onRowClick?: (row: T) => void;
   emptyMessage?: string;
   loading?: boolean;
   skeletonRows?: number;
@@ -80,6 +81,7 @@ function Table<T extends object>({
   onSortingChange,
   onColumnFiltersChange,
   onPaginationChange,
+  onRowClick,
   emptyMessage = 'No data available',
   loading = false,
   skeletonRows = 5,
@@ -257,10 +259,13 @@ function Table<T extends object>({
               renderSkeleton()
             ) : table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row, index) => (
-                <tr
-                  key={row.id}
-                  className={`${variant === 'striped' && index % 2 === 1 ? 'bg-surface-secondary' : ''} hover:bg-surface-secondary`}
-                >
+              <tr
+                key={row.id}
+                className={`${variant === 'striped' && index % 2 === 1 ? 'bg-surface-secondary' : ''} ${onRowClick ? 'cursor-pointer' : ''} hover:bg-surface-secondary`}
+                onClick={() => {
+                  onRowClick?.(row.original);
+                }}
+              >
                   {row.getVisibleCells().map(cell => (
                     <td
                       key={cell.id}

@@ -3,7 +3,15 @@ import { useGetUser } from '../../../../modules/user/hooks/useGetUser';
 
 const UserDetailPage = () => {
   const { id } = useParams<{ id: string }>();
-  const { data: user, isLoading } = useGetUser(id);
+  const { data: user, isLoading } = useGetUser(id ?? '');
+
+  if (!id) {
+    return (
+      <div className="rounded-lg border border-border-primary bg-surface-primary p-6 shadow">
+        <p className="text-sm text-text-secondary">User id is missing.</p>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

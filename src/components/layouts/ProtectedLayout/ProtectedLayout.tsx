@@ -1,5 +1,4 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../../lib/AuthContext';
 import { DashboardLayout } from '../DashboardLayout';
 
@@ -10,7 +9,7 @@ interface ProtectedLayoutProps {
 export const ProtectedLayout: React.FC<ProtectedLayoutProps> = ({
   children,
 }) => {
-  const { isLoading, isAuthenticated } = useAuth();
+  const { isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -21,10 +20,6 @@ export const ProtectedLayout: React.FC<ProtectedLayoutProps> = ({
         </div>
       </div>
     );
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
   }
 
   return <DashboardLayout>{children}</DashboardLayout>;

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '../../../components/ui/button1/Button';
 import { Form, FormFieldInput } from '../../../components/forms';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { otpEmailSchema } from '../../../modules/auth/schema';
+import { forgotPasswordSchema } from '../../../modules/auth/schema';
 
 const ForgotPasswordPage: React.FC = () => {
   const [isSent, setIsSent] = useState(false);
@@ -16,10 +16,10 @@ const ForgotPasswordPage: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-primary-50">
+    <div className="flex min-h-screen bg-gradient-to-br from-surface-secondary via-surface-primary to-primary-50">
       {/* Left side - Image */}
       <div className="relative hidden lg:block lg:w-1/2 xl:w-3/5">
-        <div className="absolute inset-0 bg-sidebar-primary">
+        <div className="absolute inset-0 bg-gradient-to-br from-sidebar-primary to-sidebar-secondary">
           <img
             src="/currency-exchange.jpg"
             alt="Currency Exchange"
@@ -38,7 +38,7 @@ const ForgotPasswordPage: React.FC = () => {
       </div>
 
       {/* Right side - Form */}
-      <div className="flex flex-1 flex-col justify-center bg-surface-primary px-4 sm:px-6 lg:px-8">
+      <div className="flex flex-1 flex-col justify-center bg-surface-primary/95 px-4 sm:px-6 lg:px-8">
         <div className="mx-auto w-full max-w-md">
           <div className="mb-8 text-center">
             <h2 className="text-3xl font-bold text-text-primary">
@@ -52,7 +52,7 @@ const ForgotPasswordPage: React.FC = () => {
           {!isSent ? (
             <Form
               onSubmit={onSubmit}
-              resolver={yupResolver(otpEmailSchema)}
+              resolver={yupResolver(forgotPasswordSchema)}
               className="space-y-4"
             >
               <FormFieldInput
@@ -66,7 +66,7 @@ const ForgotPasswordPage: React.FC = () => {
               </Button>
             </Form>
           ) : (
-            <div className="space-y-4 rounded-lg border border-success-500 bg-success-50 p-6 text-center">
+            <div className="space-y-4 rounded-2xl border border-success-500 bg-success-50 p-6 text-center shadow-sm">
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary-100">
                 <svg
                   className="h-6 w-6 text-primary-600"

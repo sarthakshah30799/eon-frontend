@@ -2,7 +2,7 @@ import React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center whitespace-nowrap rounded text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed',
+  'inline-flex items-center justify-center whitespace-nowrap rounded-xl text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed',
   {
     variants: {
       variant: {
@@ -15,7 +15,7 @@ const buttonVariants = cva(
         secondary:
           'bg-secondary-500 text-text-inverse hover:bg-secondary-600 focus:ring-secondary-500',
         ghost:
-          'text-text-secondary hover:bg-surface-secondary focus:ring-secondary-500',
+          'bg-primary-50 text-primary-700 hover:bg-primary-100 focus:ring-primary-500',
         link: 'text-primary-600 hover:text-primary-700 underline focus:ring-primary-500',
       },
       size: {

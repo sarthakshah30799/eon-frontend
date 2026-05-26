@@ -134,12 +134,14 @@ const AsyncSelectComponent = React.forwardRef<any, AsyncSelectProps>(
               // Handle direct array response
               options = response;
             } else if (response.options) {
-              // Handle paginated response
-              options = Array.isArray(response.options)
-                ? response.options
-                : response.options.flatMap(group =>
-                    Array.isArray(group) ? group : group.options || []
-                  );
+              // Handle paginated response with grouped or flat options
+              const normalizedOptions = response.options as Array<
+                AsyncSelectOption | AsyncSelectGroupOption
+              >;
+
+              options = normalizedOptions.flatMap(option =>
+                'options' in option ? option.options : [option]
+              );
             }
 
             if (pagination && currentPage > 1) {

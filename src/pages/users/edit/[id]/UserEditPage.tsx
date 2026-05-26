@@ -4,7 +4,15 @@ import { UserForm } from '@/modules/user/forms/UserForm';
 
 const UserEditPage = () => {
   const { id } = useParams<{ id: string }>();
-  const { handleSubmit, isPending, data: user } = useEditUser(id);
+  const { handleSubmit, isPending, data: user } = useEditUser(id ?? '');
+
+  if (!id) {
+    return (
+      <div className="rounded-lg border border-border-primary bg-surface-primary p-6 shadow">
+        <p className="text-sm text-text-secondary">User id is missing.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-lg border border-border-primary bg-surface-primary p-6 shadow">

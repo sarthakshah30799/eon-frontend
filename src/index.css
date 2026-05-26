@@ -1,1 +1,104 @@
 @import 'tailwindcss';
+
+@theme {
+  --color-primary-50: oklch(0.97 0.015 250);
+  --color-primary-100: oklch(0.94 0.03 250);
+  --color-primary-200: oklch(0.9 0.06 250);
+  --color-primary-300: oklch(0.83 0.1 250);
+  --color-primary-400: oklch(0.74 0.14 250);
+  --color-primary-500: oklch(0.66 0.17 250);
+  --color-primary-600: oklch(0.58 0.19 250);
+  --color-primary-700: oklch(0.51 0.2 250);
+  --color-primary-800: oklch(0.44 0.18 250);
+  --color-primary-900: oklch(0.36 0.14 250);
+
+  --color-secondary-50: oklch(0.985 0.003 260);
+  --color-secondary-100: oklch(0.96 0.006 260);
+  --color-secondary-200: oklch(0.92 0.01 260);
+  --color-secondary-300: oklch(0.83 0.014 260);
+  --color-secondary-400: oklch(0.73 0.016 260);
+  --color-secondary-500: oklch(0.6 0.02 260);
+  --color-secondary-600: oklch(0.48 0.02 260);
+  --color-secondary-700: oklch(0.37 0.02 260);
+  --color-secondary-800: oklch(0.27 0.018 260);
+  --color-secondary-900: oklch(0.18 0.015 260);
+
+  --color-surface-primary: #ffffff;
+  --color-surface-secondary: #f8fbff;
+  --color-surface-tertiary: #eef6ff;
+
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-tertiary: #64748b;
+  --color-text-inverse: #ffffff;
+
+  --color-border-primary: #dbeafe;
+  --color-border-secondary: #bfdbfe;
+  --color-border-muted: #e2e8f0;
+
+  --color-header-primary: #1d4ed8;
+  --color-header-secondary: #2563eb;
+  --color-header-border: #60a5fa;
+  --color-header-text: #ffffff;
+  --color-header-accent: #bfdbfe;
+
+  --color-success-50: #ecfdf5;
+  --color-success-500: #10b981;
+  --color-success-600: #059669;
+
+  --color-error-50: #fef2f2;
+  --color-error-500: #ef4444;
+  --color-error-600: #dc2626;
+
+  --color-warning-50: #fffbeb;
+  --color-warning-500: #f59e0b;
+  --color-warning-600: #d97706;
+
+  --color-sidebar-primary: #1d4ed8;
+  --color-sidebar-secondary: #1e40af;
+  --color-sidebar-accent: #60a5fa;
+  --color-sidebar-surface: rgba(29, 78, 216, 0.92);
+  --color-sidebar-border: rgba(255, 255, 255, 0.14);
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(
+      circle at top left,
+      color-mix(in oklch, var(--color-primary-100) 55%, transparent),
+      transparent 34%
+    ),
+    linear-gradient(
+      180deg,
+      var(--color-surface-secondary),
+      var(--color-surface-primary)
+    );
+  color: var(--color-text-primary);
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+::selection {
+  background: var(--color-primary-200);
+  color: var(--color-text-primary);
+}

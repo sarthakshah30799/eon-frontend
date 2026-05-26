@@ -7,7 +7,7 @@ const UserListPage = () => {
   return (
     <div className="rounded-lg border border-border-primary bg-surface-primary p-6 shadow">
       <UserList
-        users={users}
+        users={users ?? []}
         isLoading={isLoading}
         error={error?.message || null}
       />

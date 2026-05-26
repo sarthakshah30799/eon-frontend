@@ -1,5 +1,4 @@
 import * as yup from 'yup';
-import type { UserFormData } from '../types';
 
 export const userSchema = yup.object({
   name: yup

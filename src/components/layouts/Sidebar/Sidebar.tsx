@@ -79,25 +79,25 @@ const staticSections: SidebarSection[] = [
 ];
 
 const sidebarSectionTriggerClass =
-  'w-full justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50 focus-visible:ring-slate-300';
+  'w-full justify-between rounded-2xl border border-border-primary bg-surface-primary px-4 py-3 text-left text-sm font-semibold text-text-primary shadow-sm transition hover:border-primary-200 hover:bg-primary-50 focus-visible:ring-primary-300';
 
 const sidebarSectionMenuClass =
-  'w-72 overflow-visible rounded-2xl border border-slate-200 bg-white p-2 shadow-lg ring-0';
+  'w-72 overflow-visible rounded-2xl border border-border-primary bg-surface-primary p-2 shadow-lg ring-0';
 
 const sidebarGroupTriggerClass = (level: number) =>
   [
-    'w-full justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-left text-sm font-semibold text-slate-800 transition hover:bg-white focus-visible:ring-slate-300',
+    'w-full justify-between rounded-xl border border-border-primary bg-surface-secondary px-3 py-3 text-left text-sm font-semibold text-text-primary transition hover:border-primary-200 hover:bg-surface-primary focus-visible:ring-primary-300',
     level > 0 ? 'ml-2' : '',
   ].join(' ');
 
 const sidebarGroupMenuClass = (level: number) =>
   [
-    'w-64 overflow-visible rounded-xl border border-slate-200 bg-white p-1 shadow-lg ring-0',
+    'w-64 overflow-visible rounded-xl border border-border-primary bg-surface-primary p-1 shadow-lg ring-0',
     level > 0 ? 'ml-2' : '',
   ].join(' ');
 
 const sidebarLeafClass =
-  'flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-slate-50 hover:text-slate-900';
+  'flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm text-text-secondary transition hover:bg-primary-50 hover:text-text-primary';
 
 const mapMasterPageNodeToItem = (page: MasterPageTreeNode): SidebarMenuItem => {
   if (page.children.length === 0) {
@@ -257,22 +257,22 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   return (
     <aside
       className={[
-        'fixed inset-y-0 left-0 z-40 w-80 border-r border-slate-200 bg-slate-50 text-slate-900 shadow-2xl transition-transform duration-300 ease-out',
+        'fixed inset-y-0 left-0 z-40 w-80 border-r border-border-primary bg-surface-secondary text-text-primary shadow-2xl transition-transform duration-300 ease-out',
         'lg:translate-x-0',
         isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
       ].join(' ')}
     >
       <div className="flex h-full flex-col">
-        <div className="flex items-center justify-between border-b border-slate-200 bg-white px-5 py-4">
+        <div className="flex items-center justify-between border-b border-border-primary bg-surface-primary px-5 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-900">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-600 to-primary-700">
               <img src="/favicon.svg" alt="Maraekat logo" className="h-7 w-7" />
             </div>
             <div>
-              <p className="text-xs font-medium uppercase tracking-[0.24em] text-slate-500">
+              <p className="text-xs font-medium uppercase tracking-[0.24em] text-text-tertiary">
                 Currency Exchange
               </p>
-              <p className="text-base font-semibold text-slate-900">
+              <p className="text-base font-semibold text-text-primary">
                 Maraekat FX
               </p>
             </div>
@@ -281,7 +281,7 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
           <button
             type="button"
             aria-label="Close sidebar"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 lg:hidden"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border-primary bg-surface-primary text-text-secondary transition hover:bg-primary-50 lg:hidden"
             onClick={onClose}
           >
             <svg

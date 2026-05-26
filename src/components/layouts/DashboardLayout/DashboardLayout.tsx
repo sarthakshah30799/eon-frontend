@@ -29,12 +29,12 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   };
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-primary-50 text-text-primary">
+    <div className="min-h-screen overflow-x-hidden bg-gradient-to-br from-surface-secondary via-surface-primary to-primary-50 text-text-primary">
       {isSidebarOpen && (
         <button
           type="button"
           aria-label="Close sidebar"
-          className="fixed inset-0 z-30 bg-primary-900/20 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-30 bg-primary-900/15 backdrop-blur-sm lg:hidden"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}

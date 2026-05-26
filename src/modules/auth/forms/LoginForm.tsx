@@ -75,13 +75,13 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         <p className="mt-2 text-sm text-text-secondary">{subtitle}</p>
       </div>
 
-      <div className="flex space-x-1 rounded-xl bg-primary-100 p-1">
+      <div className="flex space-x-1 rounded-2xl bg-primary-50/80 p-1.5 shadow-sm shadow-primary-100/50">
         <button
           type="button"
-          className={`w-full py-2.5 text-sm font-medium leading-5 rounded-lg ${
+          className={`w-full rounded-xl py-2.5 text-sm font-medium leading-5 transition ${
             loginMethod === 'password'
-              ? 'bg-surface-primary text-primary-700 shadow-xs'
-              : 'text-text-secondary hover:bg-surface-primary hover:text-primary-600'
+              ? 'bg-gradient-to-r from-primary-600 to-primary-700 text-text-inverse shadow-lg shadow-primary-200/50'
+              : 'text-text-secondary hover:bg-white/80 hover:text-primary-600'
           }`}
           onClick={() => setLoginMethod('password')}
         >
@@ -89,10 +89,10 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         </button>
         <button
           type="button"
-          className={`w-full py-2.5 text-sm font-medium leading-5 rounded-lg ${
+          className={`w-full rounded-xl py-2.5 text-sm font-medium leading-5 transition ${
             loginMethod === 'otp'
-              ? 'bg-surface-primary text-primary-700 shadow-xs'
-              : 'text-text-secondary hover:bg-surface-primary hover:text-primary-600'
+              ? 'bg-gradient-to-r from-primary-600 to-primary-700 text-text-inverse shadow-lg shadow-primary-200/50'
+              : 'text-text-secondary hover:bg-white/80 hover:text-primary-600'
           }`}
           onClick={() => {
             setLoginMethod('otp');

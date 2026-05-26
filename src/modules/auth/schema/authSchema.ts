@@ -31,3 +31,10 @@ export const otpSchema = yup.object({
     .length(6, 'OTP must be exactly 6 digits')
     .required('OTP is required'),
 });
+
+export const forgotPasswordSchema = yup.object({
+  email: yup
+    .string()
+    .email('Please enter a valid email address')
+    .required('Email is required'),
+});

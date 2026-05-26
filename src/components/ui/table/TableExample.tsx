@@ -82,7 +82,6 @@ export const TableExample = () => {
         />
       ),
       enableSorting: false,
-      enableFiltering: false,
     },
     {
       accessorKey: 'id',
@@ -171,7 +170,6 @@ export const TableExample = () => {
         </div>
       ),
       enableSorting: false,
-      enableFiltering: false,
     },
   ];
 

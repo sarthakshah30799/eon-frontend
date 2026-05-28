@@ -1,8 +1,9 @@
 import { apiClient } from '../api';
 import { companyProfileApi } from '../companyProfile/companyProfile.api';
 import type {
-  BranchProfileFormValues,
+  BranchProfileSavePayload,
   BranchProfileRecord,
+  BranchProfileFormValues,
 } from '@/modules/branchProfile/types';
 
 interface BackendBranch {
@@ -45,9 +46,13 @@ const mapBackendToFrontend = (branch: BackendBranch): BranchProfileRecord => {
     stdCode: '022',
     pinCode: branch.pincode,
     operationalGroupId: branch.operationGroup || 'city-location',
-    phoneNo1CountryCode: branch.countryCode1 ? `+${branch.countryCode1.trim()}` : '+91',
+    phoneNo1CountryCode: branch.countryCode1
+      ? `+${branch.countryCode1.trim()}`
+      : '+91',
     phoneNo1: branch.phoneNumber1,
-    phoneNo2CountryCode: branch.countryCode2 ? `+${branch.countryCode2.trim()}` : '+91',
+    phoneNo2CountryCode: branch.countryCode2
+      ? `+${branch.countryCode2.trim()}`
+      : '+91',
     phoneNo2: branch.phoneNumber2 || '',
     faxNo1CountryCode: '+91',
     faxNo1: '',
@@ -55,7 +60,9 @@ const mapBackendToFrontend = (branch: BackendBranch): BranchProfileRecord => {
     faxNo2: '',
     emailId: 'branch@example.com',
     contactPerson: branch.contactPersonName || '',
-    contactNoCountryCode: branch.contactPersonCountryCode ? `+${branch.contactPersonCountryCode.trim()}` : '+91',
+    contactNoCountryCode: branch.contactPersonCountryCode
+      ? `+${branch.contactPersonCountryCode.trim()}`
+      : '+91',
     contactNo: branch.contactPersonPhone || '',
     locationTypeId: 'branch',
     operationalUserId: 'operational-user-1',
@@ -81,10 +88,14 @@ const mapBackendToFrontend = (branch: BackendBranch): BranchProfileRecord => {
     serviceTaxRegnNo: '',
     createdAt: branch.createdAt,
     updatedAt: branch.updatedAt,
+    counters: [],
   };
 };
 
-const mapFrontendToBackend = (form: BranchProfileFormValues, companyId?: string): any => {
+const mapFrontendToBackend = (
+  form: BranchProfileFormValues,
+  companyId?: string
+) => {
   return {
     companyId: companyId || undefined,
     branchCode: form.branchCode,
@@ -98,12 +109,18 @@ const mapFrontendToBackend = (form: BranchProfileFormValues, companyId?: string)
     country: 'India',
     stateCode: form.stateId ? form.stateId.slice(0, 2).toUpperCase() : 'MH',
     gstStateCode: form.serviceTaxRegnNo || '27',
-    countryCode1: form.phoneNo1CountryCode ? form.phoneNo1CountryCode.replace('+', '') : 'IN',
+    countryCode1: form.phoneNo1CountryCode
+      ? form.phoneNo1CountryCode.replace('+', '')
+      : 'IN',
     phoneNumber1: form.phoneNo1 || '',
-    countryCode2: form.phoneNo2CountryCode ? form.phoneNo2CountryCode.replace('+', '') : 'IN',
+    countryCode2: form.phoneNo2CountryCode
+      ? form.phoneNo2CountryCode.replace('+', '')
+      : 'IN',
     phoneNumber2: form.phoneNo2 || undefined,
     contactPersonName: form.contactPerson || undefined,
-    contactPersonCountryCode: form.contactNoCountryCode ? form.contactNoCountryCode.replace('+', '') : 'IN',
+    contactPersonCountryCode: form.contactNoCountryCode
+      ? form.contactNoCountryCode.replace('+', '')
+      : 'IN',
     contactPersonPhone: form.contactNo || undefined,
     operationGroup: form.operationalGroupId || undefined,
   };
@@ -125,11 +142,12 @@ export const branchProfileApi = {
   },
 
   createBranchProfile: async (
-    data: BranchProfileFormValues
+    data: BranchProfileSavePayload
   ): Promise<BranchProfileRecord> => {
     // Dynamically fetch first company to link it automatically
     const companyRes = await companyProfileApi.getCompanyProfiles();
-    const companyId = companyRes.data?.[0]?.id || '11111111-1111-4111-b111-111111111111';
+    const companyId =
+      companyRes.data?.[0]?.id || '11111111-1111-4111-b111-111111111111';
 
     const backendData = mapFrontendToBackend(data, companyId);
     const res = await apiClient.post<BackendBranch>('/branches', backendData);
@@ -141,13 +159,17 @@ export const branchProfileApi = {
 
   updateBranchProfile: async (
     id: string,
-    data: BranchProfileFormValues
+    data: BranchProfileSavePayload
   ): Promise<BranchProfileRecord | undefined> => {
     const companyRes = await companyProfileApi.getCompanyProfiles();
-    const companyId = companyRes.data?.[0]?.id || '11111111-1111-4111-b111-111111111111';
+    const companyId =
+      companyRes.data?.[0]?.id || '11111111-1111-4111-b111-111111111111';
 
     const backendData = mapFrontendToBackend(data, companyId);
-    const res = await apiClient.put<BackendBranch>(`/branches/${id}`, backendData);
+    const res = await apiClient.put<BackendBranch>(
+      `/branches/${id}`,
+      backendData
+    );
     if (res.error) throw new Error(res.error);
     return res.data ? mapBackendToFrontend(res.data) : undefined;
   },

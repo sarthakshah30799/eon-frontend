@@ -1,5 +1,7 @@
+import { useMemo } from 'react';
 import { Label } from '../label';
 import { Input } from '../input';
+import { AsyncSelect, type AsyncSelectOption } from '../asyncSelect';
 
 export interface PhoneCountryCodeOption {
   value: string;
@@ -33,6 +35,29 @@ export const PhoneInput = ({
   error,
   className = '',
 }: PhoneInputProps) => {
+  const selectedCountryCodeOption = useMemo<AsyncSelectOption | null>(
+    () =>
+      countryCodeOptions.find(option => option.value === countryCodeValue) ??
+      null,
+    [countryCodeOptions, countryCodeValue]
+  );
+
+  const loadCountryCodeOptions = useMemo(
+    () => async (inputValue: string) => {
+      const normalizedValue = inputValue.trim().toLowerCase();
+      const filteredOptions = normalizedValue
+        ? countryCodeOptions.filter(option =>
+            option.label.toLowerCase().includes(normalizedValue)
+          )
+        : countryCodeOptions;
+
+      return {
+        options: filteredOptions,
+      };
+    },
+    [countryCodeOptions]
+  );
+
   return (
     <div className={`space-y-2 ${className}`}>
       {label && <Label>{label}</Label>}
@@ -40,21 +65,24 @@ export const PhoneInput = ({
       <div className="grid grid-cols-[140px_1fr] gap-3">
         <div className="space-y-2">
           <Label>{countryCodeLabel}</Label>
-          <select
-            value={countryCodeValue}
+          <AsyncSelect
+            value={selectedCountryCodeOption}
             disabled={disabled}
-            onChange={event => onCountryCodeChange(event.target.value)}
-            className="block w-full rounded-sm border border-border-secondary bg-surface-primary px-3 py-2 text-text-primary shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {countryCodeOptions.map(option => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+            loadOptions={loadCountryCodeOptions}
+            pagination={false}
+            defaultOptions={countryCodeOptions}
+            cacheOptions
+            placeholder={countryCodeLabel}
+            size="md"
+            variant="default"
+            onChange={option => {
+              onCountryCodeChange(option?.value?.toString() ?? '');
+            }}
+          />
         </div>
 
         <Input
+          inputMode="numeric"
           label={numberLabel}
           value={numberValue}
           onChange={event => onNumberChange(event.target.value)}
@@ -68,4 +96,3 @@ export const PhoneInput = ({
 };
 
 export default PhoneInput;
-

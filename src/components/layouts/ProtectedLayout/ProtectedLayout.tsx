@@ -1,7 +1,7 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../../lib/AuthContext';
 import { DashboardLayout } from '../DashboardLayout';
+import { Navigate } from 'react-router-dom';
 
 interface ProtectedLayoutProps {
   children: React.ReactNode;
@@ -23,9 +23,9 @@ export const ProtectedLayout: React.FC<ProtectedLayoutProps> = ({
     );
   }
 
-  // if (!isAuthenticated) {
-  //   return <Navigate to="/login" replace />;
-  // }
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
 
   return <DashboardLayout>{children}</DashboardLayout>;
 };

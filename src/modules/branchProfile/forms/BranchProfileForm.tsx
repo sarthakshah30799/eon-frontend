@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
+import type { Resolver } from 'react-hook-form';
 import { Button } from '@/components/ui/button1';
 import {
   Form,
@@ -305,13 +306,15 @@ const BranchProfileFormFields = ({
               name="serviceTaxApplicable"
               label="Service Tax Applicable"
               disabled={isSubmitting}
-            />
-            <FormFieldInput
-              name="serviceTaxRegnNo"
-              label="Serv.Tax Regn No"
-              disabled={isSubmitting || !serviceTaxApplicable}
-            />
+            />        
           </div>
+           {serviceTaxApplicable && (
+              <FormFieldInput
+                name="serviceTaxRegnNo"
+                label="Serv.Tax Regn No"
+                disabled={isSubmitting || !serviceTaxApplicable}
+              />
+            )}
         </div>
       </section>
     </div>
@@ -328,7 +331,7 @@ export const BranchProfileForm = ({
   return (
     <Form
       onSubmit={onSubmit}
-      resolver={yupResolver(branchProfileSchema)}
+      resolver={yupResolver(branchProfileSchema) as Resolver<BranchProfileFormValues>}
       defaultValues={defaultValues}
       className="space-y-6"
     >

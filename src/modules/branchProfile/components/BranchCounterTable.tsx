@@ -1,47 +1,51 @@
-import { useNavigate } from 'react-router-dom';
+import { useMemo } from 'react';
 import { PencilSquareIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button1';
 import { ToggleSwitch } from '@/components/ui/toggleSwitch';
 import { Table, type TableColumnDef } from '@/components/ui/table';
-import type { UserRoleRecord } from '../types';
+import type { BranchCounterRecord } from '../types';
 
-interface UserRoleTableProps {
-  roles: UserRoleRecord[];
-  onToggleStatus: (id: string, isActive: boolean) => void | Promise<void>;
-  onDelete: (id: string) => void | Promise<void>;
-  isUpdatingStatus?: boolean;
+interface BranchCounterTableProps {
+  counters: BranchCounterRecord[];
+  onEdit: (counter: BranchCounterRecord) => void;
+  onDelete: (id: string) => void;
+  onToggleStatus: (id: string, isActive: boolean) => void;
   isDeleting?: boolean;
+  isUpdatingStatus?: boolean;
 }
 
-interface UserRoleTableRow {
+interface BranchCounterTableRow {
   id: string;
-  roleCode: string;
-  roleName: string;
+  counterCode: string;
+  counterName: string;
   isActive: boolean;
 }
 
-export const UserRoleTable = ({
-  roles,
+export const BranchCounterTable = ({
+  counters,
+  onEdit,
   onToggleStatus,
   isUpdatingStatus = false,
-}: UserRoleTableProps) => {
-  const navigate = useNavigate();
+}: BranchCounterTableProps) => {
+  const rows: BranchCounterTableRow[] = useMemo(
+    () =>
+      counters.map(counter => ({
+        id: counter.id,
+        counterCode: counter.counterCode,
+        counterName: counter.counterName,
+        isActive: counter.isActive,
+      })),
+    [counters]
+  );
 
-  const rows: UserRoleTableRow[] = roles.map(role => ({
-    id: role.id,
-    roleCode: role.roleCode,
-    roleName: role.roleName,
-    isActive: role.isActive,
-  }));
-
-  const columns: TableColumnDef<UserRoleTableRow>[] = [
-    { accessorKey: 'roleCode', header: 'Role Code' },
-    { accessorKey: 'roleName', header: 'Role Name' },
+  const columns: TableColumnDef<BranchCounterTableRow>[] = [
+    { accessorKey: 'counterCode', header: 'Counter code' },
+    { accessorKey: 'counterName', header: 'Counter Name' },
     {
       accessorKey: 'isActive',
       header: 'Status',
       cell: ({ row }) => {
-        const roleId = row.original.id;
+        const counterId = row.original.id;
         const isActive = row.original.isActive;
 
         return (
@@ -49,7 +53,7 @@ export const UserRoleTable = ({
             <ToggleSwitch
               checked={isActive}
               onCheckedChange={nextChecked => {
-                onToggleStatus(roleId, nextChecked);
+                onToggleStatus(counterId, nextChecked);
               }}
               disabled={isUpdatingStatus}
             />
@@ -67,20 +71,25 @@ export const UserRoleTable = ({
           'sticky right-0 z-10 border-l border-border-primary bg-surface-primary',
       },
       cell: ({ row }) => {
-        const roleId = row.original.id;
+        const counter = counters.find(item => item.id === row.original.id);
+
+        if (!counter) {
+          return null;
+        }
 
         return (
           <div className="flex items-center gap-2">
             <Button
               type="button"
-              aria-label="Edit role"
+              aria-label="Edit counter"
               variant="ghost"
-              size="sm"
+              size="icon"
+              className="rounded-sm bg-transparent text-text-secondary hover:bg-surface-secondary hover:text-text-primary"
               onClick={event => {
                 event.stopPropagation();
-                navigate(`/master/system-setups/user-role/edit/${roleId}`);
+                onEdit(counter);
               }}
-            >
+              >
               <PencilSquareIcon className="h-5 w-5" />
             </Button>
           </div>
@@ -99,9 +108,13 @@ export const UserRoleTable = ({
       enableRowSelection={false}
       enableColumnVisibility={false}
       onRowClick={row => {
-        navigate(`/master/system-setups/user-role/edit/${row.id}`);
+        const counter = counters.find(item => item.id === row.id);
+
+        if (counter) {
+          onEdit(counter);
+        }
       }}
-      emptyMessage="No roles found. Create your first role."
+      emptyMessage="There is no counter"
     />
   );
 };

@@ -69,7 +69,7 @@ export const IBM_BRANCH_OPTIONS: BranchProfileOption[] = [
 ];
 
 export const BRANCH_PHONE_COUNTRY_CODE_OPTIONS = [
-  { value: '+91', label: '+91 India' },
+  { value: '+91', label: '+91 IN' },
   { value: '+971', label: '+971 UAE' },
   { value: '+44', label: '+44 UK' },
   { value: '+1', label: '+1 USA' },

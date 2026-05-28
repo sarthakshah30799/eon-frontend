@@ -14,16 +14,13 @@ import {
   type VisibilityState,
   type RowSelectionState,
   type PaginationState,
-  type RowData,
 } from '@tanstack/react-table';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { Button } from '../button1';
 
-declare module '@tanstack/react-table' {
-  interface ColumnMeta<TData extends RowData, TValue> {
-    headerClassName?: string;
-    cellClassName?: string;
-  }
+interface TableColumnMeta {
+  headerClassName?: string;
+  cellClassName?: string;
 }
 
 const tableVariants = cva('w-full border-collapse', {
@@ -48,10 +45,7 @@ const tableVariants = cva('w-full border-collapse', {
 export type TableColumnDef<T extends object> = ColumnDef<T> & {
   searchable?: boolean;
   filterable?: boolean;
-  meta?: {
-    headerClassName?: string;
-    cellClassName?: string;
-  };
+  meta?: TableColumnMeta;
 };
 
 export interface TableProps<T extends object>
@@ -164,7 +158,7 @@ function Table<T extends object>({
         {columns.map((column, colIndex) => (
           <td
             key={`skeleton-cell-${colIndex}`}
-            className={`border-b border-border-primary px-4 py-3 ${column.meta?.cellClassName ?? ''}`}
+            className={`border-b border-border-primary px-4 py-3 ${(column.meta as TableColumnMeta | undefined)?.cellClassName ?? ''}`}
           >
             <div className="h-4 rounded bg-surface-secondary"></div>
           </td>
@@ -236,7 +230,7 @@ function Table<T extends object>({
                 {headerGroup.headers.map(header => (
                   <th
                     key={header.id}
-                    className={`border-b border-border-primary px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-tertiary ${header.column.columnDef.meta?.headerClassName ?? ''}`}
+                    className={`border-b border-border-primary px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-tertiary ${(header.column.columnDef.meta as TableColumnMeta | undefined)?.headerClassName ?? ''}`}
                   >
                     {header.isPlaceholder ? null : (
                       <div
@@ -274,7 +268,8 @@ function Table<T extends object>({
               <tr
                 key={row.id}
                 className={`${variant === 'striped' && index % 2 === 1 ? 'bg-surface-secondary' : ''} ${onRowClick ? 'cursor-pointer' : ''} hover:bg-surface-secondary`}
-                onClick={() => {
+                onClick={(e) => {
+                  e.preventDefault();
                   onRowClick?.(row.original);
                 }}
               >

@@ -9,9 +9,12 @@ import {
   getBranchProfileText,
 } from '../constants';
 import type {
+  BranchCounterFormValues,
+  BranchCounterRecord,
   BranchProfileFormValues,
   BranchProfileOption,
   BranchProfileRecord,
+  BranchProfileSavePayload,
 } from '../types';
 
 export const createEmptyBranchProfileFormValues = (): BranchProfileFormValues => ({
@@ -113,11 +116,38 @@ export const mapRecordToFormValues = (
 });
 
 export const mapFormValuesToRecord = (
-  values: BranchProfileFormValues,
+  values: BranchProfileSavePayload,
   id: string,
   createdAt: string,
   updatedAt: string
 ): BranchProfileRecord => ({
+  id,
+  createdAt,
+  updatedAt,
+  ...values,
+});
+
+export const createEmptyBranchCounterFormValues =
+  (): BranchCounterFormValues => ({
+    counterCode: '',
+    counterName: '',
+    isActive: true,
+  });
+
+export const mapCounterRecordToFormValues = (
+  record: BranchCounterRecord
+): BranchCounterFormValues => ({
+  counterCode: record.counterCode,
+  counterName: record.counterName,
+  isActive: record.isActive,
+});
+
+export const mapCounterFormValuesToRecord = (
+  values: BranchCounterFormValues,
+  id: string,
+  createdAt: string,
+  updatedAt: string
+): BranchCounterRecord => ({
   id,
   createdAt,
   updatedAt,

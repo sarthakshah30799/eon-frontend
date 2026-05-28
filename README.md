@@ -166,6 +166,7 @@ src/
 ## 🏗️ Architecture Rules
 
 ### Page Components
+
 - **Location**: `src/pages/`
 - **Purpose**: Page-level components that orchestrate layouts and module components
 - **Rules**:
@@ -176,6 +177,7 @@ src/
   - **Separation of Concerns**: Pages should only render module components, not contain JSX logic
 
 ### Module Components
+
 - **Location**: `src/modules/{feature}/`
 - **Purpose**: Feature-specific components, hooks, and business logic
 - **Rules**:
@@ -193,6 +195,7 @@ src/
     - `utils/` - Feature-specific utility functions
 
 ### Global Components
+
 - **Location**: `src/components/`
 - **Purpose**: Reusable UI components used across application
 - **Rules**:
@@ -206,6 +209,7 @@ src/
   - **Default exports**: Components use `export default` and index re-exports as `default`
 
 ### Module Components
+
 - **Location**: `src/modules/{feature}/components/`
 - **Purpose**: Feature-specific UI components used within that module
 - **Rules**:
@@ -216,6 +220,7 @@ src/
   - Should not be used outside its module unless promoted to global
 
 ### API Layer
+
 - **Location**: `src/api/`
 - **Purpose**: API integration and data fetching
 - **Rules**:
@@ -225,6 +230,7 @@ src/
   - Create custom hooks for API operations
 
 ### Custom Hooks
+
 - **Location**: `src/hooks/` and `src/modules/{feature}/hooks/`
 - **Purpose**: Encapsulate business logic and API operations
 - **Rules**:
@@ -235,6 +241,7 @@ src/
   - Return clean interface for components to use
 
 ### Types and Interfaces
+
 - **Location**: `src/types/` and `src/modules/{feature}/types/`
 - **Purpose**: Centralized type definitions
 - **Rules**:
@@ -245,11 +252,12 @@ src/
   - Use "I" prefix for interface names (e.g., `IUserFormData` is discouraged)
 
 #### Hook Pattern Example
+
 ```typescript
 // ❌ Wrong - Logic in component
 const UserCreatePage = () => {
   const createUser = useCreateUser();
-  
+
   const handleSubmit = async (data) => {
     try {
       await createUser.mutateAsync(data);
@@ -264,7 +272,7 @@ const UserCreatePage = () => {
 // ❌ Still Wrong - Component knows about mutation
 const UserCreatePage = () => {
   const createUser = useCreateUser();
-  
+
   const handleSubmit = (data) => {
     createUser.mutate(data);
   };
@@ -274,7 +282,7 @@ const UserCreatePage = () => {
 // ✅ Correct - Component uses hook directly
 const UserCreatePage = () => {
   const { handleSubmit, isPending } = useCreateUser();
-  
+
   return (
     <UserForm onSubmit={handleSubmit} isLoading={isPending} />
   );
@@ -313,6 +321,7 @@ export const useCreateUser = () => {
 ```
 
 #### Auth Module Example
+
 ```typescript
 // ✅ Correct - Login Page structure
 // src/pages/auth/login/LoginPage.tsx
@@ -371,6 +380,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
 ```
 
 ### Router Configuration
+
 - **Location**: `src/router/`
 - **Purpose**: Centralized routing configuration
 - **Rules**:
@@ -380,6 +390,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   - Dynamic routes with parameters
 
 #### Router Structure
+
 ```typescript
 // src/router/index.tsx
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
@@ -431,6 +442,7 @@ export const AppRouter = () => {
 ```
 
 #### App Integration
+
 ```typescript
 // src/App.tsx
 import { AppRouter } from './router';
@@ -446,6 +458,7 @@ function App() {
 ```
 
 #### Router Rules
+
 - **Location**: `src/router/`
 - **Purpose**: Centralized routing configuration
 - **Rules**:
@@ -461,11 +474,13 @@ function App() {
 ## 📋 Coding Standards
 
 ### File Size Limits
+
 - **Maximum**: 1000 lines per file
 - **Includes**: Code, comments, blank lines
 - **Enforced**: ESLint rule `max-lines`
 
 ### Code Formatting
+
 - **Tool**: Prettier
 - **Configuration**: `.prettierrc`
 - **Rules**:
@@ -476,6 +491,7 @@ function App() {
   - LF line endings
 
 ### Linting Rules
+
 - **Tool**: ESLint
 - **Configuration**: `.eslintrc.cjs`
 - **Key Rules**:
@@ -488,6 +504,7 @@ function App() {
   - **No unused code** - Throw error if any unused code is detected
 
 ### Static Text Management
+
 - **Rule**: No static text should be inside JSX or TSX files
 - **Location**: All static text must be in constant files
 - **Purpose**: Centralized text management for easier maintenance and internationalization
@@ -498,6 +515,7 @@ function App() {
   - Includes labels, placeholders, messages, titles, and any user-facing text
 
 ### Pre-commit Hooks
+
 - **Tool**: Husky with lint-staged
 - **Actions**:
   - Run ESLint with auto-fix
@@ -507,45 +525,46 @@ function App() {
 ## 🎨 Styling Guidelines
 
 ### Tailwind CSS
+
 - **Configuration**: `tailwind.config.js`
 - **Theme**: Custom color palette with primary/secondary variants
 - **Components**: Use class-variance-authority for variants
 
 ### Component Styling
+
 - **Rule**: No custom CSS in components
 - **Method**: Use Tailwind theme variants
 - **Location**: All styling in theme configuration
 - **Benefits**: Consistency, maintainability, theming support
 
 ### Theme Variants
+
 ```typescript
 // Example component variant
-const buttonVariants = cva(
-  'base-classes',
-  {
-    variants: {
-      variant: {
-        primary: 'bg-primary text-primary-foreground',
-        secondary: 'bg-secondary text-secondary-foreground',
-        outline: 'border border-input',
-      },
-      size: {
-        sm: 'h-8 px-3',
-        md: 'h-10 px-4',
-        lg: 'h-12 px-8',
-      },
+const buttonVariants = cva('base-classes', {
+  variants: {
+    variant: {
+      primary: 'bg-primary text-primary-foreground',
+      secondary: 'bg-secondary text-secondary-foreground',
+      outline: 'border border-input',
     },
-    defaultVariants: {
-      variant: 'primary',
-      size: 'md',
+    size: {
+      sm: 'h-8 px-3',
+      md: 'h-10 px-4',
+      lg: 'h-12 px-8',
     },
-  }
-);
+  },
+  defaultVariants: {
+    variant: 'primary',
+    size: 'md',
+  },
+});
 ```
 
 ## 🔄 Lazy Loading
 
 ### Implementation
+
 All pages must be lazy loaded using React.lazy():
 
 ```typescript
@@ -560,6 +579,7 @@ const UserListPage = lazy(() => import('./pages/UserListPage'));
 ```
 
 ### Benefits
+
 - Reduced initial bundle size
 - Improved initial load performance
 - Code splitting by route/feature
@@ -567,11 +587,13 @@ const UserListPage = lazy(() => import('./pages/UserListPage'));
 ## 📝 Form Handling
 
 ### React Hook Form + Yup
+
 - **Validation**: Yup schemas in `schema/` folders
 - **Components**: Reusable form components
 - **Types**: TypeScript integration with schema inference
 
 ### Example Structure
+
 ```typescript
 // Schema definition
 const userSchema = yup.object({
@@ -584,7 +606,7 @@ const UserForm = ({ onSubmit, isLoading }) => {
   const { register, handleSubmit, formState: { errors } } = useForm({
     resolver: yupResolver(userSchema),
   });
-  
+
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <Input {...register('name')} error={errors.name?.message} />
@@ -598,10 +620,12 @@ const UserForm = ({ onSubmit, isLoading }) => {
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 - Node.js 18+
 - pnpm 8+
 
 ### Installation
+
 ```bash
 # Install dependencies
 pnpm install
@@ -623,6 +647,7 @@ pnpm format
 ```
 
 ### Environment Variables
+
 ```bash
 # API configuration
 VITE_API_BASE_URL=http://localhost:3000/api
@@ -631,12 +656,14 @@ VITE_API_BASE_URL=http://localhost:3000/api
 ## 📊 Performance Considerations
 
 ### Bundle Size
+
 - Lazy loading for all pages
 - Tree shaking for unused code
 - Image optimization
 - Code splitting by feature
 
 ### Runtime Performance
+
 - React Query caching
 - Memoization where appropriate
 - Optimistic updates
@@ -645,11 +672,13 @@ VITE_API_BASE_URL=http://localhost:3000/api
 ## 🔧 Development Workflow
 
 ### Git Hooks
+
 - Pre-commit: Lint and format
 - Pre-push: Type checking
 - CI/CD: Build and test
 
 ### Code Review Checklist
+
 - [ ] File size under 1000 lines
 - [ ] Proper TypeScript types
 - [ ] Component variants used
@@ -660,18 +689,21 @@ VITE_API_BASE_URL=http://localhost:3000/api
 ## 📚 Best Practices
 
 ### Component Design
+
 - Single responsibility principle
 - Reusability through props
 - Consistent naming conventions
 - Proper error boundaries
 
 ### State Management
+
 - Local state for UI state
 - React Query for server state
 - Context for global state
 - Avoid prop drilling
 
 ### API Integration
+
 - Custom hooks for API calls
 - Error handling and retry logic
 - Loading and error states
@@ -680,12 +712,14 @@ VITE_API_BASE_URL=http://localhost:3000/api
 ## 🐛 Troubleshooting
 
 ### Common Issues
+
 1. **TypeScript errors**: Check import paths and type definitions
 2. **Styling issues**: Verify Tailwind configuration and variants
 3. **Build failures**: Check file size limits and linting rules
 4. **API errors**: Verify environment variables and endpoint configuration
 
 ### Debug Tips
+
 - Use React DevTools for component state
 - Check Network tab for API calls
 - Verify console for linting warnings
@@ -696,4 +730,5 @@ VITE_API_BASE_URL=http://localhost:3000/api
 ## 📄 License
 
 This project follows established architecture patterns and coding standards defined above. All contributors must adhere to these guidelines for consistency and maintainability.
+
 # maraekat-frontend

@@ -11,3 +11,6 @@ export * from './dropdown';
 export * from './datePicker';
 export * from './backButton';
 export * from './phoneInput';
+export * from './tabs';
+export * from './modal';
+export * from './toggleSwitch';

@@ -3,6 +3,22 @@ export interface BranchProfileOption {
   label: string;
 }
 
+export interface BranchCounterFormValues {
+  counterCode: string;
+  counterName: string;
+  isActive: boolean;
+}
+
+export interface BranchCounterRecord extends BranchCounterFormValues {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BranchProfileSavePayload extends BranchProfileFormValues {
+  counters: BranchCounterRecord[];
+}
+
 export interface BranchProfileFormValues {
   branchName: string;
   branchCode: string;
@@ -55,4 +71,5 @@ export interface BranchProfileRecord extends BranchProfileFormValues {
   id: string;
   createdAt: string;
   updatedAt: string;
+  counters: BranchCounterRecord[];
 }

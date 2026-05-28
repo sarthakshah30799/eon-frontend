@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { PencilSquareIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button1';
 import { Table, type TableColumnDef } from '@/components/ui/table';
 import type { BranchProfileRecord } from '../types';
@@ -51,8 +51,6 @@ const formatPhone = (countryCode: string, value: string): string => {
 
 export const BranchProfileTable = ({
   branches,
-  onDelete,
-  isDeleting = false,
 }: BranchProfileTableProps) => {
   const navigate = useNavigate();
 
@@ -123,26 +121,6 @@ export const BranchProfileTable = ({
               }}
             >
               <PencilSquareIcon className="h-5 w-5" />
-            </Button>
-            <Button
-              type="button"
-              aria-label="Delete branch"
-              variant="ghost"
-              size="icon"
-              disabled={isDeleting}
-              className="rounded-sm bg-transparent text-error-600 hover:bg-error-50 hover:text-error-700"
-              onClick={async event => {
-                event.stopPropagation();
-                const shouldDelete = window.confirm(
-                  'Are you sure you want to delete this branch?'
-                );
-
-                if (shouldDelete) {
-                  await onDelete(branchId);
-                }
-              }}
-            >
-              <TrashIcon className="h-5 w-5" />
             </Button>
           </div>
         );

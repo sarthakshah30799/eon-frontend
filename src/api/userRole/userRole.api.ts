@@ -31,6 +31,29 @@ export const userRoleApi = {
     if (!res.data) throw new Error('Failed to update role');
     return res.data;
   },
+  updateUserRoleStatus: async (
+    id: string,
+    isActive: boolean
+  ): Promise<UserRoleRecord | undefined> => {
+    const roles = readStoredRoles();
+    const existingRole = roles.find(role => role.id === id);
+
+    if (!existingRole) {
+      return undefined;
+    }
+
+    const updatedRole: UserRoleRecord = {
+      ...existingRole,
+      isActive,
+      updatedAt: now(),
+    };
+
+    writeStoredRoles(
+      roles.map(role => (role.id === id ? updatedRole : role))
+    );
+
+    return updatedRole;
+  },
   deleteUserRole: async (id: string): Promise<boolean> => {
     const res = await apiClient.delete<{ message: string }>(`/roles/${id}`);
     if (res.error) throw new Error(res.error);

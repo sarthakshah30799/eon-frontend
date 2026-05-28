@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import {PencilSquareIcon, TrashIcon} from '@heroicons/react/24/outline';
+import {PencilSquareIcon} from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button1';
 import { Table, type TableColumnDef } from '@/components/ui/table';
 import type { UserProfileRecord } from '../types';
@@ -39,8 +39,6 @@ const formatDate = (value: string): string => {
 
 export const UserProfileTable = ({
   profiles,
-  onDelete,
-  isDeleting = false,
 }: UserProfileTableProps) => {
   const navigate = useNavigate();
 
@@ -95,24 +93,6 @@ export const UserProfileTable = ({
               }}
             >
               <PencilSquareIcon className="h-5 w-5" />
-            </Button>
-            <Button
-              type="button"
-              aria-label="Delete user"
-              disabled={isDeleting}
-              className="border-0! bg-transparent! text-red-500! hover:bg-red-50 focus:ring-red-500"
-              onClick={async event => {
-                event.stopPropagation();
-                const shouldDelete = window.confirm(
-                  'Are you sure you want to delete this user?'
-                );
-
-                if (shouldDelete) {
-                  await onDelete(profileId);
-                }
-              }}
-            >
-              <TrashIcon className="h-5 w-5" />
             </Button>
           </div>
         );

@@ -1,3 +1,4 @@
+import type { QueryClient } from '@tanstack/react-query';
 import type { UserRoleFormValues, UserRoleRecord } from '../types';
 
 export const createEmptyUserRoleFormValues = (): UserRoleFormValues => ({
@@ -25,3 +26,18 @@ export const mapFormValuesToRecord = (
   updatedAt,
   ...values,
 });
+
+export const syncUserRoleCache = (
+  queryClient: QueryClient,
+  updatedRole: UserRoleRecord
+): void => {
+  queryClient.setQueryData<UserRoleRecord[] | undefined>(
+    ['user-roles'],
+    currentRoles =>
+      currentRoles?.map(role =>
+        role.id === updatedRole.id ? updatedRole : role
+      ) ?? currentRoles
+  );
+
+  queryClient.setQueryData(['user-role', updatedRole.id], updatedRole);
+};

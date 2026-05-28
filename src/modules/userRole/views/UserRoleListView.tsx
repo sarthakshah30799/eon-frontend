@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button1';
-import { useDeleteUserRole, useListUserRoles } from '../hooks';
+import { useDeleteUserRole, useListUserRoles, useUpdateUserRoleStatus } from '../hooks';
 import { USER_ROLE_TEXTS } from '../constants';
 import { UserRoleTable } from '../components';
 
@@ -8,12 +8,18 @@ export const UserRoleListView = () => {
   const navigate = useNavigate();
   const { data: roles = [], isLoading, error } = useListUserRoles();
   const { deleteUserRole, isPending: isDeleting } = useDeleteUserRole();
+  const { updateUserRoleStatus, isPending: isUpdatingStatus } =
+    useUpdateUserRoleStatus();
 
   const handleDelete = async (id: string) => {
     const confirmDelete = window.confirm('Are you sure you want to delete this role?');
     if (confirmDelete) {
       await deleteUserRole(id);
     }
+  };
+
+  const handleToggleStatus = async (id: string, isActive: boolean) => {
+    await updateUserRoleStatus({ id, isActive });
   };
 
   if (isLoading) {
@@ -60,7 +66,9 @@ export const UserRoleListView = () => {
       <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
         <UserRoleTable
           roles={roles}
+          onToggleStatus={handleToggleStatus}
           onDelete={handleDelete}
+          isUpdatingStatus={isUpdatingStatus}
           isDeleting={isDeleting}
         />
       </section>

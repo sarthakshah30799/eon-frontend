@@ -14,8 +14,14 @@ module.exports = {
       'warn',
       { allowConstantExport: true },
     ],
-    'max-lines': ['error', { max: 1000, skipBlankLines: true, skipComments: true }],
-    'max-lines-per-function': ['error', { max: 100, skipBlankLines: true, skipComments: true }],
+    'max-lines': [
+      'error',
+      { max: 1000, skipBlankLines: true, skipComments: true },
+    ],
+    'max-lines-per-function': [
+      'error',
+      { max: 100, skipBlankLines: true, skipComments: true },
+    ],
     '@typescript-eslint/no-unused-vars': 'error',
     '@typescript-eslint/explicit-function-return-type': 'warn',
     'react-hooks/exhaustive-deps': 'warn',
@@ -23,4 +29,4 @@ module.exports = {
     'no-var': 'error',
     'no-unused-code': 'error',
   },
-}
+};

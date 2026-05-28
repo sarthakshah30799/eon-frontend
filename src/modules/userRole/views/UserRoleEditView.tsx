@@ -29,7 +29,7 @@ export const UserRoleEditView = () => {
 
   const handleSubmit = async (values: UserRoleFormValues) => {
     await submitUserRole(values);
-    navigate('/master/system-setups/user-role');
+    navigate('/master/system-setups/roles-profile');
   };
 
   return (
@@ -42,7 +42,7 @@ export const UserRoleEditView = () => {
           {USER_ROLE_TEXTS.EDIT_ROLE}
         </h1>
         <p className="mt-2 text-sm leading-6 text-text-secondary">
-          Update the role details and active status.
+          Update the role details.
         </p>
       </div>
 

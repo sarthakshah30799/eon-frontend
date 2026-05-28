@@ -19,9 +19,9 @@ const UserEditPage = lazy(
 const UserDetailPage = lazy(
   () => import('../pages/users/detail/[id]/UserDetailPage')
 );
-const CompanyProfilePage = lazy(
+const CompanyProfileListPage = lazy(
   () =>
-    import('../pages/master/system-setups/company-profile/[id]/CompanyProfilePage')
+    import('../pages/master/system-setups/company-profile/list/CompanyProfileListPage')
 );
 const MasterPagesPage = lazy(
   () => import('../pages/master/system-setups/master-pages/MasterPagesPage')
@@ -38,17 +38,29 @@ const UserProfileEditPage = lazy(
   () =>
     import('../pages/master/system-setups/user-profile/edit/[id]/UserProfileEditPage')
 );
-const UserRoleListPage = lazy(
+const BranchProfileListPage = lazy(
   () =>
-    import('../pages/master/system-setups/user-role/list/UserRoleListPage')
+    import('../pages/master/system-setups/branch-profile/list/BranchProfileListPage')
 );
-const UserRoleCreatePage = lazy(
+const BranchProfileCreatePage = lazy(
   () =>
-    import('../pages/master/system-setups/user-role/create/UserRoleCreatePage')
+    import('../pages/master/system-setups/branch-profile/create/BranchProfileCreatePage')
 );
-const UserRoleEditPage = lazy(
+const BranchProfileEditPage = lazy(
   () =>
-    import('../pages/master/system-setups/user-role/edit/[id]/UserRoleEditPage')
+    import('../pages/master/system-setups/branch-profile/edit/[id]/BranchProfileEditPage')
+);
+const RolesProfileListPage = lazy(
+  () =>
+    import('../pages/master/system-setups/roles-profile/list/RolesProfileListPage')
+);
+const RolesProfileCreatePage = lazy(
+  () =>
+    import('../pages/master/system-setups/roles-profile/create/RolesProfileCreatePage')
+);
+const RolesProfileEditPage = lazy(
+  () =>
+    import('../pages/master/system-setups/roles-profile/edit/[id]/RolesProfileEditPage')
 );
 const MasterPageResolverPage = lazy(
   () =>
@@ -113,10 +125,34 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/master/system-setups/company-profile/:id',
+    path: '/master/system-setups/company-profile',
     element: (
       <ProtectedLayout>
-        <CompanyProfilePage />
+        <CompanyProfileListPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/master/system-setups/branch-profile',
+    element: (
+      <ProtectedLayout>
+        <BranchProfileListPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/master/system-setups/branch-profile/create',
+    element: (
+      <ProtectedLayout>
+        <BranchProfileCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/master/system-setups/branch-profile/edit/:id',
+    element: (
+      <ProtectedLayout>
+        <BranchProfileEditPage />
       </ProtectedLayout>
     ),
   },
@@ -153,26 +189,26 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/master/system-setups/user-role',
+    path: '/master/system-setups/roles-profile',
     element: (
       <ProtectedLayout>
-        <UserRoleListPage />
+        <RolesProfileListPage />
       </ProtectedLayout>
     ),
   },
   {
-    path: '/master/system-setups/user-role/create',
+    path: '/master/system-setups/roles-profile/create',
     element: (
       <ProtectedLayout>
-        <UserRoleCreatePage />
+        <RolesProfileCreatePage />
       </ProtectedLayout>
     ),
   },
   {
-    path: '/master/system-setups/user-role/edit/:id',
+    path: '/master/system-setups/roles-profile/edit/:id',
     element: (
       <ProtectedLayout>
-        <UserRoleEditPage />
+        <RolesProfileEditPage />
       </ProtectedLayout>
     ),
   },

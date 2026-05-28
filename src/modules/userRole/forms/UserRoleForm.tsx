@@ -1,12 +1,7 @@
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Button } from '@/components/ui/button1';
-import {
-  Form,
-  FormFieldCheckbox,
-  FormFieldInput,
-} from '@/components/forms';
+import { Form, FormFieldInput } from '@/components/forms';
 import { userRoleSchema } from '../schema';
-import { USER_ROLE_TEXTS } from '../constants';
 import type { UserRoleFormValues } from '../types';
 
 interface UserRoleFormProps {
@@ -19,7 +14,7 @@ interface UserRoleFormProps {
 export const UserRoleForm = ({
   defaultValues,
   onSubmit,
-  submitLabel = USER_ROLE_TEXTS.CREATE_ROLE,
+  submitLabel = 'Create Role',
   isSubmitting = false,
 }: UserRoleFormProps) => {
   return (
@@ -30,12 +25,9 @@ export const UserRoleForm = ({
       className="space-y-6"
     >
       <div className="grid gap-4 md:grid-cols-2">
-        <FormFieldInput name="roleCode" label="Role Code" disabled={isSubmitting} />
-        <FormFieldInput name="roleName" label="Role Name" disabled={isSubmitting} />
-      </div>
-
-      <div className="rounded-2xl border border-border-primary bg-surface-secondary p-4">
-        <FormFieldCheckbox name="isActive" label="Is Active" disabled={isSubmitting} />
+        <FormFieldInput name="code" label="Role Code" disabled={isSubmitting} />
+        <FormFieldInput name="name" label="Role Name" disabled={isSubmitting} />
+        <FormFieldInput name="description" label="Description" disabled={isSubmitting} />
       </div>
 
       <div className="flex justify-end border-t border-border-primary pt-4">
@@ -46,4 +38,3 @@ export const UserRoleForm = ({
     </Form>
   );
 };
-

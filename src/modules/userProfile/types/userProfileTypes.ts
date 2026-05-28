@@ -1,28 +1,16 @@
-export interface UserProfileControlSetupValues {
-  isActive: boolean;
-  isAdministrator: boolean;
-  miscLimitAuthorization: boolean;
-  canClearCounter: boolean;
-  complianceAuthorization: boolean;
-  dataEntryAuthorization: boolean;
-  creditLimitAuthorization: boolean;
-}
-
 export interface UserProfileFormValues {
-  corporateClientId: string;
-  code: string;
-  name: string;
-  cellNo: string;
-  emailId: string;
-  branchId: string;
-  idWillExpireOn: string;
-  groupId: string;
-  purposeId: string;
-  mpUsername: string;
-  controlSetup: UserProfileControlSetupValues;
+  userCode: string;
+  password?: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  countryCode?: string;
+  phoneNumber: string;
+  status?: 'pending' | 'active' | 'inactive';
+  isHo?: boolean;
 }
 
-export interface UserProfileRecord extends UserProfileFormValues {
+export interface UserProfileRecord extends Omit<UserProfileFormValues, 'password'> {
   id: string;
   createdAt: string;
   updatedAt: string;
@@ -34,7 +22,6 @@ export interface UserProfileOption {
 }
 
 export interface UserProfileControlSetupItem {
-  key: keyof UserProfileControlSetupValues;
+  key: string;
   label: string;
 }
-

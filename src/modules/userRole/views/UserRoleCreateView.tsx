@@ -11,7 +11,7 @@ export const UserRoleCreateView = () => {
 
   const handleSubmit = async (values: UserRoleFormValues) => {
     await submitUserRole(values);
-    navigate('/master/system-setups/user-role');
+    navigate('/master/system-setups/roles-profile');
   };
 
   return (
@@ -37,4 +37,3 @@ export const UserRoleCreateView = () => {
     </section>
   );
 };
-

@@ -1,17 +1,17 @@
 import type { UserRoleFormValues, UserRoleRecord } from '../types';
 
 export const createEmptyUserRoleFormValues = (): UserRoleFormValues => ({
-  roleCode: '',
-  roleName: '',
-  isActive: true,
+  code: '',
+  name: '',
+  description: '',
 });
 
 export const mapRecordToFormValues = (
   record: UserRoleRecord
 ): UserRoleFormValues => ({
-  roleCode: record.roleCode,
-  roleName: record.roleName,
-  isActive: record.isActive,
+  code: record.code || '',
+  name: record.name || '',
+  description: record.description || '',
 });
 
 export const mapFormValuesToRecord = (
@@ -25,4 +25,3 @@ export const mapFormValuesToRecord = (
   updatedAt,
   ...values,
 });
-

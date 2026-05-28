@@ -11,9 +11,9 @@ interface UserRoleTableProps {
 
 interface UserRoleTableRow {
   id: string;
-  roleCode: string;
-  roleName: string;
-  status: string;
+  code: string;
+  name: string;
+  description: string;
 }
 
 export const UserRoleTable = ({
@@ -25,15 +25,15 @@ export const UserRoleTable = ({
 
   const rows: UserRoleTableRow[] = roles.map(role => ({
     id: role.id,
-    roleCode: role.roleCode,
-    roleName: role.roleName,
-    status: role.isActive ? 'Active' : 'Inactive',
+    code: role.code,
+    name: role.name,
+    description: role.description || '',
   }));
 
   const columns: TableColumnDef<UserRoleTableRow>[] = [
-    { accessorKey: 'roleCode', header: 'Role Code' },
-    { accessorKey: 'roleName', header: 'Role Name' },
-    { accessorKey: 'status', header: 'Status' },
+    { accessorKey: 'code', header: 'Role Code' },
+    { accessorKey: 'name', header: 'Role Name' },
+    { accessorKey: 'description', header: 'Description' },
     {
       id: 'actions',
       header: 'Actions',
@@ -41,14 +41,13 @@ export const UserRoleTable = ({
         const roleId = row.original.id;
 
         return (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2" onClick={event => event.stopPropagation()}>
             <Button
               type="button"
               variant="outline"
               size="sm"
-              onClick={event => {
-                event.stopPropagation();
-                navigate(`/master/system-setups/user-role/edit/${roleId}`);
+              onClick={() => {
+                navigate(`/master/system-setups/roles-profile/edit/${roleId}`);
               }}
             >
               Edit
@@ -58,8 +57,7 @@ export const UserRoleTable = ({
               variant="destructive"
               size="sm"
               disabled={isDeleting}
-              onClick={async event => {
-                event.stopPropagation();
+              onClick={async () => {
                 const shouldDelete = window.confirm(
                   'Are you sure you want to delete this role?'
                 );
@@ -87,10 +85,9 @@ export const UserRoleTable = ({
       enableRowSelection={false}
       enableColumnVisibility={false}
       onRowClick={row => {
-        navigate(`/master/system-setups/user-role/edit/${row.id}`);
+        navigate(`/master/system-setups/roles-profile/edit/${row.id}`);
       }}
       emptyMessage="No roles found. Create your first role."
     />
   );
 };
-

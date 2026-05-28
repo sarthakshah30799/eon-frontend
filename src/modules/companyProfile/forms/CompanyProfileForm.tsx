@@ -24,30 +24,50 @@ export const CompanyProfileForm = ({
     >
       <div className="grid gap-4 md:grid-cols-2">
         <FormFieldInput
-          name="companyName"
+          name="name"
           label="Company Name"
           disabled={isSaving}
         />
-        <FormFieldInput name="rbiName" label="RBI Name" disabled={isSaving} />
         <FormFieldInput
-          name="rbiDesignation"
+          name="designation"
           label="RBI Designation"
           disabled={isSaving}
         />
+        <FormFieldInput name="rbiName" label="RBI Name" disabled={isSaving} />
         <FormFieldInput name="rbiPlace" label="RBI Place" disabled={isSaving} />
         <FormFieldInput
-          name="rbiAddress1"
-          label="RBI Address 1"
+          name="address1"
+          label="Address Line 1"
           disabled={isSaving}
         />
         <FormFieldInput
-          name="rbiAddress2"
-          label="RBI Address 2"
+          name="address2"
+          label="Address Line 2"
           disabled={isSaving}
         />
         <FormFieldInput
-          name="rbiAddress3"
-          label="RBI Address 3"
+          name="address3"
+          label="Address Line 3"
+          disabled={isSaving}
+        />
+        <FormFieldInput
+          name="pincode"
+          label="Pincode"
+          disabled={isSaving}
+        />
+        <FormFieldInput
+          name="city"
+          label="City"
+          disabled={isSaving}
+        />
+        <FormFieldInput
+          name="state"
+          label="State"
+          disabled={isSaving}
+        />
+        <FormFieldInput
+          name="country"
+          label="Country"
           disabled={isSaving}
         />
       </div>

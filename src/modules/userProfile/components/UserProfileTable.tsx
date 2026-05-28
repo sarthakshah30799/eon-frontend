@@ -2,13 +2,6 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button1';
 import { Table, type TableColumnDef } from '@/components/ui/table';
 import type { UserProfileRecord } from '../types';
-import {
-  getBranchLabel,
-  getControlSetupSummary,
-  getCorporateClientLabel,
-  getGroupLabel,
-  getPurposeLabel,
-} from '../utils';
 
 interface UserProfileTableProps {
   profiles: UserProfileRecord[];
@@ -18,25 +11,13 @@ interface UserProfileTableProps {
 
 interface UserProfileTableRow {
   id: string;
-  corporateClient: string;
-  code: string;
+  userCode: string;
   name: string;
-  cellNo: string;
-  emailId: string;
-  branch: string;
-  idWillExpireOn: string;
-  groups: string;
-  purpose: string;
-  mpUsername: string;
-  controlSetup: string;
+  email: string;
+  phoneNumber: string;
+  status: string;
+  isHo: string;
 }
-
-const formatDate = (value: string): string => {
-  const parsedDate = new Date(value);
-  return Number.isNaN(parsedDate.getTime())
-    ? value
-    : parsedDate.toLocaleDateString();
-};
 
 export const UserProfileTable = ({
   profiles,
@@ -47,31 +28,21 @@ export const UserProfileTable = ({
 
   const rows: UserProfileTableRow[] = profiles.map(profile => ({
     id: profile.id,
-    corporateClient: getCorporateClientLabel(profile.corporateClientId),
-    code: profile.code,
-    name: profile.name,
-    cellNo: profile.cellNo,
-    emailId: profile.emailId,
-    branch: getBranchLabel(profile.branchId),
-    idWillExpireOn: formatDate(profile.idWillExpireOn),
-    groups: getGroupLabel(profile.groupId),
-    purpose: getPurposeLabel(profile.purposeId),
-    mpUsername: profile.mpUsername,
-    controlSetup: getControlSetupSummary(profile.controlSetup),
+    userCode: profile.userCode || '',
+    name: `${profile.firstName || ''} ${profile.lastName || ''}`.trim(),
+    email: profile.email || '',
+    phoneNumber: profile.phoneNumber || '',
+    status: profile.status ? profile.status.toUpperCase() : 'PENDING',
+    isHo: profile.isHo ? 'Yes' : 'No',
   }));
 
   const columns: TableColumnDef<UserProfileTableRow>[] = [
-    { accessorKey: 'corporateClient', header: 'Corporate Client' },
-    { accessorKey: 'code', header: 'Code' },
+    { accessorKey: 'userCode', header: 'User Code' },
     { accessorKey: 'name', header: 'Name' },
-    { accessorKey: 'cellNo', header: 'Cell No' },
-    { accessorKey: 'emailId', header: 'Email ID' },
-    { accessorKey: 'branch', header: 'Branch' },
-    { accessorKey: 'idWillExpireOn', header: 'ID will expire on' },
-    { accessorKey: 'groups', header: 'Groups' },
-    { accessorKey: 'purpose', header: 'Purpose' },
-    { accessorKey: 'mpUsername', header: 'MP Username' },
-    { accessorKey: 'controlSetup', header: 'Control Setup' },
+    { accessorKey: 'email', header: 'Email' },
+    { accessorKey: 'phoneNumber', header: 'Phone' },
+    { accessorKey: 'status', header: 'Status' },
+    { accessorKey: 'isHo', header: 'HO User' },
     {
       id: 'actions',
       header: 'Actions',
@@ -79,13 +50,12 @@ export const UserProfileTable = ({
         const profileId = row.original.id;
 
         return (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2" onClick={event => event.stopPropagation()}>
             <Button
               type="button"
               variant="outline"
               size="sm"
-              onClick={event => {
-                event.stopPropagation();
+              onClick={() => {
                 navigate(`/master/system-setups/user-profile/edit/${profileId}`);
               }}
             >
@@ -96,8 +66,7 @@ export const UserProfileTable = ({
               variant="destructive"
               size="sm"
               disabled={isDeleting}
-              onClick={async event => {
-                event.stopPropagation();
+              onClick={async () => {
                 const shouldDelete = window.confirm(
                   'Are you sure you want to delete this user?'
                 );

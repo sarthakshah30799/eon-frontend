@@ -39,6 +39,7 @@ export const BranchProfileForm = ({
     >
       <div className="grid gap-4 md:grid-cols-2">
         <FormFieldSelect
+          key={companies.length}
           name="companyId"
           label="Company"
           placeholder="Select company"

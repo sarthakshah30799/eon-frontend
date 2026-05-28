@@ -19,9 +19,21 @@ const UserEditPage = lazy(
 const UserDetailPage = lazy(
   () => import('../pages/users/detail/[id]/UserDetailPage')
 );
-const CompanyProfileListPage = lazy(
+const CompanyProfilePage = lazy(
   () =>
-    import('../pages/master/system-setups/company-profile/list/CompanyProfileListPage')
+    import('../pages/master/system-setups/company-profile/[id]/CompanyProfilePage')
+);
+const BranchProfileListPage = lazy(
+  () =>
+    import('../pages/master/system-setups/branch-profile/list/BranchProfileListPage')
+);
+const BranchProfileCreatePage = lazy(
+  () =>
+    import('../pages/master/system-setups/branch-profile/create/BranchProfileCreatePage')
+);
+const BranchProfileEditPage = lazy(
+  () =>
+    import('../pages/master/system-setups/branch-profile/edit/[id]/BranchProfileEditPage')
 );
 const MasterPagesPage = lazy(
   () => import('../pages/master/system-setups/master-pages/MasterPagesPage')
@@ -38,29 +50,17 @@ const UserProfileEditPage = lazy(
   () =>
     import('../pages/master/system-setups/user-profile/edit/[id]/UserProfileEditPage')
 );
-const BranchProfileListPage = lazy(
+const UserRoleListPage = lazy(
   () =>
-    import('../pages/master/system-setups/branch-profile/list/BranchProfileListPage')
+    import('../pages/master/system-setups/user-role/list/UserRoleListPage')
 );
-const BranchProfileCreatePage = lazy(
+const UserRoleCreatePage = lazy(
   () =>
-    import('../pages/master/system-setups/branch-profile/create/BranchProfileCreatePage')
+    import('../pages/master/system-setups/user-role/create/UserRoleCreatePage')
 );
-const BranchProfileEditPage = lazy(
+const UserRoleEditPage = lazy(
   () =>
-    import('../pages/master/system-setups/branch-profile/edit/[id]/BranchProfileEditPage')
-);
-const RolesProfileListPage = lazy(
-  () =>
-    import('../pages/master/system-setups/roles-profile/list/RolesProfileListPage')
-);
-const RolesProfileCreatePage = lazy(
-  () =>
-    import('../pages/master/system-setups/roles-profile/create/RolesProfileCreatePage')
-);
-const RolesProfileEditPage = lazy(
-  () =>
-    import('../pages/master/system-setups/roles-profile/edit/[id]/RolesProfileEditPage')
+    import('../pages/master/system-setups/user-role/edit/[id]/UserRoleEditPage')
 );
 const MasterPageResolverPage = lazy(
   () =>
@@ -125,10 +125,10 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/master/system-setups/company-profile',
+    path: '/master/system-setups/company-profile/:id',
     element: (
       <ProtectedLayout>
-        <CompanyProfileListPage />
+        <CompanyProfilePage />
       </ProtectedLayout>
     ),
   },
@@ -189,26 +189,26 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/master/system-setups/roles-profile',
+    path: '/master/system-setups/user-role',
     element: (
       <ProtectedLayout>
-        <RolesProfileListPage />
+        <UserRoleListPage />
       </ProtectedLayout>
     ),
   },
   {
-    path: '/master/system-setups/roles-profile/create',
+    path: '/master/system-setups/user-role/create',
     element: (
       <ProtectedLayout>
-        <RolesProfileCreatePage />
+        <UserRoleCreatePage />
       </ProtectedLayout>
     ),
   },
   {
-    path: '/master/system-setups/roles-profile/edit/:id',
+    path: '/master/system-setups/user-role/edit/:id',
     element: (
       <ProtectedLayout>
-        <RolesProfileEditPage />
+        <UserRoleEditPage />
       </ProtectedLayout>
     ),
   },

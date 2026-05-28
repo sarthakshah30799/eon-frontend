@@ -1,7 +1,8 @@
 import React, { forwardRef, useId } from 'react';
 import ReactDatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
 import { Label } from '../label';
+import 'react-datepicker/dist/react-datepicker.css';
+import './datepicker.css';
 
 export interface DatePickerProps {
   label?: string;
@@ -87,6 +88,7 @@ export const DatePicker = ({
         className={className}
         customInput={<DatePickerInput />}
         showYearDropdown
+
       />
       {error && <p className="mt-1 text-sm text-error-600">{error}</p>}
     </div>

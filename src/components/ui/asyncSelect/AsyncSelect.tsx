@@ -211,6 +211,7 @@ const AsyncSelectComponent = React.forwardRef<any, AsyncSelectProps>(
               ? 'var(--color-primary-500)'
               : base.borderColor,
         },
+        borderRadius: '4px', // Rounded-md
         boxShadow: error
           ? '0 0 0 1px var(--color-error-500)'
           : state.isFocused

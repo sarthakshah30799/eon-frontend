@@ -1,4 +1,5 @@
 import { useNavigate, useParams } from 'react-router-dom';
+import { BackButton } from '@/components/ui';
 import { UserProfileForm } from '../forms';
 import { useGetUserProfile, useUpdateUserProfile } from '../hooks';
 import { USER_PROFILE_TEXTS } from '../constants';
@@ -21,7 +22,7 @@ export const UserProfileEditView = () => {
 
   if (!userProfile) {
     return (
-      <div className="rounded-2xl border border-border-primary bg-surface-primary p-6 shadow-sm">
+      <div className="rounded-sm border border-border-primary bg-surface-primary p-6 shadow-sm">
         <p className="text-center text-text-secondary">User not found</p>
       </div>
     );
@@ -33,8 +34,13 @@ export const UserProfileEditView = () => {
   };
 
   return (
-    <section className="rounded-2xl border border-border-primary bg-surface-primary p-6 shadow-sm">
-      <div className="mb-6">
+    <section className="rounded-sm border border-border-primary bg-surface-primary p-6 shadow-sm">
+      <div className="mb-6 space-y-4">
+        <BackButton
+          onClick={() => navigate('/master/system-setups/user-profile')}
+          label="Back"
+        />
+
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">
           User Management
         </p>

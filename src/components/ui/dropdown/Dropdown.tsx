@@ -286,7 +286,7 @@ const DropdownMenu = ({
       role="menu"
       aria-orientation="vertical"
       className={cn(
-        'absolute z-50 mt-2 min-w-56 overflow-hidden rounded-2xl border border-border-primary bg-surface-primary p-1 shadow-xl ring-1 ring-primary-500/5',
+        'absolute z-50 mt-2 min-w-56 overflow-hidden rounded-2xl  bg-surface-primary p-1 shadow-xl ring-1 ring-primary-500/5',
         context.align === 'end'
           ? 'right-0 origin-top-right'
           : 'left-0 origin-top-left',

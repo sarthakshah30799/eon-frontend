@@ -1,6 +1,5 @@
-import { useParams } from 'react-router-dom';
 import { CompanyProfileForm } from '../forms';
-import { useGetCompanyProfile, useUpdateCompanyProfile } from '../hooks';
+import { useGetCompanyProfile, useUpdateCompanyProfile, useListCompanyProfiles } from '../hooks';
 import type { CompanyProfileFormValues } from '../types';
 
 const emptyProfile: CompanyProfileFormValues = {
@@ -22,24 +21,24 @@ interface CompanyProfileEditViewProps {
 }
 
 export const CompanyProfileEditView = ({ id: propId }: CompanyProfileEditViewProps = {}) => {
-  const { id: paramId } = useParams<{ id: string }>();
-  const id = propId || paramId;
-  const { data, isLoading, error } = useGetCompanyProfile(id);
-  const { updateCompanyProfile, isPending: isSaving } = useUpdateCompanyProfile(id || '');
+  const { data: companies = [], isLoading: isListLoading, error: listError } = useListCompanyProfiles();
+  const firstCompanyId = propId || companies[0]?.id;
 
-  if (!id) {
-    return (
-      <div className="rounded-3xl border border-border-primary bg-surface-primary p-6 shadow-sm">
-        <p className="text-sm text-text-secondary">
-          Company profile ID is missing.
-        </p>
-      </div>
-    );
-  }
+  const { data, isLoading: isGetLoading, error: getError } = useGetCompanyProfile(firstCompanyId);
+  const { updateCompanyProfile, isPending: isSaving } = useUpdateCompanyProfile(firstCompanyId || '');
+
+  const isLoading = isListLoading || isGetLoading;
+  const error = listError || getError;
+
+  const handleSubmit = async (values: CompanyProfileFormValues) => {
+    if (firstCompanyId) {
+      await updateCompanyProfile(values);
+    }
+  };
 
   if (isLoading) {
     return (
-      <div className="rounded-3xl border border-border-primary bg-surface-primary p-6 shadow-sm">
+      <div className="rounded-sm border border-border-primary bg-surface-primary p-6 shadow-sm">
         <p className="text-sm text-text-secondary">
           Loading company profile...
         </p>
@@ -47,21 +46,17 @@ export const CompanyProfileEditView = ({ id: propId }: CompanyProfileEditViewPro
     );
   }
 
-  if (error) {
+  if (error || (!firstCompanyId && !isListLoading)) {
     return (
-      <div className="rounded-3xl border border-error-500 bg-error-50 p-6 text-error-600 shadow-sm">
-        <p className="text-sm">Unable to load company profile.</p>
+      <div className="rounded-sm border border-error-500 bg-error-50 p-6 text-error-600 shadow-sm">
+        <p className="text-sm">Unable to load company profile. Make sure it is initialized in the database.</p>
       </div>
     );
   }
 
-  const handleSubmit = async (values: CompanyProfileFormValues) => {
-    await updateCompanyProfile(values);
-  };
-
   return (
     <section className="space-y-6">
-      <div className="rounded-3xl border border-border-primary bg-surface-primary p-6 shadow-sm">
+      <div className="rounded-sm border border-border-primary bg-surface-primary p-6 shadow-sm">
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">
           Master / System setups
         </p>
@@ -73,7 +68,7 @@ export const CompanyProfileEditView = ({ id: propId }: CompanyProfileEditViewPro
         </p>
       </div>
 
-      <div className="rounded-3xl border border-border-primary bg-surface-primary p-6 shadow-sm">
+      <div className="rounded-sm border border-border-primary bg-surface-primary p-6 shadow-sm">
         <CompanyProfileForm
           defaultValues={data ?? emptyProfile}
           onSubmit={handleSubmit}

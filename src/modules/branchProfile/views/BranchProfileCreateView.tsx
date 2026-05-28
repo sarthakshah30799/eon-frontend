@@ -1,61 +1,56 @@
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { BackButton } from '@/components/ui';
 import { BranchProfileForm } from '../forms';
-import { useCreateBranchProfile } from '../hooks';
+import { BRANCH_PROFILE_TEXTS } from '../constants';
+import {
+  createEmptyBranchProfileFormValues,
+  toBranchAttachedToOptions,
+} from '../utils';
 import type { BranchProfileFormValues } from '../types';
-
-const emptyProfile: BranchProfileFormValues = {
-  companyId: '',
-  branchCode: '',
-  branchNumber: 0,
-  address1: '',
-  address2: '',
-  address3: '',
-  pincode: '',
-  city: '',
-  state: '',
-  country: 'India',
-  stateCode: '',
-  gstStateCode: '',
-  phoneNumber1: '',
-  phoneNumber2: '',
-  contactPersonName: '',
-  contactPersonPhone: '',
-  operationGroup: '',
-};
+import { useCreateBranchProfile, useListBranchProfiles } from '../hooks';
 
 export const BranchProfileCreateView = () => {
   const navigate = useNavigate();
-  const { createBranchProfile, isPending: isSaving } = useCreateBranchProfile();
+  const { data: branches = [] } = useListBranchProfiles();
+  const { submitBranchProfile, isPending } = useCreateBranchProfile();
+
+  const branchAttachedToOptions = useMemo(
+    () => toBranchAttachedToOptions(branches),
+    [branches]
+  );
 
   const handleSubmit = async (values: BranchProfileFormValues) => {
-    await createBranchProfile(values);
+    await submitBranchProfile(values);
     navigate('/master/system-setups/branch-profile');
   };
 
   return (
-    <section className="space-y-6">
-      <div className="rounded-3xl border border-border-primary bg-surface-primary p-6 shadow-sm">
+    <section className="rounded-sm border border-border-primary bg-surface-primary p-6 shadow-sm">
+      <div className="mb-6 space-y-4">
+        <BackButton
+          onClick={() => navigate('/master/system-setups/branch-profile')}
+          label="Back"
+        />
+
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">
-          Master / System setups
+          System Setup
         </p>
         <h1 className="mt-2 text-2xl font-semibold text-text-primary">
-          Create Branch Profile
+          {BRANCH_PROFILE_TEXTS.CREATE_BRANCH}
         </h1>
         <p className="mt-2 text-sm leading-6 text-text-secondary">
-          Add a new branch profile linked to a company.
+          {BRANCH_PROFILE_TEXTS.FORM_SUBTITLE}
         </p>
       </div>
 
-      <div className="rounded-3xl border border-border-primary bg-surface-primary p-6 shadow-sm">
-        <BranchProfileForm
-          defaultValues={emptyProfile}
-          onSubmit={handleSubmit}
-          isSubmitting={isSaving}
-          submitLabel="Create Branch"
-        />
-      </div>
+      <BranchProfileForm
+        defaultValues={createEmptyBranchProfileFormValues()}
+        onSubmit={handleSubmit}
+        submitLabel={BRANCH_PROFILE_TEXTS.CREATE_BRANCH}
+        isSubmitting={isPending}
+        branchAttachedToOptions={branchAttachedToOptions}
+      />
     </section>
   );
 };
-
-export default BranchProfileCreateView;

@@ -3,7 +3,7 @@ import React from 'react';
 const DashboardPage: React.FC = () => {
   return (
     <div className="space-y-6">
-      <section className="overflow-hidden rounded-3xl border border-border-primary bg-surface-primary shadow-sm">
+      <section className="overflow-hidden rounded-sm border border-border-primary bg-surface-primary shadow-sm">
         <div className="grid gap-6 bg-gradient-to-br from-primary-50 via-surface-primary to-primary-100 px-6 py-8 text-text-primary sm:px-8 lg:grid-cols-[minmax(0,1fr)_280px] lg:px-10">
           <div className="space-y-4">
             <span className="inline-flex rounded-full border border-primary-200 bg-surface-primary px-3 py-1 text-xs font-medium uppercase tracking-[0.24em] text-primary-700">
@@ -21,7 +21,7 @@ const DashboardPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid gap-3 rounded-3xl border border-border-primary bg-surface-primary p-4">
+          <div className="grid gap-3 rounded-sm border border-border-primary bg-surface-primary p-4">
             {[
               ['Master', 'Profiles and setups'],
               ['Transactions', 'Receipt and stock flows'],
@@ -29,7 +29,7 @@ const DashboardPage: React.FC = () => {
             ].map(([label, value]) => (
               <div
                 key={label}
-                className="rounded-2xl border border-border-primary bg-gradient-to-br from-surface-primary to-surface-secondary px-4 py-3"
+                className="rounded-sm border border-border-primary bg-gradient-to-br from-surface-primary to-surface-secondary px-4 py-3"
               >
                 <p className="text-xs uppercase tracking-[0.2em] text-text-tertiary">
                   {label}
@@ -64,7 +64,7 @@ const DashboardPage: React.FC = () => {
         ].map(card => (
           <article
             key={card.title}
-            className="rounded-3xl bg-surface-primary p-5 shadow-sm"
+            className="rounded-sm bg-surface-primary p-5 shadow-sm"
           >
             <p className="text-sm font-semibold text-text-primary">
               {card.title}

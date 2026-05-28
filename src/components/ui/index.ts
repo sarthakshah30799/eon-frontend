@@ -9,3 +9,5 @@ export * from './passwordInput';
 export * from './accordion';
 export * from './dropdown';
 export * from './datePicker';
+export * from './backButton';
+export * from './phoneInput';

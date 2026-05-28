@@ -111,7 +111,7 @@ export const UserProfileForm = ({
         />
       </div>
 
-      <div className="rounded-2xl border border-border-primary bg-surface-secondary p-4">
+      <div className="rounded-sm border border-border-primary bg-surface-secondary p-4">
         <p className="mb-4 text-sm font-semibold text-text-primary">
           Control Setup
         </p>

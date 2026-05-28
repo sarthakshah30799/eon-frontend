@@ -1,4 +1,5 @@
 import { useNavigate, useParams } from 'react-router-dom';
+import { BackButton } from '@/components/ui';
 import { UserRoleForm } from '../forms';
 import { useGetUserRole, useUpdateUserRole } from '../hooks';
 import { USER_ROLE_TEXTS } from '../constants';
@@ -21,7 +22,7 @@ export const UserRoleEditView = () => {
 
   if (!role) {
     return (
-      <div className="rounded-2xl border border-border-primary bg-surface-primary p-6 shadow-sm">
+      <div className="rounded-sm border border-border-primary bg-surface-primary p-6 shadow-sm">
         <p className="text-center text-text-secondary">Role not found</p>
       </div>
     );
@@ -33,8 +34,13 @@ export const UserRoleEditView = () => {
   };
 
   return (
-    <section className="rounded-2xl border border-border-primary bg-surface-primary p-6 shadow-sm">
-      <div className="mb-6">
+    <section className="rounded-sm border border-border-primary bg-surface-primary p-6 shadow-sm">
+      <div className="mb-6 space-y-4">
+        <BackButton
+          onClick={() => navigate('/master/system-setups/user-role')}
+          label="Back"
+        />
+
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">
           System Setup
         </p>

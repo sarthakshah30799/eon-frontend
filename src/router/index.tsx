@@ -23,6 +23,18 @@ const CompanyProfilePage = lazy(
   () =>
     import('../pages/master/system-setups/company-profile/[id]/CompanyProfilePage')
 );
+const BranchProfileListPage = lazy(
+  () =>
+    import('../pages/master/system-setups/branch-profile/list/BranchProfileListPage')
+);
+const BranchProfileCreatePage = lazy(
+  () =>
+    import('../pages/master/system-setups/branch-profile/create/BranchProfileCreatePage')
+);
+const BranchProfileEditPage = lazy(
+  () =>
+    import('../pages/master/system-setups/branch-profile/edit/[id]/BranchProfileEditPage')
+);
 const MasterPagesPage = lazy(
   () => import('../pages/master/system-setups/master-pages/MasterPagesPage')
 );
@@ -117,6 +129,30 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <CompanyProfilePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/master/system-setups/branch-profile',
+    element: (
+      <ProtectedLayout>
+        <BranchProfileListPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/master/system-setups/branch-profile/create',
+    element: (
+      <ProtectedLayout>
+        <BranchProfileCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/master/system-setups/branch-profile/edit/:id',
+    element: (
+      <ProtectedLayout>
+        <BranchProfileEditPage />
       </ProtectedLayout>
     ),
   },

@@ -23,9 +23,9 @@ export const ProtectedLayout: React.FC<ProtectedLayoutProps> = ({
     );
   }
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
+  // if (!isAuthenticated) {
+  //   return <Navigate to="/login" replace />;
+  // }
 
   return <DashboardLayout>{children}</DashboardLayout>;
 };

@@ -34,7 +34,7 @@ export const UserRoleForm = ({
         <FormFieldInput name="roleName" label="Role Name" disabled={isSubmitting} />
       </div>
 
-      <div className="rounded-2xl border border-border-primary bg-surface-secondary p-4">
+      <div className="rounded-sm border border-border-primary bg-surface-secondary p-4">
         <FormFieldCheckbox name="isActive" label="Is Active" disabled={isSubmitting} />
       </div>
 
@@ -46,4 +46,3 @@ export const UserRoleForm = ({
     </Form>
   );
 };
-

@@ -176,7 +176,7 @@ const NodeFields = ({ name, depth, onRemove }: NodeFieldsProps) => {
     <div
       className={[
         'relative',
-        'rounded-3xl border border-border-primary bg-surface-secondary p-4 shadow-sm',
+        'rounded-sm border border-border-primary bg-surface-secondary p-4 shadow-sm',
         depth > 0
           ? 'ml-4 border-l-4 border-l-primary-500 bg-surface-primary'
           : '',

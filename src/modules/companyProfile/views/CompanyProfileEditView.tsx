@@ -20,7 +20,7 @@ export const CompanyProfileEditView = () => {
 
   if (!id) {
     return (
-      <div className="rounded-3xl border border-border-primary bg-surface-primary p-6 shadow-sm">
+      <div className="rounded-sm border border-border-primary bg-surface-primary p-6 shadow-sm">
         <p className="text-sm text-text-secondary">
           Company profile id is missing.
         </p>
@@ -30,7 +30,7 @@ export const CompanyProfileEditView = () => {
 
   if (isLoading) {
     return (
-      <div className="rounded-3xl border border-border-primary bg-surface-primary p-6 shadow-sm">
+      <div className="rounded-sm border border-border-primary bg-surface-primary p-6 shadow-sm">
         <p className="text-sm text-text-secondary">
           Loading company profile...
         </p>
@@ -40,7 +40,7 @@ export const CompanyProfileEditView = () => {
 
   if (error) {
     return (
-      <div className="rounded-3xl border border-error-500 bg-error-50 p-6 text-error-600 shadow-sm">
+      <div className="rounded-sm border border-error-500 bg-error-50 p-6 text-error-600 shadow-sm">
         <p className="text-sm">Unable to load company profile.</p>
       </div>
     );
@@ -48,7 +48,7 @@ export const CompanyProfileEditView = () => {
 
   return (
     <section className="space-y-6">
-      <div className="rounded-3xl border border-border-primary bg-surface-primary p-6 shadow-sm">
+      <div className="rounded-sm border border-border-primary bg-surface-primary p-6 shadow-sm">
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">
           Master / System setups
         </p>
@@ -61,7 +61,7 @@ export const CompanyProfileEditView = () => {
         </p>
       </div>
 
-      <div className="rounded-3xl border border-border-primary bg-surface-primary p-6 shadow-sm">
+      <div className="rounded-sm border border-border-primary bg-surface-primary p-6 shadow-sm">
         <CompanyProfileForm
           defaultValues={data ?? emptyProfile}
           onSubmit={handleSubmit}

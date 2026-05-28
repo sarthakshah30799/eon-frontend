@@ -51,6 +51,11 @@ const staticSections: SidebarSection[] = [
             path: '/master/system-setups/company-profile/1',
           },
           {
+            id: 'branch-profile',
+            label: 'Branch Profile',
+            path: '/master/system-setups/branch-profile',
+          },
+          {
             id: 'user-profile',
             label: 'User Profile',
             path: '/master/system-setups/user-profile',
@@ -88,25 +93,25 @@ const staticSections: SidebarSection[] = [
 ];
 
 const sidebarSectionTriggerClass =
-  'w-full justify-between rounded-2xl border border-border-primary bg-surface-primary px-4 py-3 text-left text-sm font-semibold text-text-primary shadow-sm transition hover:border-primary-200 hover:bg-primary-50 focus-visible:ring-primary-300';
+  'w-full justify-between rounded-2xl border-0 border-b-1 border-black! rounded-none! bg-transparent! px-4 py-3 text-left text-sm font-semibold text-text-primary shadow-none! hover:border-primary-200 hover:bg-primary-50 focus-visible:ring-primary-300';
 
 const sidebarSectionMenuClass =
-  'w-72 overflow-visible rounded-2xl border border-border-primary bg-surface-primary p-2 shadow-lg ring-0';
+  'w-72 overflow-visible rounded-sm! border border-border-primary bg-none! p-2 shadow-lg ring-0';
 
 const sidebarGroupTriggerClass = (level: number) =>
   [
-    'w-full justify-between rounded-xl border border-border-primary bg-surface-secondary px-3 py-3 text-left text-sm font-semibold text-text-primary transition hover:border-primary-200 hover:bg-surface-primary focus-visible:ring-primary-300',
+    'w-full justify-between border-0 border-b-1 border-black! rounded-none! bg-transparent! px-3 py-3 text-left text-sm font-semibold text-text-primary shadow-none! hover:border-primary-200 hover:bg-surface-primary focus-visible:ring-primary-300',
     level > 0 ? 'ml-2' : '',
   ].join(' ');
 
 const sidebarGroupMenuClass = (level: number) =>
   [
-    'w-64 overflow-visible rounded-xl border border-border-primary bg-surface-primary p-1 shadow-lg ring-0',
+    'w-64 overflow-visible rounded-sm! border border-border-primary bg-surface-primary p-1 shadow-lg ring-0',
     level > 0 ? 'ml-2' : '',
   ].join(' ');
 
 const sidebarLeafClass =
-  'flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm text-text-secondary transition hover:bg-primary-50 hover:text-text-primary';
+  'flex w-full items-center gap-3 rounded-sm! px-3 py-2 text-left text-sm text-text-secondary transition hover:bg-primary-50 hover:text-text-primary';
 
 const mapMasterPageNodeToItem = (page: MasterPageTreeNode): SidebarMenuItem => {
   if (page.children.length === 0) {
@@ -178,7 +183,7 @@ const SidebarMenuList = ({
         }
 
         return (
-          <li key={item.id}>
+          <li key={item.id} className='mb-0!'>
             <button
               type="button"
               className={sidebarLeafClass}
@@ -210,7 +215,7 @@ const SidebarTopLevelEntry = ({
   if (isGroupItem(item)) {
     return (
       <Dropdown
-        className="w-full"
+        className="w-full border-0"
         align="start"
         open={activeId === item.id}
         onOpenChange={nextOpen => {
@@ -266,7 +271,7 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   return (
     <aside
       className={[
-        'fixed inset-y-0 left-0 z-40 w-80 border-r border-border-primary bg-surface-secondary text-text-primary shadow-2xl transition-transform duration-300 ease-out',
+        'fixed inset-y-0 left-0 z-40 w-70 border-r border-border-primary bg-surface-secondary text-text-primary shadow-2xl transition-transform duration-300 ease-out',
         'lg:translate-x-0',
         isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
       ].join(' ')}
@@ -313,9 +318,9 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
         <nav className="flex-1 overflow-y-auto px-4 py-5">
           <div className="space-y-5">
             {staticSections.map(section => (
-              <section key={section.title} className="space-y-3">
+              <section key={section.title} className="space-y-2 mb-2">
                 <Dropdown
-                  className="w-full"
+                  className="w-full border-0!"
                   align="start"
                   open={openTopLevelId === section.title}
                   onOpenChange={nextOpen => {

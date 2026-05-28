@@ -3,7 +3,7 @@ import { MasterPagesForm } from '../forms';
 export const MasterPagesBuilderView = () => {
   return (
     <section className="space-y-6">
-      <div className="rounded-3xl border border-border-primary bg-surface-primary p-6 shadow-sm">
+      <div className="rounded-sm border border-border-primary bg-surface-primary p-6 shadow-sm">
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">
           Master Pages
         </p>
@@ -17,7 +17,7 @@ export const MasterPagesBuilderView = () => {
         </p>
       </div>
 
-      <div className="rounded-3xl border border-border-primary bg-surface-primary p-6 shadow-sm">
+      <div className="rounded-sm border border-border-primary bg-surface-primary p-6 shadow-sm">
         <MasterPagesForm />
       </div>
     </section>

@@ -1,12 +1,10 @@
 import {
   BRANCH_OPTIONS,
-  CONTROL_SETUP_ITEMS,
   CORPORATE_CLIENT_OPTIONS,
   GROUP_OPTIONS,
   PURPOSE_OPTIONS,
 } from '../constants';
 import type {
-  UserProfileControlSetupValues,
   UserProfileFormValues,
   UserProfileOption,
   UserProfileRecord,
@@ -30,16 +28,6 @@ export const getGroupLabel = (value: string): string =>
 
 export const getPurposeLabel = (value: string): string =>
   getOptionLabel(PURPOSE_OPTIONS, value);
-
-export const getControlSetupSummary = (
-  controlSetup: UserProfileControlSetupValues
-): string => {
-  const selectedItems = CONTROL_SETUP_ITEMS.filter(
-    item => controlSetup[item.key]
-  ).map(item => item.label);
-
-  return selectedItems.length > 0 ? selectedItems.join(', ') : 'None';
-};
 
 export const createEmptyUserProfileFormValues = (): UserProfileFormValues => ({
   corporateClientId: '',

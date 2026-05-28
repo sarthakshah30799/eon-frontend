@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button1';
 import { Table, type TableColumnDef } from '@/components/ui/table';
 import type { UserRoleRecord } from '../types';
@@ -37,27 +38,33 @@ export const UserRoleTable = ({
     {
       id: 'actions',
       header: 'Actions',
+      meta: {
+        headerClassName:
+          'sticky right-0 z-20 border-l border-border-primary bg-surface-secondary',
+        cellClassName:
+          'sticky right-0 z-10 border-l border-border-primary bg-surface-primary',
+      },
       cell: ({ row }) => {
         const roleId = row.original.id;
 
         return (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex items-center gap-2">
             <Button
               type="button"
-              variant="outline"
-              size="sm"
+              aria-label="Edit role"
+              className="border-0! bg-transparent! text-black!"
               onClick={event => {
                 event.stopPropagation();
                 navigate(`/master/system-setups/user-role/edit/${roleId}`);
               }}
             >
-              Edit
+              <PencilSquareIcon className="h-5 w-5" />
             </Button>
             <Button
               type="button"
-              variant="destructive"
-              size="sm"
+              aria-label="Delete role"
               disabled={isDeleting}
+              className="border-0! bg-transparent! text-red-500! hover:bg-red-50 focus:ring-red-500"
               onClick={async event => {
                 event.stopPropagation();
                 const shouldDelete = window.confirm(
@@ -69,7 +76,7 @@ export const UserRoleTable = ({
                 }
               }}
             >
-              Delete
+              <TrashIcon className="h-5 w-5" />
             </Button>
           </div>
         );
@@ -93,4 +100,3 @@ export const UserRoleTable = ({
     />
   );
 };
-

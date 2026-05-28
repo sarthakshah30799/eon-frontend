@@ -13,7 +13,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         {label && <Label htmlFor={props.id}>{label}</Label>}
         <input
           type={type}
-          className={`block w-full rounded-xl border border-border-secondary bg-surface-primary px-3 py-2 text-text-primary shadow-sm placeholder:text-text-tertiary focus:border-primary-500 focus:ring-primary-500 ${error ? 'border-error-500' : ''} ${className}`}
+          className={`block w-full rounded-sm border border-border-secondary bg-surface-primary px-3 py-2 text-text-primary shadow-sm placeholder:text-text-tertiary focus:border-primary-500! focus:ring-primary-500 focus-visible:border-transparent! focus-visible:outline-primary-500 focus-visible:ring-1 ${error ? 'border-error-500' : ''} ${className}`}
           ref={ref}
           {...props}
         />

@@ -14,9 +14,17 @@ import {
   type VisibilityState,
   type RowSelectionState,
   type PaginationState,
+  type RowData,
 } from '@tanstack/react-table';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { Button } from '../button1';
+
+declare module '@tanstack/react-table' {
+  interface ColumnMeta<TData extends RowData, TValue> {
+    headerClassName?: string;
+    cellClassName?: string;
+  }
+}
 
 const tableVariants = cva('w-full border-collapse', {
   variants: {
@@ -40,6 +48,10 @@ const tableVariants = cva('w-full border-collapse', {
 export type TableColumnDef<T extends object> = ColumnDef<T> & {
   searchable?: boolean;
   filterable?: boolean;
+  meta?: {
+    headerClassName?: string;
+    cellClassName?: string;
+  };
 };
 
 export interface TableProps<T extends object>
@@ -149,10 +161,10 @@ function Table<T extends object>({
   const renderSkeleton = () =>
     Array.from({ length: skeletonRows }).map((_, index) => (
       <tr key={`skeleton-${index}`} className="animate-pulse">
-        {columns.map((_, colIndex) => (
+        {columns.map((column, colIndex) => (
           <td
             key={`skeleton-cell-${colIndex}`}
-            className="px-4 py-3 border-b border-border-primary"
+            className={`border-b border-border-primary px-4 py-3 ${column.meta?.cellClassName ?? ''}`}
           >
             <div className="h-4 rounded bg-surface-secondary"></div>
           </td>
@@ -213,7 +225,7 @@ function Table<T extends object>({
       )}
 
       {/* Table */}
-      <div className="overflow-x-auto rounded-lg border border-border-primary">
+      <div className="overflow-x-auto rounded-sm border border-border-primary">
         <table
           className={tableVariants({ variant, size, className })}
           {...props}
@@ -224,7 +236,7 @@ function Table<T extends object>({
                 {headerGroup.headers.map(header => (
                   <th
                     key={header.id}
-                    className="border-b border-border-primary px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-tertiary"
+                    className={`border-b border-border-primary px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-tertiary ${header.column.columnDef.meta?.headerClassName ?? ''}`}
                   >
                     {header.isPlaceholder ? null : (
                       <div
@@ -266,11 +278,11 @@ function Table<T extends object>({
                   onRowClick?.(row.original);
                 }}
               >
-                  {row.getVisibleCells().map(cell => (
-                    <td
-                      key={cell.id}
-                      className="whitespace-nowrap px-4 py-3 text-sm text-text-primary"
-                    >
+                {row.getVisibleCells().map(cell => (
+                  <td
+                    key={cell.id}
+                    className={`whitespace-nowrap px-4 py-3 text-sm text-text-primary ${cell.column.columnDef.meta?.cellClassName ?? ''}`}
+                  >
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()

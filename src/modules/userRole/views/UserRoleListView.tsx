@@ -31,7 +31,7 @@ export const UserRoleListView = () => {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-border-primary bg-surface-primary p-6 shadow-sm">
+      <section className="rounded-sm border border-border-primary bg-surface-primary p-6 shadow-sm">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">
@@ -54,7 +54,7 @@ export const UserRoleListView = () => {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
+      <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
         <UserRoleTable
           roles={roles}
           onDelete={handleDelete}
@@ -64,4 +64,3 @@ export const UserRoleListView = () => {
     </div>
   );
 };
-

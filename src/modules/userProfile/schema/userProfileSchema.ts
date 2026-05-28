@@ -25,4 +25,3 @@ export const userProfileSchema = yup.object({
     creditLimitAuthorization: yup.boolean().default(false),
   }),
 });
-

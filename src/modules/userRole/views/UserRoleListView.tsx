@@ -10,7 +10,10 @@ export const UserRoleListView = () => {
   const { deleteUserRole, isPending: isDeleting } = useDeleteUserRole();
 
   const handleDelete = async (id: string) => {
-    await deleteUserRole(id);
+    const confirmDelete = window.confirm('Are you sure you want to delete this role?');
+    if (confirmDelete) {
+      await deleteUserRole(id);
+    }
   };
 
   if (isLoading) {
@@ -47,7 +50,7 @@ export const UserRoleListView = () => {
 
           <Button
             type="button"
-            onClick={() => navigate('/master/system-setups/user-role/create')}
+            onClick={() => navigate('/master/system-setups/roles-profile/create')}
           >
             {USER_ROLE_TEXTS.CREATE_ROLE}
           </Button>

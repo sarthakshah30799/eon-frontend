@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { Dropdown } from '../../ui/dropdown';
 import { useMasterPages } from '../../../lib';
+import { menuApi } from '../../../api';
 import type { MasterPageTreeNode } from '../../../modules/masterPages/types';
 
 interface SidebarProps {
@@ -24,73 +26,6 @@ type SidebarSection = {
   items: SidebarMenuItem[];
 };
 
-const staticSections: SidebarSection[] = [
-  {
-    title: 'Master',
-    items: [
-      {
-        id: 'master-profiles',
-        label: 'Master Profiles',
-        children: [
-          { id: 'currency-profile', label: 'Currency Profile' },
-          { id: 'accounts-profile', label: 'Accounts Profile' },
-        ],
-      },
-      {
-        id: 'system-setups',
-        label: 'System setups',
-        children: [
-          {
-            id: 'master-pages',
-            label: 'Master Pages',
-            path: '/master/system-setups/master-pages',
-          },
-          {
-            id: 'company-profile',
-            label: 'Company Profile',
-            path: '/master/system-setups/company-profile/1',
-          },
-          {
-            id: 'branch-profile',
-            label: 'Branch Profile',
-            path: '/master/system-setups/branch-profile',
-          },
-          {
-            id: 'user-profile',
-            label: 'User Profile',
-            path: '/master/system-setups/user-profile',
-          },
-          {
-            id: 'user-role',
-            label: 'User Role',
-            path: '/master/system-setups/user-role',
-          },
-        ],
-      },
-    ],
-  },
-  {
-    title: 'Transactions',
-    items: [
-      {
-        id: 'accounting-transaction',
-        label: 'Accounting Transaction',
-        children: [
-          { id: 'receipt', label: 'Receipt' },
-          { id: 'payment', label: 'Payment' },
-        ],
-      },
-      {
-        id: 'stock-transaction',
-        label: 'Stock Transaction',
-        children: [
-          { id: 'receipt-of-stock', label: 'Receipt of Stock' },
-          { id: 'return-of-stock', label: 'Return of Stock' },
-        ],
-      },
-    ],
-  },
-];
 
 const sidebarSectionTriggerClass =
   'w-full justify-between rounded-2xl border-0 border-b-1 border-black! rounded-none! bg-transparent! px-4 py-3 text-left text-sm font-semibold text-text-primary shadow-none! hover:border-primary-200 hover:bg-primary-50 focus-visible:ring-primary-300';
@@ -254,6 +189,52 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   const { tree: createdPages } = useMasterPages();
   const [openTopLevelId, setOpenTopLevelId] = useState<string | null>(null);
 
+  const { data: menuTree = [] } = useQuery({
+    queryKey: ['menu-tree'],
+    queryFn: async () => {
+      const response = await menuApi.getMenuTree();
+      if (response.error) throw new Error(response.error);
+      return response.data || [];
+    },
+  });
+
+  const sections = useMemo<SidebarSection[]>(() => {
+    if (!menuTree || menuTree.length === 0) {
+      return [];
+    }
+    return menuTree.map(root => ({
+      title: root.name,
+      items: (root.children || []).map(group => {
+        if (!group.children || group.children.length === 0) {
+          let path = group.path || undefined;
+          if (path === '/master/system-setups/company-profile') {
+            path = '/master/system-setups/company-profile/1';
+          }
+          return {
+            id: group.id,
+            label: group.name,
+            path,
+          };
+        }
+        return {
+          id: group.id,
+          label: group.name,
+          children: group.children.map(item => {
+            let path = item.path || undefined;
+            if (path === '/master/system-setups/company-profile') {
+              path = '/master/system-setups/company-profile/1';
+            }
+            return {
+              id: item.id,
+              label: item.name,
+              path,
+            };
+          }),
+        };
+      }),
+    }));
+  }, [menuTree]);
+
   const createdPageEntries = useMemo<SidebarMenuItem[]>(
     () => createdPages.map(mapMasterPageNodeToItem),
     [createdPages]
@@ -317,7 +298,7 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
 
         <nav className="flex-1 overflow-y-auto px-4 py-5">
           <div className="space-y-5">
-            {staticSections.map(section => (
+            {sections.map(section => (
               <section key={section.title} className="space-y-2 mb-2">
                 <Dropdown
                   className="w-full border-0!"

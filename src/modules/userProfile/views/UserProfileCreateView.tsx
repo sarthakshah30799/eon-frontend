@@ -39,6 +39,7 @@ export const UserProfileCreateView = () => {
         onSubmit={handleSubmit}
         submitLabel={USER_PROFILE_TEXTS.CREATE_USER}
         isSubmitting={isPending}
+        isCreate
       />
     </section>
   );

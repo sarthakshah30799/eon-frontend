@@ -1,32 +1,40 @@
-import { useParams } from 'react-router-dom';
 import { CompanyProfileForm } from '../forms';
-import { useCompanyProfile } from '../hooks';
+import { useGetCompanyProfile, useUpdateCompanyProfile, useListCompanyProfiles } from '../hooks';
 import type { CompanyProfileFormValues } from '../types';
 
 const emptyProfile: CompanyProfileFormValues = {
-  companyName: '',
+  name: '',
+  designation: '',
   rbiName: '',
-  rbiDesignation: '',
   rbiPlace: '',
-  rbiAddress1: '',
-  rbiAddress2: '',
-  rbiAddress3: '',
+  address1: '',
+  address2: '',
+  address3: '',
+  pincode: '',
+  city: '',
+  state: '',
+  country: 'India',
 };
 
-export const CompanyProfileEditView = () => {
-  const { id } = useParams<{ id: string }>();
-  const { data, isLoading, isSaving, handleSubmit, error } =
-    useCompanyProfile(id);
+interface CompanyProfileEditViewProps {
+  id?: string;
+}
 
-  if (!id) {
-    return (
-      <div className="rounded-sm border border-border-primary bg-surface-primary p-6 shadow-sm">
-        <p className="text-sm text-text-secondary">
-          Company profile id is missing.
-        </p>
-      </div>
-    );
-  }
+export const CompanyProfileEditView = ({ id: propId }: CompanyProfileEditViewProps = {}) => {
+  const { data: companies = [], isLoading: isListLoading, error: listError } = useListCompanyProfiles();
+  const firstCompanyId = propId || companies[0]?.id;
+
+  const { data, isLoading: isGetLoading, error: getError } = useGetCompanyProfile(firstCompanyId);
+  const { updateCompanyProfile, isPending: isSaving } = useUpdateCompanyProfile(firstCompanyId || '');
+
+  const isLoading = isListLoading || isGetLoading;
+  const error = listError || getError;
+
+  const handleSubmit = async (values: CompanyProfileFormValues) => {
+    if (firstCompanyId) {
+      await updateCompanyProfile(values);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -38,10 +46,10 @@ export const CompanyProfileEditView = () => {
     );
   }
 
-  if (error) {
+  if (error || (!firstCompanyId && !isListLoading)) {
     return (
       <div className="rounded-sm border border-error-500 bg-error-50 p-6 text-error-600 shadow-sm">
-        <p className="text-sm">Unable to load company profile.</p>
+        <p className="text-sm">Unable to load company profile. Make sure it is initialized in the database.</p>
       </div>
     );
   }
@@ -53,11 +61,10 @@ export const CompanyProfileEditView = () => {
           Master / System setups
         </p>
         <h1 className="mt-2 text-2xl font-semibold text-text-primary">
-          Company Profile
+          Edit Company Profile
         </h1>
         <p className="mt-2 text-sm leading-6 text-text-secondary">
-          Edit the company profile for record id{' '}
-          <span className="font-semibold">{id}</span>.
+          Edit the company profile details.
         </p>
       </div>
 

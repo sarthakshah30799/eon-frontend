@@ -1,7 +1,7 @@
 export interface UserRoleFormValues {
-  roleCode: string;
-  roleName: string;
-  isActive: boolean;
+  code: string;
+  name: string;
+  description: string;
 }
 
 export interface UserRoleRecord extends UserRoleFormValues {
@@ -9,4 +9,3 @@ export interface UserRoleRecord extends UserRoleFormValues {
   createdAt: string;
   updatedAt: string;
 }
-

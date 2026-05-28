@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Header } from '../Header';
-import { Sidebar } from '../Sidebar';
+import { Sidebar } from '../Sidebar/Sidebar';
 import { useAuth } from '../../../lib/AuthContext';
 
 interface DashboardLayoutProps {

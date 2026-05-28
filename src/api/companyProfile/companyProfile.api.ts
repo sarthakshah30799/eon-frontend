@@ -12,13 +12,15 @@ export const companyProfileApi = {
     return apiClient.get<CompanyProfile>(`/companies/${id}`);
   },
   createCompanyProfile: async (values: CompanyProfileFormValues) => {
-    return apiClient.post<CompanyProfile>('/companies', values);
+    const { id: _, createdAt: __, updatedAt: ___, ...payload } = values as any;
+    return apiClient.post<CompanyProfile>('/companies', payload);
   },
   updateCompanyProfile: async (
     id: string,
     values: CompanyProfileFormValues
   ) => {
-    return apiClient.put<CompanyProfile>(`/companies/${id}`, values);
+    const { id: _, createdAt: __, updatedAt: ___, ...payload } = values as any;
+    return apiClient.put<CompanyProfile>(`/companies/${id}`, payload);
   },
   deleteCompanyProfile: async (id: string) => {
     return apiClient.delete<{ message: string }>(`/companies/${id}`);

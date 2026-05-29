@@ -8,10 +8,15 @@ interface FormFieldPhoneInputProps {
   label?: string;
   disabled?: boolean;
   className?: string;
-  countryCodeOptions: PhoneCountryCodeOption[];
   countryCodeLabel?: string;
   numberLabel?: string;
 }
+
+const DEFAULT_PHONE_COUNTRY_CODE_OPTIONS: PhoneCountryCodeOption[] = [
+  { value: '+91', label: '+91 IN' },
+  { value: '+1', label: '+1 USA' },
+  { value: '+971', label: '+971 UAE' },
+];
 
 export const FormFieldPhoneInput = ({
   countryCodeName,
@@ -19,7 +24,6 @@ export const FormFieldPhoneInput = ({
   label,
   disabled = false,
   className = '',
-  countryCodeOptions,
   countryCodeLabel,
   numberLabel,
 }: FormFieldPhoneInputProps) => {
@@ -46,11 +50,11 @@ export const FormFieldPhoneInput = ({
       label={label}
       countryCodeLabel={countryCodeLabel}
       numberLabel={numberLabel}
-      countryCodeValue={String(countryCodeField.value ?? countryCodeOptions[0]?.value ?? '')}
+      countryCodeValue={String(countryCodeField.value ?? DEFAULT_PHONE_COUNTRY_CODE_OPTIONS[0]?.value ?? '')}
       numberValue={String(numberField.value ?? '')}
-      countryCodeOptions={countryCodeOptions}
       disabled={disabled}
       className={className}
+      countryCodeOptions={DEFAULT_PHONE_COUNTRY_CODE_OPTIONS}
       onCountryCodeChange={value => countryCodeField.onChange(value)}
       onNumberChange={value => numberField.onChange(value)}
       error={countryCodeError?.message || numberError?.message}

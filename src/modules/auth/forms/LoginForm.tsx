@@ -44,12 +44,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     mobileNumber: '',
   });
 
-  const loginCountryCodeOptions: PhoneCountryCodeOption[] = [
-    { value: '+1', label: '+1 USA' },
-    { value: '+91', label: '+91 India' },
-    { value: '+971', label: '+971 UAE' },
-  ];
-
   const onOtpMobileSubmit = async (data: {
     countryCode: string;
     mobileNumber: string;
@@ -162,7 +156,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({
                 label="Mobile Number"
                 countryCodeLabel="Code"
                 numberLabel="Mobile Number"
-                countryCodeOptions={loginCountryCodeOptions}
                 disabled={isLoading}
               />
               <Button

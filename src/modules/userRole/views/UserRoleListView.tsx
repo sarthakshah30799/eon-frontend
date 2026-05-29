@@ -2,7 +2,8 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button1';
 import { useDeleteUserRole, useListUserRoles, useUpdateUserRoleStatus } from '../hooks';
 import { USER_ROLE_TEXTS } from '../constants';
-import { UserRoleTable } from '../components';
+import { UserRoleTable, UserRightsTable, UserRightsTreePreview } from '../components';
+import { useUserRightsMatrix } from '../hooks';
 
 export const UserRoleListView = () => {
   const navigate = useNavigate();
@@ -10,6 +11,22 @@ export const UserRoleListView = () => {
   const { deleteUserRole, isPending: isDeleting } = useDeleteUserRole();
   const { updateUserRoleStatus, isPending: isUpdatingStatus } =
     useUpdateUserRoleStatus();
+
+  const {
+    selectableTreeNodes: rightsTreeNodes,
+    selectedNodeId,
+    selectedNode,
+    selectedNodePathIds,
+    visibleRows: rightsRows,
+    rowStateById,
+    selectNode,
+    toggleAllRowsSelected,
+    toggleRowSelected,
+    togglePermission,
+    toggleColumnPermission,
+    isLoading: isLoadingMenuTree,
+    error: menuTreeError,
+  } = useUserRightsMatrix();
 
   const handleDelete = async (id: string) => {
     const confirmDelete = window.confirm('Are you sure you want to delete this role?');
@@ -34,6 +51,14 @@ export const UserRoleListView = () => {
     return (
       <div className="py-6 text-center text-error-600">
         {USER_ROLE_TEXTS.LIST_ERROR}
+      </div>
+    );
+  }
+
+  if (menuTreeError) {
+    return (
+      <div className="py-6 text-center text-error-600">
+        Unable to load user rights options.
       </div>
     );
   }
@@ -71,6 +96,55 @@ export const UserRoleListView = () => {
           isUpdatingStatus={isUpdatingStatus}
           isDeleting={isDeleting}
         />
+      </section>
+
+      <section className="space-y-6 rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">
+            {USER_ROLE_TEXTS.RIGHTS_TITLE}
+          </p>
+          <h2 className="mt-2 text-xl font-semibold text-text-primary">
+            {USER_ROLE_TEXTS.RIGHTS_TITLE}
+          </h2>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-text-secondary">
+            {USER_ROLE_TEXTS.RIGHTS_SUBTITLE}
+          </p>
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
+          <div className="rounded-sm border border-border-primary bg-surface-secondary p-4">
+            {isLoadingMenuTree ? (
+              <p className="text-sm text-text-secondary">Loading options...</p>
+            ) : (
+              <UserRightsTreePreview
+                nodes={rightsTreeNodes}
+                selectedNodeId={selectedNodeId}
+                selectedNodePathIds={selectedNodePathIds}
+                onSelectNode={selectNode}
+              />
+            )}
+          </div>
+
+          <div className="overflow-hidden rounded-sm border border-border-primary bg-surface-secondary p-4">
+            <div className="mb-4">
+              <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-text-tertiary">
+                Available Options
+              </h3>
+              <p className="mt-1 text-sm text-text-secondary">
+                {selectedNode?.label ?? 'Select a sidebar option'}
+              </p>
+            </div>
+
+            <UserRightsTable
+              rows={rightsRows}
+              rowStateById={rowStateById}
+              onToggleAllRowsSelected={toggleAllRowsSelected}
+              onToggleRowSelected={toggleRowSelected}
+              onToggleColumnPermission={toggleColumnPermission}
+              onTogglePermission={togglePermission}
+            />
+          </div>
+        </div>
       </section>
     </div>
   );

@@ -30,6 +30,7 @@ interface BranchProfileEditorViewProps {
   ) => void | Promise<void>;
   isSubmitting?: boolean;
   branchAttachedToOptions: BranchProfileOption[];
+  showCounters?: boolean;
 }
 
 const createCounterId = (): string => {
@@ -51,6 +52,7 @@ export const BranchProfileEditorView = ({
   onSubmitBranch,
   isSubmitting = false,
   branchAttachedToOptions,
+  showCounters = true,
 }: BranchProfileEditorViewProps) => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'branch' | 'counter'>('branch');
@@ -162,10 +164,15 @@ export const BranchProfileEditorView = ({
         </p>
       </div>
 
-      <Tabs value={activeTab} onValueChange={value => setActiveTab(value as 'branch' | 'counter')}>
+      <Tabs
+        value={activeTab}
+        onValueChange={value => setActiveTab(value as 'branch' | 'counter')}
+      >
         <TabsList className="mb-5">
           <TabsTrigger value="branch">Branch</TabsTrigger>
-          <TabsTrigger value="counter">Counters</TabsTrigger>
+          {showCounters && (
+            <TabsTrigger value="counter">Counters</TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="branch" className="border-0 p-0">
@@ -178,60 +185,64 @@ export const BranchProfileEditorView = ({
           />
         </TabsContent>
 
-        <TabsContent value="counter" className="border-0 p-0">
-          <div className="space-y-5">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="text-lg font-semibold text-text-primary">
-                  Counter
-                </h2>
-                <p className="mt-1 text-sm text-text-secondary">
-                  Manage counters for this branch.
-                </p>
+        {showCounters && (
+          <TabsContent value="counter" className="border-0 p-0">
+            <div className="space-y-5">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-text-primary">
+                    Counter
+                  </h2>
+                  <p className="mt-1 text-sm text-text-secondary">
+                    Manage counters for this branch.
+                  </p>
+                </div>
+
+                <Button
+                  type="button"
+                  className="rounded-sm"
+                  onClick={handleOpenCreateCounter}
+                >
+                  Create Counter
+                </Button>
               </div>
 
-              <Button
-                type="button"
-                className="rounded-sm"
-                onClick={handleOpenCreateCounter}
-              >
-                Create Counter
-              </Button>
+              <div className="rounded-sm border border-border-primary bg-surface-secondary p-4">
+                <BranchCounterTable
+                  counters={counters}
+                  onEdit={handleOpenEditCounter}
+                  onDelete={handleDeleteCounter}
+                  onToggleStatus={handleToggleCounterStatus}
+                  isUpdatingStatus={isSubmitting}
+                />
+              </div>
             </div>
-
-            <div className="rounded-sm border border-border-primary bg-surface-secondary p-4">
-              <BranchCounterTable
-                counters={counters}
-                onEdit={handleOpenEditCounter}
-                onDelete={handleDeleteCounter}
-                onToggleStatus={handleToggleCounterStatus}
-                isUpdatingStatus={isSubmitting}
-              />
-            </div>
-          </div>
-        </TabsContent>
+          </TabsContent>
+        )}
       </Tabs>
 
-      <BranchCounterModal
-        key={editingCounter?.id ?? 'create-counter'}
-        open={isCounterModalOpen}
-        onOpenChange={open => {
-          setCounterModalOpen(open);
-          if (!open) {
-            setEditingCounter(null);
+      {showCounters && (
+        <BranchCounterModal
+          key={editingCounter?.id ?? 'create-counter'}
+          open={isCounterModalOpen}
+          onOpenChange={open => {
+            setCounterModalOpen(open);
+            if (!open) {
+              setEditingCounter(null);
+            }
+          }}
+          title={editingCounter ? 'Edit Counter' : 'Create Counter'}
+          description={
+            editingCounter
+              ? 'Update the selected counter details.'
+              : 'Create a counter for this branch.'
           }
-        }}
-        title={editingCounter ? 'Edit Counter' : 'Create Counter'}
-        description={
-          editingCounter
-            ? 'Update the selected counter details.'
-            : 'Create a counter for this branch.'
-        }
-        submitLabel={editingCounter ? 'Save Changes' : 'Create Counter'}
-        defaultValues={counterModalDefaultValues}
-        onSubmit={handleSaveCounter}
-        isSubmitting={isSubmitting}
-      />
+          submitLabel={editingCounter ? 'Save Changes' : 'Create Counter'}
+          defaultValues={counterModalDefaultValues}
+          onSubmit={handleSaveCounter}
+          isSubmitting={isSubmitting}
+        />
+      )}
     </section>
   );
 };

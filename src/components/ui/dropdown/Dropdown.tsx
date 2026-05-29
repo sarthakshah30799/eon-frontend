@@ -32,6 +32,8 @@ interface DropdownProps extends HTMLAttributes<HTMLDivElement> {
   defaultOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
   align?: DropdownAlignment;
+  closeOnOutsideClick?: boolean;
+  closeOnEscape?: boolean;
   children: ReactNode;
 }
 
@@ -70,6 +72,8 @@ const DropdownBase = ({
   defaultOpen = false,
   onOpenChange,
   align = 'start',
+  closeOnOutsideClick = true,
+  closeOnEscape = true,
   className,
   children,
   ...props
@@ -111,6 +115,7 @@ const DropdownBase = ({
       }
 
       if (
+        closeOnOutsideClick &&
         currentOpen &&
         containerRef.current &&
         !containerRef.current.contains(target)
@@ -120,7 +125,7 @@ const DropdownBase = ({
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
+      if (closeOnEscape && event.key === 'Escape') {
         setOpen(false);
       }
     };
@@ -132,7 +137,7 @@ const DropdownBase = ({
       document.removeEventListener('pointerdown', handlePointerDown);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [currentOpen, setOpen]);
+  }, [closeOnEscape, closeOnOutsideClick, currentOpen, setOpen]);
 
   return (
     <DropdownContext.Provider value={contextValue}>

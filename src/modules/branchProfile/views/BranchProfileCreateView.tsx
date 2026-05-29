@@ -35,6 +35,7 @@ export const BranchProfileCreateView = () => {
       onSubmitBranch={handleSubmit}
       isSubmitting={isPending}
       branchAttachedToOptions={branchAttachedToOptions}
+      showCounters={false}
     />
   );
 };

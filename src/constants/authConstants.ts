@@ -4,7 +4,6 @@ export const AUTH_TEXTS = {
   PASSWORD: 'Password',
   ENTER_YOUR_EMAIL: 'Enter your email',
   ENTER_YOUR_PASSWORD: 'Enter your password',
-  REMEMBER_ME: 'Remember me',
   FORGOT_PASSWORD: 'Forgot password?',
   SIGN_IN: 'Sign in',
   SIGNING_IN: 'Signing in...',

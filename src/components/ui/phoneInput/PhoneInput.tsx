@@ -1,7 +1,6 @@
-import { useMemo } from 'react';
 import { Label } from '../label';
 import { Input } from '../input';
-import { AsyncSelect, type AsyncSelectOption } from '../asyncSelect';
+import { AsyncSelect } from '../asyncSelect';
 
 export interface PhoneCountryCodeOption {
   value: string;
@@ -35,28 +34,22 @@ export const PhoneInput = ({
   error,
   className = '',
 }: PhoneInputProps) => {
-  const selectedCountryCodeOption = useMemo<AsyncSelectOption | null>(
-    () =>
-      countryCodeOptions.find(option => option.value === countryCodeValue) ??
-      null,
-    [countryCodeOptions, countryCodeValue]
-  );
+  const selectedCountryCodeOption =
+    countryCodeOptions?.find(option => option.value === countryCodeValue) ??
+    null;
 
-  const loadCountryCodeOptions = useMemo(
-    () => async (inputValue: string) => {
-      const normalizedValue = inputValue.trim().toLowerCase();
-      const filteredOptions = normalizedValue
-        ? countryCodeOptions.filter(option =>
-            option.label.toLowerCase().includes(normalizedValue)
-          )
-        : countryCodeOptions;
+  const loadCountryCodeOptions = async (inputValue: string) => {
+    const normalizedValue = inputValue.trim().toLowerCase();
+    const filteredOptions = normalizedValue
+      ? countryCodeOptions?.filter(option =>
+          option.label.toLowerCase().includes(normalizedValue)
+        )
+      : countryCodeOptions;
 
-      return {
-        options: filteredOptions,
-      };
-    },
-    [countryCodeOptions]
-  );
+    return {
+      options: filteredOptions,
+    };
+  };
 
   return (
     <div className={`space-y-2 ${className}`}>

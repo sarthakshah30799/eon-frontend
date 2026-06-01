@@ -38,3 +38,15 @@ export const forgotPasswordSchema = yup.object({
     .email('Please enter a valid email address')
     .required('Email is required'),
 });
+
+export const resetPasswordSchema = yup.object({
+  password: yup
+    .string()
+    .min(6, 'Password must be at least 6 characters')
+    .required('Password is required'),
+  confirmPassword: yup
+    .string()
+    .oneOf([yup.ref('password')], 'Passwords must match')
+    .required('Confirm password is required'),
+});
+

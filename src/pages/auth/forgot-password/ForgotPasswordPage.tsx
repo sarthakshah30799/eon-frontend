@@ -4,16 +4,28 @@ import { Button } from '../../../components/ui/button1/Button';
 import { Form, FormFieldInput } from '../../../components/forms';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { forgotPasswordSchema } from '../../../modules/auth/schema';
+import { authApi } from '../../../api/auth/auth.api';
+import { toast } from 'react-hot-toast';
 
 const ForgotPasswordPage: React.FC = () => {
   const [isSent, setIsSent] = useState(false);
   const [email, setEmail] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const onSubmit = (data: { email: string }) => {
-    // Mock API call to send forgot password email
-    setEmail(data.email);
-    setIsSent(true);
+  const onSubmit = async (data: { email: string }) => {
+    setIsLoading(true);
+    try {
+      await authApi.forgotPassword(data.email);
+      setEmail(data.email);
+      setIsSent(true);
+      toast.success('Reset link generated! Copy it from your backend console.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to request reset link');
+    } finally {
+      setIsLoading(false);
+    }
   };
+
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-surface-secondary via-surface-primary to-primary-50">
@@ -61,8 +73,8 @@ const ForgotPasswordPage: React.FC = () => {
                 type="email"
                 placeholder="Enter your email"
               />
-              <Button type="submit" className="w-full" size="lg">
-                Send Reset Link
+              <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
+                {isLoading ? 'Sending...' : 'Send Reset Link'}
               </Button>
             </Form>
           ) : (

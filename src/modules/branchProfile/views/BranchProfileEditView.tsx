@@ -1,12 +1,15 @@
 import { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
+import { BRANCH_PROFILE_TEXTS } from '../constants';
 import {
-  BRANCH_PROFILE_TEXTS,
-} from '../constants';
-import { useGetBranchProfile, useListBranchProfiles, useUpdateBranchProfile } from '../hooks';
+  useGetBranchProfile,
+  useListBranchProfiles,
+  useUpdateBranchProfile,
+} from '../hooks';
 import { mapRecordToFormValues, toBranchAttachedToOptions } from '../utils';
-import type { BranchCounterRecord, BranchProfileFormValues } from '../types';
+import type { BranchProfileFormValues } from '../types';
 import { BranchProfileEditorView } from './BranchProfileEditorView';
+import { Loader } from '@/components/ui/loader';
 
 export const BranchProfileEditView = () => {
   const { id = '' } = useParams<{ id: string }>();
@@ -21,9 +24,7 @@ export const BranchProfileEditView = () => {
 
   if (isLoading) {
     return (
-      <div className="py-6 text-center text-text-secondary">
-        Loading branch...
-      </div>
+      <Loader />
     );
   }
 
@@ -35,23 +36,16 @@ export const BranchProfileEditView = () => {
     );
   }
 
-  const handleSubmit = async (
-    values: BranchProfileFormValues,
-    counters: BranchCounterRecord[]
-  ) => {
-    await submitBranchProfile({
-      ...values,
-      counters,
-    });
+  const handleSubmit = async (values: BranchProfileFormValues) => {
+    await submitBranchProfile(values);
   };
 
   return (
     <BranchProfileEditorView
       heading={BRANCH_PROFILE_TEXTS.EDIT_BRANCH}
-      description="Update the branch profile, counter list, and operational settings."
+      description="Update the branch profile and operational settings."
       submitLabel={BRANCH_PROFILE_TEXTS.SAVE_CHANGES}
       defaultValues={mapRecordToFormValues(branchProfile)}
-      initialCounters={branchProfile.counters}
       onSubmitBranch={handleSubmit}
       isSubmitting={isPending}
       branchAttachedToOptions={branchAttachedToOptions}

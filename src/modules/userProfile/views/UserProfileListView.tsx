@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button1';
 import { useDeleteUserProfile, useListUserProfiles } from '../hooks';
 import { USER_PROFILE_TEXTS } from '../constants';
 import { UserProfileTable } from '../components';
+import { Loader } from '@/components/ui/loader';
 
 export const UserProfileListView = () => {
   const navigate = useNavigate();
@@ -14,11 +15,7 @@ export const UserProfileListView = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="py-6 text-center text-text-secondary">
-        {USER_PROFILE_TEXTS.LOADING_USERS}
-      </div>
-    );
+    return <Loader />;
   }
 
   if (error) {
@@ -45,7 +42,12 @@ export const UserProfileListView = () => {
             </p>
           </div>
 
-          <Button type="button" onClick={() => navigate('/master/system-setups/user-profile/create')}>
+          <Button
+            type="button"
+            onClick={() =>
+              navigate('/master/system-setups/user-profile/create')
+            }
+          >
             {USER_PROFILE_TEXTS.CREATE_USER}
           </Button>
         </div>

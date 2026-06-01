@@ -10,11 +10,9 @@ export const USER_TEXTS = {
   EDIT_USER: 'Edit User',
 
   // User List
-  LOADING_USERS: 'Loading users...',
   ERROR_LOADING_USERS: 'Error loading users',
 
   // User Pages
-  LOADING_USER: 'Loading user...',
   USER_NOT_FOUND: 'User not found',
 
   // Labels

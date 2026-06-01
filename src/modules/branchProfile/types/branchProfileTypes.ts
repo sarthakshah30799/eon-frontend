@@ -15,9 +15,7 @@ export interface BranchCounterRecord extends BranchCounterFormValues {
   updatedAt: string;
 }
 
-export interface BranchProfileSavePayload extends BranchProfileFormValues {
-  counters: BranchCounterRecord[];
-}
+export type BranchProfileSavePayload = BranchProfileFormValues;
 
 export interface BranchProfileFormValues {
   branchName: string;
@@ -61,6 +59,7 @@ export interface BranchProfileFormValues {
   currencyLimit: string;
   tempCashLimit: string;
   tempCurrencyLimit: string;
+  connectCounterIds: string[];
   branchHasShifts: boolean;
   canReferenceOnBehalfEntries: boolean;
   serviceTaxApplicable: boolean;
@@ -71,5 +70,4 @@ export interface BranchProfileRecord extends BranchProfileFormValues {
   id: string;
   createdAt: string;
   updatedAt: string;
-  counters: BranchCounterRecord[];
 }

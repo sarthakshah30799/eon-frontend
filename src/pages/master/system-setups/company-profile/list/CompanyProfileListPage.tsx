@@ -1,3 +1,4 @@
+import { Loader } from '@/components/ui/loader';
 import { useListCompanyProfiles } from '@/modules/companyProfile/hooks';
 import { CompanyProfileEditView } from '@/modules/companyProfile/views';
 
@@ -6,11 +7,7 @@ const CompanyProfileListPage = () => {
 
   if (isLoading) {
     return (
-      <div className="rounded-3xl border border-border-primary bg-surface-primary p-6 shadow-sm">
-        <p className="text-sm text-text-secondary">
-          Loading company details...
-        </p>
-      </div>
+      <Loader />
     );
   }
 

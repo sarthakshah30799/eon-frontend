@@ -41,7 +41,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
-      <div className="min-h-screen lg:pl-80">
+      <div className="min-h-screen lg:pl-70">
         <Header
           userName={user?.name ?? user?.email ?? 'Admin'}
           onMenuClick={() => setIsSidebarOpen(true)}

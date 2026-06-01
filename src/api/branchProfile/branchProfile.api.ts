@@ -1,7 +1,6 @@
 import { apiClient } from '../api';
 import { companyProfileApi } from '../companyProfile/companyProfile.api';
 import type {
-  BranchProfileSavePayload,
   BranchProfileRecord,
   BranchProfileFormValues,
 } from '@/modules/branchProfile/types';
@@ -82,13 +81,13 @@ const mapBackendToFrontend = (branch: BackendBranch): BranchProfileRecord => {
     currencyLimit: '',
     tempCashLimit: '',
     tempCurrencyLimit: '',
+    connectCounterIds: [],
     branchHasShifts: false,
     canReferenceOnBehalfEntries: false,
     serviceTaxApplicable: false,
     serviceTaxRegnNo: '',
     createdAt: branch.createdAt,
     updatedAt: branch.updatedAt,
-    counters: [],
   };
 };
 
@@ -142,7 +141,7 @@ export const branchProfileApi = {
   },
 
   createBranchProfile: async (
-    data: BranchProfileSavePayload
+    data: BranchProfileFormValues
   ): Promise<BranchProfileRecord> => {
     // Dynamically fetch first company to link it automatically
     const companyRes = await companyProfileApi.getCompanyProfiles();
@@ -159,7 +158,7 @@ export const branchProfileApi = {
 
   updateBranchProfile: async (
     id: string,
-    data: BranchProfileSavePayload
+    data: BranchProfileFormValues
   ): Promise<BranchProfileRecord | undefined> => {
     const companyRes = await companyProfileApi.getCompanyProfiles();
     const companyId =

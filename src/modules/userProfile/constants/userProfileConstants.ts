@@ -11,7 +11,6 @@ export const USER_PROFILE_TEXTS = {
   SAVE_CHANGES: 'Save Changes',
   FORM_TITLE: 'User Details',
   FORM_SUBTITLE: 'Fill in the user details and control setup values.',
-  LOADING_USERS: 'Loading users...',
   EMPTY_STATE: 'No users found. Create your first user.',
   LIST_ERROR: 'Error loading users',
   EDIT_USER: 'Edit User',

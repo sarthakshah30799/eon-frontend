@@ -10,15 +10,31 @@ export const branchProfileSchema = yup.object({
   city: yup.string().trim().required('City is required'),
   stateId: yup.string().trim().required('State is required'),
   stdCode: yup.string().trim().notRequired(),
-  pinCode: yup.string().trim().notRequired(),
+  pinCode: yup
+      .string()
+      .trim()
+      .required('Pincode is required')
+      .matches(/^\d+$/, 'Pincode must contain only numbers')
+      .min(6, 'Pincode must be 6 digits')
+      .max(6, 'Pincode must be 6 digits'),
   operationalGroupId: yup
     .string()
     .trim()
     .required('Operational Group is required'),
   phoneNo1CountryCode: yup.string().trim().required(),
-  phoneNo1: yup.string().trim().notRequired(),
+  phoneNo1: yup
+    .string()
+    .trim()
+    .matches(/^\d*$/, 'Phone No.1 must contain only numbers')
+    .min(10, 'Phone No.1 must be at least 10 digits')
+    .notRequired(),
   phoneNo2CountryCode: yup.string().trim().required(),
-  phoneNo2: yup.string().trim().notRequired(),
+  phoneNo2: yup
+    .string()
+    .trim()
+    .matches(/^\d*$/, 'Phone No.2 must contain only numbers')
+    .min(10, 'Phone No.2 must be at least 10 digits')
+    .notRequired(),
   faxNo1CountryCode: yup.string().trim().required(),
   faxNo1: yup.string().trim().notRequired(),
   faxNo2CountryCode: yup.string().trim().required(),
@@ -26,7 +42,12 @@ export const branchProfileSchema = yup.object({
   emailId: yup.string().trim().email('Enter a valid email').notRequired(),
   contactPerson: yup.string().trim().notRequired(),
   contactNoCountryCode: yup.string().trim().required(),
-  contactNo: yup.string().trim().notRequired(),
+  contactNo: yup
+    .string()
+    .trim()
+    .matches(/^\d*$/, 'Phone No.2 must contain only numbers')
+    .min(10, 'Phone No.2 must be at least 10 digits')
+    .notRequired(),
   locationTypeId: yup.string().trim().required('Location Type is required'),
   operationalUserId: yup.string().trim().notRequired(),
   acUserInchargeId: yup.string().trim().notRequired(),
@@ -45,6 +66,7 @@ export const branchProfileSchema = yup.object({
   currencyLimit: yup.string().trim().notRequired(),
   tempCashLimit: yup.string().trim().notRequired(),
   tempCurrencyLimit: yup.string().trim().notRequired(),
+  connectCounterIds: yup.array().of(yup.string().trim()).default([]),
   branchHasShifts: yup.boolean().required(),
   canReferenceOnBehalfEntries: yup.boolean().required(),
   serviceTaxApplicable: yup.boolean().required(),

@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button1';
 import type { User } from '../../../api/user/user.api';
+import { Loader } from '@/components/ui/loader';
 
 interface UserListProps {
   users: User[];
@@ -14,9 +15,7 @@ export const UserList: React.FC<UserListProps> = ({
 }) => {
   if (isLoading) {
     return (
-      <div className="py-4 text-center text-text-secondary">
-        Loading users...
-      </div>
+      <Loader />
     );
   }
 

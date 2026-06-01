@@ -5,6 +5,7 @@ import { useGetUserProfile, useUpdateUserProfile } from '../hooks';
 import { USER_PROFILE_TEXTS } from '../constants';
 import { mapRecordToFormValues } from '../utils';
 import type { UserProfileFormValues } from '../types';
+import { Loader } from '@/components/ui/loader';
 
 export const UserProfileEditView = () => {
   const navigate = useNavigate();
@@ -14,9 +15,7 @@ export const UserProfileEditView = () => {
 
   if (isLoading) {
     return (
-      <div className="py-6 text-center text-text-secondary">
-        Loading user...
-      </div>
+     <Loader />
     );
   }
 

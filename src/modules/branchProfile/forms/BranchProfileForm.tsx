@@ -7,25 +7,26 @@ import {
   Form,
   FormFieldCheckbox,
   FormFieldDatePicker,
+  FormFieldCityDropdown,
   FormFieldInput,
   FormFieldPhoneInput,
-  FormFieldSelect,
+  FormFieldStateDropdown,
   FormFieldYesNoToggle,
+  FormFieldSelect,
 } from '@/components/forms';
 import {
   AC_USER_INCHARGE_OPTIONS,
-  BRANCH_PHONE_COUNTRY_CODE_OPTIONS,
   BRANCH_PROFILE_TEXTS,
   IBM_BRANCH_OPTIONS,
   LOCATION_TYPE_OPTIONS,
   OPERATIONAL_GROUP_OPTIONS,
   OPERATIONAL_USER_OPTIONS,
-  STATE_OPTIONS,
   WU_AC_BRANCH_POSTING_OPTIONS,
   createStaticLoadOptions,
 } from '../constants';
 import { branchProfileSchema } from '../schema';
 import type { BranchProfileFormValues, BranchProfileOption } from '../types';
+import { useListCounterProfiles } from '@/modules/counterProfile/hooks';
 
 interface BranchProfileFormProps {
   defaultValues: BranchProfileFormValues;
@@ -46,6 +47,7 @@ const BranchProfileFormFields = ({
   isSubmitting?: boolean;
 }) => {
   const form = useFormContext<BranchProfileFormValues>();
+  const { data: counterProfiles = [] } = useListCounterProfiles();
   const serviceTaxApplicable = useWatch({
     control: form.control,
     name: 'serviceTaxApplicable',
@@ -53,10 +55,6 @@ const BranchProfileFormFields = ({
 
   const locationTypeLoadOptions = useMemo(
     () => createStaticLoadOptions(LOCATION_TYPE_OPTIONS),
-    []
-  );
-  const stateLoadOptions = useMemo(
-    () => createStaticLoadOptions(STATE_OPTIONS),
     []
   );
   const operationalGroupLoadOptions = useMemo(
@@ -82,6 +80,18 @@ const BranchProfileFormFields = ({
   const branchAttachedToLoadOptions = useMemo(
     () => createStaticLoadOptions(branchAttachedToOptions),
     [branchAttachedToOptions]
+  );
+  const connectedCounterOptions = useMemo(
+    () =>
+      counterProfiles.map(counter => ({
+        value: counter.id,
+        label: `${counter.counterCode} - ${counter.counterName}`,
+      })),
+    [counterProfiles]
+  );
+  const connectedCounterLoadOptions = useMemo(
+    () => createStaticLoadOptions(connectedCounterOptions),
+    [connectedCounterOptions]
   );
 
   return (
@@ -117,14 +127,21 @@ const BranchProfileFormFields = ({
           <FormFieldInput name="address1" label="Address 1" disabled={isSubmitting} />
           <FormFieldInput name="address2" label="Address 2" disabled={isSubmitting} />
           <FormFieldInput name="address3" label="Address 3" disabled={isSubmitting} />
-          <FormFieldInput name="city" label="City" disabled={isSubmitting} />
-          <FormFieldSelect
+          <FormFieldCityDropdown
+            name="city"
+            label="City"
+            placeholder="Select city"
+            disabled={isSubmitting}
+            createLabel="Create"
+            onCreateCity={() => undefined}
+          />
+          <FormFieldStateDropdown
             name="stateId"
             label="State"
             placeholder="Select state"
-            loadOptions={stateLoadOptions}
-            pagination={false}
             disabled={isSubmitting}
+            createLabel="Create"
+            onCreateState={() => undefined}
           />
           <FormFieldInput name="stdCode" label="STD Code" disabled={isSubmitting} />
           <FormFieldInput name="pinCode" label="Pin Code" disabled={isSubmitting} />
@@ -148,28 +165,24 @@ const BranchProfileFormFields = ({
             countryCodeName="phoneNo1CountryCode"
             numberName="phoneNo1"
             label="Phone No.1"
-            countryCodeOptions={BRANCH_PHONE_COUNTRY_CODE_OPTIONS}
             disabled={isSubmitting}
           />
           <FormFieldPhoneInput
             countryCodeName="phoneNo2CountryCode"
             numberName="phoneNo2"
             label="Phone No.2"
-            countryCodeOptions={BRANCH_PHONE_COUNTRY_CODE_OPTIONS}
             disabled={isSubmitting}
           />
           <FormFieldPhoneInput
             countryCodeName="faxNo1CountryCode"
             numberName="faxNo1"
             label="Fax No 1"
-            countryCodeOptions={BRANCH_PHONE_COUNTRY_CODE_OPTIONS}
             disabled={isSubmitting}
           />
           <FormFieldPhoneInput
             countryCodeName="faxNo2CountryCode"
             numberName="faxNo2"
             label="Fax No 2"
-            countryCodeOptions={BRANCH_PHONE_COUNTRY_CODE_OPTIONS}
             disabled={isSubmitting}
           />
           <FormFieldInput
@@ -187,7 +200,6 @@ const BranchProfileFormFields = ({
             countryCodeName="contactNoCountryCode"
             numberName="contactNo"
             label="Contact No."
-            countryCodeOptions={BRANCH_PHONE_COUNTRY_CODE_OPTIONS}
             disabled={isSubmitting}
           />
         </div>
@@ -290,6 +302,17 @@ const BranchProfileFormFields = ({
             label="Temp Currency Limit"
             disabled={isSubmitting}
           />
+          <FormFieldSelect
+            name="connectCounterIds"
+            label="Connect Counters"
+            placeholder="Select counters"
+            loadOptions={connectedCounterLoadOptions}
+            pagination={false}
+            disabled={isSubmitting}
+            isMulti
+            closeMenuOnSelect={false}
+            className="md:col-span-2 lg:col-span-3"
+          />
 
           <div className="md:col-span-2 lg:col-span-3 grid gap-4 md:grid-cols-2">
             <FormFieldCheckbox
@@ -306,15 +329,15 @@ const BranchProfileFormFields = ({
               name="serviceTaxApplicable"
               label="Service Tax Applicable"
               disabled={isSubmitting}
-            />        
+            />
           </div>
-           {serviceTaxApplicable && (
-              <FormFieldInput
-                name="serviceTaxRegnNo"
-                label="Serv.Tax Regn No"
-                disabled={isSubmitting || !serviceTaxApplicable}
-              />
-            )}
+          {serviceTaxApplicable && (
+            <FormFieldInput
+              name="serviceTaxRegnNo"
+              label="Serv.Tax Regn No"
+              disabled={isSubmitting || !serviceTaxApplicable}
+            />
+          )}
         </div>
       </section>
     </div>

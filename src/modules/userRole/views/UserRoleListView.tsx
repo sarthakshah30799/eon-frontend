@@ -4,6 +4,7 @@ import { useDeleteUserRole, useListUserRoles, useUpdateUserRoleStatus } from '..
 import { USER_ROLE_TEXTS } from '../constants';
 import { UserRoleTable, UserRightsTable, UserRightsTreePreview } from '../components';
 import { useUserRightsMatrix } from '../hooks';
+import { Loader } from '@/components/ui/loader';
 
 export const UserRoleListView = () => {
   const navigate = useNavigate();
@@ -41,9 +42,7 @@ export const UserRoleListView = () => {
 
   if (isLoading) {
     return (
-      <div className="py-6 text-center text-text-secondary">
-        {USER_ROLE_TEXTS.LOADING_ROLES}
-      </div>
+      <Loader />
     );
   }
 
@@ -81,7 +80,7 @@ export const UserRoleListView = () => {
 
           <Button
             type="button"
-            onClick={() => navigate('/master/system-setups/roles-profile/create')}
+            onClick={() => navigate('/master/system-setups/user-role/create')}
           >
             {USER_ROLE_TEXTS.CREATE_ROLE}
           </Button>

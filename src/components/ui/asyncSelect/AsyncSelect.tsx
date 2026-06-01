@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
-import AsyncSelect, { type AsyncProps } from 'react-select/async';
+import AsyncSelect, { type AsyncCreatableProps } from 'react-select/async-creatable';
+import type { SelectInstance } from 'react-select';
 import { Label } from '../label';
 import './AsyncSelect.css';
 
@@ -54,10 +55,10 @@ export interface AsyncSelectResponse {
   hasMore?: boolean;
 }
 
-export interface AsyncSelectProps
+export interface AsyncSelectProps<IsMulti extends boolean = false>
   extends
     Omit<
-      AsyncProps<AsyncSelectOption, false, AsyncSelectGroupOption>,
+      AsyncCreatableProps<AsyncSelectOption, IsMulti, AsyncSelectGroupOption>,
       'loadOptions'
     >,
     VariantProps<typeof asyncSelectVariants> {
@@ -74,8 +75,10 @@ export interface AsyncSelectProps
   disabled?: boolean;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const AsyncSelectComponent = React.forwardRef<any, AsyncSelectProps>(
+const AsyncSelectComponent = React.forwardRef<
+  SelectInstance<AsyncSelectOption, boolean, AsyncSelectGroupOption>,
+  AsyncSelectProps<boolean>
+>(
   (
     {
       label,

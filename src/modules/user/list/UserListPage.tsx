@@ -1,15 +1,14 @@
 import { useListUser } from '../hooks/useListUser';
 import { Button } from '../../../components/ui/button1';
 import type { User } from '../../../api/user/user.api';
+import { Loader } from '@/components/ui/loader';
 
 export const UserListPage = () => {
   const { data: users, isLoading, error } = useListUser();
 
   if (isLoading) {
     return (
-      <div className="py-4 text-center text-text-secondary">
-        Loading users...
-      </div>
+      <Loader />
     );
   }
 

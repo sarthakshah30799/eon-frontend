@@ -14,7 +14,6 @@ import type {
   BranchProfileFormValues,
   BranchProfileOption,
   BranchProfileRecord,
-  BranchProfileSavePayload,
 } from '../types';
 
 export const createEmptyBranchProfileFormValues = (): BranchProfileFormValues => ({
@@ -59,6 +58,7 @@ export const createEmptyBranchProfileFormValues = (): BranchProfileFormValues =>
   currencyLimit: '',
   tempCashLimit: '',
   tempCurrencyLimit: '',
+  connectCounterIds: [],
   branchHasShifts: false,
   canReferenceOnBehalfEntries: false,
   serviceTaxApplicable: false,
@@ -109,6 +109,7 @@ export const mapRecordToFormValues = (
   currencyLimit: record.currencyLimit,
   tempCashLimit: record.tempCashLimit,
   tempCurrencyLimit: record.tempCurrencyLimit,
+  connectCounterIds: record.connectCounterIds,
   branchHasShifts: record.branchHasShifts,
   canReferenceOnBehalfEntries: record.canReferenceOnBehalfEntries,
   serviceTaxApplicable: record.serviceTaxApplicable,
@@ -116,7 +117,7 @@ export const mapRecordToFormValues = (
 });
 
 export const mapFormValuesToRecord = (
-  values: BranchProfileSavePayload,
+  values: BranchProfileFormValues,
   id: string,
   createdAt: string,
   updatedAt: string

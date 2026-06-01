@@ -1,5 +1,12 @@
 import { Button } from '@/components/ui/button1';
-import { Form, FormFieldInput } from '@/components/forms';
+import {
+  Form,
+  FormFieldCityDropdown,
+  FormFieldCountryDropdown,
+  FormFieldFileUploader,
+  FormFieldInput,
+  FormFieldStateDropdown,
+} from '@/components/forms';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { companyProfileSchema } from '../schema';
 import type { CompanyProfileFormValues } from '../types';
@@ -22,6 +29,16 @@ export const CompanyProfileForm = ({
       defaultValues={defaultValues}
       className="space-y-6"
     >
+      <div className="rounded-sm border border-border-primary bg-surface-secondary p-4">
+        <FormFieldFileUploader
+          name="logo"
+          label="Upload Logo"
+          accept="image/*"
+          helperText="Upload a company logo image."
+          disabled={isSaving}
+        />
+      </div>
+
       <div className="grid gap-4 md:grid-cols-2">
         <FormFieldInput
           name="name"
@@ -54,21 +71,33 @@ export const CompanyProfileForm = ({
           name="pincode"
           label="Pincode"
           disabled={isSaving}
+          inputMode="numeric"
+          pattern="[0-9]*"
+          maxLength={6}
         />
-        <FormFieldInput
+        <FormFieldCityDropdown
           name="city"
           label="City"
+          placeholder="Select city"
           disabled={isSaving}
+          createLabel="Create"
+          onCreateCity={() => undefined}
         />
-        <FormFieldInput
+        <FormFieldStateDropdown
           name="state"
           label="State"
+          placeholder="Select state"
           disabled={isSaving}
+          createLabel="Create"
+          onCreateState={() => undefined}
         />
-        <FormFieldInput
+        <FormFieldCountryDropdown
           name="country"
           label="Country"
+          placeholder="Select country"
           disabled={isSaving}
+          createLabel="Create"
+          onCreateCountry={() => console.log('Create country')}
         />
       </div>
 

@@ -5,6 +5,7 @@ import { useGetUserRole, useUpdateUserRole } from '../hooks';
 import { USER_ROLE_TEXTS } from '../constants';
 import { mapRecordToFormValues } from '../utils';
 import type { UserRoleFormValues } from '../types';
+import { Loader } from '@/components/ui/loader';
 
 export const UserRoleEditView = () => {
   const navigate = useNavigate();
@@ -14,9 +15,7 @@ export const UserRoleEditView = () => {
 
   if (isLoading) {
     return (
-      <div className="py-6 text-center text-text-secondary">
-        Loading role...
-      </div>
+      <Loader />
     );
   }
 

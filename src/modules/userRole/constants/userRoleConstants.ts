@@ -8,7 +8,6 @@ export const USER_ROLE_TEXTS = {
   SAVE_CHANGES: 'Save Changes',
   EDIT_ROLE: 'Edit Role',
   FORM_SUBTITLE: 'Fill in the role details and save the record.',
-  LOADING_ROLES: 'Loading roles...',
   EMPTY_STATE: 'No roles found. Create your first role.',
   LIST_ERROR: 'Error loading roles',
   CREATE_SUCCESS: 'Role created successfully!',

@@ -10,7 +10,6 @@ export const BRANCH_PROFILE_TEXTS = {
   FORM_TITLE: 'Branch Details',
   FORM_SUBTITLE:
     'Fill in the profile, address, contact, and operational details for the branch.',
-  LOADING_BRANCHES: 'Loading branches...',
   EMPTY_STATE: 'No branches found. Create your first branch.',
   LIST_ERROR: 'Error loading branches',
   EDIT_BRANCH: 'Edit Branch',
@@ -66,13 +65,6 @@ export const IBM_BRANCH_OPTIONS: BranchProfileOption[] = [
   { value: 'ibm-branch-1', label: 'IBMX Main' },
   { value: 'ibm-branch-2', label: 'IBMX South' },
   { value: 'ibm-branch-3', label: 'IBMX Gulf' },
-];
-
-export const BRANCH_PHONE_COUNTRY_CODE_OPTIONS = [
-  { value: '+91', label: '+91 IN' },
-  { value: '+971', label: '+971 UAE' },
-  { value: '+44', label: '+44 UK' },
-  { value: '+1', label: '+1 USA' },
 ];
 
 export const createStaticLoadOptions =

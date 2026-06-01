@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { companyProfileApi } from '@/api/companyProfile';
 import type { CompanyProfileFormValues } from '../types';
+import { mapCompanyProfileToFormValues } from '../utils';
 
 export const useCompanyProfile = (id: string | undefined) => {
   const queryClient = useQueryClient();
@@ -19,7 +20,7 @@ export const useCompanyProfile = (id: string | undefined) => {
         throw new Error(response.error);
       }
 
-      return response.data;
+      return response.data ? mapCompanyProfileToFormValues(response.data) : undefined;
     },
     enabled: Boolean(id),
   });
@@ -36,7 +37,7 @@ export const useCompanyProfile = (id: string | undefined) => {
         throw new Error(response.error);
       }
 
-      return response.data;
+      return response.data ? mapCompanyProfileToFormValues(response.data) : undefined;
     },
     onSuccess: updatedProfile => {
       if (!id) {

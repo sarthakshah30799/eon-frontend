@@ -1,6 +1,7 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 import { ProtectedLayout, PublicLayout } from '../components/layouts';
+import { Loader } from '@/components/ui/loader';
 
 // Lazy load pages
 const LoginPage = lazy(() => import('../pages/auth/login/LoginPage'));
@@ -34,6 +35,30 @@ const BranchProfileCreatePage = lazy(
 const BranchProfileEditPage = lazy(
   () =>
     import('../pages/master/system-setups/branch-profile/edit/[id]/BranchProfileEditPage')
+);
+const ProductProfileListPage = lazy(
+  () =>
+    import('../pages/master/system-setups/product-profile/list/ProductProfileListPage')
+);
+const ProductProfileCreatePage = lazy(
+  () =>
+    import('../pages/master/system-setups/product-profile/create/ProductProfileCreatePage')
+);
+const ProductProfileEditPage = lazy(
+  () =>
+    import('../pages/master/system-setups/product-profile/edit/[id]/ProductProfileEditPage')
+);
+const CounterProfileListPage = lazy(
+  () =>
+    import('../pages/master/system-setups/counter-profile/list/CounterProfileListPage')
+);
+const CounterProfileCreatePage = lazy(
+  () =>
+    import('../pages/master/system-setups/counter-profile/create/CounterProfileCreatePage')
+);
+const CounterProfileEditPage = lazy(
+  () =>
+    import('../pages/master/system-setups/counter-profile/edit/[id]/CounterProfileEditPage')
 );
 const MasterPagesPage = lazy(
   () => import('../pages/master/system-setups/master-pages/MasterPagesPage')
@@ -125,6 +150,14 @@ const router = createBrowserRouter([
     ),
   },
   {
+    path: '/admin/branch-profile',
+    element: (
+      <ProtectedLayout>
+        <BranchProfileListPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
     path: '/master/system-setups/company-profile/:id',
     element: (
       <ProtectedLayout>
@@ -153,6 +186,54 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <BranchProfileEditPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/master/system-setups/product-profile',
+    element: (
+      <ProtectedLayout>
+        <ProductProfileListPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/master/system-setups/product-profile/create',
+    element: (
+      <ProtectedLayout>
+        <ProductProfileCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/master/system-setups/product-profile/edit/:id',
+    element: (
+      <ProtectedLayout>
+        <ProductProfileEditPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/master/system-setups/counter-profile',
+    element: (
+      <ProtectedLayout>
+        <CounterProfileListPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/master/system-setups/counter-profile/create',
+    element: (
+      <ProtectedLayout>
+        <CounterProfileCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/master/system-setups/counter-profile/edit/:id',
+    element: (
+      <ProtectedLayout>
+        <CounterProfileEditPage />
       </ProtectedLayout>
     ),
   },
@@ -224,7 +305,7 @@ const router = createBrowserRouter([
 
 export const AppRouter = () => {
   return (
-    <Suspense fallback={<div className="text-center py-4">Loading...</div>}>
+    <Suspense fallback={<div className="text-center py-4"><Loader /></div>}>
       <RouterProvider router={router} />
     </Suspense>
   );

@@ -4,6 +4,38 @@ import type {
   CompanyProfileFormValues,
 } from '../../modules/companyProfile/types';
 
+interface CompanyProfilePayload {
+  logo: string;
+  name: string;
+  designation: string;
+  rbiName: string;
+  rbiPlace: string;
+  address1: string;
+  address2: string;
+  address3: string;
+  pincode: string;
+  city: string;
+  state: string;
+  country: string;
+}
+
+const toCompanyProfilePayload = (
+  values: CompanyProfileFormValues
+): CompanyProfilePayload => ({
+  logo: values.logo,
+  name: values.name,
+  designation: values.designation,
+  rbiName: values.rbiName,
+  rbiPlace: values.rbiPlace,
+  address1: values.address1,
+  address2: values.address2,
+  address3: values.address3,
+  pincode: values.pincode,
+  city: values.city,
+  state: values.state,
+  country: values.country,
+});
+
 export const companyProfileApi = {
   getCompanyProfiles: async () => {
     return apiClient.get<CompanyProfile[]>('/companies');
@@ -12,15 +44,19 @@ export const companyProfileApi = {
     return apiClient.get<CompanyProfile>(`/companies/${id}`);
   },
   createCompanyProfile: async (values: CompanyProfileFormValues) => {
-    const { id: _, createdAt: __, updatedAt: ___, ...payload } = values as any;
-    return apiClient.post<CompanyProfile>('/companies', payload);
+    return apiClient.post<CompanyProfile>(
+      '/companies',
+      toCompanyProfilePayload(values)
+    );
   },
   updateCompanyProfile: async (
     id: string,
     values: CompanyProfileFormValues
   ) => {
-    const { id: _, createdAt: __, updatedAt: ___, ...payload } = values as any;
-    return apiClient.put<CompanyProfile>(`/companies/${id}`, payload);
+    return apiClient.put<CompanyProfile>(
+      `/companies/${id}`,
+      toCompanyProfilePayload(values)
+    );
   },
   deleteCompanyProfile: async (id: string) => {
     return apiClient.delete<{ message: string }>(`/companies/${id}`);

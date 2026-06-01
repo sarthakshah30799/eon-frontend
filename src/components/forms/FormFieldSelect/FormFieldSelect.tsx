@@ -10,7 +10,7 @@ import {
 } from '../../ui';
 
 interface FormFieldSelectProps extends Omit<
-  AsyncSelectProps,
+  AsyncSelectProps<boolean>,
   'value' | 'onChange' | 'error'
 > {
   name: string;
@@ -18,6 +18,7 @@ interface FormFieldSelectProps extends Omit<
   placeholder?: string;
   disabled?: boolean;
   className?: string;
+  isMulti?: boolean;
 }
 
 const flattenOptions = (
@@ -45,6 +46,7 @@ export const FormFieldSelect = ({
   debounceDelay = 300,
   size,
   variant,
+  isMulti = false,
   ...props
 }: FormFieldSelectProps) => {
   const form = useFormContext();
@@ -57,13 +59,47 @@ export const FormFieldSelect = ({
     control: form.control,
   });
 
-  const [selectedOption, setSelectedOption] =
-    useState<AsyncSelectOption | null>(null);
+  const [selectedOption, setSelectedOption] = useState<
+    AsyncSelectOption | readonly AsyncSelectOption[] | null
+  >(null);
 
   useEffect(() => {
     let isActive = true;
 
     const resolveSelectedOption = async () => {
+      if (isMulti) {
+        const selectedValues = Array.isArray(field.value) ? field.value : [];
+
+        if (selectedValues.length === 0) {
+          if (isActive) {
+            setSelectedOption([]);
+          }
+          return;
+        }
+
+        try {
+          const response = await loadOptions('');
+          const options = flattenOptions(response);
+          const nextOptions = selectedValues
+            .map(selectedValue =>
+              options.find(
+                option => String(option.value) === String(selectedValue)
+              )
+            )
+            .filter((option): option is AsyncSelectOption => Boolean(option));
+
+          if (isActive) {
+            setSelectedOption(nextOptions);
+          }
+        } catch {
+          if (isActive) {
+            setSelectedOption([]);
+          }
+        }
+
+        return;
+      }
+
       if (
         field.value === null ||
         field.value === undefined ||
@@ -79,9 +115,8 @@ export const FormFieldSelect = ({
         const response = await loadOptions('');
         const options = flattenOptions(response);
         const nextOption =
-          options.find(
-            option => String(option.value) === String(field.value)
-          ) ?? null;
+          options.find(option => String(option.value) === String(field.value)) ??
+          null;
 
         if (isActive) {
           setSelectedOption(nextOption);
@@ -93,12 +128,12 @@ export const FormFieldSelect = ({
       }
     };
 
-    resolveSelectedOption();
+    void resolveSelectedOption();
 
     return () => {
       isActive = false;
     };
-  }, [field.value, loadOptions]);
+  }, [field.value, isMulti, loadOptions]);
 
   return (
     <AsyncSelect
@@ -113,11 +148,22 @@ export const FormFieldSelect = ({
       size={size}
       variant={variant}
       {...props}
-      {...field}
       value={selectedOption}
+      isMulti={isMulti}
+      closeMenuOnSelect={!isMulti}
       onChange={option => {
-        setSelectedOption(option ?? null);
-        field.onChange(option?.value ?? null);
+        if (isMulti) {
+          const nextOptions = Array.isArray(option) ? option : [];
+          setSelectedOption(nextOptions);
+          field.onChange(
+            nextOptions.map(selectedOptionItem => String(selectedOptionItem.value))
+          );
+          return;
+        }
+
+        const nextOption = Array.isArray(option) ? null : option;
+        setSelectedOption(nextOption);
+        field.onChange(nextOption?.value ?? null);
       }}
       error={error?.message}
     />

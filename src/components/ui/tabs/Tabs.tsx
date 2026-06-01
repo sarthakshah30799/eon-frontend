@@ -100,7 +100,7 @@ export const TabsList = ({
       role="tablist"
       aria-orientation={context.orientation}
       className={cn(
-        'inline-flex w-full items-center gap-2 rounded-sm border border-border-primary bg-surface-secondary p-1',
+        'inline-flex w-full items-center gap-2 rounded-sm p-1',
         context.orientation === 'vertical' && 'flex-col items-stretch',
         className
       )}
@@ -140,7 +140,7 @@ export const TabsTrigger = ({
       tabIndex={active ? 0 : -1}
       disabled={disabled}
       className={cn(
-        'inline-flex items-center justify-center rounded-sm px-4 py-2 text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/20 disabled:cursor-not-allowed disabled:opacity-50',
+        'inline-flex items-center justify-center px-4 py-2 text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/20 disabled:cursor-not-allowed disabled:opacity-50',
         active
           ? 'text-text-primary border-b-2 border-primary-500'
           : 'text-text-secondary hover:bg-surface-primary hover:text-text-primary',

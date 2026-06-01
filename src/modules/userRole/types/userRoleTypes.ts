@@ -1,6 +1,6 @@
 export interface UserRoleFormValues {
-  code: string;
-  name: string;
+  roleCode: string;
+  roleName: string;
   description: string;
 }
 

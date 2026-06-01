@@ -1,20 +1,8 @@
+import { Loader } from '@/components/ui/loader';
 import { CompanyProfileForm } from '../forms';
 import { useGetCompanyProfile, useUpdateCompanyProfile, useListCompanyProfiles } from '../hooks';
 import type { CompanyProfileFormValues } from '../types';
-
-const emptyProfile: CompanyProfileFormValues = {
-  name: '',
-  designation: '',
-  rbiName: '',
-  rbiPlace: '',
-  address1: '',
-  address2: '',
-  address3: '',
-  pincode: '',
-  city: '',
-  state: '',
-  country: 'India',
-};
+import { createEmptyCompanyProfileFormValues } from '../utils';
 
 interface CompanyProfileEditViewProps {
   id?: string;
@@ -38,11 +26,7 @@ export const CompanyProfileEditView = ({ id: propId }: CompanyProfileEditViewPro
 
   if (isLoading) {
     return (
-      <div className="rounded-sm border border-border-primary bg-surface-primary p-6 shadow-sm">
-        <p className="text-sm text-text-secondary">
-          Loading company profile...
-        </p>
-      </div>
+     <Loader />
     );
   }
 
@@ -70,7 +54,7 @@ export const CompanyProfileEditView = ({ id: propId }: CompanyProfileEditViewPro
 
       <div className="rounded-sm border border-border-primary bg-surface-primary p-6 shadow-sm">
         <CompanyProfileForm
-          defaultValues={data ?? emptyProfile}
+          defaultValues={data ?? createEmptyCompanyProfileFormValues()}
           onSubmit={handleSubmit}
           isSaving={isSaving}
         />

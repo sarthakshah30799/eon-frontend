@@ -11,7 +11,6 @@ import { AUTH_TEXTS } from '../../../constants';
 import { useLogin } from '../hooks';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { otpMobileSchema, otpSchema } from '../schema';
-import type { PhoneCountryCodeOption } from '../../../components/ui/phoneInput';
 
 interface LoginFormProps {
   isLoading?: boolean;
@@ -86,7 +85,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           }
         }}
       >
-        <TabsList className="grid grid-cols-2 rounded-2xl bg-primary-50/80 p-1.5 shadow-sm shadow-primary-100/50">
+        <TabsList className="grid grid-cols-2 rounded-2xl p-1.5 shadow-sm shadow-primary-100/50">
           <TabsTrigger
             value="password"
             className="w-full"

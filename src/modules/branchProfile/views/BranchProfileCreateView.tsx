@@ -1,11 +1,13 @@
 import { useMemo } from 'react';
 import { useListBranchProfiles } from '../hooks';
 import { BRANCH_PROFILE_TEXTS } from '../constants';
-import { createEmptyBranchProfileFormValues, toBranchAttachedToOptions } from '../utils';
+import {
+  createEmptyBranchProfileFormValues,
+  toBranchAttachedToOptions,
+} from '../utils';
 import type { BranchProfileFormValues } from '../types';
 import { useCreateBranchProfile } from '../hooks';
 import { BranchProfileEditorView } from './BranchProfileEditorView';
-import type { BranchCounterRecord } from '../types';
 
 export const BranchProfileCreateView = () => {
   const { data: branches = [] } = useListBranchProfiles();
@@ -16,14 +18,8 @@ export const BranchProfileCreateView = () => {
     [branches]
   );
 
-  const handleSubmit = async (
-    values: BranchProfileFormValues,
-    counters: BranchCounterRecord[]
-  ) => {
-    await submitBranchProfile({
-      ...values,
-      counters,
-    });
+  const handleSubmit = async (values: BranchProfileFormValues) => {
+    await submitBranchProfile(values);
   };
 
   return (
@@ -35,7 +31,6 @@ export const BranchProfileCreateView = () => {
       onSubmitBranch={handleSubmit}
       isSubmitting={isPending}
       branchAttachedToOptions={branchAttachedToOptions}
-      showCounters={false}
     />
   );
 };

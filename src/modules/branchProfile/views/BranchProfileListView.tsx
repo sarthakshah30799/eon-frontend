@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button1';
 import { useDeleteBranchProfile, useListBranchProfiles } from '../hooks';
 import { BRANCH_PROFILE_TEXTS } from '../constants';
 import { BranchProfileTable } from '../components';
+import { Loader } from '@/components/ui/loader';
 
 export const BranchProfileListView = () => {
   const navigate = useNavigate();
@@ -15,11 +16,7 @@ export const BranchProfileListView = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="py-6 text-center text-text-secondary">
-        {BRANCH_PROFILE_TEXTS.LOADING_BRANCHES}
-      </div>
-    );
+    return <Loader />;
   }
 
   if (error) {

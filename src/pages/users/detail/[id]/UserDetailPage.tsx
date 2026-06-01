@@ -1,5 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { useGetUser } from '../../../../modules/user/hooks/useGetUser';
+import { Loader } from '@/components/ui/loader';
 
 const UserDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -15,9 +16,7 @@ const UserDetailPage = () => {
 
   if (isLoading) {
     return (
-      <div className="py-4 text-center text-text-secondary">
-        Loading user...
-      </div>
+      <Loader />
     );
   }
 

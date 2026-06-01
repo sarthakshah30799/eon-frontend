@@ -26,11 +26,51 @@ type SidebarSection = {
   items: SidebarMenuItem[];
 };
 
+const ADMIN_BRANCH_PROFILE_PATH = '/admin/branch-profile';
+const COUNTER_PROFILE_PATH = '/master/system-setups/counter-profile';
+const PRODUCT_PROFILE_PATH = '/master/system-setups/product-profile';
+const COUNTRY_PROFILE_PATH = '/master/system-setups/country-profile';
+const STATE_PROFILE_PATH = '/master/system-setups/state-profile';
+
+const ADMIN_SECTION: SidebarSection = {
+  title: 'Admin',
+  items: [
+    {
+      id: 'admin-branch-profile',
+      label: 'Branch Profile',
+      path: ADMIN_BRANCH_PROFILE_PATH,
+    },
+  ],
+};
+const tempItems = [
+  {
+    id: 'counter-profile',
+    label: 'Counter Profile',
+    path: COUNTER_PROFILE_PATH,
+  },
+  {
+    id: 'product-profile',
+    label: 'Product Profile',
+    path: PRODUCT_PROFILE_PATH,
+  },
+  {
+    id: 'country-profile',
+    label: 'Country Profile',
+    path: COUNTRY_PROFILE_PATH,
+  },
+  {
+    id: 'state-profile',
+    label: 'State Profile',
+    path: STATE_PROFILE_PATH,
+  },
+];
 
 const sidebarSectionTriggerClass = (isActive = false) =>
   [
     'w-full justify-between rounded-none! border-0 border-b-1 border-white! px-4 py-3 text-left text-sm font-semibold shadow-none! transition hover:border-primary-200 hover:bg-white hover:text-primary-700 focus-visible:ring-primary-300',
-    isActive ? 'bg-white! text-primary-700! shadow-sm' : 'bg-transparent! text-white!',
+    isActive
+      ? 'bg-white! text-primary-700! shadow-sm'
+      : 'bg-transparent! text-white!',
   ].join(' ');
 
 const sidebarSectionMenuClass =
@@ -40,7 +80,9 @@ const sidebarGroupTriggerClass = (level: number, isActive = false) =>
   [
     'w-full justify-between border-0 border-b-1 border-white! rounded-none! px-3 py-3 text-left text-sm font-semibold shadow-none! transition hover:border-primary-200 hover:bg-white hover:text-primary-700 focus-visible:ring-primary-300',
     level > 0 ? 'ml-2' : '',
-    isActive ? 'bg-white! text-primary-700! shadow-sm' : 'bg-transparent! text-white!',
+    isActive
+      ? 'bg-white! text-primary-700! shadow-sm'
+      : 'bg-transparent! text-white!',
   ].join(' ');
 
 const sidebarGroupMenuClass = (level: number) =>
@@ -93,7 +135,10 @@ const isPathActive = (currentPath: string, targetPath?: string) => {
   );
 };
 
-const isMenuItemActive = (item: SidebarMenuItem, currentPath: string): boolean => {
+const isMenuItemActive = (
+  item: SidebarMenuItem,
+  currentPath: string
+): boolean => {
   if (isGroupItem(item)) {
     return item.children.some(child => isMenuItemActive(child, currentPath));
   }
@@ -132,7 +177,9 @@ const SidebarMenuList = ({
                   setOpenItemId(nextOpen ? item.id : null);
                 }}
               >
-                <Dropdown.Trigger className={sidebarGroupTriggerClass(level, isActive)}>
+                <Dropdown.Trigger
+                  className={sidebarGroupTriggerClass(level, isActive)}
+                >
                   {item.label}
                 </Dropdown.Trigger>
 
@@ -157,7 +204,7 @@ const SidebarMenuList = ({
         const isActive = isMenuItemActive(item, currentPath);
 
         return (
-          <li key={item.id} className='mb-0!'>
+          <li key={item.id} className="mb-0!">
             <button
               type="button"
               className={sidebarLeafClass(isActive)}
@@ -251,11 +298,13 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
 
   const sections = useMemo<SidebarSection[]>(() => {
     if (!menuTree || menuTree.length === 0) {
-      return [];
+      return [ADMIN_SECTION];
     }
-    return menuTree.map(root => ({
+    const dynamicSections = menuTree.map(root => ({
       title: root.name,
       items: (root.children || []).map(group => {
+        const isSystemSetupGroup = /system\s*set/i.test(group.name);
+
         if (!group.children || group.children.length === 0) {
           let path = group.path || undefined;
           if (path === '/master/system-setups/company-profile') {
@@ -267,23 +316,34 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
             path,
           };
         }
+
+        const mappedChildren = group.children.map(item => {
+          let path = item.path || undefined;
+          if (path === '/master/system-setups/company-profile') {
+            path = '/master/system-setups/company-profile/1';
+          }
+          return {
+            id: item.id,
+            label: item.name,
+            path,
+          };
+        });
+
+        const hasCounterProfile = mappedChildren.some(
+          item => !isGroupItem(item) && item.path === COUNTER_PROFILE_PATH
+        );
+
         return {
           id: group.id,
           label: group.name,
-          children: group.children.map(item => {
-            let path = item.path || undefined;
-            if (path === '/master/system-setups/company-profile') {
-              path = '/master/system-setups/company-profile/1';
-            }
-            return {
-              id: item.id,
-              label: item.name,
-              path,
-            };
-          }),
+          children:
+            isSystemSetupGroup && !hasCounterProfile
+              ? [...mappedChildren, ...tempItems]
+              : mappedChildren,
         };
       }),
     }));
+    return [...dynamicSections, ADMIN_SECTION];
   }, [menuTree]);
 
   const createdPageEntries = useMemo<SidebarMenuItem[]>(
@@ -318,9 +378,7 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
               <p className="text-xs font-medium uppercase tracking-[0.24em] text-text-tertiary">
                 Currency Exchange
               </p>
-              <p className="text-base font-semibold text-white">
-                Maraekat FX
-              </p>
+              <p className="text-base font-semibold text-white">Maraekat FX</p>
             </div>
           </div>
 

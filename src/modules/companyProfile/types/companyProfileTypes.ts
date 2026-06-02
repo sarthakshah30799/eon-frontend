@@ -1,10 +1,10 @@
 export interface ICompanyProfile {
   id: string;
   shortCode?: string;
-  companyName: string;
+  name: string;
   formerlyKnownName?: string;
   cinNo?: string;
-  panNo?: string;
+  panNo: string;
   fxRegNo?: string;
   fxRegDate?: string;
   fromDate?: string;
@@ -12,14 +12,14 @@ export interface ICompanyProfile {
   logo?: string;
   aeonLicNo?: string;
   website?: string;
-  emailId?: string;
+  email?: string;
   createdAt?: string;
   updatedAt?: string;
 }
 
 export interface ICreateCompanyProfile {
   shortCode: string;
-  companyName: string;
+  name: string;
   formerlyKnownName: string;
   cinNo: string;
   panNo: string;
@@ -30,7 +30,7 @@ export interface ICreateCompanyProfile {
   logo: string;
   aeonLicNo: string;
   website: string;
-  emailId: string;
+  email: string;
 }
 
 export type IUpdateCompanyProfile = Partial<ICreateCompanyProfile>;

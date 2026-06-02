@@ -7,11 +7,11 @@ import type {
 interface BackendCounter {
   id: string;
   counterNo: number;
-  counterName: string;
+  name: string;
   isActive: boolean;
-  isRetailCnt: boolean;
-  isBulkCnt: boolean;
-  isCombineCnt: boolean;
+  isRetail: boolean;
+  isBulk: boolean;
+  isCombine: boolean;
   branchId?: string;
   branchCode?: string;
   createdAt: string;
@@ -22,11 +22,11 @@ const mapBackendToFrontend = (counter: BackendCounter): ICounterProfile => {
   return {
     id: counter.id,
     counterNo: String(counter.counterNo),
-    counterName: counter.counterName,
+    name: counter.name,
     isActive: counter.isActive,
-    isRetailCnt: counter.isRetailCnt,
-    isBulkCnt: counter.isBulkCnt,
-    isCombineCnt: counter.isCombineCnt,
+    isRetail: counter.isRetail,
+    isBulk: counter.isBulk,
+    isCombine: counter.isCombine,
     createdAt: counter.createdAt,
     updatedAt: counter.updatedAt,
   };
@@ -35,11 +35,11 @@ const mapBackendToFrontend = (counter: BackendCounter): ICounterProfile => {
 const mapFrontendToBackend = (values: ICreateCounterProfile) => {
   return {
     counterNo: parseInt(values.counterNo, 10) || 1,
-    counterName: values.counterName,
+    name: values.name,
     isActive: values.isActive,
-    isRetailCnt: values.isRetailCnt,
-    isBulkCnt: values.isBulkCnt,
-    isCombineCnt: values.isCombineCnt,
+    isRetail: values.isRetail,
+    isBulk: values.isBulk,
+    isCombine: values.isCombine,
   };
 };
 

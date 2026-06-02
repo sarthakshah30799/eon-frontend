@@ -6,19 +6,19 @@ import type {
 
 interface BackendRole {
   id: string;
-  userGroupCode: string;
-  userGroupName: string;
-  isAdminGrp: boolean;
-  isMdGroup: boolean;
-  isComplianceGrp: boolean;
-  isSrFinanceGrp: boolean;
-  isFinanceGrp: boolean;
-  isBrnMgrGrp: boolean;
-  isExecutiveGrp: boolean;
-  isCardStkGrp: boolean;
-  isDeliveryBoyGrp: boolean;
-  isCashierGrp: boolean;
-  isSalesMgrGrp: boolean;
+  code: string;
+  name: string;
+  isAdmin: boolean;
+  isMd: boolean;
+  isCompliance: boolean;
+  isSrFinance: boolean;
+  isFinance: boolean;
+  isBrnMgr: boolean;
+  isExecutive: boolean;
+  isCardStk: boolean;
+  isDeliveryBoy: boolean;
+  isCashier: boolean;
+  isSalesMgr: boolean;
   isActive: boolean;
   isAeonAccess: boolean;
   isDelPortalAccess: boolean;
@@ -30,19 +30,19 @@ interface BackendRole {
 const mapBackendToFrontend = (role: BackendRole): IUserRole => {
   return {
     id: role.id,
-    userGroupCode: role.userGroupCode,
-    userGroupName: role.userGroupName,
-    isAdminGrp: role.isAdminGrp,
-    isMdGroup: role.isMdGroup,
-    isComplianceGrp: role.isComplianceGrp,
-    isSrFinanceGrp: role.isSrFinanceGrp,
-    isFinanceGrp: role.isFinanceGrp,
-    isBrnMgrGrp: role.isBrnMgrGrp,
-    isExecutiveGrp: role.isExecutiveGrp,
-    isCardStkGrp: role.isCardStkGrp,
-    isDeliveryBoyGrp: role.isDeliveryBoyGrp,
-    isCashierGrp: role.isCashierGrp,
-    isSalesMgrGrp: role.isSalesMgrGrp,
+    code: role.code,
+    name: role.name,
+    isAdmin: role.isAdmin,
+    isMd: role.isMd,
+    isCompliance: role.isCompliance,
+    isSrFinance: role.isSrFinance,
+    isFinance: role.isFinance,
+    isBrnMgr: role.isBrnMgr,
+    isExecutive: role.isExecutive,
+    isCardStk: role.isCardStk,
+    isDeliveryBoy: role.isDeliveryBoy,
+    isCashier: role.isCashier,
+    isSalesMgr: role.isSalesMgr,
     isActive: role.isActive,
     isAeonAccess: role.isAeonAccess,
     isDelPortalAccess: role.isDelPortalAccess,

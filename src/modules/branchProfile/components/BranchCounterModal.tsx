@@ -42,12 +42,13 @@ export const BranchCounterModal = ({
       >
         <div className="grid gap-4">
           <FormFieldInput
-            name="counterCode"
-            label="Counter Code"
+            name="counterNo"
+            label="Counter No."
+            type="number"
             disabled={isSubmitting}
           />
           <FormFieldInput
-            name="counterName"
+            name="name"
             label="Counter Name"
             disabled={isSubmitting}
           />

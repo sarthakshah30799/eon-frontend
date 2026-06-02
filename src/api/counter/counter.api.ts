@@ -2,11 +2,12 @@ import { apiClient } from '../api';
 
 export interface CounterRecord {
   id: string;
-  counterCode: string;
+  counterNo: number;
   name: string;
-  description?: string;
-  remark?: string;
-  status: string;
+  isActive: boolean;
+  isRetail: boolean;
+  isBulk: boolean;
+  isCombine: boolean;
   branchId?: string;
   branchCode?: string;
   createdAt: string;

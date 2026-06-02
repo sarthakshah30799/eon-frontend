@@ -6,7 +6,7 @@ import type {
 export const createEmptyCompanyProfileFormValues =
   (): ICreateCompanyProfile => ({
     shortCode: '',
-    companyName: '',
+    name: '',
     formerlyKnownName: '',
     cinNo: '',
     panNo: '',
@@ -17,14 +17,14 @@ export const createEmptyCompanyProfileFormValues =
     logo: '',
     aeonLicNo: '',
     website: '',
-    emailId: '',
+    email: '',
   });
 
 export const mapCompanyProfileToFormValues = (
   profile: ICompanyProfile
 ): ICreateCompanyProfile => ({
   shortCode: profile.shortCode ?? '',
-  companyName: profile.companyName,
+  name: profile.name,
   formerlyKnownName: profile.formerlyKnownName ?? '',
   cinNo: profile.cinNo ?? '',
   panNo: profile.panNo ?? '',
@@ -35,5 +35,5 @@ export const mapCompanyProfileToFormValues = (
   logo: profile.logo ?? '',
   aeonLicNo: profile.aeonLicNo ?? '',
   website: profile.website ?? '',
-  emailId: profile.emailId ?? '',
+  email: profile.email ?? '',
 });

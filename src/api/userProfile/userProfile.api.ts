@@ -6,14 +6,12 @@ import type {
 
 interface BackendUser {
   id: string;
-  userCode: string;
-  userName: string;
-  userGroupCode: string;
+  code: string;
+  name: string;
   contactNo: string;
-  emailId: string;
+  email: string;
   employeeNo: string;
   designation: string;
-  branchCode: string;
   userLicNo: string;
   isActive: boolean;
   isLocked: boolean;
@@ -28,14 +26,12 @@ interface BackendUser {
 const mapBackendToFrontend = (user: BackendUser): IUserProfile => {
   return {
     id: user.id,
-    userCode: user.userCode || '',
-    userName: user.userName || '',
-    userGroupCode: user.userGroupCode || '',
+    code: user.code || '',
+    name: user.name || '',
     contactNo: user.contactNo || '',
-    emailId: user.emailId || '',
+    email: user.email || '',
     employeeNo: user.employeeNo || '',
     designation: user.designation || '',
-    branchCode: user.branchCode || '',
     userLicNo: user.userLicNo || '',
     isActive: user.isActive !== false,
     isLocked: !!user.isLocked,
@@ -49,14 +45,12 @@ const mapBackendToFrontend = (user: BackendUser): IUserProfile => {
 };
 
 type BackendUserPayload = {
-  userCode: string;
-  userName: string;
-  userGroupCode?: string;
+  code: string;
+  name: string;
   contactNo?: string;
-  emailId: string;
+  email: string;
   employeeNo?: string;
   designation?: string;
-  branchCode?: string;
   userLicNo?: string;
   isActive: boolean;
   isLocked: boolean;
@@ -72,14 +66,12 @@ const mapFrontendToBackend = (
   isCreate: boolean
 ): BackendUserPayload => {
   const payload: BackendUserPayload = {
-    userCode: form.userCode,
-    userName: form.userName,
-    userGroupCode: form.userGroupCode || undefined,
+    code: form.code,
+    name: form.name,
     contactNo: form.contactNo || undefined,
-    emailId: form.emailId,
+    email: form.email,
     employeeNo: form.employeeNo || undefined,
     designation: form.designation || undefined,
-    branchCode: form.branchCode || undefined,
     userLicNo: form.userLicNo || undefined,
     isActive: form.isActive !== false,
     isLocked: !!form.isLocked,
@@ -89,8 +81,8 @@ const mapFrontendToBackend = (
     counterId: form.counterId || undefined,
   };
 
-  if (isCreate) {
-    payload.password = form.password || 'temp1234';
+    if (isCreate) {
+      payload.password = form.password || 'temp1234';
   } else if (form.password) {
     payload.password = form.password;
   }

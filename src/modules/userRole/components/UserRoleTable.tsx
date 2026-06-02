@@ -17,8 +17,8 @@ interface UserRoleTableProps {
 
 interface UserRoleTableRow {
   id: string;
-  userGroupCode: string;
-  userGroupName: string;
+  code: string;
+  name: string;
   isActive: boolean;
 }
 
@@ -32,14 +32,14 @@ export const UserRoleTable = ({
 
   const rows: UserRoleTableRow[] = roles.map(role => ({
     id: role.id,
-    userGroupCode: role.userGroupCode,
-    userGroupName: role.userGroupName,
+    code: role.code,
+    name: role.name,
     isActive: role.isActive,
   }));
 
   const columns: TableColumnDef<UserRoleTableRow>[] = [
-    { accessorKey: 'userGroupCode', header: 'User Group Code' },
-    { accessorKey: 'userGroupName', header: 'User Group Name' },
+    { accessorKey: 'code', header: 'Role Code' },
+    { accessorKey: 'name', header: 'Role Name' },
     {
       accessorKey: 'isActive',
       header: 'Status',
@@ -108,7 +108,7 @@ export const UserRoleTable = ({
           navigate(`/master/system-setups/user-role/edit/${row.id}`);
         }
       }}
-      emptyMessage="No user groups found. Create your first user group."
+      emptyMessage="No roles found. Create your first role."
     />
   );
 };

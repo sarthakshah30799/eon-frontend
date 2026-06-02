@@ -5,7 +5,7 @@ import type {
 } from '../types';
 
 export const createEmptyBranchProfileFormValues = (): ICreateBranchProfile => ({
-  branchCode: '',
+  code: '',
   branchNumber: '',
   address1: '',
   address2: '',
@@ -19,7 +19,7 @@ export const createEmptyBranchProfileFormValues = (): ICreateBranchProfile => ({
   fxRegDate: '',
   contactName: '',
   contactNo: '',
-  branchEmailId: '',
+  branchEmail: '',
   aeonBranchLic: '',
   locationType: '',
   cashHolding: '0',
@@ -34,7 +34,7 @@ export const createEmptyBranchProfileFormValues = (): ICreateBranchProfile => ({
 export const mapRecordToFormValues = (
   record: IBranchProfile
 ): ICreateBranchProfile => ({
-  branchCode: record.branchCode || '',
+  code: record.code || '',
   branchNumber: record.branchNumber || '',
   address1: record.address1 || '',
   address2: record.address2 || '',
@@ -48,7 +48,7 @@ export const mapRecordToFormValues = (
   fxRegDate: record.fxRegDate ? record.fxRegDate.slice(0, 10) : '',
   contactName: record.contactName || '',
   contactNo: record.contactNo || '',
-  branchEmailId: record.branchEmailId || '',
+  branchEmail: record.branchEmail || '',
   aeonBranchLic: record.aeonBranchLic || '',
   locationType: record.locationType || '',
   cashHolding: record.cashHolding || '0',
@@ -80,6 +80,6 @@ export const toBranchAttachedToOptions = (
     .filter(branch => branch.id !== excludeId)
     .map(branch => ({
       value: branch.id,
-      label: `${branch.branchNumber} (${branch.branchCode})`,
+      label: `${branch.branchNumber} (${branch.code})`,
     }));
 };

@@ -5,7 +5,7 @@ export interface IBranchProfileOption {
 
 export interface IBranchProfile {
   id: string;
-  branchCode: string;
+  code: string;
   branchNumber: string;
   address1: string;
   address2: string;
@@ -19,7 +19,7 @@ export interface IBranchProfile {
   fxRegDate: string;
   contactName: string;
   contactNo: string;
-  branchEmailId: string;
+  branchEmail: string;
   aeonBranchLic: string;
   locationType: string;
   cashHolding: string;
@@ -44,8 +44,8 @@ export type IUpdateBranchProfile = Partial<ICreateBranchProfile>;
 
 export interface IBranchCounter {
   id: string;
-  counterCode: string;
-  counterName: string;
+  counterNo: string;
+  name: string;
   isActive: boolean;
 }
 

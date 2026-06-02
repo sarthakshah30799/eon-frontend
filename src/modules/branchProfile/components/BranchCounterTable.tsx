@@ -16,8 +16,8 @@ interface BranchCounterTableProps {
 
 interface BranchCounterTableRow {
   id: string;
-  counterCode: string;
-  counterName: string;
+  counterNo: string;
+  name: string;
   isActive: boolean;
 }
 
@@ -31,16 +31,16 @@ export const BranchCounterTable = ({
     () =>
       counters.map(counter => ({
         id: counter.id,
-        counterCode: counter.counterCode,
-        counterName: counter.counterName,
+        counterNo: counter.counterNo,
+        name: counter.name,
         isActive: counter.isActive,
       })),
     [counters]
   );
 
   const columns: TableColumnDef<BranchCounterTableRow>[] = [
-    { accessorKey: 'counterCode', header: 'Counter code' },
-    { accessorKey: 'counterName', header: 'Counter Name' },
+    { accessorKey: 'counterNo', header: 'Counter No.' },
+    { accessorKey: 'name', header: 'Counter Name' },
     {
       accessorKey: 'isActive',
       header: 'Status',

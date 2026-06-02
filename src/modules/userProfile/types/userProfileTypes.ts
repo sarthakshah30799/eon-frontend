@@ -1,13 +1,11 @@
 export interface IUserProfile {
   id: string;
-  userCode: string;
-  userName: string;
-  userGroupCode: string;
+  code: string;
+  name: string;
   contactNo: string;
-  emailId: string;
+  email: string;
   employeeNo: string;
   designation: string;
-  branchCode: string;
   userLicNo: string;
   isActive: boolean;
   isLocked: boolean;

@@ -32,7 +32,7 @@ export const CounterProfileForm = ({
           disabled={isSubmitting}
         />
         <FormFieldInput
-          name="counterName"
+          name="name"
           label="Counter Name"
           disabled={isSubmitting}
         />
@@ -45,17 +45,17 @@ export const CounterProfileForm = ({
           disabled={isSubmitting}
         />
         <FormFieldCheckbox
-          name="isRetailCnt"
+          name="isRetail"
           label="Is Retail Counter"
           disabled={isSubmitting}
         />
         <FormFieldCheckbox
-          name="isBulkCnt"
+          name="isBulk"
           label="Is Bulk Counter"
           disabled={isSubmitting}
         />
         <FormFieldCheckbox
-          name="isCombineCnt"
+          name="isCombine"
           label="Is Combine Counter"
           disabled={isSubmitting}
         />

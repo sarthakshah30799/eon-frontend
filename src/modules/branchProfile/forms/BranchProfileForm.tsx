@@ -41,7 +41,7 @@ const BranchProfileFormFields = ({
     () =>
       counterProfiles.map(counter => ({
         value: counter.id,
-        label: `${counter.counterNo} - ${counter.counterName}`,
+        label: `${counter.counterNo} - ${counter.name}`,
       })),
     [counterProfiles]
   );
@@ -54,11 +54,11 @@ const BranchProfileFormFields = ({
     <div className="space-y-6">
       <section className={formCardClass}>
         <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.24em] text-text-tertiary">
-          Branch Profile Details
+          Company Branch Details
         </h2>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <FormFieldInput
-            name="branchCode"
+            name="code"
             label="Branch Code"
             disabled={isSubmitting}
           />
@@ -130,8 +130,8 @@ const BranchProfileFormFields = ({
             disabled={isSubmitting}
           />
           <FormFieldInput
-            name="branchEmailId"
-            label="Branch Email ID"
+            name="branchEmail"
+            label="Branch Email"
             type="email"
             disabled={isSubmitting}
           />
@@ -209,7 +209,7 @@ const BranchProfileFormFields = ({
 export const BranchProfileForm = ({
   defaultValues,
   onSubmit,
-  submitLabel = 'Save Branch',
+  submitLabel = 'Save Company Branch',
   isSubmitting = false,
 }: BranchProfileFormProps) => {
   return (
@@ -219,9 +219,7 @@ export const BranchProfileForm = ({
       defaultValues={defaultValues}
       className="space-y-6"
     >
-      <BranchProfileFormFields
-        isSubmitting={isSubmitting}
-      />
+      <BranchProfileFormFields isSubmitting={isSubmitting} />
 
       <div className="flex justify-end border-t border-border-primary pt-4">
         <Button

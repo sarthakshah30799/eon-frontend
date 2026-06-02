@@ -43,8 +43,8 @@ export const CompanyProfileForm = ({
           disabled={isSaving}
         />
         <FormFieldInput
-          name="companyName"
-          label="Company Name"
+          name="name"
+          label="Name"
           disabled={isSaving}
         />
         <FormFieldInput
@@ -80,8 +80,8 @@ export const CompanyProfileForm = ({
         />
         <FormFieldInput name="website" label="Website" disabled={isSaving} />
         <FormFieldInput
-          name="emailId"
-          label="Email ID"
+          name="email"
+          label="Email"
           type="email"
           disabled={isSaving}
         />

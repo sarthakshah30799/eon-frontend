@@ -43,7 +43,7 @@ export const BranchProfileEditView = () => {
   return (
     <BranchProfileEditorView
       heading={BRANCH_PROFILE_TEXTS.EDIT_BRANCH}
-      description="Update the branch profile and operational settings."
+      description="Update the company branch profile and operational settings."
       submitLabel={BRANCH_PROFILE_TEXTS.SAVE_CHANGES}
       defaultValues={mapRecordToFormValues(branchProfile)}
       onSubmitBranch={handleSubmit}

@@ -298,7 +298,7 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   const { user } = useAuth();
 
   const sections = useMemo<SidebarSection[]>(() => {
-    const userEmail = (user?.emailId ?? user?.email)?.toLowerCase();
+    const userEmail = user?.email?.toLowerCase();
     const isAdminUser = userEmail === 'admin@maraekat.com';
 
     if (!menuTree || menuTree.length === 0) {

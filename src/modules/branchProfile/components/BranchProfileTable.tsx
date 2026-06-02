@@ -12,13 +12,13 @@ interface BranchProfileTableProps {
 
 interface BranchProfileTableRow {
   id: string;
-  branchCode: string;
+  code: string;
   branchNumber: string;
   city: string;
   state: string;
   contactName: string;
   contactNo: string;
-  branchEmailId: string;
+  branchEmail: string;
   locationType: string;
   status: string;
 }
@@ -41,26 +41,26 @@ export const BranchProfileTable = ({
 
     return {
       id: branch.id,
-      branchCode: branch.branchCode || '',
+      code: branch.code || '',
       branchNumber: branch.branchNumber || '',
       city: branch.city || '',
       state: branch.state || '',
       contactName: branch.contactName || '-',
       contactNo: branch.contactNo || '-',
-      branchEmailId: branch.branchEmailId || '-',
+      branchEmail: branch.branchEmail || '-',
       locationType: branch.locationType || '-',
       status: statusParts.join(' / '),
     };
   });
 
   const columns: TableColumnDef<BranchProfileTableRow>[] = [
-    { accessorKey: 'branchCode', header: 'Branch Code' },
+    { accessorKey: 'code', header: 'Branch Code' },
     { accessorKey: 'branchNumber', header: 'Branch Number' },
     { accessorKey: 'city', header: 'City' },
     { accessorKey: 'state', header: 'State' },
     { accessorKey: 'contactName', header: 'Contact Name' },
     { accessorKey: 'contactNo', header: 'Contact No' },
-    { accessorKey: 'branchEmailId', header: 'Email ID' },
+    { accessorKey: 'branchEmail', header: 'Email' },
     { accessorKey: 'locationType', header: 'Location Type' },
     { accessorKey: 'status', header: 'Status' },
     {
@@ -79,7 +79,7 @@ export const BranchProfileTable = ({
           <div className="flex items-center gap-2">
             <Button
               type="button"
-              aria-label="Edit branch"
+              aria-label="Edit company branch"
               className='border-0! bg-transparent! text-black!'
               onClick={event => {
                 event.stopPropagation();
@@ -106,7 +106,7 @@ export const BranchProfileTable = ({
       onRowClick={row => {
         navigate(`/master/system-setups/branch-profile/edit/${row.id}`);
       }}
-      emptyMessage="No branches found. Create your first branch."
+      emptyMessage="No company branches found. Create your first company branch."
     />
   );
 };

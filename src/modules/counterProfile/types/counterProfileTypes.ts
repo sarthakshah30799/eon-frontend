@@ -1,11 +1,11 @@
 export interface ICounterProfile {
   id: string;
   counterNo: string;
-  counterName: string;
+  name: string;
   isActive: boolean;
-  isRetailCnt: boolean;
-  isBulkCnt: boolean;
-  isCombineCnt: boolean;
+  isRetail: boolean;
+  isBulk: boolean;
+  isCombine: boolean;
   createdAt: string;
   updatedAt: string;
   createdBy?: string;

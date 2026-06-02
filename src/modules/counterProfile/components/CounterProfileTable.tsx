@@ -16,7 +16,7 @@ interface CounterProfileTableProps {
 interface CounterProfileTableRow {
   id: string;
   counterNo: string;
-  counterName: string;
+  name: string;
   isActive: boolean;
 }
 
@@ -30,13 +30,13 @@ export const CounterProfileTable = ({
   const rows: CounterProfileTableRow[] = counters.map(counter => ({
     id: counter.id,
     counterNo: counter.counterNo,
-    counterName: counter.counterName,
+    name: counter.name,
     isActive: counter.isActive,
   }));
 
   const columns: TableColumnDef<CounterProfileTableRow>[] = [
     { accessorKey: 'counterNo', header: 'Counter No.' },
-    { accessorKey: 'counterName', header: 'Counter Name' },
+    { accessorKey: 'name', header: 'Counter Name' },
     {
       accessorKey: 'isActive',
       header: 'Status',

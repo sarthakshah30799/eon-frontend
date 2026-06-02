@@ -1,7 +1,7 @@
 import * as yup from 'yup';
 
 export const branchProfileSchema = yup.object({
-  branchCode: yup.string().trim().required('Branch Code is required').max(20, 'Branch Code must be at most 20 characters'),
+  code: yup.string().trim().required('Branch Code is required').max(20, 'Branch Code must be at most 20 characters'),
   branchNumber: yup
     .string()
     .trim()
@@ -25,7 +25,7 @@ export const branchProfileSchema = yup.object({
   fxRegDate: yup.string().trim().default(''),
   contactName: yup.string().trim().max(250, 'Contact Name must be at most 250 characters').default(''),
   contactNo: yup.string().trim().default(''),
-  branchEmailId: yup.string().trim().email('Invalid email format').default(''),
+  branchEmail: yup.string().trim().email('Invalid email format').default(''),
   aeonBranchLic: yup.string().trim().max(20, 'AEON Branch Lic must be at most 20 characters').default(''),
   locationType: yup.string().trim().max(250, 'Location Type must be at most 250 characters').default(''),
   cashHolding: yup.string().trim().default('0'),
@@ -36,4 +36,3 @@ export const branchProfileSchema = yup.object({
   isActive: yup.boolean().default(true),
   connectCounterIds: yup.array().of(yup.string()).default([]),
 });
-

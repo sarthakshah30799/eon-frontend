@@ -18,7 +18,7 @@ interface UserRoleFormProps {
 export const UserRoleForm = ({
   defaultValues,
   onSubmit,
-  submitLabel = 'Save User Group',
+  submitLabel = 'Save Role',
   isSubmitting = false,
 }: UserRoleFormProps) => {
   return (
@@ -30,30 +30,30 @@ export const UserRoleForm = ({
     >
       <section className="rounded-sm border border-border-primary bg-surface-secondary p-4 space-y-4">
         <h2 className="text-sm font-semibold uppercase tracking-[0.24em] text-text-tertiary">
-          User Group Details
+          Role Details
         </h2>
         <div className="grid gap-4 md:grid-cols-2">
-          <FormFieldInput name="userGroupCode" label="User Group Code" disabled={isSubmitting} />
-          <FormFieldInput name="userGroupName" label="User Group Name" disabled={isSubmitting} />
+          <FormFieldInput name="code" label="Role Code" disabled={isSubmitting} />
+          <FormFieldInput name="name" label="Role Name" disabled={isSubmitting} />
         </div>
       </section>
 
       <section className="rounded-sm border border-border-primary bg-surface-secondary p-4 space-y-4">
         <h2 className="text-sm font-semibold uppercase tracking-[0.24em] text-text-tertiary">
-          User Group Classifications
+          Role Classifications
         </h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <FormFieldCheckbox name="isAdminGrp" label="Is Admin Group" disabled={isSubmitting} />
-          <FormFieldCheckbox name="isMdGroup" label="Is MD Group" disabled={isSubmitting} />
-          <FormFieldCheckbox name="isComplianceGrp" label="Is Compliance Group" disabled={isSubmitting} />
-          <FormFieldCheckbox name="isSrFinanceGrp" label="Is Sr Finance Group" disabled={isSubmitting} />
-          <FormFieldCheckbox name="isFinanceGrp" label="Is Finance Group" disabled={isSubmitting} />
-          <FormFieldCheckbox name="isBrnMgrGrp" label="Is Branch Manager Group" disabled={isSubmitting} />
-          <FormFieldCheckbox name="isExecutiveGrp" label="Is Executive Group" disabled={isSubmitting} />
-          <FormFieldCheckbox name="isCardStkGrp" label="Is Card Stock Group" disabled={isSubmitting} />
-          <FormFieldCheckbox name="isDeliveryBoyGrp" label="Is Delivery Boy Group" disabled={isSubmitting} />
-          <FormFieldCheckbox name="isCashierGrp" label="Is Cashier Group" disabled={isSubmitting} />
-          <FormFieldCheckbox name="isSalesMgrGrp" label="Is Sales Manager Group" disabled={isSubmitting} />
+          <FormFieldCheckbox name="isAdmin" label="Is Admin" disabled={isSubmitting} />
+          <FormFieldCheckbox name="isMd" label="Is MD" disabled={isSubmitting} />
+          <FormFieldCheckbox name="isCompliance" label="Is Compliance" disabled={isSubmitting} />
+          <FormFieldCheckbox name="isSrFinance" label="Is Sr Finance" disabled={isSubmitting} />
+          <FormFieldCheckbox name="isFinance" label="Is Finance" disabled={isSubmitting} />
+          <FormFieldCheckbox name="isBrnMgr" label="Is Branch Manager" disabled={isSubmitting} />
+          <FormFieldCheckbox name="isExecutive" label="Is Executive" disabled={isSubmitting} />
+          <FormFieldCheckbox name="isCardStk" label="Is Card Stock" disabled={isSubmitting} />
+          <FormFieldCheckbox name="isDeliveryBoy" label="Is Delivery Boy" disabled={isSubmitting} />
+          <FormFieldCheckbox name="isCashier" label="Is Cashier" disabled={isSubmitting} />
+          <FormFieldCheckbox name="isSalesMgr" label="Is Sales Manager" disabled={isSubmitting} />
         </div>
       </section>
 

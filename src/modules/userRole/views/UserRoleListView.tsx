@@ -116,7 +116,7 @@ export const UserRoleListView = () => {
               {USER_ROLE_TEXTS.RIGHTS_TITLE}
               {activeRoleId && roles.length > 0 && (
                 <span className="text-sm font-normal text-text-secondary">
-                  for: <strong className="font-semibold text-primary-600">{roles.find(r => r.id === activeRoleId)?.userGroupName}</strong>
+                  for: <strong className="font-semibold text-primary-600">{roles.find(r => r.id === activeRoleId)?.name}</strong>
                 </span>
               )}
             </h2>

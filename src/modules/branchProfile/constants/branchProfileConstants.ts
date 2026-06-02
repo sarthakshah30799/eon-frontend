@@ -2,23 +2,23 @@ import type { AsyncSelectResponse } from '@/components/ui';
 import type { IBranchProfileOption } from '../types';
 
 export const BRANCH_PROFILE_TEXTS = {
-  LIST_TITLE: 'Branch Profile',
+  LIST_TITLE: 'Company Branch',
   LIST_SUBTITLE:
-    'Manage branches, update address and contact details, and maintain operational settings from one place.',
-  CREATE_BRANCH: 'Create Branch',
+    'Manage company branches, update address and contact details, and maintain operational settings from one place.',
+  CREATE_BRANCH: 'Create Company Branch',
   SAVE_CHANGES: 'Save Changes',
-  FORM_TITLE: 'Branch Details',
+  FORM_TITLE: 'Company Branch Details',
   FORM_SUBTITLE:
-    'Fill in the profile, address, contact, and operational details for the branch.',
-  EMPTY_STATE: 'No branches found. Create your first branch.',
-  LIST_ERROR: 'Error loading branches',
-  EDIT_BRANCH: 'Edit Branch',
-  CREATE_SUCCESS: 'Branch created successfully!',
-  UPDATE_SUCCESS: 'Branch updated successfully!',
-  DELETE_SUCCESS: 'Branch deleted successfully!',
-  CREATE_ERROR: 'Failed to create branch',
-  UPDATE_ERROR: 'Failed to update branch',
-  DELETE_ERROR: 'Failed to delete branch',
+    'Fill in the profile, address, contact, and operational details for the company branch.',
+  EMPTY_STATE: 'No company branches found. Create your first company branch.',
+  LIST_ERROR: 'Error loading company branches',
+  EDIT_BRANCH: 'Edit Company Branch',
+  CREATE_SUCCESS: 'Company branch created successfully!',
+  UPDATE_SUCCESS: 'Company branch updated successfully!',
+  DELETE_SUCCESS: 'Company branch deleted successfully!',
+  CREATE_ERROR: 'Failed to create company branch',
+  UPDATE_ERROR: 'Failed to update company branch',
+  DELETE_ERROR: 'Failed to delete company branch',
 } as const;
 
 export const LOCATION_TYPE_OPTIONS: IBranchProfileOption[] = [

@@ -61,27 +61,15 @@ const UserProfileFormFields = ({
     queryFn: () => counterProfileApi.getCounterProfiles(),
   });
 
-  // Automatically update userGroupCode when role changes
+  // Automatically update role code when role changes
   useEffect(() => {
     if (selectedRoleId && roles.length > 0) {
       const selectedRole = roles.find(r => r.id === selectedRoleId);
       if (selectedRole) {
-        setValue('userGroupCode', selectedRole.userGroupCode);
+        setValue('code', selectedRole.code);
       }
     }
   }, [selectedRoleId, roles, setValue]);
-
-  // Automatically update branchCode when branch changes
-  useEffect(() => {
-    if (selectedBranchId && branches.length > 0) {
-      const selectedBranch = branches.find(b => b.id === selectedBranchId);
-      if (selectedBranch) {
-        setValue('branchCode', selectedBranch.branchCode);
-      }
-    } else if (!selectedBranchId) {
-      setValue('branchCode', '');
-    }
-  }, [selectedBranchId, branches, setValue]);
 
   // Automatically reset counter if branch changes
   useEffect(() => {
@@ -102,7 +90,7 @@ const UserProfileFormFields = ({
   const branchLoadOptions = useMemo(() => {
     const opts = branches.map(b => ({
       value: b.id,
-      label: b.branchCode,
+      label: b.code,
     }));
     return createStaticLoadOptions(opts);
   }, [branches]);
@@ -110,7 +98,7 @@ const UserProfileFormFields = ({
   const roleLoadOptions = useMemo(() => {
     const opts = roles.map(r => ({
       value: r.id,
-      label: r.userGroupName || r.userGroupCode,
+      label: r.name || r.code,
     }));
     return createStaticLoadOptions(opts);
   }, [roles]);
@@ -124,7 +112,7 @@ const UserProfileFormFields = ({
     const filtered = counters.filter(c => connectedCounterIds.includes(c.id));
     const opts = filtered.map(c => ({
       value: c.id,
-      label: c.counterName || `Counter ${c.counterNo}`,
+      label: c.name || `Counter ${c.counterNo}`,
     }));
     return createStaticLoadOptions(opts);
   }, [counters, branches, selectedBranchId]);
@@ -136,13 +124,13 @@ const UserProfileFormFields = ({
         <h2 className={sectionHeaderClass}>Identity & Credentials</h2>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <FormFieldInput
-            name="userCode"
+            name="code"
             label="User Code"
             disabled={isSubmitting || isEdit}
             placeholder="e.g. ADM001"
           />
           <FormFieldInput
-            name="userName"
+            name="name"
             label="User Name"
             disabled={isSubmitting}
             placeholder="Full Name"
@@ -170,12 +158,6 @@ const UserProfileFormFields = ({
               disabled={isSubmitting}
             />
           </div>
-          <FormFieldInput
-            name="userGroupCode"
-            label="User Group Code"
-            disabled={true}
-            placeholder="Auto-populated on role select"
-          />
           <div className="hidden lg:block" /> {/* Alignment spacer */}
 
           <div className="space-y-2">
@@ -188,12 +170,6 @@ const UserProfileFormFields = ({
               disabled={isSubmitting}
             />
           </div>
-          <FormFieldInput
-            name="branchCode"
-            label="Branch Code"
-            disabled={true}
-            placeholder="Auto-populated on branch select"
-          />
           <div className="space-y-2">
             <FormFieldSelect
               name="counterId"
@@ -212,8 +188,8 @@ const UserProfileFormFields = ({
         <h2 className={sectionHeaderClass}>ERP Details & Contact</h2>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <FormFieldInput
-            name="emailId"
-            label="Email ID"
+            name="email"
+            label="Email"
             type="email"
             disabled={isSubmitting}
             placeholder="e.g. sarthak@example.com"
@@ -282,7 +258,7 @@ export const UserProfileForm = ({
   submitLabel = 'Create User',
   isSubmitting = false,
 }: UserProfileFormProps) => {
-  const isEdit = !!defaultValues.userCode;
+  const isEdit = !!defaultValues.code;
 
   return (
     <Form

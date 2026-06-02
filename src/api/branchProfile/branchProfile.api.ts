@@ -8,7 +8,7 @@ import type {
 interface BackendBranch {
   id: string;
   company_id?: string | null;
-  branchCode: string;
+  code: string;
   branchNumber: number;
   address1: string;
   address2?: string | null;
@@ -22,7 +22,7 @@ interface BackendBranch {
   fxRegDate?: string | null;
   contactName?: string | null;
   contactNo?: string | null;
-  branchEmailId?: string | null;
+  branchEmail?: string | null;
   aeonBranchLic?: string | null;
   locationType?: string | null;
   cashHolding?: number | null;
@@ -39,7 +39,7 @@ interface BackendBranch {
 const mapBackendToFrontend = (branch: BackendBranch): IBranchProfile => {
   return {
     id: branch.id,
-    branchCode: branch.branchCode || '',
+    code: branch.code || '',
     branchNumber: branch.branchNumber !== undefined ? String(branch.branchNumber) : '',
     address1: branch.address1 || '',
     address2: branch.address2 || '',
@@ -53,7 +53,7 @@ const mapBackendToFrontend = (branch: BackendBranch): IBranchProfile => {
     fxRegDate: branch.fxRegDate ? branch.fxRegDate.slice(0, 10) : '',
     contactName: branch.contactName || '',
     contactNo: branch.contactNo || '',
-    branchEmailId: branch.branchEmailId || '',
+    branchEmail: branch.branchEmail || '',
     aeonBranchLic: branch.aeonBranchLic || '',
     locationType: branch.locationType || '',
     cashHolding: branch.cashHolding !== null ? String(branch.cashHolding) : '0',
@@ -74,7 +74,7 @@ const mapFrontendToBackend = (
 ) => {
   return {
     companyId: companyId || undefined,
-    branchCode: form.branchCode,
+    code: form.code,
     branchNumber: parseInt(form.branchNumber, 10) || 1,
     address1: form.address1,
     address2: form.address2 || undefined,
@@ -88,7 +88,7 @@ const mapFrontendToBackend = (
     fxRegDate: form.fxRegDate || undefined,
     contactName: form.contactName || undefined,
     contactNo: form.contactNo || undefined,
-    branchEmailId: form.branchEmailId || undefined,
+    branchEmail: form.branchEmail || undefined,
     aeonBranchLic: form.aeonBranchLic || undefined,
     locationType: form.locationType || undefined,
     cashHolding: form.cashHolding ? parseFloat(form.cashHolding) : undefined,

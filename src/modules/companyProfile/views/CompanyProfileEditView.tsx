@@ -2,7 +2,7 @@ import { Loader } from '@/components/ui/loader';
 import { CompanyProfileForm } from '../forms';
 import { useGetCompanyProfile, useUpdateCompanyProfile, useListCompanyProfiles } from '../hooks';
 import type { ICreateCompanyProfile } from '../types';
-import { createEmptyCompanyProfileFormValues } from '../utils';
+import { createEmptyCompanyProfileFormValues, mapCompanyProfileToFormValues } from '../utils';
 
 interface CompanyProfileEditViewProps {
   id?: string;
@@ -54,7 +54,7 @@ export const CompanyProfileEditView = ({ id: propId }: CompanyProfileEditViewPro
 
       <div className="rounded-sm border border-border-primary bg-surface-primary p-6 shadow-sm">
         <CompanyProfileForm
-          defaultValues={data ?? createEmptyCompanyProfileFormValues()}
+          defaultValues={data ? mapCompanyProfileToFormValues(data) : createEmptyCompanyProfileFormValues()}
           onSubmit={handleSubmit}
           isSaving={isSaving}
         />

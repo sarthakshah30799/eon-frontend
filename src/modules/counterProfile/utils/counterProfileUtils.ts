@@ -6,22 +6,22 @@ import type {
 export const createEmptyCounterProfileFormValues =
   (): ICreateCounterProfile => ({
     counterNo: '',
-    counterName: '',
+    name: '',
     isActive: true,
-    isRetailCnt: false,
-    isBulkCnt: false,
-    isCombineCnt: false,
+    isRetail: false,
+    isBulk: false,
+    isCombine: false,
   });
 
 export const mapRecordToFormValues = (
   record: ICounterProfile
 ): ICreateCounterProfile => ({
   counterNo: String(record.counterNo),
-  counterName: record.counterName,
+  name: record.name,
   isActive: record.isActive,
-  isRetailCnt: record.isRetailCnt,
-  isBulkCnt: record.isBulkCnt,
-  isCombineCnt: record.isCombineCnt,
+  isRetail: record.isRetail,
+  isBulk: record.isBulk,
+  isCombine: record.isCombine,
 });
 
 export const mapFormValuesToRecord = (

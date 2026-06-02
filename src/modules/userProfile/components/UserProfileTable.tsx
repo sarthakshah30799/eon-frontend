@@ -12,12 +12,10 @@ interface UserProfileTableProps {
 
 interface UserProfileTableRow {
   id: string;
-  userCode: string;
-  userName: string;
-  emailId: string;
+  code: string;
+  name: string;
+  email: string;
   contactNo: string;
-  userGroupCode: string;
-  branchCode: string;
   designation: string;
   status: string;
 }
@@ -43,24 +41,20 @@ export const UserProfileTable = ({
 
     return {
       id: profile.id,
-      userCode: profile.userCode,
-      userName: profile.userName,
-      emailId: profile.emailId,
+      code: profile.code,
+      name: profile.name,
+      email: profile.email,
       contactNo: profile.contactNo || '-',
-      userGroupCode: profile.userGroupCode || '-',
-      branchCode: profile.branchCode || '-',
       designation: profile.designation || '-',
       status: statusParts.join(' / '),
     };
   });
 
   const columns: TableColumnDef<UserProfileTableRow>[] = [
-    { accessorKey: 'userCode', header: 'User Code' },
-    { accessorKey: 'userName', header: 'User Name' },
-    { accessorKey: 'emailId', header: 'Email ID' },
+    { accessorKey: 'code', header: 'User Code' },
+    { accessorKey: 'name', header: 'User Name' },
+    { accessorKey: 'email', header: 'Email' },
     { accessorKey: 'contactNo', header: 'Contact No' },
-    { accessorKey: 'userGroupCode', header: 'Group Code' },
-    { accessorKey: 'branchCode', header: 'Branch Code' },
     { accessorKey: 'designation', header: 'Designation' },
     { accessorKey: 'status', header: 'Status' },
     {

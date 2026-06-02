@@ -21,7 +21,6 @@ export interface IOtpFormData {
 export interface IUser {
   id: string;
   email: string;
-  emailId?: string;
   name?: string;
   avatar?: string;
   role?: string;

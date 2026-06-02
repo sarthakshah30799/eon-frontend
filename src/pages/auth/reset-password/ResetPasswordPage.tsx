@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Button } from '../../../components/ui/button1/Button';
 import { Form, FormFieldInput } from '../../../components/forms';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -9,7 +9,6 @@ import { toast } from 'react-hot-toast';
 
 const ResetPasswordPage: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
   const token = searchParams.get('token') || '';
   const email = searchParams.get('email') || '';
 

@@ -1,78 +1,39 @@
 import * as yup from 'yup';
 
 export const branchProfileSchema = yup.object({
-  branchName: yup.string().trim().required('Branch Name is required'),
-  branchCode: yup.string().trim().required('Branch Code is required'),
-  branchNo: yup.string().trim().required('Branch No. is required'),
-  address1: yup.string().trim().required('Address 1 is required'),
-  address2: yup.string().trim().notRequired(),
-  address3: yup.string().trim().notRequired(),
-  city: yup.string().trim().required('City is required'),
-  stateId: yup.string().trim().required('State is required'),
-  stdCode: yup.string().trim().notRequired(),
+  branchCode: yup.string().trim().required('Branch Code is required').max(20, 'Branch Code must be at most 20 characters'),
+  branchNumber: yup
+    .string()
+    .trim()
+    .required('Branch Number is required')
+    .matches(/^\d+$/, 'Branch Number must contain only numbers'),
+  address1: yup.string().trim().required('Address 1 is required').max(250, 'Address must be at most 250 characters'),
+  address2: yup.string().trim().max(250, 'Address must be at most 250 characters').default(''),
+  address3: yup.string().trim().max(250, 'Address must be at most 250 characters').default(''),
+  city: yup.string().trim().required('City is required').max(250, 'City must be at most 250 characters'),
+  state: yup.string().trim().required('State is required').max(250, 'State must be at most 250 characters'),
+  gstState: yup.string().trim().max(250, 'GST State must be at most 250 characters').default(''),
   pinCode: yup
-      .string()
-      .trim()
-      .required('Pincode is required')
-      .matches(/^\d+$/, 'Pincode must contain only numbers')
-      .min(6, 'Pincode must be 6 digits')
-      .max(6, 'Pincode must be 6 digits'),
-  operationalGroupId: yup
     .string()
     .trim()
-    .required('Operational Group is required'),
-  phoneNo1CountryCode: yup.string().trim().required(),
-  phoneNo1: yup
-    .string()
-    .trim()
-    .matches(/^\d*$/, 'Phone No.1 must contain only numbers')
-    .min(10, 'Phone No.1 must be at least 10 digits')
-    .notRequired(),
-  phoneNo2CountryCode: yup.string().trim().required(),
-  phoneNo2: yup
-    .string()
-    .trim()
-    .matches(/^\d*$/, 'Phone No.2 must contain only numbers')
-    .min(10, 'Phone No.2 must be at least 10 digits')
-    .notRequired(),
-  faxNo1CountryCode: yup.string().trim().required(),
-  faxNo1: yup.string().trim().notRequired(),
-  faxNo2CountryCode: yup.string().trim().required(),
-  faxNo2: yup.string().trim().notRequired(),
-  emailId: yup.string().trim().email('Enter a valid email').notRequired(),
-  contactPerson: yup.string().trim().notRequired(),
-  contactNoCountryCode: yup.string().trim().required(),
-  contactNo: yup
-    .string()
-    .trim()
-    .matches(/^\d*$/, 'Phone No.2 must contain only numbers')
-    .min(10, 'Phone No.2 must be at least 10 digits')
-    .notRequired(),
-  locationTypeId: yup.string().trim().required('Location Type is required'),
-  operationalUserId: yup.string().trim().notRequired(),
-  acUserInchargeId: yup.string().trim().notRequired(),
-  aiiNo: yup.string().trim().notRequired(),
-  wuAiiNo: yup.string().trim().notRequired(),
-  rbiLicenceNo: yup.string().trim().notRequired(),
-  rbiRegDate: yup.string().trim().notRequired(),
-  authSignatory: yup.string().trim().notRequired(),
-  branchAttachedToId: yup.string().trim().notRequired(),
-  wuAcBranchPostingId: yup.string().trim().notRequired(),
-  cashLimit: yup.string().trim().notRequired(),
-  ibmHo1: yup.string().trim().notRequired(),
-  ibmHo2: yup.string().trim().notRequired(),
-  ibmBranchId: yup.string().trim().notRequired(),
-  lastSettlementRef: yup.string().trim().notRequired(),
-  currencyLimit: yup.string().trim().notRequired(),
-  tempCashLimit: yup.string().trim().notRequired(),
-  tempCurrencyLimit: yup.string().trim().notRequired(),
-  connectCounterIds: yup.array().of(yup.string().trim()).default([]),
-  branchHasShifts: yup.boolean().required(),
-  canReferenceOnBehalfEntries: yup.boolean().required(),
-  serviceTaxApplicable: yup.boolean().required(),
-  serviceTaxRegnNo: yup.string().when('serviceTaxApplicable', {
-    is: true,
-    then: schema => schema.trim().required('Service Tax Regn No. is required'),
-    otherwise: schema => schema.trim().notRequired(),
-  }),
+    .required('Pincode is required')
+    .matches(/^\d+$/, 'Pincode must contain only numbers')
+    .min(6, 'Pincode must be 6 digits')
+    .max(6, 'Pincode must be 6 digits'),
+  gstNo: yup.string().trim().max(20, 'GST No. must be at most 20 characters').default(''),
+  fxRegNo: yup.string().trim().max(20, 'FX Reg No. must be at most 20 characters').default(''),
+  fxRegDate: yup.string().trim().default(''),
+  contactName: yup.string().trim().max(250, 'Contact Name must be at most 250 characters').default(''),
+  contactNo: yup.string().trim().default(''),
+  branchEmailId: yup.string().trim().email('Invalid email format').default(''),
+  aeonBranchLic: yup.string().trim().max(20, 'AEON Branch Lic must be at most 20 characters').default(''),
+  locationType: yup.string().trim().max(250, 'Location Type must be at most 250 characters').default(''),
+  cashHolding: yup.string().trim().default('0'),
+  cashHoldingTemp: yup.string().trim().default('0'),
+  currHolding: yup.string().trim().default('0'),
+  currHoldingTemp: yup.string().trim().default('0'),
+  isHeadOffice: yup.boolean().default(false),
+  isActive: yup.boolean().default(true),
+  connectCounterIds: yup.array().of(yup.string()).default([]),
 });
+

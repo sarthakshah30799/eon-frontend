@@ -114,7 +114,7 @@ export const UserRightsTable = ({
           {permission.label}
         </Checkbox>
       ),
-      cell: ({ row }: { row: UserRightsTableRow }) => (
+      cell: ({ row }: any) => (
         <Checkbox
           id={`user-rights-${permission.key}-${row.original.id}`}
           checked={row.original.permissions[permission.key]}

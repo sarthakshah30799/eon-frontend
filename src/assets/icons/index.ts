@@ -1,2 +1,11 @@
 export { EyeIcon } from './EyeIcon';
 export { EyeSlashIcon } from './EyeSlashIcon';
+export { CloseIcon } from './CloseIcon';
+export { CheckIcon } from './CheckIcon';
+export { CalendarIcon } from './CalendarIcon';
+export { ChevronDownIcon } from './ChevronDownIcon';
+export { ArrowLeftIcon } from './ArrowLeftIcon';
+export { MenuIcon } from './MenuIcon';
+export { UserIcon } from './UserIcon';
+export { AlertTriangleIcon } from './AlertTriangleIcon';
+export { CurrencyIcon } from './CurrencyIcon';

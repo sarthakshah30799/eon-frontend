@@ -163,7 +163,7 @@ export const FormFieldSelect = ({
 
         const nextOption = Array.isArray(option) ? null : option;
         setSelectedOption(nextOption);
-        field.onChange(nextOption?.value ?? null);
+        field.onChange((nextOption as AsyncSelectOption | null)?.value ?? null);
       }}
       error={error?.message}
     />

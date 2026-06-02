@@ -5,17 +5,23 @@ import type {
 
 export const createEmptyCounterProfileFormValues =
   (): CounterProfileFormValues => ({
-    counterCode: '',
+    counterNo: '',
     counterName: '',
     isActive: true,
+    isRetailCnt: false,
+    isBulkCnt: false,
+    isCombineCnt: false,
   });
 
 export const mapRecordToFormValues = (
   record: CounterProfileRecord
 ): CounterProfileFormValues => ({
-  counterCode: record.counterCode,
+  counterNo: String(record.counterNo),
   counterName: record.counterName,
   isActive: record.isActive,
+  isRetailCnt: record.isRetailCnt,
+  isBulkCnt: record.isBulkCnt,
+  isCombineCnt: record.isCombineCnt,
 });
 
 export const mapFormValuesToRecord = (

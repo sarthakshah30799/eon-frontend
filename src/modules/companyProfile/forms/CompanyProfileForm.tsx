@@ -1,11 +1,8 @@
 import { Button } from '@/components/ui/button1';
 import {
   Form,
-  FormFieldCityDropdown,
-  FormFieldCountryDropdown,
   FormFieldFileUploader,
   FormFieldInput,
-  FormFieldStateDropdown,
 } from '@/components/forms';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { companyProfileSchema } from '../schema';
@@ -41,63 +38,68 @@ export const CompanyProfileForm = ({
 
       <div className="grid gap-4 md:grid-cols-2">
         <FormFieldInput
-          name="name"
+          name="shortCode"
+          label="Short Code"
+          disabled={isSaving}
+        />
+        <FormFieldInput
+          name="companyName"
           label="Company Name"
           disabled={isSaving}
         />
         <FormFieldInput
-          name="designation"
-          label="RBI Designation"
-          disabled={isSaving}
-        />
-        <FormFieldInput name="rbiName" label="RBI Name" disabled={isSaving} />
-        <FormFieldInput name="rbiPlace" label="RBI Place" disabled={isSaving} />
-        <FormFieldInput
-          name="address1"
-          label="Address Line 1"
+          name="formerlyKnownName"
+          label="Formerly Known Name"
           disabled={isSaving}
         />
         <FormFieldInput
-          name="address2"
-          label="Address Line 2"
+          name="cinNo"
+          label="CIN No."
           disabled={isSaving}
         />
         <FormFieldInput
-          name="address3"
-          label="Address Line 3"
+          name="panNo"
+          label="PAN No."
           disabled={isSaving}
         />
         <FormFieldInput
-          name="pincode"
-          label="Pincode"
+          name="fxRegNo"
+          label="FX Reg No."
           disabled={isSaving}
-          inputMode="numeric"
-          pattern="[0-9]*"
-          maxLength={6}
         />
-        <FormFieldCityDropdown
-          name="city"
-          label="City"
-          placeholder="Select city"
+        <FormFieldInput
+          name="fxRegDate"
+          label="FX Reg Date"
+          type="date"
           disabled={isSaving}
-          createLabel="Create"
-          onCreateCity={() => undefined}
         />
-        <FormFieldStateDropdown
-          name="state"
-          label="State"
-          placeholder="Select state"
+        <FormFieldInput
+          name="fromDate"
+          label="From Date"
+          type="date"
           disabled={isSaving}
-          createLabel="Create"
-          onCreateState={() => undefined}
         />
-        <FormFieldCountryDropdown
-          name="country"
-          label="Country"
-          placeholder="Select country"
+        <FormFieldInput
+          name="toDate"
+          label="To Date"
+          type="date"
           disabled={isSaving}
-          createLabel="Create"
-          onCreateCountry={() => console.log('Create country')}
+        />
+        <FormFieldInput
+          name="aeonLicNo"
+          label="AEON Lic No."
+          disabled={isSaving}
+        />
+        <FormFieldInput
+          name="website"
+          label="Website"
+          disabled={isSaving}
+        />
+        <FormFieldInput
+          name="emailId"
+          label="Email ID"
+          type="email"
+          disabled={isSaving}
         />
       </div>
 

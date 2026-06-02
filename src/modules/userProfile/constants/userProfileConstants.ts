@@ -1,8 +1,9 @@
 import type { AsyncSelectResponse } from '@/components/ui';
 import type {
-  UserProfileControlSetupItem,
   UserProfileOption,
+  UserProfileControlSetupItem,
 } from '../types';
+
 
 export const USER_PROFILE_TEXTS = {
   LIST_TITLE: 'User Profile',

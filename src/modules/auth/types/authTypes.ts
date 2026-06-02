@@ -21,10 +21,14 @@ export interface OtpFormData {
 export interface User {
   id: string;
   email: string;
+  emailId?: string;
   name?: string;
   avatar?: string;
   role?: string;
   createdAt?: string;
   lastLogin?: string;
   status?: 'active' | 'inactive' | 'suspended';
+  isHo?: boolean;
+  permissions?: Record<string, string[]>;
 }
+

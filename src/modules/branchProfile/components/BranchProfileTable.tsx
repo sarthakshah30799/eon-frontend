@@ -1,18 +1,8 @@
-import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PencilSquareIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button1';
 import { Table, type TableColumnDef } from '@/components/ui/table';
 import type { BranchProfileRecord } from '../types';
-import {
-  getAcUserInchargeLabel,
-  getIbmBranchLabel,
-  getLocationTypeLabel,
-  getOperationalGroupLabel,
-  getOperationalUserLabel,
-  getStateLabel,
-  getWuAcBranchPostingLabel,
-} from '../utils';
 
 interface BranchProfileTableProps {
   branches: BranchProfileRecord[];
@@ -22,79 +12,57 @@ interface BranchProfileTableProps {
 
 interface BranchProfileTableRow {
   id: string;
-  branchName: string;
   branchCode: string;
-  branchNo: string;
+  branchNumber: string;
   city: string;
   state: string;
-  operationalGroup: string;
+  contactName: string;
+  contactNo: string;
+  branchEmailId: string;
   locationType: string;
-  operationalUser: string;
-  acUserIncharge: string;
-  wuAcBranchPosting: string;
-  ibmBranch: string;
-  branchAttachedTo: string;
-  contactPerson: string;
-  emailId: string;
-  phoneNo1: string;
+  status: string;
 }
-
-const formatPhone = (countryCode: string, value: string): string => {
-  const trimmedValue = value.trim();
-
-  if (!trimmedValue) {
-    return '-';
-  }
-
-  return `${countryCode} ${trimmedValue}`;
-};
 
 export const BranchProfileTable = ({
   branches,
 }: BranchProfileTableProps) => {
   const navigate = useNavigate();
 
-  const branchNameMap = useMemo(() => {
-    const map = new Map<string, string>();
+  const rows: BranchProfileTableRow[] = branches.map(branch => {
+    const statusParts: string[] = [];
+    if (branch.isActive) {
+      statusParts.push('Active');
+    } else {
+      statusParts.push('Inactive');
+    }
+    if (branch.isHeadOffice) {
+      statusParts.push('Head Office');
+    }
 
-    branches.forEach(branch => {
-      map.set(branch.id, `${branch.branchName} (${branch.branchCode})`);
-    });
-
-    return map;
-  }, [branches]);
-
-  const rows: BranchProfileTableRow[] = branches.map(branch => ({
-    id: branch.id,
-    branchName: branch.branchName,
-    branchCode: branch.branchCode,
-    branchNo: branch.branchNo,
-    city: branch.city,
-    state: getStateLabel(branch.stateId),
-    operationalGroup: getOperationalGroupLabel(branch.operationalGroupId),
-    locationType: getLocationTypeLabel(branch.locationTypeId),
-    operationalUser: getOperationalUserLabel(branch.operationalUserId),
-    acUserIncharge: getAcUserInchargeLabel(branch.acUserInchargeId),
-    wuAcBranchPosting: getWuAcBranchPostingLabel(branch.wuAcBranchPostingId),
-    ibmBranch: getIbmBranchLabel(branch.ibmBranchId),
-    branchAttachedTo: branchNameMap.get(branch.branchAttachedToId) ?? '-',
-    contactPerson: branch.contactPerson,
-    emailId: branch.emailId,
-    phoneNo1: formatPhone(branch.phoneNo1CountryCode, branch.phoneNo1),
-  }));
+    return {
+      id: branch.id,
+      branchCode: branch.branchCode || '',
+      branchNumber: branch.branchNumber || '',
+      city: branch.city || '',
+      state: branch.state || '',
+      contactName: branch.contactName || '-',
+      contactNo: branch.contactNo || '-',
+      branchEmailId: branch.branchEmailId || '-',
+      locationType: branch.locationType || '-',
+      status: statusParts.join(' / '),
+    };
+  });
 
   const columns: TableColumnDef<BranchProfileTableRow>[] = [
-    { accessorKey: 'branchName', header: 'Branch Name' },
     { accessorKey: 'branchCode', header: 'Branch Code' },
-    { accessorKey: 'branchNo', header: 'Branch No' },
+    { accessorKey: 'branchNumber', header: 'Branch Number' },
     { accessorKey: 'city', header: 'City' },
     { accessorKey: 'state', header: 'State' },
+    { accessorKey: 'contactName', header: 'Contact Name' },
+    { accessorKey: 'contactNo', header: 'Contact No' },
+    { accessorKey: 'branchEmailId', header: 'Email ID' },
     { accessorKey: 'locationType', header: 'Location Type' },
-    { accessorKey: 'operationalGroup', header: 'Operational Group' },
-    { accessorKey: 'branchAttachedTo', header: 'Branch Attached To' },
-    { accessorKey: 'contactPerson', header: 'Contact Person' },
-    { accessorKey: 'phoneNo1', header: 'Phone No.1' },
-    { accessorKey: 'emailId', header: 'Email ID' },
+    { accessorKey: 'status', header: 'Status' },
     {
       id: 'actions',
       header: 'Actions',
@@ -112,9 +80,7 @@ export const BranchProfileTable = ({
             <Button
               type="button"
               aria-label="Edit branch"
-              variant="ghost"
-              size="icon"
-              className="rounded-sm bg-transparent text-text-secondary hover:bg-surface-secondary hover:text-text-primary"
+              className='border-0! bg-transparent! text-black!'
               onClick={event => {
                 event.stopPropagation();
                 navigate(`/master/system-setups/branch-profile/edit/${branchId}`);

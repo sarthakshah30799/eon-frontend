@@ -1,32 +1,34 @@
 export interface CompanyProfile {
   id: string;
+  shortCode?: string;
+  companyName: string;
+  formerlyKnownName?: string;
+  cinNo?: string;
+  panNo?: string;
+  fxRegNo?: string;
+  fxRegDate?: string;
+  fromDate?: string;
+  toDate?: string;
   logo?: string;
-  name: string;
-  designation: string;
-  rbiName: string;
-  rbiPlace: string;
-  address1: string;
-  address2?: string;
-  address3?: string;
-  pincode: string;
-  city: string;
-  state: string;
-  country?: string;
+  aeonLicNo?: string;
+  website?: string;
+  emailId?: string;
   createdAt?: string;
   updatedAt?: string;
 }
 
 export interface CompanyProfileFormValues {
+  shortCode: string;
+  companyName: string;
+  formerlyKnownName: string;
+  cinNo: string;
+  panNo: string;
+  fxRegNo: string;
+  fxRegDate: string;
+  fromDate: string;
+  toDate: string;
   logo: string;
-  name: string;
-  designation: string;
-  rbiName: string;
-  rbiPlace: string;
-  address1: string;
-  address2: string;
-  address3: string;
-  pincode: string;
-  city: string;
-  state: string;
-  country: string;
+  aeonLicNo: string;
+  website: string;
+  emailId: string;
 }

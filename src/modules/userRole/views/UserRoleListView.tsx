@@ -5,6 +5,8 @@ import { USER_ROLE_TEXTS } from '../constants';
 import { UserRoleTable, UserRightsTable, UserRightsTreePreview } from '../components';
 import { useUserRightsMatrix } from '../hooks';
 import { Loader } from '@/components/ui/loader';
+import { useState, useEffect } from 'react';
+
 
 export const UserRoleListView = () => {
   const navigate = useNavigate();
@@ -12,6 +14,14 @@ export const UserRoleListView = () => {
   const { deleteUserRole, isPending: isDeleting } = useDeleteUserRole();
   const { updateUserRoleStatus, isPending: isUpdatingStatus } =
     useUpdateUserRoleStatus();
+
+  const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (roles && roles.length > 0 && !selectedRoleId) {
+      setSelectedRoleId(roles[0].id);
+    }
+  }, [roles, selectedRoleId]);
 
   const {
     selectableTreeNodes: rightsTreeNodes,
@@ -27,7 +37,9 @@ export const UserRoleListView = () => {
     toggleColumnPermission,
     isLoading: isLoadingMenuTree,
     error: menuTreeError,
-  } = useUserRightsMatrix();
+    savePermissions,
+    isSaving,
+  } = useUserRightsMatrix(selectedRoleId);
 
   const handleDelete = async (id: string) => {
     const confirmDelete = window.confirm('Are you sure you want to delete this role?');
@@ -94,20 +106,38 @@ export const UserRoleListView = () => {
           onDelete={handleDelete}
           isUpdatingStatus={isUpdatingStatus}
           isDeleting={isDeleting}
+          selectedRoleId={selectedRoleId}
+          onSelectRole={setSelectedRoleId}
         />
       </section>
 
       <section className="space-y-6 rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">
-            {USER_ROLE_TEXTS.RIGHTS_TITLE}
-          </p>
-          <h2 className="mt-2 text-xl font-semibold text-text-primary">
-            {USER_ROLE_TEXTS.RIGHTS_TITLE}
-          </h2>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-text-secondary">
-            {USER_ROLE_TEXTS.RIGHTS_SUBTITLE}
-          </p>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">
+              {USER_ROLE_TEXTS.RIGHTS_TITLE}
+            </p>
+            <h2 className="mt-2 text-xl font-semibold text-text-primary flex items-center gap-2">
+              {USER_ROLE_TEXTS.RIGHTS_TITLE}
+              {selectedRoleId && roles.length > 0 && (
+                <span className="text-sm font-normal text-text-secondary">
+                  for: <strong className="text-primary-600 font-semibold">{roles.find(r => r.id === selectedRoleId)?.userGroupName}</strong>
+                </span>
+              )}
+            </h2>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-text-secondary">
+              {USER_ROLE_TEXTS.RIGHTS_SUBTITLE}
+            </p>
+          </div>
+          {selectedRoleId && (
+            <Button
+              type="button"
+              onClick={savePermissions}
+              disabled={isSaving}
+            >
+              {isSaving ? 'Saving...' : 'Save Permissions'}
+            </Button>
+          )}
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">

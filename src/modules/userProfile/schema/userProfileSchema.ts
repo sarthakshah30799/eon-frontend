@@ -1,27 +1,29 @@
 import * as yup from 'yup';
 
 export const userProfileSchema = yup.object({
-  corporateClientId: yup.string().trim().required('Corporate client is required'),
-  code: yup.string().trim().required('Code is required'),
-  name: yup.string().trim().required('Name is required'),
-  cellNo: yup.string().trim().required('Cell number is required'),
+  userCode: yup.string().trim().required('User Code is required').max(20, 'User Code must be at most 20 characters'),
+  userName: yup.string().trim().required('User Name is required').max(250, 'User Name must be at most 250 characters'),
+  userGroupCode: yup.string().trim().max(20, 'User Group Code must be at most 20 characters'),
+
+  contactNo: yup.string().trim(),
   emailId: yup
     .string()
     .trim()
     .required('Email ID is required')
     .email('Enter a valid email address'),
-  branchId: yup.string().trim().required('Branch is required'),
-  idWillExpireOn: yup.string().trim().required('Expiry date is required'),
-  groupId: yup.string().trim().required('Group is required'),
-  purposeId: yup.string().trim().required('Purpose is required'),
-  mpUsername: yup.string().trim().required('MP username is required'),
-  controlSetup: yup.object({
-    isActive: yup.boolean().default(false),
-    isAdministrator: yup.boolean().default(false),
-    miscLimitAuthorization: yup.boolean().default(false),
-    canClearCounter: yup.boolean().default(false),
-    complianceAuthorization: yup.boolean().default(false),
-    dataEntryAuthorization: yup.boolean().default(false),
-    creditLimitAuthorization: yup.boolean().default(false),
+  employeeNo: yup.string().trim(),
+  designation: yup.string().trim(),
+  branchCode: yup.string().trim(),
+  userLicNo: yup.string().trim(),
+  isActive: yup.boolean().default(true),
+  isLocked: yup.boolean().default(false),
+  isDormant: yup.boolean().default(false),
+  password: yup.string().trim().when('$isEdit', {
+    is: true,
+    then: (schema) => schema.notRequired(),
+    otherwise: (schema) => schema.required('Password is required').min(6, 'Password must be at least 6 characters'),
   }),
+  roleId: yup.string().trim().nullable(),
+  branchId: yup.string().trim().nullable(),
+  counterId: yup.string().trim().nullable(),
 });

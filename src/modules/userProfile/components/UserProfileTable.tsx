@@ -1,14 +1,8 @@
 import { useNavigate } from 'react-router-dom';
-import {PencilSquareIcon} from '@heroicons/react/24/outline';
+import { PencilSquareIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button1';
 import { Table, type TableColumnDef } from '@/components/ui/table';
 import type { UserProfileRecord } from '../types';
-import {
-  getBranchLabel,
-  getCorporateClientLabel,
-  getGroupLabel,
-  getPurposeLabel,
-} from '../utils';
 
 interface UserProfileTableProps {
   profiles: UserProfileRecord[];
@@ -18,55 +12,57 @@ interface UserProfileTableProps {
 
 interface UserProfileTableRow {
   id: string;
-  corporateClient: string;
-  code: string;
-  name: string;
-  cellNo: string;
+  userCode: string;
+  userName: string;
   emailId: string;
-  branch: string;
-  idWillExpireOn: string;
-  groups: string;
-  purpose: string;
-  mpUsername: string;
+  contactNo: string;
+  userGroupCode: string;
+  branchCode: string;
+  designation: string;
+  status: string;
 }
-
-const formatDate = (value: string): string => {
-  const parsedDate = new Date(value);
-  return Number.isNaN(parsedDate.getTime())
-    ? value
-    : parsedDate.toLocaleDateString();
-};
 
 export const UserProfileTable = ({
   profiles,
 }: UserProfileTableProps) => {
   const navigate = useNavigate();
 
-  const rows: UserProfileTableRow[] = profiles.map(profile => ({
-    id: profile.id,
-    corporateClient: getCorporateClientLabel(profile.corporateClientId),
-    code: profile.code,
-    name: profile.name,
-    cellNo: profile.cellNo,
-    emailId: profile.emailId,
-    branch: getBranchLabel(profile.branchId),
-    idWillExpireOn: formatDate(profile.idWillExpireOn),
-    groups: getGroupLabel(profile.groupId),
-    purpose: getPurposeLabel(profile.purposeId),
-    mpUsername: profile.mpUsername,
-  }));
+  const rows: UserProfileTableRow[] = profiles.map(profile => {
+    const statusParts: string[] = [];
+    if (profile.isActive) {
+      statusParts.push('Active');
+    } else {
+      statusParts.push('Inactive');
+    }
+    if (profile.isLocked) {
+      statusParts.push('Locked');
+    }
+    if (profile.isDormant) {
+      statusParts.push('Dormant');
+    }
+
+    return {
+      id: profile.id,
+      userCode: profile.userCode,
+      userName: profile.userName,
+      emailId: profile.emailId,
+      contactNo: profile.contactNo || '-',
+      userGroupCode: profile.userGroupCode || '-',
+      branchCode: profile.branchCode || '-',
+      designation: profile.designation || '-',
+      status: statusParts.join(' / '),
+    };
+  });
 
   const columns: TableColumnDef<UserProfileTableRow>[] = [
-    { accessorKey: 'corporateClient', header: 'Corporate Client' },
-    { accessorKey: 'code', header: 'Code' },
-    { accessorKey: 'name', header: 'Name' },
-    { accessorKey: 'cellNo', header: 'Cell No' },
+    { accessorKey: 'userCode', header: 'User Code' },
+    { accessorKey: 'userName', header: 'User Name' },
     { accessorKey: 'emailId', header: 'Email ID' },
-    { accessorKey: 'branch', header: 'Branch' },
-    { accessorKey: 'idWillExpireOn', header: 'ID will expire on' },
-    { accessorKey: 'groups', header: 'Groups' },
-    { accessorKey: 'purpose', header: 'Purpose' },
-    { accessorKey: 'mpUsername', header: 'MP Username' },
+    { accessorKey: 'contactNo', header: 'Contact No' },
+    { accessorKey: 'userGroupCode', header: 'Group Code' },
+    { accessorKey: 'branchCode', header: 'Branch Code' },
+    { accessorKey: 'designation', header: 'Designation' },
+    { accessorKey: 'status', header: 'Status' },
     {
       id: 'actions',
       header: 'Actions',

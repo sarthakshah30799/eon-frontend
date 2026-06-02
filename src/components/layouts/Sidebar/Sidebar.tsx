@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Dropdown } from '../../ui/dropdown';
 import { useMasterPages } from '../../../lib';
 import { menuApi } from '../../../api';
+import { useAuth } from '../../../lib/AuthContext';
 import type { MasterPageTreeNode } from '../../../modules/masterPages/types';
 
 interface SidebarProps {
@@ -26,44 +27,42 @@ type SidebarSection = {
   items: SidebarMenuItem[];
 };
 
-const ADMIN_BRANCH_PROFILE_PATH = '/admin/branch-profile';
-const COUNTER_PROFILE_PATH = '/master/system-setups/counter-profile';
-const PRODUCT_PROFILE_PATH = '/master/system-setups/product-profile';
-const COUNTRY_PROFILE_PATH = '/master/system-setups/country-profile';
-const STATE_PROFILE_PATH = '/master/system-setups/state-profile';
 
-const ADMIN_SECTION: SidebarSection = {
-  title: 'Admin',
+
+const isExcludedProfile = (name: string, path?: string) => {
+  const lowerName = name.toLowerCase();
+  const lowerPath = path?.toLowerCase() || '';
+  return (
+    lowerName.includes('company') ||
+    lowerName.includes('branch') ||
+    lowerName.includes('counter') ||
+    lowerPath.includes('company-profile') ||
+    lowerPath.includes('branch-profile') ||
+    lowerPath.includes('counter-profile')
+  );
+};
+
+const ADMIN_DROPDOWN_SECTION: SidebarSection = {
+  title: 'Admin Dropdown',
   items: [
+    {
+      id: 'admin-company-profile',
+      label: 'Company Profile',
+      path: '/master/system-setups/company-profile/11111111-1111-4111-b111-111111111111',
+    },
     {
       id: 'admin-branch-profile',
       label: 'Branch Profile',
-      path: ADMIN_BRANCH_PROFILE_PATH,
+      path: '/master/system-setups/branch-profile',
+    },
+    {
+      id: 'admin-counter-profile',
+      label: 'Counter Profile',
+      path: '/master/system-setups/counter-profile',
     },
   ],
 };
-const tempItems = [
-  {
-    id: 'counter-profile',
-    label: 'Counter Profile',
-    path: COUNTER_PROFILE_PATH,
-  },
-  {
-    id: 'product-profile',
-    label: 'Product Profile',
-    path: PRODUCT_PROFILE_PATH,
-  },
-  {
-    id: 'country-profile',
-    label: 'Country Profile',
-    path: COUNTRY_PROFILE_PATH,
-  },
-  {
-    id: 'state-profile',
-    label: 'State Profile',
-    path: STATE_PROFILE_PATH,
-  },
-];
+
 
 const sidebarSectionTriggerClass = (isActive = false) =>
   [
@@ -296,55 +295,55 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     },
   });
 
-  const sections = useMemo<SidebarSection[]>(() => {
-    if (!menuTree || menuTree.length === 0) {
-      return [ADMIN_SECTION];
-    }
-    const dynamicSections = menuTree.map(root => ({
-      title: root.name,
-      items: (root.children || []).map(group => {
-        const isSystemSetupGroup = /system\s*set/i.test(group.name);
+  const { user } = useAuth();
 
-        if (!group.children || group.children.length === 0) {
-          let path = group.path || undefined;
-          if (path === '/master/system-setups/company-profile') {
-            path = '/master/system-setups/company-profile/1';
+  const sections = useMemo<SidebarSection[]>(() => {
+    const userEmail = (user?.emailId ?? user?.email)?.toLowerCase();
+    const isAdminUser = userEmail === 'admin@maraekat.com';
+
+    if (!menuTree || menuTree.length === 0) {
+      return isAdminUser ? [ADMIN_DROPDOWN_SECTION] : [];
+    }
+
+    const dynamicSections = menuTree.map(root => {
+      const items = (root.children || [])
+        .filter(group => !isExcludedProfile(group.name, group.path ?? undefined))
+        .map(group => {
+          if (!group.children || group.children.length === 0) {
+            return {
+              id: group.id,
+              label: group.name,
+              path: group.path || undefined,
+            };
           }
+
+          const mappedChildren = group.children
+            .filter(item => !isExcludedProfile(item.name, item.path ?? undefined))
+            .map(item => ({
+              id: item.id,
+              label: item.name,
+              path: item.path ?? undefined,
+            }));
+
           return {
             id: group.id,
             label: group.name,
-            path,
-          };
-        }
-
-        const mappedChildren = group.children.map(item => {
-          let path = item.path || undefined;
-          if (path === '/master/system-setups/company-profile') {
-            path = '/master/system-setups/company-profile/1';
-          }
-          return {
-            id: item.id,
-            label: item.name,
-            path,
+            children: mappedChildren,
           };
         });
 
-        const hasCounterProfile = mappedChildren.some(
-          item => !isGroupItem(item) && item.path === COUNTER_PROFILE_PATH
-        );
+      return {
+        title: root.name,
+        items,
+      };
+    });
 
-        return {
-          id: group.id,
-          label: group.name,
-          children:
-            isSystemSetupGroup && !hasCounterProfile
-              ? [...mappedChildren, ...tempItems]
-              : mappedChildren,
-        };
-      }),
-    }));
-    return [...dynamicSections, ADMIN_SECTION];
-  }, [menuTree]);
+    if (isAdminUser) {
+      return [...dynamicSections, ADMIN_DROPDOWN_SECTION];
+    }
+
+    return dynamicSections;
+  }, [menuTree, user]);
 
   const createdPageEntries = useMemo<SidebarMenuItem[]>(
     () => createdPages.map(mapMasterPageNodeToItem),

@@ -1,9 +1,3 @@
-import {
-  BRANCH_OPTIONS,
-  CORPORATE_CLIENT_OPTIONS,
-  GROUP_OPTIONS,
-  PURPOSE_OPTIONS,
-} from '../constants';
 import type {
   UserProfileFormValues,
   UserProfileOption,
@@ -17,54 +11,43 @@ export const getOptionLabel = (
   return options.find(option => option.value === value)?.label ?? value;
 };
 
-export const getCorporateClientLabel = (value: string): string =>
-  getOptionLabel(CORPORATE_CLIENT_OPTIONS, value);
-
-export const getBranchLabel = (value: string): string =>
-  getOptionLabel(BRANCH_OPTIONS, value);
-
-export const getGroupLabel = (value: string): string =>
-  getOptionLabel(GROUP_OPTIONS, value);
-
-export const getPurposeLabel = (value: string): string =>
-  getOptionLabel(PURPOSE_OPTIONS, value);
-
 export const createEmptyUserProfileFormValues = (): UserProfileFormValues => ({
-  corporateClientId: '',
-  code: '',
-  name: '',
-  cellNo: '',
+  userCode: '',
+  userName: '',
+  userGroupCode: '',
+  contactNo: '',
   emailId: '',
+  employeeNo: '',
+  designation: '',
+  branchCode: '',
+  userLicNo: '',
+  isActive: true,
+  isLocked: false,
+  isDormant: false,
+  password: '',
+  roleId: '',
   branchId: '',
-  idWillExpireOn: '',
-  groupId: '',
-  purposeId: '',
-  mpUsername: '',
-  controlSetup: {
-    isActive: false,
-    isAdministrator: false,
-    miscLimitAuthorization: false,
-    canClearCounter: false,
-    complianceAuthorization: false,
-    dataEntryAuthorization: false,
-    creditLimitAuthorization: false,
-  },
+  counterId: '',
 });
 
 export const mapRecordToFormValues = (
   record: UserProfileRecord
 ): UserProfileFormValues => ({
-  corporateClientId: record.corporateClientId,
-  code: record.code,
-  name: record.name,
-  cellNo: record.cellNo,
-  emailId: record.emailId,
-  branchId: record.branchId,
-  idWillExpireOn: record.idWillExpireOn,
-  groupId: record.groupId,
-  purposeId: record.purposeId,
-  mpUsername: record.mpUsername,
-  controlSetup: record.controlSetup,
+  userCode: record.userCode || '',
+  userName: record.userName || '',
+  userGroupCode: record.userGroupCode || '',
+  contactNo: record.contactNo || '',
+  emailId: record.emailId || '',
+  employeeNo: record.employeeNo || '',
+  designation: record.designation || '',
+  branchCode: record.branchCode || '',
+  userLicNo: record.userLicNo || '',
+  isActive: record.isActive !== false,
+  isLocked: !!record.isLocked,
+  isDormant: !!record.isDormant,
+  roleId: record.roleId || '',
+  branchId: record.branchId || '',
+  counterId: record.counterId || '',
 });
 
 export const mapFormValuesToRecord = (
@@ -76,6 +59,19 @@ export const mapFormValuesToRecord = (
   id,
   createdAt,
   updatedAt,
-  ...values,
+  userCode: values.userCode,
+  userName: values.userName,
+  userGroupCode: values.userGroupCode,
+  contactNo: values.contactNo,
+  emailId: values.emailId,
+  employeeNo: values.employeeNo,
+  designation: values.designation,
+  branchCode: values.branchCode,
+  userLicNo: values.userLicNo,
+  isActive: values.isActive,
+  isLocked: values.isLocked,
+  isDormant: values.isDormant,
+  roleId: values.roleId,
+  branchId: values.branchId,
+  counterId: values.counterId,
 });
-

@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { menuApi } from '@/api';
+import { useMemo, useState, useEffect } from 'react';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { menuApi, userRoleApi } from '@/api';
 import { useMasterPages } from '@/lib';
 import type { MenuRecord } from '@/api/menu/menu.api';
 import type { MasterPageTreeNode } from '@/modules/masterPages/types';
 import { USER_RIGHTS_PERMISSION_COLUMNS } from '../constants';
+import toast from 'react-hot-toast';
 import type {
   UserRightsPermissionState,
   UserRightsRowState,
@@ -44,6 +45,8 @@ interface UseUserRightsMatrixResult {
     permission: keyof UserRightsPermissionState,
     checked: boolean
   ) => void;
+  savePermissions: () => Promise<void>;
+  isSaving: boolean;
 }
 
 const defaultState = (
@@ -58,7 +61,33 @@ const defaultState = (
   rejected: checked,
 });
 
-export const useUserRightsMatrix = (): UseUserRightsMatrixResult => {
+const isExcludedProfile = (name: string, path?: string) => {
+  const lowerName = name.toLowerCase();
+  const lowerPath = path?.toLowerCase() || '';
+  return (
+    lowerName.includes('company') ||
+    lowerName.includes('branch') ||
+    lowerName.includes('counter') ||
+    lowerPath.includes('company-profile') ||
+    lowerPath.includes('branch-profile') ||
+    lowerPath.includes('counter-profile')
+  );
+};
+
+const filterMenuRecord = (menu: MenuRecord): MenuRecord | null => {
+  if (isExcludedProfile(menu.name, menu.path ?? undefined)) {
+    return null;
+  }
+  const copy = { ...menu };
+  if (copy.children && copy.children.length > 0) {
+    copy.children = copy.children
+      .map(filterMenuRecord)
+      .filter((c): c is MenuRecord => c !== null);
+  }
+  return copy;
+};
+
+export const useUserRightsMatrix = (roleId: string | null): UseUserRightsMatrixResult => {
   const { tree: createdPages } = useMasterPages();
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [rowStateOverrides, setRowStateOverrides] = useState<
@@ -67,8 +96,8 @@ export const useUserRightsMatrix = (): UseUserRightsMatrixResult => {
 
   const {
     data: menuTree = [],
-    isLoading,
-    error,
+    isLoading: isLoadingMenu,
+    error: menuError,
   } = useQuery({
     queryKey: ['menu-tree'],
     queryFn: async () => {
@@ -80,13 +109,75 @@ export const useUserRightsMatrix = (): UseUserRightsMatrixResult => {
     },
   });
 
+  // Query to fetch permissions for the active role from the backend
+  const {
+    data: activeRolePermissions,
+    isLoading: isLoadingPermissions,
+    error: permissionsError,
+  } = useQuery({
+    queryKey: ['role-permissions', roleId],
+    queryFn: async () => {
+      if (!roleId) return null;
+      return await userRoleApi.getRolePermissions(roleId);
+    },
+    enabled: !!roleId,
+  });
+
+  // Set the grid overrides state when new permissions are loaded from the backend
+  useEffect(() => {
+    if (activeRolePermissions) {
+      const nextOverrides: Record<string, UserRightsRowState> = {};
+      for (const [menuId, perms] of Object.entries(activeRolePermissions)) {
+        const selected = USER_RIGHTS_PERMISSION_COLUMNS.every(
+          column => perms[column.key]
+        );
+        nextOverrides[menuId] = {
+          selected,
+          permissions: perms as unknown as UserRightsPermissionState,
+        };
+      }
+      setRowStateOverrides(nextOverrides);
+    } else {
+      setRowStateOverrides({});
+    }
+  }, [activeRolePermissions]);
+
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      if (!roleId) {
+        throw new Error('Please select a role first to save permissions.');
+      }
+      const grid: Record<string, Record<string, boolean>> = {};
+      for (const [menuId, state] of Object.entries(rowStateById)) {
+        const hasAnyActive = Object.values(state.permissions).some(v => v);
+        if (hasAnyActive) {
+          grid[menuId] = state.permissions as any;
+        }
+      }
+      await userRoleApi.saveRolePermissions(roleId, grid);
+    },
+    onSuccess: () => {
+      toast.success('Permissions saved successfully!');
+    },
+    onError: (err: any) => {
+      toast.error(err.message || 'Failed to save permissions');
+    },
+  });
+
   const treeNodes = useMemo<UserRightsTreeNode[]>(
-    () => [
-      ...(menuTree as MenuRecord[]).map(mapMenuRecordToRightsTreeNode),
-      ...(createdPages as MasterPageTreeNode[]).map(
-        mapMasterPageTreeNodeToRightsTreeNode
-      ),
-    ],
+    () => {
+      const filteredMenus = (menuTree as MenuRecord[])
+        .map(filterMenuRecord)
+        .filter((m): m is MenuRecord => m !== null);
+
+      const filteredPages = (createdPages as MasterPageTreeNode[])
+        .filter(p => !isExcludedProfile(p.pageName, p.slug));
+
+      return [
+        ...filteredMenus.map(mapMenuRecordToRightsTreeNode),
+        ...filteredPages.map(mapMasterPageTreeNodeToRightsTreeNode),
+      ];
+    },
     [createdPages, menuTree]
   );
 
@@ -259,6 +350,10 @@ export const useUserRightsMatrix = (): UseUserRightsMatrixResult => {
     });
   };
 
+  const handleSave = async () => {
+    await saveMutation.mutateAsync();
+  };
+
   return {
     treeNodes,
     selectableTreeNodes,
@@ -268,12 +363,15 @@ export const useUserRightsMatrix = (): UseUserRightsMatrixResult => {
     rows,
     visibleRows,
     rowStateById,
-    isLoading,
-    error: error instanceof Error ? error : null,
+    isLoading: isLoadingMenu || (!!roleId && isLoadingPermissions),
+    error: (menuError || permissionsError) as Error | null,
     selectNode,
     toggleAllRowsSelected,
     toggleRowSelected,
     togglePermission,
     toggleColumnPermission,
+    savePermissions: handleSave,
+    isSaving: saveMutation.isPending,
   };
 };
+

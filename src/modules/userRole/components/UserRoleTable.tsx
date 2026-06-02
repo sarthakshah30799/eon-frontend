@@ -11,12 +11,14 @@ interface UserRoleTableProps {
   onDelete: (id: string) => void | Promise<void>;
   isUpdatingStatus?: boolean;
   isDeleting?: boolean;
+  selectedRoleId?: string | null;
+  onSelectRole?: (id: string) => void;
 }
 
 interface UserRoleTableRow {
   id: string;
-  roleCode: string;
-  roleName: string;
+  userGroupCode: string;
+  userGroupName: string;
   isActive: boolean;
 }
 
@@ -24,19 +26,20 @@ export const UserRoleTable = ({
   roles,
   onToggleStatus,
   isUpdatingStatus = false,
+  onSelectRole,
 }: UserRoleTableProps) => {
   const navigate = useNavigate();
 
   const rows: UserRoleTableRow[] = roles.map(role => ({
     id: role.id,
-    roleCode: role.roleCode,
-    roleName: role.roleName,
+    userGroupCode: role.userGroupCode,
+    userGroupName: role.userGroupName,
     isActive: role.isActive,
   }));
 
   const columns: TableColumnDef<UserRoleTableRow>[] = [
-    { accessorKey: 'roleCode', header: 'Role Code' },
-    { accessorKey: 'roleName', header: 'Role Name' },
+    { accessorKey: 'userGroupCode', header: 'User Group Code' },
+    { accessorKey: 'userGroupName', header: 'User Group Name' },
     {
       accessorKey: 'isActive',
       header: 'Status',
@@ -99,9 +102,13 @@ export const UserRoleTable = ({
       enableRowSelection={false}
       enableColumnVisibility={false}
       onRowClick={row => {
-        navigate(`/master/system-setups/user-role/edit/${row.id}`);
+        if (onSelectRole) {
+          onSelectRole(row.id);
+        } else {
+          navigate(`/master/system-setups/user-role/edit/${row.id}`);
+        }
       }}
-      emptyMessage="No roles found. Create your first role."
+      emptyMessage="No user groups found. Create your first user group."
     />
   );
 };

@@ -1,29 +1,13 @@
 import { useMemo } from 'react';
-import { useFormContext, useWatch } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
 import type { Resolver } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
 import { Button } from '@/components/ui/button1';
 import {
   Form,
   FormFieldCheckbox,
-  FormFieldDatePicker,
-  FormFieldCityDropdown,
   FormFieldInput,
-  FormFieldPhoneInput,
-  FormFieldStateDropdown,
-  FormFieldYesNoToggle,
   FormFieldSelect,
 } from '@/components/forms';
-import {
-  AC_USER_INCHARGE_OPTIONS,
-  BRANCH_PROFILE_TEXTS,
-  IBM_BRANCH_OPTIONS,
-  LOCATION_TYPE_OPTIONS,
-  OPERATIONAL_GROUP_OPTIONS,
-  OPERATIONAL_USER_OPTIONS,
-  WU_AC_BRANCH_POSTING_OPTIONS,
-  createStaticLoadOptions,
-} from '../constants';
 import { branchProfileSchema } from '../schema';
 import type { BranchProfileFormValues, BranchProfileOption } from '../types';
 import { useListCounterProfiles } from '@/modules/counterProfile/hooks';
@@ -33,59 +17,31 @@ interface BranchProfileFormProps {
   onSubmit: (values: BranchProfileFormValues) => void | Promise<void>;
   submitLabel?: string;
   isSubmitting?: boolean;
-  branchAttachedToOptions: BranchProfileOption[];
+  branchAttachedToOptions?: BranchProfileOption[];
 }
 
 const formCardClass =
   'rounded-sm border border-border-primary bg-surface-secondary p-4';
 
+const createStaticLoadOptions = (options: { value: string; label: string }[]) => {
+  return async () => ({
+    options,
+    hasMore: false,
+  });
+};
+
 const BranchProfileFormFields = ({
-  branchAttachedToOptions,
   isSubmitting = false,
 }: {
-  branchAttachedToOptions: BranchProfileOption[];
   isSubmitting?: boolean;
 }) => {
-  const form = useFormContext<BranchProfileFormValues>();
   const { data: counterProfiles = [] } = useListCounterProfiles();
-  const serviceTaxApplicable = useWatch({
-    control: form.control,
-    name: 'serviceTaxApplicable',
-  });
 
-  const locationTypeLoadOptions = useMemo(
-    () => createStaticLoadOptions(LOCATION_TYPE_OPTIONS),
-    []
-  );
-  const operationalGroupLoadOptions = useMemo(
-    () => createStaticLoadOptions(OPERATIONAL_GROUP_OPTIONS),
-    []
-  );
-  const operationalUserLoadOptions = useMemo(
-    () => createStaticLoadOptions(OPERATIONAL_USER_OPTIONS),
-    []
-  );
-  const acUserInchargeLoadOptions = useMemo(
-    () => createStaticLoadOptions(AC_USER_INCHARGE_OPTIONS),
-    []
-  );
-  const wuAcBranchPostingLoadOptions = useMemo(
-    () => createStaticLoadOptions(WU_AC_BRANCH_POSTING_OPTIONS),
-    []
-  );
-  const ibmBranchLoadOptions = useMemo(
-    () => createStaticLoadOptions(IBM_BRANCH_OPTIONS),
-    []
-  );
-  const branchAttachedToLoadOptions = useMemo(
-    () => createStaticLoadOptions(branchAttachedToOptions),
-    [branchAttachedToOptions]
-  );
   const connectedCounterOptions = useMemo(
     () =>
       counterProfiles.map(counter => ({
         value: counter.id,
-        label: `${counter.counterCode} - ${counter.counterName}`,
+        label: `${counter.counterNo} - ${counter.counterName}`,
       })),
     [counterProfiles]
   );
@@ -98,108 +54,119 @@ const BranchProfileFormFields = ({
     <div className="space-y-6">
       <section className={formCardClass}>
         <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.24em] text-text-tertiary">
-          Profile
+          Branch Profile Details
         </h2>
-        <div className="grid gap-4 md:grid-cols-2">
-          <FormFieldInput
-            name="branchName"
-            label="Branch Name"
-            disabled={isSubmitting}
-          />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <FormFieldInput
             name="branchCode"
             label="Branch Code"
             disabled={isSubmitting}
           />
           <FormFieldInput
-            name="branchNo"
-            label="Branch No"
-            disabled={isSubmitting}
-          />
-        </div>
-      </section>
-
-      <section className={formCardClass}>
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.24em] text-text-tertiary">
-          Address
-        </h2>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <FormFieldInput name="address1" label="Address 1" disabled={isSubmitting} />
-          <FormFieldInput name="address2" label="Address 2" disabled={isSubmitting} />
-          <FormFieldInput name="address3" label="Address 3" disabled={isSubmitting} />
-          <FormFieldCityDropdown
-            name="city"
-            label="City"
-            placeholder="Select city"
-            disabled={isSubmitting}
-            createLabel="Create"
-            onCreateCity={() => undefined}
-          />
-          <FormFieldStateDropdown
-            name="stateId"
-            label="State"
-            placeholder="Select state"
-            disabled={isSubmitting}
-            createLabel="Create"
-            onCreateState={() => undefined}
-          />
-          <FormFieldInput name="stdCode" label="STD Code" disabled={isSubmitting} />
-          <FormFieldInput name="pinCode" label="Pin Code" disabled={isSubmitting} />
-          <FormFieldSelect
-            name="operationalGroupId"
-            label="Operational Group"
-            placeholder="Select operational group"
-            loadOptions={operationalGroupLoadOptions}
-            pagination={false}
-            disabled={isSubmitting}
-          />
-        </div>
-      </section>
-
-      <section className={formCardClass}>
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.24em] text-text-tertiary">
-          Contact
-        </h2>
-        <div className="grid gap-4 md:grid-cols-2">
-          <FormFieldPhoneInput
-            countryCodeName="phoneNo1CountryCode"
-            numberName="phoneNo1"
-            label="Phone No.1"
-            disabled={isSubmitting}
-          />
-          <FormFieldPhoneInput
-            countryCodeName="phoneNo2CountryCode"
-            numberName="phoneNo2"
-            label="Phone No.2"
-            disabled={isSubmitting}
-          />
-          <FormFieldPhoneInput
-            countryCodeName="faxNo1CountryCode"
-            numberName="faxNo1"
-            label="Fax No 1"
-            disabled={isSubmitting}
-          />
-          <FormFieldPhoneInput
-            countryCodeName="faxNo2CountryCode"
-            numberName="faxNo2"
-            label="Fax No 2"
+            name="branchNumber"
+            label="Branch Number"
+            type="number"
             disabled={isSubmitting}
           />
           <FormFieldInput
-            name="emailId"
-            label="Email ID"
+            name="address1"
+            label="Address Line 1"
+            disabled={isSubmitting}
+          />
+          <FormFieldInput
+            name="address2"
+            label="Address Line 2"
+            disabled={isSubmitting}
+          />
+          <FormFieldInput
+            name="address3"
+            label="Address Line 3"
+            disabled={isSubmitting}
+          />
+          <FormFieldInput
+            name="city"
+            label="City"
+            disabled={isSubmitting}
+          />
+          <FormFieldInput
+            name="state"
+            label="State"
+            disabled={isSubmitting}
+          />
+          <FormFieldInput
+            name="gstState"
+            label="GST State"
+            disabled={isSubmitting}
+          />
+          <FormFieldInput
+            name="pinCode"
+            label="Pincode"
+            disabled={isSubmitting}
+          />
+          <FormFieldInput
+            name="gstNo"
+            label="GST No."
+            disabled={isSubmitting}
+          />
+          <FormFieldInput
+            name="fxRegNo"
+            label="FX Reg No."
+            disabled={isSubmitting}
+          />
+          <FormFieldInput
+            name="fxRegDate"
+            label="FX Reg Date"
+            type="date"
+            disabled={isSubmitting}
+          />
+          <FormFieldInput
+            name="contactName"
+            label="Contact Name"
+            disabled={isSubmitting}
+          />
+          <FormFieldInput
+            name="contactNo"
+            label="Contact No."
+            disabled={isSubmitting}
+          />
+          <FormFieldInput
+            name="branchEmailId"
+            label="Branch Email ID"
             type="email"
             disabled={isSubmitting}
           />
           <FormFieldInput
-            name="contactPerson"
-            label="Contact Person"
+            name="aeonBranchLic"
+            label="AEON Branch Lic"
             disabled={isSubmitting}
           />
-          <FormFieldPhoneInput
-            countryCodeName="contactNoCountryCode"
-            numberName="contactNo"
-            label="Contact No."
+          <FormFieldInput
+            name="locationType"
+            label="Location Type"
+            disabled={isSubmitting}
+          />
+          <FormFieldInput
+            name="cashHolding"
+            label="Cash Holding"
+            type="number"
+            disabled={isSubmitting}
+          />
+          <FormFieldInput
+            name="cashHoldingTemp"
+            label="Cash Holding Temp"
+            type="number"
+            disabled={isSubmitting}
+          />
+          <FormFieldInput
+            name="currHolding"
+            label="Currency Holding"
+            type="number"
+            disabled={isSubmitting}
+          />
+          <FormFieldInput
+            name="currHoldingTemp"
+            label="Currency Holding Temp"
+            type="number"
             disabled={isSubmitting}
           />
         </div>
@@ -207,105 +174,13 @@ const BranchProfileFormFields = ({
 
       <section className={formCardClass}>
         <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.24em] text-text-tertiary">
-          Other details
+          Relations & Status
         </h2>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <FormFieldSelect
-            name="locationTypeId"
-            label="Location Type"
-            placeholder="Select location type"
-            loadOptions={locationTypeLoadOptions}
-            pagination={false}
-            disabled={isSubmitting}
-          />
-          <FormFieldSelect
-            name="operationalUserId"
-            label="Operational User"
-            placeholder="Select operational user"
-            loadOptions={operationalUserLoadOptions}
-            pagination={false}
-            disabled={isSubmitting}
-          />
-          <FormFieldSelect
-            name="acUserInchargeId"
-            label="A/C User Incharge"
-            placeholder="Select A/C user incharge"
-            loadOptions={acUserInchargeLoadOptions}
-            pagination={false}
-            disabled={isSubmitting}
-          />
-          <FormFieldInput name="aiiNo" label="AII No." disabled={isSubmitting} />
-          <FormFieldInput name="wuAiiNo" label="WU-AII No." disabled={isSubmitting} />
-          <FormFieldInput
-            name="rbiLicenceNo"
-            label="RBI Licence No."
-            disabled={isSubmitting}
-          />
-          <FormFieldDatePicker
-            name="rbiRegDate"
-            label="RBI Reg Date"
-            disabled={isSubmitting}
-          />
-          <FormFieldInput
-            name="authSignatory"
-            label="Auth. Signatory"
-            disabled={isSubmitting}
-          />
-          <FormFieldSelect
-            name="branchAttachedToId"
-            label="Branch Attached To"
-            placeholder="Select branch"
-            loadOptions={branchAttachedToLoadOptions}
-            pagination={false}
-            disabled={isSubmitting}
-          />
-          <FormFieldSelect
-            name="wuAcBranchPostingId"
-            label="WU A/c Branch Posting"
-            placeholder="Select posting branch"
-            loadOptions={wuAcBranchPostingLoadOptions}
-            pagination={false}
-            disabled={isSubmitting}
-          />
-          <FormFieldInput
-            name="cashLimit"
-            label="Cash Limit"
-            disabled={isSubmitting}
-          />
-          <FormFieldInput name="ibmHo1" label="IBM HO 1." disabled={isSubmitting} />
-          <FormFieldInput name="ibmHo2" label="IBM HO 2." disabled={isSubmitting} />
-          <FormFieldSelect
-            name="ibmBranchId"
-            label="IBM Branch"
-            placeholder="Select IBM branch"
-            loadOptions={ibmBranchLoadOptions}
-            pagination={false}
-            disabled={isSubmitting}
-          />
-          <FormFieldInput
-            name="lastSettlementRef"
-            label="Last Settlement Ref."
-            disabled={isSubmitting}
-          />
-          <FormFieldInput
-            name="currencyLimit"
-            label="Currency Limit"
-            disabled={isSubmitting}
-          />
-          <FormFieldInput
-            name="tempCashLimit"
-            label="Temp Cash Limit"
-            disabled={isSubmitting}
-          />
-          <FormFieldInput
-            name="tempCurrencyLimit"
-            label="Temp Currency Limit"
-            disabled={isSubmitting}
-          />
-          <FormFieldSelect
             name="connectCounterIds"
             label="Connect Counters"
-            placeholder="Select counters"
+            placeholder="Select counters to link"
             loadOptions={connectedCounterLoadOptions}
             pagination={false}
             disabled={isSubmitting}
@@ -313,31 +188,18 @@ const BranchProfileFormFields = ({
             closeMenuOnSelect={false}
             className="md:col-span-2 lg:col-span-3"
           />
-
-          <div className="md:col-span-2 lg:col-span-3 grid gap-4 md:grid-cols-2">
+          <div className="md:col-span-2 lg:col-span-3 grid gap-4 md:grid-cols-2 mt-2">
             <FormFieldCheckbox
-              name="branchHasShifts"
-              label="Branch has Shifts"
+              name="isHeadOffice"
+              label="Is Head Office"
               disabled={isSubmitting}
             />
             <FormFieldCheckbox
-              name="canReferenceOnBehalfEntries"
-              label="Can this Branch be a reference 'On Behalf' entries"
-              disabled={isSubmitting}
-            />
-            <FormFieldYesNoToggle
-              name="serviceTaxApplicable"
-              label="Service Tax Applicable"
+              name="isActive"
+              label="Is Active"
               disabled={isSubmitting}
             />
           </div>
-          {serviceTaxApplicable && (
-            <FormFieldInput
-              name="serviceTaxRegnNo"
-              label="Serv.Tax Regn No"
-              disabled={isSubmitting || !serviceTaxApplicable}
-            />
-          )}
         </div>
       </section>
     </div>
@@ -347,9 +209,8 @@ const BranchProfileFormFields = ({
 export const BranchProfileForm = ({
   defaultValues,
   onSubmit,
-  submitLabel = BRANCH_PROFILE_TEXTS.CREATE_BRANCH,
+  submitLabel = 'Save Branch',
   isSubmitting = false,
-  branchAttachedToOptions,
 }: BranchProfileFormProps) => {
   return (
     <Form
@@ -359,7 +220,6 @@ export const BranchProfileForm = ({
       className="space-y-6"
     >
       <BranchProfileFormFields
-        branchAttachedToOptions={branchAttachedToOptions}
         isSubmitting={isSubmitting}
       />
 

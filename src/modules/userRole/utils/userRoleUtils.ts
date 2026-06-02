@@ -2,17 +2,45 @@ import type { QueryClient } from '@tanstack/react-query';
 import type { UserRoleFormValues, UserRoleRecord } from '../types';
 
 export const createEmptyUserRoleFormValues = (): UserRoleFormValues => ({
-  code: '',
-  name: '',
-  description: '',
+  userGroupCode: '',
+  userGroupName: '',
+  isAdminGrp: false,
+  isMdGroup: false,
+  isComplianceGrp: false,
+  isSrFinanceGrp: false,
+  isFinanceGrp: false,
+  isBrnMgrGrp: false,
+  isExecutiveGrp: false,
+  isCardStkGrp: false,
+  isDeliveryBoyGrp: false,
+  isCashierGrp: false,
+  isSalesMgrGrp: false,
+  isActive: true,
+  isAeonAccess: false,
+  isDelPortalAccess: false,
+  isDelAppAccess: false,
 });
 
 export const mapRecordToFormValues = (
   record: UserRoleRecord
 ): UserRoleFormValues => ({
-  code: record.code || '',
-  name: record.name || '',
-  description: record.description || '',
+  userGroupCode: record.userGroupCode || '',
+  userGroupName: record.userGroupName || '',
+  isAdminGrp: !!record.isAdminGrp,
+  isMdGroup: !!record.isMdGroup,
+  isComplianceGrp: !!record.isComplianceGrp,
+  isSrFinanceGrp: !!record.isSrFinanceGrp,
+  isFinanceGrp: !!record.isFinanceGrp,
+  isBrnMgrGrp: !!record.isBrnMgrGrp,
+  isExecutiveGrp: !!record.isExecutiveGrp,
+  isCardStkGrp: !!record.isCardStkGrp,
+  isDeliveryBoyGrp: !!record.isDeliveryBoyGrp,
+  isCashierGrp: !!record.isCashierGrp,
+  isSalesMgrGrp: !!record.isSalesMgrGrp,
+  isActive: record.isActive !== false,
+  isAeonAccess: !!record.isAeonAccess,
+  isDelPortalAccess: !!record.isDelPortalAccess,
+  isDelAppAccess: !!record.isDelAppAccess,
 });
 
 export const mapFormValuesToRecord = (

@@ -13,20 +13,25 @@ interface BackendBranch {
   address1: string;
   address2?: string | null;
   address3?: string | null;
-  pincode: string;
   city: string;
   state: string;
-  country: string;
-  stateCode: string;
-  gstStateCode: string;
-  countryCode1: string;
-  phoneNumber1: string;
-  countryCode2: string;
-  phoneNumber2?: string | null;
-  contactPersonName?: string | null;
-  contactPersonCountryCode: string;
-  contactPersonPhone?: string | null;
-  operationGroup?: string | null;
+  gstState?: string | null;
+  pinCode: string;
+  gstNo?: string | null;
+  fxRegNo?: string | null;
+  fxRegDate?: string | null;
+  contactName?: string | null;
+  contactNo?: string | null;
+  branchEmailId?: string | null;
+  aeonBranchLic?: string | null;
+  locationType?: string | null;
+  cashHolding?: number | null;
+  cashHoldingTemp?: number | null;
+  currHolding?: number | null;
+  currHoldingTemp?: number | null;
+  isHeadOffice: boolean;
+  isActive: boolean;
+  counterIds?: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -34,58 +39,30 @@ interface BackendBranch {
 const mapBackendToFrontend = (branch: BackendBranch): BranchProfileRecord => {
   return {
     id: branch.id,
-    branchName: `Branch ${branch.branchCode}`,
-    branchCode: branch.branchCode,
-    branchNo: String(branch.branchNumber),
-    address1: branch.address1,
+    branchCode: branch.branchCode || '',
+    branchNumber: branch.branchNumber !== undefined ? String(branch.branchNumber) : '',
+    address1: branch.address1 || '',
     address2: branch.address2 || '',
     address3: branch.address3 || '',
-    city: branch.city,
-    stateId: branch.state,
-    stdCode: '022',
-    pinCode: branch.pincode,
-    operationalGroupId: branch.operationGroup || 'city-location',
-    phoneNo1CountryCode: branch.countryCode1
-      ? `+${branch.countryCode1.trim()}`
-      : '+91',
-    phoneNo1: branch.phoneNumber1,
-    phoneNo2CountryCode: branch.countryCode2
-      ? `+${branch.countryCode2.trim()}`
-      : '+91',
-    phoneNo2: branch.phoneNumber2 || '',
-    faxNo1CountryCode: '+91',
-    faxNo1: '',
-    faxNo2CountryCode: '+91',
-    faxNo2: '',
-    emailId: 'branch@example.com',
-    contactPerson: branch.contactPersonName || '',
-    contactNoCountryCode: branch.contactPersonCountryCode
-      ? `+${branch.contactPersonCountryCode.trim()}`
-      : '+91',
-    contactNo: branch.contactPersonPhone || '',
-    locationTypeId: 'branch',
-    operationalUserId: 'operational-user-1',
-    acUserInchargeId: 'ac-user-1',
-    aiiNo: '',
-    wuAiiNo: '',
-    rbiLicenceNo: 'RBI-LIC',
-    rbiRegDate: '2025-01-01',
-    authSignatory: '',
-    branchAttachedToId: '',
-    wuAcBranchPostingId: '',
-    cashLimit: '500000',
-    ibmHo1: '',
-    ibmHo2: '',
-    ibmBranchId: '',
-    lastSettlementRef: '',
-    currencyLimit: '',
-    tempCashLimit: '',
-    tempCurrencyLimit: '',
-    connectCounterIds: [],
-    branchHasShifts: false,
-    canReferenceOnBehalfEntries: false,
-    serviceTaxApplicable: false,
-    serviceTaxRegnNo: '',
+    city: branch.city || '',
+    state: branch.state || '',
+    gstState: branch.gstState || '',
+    pinCode: branch.pinCode || '',
+    gstNo: branch.gstNo || '',
+    fxRegNo: branch.fxRegNo || '',
+    fxRegDate: branch.fxRegDate ? branch.fxRegDate.slice(0, 10) : '',
+    contactName: branch.contactName || '',
+    contactNo: branch.contactNo || '',
+    branchEmailId: branch.branchEmailId || '',
+    aeonBranchLic: branch.aeonBranchLic || '',
+    locationType: branch.locationType || '',
+    cashHolding: branch.cashHolding !== null ? String(branch.cashHolding) : '0',
+    cashHoldingTemp: branch.cashHoldingTemp !== null ? String(branch.cashHoldingTemp) : '0',
+    currHolding: branch.currHolding !== null ? String(branch.currHolding) : '0',
+    currHoldingTemp: branch.currHoldingTemp !== null ? String(branch.currHoldingTemp) : '0',
+    isHeadOffice: !!branch.isHeadOffice,
+    isActive: branch.isActive !== false,
+    connectCounterIds: branch.counterIds || [],
     createdAt: branch.createdAt,
     updatedAt: branch.updatedAt,
   };
@@ -98,30 +75,29 @@ const mapFrontendToBackend = (
   return {
     companyId: companyId || undefined,
     branchCode: form.branchCode,
-    branchNumber: parseInt(form.branchNo, 10) || 1,
+    branchNumber: parseInt(form.branchNumber, 10) || 1,
     address1: form.address1,
     address2: form.address2 || undefined,
     address3: form.address3 || undefined,
-    pincode: form.pinCode,
     city: form.city,
-    state: form.stateId || 'Maharashtra',
-    country: 'India',
-    stateCode: form.stateId ? form.stateId.slice(0, 2).toUpperCase() : 'MH',
-    gstStateCode: form.serviceTaxRegnNo || '27',
-    countryCode1: form.phoneNo1CountryCode
-      ? form.phoneNo1CountryCode.replace('+', '')
-      : 'IN',
-    phoneNumber1: form.phoneNo1 || '',
-    countryCode2: form.phoneNo2CountryCode
-      ? form.phoneNo2CountryCode.replace('+', '')
-      : 'IN',
-    phoneNumber2: form.phoneNo2 || undefined,
-    contactPersonName: form.contactPerson || undefined,
-    contactPersonCountryCode: form.contactNoCountryCode
-      ? form.contactNoCountryCode.replace('+', '')
-      : 'IN',
-    contactPersonPhone: form.contactNo || undefined,
-    operationGroup: form.operationalGroupId || undefined,
+    state: form.state,
+    gstState: form.gstState || undefined,
+    pinCode: form.pinCode,
+    gstNo: form.gstNo || undefined,
+    fxRegNo: form.fxRegNo || undefined,
+    fxRegDate: form.fxRegDate || undefined,
+    contactName: form.contactName || undefined,
+    contactNo: form.contactNo || undefined,
+    branchEmailId: form.branchEmailId || undefined,
+    aeonBranchLic: form.aeonBranchLic || undefined,
+    locationType: form.locationType || undefined,
+    cashHolding: form.cashHolding ? parseFloat(form.cashHolding) : undefined,
+    cashHoldingTemp: form.cashHoldingTemp ? parseFloat(form.cashHoldingTemp) : undefined,
+    currHolding: form.currHolding ? parseFloat(form.currHolding) : undefined,
+    currHoldingTemp: form.currHoldingTemp ? parseFloat(form.currHoldingTemp) : undefined,
+    isHeadOffice: form.isHeadOffice,
+    isActive: form.isActive,
+    counterIds: form.connectCounterIds || [],
   };
 };
 
@@ -143,7 +119,6 @@ export const branchProfileApi = {
   createBranchProfile: async (
     data: BranchProfileFormValues
   ): Promise<BranchProfileRecord> => {
-    // Dynamically fetch first company to link it automatically
     const companyRes = await companyProfileApi.getCompanyProfiles();
     const companyId =
       companyRes.data?.[0]?.id || '11111111-1111-4111-b111-111111111111';

@@ -1,0 +1,76 @@
+import { useAuth } from '../lib/AuthContext';
+import { useMemo } from 'react';
+
+export interface UsePermissionResult {
+  canAdd: boolean;
+  canModify: boolean;
+  canDelete: boolean;
+  canView: boolean;
+  canExport: boolean;
+  canAuthorize: boolean;
+  canReject: boolean;
+  hasAnyPermission: boolean;
+}
+
+export const usePermission = (path?: string): UsePermissionResult => {
+  const { user } = useAuth();
+
+  return useMemo(() => {
+    if (!user) {
+      return {
+        canAdd: false,
+        canModify: false,
+        canDelete: false,
+        canView: false,
+        canExport: false,
+        canAuthorize: false,
+        canReject: false,
+        hasAnyPermission: false,
+      };
+    }
+
+    if (user.isHo) {
+      return {
+        canAdd: true,
+        canModify: true,
+        canDelete: true,
+        canView: true,
+        canExport: true,
+        canAuthorize: true,
+        canReject: true,
+        hasAnyPermission: true,
+      };
+    }
+
+    if (!path) {
+      return {
+        canAdd: false,
+        canModify: false,
+        canDelete: false,
+        canView: false,
+        canExport: false,
+        canAuthorize: false,
+        canReject: false,
+        hasAnyPermission: false,
+      };
+    }
+
+    let checkPath = path;
+    if (path.startsWith('/master/system-setups/company-profile')) {
+      checkPath = '/master/system-setups/company-profile';
+    }
+
+    const permissions = user.permissions?.[checkPath] || [];
+
+    return {
+      canAdd: permissions.includes('add'),
+      canModify: permissions.includes('modify'),
+      canDelete: permissions.includes('delete'),
+      canView: permissions.includes('view'),
+      canExport: permissions.includes('export'),
+      canAuthorize: permissions.includes('authorized'),
+      canReject: permissions.includes('rejected'),
+      hasAnyPermission: permissions.length > 0,
+    };
+  }, [user, path]);
+};

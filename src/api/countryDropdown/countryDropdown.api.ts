@@ -1,5 +1,5 @@
 import { apiClient } from '@/api/api';
-import type { CountryDropdownOption, CountryRecord } from '@/components/dropdowns/countryDropdown';
+import type { CountryDropdownOption, CountryRecord } from '@/modules/dropdowns/countryDropdown';
 
 const toCountryOption = (country: CountryRecord): CountryDropdownOption => ({
   value: country.name,

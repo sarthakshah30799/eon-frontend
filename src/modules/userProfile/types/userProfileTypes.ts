@@ -1,13 +1,20 @@
 export interface UserProfileFormValues {
   userCode: string;
+  userName: string;
+  userGroupCode: string;
+  contactNo: string;
+  emailId: string;
+  employeeNo: string;
+  designation: string;
+  branchCode: string;
+  userLicNo: string;
+  isActive: boolean;
+  isLocked: boolean;
+  isDormant: boolean;
   password?: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  countryCode?: string;
-  phoneNumber: string;
-  status?: 'pending' | 'active' | 'inactive';
-  isHo?: boolean;
+  roleId: string;
+  branchId: string;
+  counterId: string;
 }
 
 export interface UserProfileRecord extends Omit<UserProfileFormValues, 'password'> {
@@ -25,3 +32,4 @@ export interface UserProfileControlSetupItem {
   key: string;
   label: string;
 }
+

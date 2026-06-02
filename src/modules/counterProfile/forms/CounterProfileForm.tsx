@@ -2,9 +2,8 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { Button } from '@/components/ui/button1';
 import { Form, FormFieldCheckbox, FormFieldInput } from '@/components/forms';
 import { counterProfileSchema } from '../schema';
-import { COUNTER_PROFILE_TEXTS } from '../constants';
 import type { CounterProfileFormValues } from '../types';
-import type { SubmitErrorHandler } from 'react-hook-form';
+
 
 interface CounterProfileFormProps {
   defaultValues: CounterProfileFormValues;
@@ -16,26 +15,20 @@ interface CounterProfileFormProps {
 export const CounterProfileForm = ({
   defaultValues,
   onSubmit,
-  submitLabel = COUNTER_PROFILE_TEXTS.CREATE_COUNTER,
+  submitLabel = 'Save Counter',
   isSubmitting = false,
 }: CounterProfileFormProps) => {
-  const handleSubmitErrors: SubmitErrorHandler<CounterProfileFormValues> =
-    errors => {
-      console.log('CounterProfileForm submit errors:', errors);
-    };
-
   return (
     <Form
       onSubmit={onSubmit}
-      onError={handleSubmitErrors}
       resolver={yupResolver(counterProfileSchema)}
       defaultValues={defaultValues}
       className="space-y-6"
     >
       <div className="grid gap-4 md:grid-cols-2">
         <FormFieldInput
-          name="counterCode"
-          label="Counter Code"
+          name="counterNo"
+          label="Counter No."
           disabled={isSubmitting}
         />
         <FormFieldInput
@@ -45,10 +38,25 @@ export const CounterProfileForm = ({
         />
       </div>
 
-      <div className="rounded-sm border border-border-primary bg-surface-secondary p-4">
+      <div className="rounded-sm border border-border-primary bg-surface-secondary p-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <FormFieldCheckbox
           name="isActive"
           label="Is Active"
+          disabled={isSubmitting}
+        />
+        <FormFieldCheckbox
+          name="isRetailCnt"
+          label="Is Retail Counter"
+          disabled={isSubmitting}
+        />
+        <FormFieldCheckbox
+          name="isBulkCnt"
+          label="Is Bulk Counter"
+          disabled={isSubmitting}
+        />
+        <FormFieldCheckbox
+          name="isCombineCnt"
+          label="Is Combine Counter"
           disabled={isSubmitting}
         />
       </div>

@@ -276,7 +276,7 @@ function Table<T extends object>({
                 {row.getVisibleCells().map(cell => (
                   <td
                     key={cell.id}
-                    className={`whitespace-nowrap px-4 py-3 text-sm text-text-primary ${cell.column.columnDef.meta?.cellClassName ?? ''}`}
+                    className={`whitespace-nowrap px-4 py-3 text-sm text-text-primary ${(cell.column.columnDef.meta as TableColumnMeta | undefined)?.cellClassName ?? ''}`}
                   >
                       {flexRender(
                         cell.column.columnDef.cell,

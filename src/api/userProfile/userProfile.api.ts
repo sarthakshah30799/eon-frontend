@@ -7,13 +7,20 @@ import type {
 interface BackendUser {
   id: string;
   userCode: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  countryCode: string;
-  phoneNumber: string;
-  status: 'pending' | 'active' | 'inactive';
-  isHo: boolean;
+  userName: string;
+  userGroupCode: string;
+  contactNo: string;
+  emailId: string;
+  employeeNo: string;
+  designation: string;
+  branchCode: string;
+  userLicNo: string;
+  isActive: boolean;
+  isLocked: boolean;
+  isDormant: boolean;
+  roleId?: string;
+  branchId?: string;
+  counterId?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -21,48 +28,47 @@ interface BackendUser {
 const mapBackendToFrontend = (user: BackendUser): UserProfileRecord => {
   return {
     id: user.id,
-    corporateClientId: 'client-1',
-    code: user.userCode,
-    name: `${user.firstName} ${user.lastName}`.trim(),
-    cellNo: user.phoneNumber,
-    emailId: user.email,
-    branchId: 'branch-1',
-    idWillExpireOn: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    groupId: 'group-1',
-    purposeId: 'purpose-1',
-    mpUsername: user.userCode.toLowerCase(),
-    controlSetup: {
-      isActive: user.status === 'active',
-      isAdministrator: user.isHo,
-      miscLimitAuthorization: false,
-      canClearCounter: false,
-      complianceAuthorization: false,
-      dataEntryAuthorization: false,
-      creditLimitAuthorization: false,
-    },
+    userCode: user.userCode || '',
+    userName: user.userName || '',
+    userGroupCode: user.userGroupCode || '',
+    contactNo: user.contactNo || '',
+    emailId: user.emailId || '',
+    employeeNo: user.employeeNo || '',
+    designation: user.designation || '',
+    branchCode: user.branchCode || '',
+    userLicNo: user.userLicNo || '',
+    isActive: user.isActive !== false,
+    isLocked: !!user.isLocked,
+    isDormant: !!user.isDormant,
+    roleId: user.roleId || '',
+    branchId: user.branchId || '',
+    counterId: user.counterId || '',
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
   };
 };
 
 const mapFrontendToBackend = (form: UserProfileFormValues, isCreate: boolean): any => {
-  const nameParts = (form.name || '').trim().split(/\s+/);
-  const firstName = nameParts[0] || 'User';
-  const lastName = nameParts.slice(1).join(' ') || '.';
-
   const payload: any = {
-    userCode: form.code,
-    firstName,
-    lastName,
-    email: form.emailId,
-    countryCode: 'IN',
-    phoneNumber: form.cellNo,
-    status: form.controlSetup?.isActive ? 'active' : 'inactive',
-    isHo: form.controlSetup?.isAdministrator || false,
+    userCode: form.userCode,
+    userName: form.userName,
+    userGroupCode: form.userGroupCode || undefined,
+    contactNo: form.contactNo || undefined,
+    emailId: form.emailId,
+    employeeNo: form.employeeNo || undefined,
+    designation: form.designation || undefined,
+    branchCode: form.branchCode || undefined,
+    userLicNo: form.userLicNo || undefined,
+    isActive: form.isActive !== false,
+    isLocked: !!form.isLocked,
+    isDormant: !!form.isDormant,
+    roleId: form.roleId || undefined,
+    branchId: form.branchId || undefined,
+    counterId: form.counterId || undefined,
   };
 
   if (isCreate) {
-    payload.password = form.password || 'password123';
+    payload.password = form.password || 'temp1234';
   } else if (form.password) {
     payload.password = form.password;
   }

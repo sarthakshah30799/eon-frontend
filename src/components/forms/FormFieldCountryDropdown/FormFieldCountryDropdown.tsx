@@ -9,7 +9,6 @@ interface FormFieldCountryDropdownProps {
   disabled?: boolean;
   className?: string;
   createLabel?: string;
-  onCreateCountry?: (inputValue: string) => void | Promise<void>;
 }
 
 export const FormFieldCountryDropdown = ({
@@ -19,7 +18,6 @@ export const FormFieldCountryDropdown = ({
   disabled = false,
   className = '',
   createLabel,
-  onCreateCountry,
 }: FormFieldCountryDropdownProps) => {
   const form = useFormContext();
 
@@ -39,7 +37,6 @@ export const FormFieldCountryDropdown = ({
       className={className}
       value={String(field.value ?? '')}
       createLabel={createLabel}
-      onCreateCountry={onCreateCountry}
       onChange={nextValue => {
         field.onChange(nextValue);
       }}

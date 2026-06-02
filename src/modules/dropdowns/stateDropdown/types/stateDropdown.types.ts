@@ -1,10 +1,5 @@
 import type { AsyncSelectOption } from '@/components/ui';
 
-export interface StateRecord {
-  id: string;
-  name: string;
-}
-
 export interface StateDropdownOption extends AsyncSelectOption {
   value: string;
   label: string;

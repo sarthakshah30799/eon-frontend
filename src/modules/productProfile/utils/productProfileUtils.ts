@@ -1,7 +1,4 @@
-import type {
-  ProductProfileFormValues,
-  ProductProfileRecord,
-} from '../types';
+import type { ProductProfileFormValues, ProductProfileRecord } from '../types';
 
 export const createEmptyProductProfileFormValues =
   (): ProductProfileFormValues => ({
@@ -44,6 +41,19 @@ export const createEmptyProductProfileFormValues =
     allowChangingDenominationInSales: false,
     allowMulticard: false,
     askReference: false,
+    availableInRetailBuying: false,
+    retailBuyingSeriesApplicable: false,
+    availableInRetailSelling: false,
+    retailSellingSeriesApplicable: false,
+    availableInBulkBuying: false,
+    bulkBuyingSeriesApplicable: false,
+    availableInBulkSelling: false,
+    bulkSellingSeriesApplicable: false,
+    allowProductCancellation: false,
+    maintainBlankStockOfProduct: false,
+    denominationApplicable: false,
+    allowAddOnLinking: false,
+    instrumentIssuingAuthorityRequired: false,
   });
 
 export const mapRecordToFormValues = (
@@ -89,6 +99,19 @@ export const mapRecordToFormValues = (
   allowChangingDenominationInSales: record.allowChangingDenominationInSales,
   allowMulticard: record.allowMulticard,
   askReference: record.askReference,
+  availableInRetailBuying: record.availableInRetailBuying,
+  retailBuyingSeriesApplicable: record.retailBuyingSeriesApplicable,
+  availableInRetailSelling: record.availableInRetailSelling,
+  retailSellingSeriesApplicable: record.retailSellingSeriesApplicable,
+  availableInBulkBuying: record.availableInBulkBuying,
+  bulkBuyingSeriesApplicable: record.bulkBuyingSeriesApplicable,
+  availableInBulkSelling: record.availableInBulkSelling,
+  bulkSellingSeriesApplicable: record.bulkSellingSeriesApplicable,
+  allowProductCancellation: record.allowProductCancellation,
+  maintainBlankStockOfProduct: record.maintainBlankStockOfProduct,
+  denominationApplicable: record.denominationApplicable,
+  allowAddOnLinking: record.allowAddOnLinking,
+  instrumentIssuingAuthorityRequired: record.instrumentIssuingAuthorityRequired,
 });
 
 export const mapFormValuesToRecord = (

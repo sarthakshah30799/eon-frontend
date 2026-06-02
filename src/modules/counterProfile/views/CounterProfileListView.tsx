@@ -7,6 +7,7 @@ import {
 } from '../hooks';
 import { COUNTER_PROFILE_TEXTS } from '../constants';
 import { CounterProfileTable } from '../components';
+import { Loader } from '@/components/ui/loader';
 
 export const CounterProfileListView = () => {
   const navigate = useNavigate();
@@ -32,9 +33,7 @@ export const CounterProfileListView = () => {
 
   if (isLoading) {
     return (
-      <div className="py-6 text-center text-text-secondary">
-        {COUNTER_PROFILE_TEXTS.LOADING_COUNTERS}
-      </div>
+     <Loader />
     );
   }
 

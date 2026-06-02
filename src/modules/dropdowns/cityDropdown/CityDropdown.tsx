@@ -57,6 +57,7 @@ export const CityDropdown = ({
       placeholder={placeholder}
       disabled={disabled}
       className={className}
+      isCreatable
       loadOptions={loadOptions}
       defaultOptions={defaultOptions}
       isClearable

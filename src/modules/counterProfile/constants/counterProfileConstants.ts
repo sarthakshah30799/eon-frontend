@@ -6,7 +6,6 @@ export const COUNTER_PROFILE_TEXTS = {
   SAVE_CHANGES: 'Save Changes',
   EDIT_COUNTER: 'Edit Counter',
   FORM_SUBTITLE: 'Fill in the counter code, name, and status.',
-  LOADING_COUNTERS: 'Loading counters...',
   EMPTY_STATE: 'No counters found. Create your first counter.',
   LIST_ERROR: 'Error loading counters',
   CREATE_SUCCESS: 'Counter created successfully!',

@@ -52,21 +52,9 @@ export const CompanyProfileForm = ({
           label="Formerly Known Name"
           disabled={isSaving}
         />
-        <FormFieldInput
-          name="cinNo"
-          label="CIN No."
-          disabled={isSaving}
-        />
-        <FormFieldInput
-          name="panNo"
-          label="PAN No."
-          disabled={isSaving}
-        />
-        <FormFieldInput
-          name="fxRegNo"
-          label="FX Reg No."
-          disabled={isSaving}
-        />
+        <FormFieldInput name="cinNo" label="CIN No." disabled={isSaving} />
+        <FormFieldInput name="panNo" label="PAN No." disabled={isSaving} />
+        <FormFieldInput name="fxRegNo" label="FX Reg No." disabled={isSaving} />
         <FormFieldInput
           name="fxRegDate"
           label="FX Reg Date"
@@ -90,11 +78,7 @@ export const CompanyProfileForm = ({
           label="AEON Lic No."
           disabled={isSaving}
         />
-        <FormFieldInput
-          name="website"
-          label="Website"
-          disabled={isSaving}
-        />
+        <FormFieldInput name="website" label="Website" disabled={isSaving} />
         <FormFieldInput
           name="emailId"
           label="Email ID"

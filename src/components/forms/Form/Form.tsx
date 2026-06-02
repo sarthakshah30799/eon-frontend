@@ -4,12 +4,14 @@ import {
   useForm,
   type DefaultValues,
   type FieldValues,
+  type SubmitErrorHandler,
   type Resolver,
 } from 'react-hook-form';
 
 interface FormProps<TFieldValues extends FieldValues = FieldValues> {
   children: React.ReactNode;
   onSubmit: (data: TFieldValues) => void | Promise<void>;
+  onError?: SubmitErrorHandler<TFieldValues>;
   className?: string;
   resolver?: Resolver<TFieldValues>;
   defaultValues?: DefaultValues<TFieldValues>;
@@ -18,6 +20,7 @@ interface FormProps<TFieldValues extends FieldValues = FieldValues> {
 export const Form = <TFieldValues extends FieldValues = FieldValues>({
   children,
   onSubmit,
+  onError,
   className = '',
   resolver,
   defaultValues,
@@ -27,11 +30,15 @@ export const Form = <TFieldValues extends FieldValues = FieldValues>({
     defaultValues,
   });
 
-  const handleSubmit = form.handleSubmit(onSubmit);
+  const handleSubmit = form.handleSubmit(onSubmit, onError);
+  const handleFormSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.stopPropagation();
+    await handleSubmit(event);
+  };
 
   return (
     <RHFFormProvider {...form}>
-      <form onSubmit={handleSubmit} className={className}>
+      <form onSubmit={handleFormSubmit} className={className}>
         {children}
       </form>
     </RHFFormProvider>

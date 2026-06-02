@@ -16,7 +16,6 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           className={`block w-full rounded-sm border border-border-secondary bg-surface-primary px-3 py-2 text-text-primary shadow-sm placeholder:text-text-tertiary focus:border-primary-500! focus:ring-primary-500 focus-visible:border-transparent! focus-visible:outline-primary-500 focus-visible:ring-1 ${error ? 'border-error-500' : ''} ${className}`}
           ref={ref}
           {...props}
-          value={typeof(props.value) === "string" ? props.value.toUpperCase() : props.value }
         />
         {error && <p className="mt-1 text-sm text-error-600">{error}</p>}
       </div>

@@ -49,6 +49,19 @@ export interface ProductProfileFormValues {
   allowChangingDenominationInSales: boolean;
   allowMulticard: boolean;
   askReference: boolean;
+  availableInRetailBuying: boolean;
+  retailBuyingSeriesApplicable: boolean;
+  availableInRetailSelling: boolean;
+  retailSellingSeriesApplicable: boolean;
+  availableInBulkBuying: boolean;
+  bulkBuyingSeriesApplicable: boolean;
+  availableInBulkSelling: boolean;
+  bulkSellingSeriesApplicable: boolean;
+  allowProductCancellation: boolean;
+  maintainBlankStockOfProduct: boolean;
+  denominationApplicable: boolean;
+  allowAddOnLinking: boolean;
+  instrumentIssuingAuthorityRequired: boolean;
 }
 
 export interface ProductProfileRecord extends ProductProfileFormValues {

@@ -1,25 +1,27 @@
-import { apiClient } from '@/api/api';
-import type { CountryDropdownOption, CountryRecord } from '@/components/dropdowns/countryDropdown';
-
-const toCountryOption = (country: CountryRecord): CountryDropdownOption => ({
-  value: country.name,
-  label: country.name,
-  countryId: country.id,
-});
+import { countryProfileApi } from '@/api/countryProfile';
+import type { CountryDropdownOption } from '@/modules/dropdowns/countryDropdown';
 
 export const countryDropdownApi = {
   getCountries: async (inputValue: string): Promise<CountryDropdownOption[]> => {
     const query = inputValue.trim();
-    const endpoint = query
-      ? `/countries?search=${encodeURIComponent(query)}`
-      : '/countries';
+    const countries = await countryProfileApi.getCountryProfiles();
 
-    const response = await apiClient.get<CountryRecord[]>(endpoint);
+    return countries
+      .filter(country => {
+        if (!query) {
+          return true;
+        }
 
-    if (response.error) {
-      throw new Error(response.error);
-    }
-
-    return (response.data ?? []).map(toCountryOption);
+        const search = query.toLowerCase();
+        return (
+          country.countryName.toLowerCase().includes(search) ||
+          country.countryCode.toLowerCase().includes(search)
+        );
+      })
+      .map(country => ({
+        value: country.countryName,
+        label: country.countryName,
+        countryId: country.id,
+      }));
   },
 };

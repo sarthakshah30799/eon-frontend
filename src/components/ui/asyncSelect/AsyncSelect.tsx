@@ -1,7 +1,10 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
-import AsyncSelect, { type AsyncCreatableProps } from 'react-select/async-creatable';
-import type { SelectInstance } from 'react-select';
+import AsyncSelectBase from 'react-select/async';
+import AsyncCreatableSelect, {
+  type AsyncCreatableProps,
+} from 'react-select/async-creatable';
+import type { GroupBase, SelectInstance, StylesConfig } from 'react-select';
 import { Label } from '../label';
 import './AsyncSelect.css';
 
@@ -23,23 +26,10 @@ const asyncSelectVariants = cva('react-select-container', {
   },
 });
 
-// Extended interfaces based on react-select types
 export interface AsyncSelectOption {
   value: string | number;
   label: string;
   isDisabled?: boolean;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any;
-}
-
-export interface AsyncSelectGroupOption {
-  label: string;
-  options: AsyncSelectOption[];
-}
-
-export interface AsyncSelectLoadOptions {
-  inputValue: string;
-  callback: (options: AsyncSelectOption[] | AsyncSelectGroupOption[]) => void;
 }
 
 export interface AsyncSelectPaginationMeta {
@@ -50,7 +40,7 @@ export interface AsyncSelectPaginationMeta {
 }
 
 export interface AsyncSelectResponse {
-  options: AsyncSelectOption[] | AsyncSelectGroupOption[];
+  options: AsyncSelectOption[];
   meta?: AsyncSelectPaginationMeta;
   hasMore?: boolean;
 }
@@ -58,7 +48,11 @@ export interface AsyncSelectResponse {
 export interface AsyncSelectProps<IsMulti extends boolean = false>
   extends
     Omit<
-      AsyncCreatableProps<AsyncSelectOption, IsMulti, AsyncSelectGroupOption>,
+      AsyncCreatableProps<
+        AsyncSelectOption,
+        IsMulti,
+        GroupBase<AsyncSelectOption>
+      >,
       'loadOptions'
     >,
     VariantProps<typeof asyncSelectVariants> {
@@ -73,10 +67,12 @@ export interface AsyncSelectProps<IsMulti extends boolean = false>
   debounceDelay?: number;
   className?: string;
   disabled?: boolean;
+  isCreatable?: boolean;
+  isSearchable?: boolean;
 }
 
 const AsyncSelectComponent = React.forwardRef<
-  SelectInstance<AsyncSelectOption, boolean, AsyncSelectGroupOption>,
+  SelectInstance<AsyncSelectOption, boolean, GroupBase<AsyncSelectOption>>,
   AsyncSelectProps<boolean>
 >(
   (
@@ -89,6 +85,7 @@ const AsyncSelectComponent = React.forwardRef<
       className = '',
       size,
       variant,
+      isCreatable = false,
       ...props
     },
     ref
@@ -130,22 +127,7 @@ const AsyncSelectComponent = React.forwardRef<
 
             const page = pagination ? currentPage : 1;
             const response = await loadOptions(inputValue, page);
-
-            let options: AsyncSelectOption[] = [];
-
-            if (Array.isArray(response)) {
-              // Handle direct array response
-              options = response;
-            } else if (response.options) {
-              // Handle paginated response with grouped or flat options
-              const normalizedOptions = response.options as Array<
-                AsyncSelectOption | AsyncSelectGroupOption
-              >;
-
-              options = normalizedOptions.flatMap(option =>
-                'options' in option ? option.options : [option]
-              );
-            }
+            const options = response.options ?? [];
 
             if (pagination && currentPage > 1) {
               // Append to existing options for pagination
@@ -202,9 +184,11 @@ const AsyncSelectComponent = React.forwardRef<
 
     // Custom styles
 
-    const customStyles = {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      control: (base: any, state: any) => ({
+    const customStyles: StylesConfig<
+      AsyncSelectOption,
+      boolean
+    > = {
+      control: (base, state) => ({
         ...base,
         borderColor: error ? 'var(--color-error-500)' : base.borderColor,
         '&:hover': {
@@ -222,13 +206,11 @@ const AsyncSelectComponent = React.forwardRef<
             : base.boxShadow,
         minHeight: size === 'sm' ? '32px' : size === 'lg' ? '48px' : '40px',
       }),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      loadingIndicator: (base: any) => ({
+      loadingIndicator: base => ({
         ...base,
         color: 'var(--color-primary-500)',
       }),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      menu: (base: any) => ({
+      menu: base => ({
         ...base,
         zIndex: 50,
       }),
@@ -238,21 +220,39 @@ const AsyncSelectComponent = React.forwardRef<
       <div className="space-y-2">
         {label && <Label htmlFor={props.id}>{label}</Label>}
         <div className={asyncSelectVariants({ size, variant, className })}>
-          <AsyncSelect
-            ref={ref}
-            cacheOptions={!pagination}
-            defaultOptions
-            loadOptions={debouncedLoadOptions}
-            onMenuScrollToBottom={handleMenuScrollToBottom}
-            onInputChange={handleInputChange}
-            isLoading={isLoadingMore}
-            styles={customStyles}
-            noOptionsMessage={({ inputValue }) =>
-              inputValue ? 'No options found' : 'Start typing to search...'
-            }
-            isDisabled={props.disabled}
-            {...props}
-          />
+          {isCreatable ? (
+            <AsyncCreatableSelect
+              ref={ref}
+              cacheOptions={!pagination}
+              defaultOptions
+              loadOptions={debouncedLoadOptions}
+              onMenuScrollToBottom={handleMenuScrollToBottom}
+              onInputChange={handleInputChange}
+              isLoading={isLoadingMore}
+              styles={customStyles}
+              noOptionsMessage={({ inputValue }) =>
+                inputValue ? 'No options found' : 'Start typing to search...'
+              }
+              isDisabled={props.disabled}
+              {...props}
+            />
+          ) : (
+            <AsyncSelectBase
+              ref={ref}
+              cacheOptions={!pagination}
+              defaultOptions
+              loadOptions={debouncedLoadOptions}
+              onMenuScrollToBottom={handleMenuScrollToBottom}
+              onInputChange={handleInputChange}
+              isLoading={isLoadingMore}
+              styles={customStyles}
+              noOptionsMessage={({ inputValue }) =>
+                inputValue ? 'No options found' : 'Start typing to search...'
+              }
+              isDisabled={props.disabled}
+              {...props}
+            />
+          )}
         </div>
         {error && <p className="mt-1 text-sm text-error-600">{error}</p>}
       </div>

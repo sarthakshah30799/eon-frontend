@@ -80,3 +80,56 @@ export const PRODUCT_PROFILE_DETAIL_CHECKBOXES: ProductProfileCheckboxFieldConfi
     { name: 'allowMulticard', label: 'Allow Multicard?' },
     { name: 'askReference', label: 'Ask Reference' },
   ];
+
+export const PRODUCT_PROFILE_RETAIL_TRANSACTION_CHECKBOXES: ProductProfileCheckboxFieldConfig[] =
+  [
+    {
+      name: 'availableInRetailBuying',
+      label: 'Available in Retail Buying',
+    },
+    {
+      name: 'retailBuyingSeriesApplicable',
+      label: 'Series Applicable',
+    },
+    {
+      name: 'availableInRetailSelling',
+      label: 'Available in Retail Selling',
+    },
+    {
+      name: 'retailSellingSeriesApplicable',
+      label: 'Series Applicable',
+    },
+    {
+      name: 'availableInBulkBuying',
+      label: 'Available in Bulk Buying',
+    },
+    {
+      name: 'bulkBuyingSeriesApplicable',
+      label: 'Series Applicable',
+    },
+    {
+      name: 'availableInBulkSelling',
+      label: 'Available in Bulk Selling',
+    },
+    {
+      name: 'bulkSellingSeriesApplicable',
+      label: 'Series Applicable',
+    },
+    {
+      name: 'allowProductCancellation',
+      label: 'Allow Product Cancellation',
+    },
+    {
+      name: 'maintainBlankStockOfProduct',
+      label: 'Maintain Blank Stock of Product?',
+    },
+    {
+      name: 'denominationApplicable',
+      label: 'Denomination Applicable',
+    },
+    { name: 'allowAddOnLinking', label: 'Allow Add-On Linking' },
+    {
+      name: 'instrumentIssuingAuthorityRequired',
+      label: 'Instrument Issuing Authority Required',
+    },
+  ];

@@ -27,6 +27,30 @@ const CompanyProfilePage = lazy(
   () =>
     import('../pages/master/system-setups/company-profile/[id]/CompanyProfilePage')
 );
+const CountryProfileListPage = lazy(
+  () =>
+    import('../pages/master/system-setups/country-profile/list/CountryProfileListPage')
+);
+const CountryProfileCreatePage = lazy(
+  () =>
+    import('../pages/master/system-setups/country-profile/create/CountryProfileCreatePage')
+);
+const CountryProfileEditPage = lazy(
+  () =>
+    import('../pages/master/system-setups/country-profile/edit/[id]/CountryProfileEditPage')
+);
+const StateProfileListPage = lazy(
+  () =>
+    import('../pages/master/system-setups/state-profile/list/StateProfileListPage')
+);
+const StateProfileCreatePage = lazy(
+  () =>
+    import('../pages/master/system-setups/state-profile/create/StateProfileCreatePage')
+);
+const StateProfileEditPage = lazy(
+  () =>
+    import('../pages/master/system-setups/state-profile/edit/[id]/StateProfileEditPage')
+);
 const BranchProfileListPage = lazy(
   () =>
     import('../pages/master/system-setups/branch-profile/list/BranchProfileListPage')
@@ -173,6 +197,54 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <CompanyProfilePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/master/system-setups/country-profile',
+    element: (
+      <ProtectedLayout>
+        <CountryProfileListPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/master/system-setups/country-profile/create',
+    element: (
+      <ProtectedLayout>
+        <CountryProfileCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/master/system-setups/country-profile/edit/:id',
+    element: (
+      <ProtectedLayout>
+        <CountryProfileEditPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/master/system-setups/state-profile',
+    element: (
+      <ProtectedLayout>
+        <StateProfileListPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/master/system-setups/state-profile/create',
+    element: (
+      <ProtectedLayout>
+        <StateProfileCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/master/system-setups/state-profile/edit/:id',
+    element: (
+      <ProtectedLayout>
+        <StateProfileEditPage />
       </ProtectedLayout>
     ),
   },

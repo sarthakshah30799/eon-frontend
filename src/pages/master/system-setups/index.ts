@@ -1,5 +1,7 @@
 export * from './company-profile';
 export * from './branch-profile';
+export * from './country-profile';
+export * from './state-profile';
 export * from './product-profile';
 export * from './counter-profile';
 export * from './master-pages';

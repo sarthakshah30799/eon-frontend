@@ -89,7 +89,6 @@ export const CompanyProfileForm = ({
           placeholder="Select state"
           disabled={isSaving}
           createLabel="Create"
-          onCreateState={() => undefined}
         />
         <FormFieldCountryDropdown
           name="country"
@@ -97,7 +96,6 @@ export const CompanyProfileForm = ({
           placeholder="Select country"
           disabled={isSaving}
           createLabel="Create"
-          onCreateCountry={() => console.log('Create country')}
         />
       </div>
 

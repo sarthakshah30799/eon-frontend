@@ -6,6 +6,8 @@ export * from './branchProfile/branchProfile.api';
 export * from './userProfile';
 export * from './userRole';
 export * from './productProfile';
+export * from './countryProfile';
+export * from './stateProfile';
 export * from './cityDropdown';
 export * from './stateDropdown';
 export * from './countryDropdown';

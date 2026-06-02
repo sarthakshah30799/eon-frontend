@@ -3,11 +3,11 @@ import { useController } from 'react-hook-form';
 import { useFormContext } from 'react-hook-form';
 import {
   AsyncSelect,
-  type AsyncSelectGroupOption,
   type AsyncSelectOption,
   type AsyncSelectProps,
   type AsyncSelectResponse,
 } from '../../ui';
+import type { MultiValue, SingleValue } from 'react-select';
 
 interface FormFieldSelectProps extends Omit<
   AsyncSelectProps<boolean>,
@@ -28,10 +28,7 @@ const flattenOptions = (
     return response;
   }
 
-  return response.options.flatMap(
-    (item: AsyncSelectOption | AsyncSelectGroupOption) =>
-      'options' in item ? item.options : [item]
-  );
+  return response.options;
 };
 
 export const FormFieldSelect = ({
@@ -151,7 +148,9 @@ export const FormFieldSelect = ({
       value={selectedOption}
       isMulti={isMulti}
       closeMenuOnSelect={!isMulti}
-      onChange={option => {
+      onChange={(
+        option: MultiValue<AsyncSelectOption> | SingleValue<AsyncSelectOption>,
+      ) => {
         if (isMulti) {
           const nextOptions = Array.isArray(option) ? option : [];
           setSelectedOption(nextOptions);
@@ -161,9 +160,15 @@ export const FormFieldSelect = ({
           return;
         }
 
-        const nextOption = Array.isArray(option) ? null : option;
+        if (Array.isArray(option) || option === null) {
+          setSelectedOption(null);
+          field.onChange(null);
+          return;
+        }
+
+        const nextOption = option;
         setSelectedOption(nextOption);
-        field.onChange(nextOption?.value ?? null);
+        field.onChange(nextOption.value ?? null);
       }}
       error={error?.message}
     />

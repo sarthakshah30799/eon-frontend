@@ -1,25 +1,29 @@
-import { apiClient } from '@/api/api';
-import type { StateDropdownOption, StateRecord } from '@/modules/dropdowns/stateDropdown';
-
-const toStateOption = (state: StateRecord): StateDropdownOption => ({
-  value: state.name,
-  label: state.name,
-  stateId: state.id,
-});
+import { stateProfileApi } from '@/api/stateProfile';
+import type { StateDropdownOption } from '@/modules/dropdowns/stateDropdown';
 
 export const stateDropdownApi = {
   getStates: async (inputValue: string): Promise<StateDropdownOption[]> => {
     const query = inputValue.trim();
-    const endpoint = query
-      ? `/states?search=${encodeURIComponent(query)}`
-      : '/states';
+    const states = await stateProfileApi.getStateProfiles();
 
-    const response = await apiClient.get<StateRecord[]>(endpoint);
+    return states
+      .filter(state => {
+        if (!query) {
+          return true;
+        }
 
-    if (response.error) {
-      throw new Error(response.error);
-    }
-
-    return (response.data ?? []).map(toStateOption);
+        const search = query.toLowerCase();
+        return (
+          state.stateName.toLowerCase().includes(search) ||
+          state.stateCode.toLowerCase().includes(search) ||
+          state.gstStateCode.toLowerCase().includes(search) ||
+          state.ctrStateCode.toLowerCase().includes(search)
+        );
+      })
+      .map(state => ({
+        value: state.stateName,
+        label: state.stateName,
+        stateId: state.id,
+      }));
   },
 };

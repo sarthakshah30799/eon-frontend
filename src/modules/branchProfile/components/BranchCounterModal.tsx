@@ -3,16 +3,16 @@ import { Button } from '@/components/ui/button1';
 import { Modal } from '@/components/ui/modal';
 import { Form, FormFieldCheckbox, FormFieldInput } from '@/components/forms';
 import { branchCounterSchema } from '../schema';
-import type { BranchCounterFormValues } from '../types';
+import type { ICreateBranchCounter } from '../types';
 
 interface BranchCounterModalProps {
   open: boolean;
   title: string;
   description?: string;
   submitLabel: string;
-  defaultValues: BranchCounterFormValues;
+  defaultValues: ICreateBranchCounter;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (values: BranchCounterFormValues) => void | Promise<void>;
+  onSubmit: (values: ICreateBranchCounter) => void | Promise<void>;
   isSubmitting?: boolean;
 }
 

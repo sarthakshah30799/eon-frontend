@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { stateDropdownApi } from '@/api/stateDropdown';
+import { stateProfileApi } from '@/api/stateProfile';
 import type { AsyncSelectResponse } from '@/components/ui';
 
 interface UseStateDropdownResult {
@@ -9,10 +9,21 @@ interface UseStateDropdownResult {
 export const useStateDropdown = (): UseStateDropdownResult => {
   const loadOptions = useCallback(
     async (inputValue: string): Promise<AsyncSelectResponse> => {
-      const options = await stateDropdownApi.getStates(inputValue);
+      const response = await stateProfileApi.getStateProfiles({
+        page: 1,
+        limit: 25,
+        search: inputValue.trim() || undefined,
+      });
 
       return {
-        options,
+        options: response.data.map(state => ({
+          value: state.id,
+          label: `${state.code} - ${state.name}`,
+          stateId: state.id,
+          countryId: state.countryId,
+          code: state.code,
+          name: state.name,
+        })),
       };
     },
     []

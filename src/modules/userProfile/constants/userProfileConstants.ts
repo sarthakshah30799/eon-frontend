@@ -1,7 +1,7 @@
 import type { AsyncSelectResponse } from '@/components/ui';
 import type {
-  UserProfileOption,
-  UserProfileControlSetupItem,
+  IUserProfileOption,
+  IUserProfileControlSetupItem,
 } from '../types';
 
 
@@ -23,31 +23,31 @@ export const USER_PROFILE_TEXTS = {
   DELETE_ERROR: 'Failed to delete user',
 } as const;
 
-export const CORPORATE_CLIENT_OPTIONS: UserProfileOption[] = [
+export const CORPORATE_CLIENT_OPTIONS: IUserProfileOption[] = [
   { value: 'client-1', label: 'Alpha Forex Pvt Ltd' },
   { value: 'client-2', label: 'Global Remit Services' },
   { value: 'client-3', label: 'Maraekat Trading Co' },
 ];
 
-export const BRANCH_OPTIONS: UserProfileOption[] = [
+export const BRANCH_OPTIONS: IUserProfileOption[] = [
   { value: 'branch-1', label: 'Mumbai Main Branch' },
   { value: 'branch-2', label: 'Delhi City Branch' },
   { value: 'branch-3', label: 'Dubai Desk' },
 ];
 
-export const GROUP_OPTIONS: UserProfileOption[] = [
+export const GROUP_OPTIONS: IUserProfileOption[] = [
   { value: 'group-1', label: 'Operations' },
   { value: 'group-2', label: 'Accounts' },
   { value: 'group-3', label: 'Compliance' },
 ];
 
-export const PURPOSE_OPTIONS: UserProfileOption[] = [
+export const PURPOSE_OPTIONS: IUserProfileOption[] = [
   { value: 'purpose-1', label: 'Payroll' },
   { value: 'purpose-2', label: 'Travel' },
   { value: 'purpose-3', label: 'Trade Settlement' },
 ];
 
-export const CONTROL_SETUP_ITEMS: UserProfileControlSetupItem[] = [
+export const CONTROL_SETUP_ITEMS: IUserProfileControlSetupItem[] = [
   { key: 'isActive', label: 'Is Active' },
   { key: 'isAdministrator', label: 'Is Administrator' },
   { key: 'miscLimitAuthorization', label: 'Misc Limit Authorization' },
@@ -58,7 +58,7 @@ export const CONTROL_SETUP_ITEMS: UserProfileControlSetupItem[] = [
 ];
 
 export const createStaticLoadOptions =
-  (options: UserProfileOption[]) =>
+  (options: IUserProfileOption[]) =>
   async (inputValue: string): Promise<AsyncSelectResponse> => {
     const normalizedValue = inputValue.trim().toLowerCase();
     const filteredOptions = normalizedValue

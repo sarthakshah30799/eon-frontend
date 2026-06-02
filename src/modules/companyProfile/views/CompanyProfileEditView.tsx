@@ -1,7 +1,7 @@
 import { Loader } from '@/components/ui/loader';
 import { CompanyProfileForm } from '../forms';
 import { useGetCompanyProfile, useUpdateCompanyProfile, useListCompanyProfiles } from '../hooks';
-import type { CompanyProfileFormValues } from '../types';
+import type { ICreateCompanyProfile } from '../types';
 import { createEmptyCompanyProfileFormValues } from '../utils';
 
 interface CompanyProfileEditViewProps {
@@ -18,7 +18,7 @@ export const CompanyProfileEditView = ({ id: propId }: CompanyProfileEditViewPro
   const isLoading = isListLoading || isGetLoading;
   const error = listError || getError;
 
-  const handleSubmit = async (values: CompanyProfileFormValues) => {
+  const handleSubmit = async (values: ICreateCompanyProfile) => {
     if (firstCompanyId) {
       await updateCompanyProfile(values);
     }

@@ -1,7 +1,7 @@
 import type {
-  MasterPageDraftNode,
-  MasterPageRecord,
-  MasterPageTreeNode,
+  IMasterPageDraftNode,
+  IMasterPage,
+  IMasterPageTreeNode,
 } from '../types';
 
 export const createId = () => {
@@ -14,7 +14,7 @@ export const createId = () => {
 
 export const createDraftNode = (
   parentId: string | null = null
-): MasterPageDraftNode => ({
+): IMasterPageDraftNode => ({
   clientId: createId(),
   pageName: '',
   slug: '',
@@ -24,8 +24,8 @@ export const createDraftNode = (
 });
 
 export const createMasterPageRecord = (
-  values: Pick<MasterPageRecord, 'pageName' | 'slug' | 'parentId'>
-): MasterPageRecord => ({
+  values: Pick<IMasterPage, 'pageName' | 'slug' | 'parentId'>
+): IMasterPage => ({
   id: createId(),
   pageName: values.pageName,
   slug: values.slug,
@@ -34,15 +34,15 @@ export const createMasterPageRecord = (
 });
 
 export const buildMasterPageTree = (
-  pages: MasterPageRecord[]
-): MasterPageTreeNode[] => {
-  const nodeMap = new Map<string, MasterPageTreeNode>();
+  pages: IMasterPage[]
+): IMasterPageTreeNode[] => {
+  const nodeMap = new Map<string, IMasterPageTreeNode>();
 
   pages.forEach(page => {
     nodeMap.set(page.id, { ...page, children: [] });
   });
 
-  const roots: MasterPageTreeNode[] = [];
+  const roots: IMasterPageTreeNode[] = [];
 
   pages.forEach(page => {
     const currentNode = nodeMap.get(page.id);
@@ -63,11 +63,11 @@ export const buildMasterPageTree = (
 };
 
 export const flattenDraftTree = (
-  nodes: MasterPageDraftNode[],
+  nodes: IMasterPageDraftNode[],
   parentId: string | null = null,
   existingParentMap: Record<string, string> = {}
-): MasterPageRecord[] => {
-  const pages: MasterPageRecord[] = [];
+): IMasterPage[] => {
+  const pages: IMasterPage[] = [];
 
   nodes.forEach(node => {
     const currentPage = createMasterPageRecord({
@@ -92,16 +92,16 @@ export const flattenDraftTree = (
   return pages;
 };
 
-export const flattenPagesForOptions = (pages: MasterPageRecord[]) =>
+export const flattenPagesForOptions = (pages: IMasterPage[]) =>
   pages.map(page => ({
     value: page.id,
     label: page.pageName,
   }));
 
-export const flattenDraftPagesForOptions = (nodes: MasterPageDraftNode[]) => {
+export const flattenDraftPagesForOptions = (nodes: IMasterPageDraftNode[]) => {
   const options: Array<{ value: string; label: string }> = [];
 
-  const walk = (items: MasterPageDraftNode[]) => {
+  const walk = (items: IMasterPageDraftNode[]) => {
     items.forEach(item => {
       if (item.pageName) {
         options.push({

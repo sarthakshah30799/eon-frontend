@@ -1,14 +1,14 @@
 import type { SubmitErrorHandler } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Button } from '@/components/ui/button1';
-import { Form, FormFieldInput } from '@/components/forms';
+import { Form, FormFieldCountryDropdown, FormFieldInput } from '@/components/forms';
 import { stateProfileSchema } from '../schema';
 import { STATE_PROFILE_TEXTS } from '../constants';
-import type { StateProfileFormValues } from '../types';
+import type { ICreateStateProfile } from '../types';
 
 interface StateProfileFormProps {
-  defaultValues: StateProfileFormValues;
-  onSubmit: (values: StateProfileFormValues) => void | Promise<void>;
+  defaultValues: ICreateStateProfile;
+  onSubmit: (values: ICreateStateProfile) => void | Promise<void>;
   submitLabel?: string;
   isSubmitting?: boolean;
 }
@@ -19,7 +19,7 @@ export const StateProfileForm = ({
   submitLabel = STATE_PROFILE_TEXTS.CREATE_STATE,
   isSubmitting = false,
 }: StateProfileFormProps) => {
-  const handleSubmitErrors: SubmitErrorHandler<StateProfileFormValues> =
+  const handleSubmitErrors: SubmitErrorHandler<ICreateStateProfile> =
     errors => {
       console.log('StateProfileForm submit errors:', errors);
     };
@@ -33,13 +33,21 @@ export const StateProfileForm = ({
       className="space-y-6"
     >
       <div className="grid gap-4 md:grid-cols-2">
+        <div className="md:col-span-2">
+          <FormFieldCountryDropdown
+            name="countryId"
+            label="Country"
+            placeholder="Select country"
+            disabled={isSubmitting}
+          />
+        </div>
         <FormFieldInput
-          name="stateCode"
+          name="code"
           label="State Code"
           disabled={isSubmitting}
         />
         <FormFieldInput
-          name="stateName"
+          name="name"
           label="State Name"
           disabled={isSubmitting}
         />

@@ -9,14 +9,15 @@ import {
   FormFieldSelect,
   FormFieldPassword,
 } from '@/components/forms';
-import type { UserProfileFormValues } from '../types';
+import type { ICreateUserProfile } from '../types';
 import { yupResolver } from '@hookform/resolvers/yup';
+import type { Resolver } from 'react-hook-form';
 import { userProfileSchema } from '../schema';
 import { userRoleApi, branchProfileApi, counterProfileApi } from '@/api';
 
 interface UserProfileFormProps {
-  defaultValues: UserProfileFormValues;
-  onSubmit: (values: UserProfileFormValues) => void | Promise<void>;
+  defaultValues: ICreateUserProfile;
+  onSubmit: (values: ICreateUserProfile) => void | Promise<void>;
   submitLabel?: string;
   isSubmitting?: boolean;
 }
@@ -286,7 +287,9 @@ export const UserProfileForm = ({
   return (
     <Form
       onSubmit={onSubmit}
-      resolver={yupResolver(userProfileSchema, { context: { isEdit } }) as any}
+      resolver={
+        yupResolver(userProfileSchema, { context: { isEdit } }) as Resolver<ICreateUserProfile>
+      }
       defaultValues={defaultValues}
       className="space-y-6"
     >

@@ -3,10 +3,10 @@ import { PencilSquareIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button1';
 import { ToggleSwitch } from '@/components/ui/toggleSwitch';
 import { Table, type TableColumnDef } from '@/components/ui/table';
-import type { UserRoleRecord } from '../types';
+import type { IUserRole } from '../types';
 
 interface UserRoleTableProps {
-  roles: UserRoleRecord[];
+  roles: IUserRole[];
   onToggleStatus: (id: string, isActive: boolean) => void | Promise<void>;
   onDelete: (id: string) => void | Promise<void>;
   isUpdatingStatus?: boolean;

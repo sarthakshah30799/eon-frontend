@@ -7,11 +7,11 @@ import {
   PRODUCT_PROFILE_RETAIL_TRANSACTION_CHECKBOXES,
 } from '../constants';
 import { productProfileSchema } from '../schema';
-import type { ProductProfileFormValues } from '../types';
+import type { ICreateProductProfile } from '../types';
 
 interface ProductProfileFormProps {
-  defaultValues: ProductProfileFormValues;
-  onSubmit: (values: ProductProfileFormValues) => void | Promise<void>;
+  defaultValues: ICreateProductProfile;
+  onSubmit: (values: ICreateProductProfile) => void | Promise<void>;
   submitLabel?: string;
   isSubmitting?: boolean;
 }

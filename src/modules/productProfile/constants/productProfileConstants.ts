@@ -1,6 +1,6 @@
 import type {
-  ProductProfileCheckboxFieldConfig,
-  ProductProfileFieldConfig,
+  IProductProfileCheckboxFieldConfig,
+  IProductProfileFieldConfig,
 } from '../types';
 
 export const PRODUCT_PROFILE_TEXTS = {
@@ -23,7 +23,7 @@ export const PRODUCT_PROFILE_TEXTS = {
   UPDATE_ERROR: 'Failed to update product',
 } as const;
 
-export const PRODUCT_PROFILE_ACCOUNTING_FIELDS: ProductProfileFieldConfig[] = [
+export const PRODUCT_PROFILE_ACCOUNTING_FIELDS: IProductProfileFieldConfig[] = [
   { name: 'acOfIssuer', label: 'A/C of Issuer' },
   { name: 'commissionAc', label: 'Commission A/C' },
   { name: 'fakeAccount', label: 'Fake Account' },
@@ -49,7 +49,7 @@ export const PRODUCT_PROFILE_ACCOUNTING_FIELDS: ProductProfileFieldConfig[] = [
   { name: 'maxAmtComm', label: 'Max.Amt Comm.', inputType: 'number' },
 ];
 
-export const PRODUCT_PROFILE_DETAIL_CHECKBOXES: ProductProfileCheckboxFieldConfig[] =
+export const PRODUCT_PROFILE_DETAIL_CHECKBOXES: IProductProfileCheckboxFieldConfig[] =
   [
     { name: 'allowFractionInFEAmount', label: 'Allow fraction in FE Amout?' },
     {
@@ -81,7 +81,7 @@ export const PRODUCT_PROFILE_DETAIL_CHECKBOXES: ProductProfileCheckboxFieldConfi
     { name: 'askReference', label: 'Ask Reference' },
   ];
 
-export const PRODUCT_PROFILE_RETAIL_TRANSACTION_CHECKBOXES: ProductProfileCheckboxFieldConfig[] =
+export const PRODUCT_PROFILE_RETAIL_TRANSACTION_CHECKBOXES: IProductProfileCheckboxFieldConfig[] =
   [
     {
       name: 'availableInRetailBuying',

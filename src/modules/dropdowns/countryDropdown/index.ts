@@ -4,4 +4,4 @@ export type {
   CountryDropdownOption,
   CountryDropdownProps,
   CountryRecord,
-} from './types';
+} from './types/countryDropdown.types';

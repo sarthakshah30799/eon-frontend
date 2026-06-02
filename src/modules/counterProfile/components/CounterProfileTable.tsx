@@ -3,10 +3,10 @@ import { PencilSquareIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button1';
 import { ToggleSwitch } from '@/components/ui/toggleSwitch';
 import { Table, type TableColumnDef } from '@/components/ui/table';
-import type { CounterProfileRecord } from '../types';
+import type { ICounterProfile } from '../types';
 
 interface CounterProfileTableProps {
-  counters: CounterProfileRecord[];
+  counters: ICounterProfile[];
   onToggleStatus: (id: string, isActive: boolean) => void | Promise<void>;
   onDelete: (id: string) => void | Promise<void>;
   isUpdatingStatus?: boolean;

@@ -4,7 +4,7 @@ import { UserRoleForm } from '../forms';
 import { useGetUserRole, useUpdateUserRole } from '../hooks';
 import { USER_ROLE_TEXTS } from '../constants';
 import { mapRecordToFormValues } from '../utils';
-import type { UserRoleFormValues } from '../types';
+import type { ICreateUserRole } from '../types';
 import { Loader } from '@/components/ui/loader';
 
 export const UserRoleEditView = () => {
@@ -27,7 +27,7 @@ export const UserRoleEditView = () => {
     );
   }
 
-  const handleSubmit = async (values: UserRoleFormValues) => {
+  const handleSubmit = async (values: ICreateUserRole) => {
     await submitUserRole(values);
     navigate('/master/system-setups/roles-profile');
   };

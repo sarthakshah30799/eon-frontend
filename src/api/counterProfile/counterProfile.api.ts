@@ -1,7 +1,7 @@
 import { apiClient } from '../api';
 import type {
-  CounterProfileFormValues,
-  CounterProfileRecord,
+  ICreateCounterProfile,
+  ICounterProfile,
 } from '@/modules/counterProfile/types';
 
 interface BackendCounter {
@@ -18,7 +18,7 @@ interface BackendCounter {
   updatedAt: string;
 }
 
-const mapBackendToFrontend = (counter: BackendCounter): CounterProfileRecord => {
+const mapBackendToFrontend = (counter: BackendCounter): ICounterProfile => {
   return {
     id: counter.id,
     counterNo: String(counter.counterNo),
@@ -32,7 +32,7 @@ const mapBackendToFrontend = (counter: BackendCounter): CounterProfileRecord => 
   };
 };
 
-const mapFrontendToBackend = (values: CounterProfileFormValues) => {
+const mapFrontendToBackend = (values: ICreateCounterProfile) => {
   return {
     counterNo: parseInt(values.counterNo, 10) || 1,
     counterName: values.counterName,
@@ -44,7 +44,7 @@ const mapFrontendToBackend = (values: CounterProfileFormValues) => {
 };
 
 export const counterProfileApi = {
-  getCounterProfiles: async (): Promise<CounterProfileRecord[]> => {
+  getCounterProfiles: async (): Promise<ICounterProfile[]> => {
     const res = await apiClient.get<BackendCounter[]>('/counters');
     if (res.error) throw new Error(res.error);
     return (res.data || []).map(mapBackendToFrontend);
@@ -52,15 +52,15 @@ export const counterProfileApi = {
 
   getCounterProfileById: async (
     id: string
-  ): Promise<CounterProfileRecord | undefined> => {
+  ): Promise<ICounterProfile | undefined> => {
     const res = await apiClient.get<BackendCounter>(`/counters/${id}`);
     if (res.error) throw new Error(res.error);
     return res.data ? mapBackendToFrontend(res.data) : undefined;
   },
 
   createCounterProfile: async (
-    values: CounterProfileFormValues
-  ): Promise<CounterProfileRecord> => {
+    values: ICreateCounterProfile
+  ): Promise<ICounterProfile> => {
     const backendData = mapFrontendToBackend(values);
     const res = await apiClient.post<BackendCounter>('/counters', backendData);
     if (res.error) throw new Error(res.error);
@@ -70,8 +70,8 @@ export const counterProfileApi = {
 
   updateCounterProfile: async (
     id: string,
-    values: CounterProfileFormValues
-  ): Promise<CounterProfileRecord | undefined> => {
+    values: ICreateCounterProfile
+  ): Promise<ICounterProfile | undefined> => {
     const backendData = mapFrontendToBackend(values);
     const res = await apiClient.put<BackendCounter>(`/counters/${id}`, backendData);
     if (res.error) throw new Error(res.error);
@@ -81,7 +81,7 @@ export const counterProfileApi = {
   updateCounterProfileStatus: async (
     id: string,
     isActive: boolean
-  ): Promise<CounterProfileRecord | undefined> => {
+  ): Promise<ICounterProfile | undefined> => {
     const res = await apiClient.put<BackendCounter>(`/counters/${id}`, {
       isActive,
     });

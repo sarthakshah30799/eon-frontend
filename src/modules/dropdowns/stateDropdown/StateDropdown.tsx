@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AsyncSelect, Modal, type AsyncSelectOption } from '@/components/ui';
+import { stateProfileApi } from '@/api/stateProfile';
 import {
   StateProfileForm,
   useCreateStateProfile,
 } from '@/modules/stateProfile';
 import { createEmptyStateProfileFormValues } from '@/modules/stateProfile/utils';
-import type { StateProfileFormValues } from '@/modules/stateProfile/types';
+import type { ICreateStateProfile } from '@/modules/stateProfile/types';
 import { useStateDropdown } from './hooks';
 import type { StateDropdownOption, StateDropdownProps } from './types/stateDropdown.types';
 
@@ -23,6 +24,8 @@ export const StateDropdown = ({
   const [defaultOptions, setDefaultOptions] = useState<StateDropdownOption[]>(
     []
   );
+  const [selectedOption, setSelectedOption] =
+    useState<StateDropdownOption | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [pendingStateName, setPendingStateName] = useState('');
   const { loadOptions } = useStateDropdown();
@@ -53,29 +56,75 @@ export const StateDropdown = ({
     };
   }, [loadOptions]);
 
-  const selectedOption = useMemo(() => {
-    if (!value) {
-      return null;
-    }
+  useEffect(() => {
+    let isActive = true;
 
-    return defaultOptions.find(option => option.value === value) ?? null;
-  }, [defaultOptions, value]);
+    const resolveSelectedOption = async () => {
+      if (!value) {
+        if (isActive) {
+          setSelectedOption(null);
+        }
+        return;
+      }
 
-  const createStateDefaultValues = useMemo<StateProfileFormValues>(
+      const cachedOption =
+        defaultOptions.find(option => option.value === value) ?? null;
+
+      if (cachedOption) {
+        if (isActive) {
+          setSelectedOption(cachedOption);
+        }
+        return;
+      }
+
+      try {
+        const state = await stateProfileApi.getStateProfileById(value);
+        const nextOption = state
+          ? {
+              value: state.id,
+              label: `${state.code} - ${state.name}`,
+              stateId: state.id,
+              countryId: state.countryId,
+              code: state.code,
+              name: state.name,
+            }
+          : null;
+
+        if (isActive) {
+          setSelectedOption(nextOption);
+        }
+      } catch {
+        if (isActive) {
+          setSelectedOption(null);
+        }
+      }
+    };
+
+    void resolveSelectedOption();
+
+    return () => {
+      isActive = false;
+    };
+  }, [defaultOptions, loadOptions, value]);
+
+  const createStateDefaultValues = useMemo<ICreateStateProfile>(
     () => ({
       ...createEmptyStateProfileFormValues(),
-      stateName: pendingStateName,
+      name: pendingStateName,
     }),
     [pendingStateName]
   );
 
-  const handleCreateState = async (values: StateProfileFormValues) => {
+  const handleCreateState = async (values: ICreateStateProfile) => {
     const createdState = await submitStateProfile(values);
 
     const nextOption: StateDropdownOption = {
-      value: createdState.stateName,
-      label: createdState.stateName,
+      value: createdState.id,
+      label: `${createdState.code} - ${createdState.name}`,
       stateId: createdState.id,
+      countryId: createdState.countryId,
+      code: createdState.code,
+      name: createdState.name,
     };
 
     setDefaultOptions(prevOptions => {
@@ -142,4 +191,3 @@ export const StateDropdown = ({
     </>
   );
 };
-

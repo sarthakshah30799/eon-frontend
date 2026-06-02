@@ -2,6 +2,7 @@ import type { AsyncSelectOption } from '@/components/ui';
 
 export interface CountryRecord {
   id: string;
+  code: string;
   name: string;
 }
 
@@ -9,6 +10,8 @@ export interface CountryDropdownOption extends AsyncSelectOption {
   value: string;
   label: string;
   countryId: string;
+  code: string;
+  name: string;
 }
 
 export interface CountryDropdownProps {

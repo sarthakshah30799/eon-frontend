@@ -2,8 +2,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Loader } from '@/components/ui/loader';
 import { STATE_PROFILE_TEXTS } from '../constants';
 import { useGetStateProfile, useUpdateStateProfile } from '../hooks';
-import { createEmptyStateProfileFormValues, mapRecordToFormValues } from '../utils';
-import type { StateProfileFormValues } from '../types';
+import { createEmptyStateProfileFormValues } from '../utils';
+import type { ICreateStateProfile } from '../types';
 import { StateProfileEditorView } from './StateProfileEditorView';
 
 export const StateProfileEditView = () => {
@@ -24,7 +24,7 @@ export const StateProfileEditView = () => {
     );
   }
 
-  const handleSubmit = async (values: StateProfileFormValues) => {
+  const handleSubmit = async (values: ICreateStateProfile) => {
     await submitStateProfile(values);
     navigate('/master/system-setups/state-profile');
   };
@@ -35,7 +35,14 @@ export const StateProfileEditView = () => {
       description="Update the state details."
       submitLabel={STATE_PROFILE_TEXTS.SAVE_CHANGES}
       defaultValues={
-        state ? mapRecordToFormValues(state) : createEmptyStateProfileFormValues()
+        state
+          ? {
+              ...createEmptyStateProfileFormValues(),
+              ...state,
+              gstStateCode: state.gstStateCode ?? '',
+              ctrStateCode: state.ctrStateCode ?? '',
+            }
+          : createEmptyStateProfileFormValues()
       }
       onSubmitState={handleSubmit}
       isSubmitting={isPending}
@@ -44,4 +51,3 @@ export const StateProfileEditView = () => {
 };
 
 export default StateProfileEditView;
-

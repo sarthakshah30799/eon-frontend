@@ -1,7 +1,7 @@
-import type { ProductProfileFormValues, ProductProfileRecord } from '../types';
+import type { ICreateProductProfile, IProductProfile } from '../types';
 
 export const createEmptyProductProfileFormValues =
-  (): ProductProfileFormValues => ({
+  (): ICreateProductProfile => ({
     productCode: '',
     productDescription: '',
     acOfIssuer: '',
@@ -57,8 +57,8 @@ export const createEmptyProductProfileFormValues =
   });
 
 export const mapRecordToFormValues = (
-  record: ProductProfileRecord
-): ProductProfileFormValues => ({
+  record: IProductProfile
+): ICreateProductProfile => ({
   productCode: record.productCode,
   productDescription: record.productDescription,
   acOfIssuer: record.acOfIssuer,
@@ -115,11 +115,11 @@ export const mapRecordToFormValues = (
 });
 
 export const mapFormValuesToRecord = (
-  values: ProductProfileFormValues,
+  values: ICreateProductProfile,
   id: string,
   createdAt: string,
   updatedAt: string
-): ProductProfileRecord => ({
+): IProductProfile => ({
   id,
   createdAt,
   updatedAt,

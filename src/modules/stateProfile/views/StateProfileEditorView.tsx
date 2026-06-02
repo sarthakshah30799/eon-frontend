@@ -1,14 +1,14 @@
 import { useNavigate } from 'react-router-dom';
 import { BackButton } from '@/components/ui';
 import { StateProfileForm } from '../forms';
-import type { StateProfileFormValues } from '../types';
+import type { ICreateStateProfile } from '../types';
 
 interface StateProfileEditorViewProps {
   heading: string;
   description: string;
   submitLabel: string;
-  defaultValues: StateProfileFormValues;
-  onSubmitState: (values: StateProfileFormValues) => void | Promise<void>;
+  defaultValues: ICreateStateProfile;
+  onSubmitState: (values: ICreateStateProfile) => void | Promise<void>;
   isSubmitting?: boolean;
 }
 

@@ -1,14 +1,14 @@
 import { useNavigate } from 'react-router-dom';
 import { BackButton } from '@/components/ui';
 import { CountryProfileForm } from '../forms';
-import type { CountryProfileFormValues } from '../types';
+import type { ICreateCountryProfile } from '../types';
 
 interface CountryProfileEditorViewProps {
   heading: string;
   description: string;
   submitLabel: string;
-  defaultValues: CountryProfileFormValues;
-  onSubmitCountry: (values: CountryProfileFormValues) => void | Promise<void>;
+  defaultValues: ICreateCountryProfile;
+  onSubmitCountry: (values: ICreateCountryProfile) => void | Promise<void>;
   isSubmitting?: boolean;
 }
 

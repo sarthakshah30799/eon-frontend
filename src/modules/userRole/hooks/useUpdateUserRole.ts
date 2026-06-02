@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { userRoleApi } from '@/api/userRole';
-import type { UserRoleFormValues } from '../types';
+import type { ICreateUserRole } from '../types';
 import { USER_ROLE_TEXTS } from '../constants';
 import { syncUserRoleCache } from '../utils';
 
@@ -9,7 +9,7 @@ export const useUpdateUserRole = (id: string) => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: (data: UserRoleFormValues) => userRoleApi.updateUserRole(id, data),
+    mutationFn: (data: ICreateUserRole) => userRoleApi.updateUserRole(id, data),
     onSuccess: updatedRole => {
       if (updatedRole) {
         syncUserRoleCache(queryClient, updatedRole);

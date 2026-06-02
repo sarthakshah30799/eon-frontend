@@ -5,7 +5,7 @@ import { USER_ROLE_TEXTS } from '../constants';
 import { UserRoleTable, UserRightsTable, UserRightsTreePreview } from '../components';
 import { useUserRightsMatrix } from '../hooks';
 import { Loader } from '@/components/ui/loader';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 
 export const UserRoleListView = () => {
@@ -16,12 +16,7 @@ export const UserRoleListView = () => {
     useUpdateUserRoleStatus();
 
   const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (roles && roles.length > 0 && !selectedRoleId) {
-      setSelectedRoleId(roles[0].id);
-    }
-  }, [roles, selectedRoleId]);
+  const activeRoleId = selectedRoleId ?? roles[0]?.id ?? null;
 
   const {
     selectableTreeNodes: rightsTreeNodes,
@@ -39,7 +34,7 @@ export const UserRoleListView = () => {
     error: menuTreeError,
     savePermissions,
     isSaving,
-  } = useUserRightsMatrix(selectedRoleId);
+  } = useUserRightsMatrix(activeRoleId);
 
   const handleDelete = async (id: string) => {
     const confirmDelete = window.confirm('Are you sure you want to delete this role?');
@@ -119,9 +114,9 @@ export const UserRoleListView = () => {
             </p>
             <h2 className="mt-2 text-xl font-semibold text-text-primary flex items-center gap-2">
               {USER_ROLE_TEXTS.RIGHTS_TITLE}
-              {selectedRoleId && roles.length > 0 && (
+              {activeRoleId && roles.length > 0 && (
                 <span className="text-sm font-normal text-text-secondary">
-                  for: <strong className="text-primary-600 font-semibold">{roles.find(r => r.id === selectedRoleId)?.userGroupName}</strong>
+                  for: <strong className="font-semibold text-primary-600">{roles.find(r => r.id === activeRoleId)?.userGroupName}</strong>
                 </span>
               )}
             </h2>
@@ -129,7 +124,7 @@ export const UserRoleListView = () => {
               {USER_ROLE_TEXTS.RIGHTS_SUBTITLE}
             </p>
           </div>
-          {selectedRoleId && (
+          {activeRoleId && (
             <Button
               type="button"
               onClick={savePermissions}

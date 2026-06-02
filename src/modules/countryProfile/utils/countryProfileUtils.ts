@@ -1,41 +1,14 @@
-import type {
-  CountryProfileFormValues,
-  CountryProfileRecord,
-} from '../types';
+import { CountryRiskCategory } from '@/modules/countryProfile/types';
+import type { ICreateCountryProfile } from '../types';
 
 export const createEmptyCountryProfileFormValues =
-  (): CountryProfileFormValues => ({
-    countryCode: '',
-    countryName: '',
+  (): ICreateCountryProfile => ({
+    code: '',
+    name: '',
     lrsCountryCode: '',
     ctrCountryCode: '',
-    riskCategory: '',
+    riskCategory: CountryRiskCategory.LOW,
     restrictedCountry: false,
     greyListCountry: false,
     baseCountry: false,
   });
-
-export const mapRecordToFormValues = (
-  record: CountryProfileRecord
-): CountryProfileFormValues => ({
-  countryCode: record.countryCode ?? '',
-  countryName: record.countryName ?? '',
-  lrsCountryCode: record.lrsCountryCode ?? '',
-  ctrCountryCode: record.ctrCountryCode ?? '',
-  riskCategory: record.riskCategory ?? '',
-  restrictedCountry: record.restrictedCountry ?? false,
-  greyListCountry: record.greyListCountry ?? false,
-  baseCountry: record.baseCountry ?? false,
-});
-
-export const mapFormValuesToRecord = (
-  values: CountryProfileFormValues,
-  id: string,
-  createdAt: string,
-  updatedAt: string
-): CountryProfileRecord => ({
-  id,
-  createdAt,
-  updatedAt,
-  ...values,
-});

@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { companyProfileApi } from '@/api/companyProfile';
-import type { CompanyProfileFormValues } from '../types';
+import type { ICreateCompanyProfile } from '../types';
 import { mapCompanyProfileToFormValues } from '../utils';
 
 export const useCompanyProfile = (id: string | undefined) => {
@@ -26,7 +26,7 @@ export const useCompanyProfile = (id: string | undefined) => {
   });
 
   const mutation = useMutation({
-    mutationFn: async (values: CompanyProfileFormValues) => {
+    mutationFn: async (values: ICreateCompanyProfile) => {
       if (!id) {
         throw new Error('Company profile id is required');
       }
@@ -52,7 +52,7 @@ export const useCompanyProfile = (id: string | undefined) => {
     },
   });
 
-  const handleSubmit = (values: CompanyProfileFormValues) => {
+  const handleSubmit = (values: ICreateCompanyProfile) => {
     mutation.mutate(values);
   };
 

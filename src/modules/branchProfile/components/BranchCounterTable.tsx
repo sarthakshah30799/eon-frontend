@@ -3,11 +3,11 @@ import { PencilSquareIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button1';
 import { ToggleSwitch } from '@/components/ui/toggleSwitch';
 import { Table, type TableColumnDef } from '@/components/ui/table';
-import type { BranchCounterRecord } from '../types';
+import type { IBranchCounter } from '../types';
 
 interface BranchCounterTableProps {
-  counters: BranchCounterRecord[];
-  onEdit: (counter: BranchCounterRecord) => void;
+  counters: IBranchCounter[];
+  onEdit: (counter: IBranchCounter) => void;
   onDelete: (id: string) => void;
   onToggleStatus: (id: string, isActive: boolean) => void;
   isDeleting?: boolean;

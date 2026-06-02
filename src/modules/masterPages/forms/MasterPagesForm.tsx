@@ -22,31 +22,31 @@ import {
   flattenPagesForOptions,
 } from '../utils';
 import type {
-  MasterPageDraftNode,
-  MasterPageOption,
-  MasterPagesFormValues,
+  IMasterPageDraftNode,
+  IMasterPageOption,
+  IMasterPagesFormValues,
 } from '../types';
 
 interface MasterPagesFormProps {
   onConfirm?: () => void;
 }
 
-const createRootValues = (): MasterPagesFormValues => ({
+const createRootValues = (): IMasterPagesFormValues => ({
   pages: [createDraftNode(null)],
 });
 
 const validatePageNodes = (
-  nodes: MasterPageDraftNode[],
+  nodes: IMasterPageDraftNode[],
   prefix = 'pages',
-  setError?: UseFormSetError<MasterPagesFormValues>
+  setError?: UseFormSetError<IMasterPagesFormValues>
 ) => {
   let isValid = true;
 
   nodes.forEach((node, index) => {
     const currentPath = `${prefix}.${index}`;
     const pageNamePath =
-      `${currentPath}.pageName` as Path<MasterPagesFormValues>;
-    const slugPath = `${currentPath}.slug` as Path<MasterPagesFormValues>;
+      `${currentPath}.pageName` as Path<IMasterPagesFormValues>;
+    const slugPath = `${currentPath}.slug` as Path<IMasterPagesFormValues>;
 
     if (!node.pageName.trim()) {
       setError?.(pageNamePath, {
@@ -78,14 +78,14 @@ const validatePageNodes = (
 };
 
 interface NodeFieldsProps {
-  name: Path<MasterPagesFormValues>;
+  name: Path<IMasterPagesFormValues>;
   depth: number;
   onRemove?: () => void;
 }
 
 const NodeFields = ({ name, depth, onRemove }: NodeFieldsProps) => {
-  const form = useFormContext<MasterPagesFormValues>();
-  const childName = `${name}.children` as FieldArrayPath<MasterPagesFormValues>;
+  const form = useFormContext<IMasterPagesFormValues>();
+  const childName = `${name}.children` as FieldArrayPath<IMasterPagesFormValues>;
   const { fields, append, replace, remove } = useFieldArray({
     control: form.control,
     name: childName,
@@ -94,12 +94,12 @@ const NodeFields = ({ name, depth, onRemove }: NodeFieldsProps) => {
   const draftPages = useWatch({
     control: form.control,
     name: 'pages',
-  }) as MasterPageDraftNode[];
+  }) as IMasterPageDraftNode[];
 
   const node = useWatch({
     control: form.control,
     name,
-  }) as MasterPageDraftNode | undefined;
+  }) as IMasterPageDraftNode | undefined;
 
   const currentNodeId = node?.clientId;
   const makeChildren = node?.makeChildren ?? false;
@@ -108,12 +108,12 @@ const NodeFields = ({ name, depth, onRemove }: NodeFieldsProps) => {
 
   const { pages } = useMasterPages();
 
-  const parentOptions = useMemo<MasterPageOption[]>(() => {
+  const parentOptions = useMemo<IMasterPageOption[]>(() => {
     const committed = flattenPagesForOptions(pages);
     const drafted = flattenDraftPagesForOptions(draftPages ?? []);
 
     const merged = [...committed, ...drafted];
-    const unique = new Map<string, MasterPageOption>();
+    const unique = new Map<string, IMasterPageOption>();
 
     merged.forEach(option => {
       unique.set(option.value, option);
@@ -143,7 +143,7 @@ const NodeFields = ({ name, depth, onRemove }: NodeFieldsProps) => {
 
   useEffect(() => {
     const makeChildrenPath =
-      `${name}.makeChildren` as Path<MasterPagesFormValues>;
+      `${name}.makeChildren` as Path<IMasterPagesFormValues>;
 
     if (
       previousChildrenCount.current > 0 &&
@@ -247,7 +247,7 @@ const NodeFields = ({ name, depth, onRemove }: NodeFieldsProps) => {
               <NodeFields
                 key={field.id}
                 name={
-                  `${name}.children.${index}` as Path<MasterPagesFormValues>
+                  `${name}.children.${index}` as Path<IMasterPagesFormValues>
                 }
                 depth={depth + 1}
                 onRemove={() => remove(index)}
@@ -262,7 +262,7 @@ const NodeFields = ({ name, depth, onRemove }: NodeFieldsProps) => {
 
 export const MasterPagesForm = ({ onConfirm }: MasterPagesFormProps) => {
   const { createPages } = useMasterPages();
-  const form = useForm<MasterPagesFormValues>({
+  const form = useForm<IMasterPagesFormValues>({
     defaultValues: createRootValues(),
   });
   const { fields } = useFieldArray({
@@ -270,7 +270,7 @@ export const MasterPagesForm = ({ onConfirm }: MasterPagesFormProps) => {
     name: 'pages',
   });
 
-  const handleConfirm = (values: MasterPagesFormValues) => {
+  const handleConfirm = (values: IMasterPagesFormValues) => {
     const isValid = validatePageNodes(values.pages, 'pages', form.setError);
 
     if (!isValid) {

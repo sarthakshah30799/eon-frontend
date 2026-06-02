@@ -4,7 +4,7 @@ import { UserProfileForm } from '../forms';
 import { useGetUserProfile, useUpdateUserProfile } from '../hooks';
 import { USER_PROFILE_TEXTS } from '../constants';
 import { mapRecordToFormValues } from '../utils';
-import type { UserProfileFormValues } from '../types';
+import type { ICreateUserProfile } from '../types';
 import { Loader } from '@/components/ui/loader';
 
 export const UserProfileEditView = () => {
@@ -27,7 +27,7 @@ export const UserProfileEditView = () => {
     );
   }
 
-  const handleSubmit = async (values: UserProfileFormValues) => {
+  const handleSubmit = async (values: ICreateUserProfile) => {
     await submitUserProfile(values);
     navigate('/master/system-setups/user-profile');
   };

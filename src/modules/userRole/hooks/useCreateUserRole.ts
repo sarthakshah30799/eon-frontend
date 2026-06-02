@@ -1,14 +1,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { userRoleApi } from '@/api/userRole';
-import type { UserRoleFormValues } from '../types';
+import type { ICreateUserRole } from '../types';
 import { USER_ROLE_TEXTS } from '../constants';
 
 export const useCreateUserRole = () => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: (data: UserRoleFormValues) => userRoleApi.createUserRole(data),
+    mutationFn: (data: ICreateUserRole) => userRoleApi.createUserRole(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-roles'] });
       toast.success(USER_ROLE_TEXTS.CREATE_SUCCESS);

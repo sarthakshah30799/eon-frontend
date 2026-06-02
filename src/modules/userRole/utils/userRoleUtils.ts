@@ -1,7 +1,7 @@
 import type { QueryClient } from '@tanstack/react-query';
-import type { UserRoleFormValues, UserRoleRecord } from '../types';
+import type { ICreateUserRole, IUserRole } from '../types';
 
-export const createEmptyUserRoleFormValues = (): UserRoleFormValues => ({
+export const createEmptyUserRoleFormValues = (): ICreateUserRole => ({
   userGroupCode: '',
   userGroupName: '',
   isAdminGrp: false,
@@ -22,8 +22,8 @@ export const createEmptyUserRoleFormValues = (): UserRoleFormValues => ({
 });
 
 export const mapRecordToFormValues = (
-  record: UserRoleRecord
-): UserRoleFormValues => ({
+  record: IUserRole
+): ICreateUserRole => ({
   userGroupCode: record.userGroupCode || '',
   userGroupName: record.userGroupName || '',
   isAdminGrp: !!record.isAdminGrp,
@@ -44,11 +44,11 @@ export const mapRecordToFormValues = (
 });
 
 export const mapFormValuesToRecord = (
-  values: UserRoleFormValues,
+  values: ICreateUserRole,
   id: string,
   createdAt: string,
   updatedAt: string
-): UserRoleRecord => ({
+): IUserRole => ({
   id,
   createdAt,
   updatedAt,
@@ -57,9 +57,9 @@ export const mapFormValuesToRecord = (
 
 export const syncUserRoleCache = (
   queryClient: QueryClient,
-  updatedRole: UserRoleRecord
+  updatedRole: IUserRole
 ): void => {
-  queryClient.setQueryData<UserRoleRecord[] | undefined>(
+  queryClient.setQueryData<IUserRole[] | undefined>(
     ['user-roles'],
     currentRoles =>
       currentRoles?.map(role =>

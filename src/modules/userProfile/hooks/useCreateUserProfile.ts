@@ -1,14 +1,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { userProfileApi } from '@/api/userProfile';
-import type { UserProfileFormValues } from '../types';
+import type { ICreateUserProfile } from '../types';
 import { USER_PROFILE_TEXTS } from '../constants';
 
 export const useCreateUserProfile = () => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: (data: UserProfileFormValues) =>
+    mutationFn: (data: ICreateUserProfile) =>
       userProfileApi.createUserProfile(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-profiles'] });

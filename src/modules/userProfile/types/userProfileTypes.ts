@@ -1,4 +1,5 @@
-export interface UserProfileFormValues {
+export interface IUserProfile {
+  id: string;
   userCode: string;
   userName: string;
   userGroupCode: string;
@@ -15,21 +16,25 @@ export interface UserProfileFormValues {
   roleId: string;
   branchId: string;
   counterId: string;
-}
-
-export interface UserProfileRecord extends Omit<UserProfileFormValues, 'password'> {
-  id: string;
   createdAt: string;
   updatedAt: string;
+  createdBy?: string;
+  updatedBy?: string;
 }
 
-export interface UserProfileOption {
+export type ICreateUserProfile = Omit<
+  IUserProfile,
+  'id' | 'createdAt' | 'updatedAt' | 'createdBy' | 'updatedBy'
+>;
+
+export type IUpdateUserProfile = Partial<ICreateUserProfile>;
+
+export interface IUserProfileOption {
   value: string;
   label: string;
 }
 
-export interface UserProfileControlSetupItem {
+export interface IUserProfileControlSetupItem {
   key: string;
   label: string;
 }
-

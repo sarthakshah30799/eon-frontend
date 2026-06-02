@@ -1,10 +1,10 @@
 import type {
-  BranchProfileFormValues,
-  BranchProfileOption,
-  BranchProfileRecord,
+  ICreateBranchProfile,
+  IBranchProfileOption,
+  IBranchProfile,
 } from '../types';
 
-export const createEmptyBranchProfileFormValues = (): BranchProfileFormValues => ({
+export const createEmptyBranchProfileFormValues = (): ICreateBranchProfile => ({
   branchCode: '',
   branchNumber: '',
   address1: '',
@@ -32,8 +32,8 @@ export const createEmptyBranchProfileFormValues = (): BranchProfileFormValues =>
 });
 
 export const mapRecordToFormValues = (
-  record: BranchProfileRecord
-): BranchProfileFormValues => ({
+  record: IBranchProfile
+): ICreateBranchProfile => ({
   branchCode: record.branchCode || '',
   branchNumber: record.branchNumber || '',
   address1: record.address1 || '',
@@ -61,11 +61,11 @@ export const mapRecordToFormValues = (
 });
 
 export const mapFormValuesToRecord = (
-  values: BranchProfileFormValues,
+  values: ICreateBranchProfile,
   id: string,
   createdAt: string,
   updatedAt: string
-): BranchProfileRecord => ({
+): IBranchProfile => ({
   id,
   createdAt,
   updatedAt,
@@ -73,9 +73,9 @@ export const mapFormValuesToRecord = (
 });
 
 export const toBranchAttachedToOptions = (
-  branches: BranchProfileRecord[],
+  branches: IBranchProfile[],
   excludeId?: string
-): BranchProfileOption[] => {
+): IBranchProfileOption[] => {
   return branches
     .filter(branch => branch.id !== excludeId)
     .map(branch => ({

@@ -2,8 +2,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Loader } from '@/components/ui/loader';
 import { COUNTRY_PROFILE_TEXTS } from '../constants';
 import { useGetCountryProfile, useUpdateCountryProfile } from '../hooks';
-import { createEmptyCountryProfileFormValues, mapRecordToFormValues } from '../utils';
-import type { CountryProfileFormValues } from '../types';
+import { createEmptyCountryProfileFormValues } from '../utils';
+import type { ICreateCountryProfile } from '../types';
 import { CountryProfileEditorView } from './CountryProfileEditorView';
 
 export const CountryProfileEditView = () => {
@@ -24,7 +24,7 @@ export const CountryProfileEditView = () => {
     );
   }
 
-  const handleSubmit = async (values: CountryProfileFormValues) => {
+  const handleSubmit = async (values: ICreateCountryProfile) => {
     await submitCountryProfile(values);
     navigate('/master/system-setups/country-profile');
   };
@@ -34,7 +34,16 @@ export const CountryProfileEditView = () => {
       heading={COUNTRY_PROFILE_TEXTS.EDIT_COUNTRY}
       description="Update the country details."
       submitLabel={COUNTRY_PROFILE_TEXTS.SAVE_CHANGES}
-      defaultValues={country ? mapRecordToFormValues(country) : createEmptyCountryProfileFormValues()}
+      defaultValues={
+        country
+          ? {
+              ...createEmptyCountryProfileFormValues(),
+              ...country,
+              lrsCountryCode: country.lrsCountryCode ?? '',
+              ctrCountryCode: country.ctrCountryCode ?? '',
+            }
+          : createEmptyCountryProfileFormValues()
+      }
       onSubmitCountry={handleSubmit}
       isSubmitting={isPending}
     />
@@ -42,4 +51,3 @@ export const CountryProfileEditView = () => {
 };
 
 export default CountryProfileEditView;
-

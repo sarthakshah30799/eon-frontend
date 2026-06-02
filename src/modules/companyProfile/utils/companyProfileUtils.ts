@@ -1,10 +1,10 @@
 import type {
-  CompanyProfile,
-  CompanyProfileFormValues,
+  ICompanyProfile,
+  ICreateCompanyProfile,
 } from '../types';
 
 export const createEmptyCompanyProfileFormValues =
-  (): CompanyProfileFormValues => ({
+  (): ICreateCompanyProfile => ({
     shortCode: '',
     companyName: '',
     formerlyKnownName: '',
@@ -21,8 +21,8 @@ export const createEmptyCompanyProfileFormValues =
   });
 
 export const mapCompanyProfileToFormValues = (
-  profile: CompanyProfile
-): CompanyProfileFormValues => ({
+  profile: ICompanyProfile
+): ICreateCompanyProfile => ({
   shortCode: profile.shortCode ?? '',
   companyName: profile.companyName,
   formerlyKnownName: profile.formerlyKnownName ?? '',

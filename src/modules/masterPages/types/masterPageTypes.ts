@@ -1,4 +1,4 @@
-export interface MasterPageRecord {
+export interface IMasterPage {
   id: string;
   pageName: string;
   slug: string;
@@ -6,24 +6,24 @@ export interface MasterPageRecord {
   createdAt: number;
 }
 
-export interface MasterPageTreeNode extends MasterPageRecord {
-  children: MasterPageTreeNode[];
+export interface IMasterPageTreeNode extends IMasterPage {
+  children: IMasterPageTreeNode[];
 }
 
-export interface MasterPageDraftNode {
+export interface IMasterPageDraftNode {
   clientId: string;
   pageName: string;
   slug: string;
   parentId: string | null;
   makeChildren: boolean;
-  children: MasterPageDraftNode[];
+  children: IMasterPageDraftNode[];
 }
 
-export interface MasterPagesFormValues {
-  pages: MasterPageDraftNode[];
+export interface IMasterPagesFormValues {
+  pages: IMasterPageDraftNode[];
 }
 
-export interface MasterPageOption {
+export interface IMasterPageOption {
   value: string;
   label: string;
 }

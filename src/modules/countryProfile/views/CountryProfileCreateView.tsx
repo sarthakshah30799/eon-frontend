@@ -3,13 +3,13 @@ import { COUNTRY_PROFILE_TEXTS } from '../constants';
 import { createEmptyCountryProfileFormValues } from '../utils';
 import { useCreateCountryProfile } from '../hooks';
 import { CountryProfileEditorView } from './CountryProfileEditorView';
-import type { CountryProfileFormValues } from '../types';
+import type { ICreateCountryProfile } from '../types';
 
 export const CountryProfileCreateView = () => {
   const navigate = useNavigate();
   const { submitCountryProfile, isPending } = useCreateCountryProfile();
 
-  const handleSubmit = async (values: CountryProfileFormValues) => {
+  const handleSubmit = async (values: ICreateCountryProfile) => {
     await submitCountryProfile(values);
     navigate('/master/system-setups/country-profile');
   };

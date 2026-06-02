@@ -1,13 +1,33 @@
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button1';
+import { Input } from '@/components/ui/input';
 import { Loader } from '@/components/ui/loader';
+import { PaginationControls } from '@/components/ui/pagination';
 import { COUNTRY_PROFILE_TEXTS } from '../constants';
 import { CountryProfileTable } from '../components';
 import { useListCountryProfiles } from '../hooks';
 
 export const CountryProfileListView = () => {
   const navigate = useNavigate();
-  const { data: countries = [], isLoading, error } = useListCountryProfiles();
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [search, setSearch] = useState('');
+
+  const query = useMemo(
+    () => ({
+      page,
+      limit: pageSize,
+      search: search.trim() || undefined,
+    }),
+    [page, pageSize, search]
+  );
+
+  const { data: countryResponse, isLoading, error } =
+    useListCountryProfiles(query);
+  const countries = countryResponse?.data ?? [];
+  const totalPages = countryResponse?.totalPages ?? 0;
+  const totalItems = countryResponse?.totalItems ?? 0;
 
   if (isLoading) {
     return <Loader />;
@@ -50,9 +70,35 @@ export const CountryProfileListView = () => {
       </section>
 
       <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
+        <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <Input
+            label="Search"
+            placeholder="Search country code or name"
+            value={search}
+            onChange={event => {
+              setPage(1);
+              setSearch(event.target.value);
+            }}
+            className="sm:max-w-md"
+          />
+          <div className="text-sm text-text-secondary">{totalItems} total records</div>
+        </div>
+
         <CountryProfileTable countries={countries} />
+
+        <PaginationControls
+          page={page}
+          pageSize={pageSize}
+          totalItems={totalItems}
+          totalPages={totalPages}
+          itemLabel="countries"
+          onPageChange={setPage}
+          onPageSizeChange={nextPageSize => {
+            setPage(1);
+            setPageSize(nextPageSize);
+          }}
+        />
       </section>
     </div>
   );
 };
-

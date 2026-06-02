@@ -3,13 +3,13 @@ import { STATE_PROFILE_TEXTS } from '../constants';
 import { createEmptyStateProfileFormValues } from '../utils';
 import { useCreateStateProfile } from '../hooks';
 import { StateProfileEditorView } from './StateProfileEditorView';
-import type { StateProfileFormValues } from '../types';
+import type { ICreateStateProfile } from '../types';
 
 export const StateProfileCreateView = () => {
   const navigate = useNavigate();
   const { submitStateProfile, isPending } = useCreateStateProfile();
 
-  const handleSubmit = async (values: StateProfileFormValues) => {
+  const handleSubmit = async (values: ICreateStateProfile) => {
     await submitStateProfile(values);
     navigate('/master/system-setups/state-profile');
   };

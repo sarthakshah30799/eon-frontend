@@ -6,11 +6,11 @@ import {
 } from '@/components/forms';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { companyProfileSchema } from '../schema';
-import type { CompanyProfileFormValues } from '../types';
+import type { ICreateCompanyProfile } from '../types';
 
 interface CompanyProfileFormProps {
-  defaultValues: CompanyProfileFormValues;
-  onSubmit: (values: CompanyProfileFormValues) => void | Promise<void>;
+  defaultValues: ICreateCompanyProfile;
+  onSubmit: (values: ICreateCompanyProfile) => void | Promise<void>;
   isSaving?: boolean;
 }
 

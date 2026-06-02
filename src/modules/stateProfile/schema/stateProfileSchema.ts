@@ -1,9 +1,9 @@
 import * as yup from 'yup';
 
 export const stateProfileSchema = yup.object({
-  stateCode: yup.string().trim().required('State Code is required'),
-  stateName: yup.string().trim().required('State Name is required'),
-  gstStateCode: yup.string().trim().required('GST State Code is required'),
-  ctrStateCode: yup.string().trim().required('CTR State Code is required'),
+  countryId: yup.string().trim().required('Country is required'),
+  code: yup.string().trim().required('State Code is required'),
+  name: yup.string().trim().required('State Name is required'),
+  gstStateCode: yup.string().trim().default(''),
+  ctrStateCode: yup.string().trim().default(''),
 });
-

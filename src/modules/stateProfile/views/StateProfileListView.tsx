@@ -1,13 +1,35 @@
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button1';
+import { Input } from '@/components/ui/input';
 import { Loader } from '@/components/ui/loader';
+import { PaginationControls } from '@/components/ui/pagination';
 import { STATE_PROFILE_TEXTS } from '../constants';
 import { StateProfileTable } from '../components';
 import { useListStateProfiles } from '../hooks';
+import { CountryDropdown } from '@/modules/dropdowns/countryDropdown';
 
 export const StateProfileListView = () => {
   const navigate = useNavigate();
-  const { data: states = [], isLoading, error } = useListStateProfiles();
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [search, setSearch] = useState('');
+  const [countryId, setCountryId] = useState('');
+
+  const query = useMemo(
+    () => ({
+      page,
+      limit: pageSize,
+      search: search.trim() || undefined,
+      countryId: countryId || undefined,
+    }),
+    [countryId, page, pageSize, search]
+  );
+
+  const { data: stateResponse, isLoading, error } = useListStateProfiles(query);
+  const states = stateResponse?.data ?? [];
+  const totalPages = stateResponse?.totalPages ?? 0;
+  const totalItems = stateResponse?.totalItems ?? 0;
 
   if (isLoading) {
     return <Loader />;
@@ -50,9 +72,47 @@ export const StateProfileListView = () => {
       </section>
 
       <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
+        <div className="mb-4 grid gap-4 lg:grid-cols-3">
+          <Input
+            label="Search"
+            placeholder="Search state code or name"
+            value={search}
+            onChange={event => {
+              setPage(1);
+              setSearch(event.target.value);
+            }}
+          />
+
+          <CountryDropdown
+            value={countryId}
+            onChange={nextValue => {
+              setPage(1);
+              setCountryId(nextValue);
+            }}
+            label="Country"
+            placeholder="Filter by country"
+          />
+
+          <div className="flex items-end text-sm text-text-secondary">
+            {totalItems} total records
+          </div>
+        </div>
+
         <StateProfileTable states={states} />
+
+        <PaginationControls
+          page={page}
+          pageSize={pageSize}
+          totalItems={totalItems}
+          totalPages={totalPages}
+          itemLabel="states"
+          onPageChange={setPage}
+          onPageSizeChange={nextPageSize => {
+            setPage(1);
+            setPageSize(nextPageSize);
+          }}
+        />
       </section>
     </div>
   );
 };
-

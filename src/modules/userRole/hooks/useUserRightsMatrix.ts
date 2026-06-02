@@ -1,9 +1,9 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { menuApi, userRoleApi } from '@/api';
 import { useMasterPages } from '@/lib';
 import type { MenuRecord } from '@/api/menu/menu.api';
-import type { MasterPageTreeNode } from '@/modules/masterPages/types';
+import type { IMasterPageTreeNode } from '@/modules/masterPages/types';
 import { USER_RIGHTS_PERMISSION_COLUMNS } from '../constants';
 import toast from 'react-hot-toast';
 import type {
@@ -90,9 +90,11 @@ const filterMenuRecord = (menu: MenuRecord): MenuRecord | null => {
 export const useUserRightsMatrix = (roleId: string | null): UseUserRightsMatrixResult => {
   const { tree: createdPages } = useMasterPages();
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-  const [rowStateOverrides, setRowStateOverrides] = useState<
-    Record<string, UserRightsRowState>
+  const [rowStateOverridesByRole, setRowStateOverridesByRole] = useState<
+    Record<string, Record<string, UserRightsRowState>>
   >({});
+  const currentRoleKey = roleId ?? '__no_role__';
+  const rowStateOverrides = rowStateOverridesByRole[currentRoleKey] ?? {};
 
   const {
     data: menuTree = [],
@@ -123,23 +125,23 @@ export const useUserRightsMatrix = (roleId: string | null): UseUserRightsMatrixR
     enabled: !!roleId,
   });
 
-  // Set the grid overrides state when new permissions are loaded from the backend
-  useEffect(() => {
-    if (activeRolePermissions) {
-      const nextOverrides: Record<string, UserRightsRowState> = {};
-      for (const [menuId, perms] of Object.entries(activeRolePermissions)) {
-        const selected = USER_RIGHTS_PERMISSION_COLUMNS.every(
-          column => perms[column.key]
-        );
-        nextOverrides[menuId] = {
-          selected,
-          permissions: perms as unknown as UserRightsPermissionState,
-        };
-      }
-      setRowStateOverrides(nextOverrides);
-    } else {
-      setRowStateOverrides({});
+  const backendRowStateOverrides = useMemo(() => {
+    if (!activeRolePermissions) {
+      return {};
     }
+
+    const nextOverrides: Record<string, UserRightsRowState> = {};
+    for (const [menuId, perms] of Object.entries(activeRolePermissions)) {
+      const selected = USER_RIGHTS_PERMISSION_COLUMNS.every(
+        column => perms[column.key]
+      );
+      nextOverrides[menuId] = {
+        selected,
+        permissions: perms as unknown as UserRightsPermissionState,
+      };
+    }
+
+    return nextOverrides;
   }, [activeRolePermissions]);
 
   const saveMutation = useMutation({
@@ -151,7 +153,7 @@ export const useUserRightsMatrix = (roleId: string | null): UseUserRightsMatrixR
       for (const [menuId, state] of Object.entries(rowStateById)) {
         const hasAnyActive = Object.values(state.permissions).some(v => v);
         if (hasAnyActive) {
-          grid[menuId] = state.permissions as any;
+          grid[menuId] = state.permissions as unknown as Record<string, boolean>;
         }
       }
       await userRoleApi.saveRolePermissions(roleId, grid);
@@ -159,8 +161,10 @@ export const useUserRightsMatrix = (roleId: string | null): UseUserRightsMatrixR
     onSuccess: () => {
       toast.success('Permissions saved successfully!');
     },
-    onError: (err: any) => {
-      toast.error(err.message || 'Failed to save permissions');
+    onError: (err: unknown) => {
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to save permissions'
+      );
     },
   });
 
@@ -170,7 +174,7 @@ export const useUserRightsMatrix = (roleId: string | null): UseUserRightsMatrixR
         .map(filterMenuRecord)
         .filter((m): m is MenuRecord => m !== null);
 
-      const filteredPages = (createdPages as MasterPageTreeNode[])
+      const filteredPages = (createdPages as IMasterPageTreeNode[])
         .filter(p => !isExcludedProfile(p.pageName, p.slug));
 
       return [
@@ -240,10 +244,10 @@ export const useUserRightsMatrix = (roleId: string | null): UseUserRightsMatrixR
     return descendantRows.length > 0 ? descendantRows : [];
   }, [selectedNode]);
 
-  const rowStateById = useMemo(
-    () => buildDefaultRowState(rows, rowStateOverrides),
-    [rows, rowStateOverrides]
-  );
+  const rowStateById = buildDefaultRowState(rows, {
+    ...backendRowStateOverrides,
+    ...rowStateOverrides,
+  });
 
   const currentVisibleRows = useMemo(
     () =>
@@ -259,21 +263,26 @@ export const useUserRightsMatrix = (roleId: string | null): UseUserRightsMatrixR
   };
 
   const toggleRowSelected = (rowId: string, checked: boolean) => {
-    setRowStateOverrides(previousState => {
+    setRowStateOverridesByRole(previousState => {
+      const previousRoleState = previousState[currentRoleKey] ?? {};
       return {
         ...previousState,
-        [rowId]: {
-          selected: checked,
-          permissions: defaultState(checked),
+        [currentRoleKey]: {
+          ...previousRoleState,
+          [rowId]: {
+            selected: checked,
+            permissions: defaultState(checked),
+          },
         },
       };
     });
   };
 
   const toggleAllRowsSelected = (checked: boolean) => {
-    setRowStateOverrides(previousState => {
+    setRowStateOverridesByRole(previousState => {
+      const previousRoleState = previousState[currentRoleKey] ?? {};
       const nextState: Record<string, UserRightsRowState> = {
-        ...previousState,
+        ...previousRoleState,
       };
 
       currentVisibleRows.forEach(row => {
@@ -283,7 +292,10 @@ export const useUserRightsMatrix = (roleId: string | null): UseUserRightsMatrixR
         };
       });
 
-      return nextState;
+      return {
+        ...previousState,
+        [currentRoleKey]: nextState,
+      };
     });
   };
 
@@ -292,9 +304,10 @@ export const useUserRightsMatrix = (roleId: string | null): UseUserRightsMatrixR
     permission: keyof UserRightsPermissionState,
     checked: boolean
   ) => {
-    setRowStateOverrides(previousState => {
+    setRowStateOverridesByRole(previousState => {
+      const previousRoleState = previousState[currentRoleKey] ?? {};
       const previousRow =
-        previousState[rowId] ?? {
+        previousRoleState[rowId] ?? {
           selected: false,
           permissions: defaultState(false),
         };
@@ -310,9 +323,12 @@ export const useUserRightsMatrix = (roleId: string | null): UseUserRightsMatrixR
 
       return {
         ...previousState,
-        [rowId]: {
-          selected,
-          permissions: nextPermissions,
+        [currentRoleKey]: {
+          ...previousRoleState,
+          [rowId]: {
+            selected,
+            permissions: nextPermissions,
+          },
         },
       };
     });
@@ -322,13 +338,14 @@ export const useUserRightsMatrix = (roleId: string | null): UseUserRightsMatrixR
     permission: keyof UserRightsPermissionState,
     checked: boolean
   ) => {
-    setRowStateOverrides(previousState => {
+    setRowStateOverridesByRole(previousState => {
+      const previousRoleState = previousState[currentRoleKey] ?? {};
       const nextState: Record<string, UserRightsRowState> = {
-        ...previousState,
+        ...previousRoleState,
       };
 
       currentVisibleRows.forEach(row => {
-        const previousRow = previousState[row.id];
+        const previousRow = previousRoleState[row.id];
         const basePermissions =
           previousRow?.permissions ?? defaultState(false);
         const nextPermissions = {
@@ -346,7 +363,10 @@ export const useUserRightsMatrix = (roleId: string | null): UseUserRightsMatrixR
         };
       });
 
-      return nextState;
+      return {
+        ...previousState,
+        [currentRoleKey]: nextState,
+      };
     });
   };
 
@@ -374,4 +394,3 @@ export const useUserRightsMatrix = (roleId: string | null): UseUserRightsMatrixR
     isSaving: saveMutation.isPending,
   };
 };
-

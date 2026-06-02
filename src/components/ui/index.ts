@@ -15,3 +15,4 @@ export * from './tabs';
 export * from './modal';
 export * from './toggleSwitch';
 export * from './fileUploader';
+export * from './pagination';

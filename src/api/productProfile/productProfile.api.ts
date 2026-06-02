@@ -1,6 +1,6 @@
 import type {
-  ProductProfileFormValues,
-  ProductProfileRecord,
+  ICreateProductProfile,
+  IProductProfile,
 } from '@/modules/productProfile/types';
 import {
   createEmptyProductProfileFormValues,
@@ -19,7 +19,7 @@ const createId = (): string => {
 
 const now = (): string => new Date().toISOString();
 
-const createSeedProducts = (): ProductProfileRecord[] => {
+const createSeedProducts = (): IProductProfile[] => {
   const first = mapFormValuesToRecord(
     {
       ...createEmptyProductProfileFormValues(),
@@ -119,7 +119,7 @@ const createSeedProducts = (): ProductProfileRecord[] => {
   return [first, second];
 };
 
-const writeStoredProducts = (products: ProductProfileRecord[]): void => {
+const writeStoredProducts = (products: IProductProfile[]): void => {
   if (typeof window === 'undefined') {
     return;
   }
@@ -127,7 +127,7 @@ const writeStoredProducts = (products: ProductProfileRecord[]): void => {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
 };
 
-const readStoredProducts = (): ProductProfileRecord[] => {
+const readStoredProducts = (): IProductProfile[] => {
   if (typeof window === 'undefined') {
     return createSeedProducts();
   }
@@ -141,7 +141,7 @@ const readStoredProducts = (): ProductProfileRecord[] => {
   }
 
   try {
-    const parsed = JSON.parse(stored) as ProductProfileRecord[];
+    const parsed = JSON.parse(stored) as IProductProfile[];
 
     if (!Array.isArray(parsed)) {
       const seed = createSeedProducts();
@@ -158,20 +158,20 @@ const readStoredProducts = (): ProductProfileRecord[] => {
 };
 
 export const productProfileApi = {
-  getProductProfiles: async (): Promise<ProductProfileRecord[]> => {
+  getProductProfiles: async (): Promise<IProductProfile[]> => {
     return readStoredProducts();
   },
 
   getProductProfileById: async (
     id: string
-  ): Promise<ProductProfileRecord | undefined> => {
+  ): Promise<IProductProfile | undefined> => {
     const products = readStoredProducts();
     return products.find(product => product.id === id);
   },
 
   createProductProfile: async (
-    data: ProductProfileFormValues
-  ): Promise<ProductProfileRecord> => {
+    data: ICreateProductProfile
+  ): Promise<IProductProfile> => {
     const products = readStoredProducts();
     const timestamp = now();
     const record = mapFormValuesToRecord(data, createId(), timestamp, timestamp);
@@ -183,8 +183,8 @@ export const productProfileApi = {
 
   updateProductProfile: async (
     id: string,
-    data: ProductProfileFormValues
-  ): Promise<ProductProfileRecord | undefined> => {
+    data: ICreateProductProfile
+  ): Promise<IProductProfile | undefined> => {
     const products = readStoredProducts();
     const existing = products.find(product => product.id === id);
 
@@ -209,7 +209,7 @@ export const productProfileApi = {
   updateProductProfileStatus: async (
     id: string,
     isActiveProduct: boolean
-  ): Promise<ProductProfileRecord | undefined> => {
+  ): Promise<IProductProfile | undefined> => {
     const products = readStoredProducts();
     const existing = products.find(product => product.id === id);
 
@@ -217,7 +217,7 @@ export const productProfileApi = {
       return undefined;
     }
 
-    const updated: ProductProfileRecord = {
+    const updated: IProductProfile = {
       ...existing,
       isActiveProduct,
       updatedAt: now(),

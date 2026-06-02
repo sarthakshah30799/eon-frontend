@@ -1,9 +1,10 @@
-export interface BranchProfileOption {
+export interface IBranchProfileOption {
   value: string;
   label: string;
 }
 
-export interface BranchProfileFormValues {
+export interface IBranchProfile {
+  id: string;
   branchCode: string;
   branchNumber: string;
   address1: string;
@@ -28,21 +29,26 @@ export interface BranchProfileFormValues {
   isHeadOffice: boolean;
   isActive: boolean;
   connectCounterIds: string[];
-}
-
-export interface BranchProfileRecord extends BranchProfileFormValues {
-  id: string;
   createdAt: string;
   updatedAt: string;
+  createdBy?: string;
+  updatedBy?: string;
 }
 
-export interface BranchCounterFormValues {
+export type ICreateBranchProfile = Omit<
+  IBranchProfile,
+  'id' | 'createdAt' | 'updatedAt' | 'createdBy' | 'updatedBy'
+>;
+
+export type IUpdateBranchProfile = Partial<ICreateBranchProfile>;
+
+export interface IBranchCounter {
+  id: string;
   counterCode: string;
   counterName: string;
   isActive: boolean;
 }
 
-export interface BranchCounterRecord extends BranchCounterFormValues {
-  id: string;
-}
+export type ICreateBranchCounter = Omit<IBranchCounter, 'id'>;
 
+export type IUpdateBranchCounter = Partial<ICreateBranchCounter>;

@@ -2,13 +2,13 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { counterProfileApi } from '@/api/counterProfile';
 import { COUNTER_PROFILE_TEXTS } from '../constants';
-import type { CounterProfileFormValues } from '../types';
+import type { ICreateCounterProfile } from '../types';
 
 export const useCreateCounterProfile = () => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: (data: CounterProfileFormValues) =>
+    mutationFn: (data: ICreateCounterProfile) =>
       counterProfileApi.createCounterProfile(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['counter-profiles'] });

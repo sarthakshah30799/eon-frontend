@@ -2,10 +2,10 @@ import { useNavigate } from 'react-router-dom';
 import { PencilSquareIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button1';
 import { Table, type TableColumnDef } from '@/components/ui/table';
-import type { BranchProfileRecord } from '../types';
+import type { IBranchProfile } from '../types';
 
 interface BranchProfileTableProps {
-  branches: BranchProfileRecord[];
+  branches: IBranchProfile[];
   onDelete: (id: string) => void | Promise<void>;
   isDeleting?: boolean;
 }

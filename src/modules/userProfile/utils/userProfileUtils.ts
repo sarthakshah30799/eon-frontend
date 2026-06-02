@@ -1,17 +1,17 @@
 import type {
-  UserProfileFormValues,
-  UserProfileOption,
-  UserProfileRecord,
+  ICreateUserProfile,
+  IUserProfileOption,
+  IUserProfile,
 } from '../types';
 
 export const getOptionLabel = (
-  options: UserProfileOption[],
+  options: IUserProfileOption[],
   value: string
 ): string => {
   return options.find(option => option.value === value)?.label ?? value;
 };
 
-export const createEmptyUserProfileFormValues = (): UserProfileFormValues => ({
+export const createEmptyUserProfileFormValues = (): ICreateUserProfile => ({
   userCode: '',
   userName: '',
   userGroupCode: '',
@@ -31,8 +31,8 @@ export const createEmptyUserProfileFormValues = (): UserProfileFormValues => ({
 });
 
 export const mapRecordToFormValues = (
-  record: UserProfileRecord
-): UserProfileFormValues => ({
+  record: IUserProfile
+): ICreateUserProfile => ({
   userCode: record.userCode || '',
   userName: record.userName || '',
   userGroupCode: record.userGroupCode || '',
@@ -51,11 +51,11 @@ export const mapRecordToFormValues = (
 });
 
 export const mapFormValuesToRecord = (
-  values: UserProfileFormValues,
+  values: ICreateUserProfile,
   id: string,
   createdAt: string,
   updatedAt: string
-): UserProfileRecord => ({
+): IUserProfile => ({
   id,
   createdAt,
   updatedAt,

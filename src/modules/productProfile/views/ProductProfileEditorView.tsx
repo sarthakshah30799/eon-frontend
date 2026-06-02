@@ -1,14 +1,14 @@
 import { useNavigate } from 'react-router-dom';
 import { BackButton } from '@/components/ui';
 import { ProductProfileForm } from '../forms';
-import type { ProductProfileFormValues } from '../types';
+import type { ICreateProductProfile } from '../types';
 
 interface ProductProfileEditorViewProps {
   heading: string;
   description: string;
   submitLabel: string;
-  defaultValues: ProductProfileFormValues;
-  onSubmitProduct: (values: ProductProfileFormValues) => void | Promise<void>;
+  defaultValues: ICreateProductProfile;
+  onSubmitProduct: (values: ICreateProductProfile) => void | Promise<void>;
   isSubmitting?: boolean;
 }
 

@@ -6,11 +6,11 @@ import {
   FormFieldInput,
 } from '@/components/forms';
 import { userRoleSchema } from '../schema';
-import type { UserRoleFormValues } from '../types';
+import type { ICreateUserRole } from '../types';
 
 interface UserRoleFormProps {
-  defaultValues: UserRoleFormValues;
-  onSubmit: (values: UserRoleFormValues) => void | Promise<void>;
+  defaultValues: ICreateUserRole;
+  onSubmit: (values: ICreateUserRole) => void | Promise<void>;
   submitLabel?: string;
   isSubmitting?: boolean;
 }

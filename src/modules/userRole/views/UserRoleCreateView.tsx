@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { BackButton } from '@/components/ui';
 import { createEmptyUserRoleFormValues } from '../utils';
 import { UserRoleForm } from '../forms';
-import type { UserRoleFormValues } from '../types';
+import type { ICreateUserRole } from '../types';
 import { useCreateUserRole } from '../hooks';
 import { USER_ROLE_TEXTS } from '../constants';
 
@@ -10,7 +10,7 @@ export const UserRoleCreateView = () => {
   const navigate = useNavigate();
   const { submitUserRole, isPending } = useCreateUserRole();
 
-  const handleSubmit = async (values: UserRoleFormValues) => {
+  const handleSubmit = async (values: ICreateUserRole) => {
     await submitUserRole(values);
     navigate('/master/system-setups/roles-profile');
   };

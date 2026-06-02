@@ -1,8 +1,8 @@
 import type {
-  LoginFormData,
-  LoginResponse,
-  AuthError,
-  User,
+  ILoginFormData,
+  ILoginResponse,
+  IAuthError,
+  IUser,
 } from '../../modules/auth/types';
 
 const API_BASE_URL =
@@ -27,7 +27,7 @@ class AuthAPI {
       const response = await fetch(url, config);
 
       if (!response.ok) {
-        const errorData: AuthError = await response.json().catch(() => ({
+        const errorData: IAuthError = await response.json().catch(() => ({
           message: 'Network error occurred',
         }));
         throw new Error(
@@ -44,8 +44,8 @@ class AuthAPI {
     }
   }
 
-  async login(data: LoginFormData): Promise<LoginResponse> {
-    return this.request<LoginResponse>('/auth/login', {
+  async login(data: ILoginFormData): Promise<ILoginResponse> {
+    return this.request<ILoginResponse>('/auth/login', {
       method: 'POST',
       body: JSON.stringify(data),
       credentials: 'include', // Important for session-based auth
@@ -67,8 +67,8 @@ class AuthAPI {
     countryCode: string,
     mobileNumber: string,
     otp: string
-  ): Promise<LoginResponse> {
-    return this.request<LoginResponse>('/auth/verify-otp', {
+  ): Promise<ILoginResponse> {
+    return this.request<ILoginResponse>('/auth/verify-otp', {
       method: 'POST',
       body: JSON.stringify({ countryCode, mobileNumber, otp }),
       credentials: 'include',
@@ -82,8 +82,8 @@ class AuthAPI {
     });
   }
 
-  async getCurrentUser(): Promise<User> {
-    return this.request<User>('/auth/me', {
+  async getCurrentUser(): Promise<IUser> {
+    return this.request<IUser>('/auth/me', {
       method: 'GET',
       credentials: 'include',
     });
@@ -96,7 +96,11 @@ class AuthAPI {
     });
   }
 
-  async resetPassword(data: any): Promise<{ message: string }> {
+  async resetPassword(data: {
+    email: string;
+    token: string;
+    password: string;
+  }): Promise<{ message: string }> {
     return this.request<{ message: string }>('/auth/reset-password', {
       method: 'POST',
       body: JSON.stringify(data),

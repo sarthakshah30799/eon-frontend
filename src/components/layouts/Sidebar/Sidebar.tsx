@@ -5,7 +5,7 @@ import { Dropdown } from '../../ui/dropdown';
 import { useMasterPages } from '../../../lib';
 import { menuApi } from '../../../api';
 import { useAuth } from '../../../lib/AuthContext';
-import type { MasterPageTreeNode } from '../../../modules/masterPages/types';
+import type { IMasterPageTreeNode } from '../../../modules/masterPages/types';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -98,7 +98,7 @@ const sidebarLeafClass = (isActive = false) =>
       : 'text-white hover:bg-white hover:text-primary-700',
   ].join(' ');
 
-const mapMasterPageNodeToItem = (page: MasterPageTreeNode): SidebarMenuItem => {
+const mapMasterPageNodeToItem = (page: IMasterPageTreeNode): SidebarMenuItem => {
   if (page.children.length === 0) {
     return {
       id: page.id,

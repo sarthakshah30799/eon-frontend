@@ -9,15 +9,15 @@ import {
   FormFieldSelect,
 } from '@/components/forms';
 import { branchProfileSchema } from '../schema';
-import type { BranchProfileFormValues, BranchProfileOption } from '../types';
+import type { ICreateBranchProfile, IBranchProfileOption } from '../types';
 import { useListCounterProfiles } from '@/modules/counterProfile/hooks';
 
 interface BranchProfileFormProps {
-  defaultValues: BranchProfileFormValues;
-  onSubmit: (values: BranchProfileFormValues) => void | Promise<void>;
+  defaultValues: ICreateBranchProfile;
+  onSubmit: (values: ICreateBranchProfile) => void | Promise<void>;
   submitLabel?: string;
   isSubmitting?: boolean;
-  branchAttachedToOptions?: BranchProfileOption[];
+  branchAttachedToOptions?: IBranchProfileOption[];
 }
 
 const formCardClass =
@@ -215,7 +215,7 @@ export const BranchProfileForm = ({
   return (
     <Form
       onSubmit={onSubmit}
-      resolver={yupResolver(branchProfileSchema) as Resolver<BranchProfileFormValues>}
+      resolver={yupResolver(branchProfileSchema) as Resolver<ICreateBranchProfile>}
       defaultValues={defaultValues}
       className="space-y-6"
     >

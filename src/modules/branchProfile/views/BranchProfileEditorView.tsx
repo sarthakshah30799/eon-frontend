@@ -3,18 +3,18 @@ import { BackButton } from '@/components/ui';
 import { BranchProfileForm } from '../forms';
 import { createEmptyBranchProfileFormValues } from '../utils';
 import type {
-  BranchProfileFormValues,
-  BranchProfileOption,
+  ICreateBranchProfile,
+  IBranchProfileOption,
 } from '../types';
 
 interface BranchProfileEditorViewProps {
   heading: string;
   description: string;
   submitLabel: string;
-  defaultValues?: BranchProfileFormValues;
-  onSubmitBranch: (values: BranchProfileFormValues) => void | Promise<void>;
+  defaultValues?: ICreateBranchProfile;
+  onSubmitBranch: (values: ICreateBranchProfile) => void | Promise<void>;
   isSubmitting?: boolean;
-  branchAttachedToOptions: BranchProfileOption[];
+  branchAttachedToOptions: IBranchProfileOption[];
 }
 
 export const BranchProfileEditorView = ({

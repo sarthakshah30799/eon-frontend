@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { BackButton } from '@/components/ui';
 import { UserProfileForm } from '../forms';
 import { createEmptyUserProfileFormValues } from '../utils';
-import type { UserProfileFormValues } from '../types';
+import type { ICreateUserProfile } from '../types';
 import { useCreateUserProfile } from '../hooks';
 import { USER_PROFILE_TEXTS } from '../constants';
 
@@ -10,7 +10,7 @@ export const UserProfileCreateView = () => {
   const navigate = useNavigate();
   const { submitUserProfile, isPending } = useCreateUserProfile();
 
-  const handleSubmit = async (values: UserProfileFormValues) => {
+  const handleSubmit = async (values: ICreateUserProfile) => {
     await submitUserProfile(values);
     navigate('/master/system-setups/user-profile');
   };

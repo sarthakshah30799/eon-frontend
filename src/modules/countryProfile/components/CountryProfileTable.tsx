@@ -2,16 +2,17 @@ import { useNavigate } from 'react-router-dom';
 import { PencilSquareIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button1';
 import { Table, type TableColumnDef } from '@/components/ui/table';
-import type { CountryProfileRecord } from '../types';
+import type { ICountryProfile } from '../types';
 
 interface CountryProfileTableProps {
-  countries: CountryProfileRecord[];
+  countries: ICountryProfile[];
 }
 
 interface CountryProfileTableRow {
   id: string;
-  countryCode: string;
-  countryName: string;
+  code: string;
+  name: string;
+  riskCategory: string;
 }
 
 export const CountryProfileTable = ({
@@ -21,13 +22,15 @@ export const CountryProfileTable = ({
 
   const rows: CountryProfileTableRow[] = countries.map(country => ({
     id: country.id,
-    countryCode: country.countryCode,
-    countryName: country.countryName,
+    code: country.code,
+    name: country.name,
+    riskCategory: country.riskCategory,
   }));
 
   const columns: TableColumnDef<CountryProfileTableRow>[] = [
-    { accessorKey: 'countryCode', header: 'Country Code' },
-    { accessorKey: 'countryName', header: 'Country Name' },
+    { accessorKey: 'code', header: 'Country Code' },
+    { accessorKey: 'name', header: 'Country Name' },
+    { accessorKey: 'riskCategory', header: 'Risk Category' },
     {
       id: 'actions',
       header: 'Actions',
@@ -76,4 +79,3 @@ export const CountryProfileTable = ({
     />
   );
 };
-

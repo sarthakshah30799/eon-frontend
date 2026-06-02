@@ -3,13 +3,13 @@ import { ProductProfileEditorView } from './ProductProfileEditorView';
 import { PRODUCT_PROFILE_TEXTS } from '../constants';
 import { createEmptyProductProfileFormValues } from '../utils';
 import { useCreateProductProfile } from '../hooks';
-import type { ProductProfileFormValues } from '../types';
+import type { ICreateProductProfile } from '../types';
 
 export const ProductProfileCreateView = () => {
   const navigate = useNavigate();
   const { submitProductProfile, isPending } = useCreateProductProfile();
 
-  const handleSubmit = async (values: ProductProfileFormValues) => {
+  const handleSubmit = async (values: ICreateProductProfile) => {
     await submitProductProfile(values);
     navigate('/master/system-setups/product-profile');
   };

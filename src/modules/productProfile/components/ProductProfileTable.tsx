@@ -4,10 +4,10 @@ import { PencilSquareIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button1';
 import { ToggleSwitch } from '@/components/ui/toggleSwitch';
 import { Table, type TableColumnDef } from '@/components/ui/table';
-import type { ProductProfileRecord } from '../types';
+import type { IProductProfile } from '../types';
 
 interface ProductProfileTableProps {
-  products: ProductProfileRecord[];
+  products: IProductProfile[];
   onToggleStatus: (id: string, isActiveProduct: boolean) => void | Promise<void>;
   isUpdatingStatus?: boolean;
 }

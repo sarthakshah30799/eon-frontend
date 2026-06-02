@@ -1,11 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { userProfileApi } from '@/api/userProfile';
-import type { UserProfileFormValues } from '../types';
+import type { ICreateUserProfile } from '../types';
 import { USER_PROFILE_TEXTS } from '../constants';
 
 interface UseUpdateUserProfileResult {
-  submitUserProfile: (data: UserProfileFormValues) => Promise<unknown>;
+  submitUserProfile: (data: ICreateUserProfile) => Promise<unknown>;
   isPending: boolean;
 }
 
@@ -13,7 +13,7 @@ export const useUpdateUserProfile = (id: string): UseUpdateUserProfileResult => 
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: (data: UserProfileFormValues) =>
+    mutationFn: (data: ICreateUserProfile) =>
       userProfileApi.updateUserProfile(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-profiles'] });

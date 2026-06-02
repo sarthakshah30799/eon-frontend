@@ -3,7 +3,7 @@ import { Loader } from '@/components/ui/loader';
 import { COUNTER_PROFILE_TEXTS } from '../constants';
 import { useGetCounterProfile, useUpdateCounterProfile } from '../hooks';
 import { mapRecordToFormValues } from '../utils';
-import type { CounterProfileFormValues } from '../types';
+import type { ICreateCounterProfile } from '../types';
 import { CounterProfileEditorView } from './CounterProfileEditorView';
 
 export const CounterProfileEditView = () => {
@@ -24,7 +24,7 @@ export const CounterProfileEditView = () => {
     );
   }
 
-  const handleSubmit = async (values: CounterProfileFormValues) => {
+  const handleSubmit = async (values: ICreateCounterProfile) => {
     await submitCounterProfile(values);
     navigate('/master/system-setups/counter-profile');
   };

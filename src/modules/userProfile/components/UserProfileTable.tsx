@@ -2,10 +2,10 @@ import { useNavigate } from 'react-router-dom';
 import { PencilSquareIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button1';
 import { Table, type TableColumnDef } from '@/components/ui/table';
-import type { UserProfileRecord } from '../types';
+import type { IUserProfile } from '../types';
 
 interface UserProfileTableProps {
-  profiles: UserProfileRecord[];
+  profiles: IUserProfile[];
   onDelete: (id: string) => void | Promise<void>;
   isDeleting?: boolean;
 }

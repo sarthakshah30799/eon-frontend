@@ -1,5 +1,5 @@
 import type { AsyncSelectResponse } from '@/components/ui';
-import type { BranchProfileOption } from '../types';
+import type { IBranchProfileOption } from '../types';
 
 export const BRANCH_PROFILE_TEXTS = {
   LIST_TITLE: 'Branch Profile',
@@ -21,18 +21,18 @@ export const BRANCH_PROFILE_TEXTS = {
   DELETE_ERROR: 'Failed to delete branch',
 } as const;
 
-export const LOCATION_TYPE_OPTIONS: BranchProfileOption[] = [
+export const LOCATION_TYPE_OPTIONS: IBranchProfileOption[] = [
   { value: 'branch', label: 'Branch' },
   { value: 'franchies', label: 'Franchies' },
 ];
 
-export const OPERATIONAL_GROUP_OPTIONS: BranchProfileOption[] = [
+export const OPERATIONAL_GROUP_OPTIONS: IBranchProfileOption[] = [
   { value: 'city-location', label: 'City Location' },
   { value: 'rural-location', label: 'Rural Location' },
   { value: 'airport-location', label: 'Airport Location' },
 ];
 
-export const STATE_OPTIONS: BranchProfileOption[] = [
+export const STATE_OPTIONS: IBranchProfileOption[] = [
   { value: 'maharashtra', label: 'Maharashtra' },
   { value: 'delhi', label: 'Delhi' },
   { value: 'gujarat', label: 'Gujarat' },
@@ -43,32 +43,32 @@ export const STATE_OPTIONS: BranchProfileOption[] = [
   { value: 'kerala', label: 'Kerala' },
 ];
 
-export const OPERATIONAL_USER_OPTIONS: BranchProfileOption[] = [
+export const OPERATIONAL_USER_OPTIONS: IBranchProfileOption[] = [
   { value: 'operational-user-1', label: 'Ramesh Kumar' },
   { value: 'operational-user-2', label: 'Neha Sharma' },
   { value: 'operational-user-3', label: 'Imran Ali' },
 ];
 
-export const AC_USER_INCHARGE_OPTIONS: BranchProfileOption[] = [
+export const AC_USER_INCHARGE_OPTIONS: IBranchProfileOption[] = [
   { value: 'ac-user-1', label: 'Priya Mehta' },
   { value: 'ac-user-2', label: 'Aman Verma' },
   { value: 'ac-user-3', label: 'Salma Khan' },
 ];
 
-export const WU_AC_BRANCH_POSTING_OPTIONS: BranchProfileOption[] = [
+export const WU_AC_BRANCH_POSTING_OPTIONS: IBranchProfileOption[] = [
   { value: 'wu-posting-1', label: 'Mumbai Main Branch' },
   { value: 'wu-posting-2', label: 'Delhi City Branch' },
   { value: 'wu-posting-3', label: 'Dubai Desk' },
 ];
 
-export const IBM_BRANCH_OPTIONS: BranchProfileOption[] = [
+export const IBM_BRANCH_OPTIONS: IBranchProfileOption[] = [
   { value: 'ibm-branch-1', label: 'IBMX Main' },
   { value: 'ibm-branch-2', label: 'IBMX South' },
   { value: 'ibm-branch-3', label: 'IBMX Gulf' },
 ];
 
 export const createStaticLoadOptions =
-  (options: BranchProfileOption[]) =>
+  (options: IBranchProfileOption[]) =>
   async (inputValue: string): Promise<AsyncSelectResponse> => {
     const normalizedValue = inputValue.trim().toLowerCase();
     const filteredOptions = normalizedValue
@@ -83,7 +83,7 @@ export const createStaticLoadOptions =
   };
 
 export const getBranchProfileText = (
-  options: BranchProfileOption[],
+  options: IBranchProfileOption[],
   value: string
 ): string => {
   return options.find(option => option.value === value)?.label ?? value;

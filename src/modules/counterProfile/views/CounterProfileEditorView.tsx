@@ -1,14 +1,14 @@
 import { useNavigate } from 'react-router-dom';
 import { BackButton } from '@/components/ui';
 import { CounterProfileForm } from '../forms';
-import type { CounterProfileFormValues } from '../types';
+import type { ICreateCounterProfile } from '../types';
 
 interface CounterProfileEditorViewProps {
   heading: string;
   description: string;
   submitLabel: string;
-  defaultValues: CounterProfileFormValues;
-  onSubmitCounter: (values: CounterProfileFormValues) => void | Promise<void>;
+  defaultValues: ICreateCounterProfile;
+  onSubmitCounter: (values: ICreateCounterProfile) => void | Promise<void>;
   isSubmitting?: boolean;
 }
 

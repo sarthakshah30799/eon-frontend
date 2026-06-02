@@ -6,6 +6,9 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { resetPasswordSchema } from '../../../modules/auth/schema';
 import { authApi } from '../../../api/auth/auth.api';
 import { toast } from 'react-hot-toast';
+import type { InferType } from 'yup';
+
+type ResetPasswordFormData = InferType<typeof resetPasswordSchema>;
 
 const ResetPasswordPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -15,7 +18,7 @@ const ResetPasswordPage: React.FC = () => {
   const [isSuccess, setIsSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: ResetPasswordFormData) => {
     if (!token || !email) {
       toast.error('Invalid password reset link. Missing token or email.');
       return;

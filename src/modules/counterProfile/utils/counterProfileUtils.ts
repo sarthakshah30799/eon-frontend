@@ -1,10 +1,10 @@
 import type {
-  CounterProfileFormValues,
-  CounterProfileRecord,
+  ICreateCounterProfile,
+  ICounterProfile,
 } from '../types';
 
 export const createEmptyCounterProfileFormValues =
-  (): CounterProfileFormValues => ({
+  (): ICreateCounterProfile => ({
     counterNo: '',
     counterName: '',
     isActive: true,
@@ -14,8 +14,8 @@ export const createEmptyCounterProfileFormValues =
   });
 
 export const mapRecordToFormValues = (
-  record: CounterProfileRecord
-): CounterProfileFormValues => ({
+  record: ICounterProfile
+): ICreateCounterProfile => ({
   counterNo: String(record.counterNo),
   counterName: record.counterName,
   isActive: record.isActive,
@@ -25,11 +25,11 @@ export const mapRecordToFormValues = (
 });
 
 export const mapFormValuesToRecord = (
-  values: CounterProfileFormValues,
+  values: ICreateCounterProfile,
   id: string,
   createdAt: string,
   updatedAt: string
-): CounterProfileRecord => ({
+): ICounterProfile => ({
   id,
   createdAt,
   updatedAt,

@@ -1,7 +1,7 @@
 import { apiClient } from '../api';
 import type {
-  UserRoleFormValues,
-  UserRoleRecord,
+  ICreateUserRole,
+  IUserRole,
 } from '@/modules/userRole/types';
 
 interface BackendRole {
@@ -27,7 +27,7 @@ interface BackendRole {
   updatedAt: string;
 }
 
-const mapBackendToFrontend = (role: BackendRole): UserRoleRecord => {
+const mapBackendToFrontend = (role: BackendRole): IUserRole => {
   return {
     id: role.id,
     userGroupCode: role.userGroupCode,
@@ -53,20 +53,20 @@ const mapBackendToFrontend = (role: BackendRole): UserRoleRecord => {
 };
 
 export const userRoleApi = {
-  getUserRoles: async (): Promise<UserRoleRecord[]> => {
+  getUserRoles: async (): Promise<IUserRole[]> => {
     const res = await apiClient.get<BackendRole[]>('/roles');
     if (res.error) throw new Error(res.error);
     return (res.data || []).map(mapBackendToFrontend);
   },
 
-  getUserRoleById: async (id: string): Promise<UserRoleRecord> => {
+  getUserRoleById: async (id: string): Promise<IUserRole> => {
     const res = await apiClient.get<BackendRole>(`/roles/${id}`);
     if (res.error) throw new Error(res.error);
     if (!res.data) throw new Error('Role not found');
     return mapBackendToFrontend(res.data);
   },
 
-  createUserRole: async (data: UserRoleFormValues): Promise<UserRoleRecord> => {
+  createUserRole: async (data: ICreateUserRole): Promise<IUserRole> => {
     const res = await apiClient.post<BackendRole>('/roles', data);
     if (res.error) throw new Error(res.error);
     if (!res.data) throw new Error('Failed to create role');
@@ -75,8 +75,8 @@ export const userRoleApi = {
 
   updateUserRole: async (
     id: string,
-    data: UserRoleFormValues
-  ): Promise<UserRoleRecord> => {
+    data: ICreateUserRole
+  ): Promise<IUserRole> => {
     const res = await apiClient.put<BackendRole>(`/roles/${id}`, data);
     if (res.error) throw new Error(res.error);
     if (!res.data) throw new Error('Failed to update role');
@@ -86,7 +86,7 @@ export const userRoleApi = {
   updateUserRoleStatus: async (
     id: string,
     isActive: boolean
-  ): Promise<UserRoleRecord | undefined> => {
+  ): Promise<IUserRole | undefined> => {
     const res = await apiClient.put<BackendRole>(`/roles/${id}`, { isActive });
     if (res.error) throw new Error(res.error);
     return res.data ? mapBackendToFrontend(res.data) : undefined;

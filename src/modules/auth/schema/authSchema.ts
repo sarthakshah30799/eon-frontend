@@ -11,7 +11,7 @@ export const loginSchema = yup.object({
     .required('Password is required'),
 });
 
-export interface LoginFormData {
+export interface ILoginFormData {
   email: string;
   password: string;
 }

@@ -1,5 +1,5 @@
 import type { MenuRecord } from '@/api/menu/menu.api';
-import type { MasterPageTreeNode } from '@/modules/masterPages/types';
+import type { IMasterPageTreeNode } from '@/modules/masterPages/types';
 import type {
   UserRightsPermissionState,
   UserRightsRow,
@@ -27,7 +27,7 @@ export const mapMenuRecordToRightsTreeNode = (
 });
 
 export const mapMasterPageTreeNodeToRightsTreeNode = (
-  page: MasterPageTreeNode
+  page: IMasterPageTreeNode
 ): UserRightsTreeNode => ({
   id: page.id,
   label: page.pageName,

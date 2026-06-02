@@ -5,7 +5,7 @@ import {
   createEmptyBranchProfileFormValues,
   toBranchAttachedToOptions,
 } from '../utils';
-import type { BranchProfileFormValues } from '../types';
+import type { ICreateBranchProfile } from '../types';
 import { useCreateBranchProfile } from '../hooks';
 import { BranchProfileEditorView } from './BranchProfileEditorView';
 
@@ -18,7 +18,7 @@ export const BranchProfileCreateView = () => {
     [branches]
   );
 
-  const handleSubmit = async (values: BranchProfileFormValues) => {
+  const handleSubmit = async (values: ICreateBranchProfile) => {
     await submitBranchProfile(values);
   };
 

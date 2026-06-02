@@ -2,12 +2,12 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { Button } from '@/components/ui/button1';
 import { Form, FormFieldCheckbox, FormFieldInput } from '@/components/forms';
 import { counterProfileSchema } from '../schema';
-import type { CounterProfileFormValues } from '../types';
+import type { ICreateCounterProfile } from '../types';
 
 
 interface CounterProfileFormProps {
-  defaultValues: CounterProfileFormValues;
-  onSubmit: (values: CounterProfileFormValues) => void | Promise<void>;
+  defaultValues: ICreateCounterProfile;
+  onSubmit: (values: ICreateCounterProfile) => void | Promise<void>;
   submitLabel?: string;
   isSubmitting?: boolean;
 }

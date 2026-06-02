@@ -1,4 +1,4 @@
-export interface CompanyProfile {
+export interface ICompanyProfile {
   id: string;
   shortCode?: string;
   companyName: string;
@@ -17,7 +17,7 @@ export interface CompanyProfile {
   updatedAt?: string;
 }
 
-export interface CompanyProfileFormValues {
+export interface ICreateCompanyProfile {
   shortCode: string;
   companyName: string;
   formerlyKnownName: string;
@@ -32,3 +32,5 @@ export interface CompanyProfileFormValues {
   website: string;
   emailId: string;
 }
+
+export type IUpdateCompanyProfile = Partial<ICreateCompanyProfile>;

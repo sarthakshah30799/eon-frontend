@@ -2,16 +2,17 @@ import { useNavigate } from 'react-router-dom';
 import { PencilSquareIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button1';
 import { Table, type TableColumnDef } from '@/components/ui/table';
-import type { StateProfileRecord } from '../types';
+import type { IStateProfile } from '../types';
 
 interface StateProfileTableProps {
-  states: StateProfileRecord[];
+  states: IStateProfile[];
 }
 
 interface StateProfileTableRow {
   id: string;
-  stateCode: string;
-  stateName: string;
+  countryName: string;
+  code: string;
+  name: string;
   gstStateCode: string;
   ctrStateCode: string;
 }
@@ -21,15 +22,17 @@ export const StateProfileTable = ({ states }: StateProfileTableProps) => {
 
   const rows: StateProfileTableRow[] = states.map(state => ({
     id: state.id,
-    stateCode: state.stateCode,
-    stateName: state.stateName,
+    countryName: state.countryName,
+    code: state.code,
+    name: state.name,
     gstStateCode: state.gstStateCode,
     ctrStateCode: state.ctrStateCode,
   }));
 
   const columns: TableColumnDef<StateProfileTableRow>[] = [
-    { accessorKey: 'stateName', header: 'State Name' },
-    { accessorKey: 'stateCode', header: 'State Code' },
+    { accessorKey: 'countryName', header: 'Country' },
+    { accessorKey: 'name', header: 'State Name' },
+    { accessorKey: 'code', header: 'State Code' },
     { accessorKey: 'gstStateCode', header: 'GST State Code' },
     { accessorKey: 'ctrStateCode', header: 'CTR State Code' },
     {
@@ -81,4 +84,3 @@ export const StateProfileTable = ({ states }: StateProfileTableProps) => {
     />
   );
 };
-

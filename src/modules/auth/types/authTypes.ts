@@ -1,24 +1,24 @@
-export interface LoginFormData {
+export interface ILoginFormData {
   email: string;
   password: string;
 }
 
-export interface LoginResponse {
+export interface ILoginResponse {
   message: string;
 }
 
-export interface AuthError {
+export interface IAuthError {
   message: string;
   code?: string;
   details?: unknown;
 }
 
-export interface OtpFormData {
+export interface IOtpFormData {
   email: string;
   otp: string;
 }
 
-export interface User {
+export interface IUser {
   id: string;
   email: string;
   emailId?: string;
@@ -31,4 +31,3 @@ export interface User {
   isHo?: boolean;
   permissions?: Record<string, string[]>;
 }
-

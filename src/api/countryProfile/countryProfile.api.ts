@@ -1,145 +1,87 @@
+import { apiClient } from '../api';
 import type {
-  CountryProfileFormValues,
-  CountryProfileRecord,
+  ICountryProfileListQuery,
+  ICountryProfileListResponse,
 } from '@/modules/countryProfile/types';
-import {
-  createEmptyCountryProfileFormValues,
-  mapFormValuesToRecord,
-} from '@/modules/countryProfile/utils';
+import type {
+  ICreateCountryProfile,
+  ICountryProfile,
+} from '@/modules/countryProfile/types';
 
-const STORAGE_KEY = 'maraekat-country-profiles';
-
-const createId = (): string => {
-  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
-    return crypto.randomUUID();
+const buildQueryString = (params?: ICountryProfileListQuery) => {
+  if (!params) {
+    return '';
   }
 
-  return `country-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-};
+  const query = new URLSearchParams();
 
-const now = (): string => new Date().toISOString();
-
-const createSeedCountries = (): CountryProfileRecord[] => {
-  const first = mapFormValuesToRecord(
-    {
-      ...createEmptyCountryProfileFormValues(),
-      countryCode: 'IN',
-      countryName: 'India',
-      lrsCountryCode: 'LRS-IN',
-      ctrCountryCode: 'CTR-IN',
-      riskCategory: 'Low',
-      baseCountry: true,
-    },
-    createId(),
-    now(),
-    now()
-  );
-
-  const second = mapFormValuesToRecord(
-    {
-      ...createEmptyCountryProfileFormValues(),
-      countryCode: 'AE',
-      countryName: 'United Arab Emirates',
-      lrsCountryCode: 'LRS-AE',
-      ctrCountryCode: 'CTR-AE',
-      riskCategory: 'Medium',
-      restrictedCountry: false,
-      greyListCountry: true,
-    },
-    createId(),
-    now(),
-    now()
-  );
-
-  return [first, second];
-};
-
-const writeStoredCountries = (countries: CountryProfileRecord[]): void => {
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(countries));
-};
-
-const readStoredCountries = (): CountryProfileRecord[] => {
-  if (typeof window === 'undefined') {
-    return createSeedCountries();
-  }
-
-  const stored = window.localStorage.getItem(STORAGE_KEY);
-
-  if (!stored) {
-    const seed = createSeedCountries();
-    writeStoredCountries(seed);
-    return seed;
-  }
-
-  try {
-    const parsed = JSON.parse(stored) as CountryProfileRecord[];
-
-    if (!Array.isArray(parsed)) {
-      const seed = createSeedCountries();
-      writeStoredCountries(seed);
-      return seed;
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === '') {
+      return;
     }
 
-    return parsed;
-  } catch {
-    const seed = createSeedCountries();
-    writeStoredCountries(seed);
-    return seed;
-  }
+    query.set(key, String(value));
+  });
+
+  const queryString = query.toString();
+  return queryString ? `?${queryString}` : '';
 };
 
 export const countryProfileApi = {
-  getCountryProfiles: async (): Promise<CountryProfileRecord[]> => {
-    return readStoredCountries();
+  getCountryProfiles: async (
+    params?: ICountryProfileListQuery
+  ): Promise<ICountryProfileListResponse> => {
+    const res = await apiClient.get<ICountryProfileListResponse>(
+      `/countries${buildQueryString(params)}`
+    );
+    if (res.error) throw new Error(res.error);
+    if (!res.data) {
+      return {
+        data: [],
+        page: params?.page ?? 1,
+        limit: params?.limit ?? 10,
+        totalItems: 0,
+        totalPages: 0,
+      };
+    }
+
+    return {
+      ...res.data,
+      data: res.data.data || [],
+    };
   },
 
   getCountryProfileById: async (
     id: string
-  ): Promise<CountryProfileRecord | undefined> => {
-    return readStoredCountries().find(country => country.id === id);
+  ): Promise<ICountryProfile | undefined> => {
+    const res = await apiClient.get<ICountryProfile>(`/countries/${id}`);
+    if (res.error) throw new Error(res.error);
+    return res.data;
   },
 
   createCountryProfile: async (
-    values: CountryProfileFormValues
-  ): Promise<CountryProfileRecord> => {
-    const countries = readStoredCountries();
-    const timestamp = now();
-    const record = mapFormValuesToRecord(
-      values,
-      createId(),
-      timestamp,
-      timestamp
-    );
-    writeStoredCountries([...countries, record]);
-    return record;
+    values: ICreateCountryProfile
+  ): Promise<ICountryProfile> => {
+    const res = await apiClient.post<ICountryProfile>('/countries', {
+      ...values,
+      lrsCountryCode: values.lrsCountryCode || undefined,
+      ctrCountryCode: values.ctrCountryCode || undefined,
+    });
+    if (res.error) throw new Error(res.error);
+    if (!res.data) throw new Error('Failed to create country');
+    return res.data;
   },
 
   updateCountryProfile: async (
     id: string,
-    values: CountryProfileFormValues
-  ): Promise<CountryProfileRecord | undefined> => {
-    const countries = readStoredCountries();
-    const existing = countries.find(country => country.id === id);
-
-    if (!existing) {
-      return undefined;
-    }
-
-    const updated = mapFormValuesToRecord(
-      values,
-      existing.id,
-      existing.createdAt,
-      now()
-    );
-
-    writeStoredCountries(
-      countries.map(country => (country.id === id ? updated : country))
-    );
-
-    return updated;
+    values: ICreateCountryProfile
+  ): Promise<ICountryProfile | undefined> => {
+    const res = await apiClient.put<ICountryProfile>(`/countries/${id}`, {
+      ...values,
+      lrsCountryCode: values.lrsCountryCode || undefined,
+      ctrCountryCode: values.ctrCountryCode || undefined,
+    });
+    if (res.error) throw new Error(res.error);
+    return res.data;
   },
 };

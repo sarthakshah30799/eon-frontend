@@ -2,13 +2,13 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { productProfileApi } from '@/api/productProfile';
 import { PRODUCT_PROFILE_TEXTS } from '../constants';
-import type { ProductProfileFormValues } from '../types';
+import type { ICreateProductProfile } from '../types';
 
 export const useUpdateProductProfile = (id: string) => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: (data: ProductProfileFormValues) =>
+    mutationFn: (data: ICreateProductProfile) =>
       productProfileApi.updateProductProfile(id, data),
     onSuccess: updatedProduct => {
       if (updatedProduct) {

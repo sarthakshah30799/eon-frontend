@@ -1,4 +1,5 @@
-export interface UserRoleFormValues {
+export interface IUserRole {
+  id: string;
   userGroupCode: string;
   userGroupName: string;
   isAdminGrp: boolean;
@@ -16,10 +17,15 @@ export interface UserRoleFormValues {
   isAeonAccess: boolean;
   isDelPortalAccess: boolean;
   isDelAppAccess: boolean;
-}
-
-export interface UserRoleRecord extends UserRoleFormValues {
-  id: string;
   createdAt: string;
   updatedAt: string;
+  createdBy?: string;
+  updatedBy?: string;
 }
+
+export type ICreateUserRole = Omit<
+  IUserRole,
+  'id' | 'createdAt' | 'updatedAt' | 'createdBy' | 'updatedBy'
+>;
+
+export type IUpdateUserRole = Partial<ICreateUserRole>;

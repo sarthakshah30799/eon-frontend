@@ -2,13 +2,13 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { countryProfileApi } from '@/api/countryProfile';
 import { COUNTRY_PROFILE_TEXTS } from '../constants';
-import type { CountryProfileFormValues } from '../types';
+import type { ICreateCountryProfile } from '../types';
 
 export const useCreateCountryProfile = () => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: (data: CountryProfileFormValues) =>
+    mutationFn: (data: ICreateCountryProfile) =>
       countryProfileApi.createCountryProfile(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['country-profiles'] });

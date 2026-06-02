@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AsyncSelect, Modal, type AsyncSelectOption } from '@/components/ui';
+import { countryProfileApi } from '@/api/countryProfile';
 import { CountryProfileForm } from '@/modules/countryProfile/forms';
 import { createEmptyCountryProfileFormValues } from '@/modules/countryProfile/utils';
 import { useCreateCountryProfile } from '@/modules/countryProfile/hooks';
 import { useCountryDropdown } from './hooks';
-import type { CountryDropdownOption, CountryDropdownProps } from './types';
-import type { CountryProfileFormValues } from '@/modules/countryProfile/types';
+import type { CountryDropdownOption, CountryDropdownProps } from './types/countryDropdown.types';
+import type { ICreateCountryProfile } from '@/modules/countryProfile/types';
 
 export const CountryDropdown = ({
   value,
@@ -20,6 +21,8 @@ export const CountryDropdown = ({
   const [defaultOptions, setDefaultOptions] = useState<CountryDropdownOption[]>(
     []
   );
+  const [selectedOption, setSelectedOption] =
+    useState<CountryDropdownOption | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [pendingCountryName, setPendingCountryName] = useState('');
   const { loadOptions } = useCountryDropdown();
@@ -50,29 +53,73 @@ export const CountryDropdown = ({
     };
   }, [loadOptions]);
 
-  const selectedOption = useMemo(() => {
-    if (!value) {
-      return null;
-    }
+  useEffect(() => {
+    let isActive = true;
 
-    return defaultOptions.find(option => option.value === value) ?? null;
-  }, [defaultOptions, value]);
+    const resolveSelectedOption = async () => {
+      if (!value) {
+        if (isActive) {
+          setSelectedOption(null);
+        }
+        return;
+      }
 
-  const createCountryDefaultValues = useMemo<CountryProfileFormValues>(
+      const cachedOption =
+        defaultOptions.find(option => option.value === value) ?? null;
+
+      if (cachedOption) {
+        if (isActive) {
+          setSelectedOption(cachedOption);
+        }
+        return;
+      }
+
+      try {
+        const country = await countryProfileApi.getCountryProfileById(value);
+        const nextOption = country
+          ? {
+              value: country.id,
+              label: `${country.code} - ${country.name}`,
+              countryId: country.id,
+              code: country.code,
+              name: country.name,
+            }
+          : null;
+
+        if (isActive) {
+          setSelectedOption(nextOption);
+        }
+      } catch {
+        if (isActive) {
+          setSelectedOption(null);
+        }
+      }
+    };
+
+    void resolveSelectedOption();
+
+    return () => {
+      isActive = false;
+    };
+  }, [defaultOptions, loadOptions, value]);
+
+  const createCountryDefaultValues = useMemo<ICreateCountryProfile>(
     () => ({
       ...createEmptyCountryProfileFormValues(),
-      countryName: pendingCountryName,
+      name: pendingCountryName,
     }),
     [pendingCountryName]
   );
 
-  const handleCreateCountry = async (values: CountryProfileFormValues) => {
+  const handleCreateCountry = async (values: ICreateCountryProfile) => {
     const createdCountry = await submitCountryProfile(values);
 
     const nextOption: CountryDropdownOption = {
-      value: createdCountry.countryName,
-      label: createdCountry.countryName,
+      value: createdCountry.id,
+      label: `${createdCountry.code} - ${createdCountry.name}`,
       countryId: createdCountry.id,
+      code: createdCountry.code,
+      name: createdCountry.name,
     };
 
     setDefaultOptions(prevOptions => {

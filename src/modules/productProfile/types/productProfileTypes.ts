@@ -1,15 +1,16 @@
-export interface ProductProfileCheckboxFieldConfig {
-  name: keyof ProductProfileFormValues;
+export interface IProductProfileCheckboxFieldConfig {
+  name: keyof IProductProfile;
   label: string;
 }
 
-export interface ProductProfileFieldConfig {
-  name: keyof ProductProfileFormValues;
+export interface IProductProfileFieldConfig {
+  name: keyof IProductProfile;
   label: string;
   inputType?: 'text' | 'number';
 }
 
-export interface ProductProfileFormValues {
+export interface IProductProfile {
+  id: string;
   productCode: string;
   productDescription: string;
   acOfIssuer: string;
@@ -62,10 +63,15 @@ export interface ProductProfileFormValues {
   denominationApplicable: boolean;
   allowAddOnLinking: boolean;
   instrumentIssuingAuthorityRequired: boolean;
-}
-
-export interface ProductProfileRecord extends ProductProfileFormValues {
-  id: string;
   createdAt: string;
   updatedAt: string;
+  createdBy?: string;
+  updatedBy?: string;
 }
+
+export type ICreateProductProfile = Omit<
+  IProductProfile,
+  'id' | 'createdAt' | 'updatedAt' | 'createdBy' | 'updatedBy'
+>;
+
+export type IUpdateProductProfile = Partial<ICreateProductProfile>;

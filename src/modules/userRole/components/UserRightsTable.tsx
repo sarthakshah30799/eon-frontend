@@ -1,5 +1,6 @@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Table, type TableColumnDef } from '@/components/ui/table';
+import type { CellContext } from '@tanstack/react-table';
 import { USER_RIGHTS_PERMISSION_COLUMNS } from '../constants';
 import type {
   UserRightsPermissionState,
@@ -114,7 +115,7 @@ export const UserRightsTable = ({
           {permission.label}
         </Checkbox>
       ),
-      cell: ({ row }: any) => (
+      cell: ({ row }: CellContext<UserRightsTableRow, unknown>) => (
         <Checkbox
           id={`user-rights-${permission.key}-${row.original.id}`}
           checked={row.original.permissions[permission.key]}

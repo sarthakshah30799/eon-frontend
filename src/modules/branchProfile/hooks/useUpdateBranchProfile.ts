@@ -1,11 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { branchProfileApi } from '@/api/branchProfile';
-import type { BranchProfileFormValues } from '../types';
+import type { ICreateBranchProfile } from '../types';
 import { BRANCH_PROFILE_TEXTS } from '../constants';
 
 interface UseUpdateBranchProfileResult {
-  submitBranchProfile: (data: BranchProfileFormValues) => Promise<unknown>;
+  submitBranchProfile: (data: ICreateBranchProfile) => Promise<unknown>;
   isPending: boolean;
 }
 
@@ -15,7 +15,7 @@ export const useUpdateBranchProfile = (
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: (data: BranchProfileFormValues) =>
+    mutationFn: (data: ICreateBranchProfile) =>
       branchProfileApi.updateBranchProfile(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['branch-profiles'] });

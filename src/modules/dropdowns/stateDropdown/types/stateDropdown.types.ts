@@ -4,6 +4,9 @@ export interface StateDropdownOption extends AsyncSelectOption {
   value: string;
   label: string;
   stateId: string;
+  countryId: string;
+  code: string;
+  name: string;
 }
 
 export interface StateDropdownProps {

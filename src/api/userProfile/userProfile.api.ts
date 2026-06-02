@@ -1,7 +1,7 @@
 import { apiClient } from '../api';
 import type {
-  UserProfileFormValues,
-  UserProfileRecord,
+  ICreateUserProfile,
+  IUserProfile,
 } from '@/modules/userProfile/types';
 
 interface BackendUser {
@@ -25,7 +25,7 @@ interface BackendUser {
   updatedAt: string;
 }
 
-const mapBackendToFrontend = (user: BackendUser): UserProfileRecord => {
+const mapBackendToFrontend = (user: BackendUser): IUserProfile => {
   return {
     id: user.id,
     userCode: user.userCode || '',
@@ -48,8 +48,30 @@ const mapBackendToFrontend = (user: BackendUser): UserProfileRecord => {
   };
 };
 
-const mapFrontendToBackend = (form: UserProfileFormValues, isCreate: boolean): any => {
-  const payload: any = {
+type BackendUserPayload = {
+  userCode: string;
+  userName: string;
+  userGroupCode?: string;
+  contactNo?: string;
+  emailId: string;
+  employeeNo?: string;
+  designation?: string;
+  branchCode?: string;
+  userLicNo?: string;
+  isActive: boolean;
+  isLocked: boolean;
+  isDormant: boolean;
+  roleId?: string;
+  branchId?: string;
+  counterId?: string;
+  password?: string;
+};
+
+const mapFrontendToBackend = (
+  form: ICreateUserProfile,
+  isCreate: boolean
+): BackendUserPayload => {
+  const payload: BackendUserPayload = {
     userCode: form.userCode,
     userName: form.userName,
     userGroupCode: form.userGroupCode || undefined,
@@ -77,20 +99,20 @@ const mapFrontendToBackend = (form: UserProfileFormValues, isCreate: boolean): a
 };
 
 export const userProfileApi = {
-  getUserProfiles: async (): Promise<UserProfileRecord[]> => {
+  getUserProfiles: async (): Promise<IUserProfile[]> => {
     const res = await apiClient.get<BackendUser[]>('/users');
     if (res.error) throw new Error(res.error);
     return (res.data || []).map(mapBackendToFrontend);
   },
-  getUserProfileById: async (id: string): Promise<UserProfileRecord> => {
+  getUserProfileById: async (id: string): Promise<IUserProfile> => {
     const res = await apiClient.get<BackendUser>(`/users/${id}`);
     if (res.error) throw new Error(res.error);
     if (!res.data) throw new Error('User not found');
     return mapBackendToFrontend(res.data);
   },
   createUserProfile: async (
-    data: UserProfileFormValues
-  ): Promise<UserProfileRecord> => {
+    data: ICreateUserProfile
+  ): Promise<IUserProfile> => {
     const backendData = mapFrontendToBackend(data, true);
     const res = await apiClient.post<BackendUser>('/users', backendData);
     if (res.error) throw new Error(res.error);
@@ -99,9 +121,9 @@ export const userProfileApi = {
   },
   updateUserProfile: async (
     id: string,
-    data: Partial<UserProfileFormValues>
-  ): Promise<UserProfileRecord> => {
-    const backendData = mapFrontendToBackend(data as UserProfileFormValues, false);
+    data: Partial<ICreateUserProfile>
+  ): Promise<IUserProfile> => {
+    const backendData = mapFrontendToBackend(data as ICreateUserProfile, false);
     const res = await apiClient.put<BackendUser>(`/users/${id}`, backendData);
     if (res.error) throw new Error(res.error);
     if (!res.data) throw new Error('Failed to update user');

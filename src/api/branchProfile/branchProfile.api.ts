@@ -1,8 +1,8 @@
 import { apiClient } from '../api';
 import { companyProfileApi } from '../companyProfile/companyProfile.api';
 import type {
-  BranchProfileRecord,
-  BranchProfileFormValues,
+  IBranchProfile,
+  ICreateBranchProfile,
 } from '@/modules/branchProfile/types';
 
 interface BackendBranch {
@@ -36,7 +36,7 @@ interface BackendBranch {
   updatedAt: string;
 }
 
-const mapBackendToFrontend = (branch: BackendBranch): BranchProfileRecord => {
+const mapBackendToFrontend = (branch: BackendBranch): IBranchProfile => {
   return {
     id: branch.id,
     branchCode: branch.branchCode || '',
@@ -69,7 +69,7 @@ const mapBackendToFrontend = (branch: BackendBranch): BranchProfileRecord => {
 };
 
 const mapFrontendToBackend = (
-  form: BranchProfileFormValues,
+  form: ICreateBranchProfile,
   companyId?: string
 ) => {
   return {
@@ -102,7 +102,7 @@ const mapFrontendToBackend = (
 };
 
 export const branchProfileApi = {
-  getBranchProfiles: async (): Promise<BranchProfileRecord[]> => {
+  getBranchProfiles: async (): Promise<IBranchProfile[]> => {
     const res = await apiClient.get<BackendBranch[]>('/branches');
     if (res.error) throw new Error(res.error);
     return (res.data || []).map(mapBackendToFrontend);
@@ -110,15 +110,15 @@ export const branchProfileApi = {
 
   getBranchProfileById: async (
     id: string
-  ): Promise<BranchProfileRecord | undefined> => {
+  ): Promise<IBranchProfile | undefined> => {
     const res = await apiClient.get<BackendBranch>(`/branches/${id}`);
     if (res.error) throw new Error(res.error);
     return res.data ? mapBackendToFrontend(res.data) : undefined;
   },
 
   createBranchProfile: async (
-    data: BranchProfileFormValues
-  ): Promise<BranchProfileRecord> => {
+    data: ICreateBranchProfile
+  ): Promise<IBranchProfile> => {
     const companyRes = await companyProfileApi.getCompanyProfiles();
     const companyId =
       companyRes.data?.[0]?.id || '11111111-1111-4111-b111-111111111111';
@@ -133,8 +133,8 @@ export const branchProfileApi = {
 
   updateBranchProfile: async (
     id: string,
-    data: BranchProfileFormValues
-  ): Promise<BranchProfileRecord | undefined> => {
+    data: ICreateBranchProfile
+  ): Promise<IBranchProfile | undefined> => {
     const companyRes = await companyProfileApi.getCompanyProfiles();
     const companyId =
       companyRes.data?.[0]?.id || '11111111-1111-4111-b111-111111111111';

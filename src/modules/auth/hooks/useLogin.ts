@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { authApi } from '../../../api/auth';
 import { loginSchema } from '../schema';
 import { useAuth } from '../../../lib/AuthContext';
-import type { LoginFormData } from '../schema';
+import type { ILoginFormData } from '../schema';
 import { yupResolver } from '@hookform/resolvers/yup';
 
 export const useLogin = () => {
@@ -12,7 +12,7 @@ export const useLogin = () => {
   const navigate = useNavigate();
 
   const mutation = useMutation({
-    mutationFn: async (data: LoginFormData) => {
+    mutationFn: async (data: ILoginFormData) => {
       await authApi.login(data);
       return data;
     },
@@ -44,7 +44,7 @@ export const useLogin = () => {
     },
   });
 
-  const handleLogin = (data: LoginFormData) => {
+  const handleLogin = (data: ILoginFormData) => {
     mutation.mutate(data);
   };
 

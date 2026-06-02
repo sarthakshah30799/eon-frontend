@@ -7,9 +7,9 @@ import {
   type ReactNode,
 } from 'react';
 import type {
-  MasterPageDraftNode,
-  MasterPageRecord,
-  MasterPageTreeNode,
+  IMasterPageDraftNode,
+  IMasterPage,
+  IMasterPageTreeNode,
 } from '../modules/masterPages/types';
 import {
   buildMasterPageTree,
@@ -19,10 +19,10 @@ import {
 const STORAGE_KEY = 'maraekat_master_pages';
 
 interface MasterPagesContextType {
-  pages: MasterPageRecord[];
-  tree: MasterPageTreeNode[];
-  createPages: (draftPages: MasterPageDraftNode[]) => void;
-  findPageBySlug: (slug: string) => MasterPageRecord | undefined;
+  pages: IMasterPage[];
+  tree: IMasterPageTreeNode[];
+  createPages: (draftPages: IMasterPageDraftNode[]) => void;
+  findPageBySlug: (slug: string) => IMasterPage | undefined;
 }
 
 const MasterPagesContext = createContext<MasterPagesContextType | undefined>(
@@ -33,21 +33,21 @@ interface MasterPagesProviderProps {
   children: ReactNode;
 }
 
-const readStoredPages = (): MasterPageRecord[] => {
+const readStoredPages = (): IMasterPage[] => {
   if (typeof window === 'undefined') {
     return [];
   }
 
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as MasterPageRecord[]) : [];
+    return raw ? (JSON.parse(raw) as IMasterPage[]) : [];
   } catch {
     return [];
   }
 };
 
 export const MasterPagesProvider = ({ children }: MasterPagesProviderProps) => {
-  const [pages, setPages] = useState<MasterPageRecord[]>(() =>
+  const [pages, setPages] = useState<IMasterPage[]>(() =>
     readStoredPages()
   );
 
@@ -55,7 +55,7 @@ export const MasterPagesProvider = ({ children }: MasterPagesProviderProps) => {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(pages));
   }, [pages]);
 
-  const createPages = (draftPages: MasterPageDraftNode[]) => {
+  const createPages = (draftPages: IMasterPageDraftNode[]) => {
     const newPages = flattenDraftTree(draftPages);
     setPages(currentPages => [...currentPages, ...newPages]);
   };

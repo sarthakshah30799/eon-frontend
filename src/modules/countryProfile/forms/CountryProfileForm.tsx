@@ -5,15 +5,15 @@ import { Form, FormFieldCheckbox, FormFieldInput, FormFieldSelect } from '@/comp
 import type { AsyncSelectResponse } from '@/components/ui';
 import { countryProfileSchema } from '../schema';
 import { COUNTRY_PROFILE_TEXTS, riskCategoryOptions } from '../constants';
-import type { CountryProfileFormValues } from '../types';
+import type { ICreateCountryProfile } from '../types';
 
 const loadRiskCategoryOptions = async (): Promise<AsyncSelectResponse> => {
   return { options: riskCategoryOptions };
 };
 
 interface CountryProfileFormProps {
-  defaultValues: CountryProfileFormValues;
-  onSubmit: (values: CountryProfileFormValues) => void | Promise<void>;
+  defaultValues: ICreateCountryProfile;
+  onSubmit: (values: ICreateCountryProfile) => void | Promise<void>;
   submitLabel?: string;
   isSubmitting?: boolean;
 }
@@ -24,7 +24,7 @@ export const CountryProfileForm = ({
   submitLabel = COUNTRY_PROFILE_TEXTS.CREATE_COUNTRY,
   isSubmitting = false,
 }: CountryProfileFormProps) => {
-  const handleSubmitErrors: SubmitErrorHandler<CountryProfileFormValues> =
+  const handleSubmitErrors: SubmitErrorHandler<ICreateCountryProfile> =
     errors => {
       console.log('CountryProfileForm submit errors:', errors);
     };
@@ -39,12 +39,12 @@ export const CountryProfileForm = ({
     >
       <div className="grid gap-4 md:grid-cols-2">
         <FormFieldInput
-          name="countryCode"
+          name="code"
           label="Country Code"
           disabled={isSubmitting}
         />
         <FormFieldInput
-          name="countryName"
+          name="name"
           label="Country Name"
           disabled={isSubmitting}
         />

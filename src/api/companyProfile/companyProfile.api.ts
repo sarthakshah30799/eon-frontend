@@ -1,27 +1,27 @@
 import { apiClient } from '../api';
 import type {
-  CompanyProfile,
-  CompanyProfileFormValues,
+  ICompanyProfile,
+  ICreateCompanyProfile,
 } from '../../modules/companyProfile/types';
 
 export const companyProfileApi = {
   getCompanyProfiles: async () => {
-    return apiClient.get<CompanyProfile[]>('/companies');
+    return apiClient.get<ICompanyProfile[]>('/companies');
   },
   getCompanyProfileById: async (id: string) => {
-    return apiClient.get<CompanyProfile>(`/companies/${id}`);
+    return apiClient.get<ICompanyProfile>(`/companies/${id}`);
   },
-  createCompanyProfile: async (values: CompanyProfileFormValues) => {
-    return apiClient.post<CompanyProfile>(
+  createCompanyProfile: async (values: ICreateCompanyProfile) => {
+    return apiClient.post<ICompanyProfile>(
       '/companies',
       values
     );
   },
   updateCompanyProfile: async (
     id: string,
-    values: CompanyProfileFormValues
+    values: ICreateCompanyProfile
   ) => {
-    return apiClient.put<CompanyProfile>(
+    return apiClient.put<ICompanyProfile>(
       `/companies/${id}`,
       values
     );

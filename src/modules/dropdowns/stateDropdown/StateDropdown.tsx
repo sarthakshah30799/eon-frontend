@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AsyncSelect, Modal, type AsyncSelectOption } from '@/components/ui';
-import { stateProfileApi } from '@/api/stateProfile';
 import {
   StateProfileForm,
   useCreateStateProfile,
+  useGetStateProfile,
 } from '@/modules/stateProfile';
 import { createEmptyStateProfileFormValues } from '@/modules/stateProfile/utils';
 import type { ICreateStateProfile } from '@/modules/stateProfile/types';
@@ -22,40 +22,40 @@ export const StateDropdown = ({
   createLabel = 'Create',
   onCreateState,
 }: StateDropdownProps) => {
-  const [defaultOptions, setDefaultOptions] = useState<StateDropdownOption[]>(
+  const [createdOptions, setCreatedOptions] = useState<StateDropdownOption[]>(
     []
   );
   const [selectedOption, setSelectedOption] =
     useState<StateDropdownOption | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [pendingStateName, setPendingStateName] = useState('');
-  const { loadOptions } = useStateDropdown(countryId);
+  const {
+    defaultOptions,
+    loadOptions,
+    isLoading: isLoadingOptions,
+    isFetching: isFetchingOptions,
+  } = useStateDropdown(countryId);
+  const { data: selectedState, isFetching: isResolvingSelectedOption } =
+    useGetStateProfile(value || '');
   const { submitStateProfile, isPending: isCreatingState } =
     useCreateStateProfile();
 
-  useEffect(() => {
-    let isActive = true;
+  const mergedDefaultOptions = useMemo<StateDropdownOption[]>(
+    () => {
+      const map = new Map<string, StateDropdownOption>();
 
-    const loadInitialOptions = async () => {
-      try {
-        const response = await loadOptions('');
+      defaultOptions.forEach(option => {
+        map.set(option.value, option);
+      });
 
-        if (isActive) {
-          setDefaultOptions(response.options as StateDropdownOption[]);
-        }
-      } catch {
-        if (isActive) {
-          setDefaultOptions([]);
-        }
-      }
-    };
+      createdOptions.forEach(option => {
+        map.set(option.value, option);
+      });
 
-    loadInitialOptions();
-
-    return () => {
-      isActive = false;
-    };
-  }, [loadOptions]);
+      return Array.from(map.values());
+    },
+    [createdOptions, defaultOptions]
+  );
 
   useEffect(() => {
     let isActive = true;
@@ -69,7 +69,7 @@ export const StateDropdown = ({
       }
 
       const cachedOption =
-        defaultOptions.find(option => option.value === value) ?? null;
+        mergedDefaultOptions.find(option => option.value === value) ?? null;
 
       if (cachedOption) {
         if (isActive) {
@@ -78,26 +78,19 @@ export const StateDropdown = ({
         return;
       }
 
-      try {
-        const state = await stateProfileApi.getStateProfileById(value);
-        const nextOption = state
-          ? {
-              value: state.id,
-              label: `${state.code} - ${state.name}`,
-              stateId: state.id,
-              countryId: state.countryId,
-              code: state.code,
-              name: state.name,
-            }
-          : null;
+      const nextOption = selectedState
+        ? {
+            value: selectedState.id,
+            label: `${selectedState.code} - ${selectedState.name}`,
+            stateId: selectedState.id,
+            countryId: selectedState.countryId,
+            code: selectedState.code,
+            name: selectedState.name,
+          }
+        : null;
 
-        if (isActive) {
-          setSelectedOption(nextOption);
-        }
-      } catch {
-        if (isActive) {
-          setSelectedOption(null);
-        }
+      if (isActive) {
+        setSelectedOption(nextOption);
       }
     };
 
@@ -106,7 +99,7 @@ export const StateDropdown = ({
     return () => {
       isActive = false;
     };
-  }, [defaultOptions, loadOptions, value]);
+  }, [mergedDefaultOptions, selectedState, value]);
 
   const createStateDefaultValues = useMemo<ICreateStateProfile>(
     () => ({
@@ -129,7 +122,7 @@ export const StateDropdown = ({
       name: createdState.name,
     };
 
-    setDefaultOptions(prevOptions => {
+    setCreatedOptions(prevOptions => {
       const nextOptions = prevOptions.filter(
         option => option.stateId !== nextOption.stateId
       );
@@ -154,7 +147,10 @@ export const StateDropdown = ({
         disabled={disabled || !countryId}
         className={className}
         loadOptions={loadOptions}
-        defaultOptions={defaultOptions}
+        defaultOptions={mergedDefaultOptions}
+        isLoading={
+          isLoadingOptions || isFetchingOptions || isResolvingSelectedOption
+        }
         isCreatable={Boolean(countryId)}
         isClearable
         value={selectedOption as AsyncSelectOption | null}

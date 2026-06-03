@@ -1,38 +1,50 @@
-import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { BackButton } from '@/components/ui';
 import { CATEGORY_OPTIONS_TEXTS } from '../constants';
-import { createEmptyCategoryOptionFormValues } from '../utils';
-import { useCreateCategoryOption } from '../hooks';
-import type { ICreateCategoryOption } from '@/types/categoryOptionTypes';
+import {
+  buildCategoryOptionPayloads,
+  createEmptyCategoryOptionsFormValues,
+} from '../utils';
+import { useBulkCreateCategoryOptions } from '../hooks';
 import { CategoryOptionsForm } from '../forms';
+import type { ICategoryOptionsFormValues } from '../utils';
 
 export const CategoryOptionsCreateView = () => {
-  const { submitCategoryOption, isPending } = useCreateCategoryOption();
-  const [formKey, setFormKey] = useState(0);
+  const navigate = useNavigate();
+  const { submitCategoryOptions, isPending } = useBulkCreateCategoryOptions();
 
-  const handleSubmit = async (values: ICreateCategoryOption) => {
-    await submitCategoryOption(values);
-    setFormKey(prev => prev + 1);
+  const handleSubmit = async (values: ICategoryOptionsFormValues) => {
+    await submitCategoryOptions(buildCategoryOptionPayloads(values));
+    navigate('/admin/category-options');
   };
 
   return (
-    <div className="rounded-sm border border-border-primary bg-surface-primary p-6 shadow-sm">
-      <div className="mb-6 space-y-2">
-        <h1 className="text-2xl font-semibold text-text-primary">
+    <section className="rounded-sm border border-border-primary bg-surface-primary p-6 shadow-sm">
+      <div className="mb-6 space-y-4">
+        <BackButton
+          onClick={() => navigate('/admin/category-options')}
+          label="Back"
+        />
+
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">
+          Admin
+        </p>
+        <h1 className="mt-2 text-2xl font-semibold text-text-primary">
           {CATEGORY_OPTIONS_TEXTS.CREATE_TITLE}
         </h1>
-        <p className="text-sm text-text-secondary">
-          {CATEGORY_OPTIONS_TEXTS.FORM_SUBTITLE}
+        <p className="mt-2 text-sm leading-6 text-text-secondary">
+          {CATEGORY_OPTIONS_TEXTS.CREATE_SUBTITLE}
         </p>
       </div>
 
       <CategoryOptionsForm
-        key={formKey}
-        defaultValues={createEmptyCategoryOptionFormValues()}
+        defaultValues={createEmptyCategoryOptionsFormValues()}
         onSubmit={handleSubmit}
-        submitLabel={CATEGORY_OPTIONS_TEXTS.SAVE_CHANGES}
+        submitLabel={CATEGORY_OPTIONS_TEXTS.SAVE_OPTIONS}
         isSubmitting={isPending}
+        mode="create"
       />
-    </div>
+    </section>
   );
 };
 

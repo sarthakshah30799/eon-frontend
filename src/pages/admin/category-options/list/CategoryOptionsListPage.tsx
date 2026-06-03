@@ -1,7 +1,7 @@
 import { CategoryOptionsListView } from '@/modules/categoryOptions';
 
-const CategoryOptionsPage = () => {
+const CategoryOptionsListPage = () => {
   return <CategoryOptionsListView />;
 };
 
-export default CategoryOptionsPage;
+export default CategoryOptionsListPage;

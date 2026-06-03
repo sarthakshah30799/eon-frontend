@@ -4,16 +4,15 @@ import type {
   IBranchProfile,
   ICreateBranchProfile,
 } from '@/modules/branchProfile/types';
+import type { ICountryProfile } from '@/modules/countryProfile/types/countryProfileTypes';
+import type { IStateProfile } from '@/modules/stateProfile/types/stateProfileTypes';
+import type { ICategoryOption } from '@/types/categoryOptionTypes';
 
 interface BackendBranch {
   id: string;
   company_id?: string | null;
-  countryId?: string | null;
-  countryCode?: string | null;
-  countryName?: string | null;
-  stateId?: string | null;
-  stateCode?: string | null;
-  stateName?: string | null;
+  country?: ICountryProfile | null;
+  state?: IStateProfile | null;
   code: string;
   branchNumber: number;
   address1: string;
@@ -29,7 +28,7 @@ interface BackendBranch {
   contactNo?: string | null;
   branchEmail?: string | null;
   aeonBranchLic?: string | null;
-  locationType?: string | null;
+  locationType?: ICategoryOption | null;
   cashHolding?: number | null;
   cashHoldingTemp?: number | null;
   currHolding?: number | null;
@@ -44,12 +43,8 @@ interface BackendBranch {
 const mapBackendToFrontend = (branch: BackendBranch): IBranchProfile => {
   return {
     id: branch.id,
-    countryId: branch.countryId || '',
-    countryCode: branch.countryCode || '',
-    countryName: branch.countryName || '',
-    stateId: branch.stateId || '',
-    stateCode: branch.stateCode || '',
-    stateName: branch.stateName || '',
+    country: branch.country || null,
+    state: branch.state || null,
     code: branch.code || '',
     branchNumber: branch.branchNumber !== undefined ? String(branch.branchNumber) : '',
     address1: branch.address1 || '',
@@ -65,7 +60,7 @@ const mapBackendToFrontend = (branch: BackendBranch): IBranchProfile => {
     contactNo: branch.contactNo || '',
     branchEmail: branch.branchEmail || '',
     aeonBranchLic: branch.aeonBranchLic || '',
-    locationType: branch.locationType || '',
+    locationType: branch.locationType || null,
     cashHolding: branch.cashHolding !== null ? String(branch.cashHolding) : '0',
     cashHoldingTemp: branch.cashHoldingTemp !== null ? String(branch.cashHoldingTemp) : '0',
     currHolding: branch.currHolding !== null ? String(branch.currHolding) : '0',

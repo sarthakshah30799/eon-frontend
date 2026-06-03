@@ -35,8 +35,8 @@ export const createEmptyBranchProfileFormValues = (): ICreateBranchProfile => ({
 export const mapRecordToFormValues = (
   record: IBranchProfile
 ): ICreateBranchProfile => ({
-  countryId: record.countryId || '',
-  stateId: record.stateId || '',
+  countryId: record.country?.id || '',
+  stateId: record.state?.id || '',
   code: record.code || '',
   branchNumber: record.branchNumber || '',
   address1: record.address1 || '',
@@ -52,7 +52,10 @@ export const mapRecordToFormValues = (
   contactNo: record.contactNo || '',
   branchEmail: record.branchEmail || '',
   aeonBranchLic: record.aeonBranchLic || '',
-  locationType: record.locationType || '',
+  locationType:
+    typeof record.locationType === 'string'
+      ? record.locationType
+      : record.locationType?.id || '',
   cashHolding: record.cashHolding || '0',
   cashHoldingTemp: record.cashHoldingTemp || '0',
   currHolding: record.currHolding || '0',
@@ -69,13 +72,33 @@ export const mapFormValuesToRecord = (
   updatedAt: string
 ): IBranchProfile => ({
   id,
-  countryCode: '',
-  countryName: '',
-  stateCode: '',
-  stateName: '',
+  country: null,
+  state: null,
   createdAt,
   updatedAt,
-  ...values,
+  code: values.code,
+  branchNumber: values.branchNumber,
+  address1: values.address1,
+  address2: values.address2,
+  address3: values.address3,
+  city: values.city,
+  gstState: values.gstState,
+  pinCode: values.pinCode,
+  gstNo: values.gstNo,
+  fxRegNo: values.fxRegNo,
+  fxRegDate: values.fxRegDate,
+  contactName: values.contactName,
+  contactNo: values.contactNo,
+  branchEmail: values.branchEmail,
+  aeonBranchLic: values.aeonBranchLic,
+  locationType: null,
+  cashHolding: values.cashHolding,
+  cashHoldingTemp: values.cashHoldingTemp,
+  currHolding: values.currHolding,
+  currHoldingTemp: values.currHoldingTemp,
+  isHeadOffice: values.isHeadOffice,
+  isActive: values.isActive,
+  connectCounterIds: values.connectCounterIds,
 });
 
 export const toBranchAttachedToOptions = (

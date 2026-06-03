@@ -46,7 +46,11 @@ const BranchProfileFormFields = ({
     name: 'countryId',
   });
   const previousCountryIdRef = useRef<string>(countryId);
-  const { data: counterProfiles = [] } = useListCounterProfiles();
+  const {
+    data: counterProfiles = [],
+    isLoading: isCountersLoading,
+    isFetching: isCountersFetching,
+  } = useListCounterProfiles();
 
   useEffect(() => {
     if (previousCountryIdRef.current !== countryId) {
@@ -211,6 +215,7 @@ const BranchProfileFormFields = ({
             placeholder="Select counters to link"
             loadOptions={connectedCounterLoadOptions}
             pagination={false}
+            isLoading={isCountersLoading || isCountersFetching}
             disabled={isSubmitting}
             isMulti
             closeMenuOnSelect={false}

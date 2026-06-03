@@ -1,3 +1,7 @@
+import type { ICategoryOption } from '@/types/categoryOptionTypes';
+import type { ICountryProfile } from '@/modules/countryProfile/types/countryProfileTypes';
+import type { IStateProfile } from '@/modules/stateProfile/types/stateProfileTypes';
+
 export interface IBranchProfileOption {
   value: string;
   label: string;
@@ -5,12 +9,40 @@ export interface IBranchProfileOption {
 
 export interface IBranchProfile {
   id: string;
+  country: ICountryProfile | null;
+  state: IStateProfile | null;
+  code: string;
+  branchNumber: string;
+  address1: string;
+  address2: string;
+  address3: string;
+  city: string;
+  gstState: string;
+  pinCode: string;
+  gstNo: string;
+  fxRegNo: string;
+  fxRegDate: string;
+  contactName: string;
+  contactNo: string;
+  branchEmail: string;
+  aeonBranchLic: string;
+  locationType: ICategoryOption | null;
+  cashHolding: string;
+  cashHoldingTemp: string;
+  currHolding: string;
+  currHoldingTemp: string;
+  isHeadOffice: boolean;
+  isActive: boolean;
+  connectCounterIds: string[];
+  createdAt: string;
+  updatedAt: string;
+  createdBy?: string;
+  updatedBy?: string;
+}
+
+export interface ICreateBranchProfile {
   countryId: string;
-  countryCode: string;
-  countryName: string;
   stateId: string;
-  stateCode: string;
-  stateName: string;
   code: string;
   branchNumber: string;
   address1: string;
@@ -34,24 +66,7 @@ export interface IBranchProfile {
   isHeadOffice: boolean;
   isActive: boolean;
   connectCounterIds: string[];
-  createdAt: string;
-  updatedAt: string;
-  createdBy?: string;
-  updatedBy?: string;
 }
-
-export type ICreateBranchProfile = Omit<
-  IBranchProfile,
-  | 'id'
-  | 'countryCode'
-  | 'countryName'
-  | 'stateCode'
-  | 'stateName'
-  | 'createdAt'
-  | 'updatedAt'
-  | 'createdBy'
-  | 'updatedBy'
->;
 
 export type IUpdateBranchProfile = Partial<ICreateBranchProfile>;
 

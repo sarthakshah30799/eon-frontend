@@ -25,4 +25,9 @@ export interface ICreateCategoryOption {
   isActive?: boolean;
 }
 
+export interface ICreateCategoryOptionBulkEntry {
+  value: string;
+  label: string;
+}
+
 export type IUpdateCategoryOption = Partial<ICreateCategoryOption>;

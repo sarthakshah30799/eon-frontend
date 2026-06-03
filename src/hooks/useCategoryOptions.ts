@@ -5,6 +5,7 @@ import type { AsyncSelectOption, AsyncSelectResponse } from '@/components/ui';
 import type {
   ICategoryOption,
   CategoryOptionCode,
+  ICreateCategoryOption,
 } from '@/types/categoryOptionTypes';
 
 const CATEGORY_OPTIONS_STALE_TIME = 5 * 60 * 1000;
@@ -37,6 +38,15 @@ const createQueryKey = (code: CategoryOptionCode) => [
   code.trim().toLowerCase(),
 ];
 
+const sortCategoryOptions = (options: ICategoryOption[]) =>
+  [...options].sort((left, right) => {
+    if (left.sortOrder !== right.sortOrder) {
+      return left.sortOrder - right.sortOrder;
+    }
+
+    return left.label.localeCompare(right.label);
+  });
+
 export const useCategoryOptions = (code: CategoryOptionCode) => {
   const normalizedCode = code.trim() as CategoryOptionCode;
   const queryClient = useQueryClient();
@@ -68,41 +78,65 @@ export const useCategoryOptions = (code: CategoryOptionCode) => {
     [normalizedCode, queryClient, queryKey]
   );
 
-  const createOption = useCallback(
-    async (inputValue: string, label?: string): Promise<AsyncSelectOption> => {
-      const trimmedValue = inputValue.trim();
-      const trimmedLabel = (label ?? inputValue).trim();
+  const createOptions = useCallback(
+    async (
+      options: Array<
+        Pick<ICreateCategoryOption, 'value' | 'label' | 'sortOrder' | 'isActive'>
+      >
+    ): Promise<AsyncSelectOption[]> => {
+      const payload = options
+        .map(option => ({
+          code: normalizedCode,
+          value: option.value.trim(),
+          label: option.label.trim(),
+          sortOrder: option.sortOrder ?? 0,
+          isActive: option.isActive ?? true,
+        }))
+        .filter(option => Boolean(option.value));
 
-      if (!trimmedValue) {
+      if (payload.length === 0) {
         throw new Error('Option value is required');
       }
 
-      const created = await categoryOptionsApi.createCategoryOption({
-        code: normalizedCode,
-        value: trimmedValue,
-        label: trimmedLabel,
-        sortOrder: 0,
-        isActive: true,
-      });
+      const created = await categoryOptionsApi.bulkUpsertCategoryOptions(
+        payload
+      );
 
       queryClient.setQueryData<ICategoryOption[]>(queryKey, previous => {
-        const nextOptions = [
-          ...(previous ?? []).filter(option => option.id !== created.id),
-          created,
-        ];
+        const nextOptionsMap = new Map<string, ICategoryOption>();
 
-        return nextOptions.sort((left, right) => {
-          if (left.sortOrder !== right.sortOrder) {
-            return left.sortOrder - right.sortOrder;
-          }
-
-          return left.label.localeCompare(right.label);
+        (previous ?? []).forEach(option => {
+          nextOptionsMap.set(option.id, option);
         });
+
+        created.forEach(option => {
+          nextOptionsMap.set(option.id, option);
+        });
+
+        return sortCategoryOptions(Array.from(nextOptionsMap.values()));
       });
 
-      return toAsyncSelectOption(created);
+      return created.map(toAsyncSelectOption);
     },
     [normalizedCode, queryClient, queryKey]
+  );
+
+  const createOption = useCallback(
+    async (inputValue: string, label?: string): Promise<AsyncSelectOption> => {
+      const [createdOption] = await createOptions([
+        {
+          value: inputValue,
+          label: label ?? inputValue,
+        },
+      ]);
+
+      if (!createdOption) {
+        throw new Error('Failed to create category option');
+      }
+
+      return createdOption;
+    },
+    [createOptions]
   );
 
   return {
@@ -112,6 +146,7 @@ export const useCategoryOptions = (code: CategoryOptionCode) => {
     ),
     loadOptions,
     createOption,
+    createOptions,
     isLoading: query.isLoading,
   };
 };

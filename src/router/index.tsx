@@ -90,8 +90,14 @@ const CounterProfileEditPage = lazy(
   () =>
     import('../pages/master/system-setups/counter-profile/edit/[id]/CounterProfileEditPage')
 );
-const CategoryOptionsPage = lazy(
-  () => import('../pages/admin/category-options/CategoryOptionsPage')
+const CategoryOptionsListPage = lazy(
+  () => import('../pages/admin/category-options/list')
+);
+const CategoryOptionsCreatePage = lazy(
+  () => import('../pages/admin/category-options/create')
+);
+const CategoryOptionsEditPage = lazy(
+  () => import('../pages/admin/category-options/edit/[id]')
 );
 const MenuPage = lazy(() => import('../pages/admin/menu/MenuPage'));
 const MasterPagesPage = lazy(
@@ -268,7 +274,23 @@ const router = createBrowserRouter([
     path: '/admin/category-options',
     element: (
       <ProtectedLayout>
-        <CategoryOptionsPage />
+        <CategoryOptionsListPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/category-options/create',
+    element: (
+      <ProtectedLayout>
+        <CategoryOptionsCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/category-options/edit/:code',
+    element: (
+      <ProtectedLayout>
+        <CategoryOptionsEditPage />
       </ProtectedLayout>
     ),
   },

@@ -9,6 +9,13 @@ const normalizeCode = (code: CategoryOptionCode): CategoryOptionCode =>
   code.trim() as CategoryOptionCode;
 
 export const categoryOptionsApi = {
+  getCategoryOptions: async (): Promise<ICategoryOption[]> => {
+    const res = await apiClient.get<ICategoryOption[]>('/select-options/all');
+
+    if (res.error) throw new Error(res.error);
+    return res.data ?? [];
+  },
+
   getCategoryOptionsByCode: async (
     code: CategoryOptionCode
   ): Promise<ICategoryOption[]> => {
@@ -48,5 +55,65 @@ export const categoryOptionsApi = {
     }
 
     return res.data;
+  },
+
+  getCategoryOptionById: async (id: string): Promise<ICategoryOption> => {
+    const res = await apiClient.get<ICategoryOption>(`/select-options/item/${id}`);
+
+    if (res.error) throw new Error(res.error);
+    if (!res.data) {
+      throw new Error('Failed to load category option');
+    }
+
+    return res.data;
+  },
+
+  updateCategoryOption: async (
+    id: string,
+    values: ICreateCategoryOption
+  ): Promise<ICategoryOption> => {
+    const payload: ICreateCategoryOption = {
+      code: normalizeCode(values.code),
+      value: values.value.trim(),
+      label: values.label.trim(),
+      sortOrder: values.sortOrder ?? 0,
+      isActive: values.isActive ?? true,
+    };
+
+    const res = await apiClient.put<ICategoryOption>(
+      `/select-options/${id}`,
+      payload
+    );
+
+    if (res.error) throw new Error(res.error);
+    if (!res.data) {
+      throw new Error('Failed to update category option');
+    }
+
+    return res.data;
+  },
+
+  bulkUpsertCategoryOptions: async (
+    values: ICreateCategoryOption[]
+  ): Promise<ICategoryOption[]> => {
+    const payload = values.map(option => ({
+      code: normalizeCode(option.code),
+      value: option.value.trim(),
+      label: option.label.trim(),
+      sortOrder: option.sortOrder ?? 0,
+      isActive: option.isActive ?? true,
+    }));
+
+    if (payload.length === 0) {
+      return [];
+    }
+
+    const res = await apiClient.post<ICategoryOption[]>(
+      '/select-options/bulk-upsert',
+      payload
+    );
+
+    if (res.error) throw new Error(res.error);
+    return res.data ?? [];
   },
 };

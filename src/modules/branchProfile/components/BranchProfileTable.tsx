@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PencilSquareIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button1';
@@ -29,31 +30,40 @@ export const BranchProfileTable = ({
 }: BranchProfileTableProps) => {
   const navigate = useNavigate();
 
-  const rows: BranchProfileTableRow[] = branches.map(branch => {
-    const statusParts: string[] = [];
-    if (branch.isActive) {
-      statusParts.push('Active');
-    } else {
-      statusParts.push('Inactive');
-    }
-    if (branch.isHeadOffice) {
-      statusParts.push('Head Office');
-    }
+  const rows: BranchProfileTableRow[] = useMemo(
+    () =>
+      branches.map(branch => {
+        const statusParts: string[] = [];
 
-    return {
-      id: branch.id,
-      code: branch.code || '',
-      branchNumber: branch.branchNumber || '',
-      country: branch.countryName || '-',
-      state: branch.stateName || '-',
-      city: branch.city || '',
-      contactName: branch.contactName || '-',
-      contactNo: branch.contactNo || '-',
-      branchEmail: branch.branchEmail || '-',
-      locationType: branch.locationType || '-',
-      status: statusParts.join(' / '),
-    };
-  });
+        if (branch.isActive) {
+          statusParts.push('Active');
+        } else {
+          statusParts.push('Inactive');
+        }
+
+        if (branch.isHeadOffice) {
+          statusParts.push('Head Office');
+        }
+
+        return {
+          id: branch.id,
+          code: branch.code || '',
+          branchNumber: branch.branchNumber || '',
+          country: branch.country?.name || '-',
+          state: branch.state?.name || '-',
+          city: branch.city || '',
+          contactName: branch.contactName || '-',
+          contactNo: branch.contactNo || '-',
+          branchEmail: branch.branchEmail || '-',
+          locationType:
+            typeof branch.locationType === 'string'
+              ? branch.locationType
+              : branch.locationType?.label ?? '-',
+          status: statusParts.join(' / '),
+        };
+      }),
+    [branches]
+  );
 
   const columns: TableColumnDef<BranchProfileTableRow>[] = [
     { accessorKey: 'code', header: 'Branch Code' },

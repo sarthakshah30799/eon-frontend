@@ -34,6 +34,9 @@ const flattenOptions = (
   return response.options;
 };
 
+const normalizeComparableValue = (value: unknown) =>
+  String(value ?? '').trim().toLowerCase();
+
 export const FormFieldSelect = ({
   name,
   label,
@@ -84,7 +87,9 @@ export const FormFieldSelect = ({
           const nextOptions = selectedValues
             .map(selectedValue =>
               options.find(
-                option => String(option.value) === String(selectedValue)
+                option =>
+                  normalizeComparableValue(option.value) ===
+                  normalizeComparableValue(selectedValue)
               )
             )
             .filter((option): option is AsyncSelectOption => Boolean(option));
@@ -117,7 +122,9 @@ export const FormFieldSelect = ({
         const options = flattenOptions(response);
         const nextOption =
           options.find(
-            option => String(option.value) === String(field.value)
+            option =>
+              normalizeComparableValue(option.value) ===
+              normalizeComparableValue(field.value)
           ) ?? null;
 
         if (isActive) {
@@ -174,9 +181,9 @@ export const FormFieldSelect = ({
       return;
     }
 
-    setSelectedOption(createdOption);
-    field.onChange(createdOption.value);
-  };
+      setSelectedOption(createdOption);
+      field.onChange(createdOption.value);
+    };
 
   return (
     <AsyncSelect

@@ -2,10 +2,10 @@ import { useMemo, useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { menuApi, userRoleApi } from '@/api';
 import { useMasterPages } from '@/lib';
-import type { MenuRecord } from '@/api/menu/menu.api';
 import type { IMasterPageTreeNode } from '@/modules/masterPages/types';
 import { USER_RIGHTS_PERMISSION_COLUMNS } from '../constants';
 import toast from 'react-hot-toast';
+import type { IMenu } from '@/types/menuTypes';
 import type {
   UserRightsPermissionState,
   UserRightsRowState,
@@ -74,7 +74,7 @@ const isExcludedProfile = (name: string, path?: string) => {
   );
 };
 
-const filterMenuRecord = (menu: MenuRecord): MenuRecord | null => {
+const filterMenuRecord = (menu: IMenu): IMenu | null => {
   if (isExcludedProfile(menu.name, menu.path ?? undefined)) {
     return null;
   }
@@ -82,7 +82,7 @@ const filterMenuRecord = (menu: MenuRecord): MenuRecord | null => {
   if (copy.children && copy.children.length > 0) {
     copy.children = copy.children
       .map(filterMenuRecord)
-      .filter((c): c is MenuRecord => c !== null);
+      .filter((c): c is IMenu => c !== null);
   }
   return copy;
 };
@@ -170,9 +170,9 @@ export const useUserRightsMatrix = (roleId: string | null): UseUserRightsMatrixR
 
   const treeNodes = useMemo<UserRightsTreeNode[]>(
     () => {
-      const filteredMenus = (menuTree as MenuRecord[])
+      const filteredMenus = (menuTree as IMenu[])
         .map(filterMenuRecord)
-        .filter((m): m is MenuRecord => m !== null);
+        .filter((m): m is IMenu => m !== null);
 
       const filteredPages = (createdPages as IMasterPageTreeNode[])
         .filter(p => !isExcludedProfile(p.pageName, p.slug));

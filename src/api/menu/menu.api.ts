@@ -1,33 +1,53 @@
 import { apiClient } from '../api';
-
-export interface MenuRecord {
-  id: string;
-  name: string;
-  path: string | null;
-  icon: string | null;
-  parentId: string | null;
-  sortOrder: number;
-  isActive: boolean;
-  children?: MenuRecord[];
-}
+import type { ICreateMenu, IMenu, IUpdateMenu } from '@/types/menuTypes';
 
 export const menuApi = {
   getMenuTree: async () => {
-    return apiClient.get<MenuRecord[]>('/menus/tree');
+    const res = await apiClient.get<IMenu[]>('/menus/tree');
+    if (res.error) throw new Error(res.error);
+    return res;
   },
   getMenus: async () => {
-    return apiClient.get<MenuRecord[]>('/menus');
+    const res = await apiClient.get<IMenu[]>('/menus');
+    if (res.error) throw new Error(res.error);
+    return res;
   },
   getMenuById: async (id: string) => {
-    return apiClient.get<MenuRecord>(`/menus/${id}`);
+    const res = await apiClient.get<IMenu>(`/menus/${id}`);
+    if (res.error) throw new Error(res.error);
+    return res;
   },
-  createMenu: async (data: Partial<MenuRecord>) => {
-    return apiClient.post<MenuRecord>('/menus', data);
+  createMenu: async (data: ICreateMenu) => {
+    const payload = {
+      ...data,
+      path: data.path.trim() || undefined,
+      icon: data.icon.trim() || undefined,
+      parentId: data.parentId || undefined,
+    };
+
+    const res = await apiClient.post<IMenu>('/menus', payload);
+    if (res.error) throw new Error(res.error);
+    if (!res.data) throw new Error('Failed to create menu');
+    return res.data;
   },
-  updateMenu: async (id: string, data: Partial<MenuRecord>) => {
-    return apiClient.put<MenuRecord>(`/menus/${id}`, data);
+  updateMenu: async (id: string, data: IUpdateMenu) => {
+    const payload = {
+      ...data,
+      path:
+        data.path !== undefined ? data.path.trim() || undefined : undefined,
+      icon:
+        data.icon !== undefined ? data.icon.trim() || undefined : undefined,
+      parentId: data.parentId || undefined,
+    };
+
+    const res = await apiClient.put<IMenu>(`/menus/${id}`, payload);
+    if (res.error) throw new Error(res.error);
+    if (!res.data) throw new Error('Failed to update menu');
+    return res.data;
   },
   deleteMenu: async (id: string) => {
-    return apiClient.delete<{ message: string }>(`/menus/${id}`);
+    const res = await apiClient.delete<{ message: string }>(`/menus/${id}`);
+    if (res.error) throw new Error(res.error);
+    return res;
   },
 };

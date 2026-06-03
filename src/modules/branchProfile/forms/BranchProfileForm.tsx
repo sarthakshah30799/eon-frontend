@@ -5,12 +5,14 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { Button } from '@/components/ui/button1';
 import {
   Form,
+  FormFieldCategoryOption,
   FormFieldCheckbox,
   FormFieldCountryDropdown,
   FormFieldInput,
   FormFieldSelect,
   FormFieldStateDropdown,
 } from '@/components/forms';
+import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import { branchProfileSchema } from '../schema';
 import type { ICreateBranchProfile, IBranchProfileOption } from '../types';
 import { useListCounterProfiles } from '@/modules/counterProfile/hooks';
@@ -164,9 +166,11 @@ const BranchProfileFormFields = ({
             label="AEON Branch Lic"
             disabled={isSubmitting}
           />
-          <FormFieldInput
+          <FormFieldCategoryOption
             name="locationType"
             label="Location Type"
+            code={CategoryOptionCodeEnum.LocationType}
+            placeholder="Select location type"
             disabled={isSubmitting}
           />
           <FormFieldInput

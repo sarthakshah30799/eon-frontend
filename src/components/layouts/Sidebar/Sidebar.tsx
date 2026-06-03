@@ -59,6 +59,16 @@ const ADMIN_DROPDOWN_SECTION: SidebarSection = {
       label: 'Counter Profile',
       path: '/admin/counter-profile',
     },
+    {
+      id: 'admin-category-options',
+      label: 'Category Options',
+      path: '/admin/category-options',
+    },
+    {
+      id: 'admin-menu-management',
+      label: 'Menu Management',
+      path: '/admin/menu-management',
+    },
   ],
 };
 
@@ -319,7 +329,10 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
       return user?.permissions?.[path]?.includes('view') === true;
     };
 
-    const dynamicSections = menuTree
+    const adminRoot = menuTree.find(root => root.isAdmin);
+    const nonAdminRoots = menuTree.filter(root => !root.isAdmin);
+
+    const dynamicSections = nonAdminRoots
       .map(root => {
         const items = (root.children || [])
           .filter(
@@ -354,7 +367,13 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
             return {
               id: group.id,
               label: group.name,
-              children: mappedChildren.map(({ visible, ...rest }) => rest),
+              children: mappedChildren.map(item => {
+                const { visible, ...rest } = item as SidebarMenuItem & {
+                  visible?: boolean;
+                };
+                void visible;
+                return rest;
+              }),
               visible: mappedChildren.length > 0,
             };
           })
@@ -362,15 +381,52 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
 
         return {
           title: root.name,
-          items: items.map(({ visible, ...rest }) => rest as SidebarMenuItem),
+          items: items.map(item => {
+            const { visible, ...rest } = item as SidebarMenuItem & {
+              visible?: boolean;
+            };
+            void visible;
+            return rest as SidebarMenuItem;
+          }),
           visible: items.length > 0,
         };
       })
       .filter(section => section.visible)
-      .map(({ visible, ...rest }) => rest as SidebarSection);
+      .map(section => {
+        const { visible, ...rest } = section as SidebarSection & {
+          visible?: boolean;
+        };
+        void visible;
+        return rest as SidebarSection;
+      });
 
     if (isAdminUser) {
-      return [ADMIN_DROPDOWN_SECTION, ...dynamicSections];
+      const adminSection = adminRoot
+        ? {
+            title: adminRoot.name,
+            items: (adminRoot.children || []).map(group => {
+              if (!group.children || group.children.length === 0) {
+                return {
+                  id: group.id,
+                  label: group.name,
+                  path: group.path || undefined,
+                };
+              }
+
+              return {
+                id: group.id,
+                label: group.name,
+                children: group.children.map(item => ({
+                  id: item.id,
+                  label: item.name,
+                  path: item.path || undefined,
+                })),
+              };
+            }),
+          }
+        : ADMIN_DROPDOWN_SECTION;
+
+      return [adminSection, ...dynamicSections];
     }
 
     return dynamicSections;

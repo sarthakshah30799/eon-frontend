@@ -1,7 +1,12 @@
 import type { SubmitErrorHandler } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Button } from '@/components/ui/button1';
-import { Form, FormFieldCheckbox, FormFieldInput, FormFieldSelect } from '@/components/forms';
+import {
+  Form,
+  FormFieldCheckbox,
+  FormFieldInput,
+  FormFieldSelect,
+} from '@/components/forms';
 import type { AsyncSelectResponse } from '@/components/ui';
 import { countryProfileSchema } from '../schema';
 import { COUNTRY_PROFILE_TEXTS, riskCategoryOptions } from '../constants';

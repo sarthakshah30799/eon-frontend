@@ -1,7 +1,6 @@
 import type { AsyncSelectResponse } from '@/components/ui';
 import type {
   IUserProfileOption,
-  IUserProfileControlSetupItem,
 } from '../types';
 
 
@@ -45,16 +44,6 @@ export const PURPOSE_OPTIONS: IUserProfileOption[] = [
   { value: 'purpose-1', label: 'Payroll' },
   { value: 'purpose-2', label: 'Travel' },
   { value: 'purpose-3', label: 'Trade Settlement' },
-];
-
-export const CONTROL_SETUP_ITEMS: IUserProfileControlSetupItem[] = [
-  { key: 'isActive', label: 'Is Active' },
-  { key: 'isAdministrator', label: 'Is Administrator' },
-  { key: 'miscLimitAuthorization', label: 'Misc Limit Authorization' },
-  { key: 'canClearCounter', label: 'Can Clear Counter' },
-  { key: 'complianceAuthorization', label: 'Compliance Authorization' },
-  { key: 'dataEntryAuthorization', label: 'Data Entry Authorization' },
-  { key: 'creditLimitAuthorization', label: 'Credit Limit Authorization' },
 ];
 
 export const createStaticLoadOptions =

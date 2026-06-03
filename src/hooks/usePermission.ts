@@ -42,6 +42,19 @@ export const usePermission = (path?: string): UsePermissionResult => {
       };
     }
 
+    if (user.isAdmin) {
+      return {
+        canAdd: true,
+        canModify: true,
+        canDelete: true,
+        canView: true,
+        canExport: true,
+        canAuthorize: true,
+        canReject: true,
+        hasAnyPermission: true,
+      };
+    }
+
     if (!path) {
       return {
         canAdd: false,

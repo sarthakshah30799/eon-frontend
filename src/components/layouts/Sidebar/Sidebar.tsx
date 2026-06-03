@@ -41,37 +41,6 @@ const isExcludedProfile = (name: string, path?: string) => {
   );
 };
 
-const ADMIN_DROPDOWN_SECTION: SidebarSection = {
-  title: 'Admin',
-  items: [
-    {
-      id: 'admin-company-profile',
-      label: 'Company Profile',
-      path: '/admin/company-profile',
-    },
-    {
-      id: 'admin-branch-profile',
-      label: 'Branch Profile',
-      path: '/admin/branch-profile',
-    },
-    {
-      id: 'admin-counter-profile',
-      label: 'Counter Profile',
-      path: '/admin/counter-profile',
-    },
-    {
-      id: 'admin-category-options',
-      label: 'Category Options',
-      path: '/admin/category-options',
-    },
-    {
-      id: 'admin-menu-management',
-      label: 'Menu Management',
-      path: '/admin/menu-management',
-    },
-  ],
-};
-
 const sidebarSectionTriggerClass = (isActive = false) =>
   [
     'w-full justify-between rounded-none! border-0 border-b-1 border-white! px-4 py-3 text-left text-sm font-semibold shadow-none! transition hover:border-primary-200 hover:bg-white hover:text-primary-700 focus-visible:ring-primary-300',
@@ -320,7 +289,7 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     const isAdminUser = user?.isAdmin === true;
 
     if (!menuTree || menuTree.length === 0) {
-      return isAdminUser ? [ADMIN_DROPDOWN_SECTION] : [];
+      return [];
     }
 
     const hasViewPermission = (path?: string) => {
@@ -329,10 +298,11 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
       return user?.permissions?.[path]?.includes('view') === true;
     };
 
-    const adminRoot = menuTree.find(root => root.isAdmin);
-    const nonAdminRoots = menuTree.filter(root => !root.isAdmin);
+    const roots = isAdminUser
+      ? menuTree
+      : menuTree.filter(root => !root.isAdmin);
 
-    const dynamicSections = nonAdminRoots
+    return roots
       .map(root => {
         const items = (root.children || [])
           .filter(
@@ -399,36 +369,6 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
         void visible;
         return rest as SidebarSection;
       });
-
-    if (isAdminUser) {
-      const adminSection = adminRoot
-        && {
-            title: adminRoot.name,
-            items: (adminRoot.children || []).map(group => {
-              if (!group.children || group.children.length === 0) {
-                return {
-                  id: group.id,
-                  label: group.name,
-                  path: group.path || undefined,
-                };
-              }
-
-              return {
-                id: group.id,
-                label: group.name,
-                children: group.children.map(item => ({
-                  id: item.id,
-                  label: item.name,
-                  path: item.path || undefined,
-                })),
-              };
-            }),
-          };
-
-      return adminSection ? [adminSection, ...dynamicSections] : dynamicSections;
-    }
-
-    return dynamicSections;
   }, [menuTree, user]);
 
   const createdPageEntries = useMemo<SidebarMenuItem[]>(

@@ -53,12 +53,19 @@ export const MenuForm = ({
               disabled={isSubmitting}
             />
           </div>
-          <FormFieldInput name="name" label="Menu Name" disabled={isSubmitting} />
+          <FormFieldInput
+            name="name"
+            label="Menu Name"
+            disabled={isSubmitting}
+            valueTransform="none"
+          />
           <FormFieldInput
             name="path"
             label="Route Path"
             disabled={isSubmitting}
             placeholder="/admin/menu-management"
+            valueTransform="none"
+
           />
           <FormFieldInput
             name="icon"

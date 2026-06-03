@@ -1,6 +1,22 @@
 import type { AsyncSelectOption } from '@/components/ui';
 import type { ICreateMenu, IMenu } from '@/types/menuTypes';
 
+export const normalizeMenuPath = (path: string): string => {
+  const trimmed = path.trim();
+
+  if (!trimmed) {
+    return '';
+  }
+
+  const normalized = trimmed
+    .split('/')
+    .map(segment => segment.trim().toLowerCase().replace(/\s+/g, '-'))
+    .join('/')
+    .replace(/\/{2,}/g, '/');
+
+  return normalized.startsWith('/') ? normalized : `/${normalized}`;
+};
+
 export const createEmptyMenuValues = (): ICreateMenu => ({
   isAdmin: false,
   name: '',
@@ -16,7 +32,7 @@ export const mapMenuToCreateValues = (
 ): ICreateMenu => ({
   isAdmin: menu.isAdmin,
   name: menu.name,
-  path: menu.path ?? '',
+  path: menu.path ? normalizeMenuPath(menu.path) : '',
   icon: menu.icon ?? '',
   parentId: menu.parentId,
   sortOrder: menu.sortOrder,

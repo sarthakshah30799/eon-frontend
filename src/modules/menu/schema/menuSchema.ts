@@ -1,4 +1,5 @@
 import * as yup from 'yup';
+import { normalizeMenuPath } from '../utils/menuUtils';
 
 export const menuSchema = yup.object({
   isAdmin: yup.boolean().default(false),
@@ -10,6 +11,7 @@ export const menuSchema = yup.object({
   path: yup
     .string()
     .trim()
+    .transform(value => (value ? normalizeMenuPath(value) : ''))
     .max(500, 'Menu path must be at most 500 characters')
     .default(''),
   icon: yup

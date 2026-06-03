@@ -6,6 +6,7 @@ import { Input } from '../../ui';
 interface FormFieldInputProps extends InputHTMLAttributes<HTMLInputElement> {
   name: string;
   label?: string;
+  valueTransform?: 'uppercase' | 'none';
 }
 
 export const FormFieldInput = ({
@@ -15,6 +16,7 @@ export const FormFieldInput = ({
   type = 'text',
   disabled = false,
   className = '',
+  valueTransform = 'uppercase',
   ...rest
 }: FormFieldInputProps) => {
   const form = useFormContext();
@@ -27,10 +29,10 @@ export const FormFieldInput = ({
     control: form.control,
   });
 
-  const shouldUppercaseValue = type !== 'email' && type !== 'password';
+  const shouldUppercaseValue = type !== "email"  && type !== "password";
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>): void => {
-    const nextValue = shouldUppercaseValue
+    const nextValue = valueTransform === 'uppercase' && shouldUppercaseValue
       ? event.target.value.toUpperCase()
       : event.target.value;
 

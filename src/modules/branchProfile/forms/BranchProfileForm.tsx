@@ -1,12 +1,15 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import type { Resolver } from 'react-hook-form';
+import { useFormContext, useWatch } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Button } from '@/components/ui/button1';
 import {
   Form,
   FormFieldCheckbox,
+  FormFieldCountryDropdown,
   FormFieldInput,
   FormFieldSelect,
+  FormFieldStateDropdown,
 } from '@/components/forms';
 import { branchProfileSchema } from '../schema';
 import type { ICreateBranchProfile, IBranchProfileOption } from '../types';
@@ -35,7 +38,20 @@ const BranchProfileFormFields = ({
 }: {
   isSubmitting?: boolean;
 }) => {
+  const form = useFormContext<ICreateBranchProfile>();
+  const countryId = useWatch({
+    control: form.control,
+    name: 'countryId',
+  });
+  const previousCountryIdRef = useRef<string>(countryId);
   const { data: counterProfiles = [] } = useListCounterProfiles();
+
+  useEffect(() => {
+    if (previousCountryIdRef.current !== countryId) {
+      form.setValue('stateId', '');
+      previousCountryIdRef.current = countryId;
+    }
+  }, [countryId, form]);
 
   const connectedCounterOptions = useMemo(
     () =>
@@ -88,10 +104,18 @@ const BranchProfileFormFields = ({
             label="City"
             disabled={isSubmitting}
           />
-          <FormFieldInput
-            name="state"
-            label="State"
+          <FormFieldCountryDropdown
+            name="countryId"
+            label="Country"
+            placeholder="Select country"
             disabled={isSubmitting}
+          />
+          <FormFieldStateDropdown
+            name="stateId"
+            label="State"
+            placeholder={countryId ? 'Select state' : 'Select country first'}
+            countryId={countryId}
+            disabled={isSubmitting || !countryId}
           />
           <FormFieldInput
             name="gstState"

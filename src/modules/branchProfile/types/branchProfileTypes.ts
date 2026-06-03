@@ -5,13 +5,18 @@ export interface IBranchProfileOption {
 
 export interface IBranchProfile {
   id: string;
+  countryId: string;
+  countryCode: string;
+  countryName: string;
+  stateId: string;
+  stateCode: string;
+  stateName: string;
   code: string;
   branchNumber: string;
   address1: string;
   address2: string;
   address3: string;
   city: string;
-  state: string;
   gstState: string;
   pinCode: string;
   gstNo: string;
@@ -37,7 +42,15 @@ export interface IBranchProfile {
 
 export type ICreateBranchProfile = Omit<
   IBranchProfile,
-  'id' | 'createdAt' | 'updatedAt' | 'createdBy' | 'updatedBy'
+  | 'id'
+  | 'countryCode'
+  | 'countryName'
+  | 'stateCode'
+  | 'stateName'
+  | 'createdAt'
+  | 'updatedAt'
+  | 'createdBy'
+  | 'updatedBy'
 >;
 
 export type IUpdateBranchProfile = Partial<ICreateBranchProfile>;

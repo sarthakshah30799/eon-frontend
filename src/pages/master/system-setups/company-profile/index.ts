@@ -1,2 +1,2 @@
-export { default } from './[id]';
-export { default as CompanyProfilePage } from './[id]';
+export { default } from './list/CompanyProfileListPage';
+export { default as CompanyProfilePage } from './list/CompanyProfileListPage';

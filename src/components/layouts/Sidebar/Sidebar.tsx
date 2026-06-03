@@ -3,8 +3,9 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Dropdown } from '../../ui/dropdown';
 import { useMasterPages } from '../../../lib';
-import { menuApi } from '../../../api';
+import { companyProfileApi, menuApi } from '../../../api';
 import { useAuth } from '../../../lib/AuthContext';
+import type { ICompanyProfile } from '../../../modules/companyProfile/types';
 import type { IMasterPageTreeNode } from '../../../modules/masterPages/types';
 
 interface SidebarProps {
@@ -27,10 +28,6 @@ type SidebarSection = {
   items: SidebarMenuItem[];
 };
 
-
-
-
-
 const isExcludedProfile = (name: string, path?: string) => {
   const lowerName = name.toLowerCase();
   const lowerPath = path?.toLowerCase() || '';
@@ -45,22 +42,22 @@ const isExcludedProfile = (name: string, path?: string) => {
 };
 
 const ADMIN_DROPDOWN_SECTION: SidebarSection = {
-  title: 'Admin Dropdown',
+  title: 'Admin',
   items: [
     {
       id: 'admin-company-profile',
       label: 'Company Profile',
-      path: '/master/system-setups/company-profile/11111111-1111-4111-b111-111111111111',
+      path: '/admin/company-profile',
     },
     {
       id: 'admin-branch-profile',
       label: 'Branch Profile',
-      path: '/master/system-setups/branch-profile',
+      path: '/admin/branch-profile',
     },
     {
       id: 'admin-counter-profile',
       label: 'Counter Profile',
-      path: '/master/system-setups/counter-profile',
+      path: '/admin/counter-profile',
     },
   ],
 };
@@ -99,7 +96,9 @@ const sidebarLeafClass = (isActive = false) =>
       : 'text-white hover:bg-white hover:text-primary-700',
   ].join(' ');
 
-const mapMasterPageNodeToItem = (page: IMasterPageTreeNode): SidebarMenuItem => {
+const mapMasterPageNodeToItem = (
+  page: IMasterPageTreeNode
+): SidebarMenuItem => {
   if (page.children.length === 0) {
     return {
       id: page.id,
@@ -204,7 +203,7 @@ const SidebarMenuList = ({
         const isActive = isMenuItemActive(item, currentPath);
 
         return (
-          <li key={item.id} className="mb-0!">
+          <li key={item.id} className="my-1">
             <button
               type="button"
               className={sidebarLeafClass(isActive)}
@@ -296,7 +295,14 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     },
   });
 
-
+  const { data: company = null } = useQuery({
+    queryKey: ['company-profile-sidebar'],
+    queryFn: async (): Promise<ICompanyProfile | null> => {
+      const response = await companyProfileApi.getCompanyProfiles();
+      if (response.error) throw new Error(response.error);
+      return response.data?.[0] ?? null;
+    },
+  });
 
   const { user } = useAuth();
 
@@ -316,7 +322,9 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     const dynamicSections = menuTree
       .map(root => {
         const items = (root.children || [])
-          .filter(group => !isExcludedProfile(group.name, group.path ?? undefined))
+          .filter(
+            group => !isExcludedProfile(group.name, group.path ?? undefined)
+          )
           .map(group => {
             if (!group.children || group.children.length === 0) {
               const isVisible = hasViewPermission(group.path || undefined);
@@ -329,7 +337,9 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
             }
 
             const mappedChildren = group.children
-              .filter(item => !isExcludedProfile(item.name, item.path ?? undefined))
+              .filter(
+                item => !isExcludedProfile(item.name, item.path ?? undefined)
+              )
               .map(item => {
                 const isVisible = hasViewPermission(item.path ?? undefined);
                 return {
@@ -360,7 +370,7 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
       .map(({ visible, ...rest }) => rest as SidebarSection);
 
     if (isAdminUser) {
-      return [...dynamicSections, ADMIN_DROPDOWN_SECTION];
+      return [ADMIN_DROPDOWN_SECTION, ...dynamicSections];
     }
 
     return dynamicSections;
@@ -391,14 +401,25 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
       <div className="flex h-full flex-col">
         <div className="flex items-center justify-between border-b border-border-primary bg-primary-500 px-5 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-600 to-primary-700">
-              <img src="/favicon.svg" alt="Maraekat logo" className="h-7 w-7" />
+            <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl border border-white/15 bg-white/10">
+              {company?.logo ? (
+                <img
+                  src={company.logo}
+                  alt={company.name}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <img
+                  src="/favicon.svg"
+                  alt="Maraekat logo"
+                  className="h-7 w-7"
+                />
+              )}
             </div>
-            <div>
-              <p className="text-xs font-medium uppercase tracking-[0.24em] text-text-tertiary">
-                Currency Exchange
+            <div className="min-w-0">
+              <p className="truncate text-base font-semibold text-white">
+                {company?.name ?? 'Maraekat FX'}
               </p>
-              <p className="text-base font-semibold text-white">Maraekat FX</p>
             </div>
           </div>
 

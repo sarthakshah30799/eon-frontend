@@ -28,7 +28,7 @@ const UserDetailPage = lazy(
 );
 const CompanyProfilePage = lazy(
   () =>
-    import('../pages/master/system-setups/company-profile/[id]/CompanyProfilePage')
+    import('../pages/master/system-setups/company-profile/list/CompanyProfileListPage')
 );
 const CountryProfileListPage = lazy(
   () =>
@@ -192,6 +192,14 @@ const router = createBrowserRouter([
     ),
   },
   {
+    path: '/admin/company-profile',
+    element: (
+      <ProtectedLayout>
+        <CompanyProfilePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
     path: '/admin/branch-profile',
     element: (
       <ProtectedLayout>
@@ -200,18 +208,42 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/master/system-setups/company-profile/:id',
+    path: '/admin/branch-profile/create',
     element: (
       <ProtectedLayout>
-        <CompanyProfilePage />
+        <BranchProfileCreatePage />
       </ProtectedLayout>
     ),
   },
   {
-    path: '/master/system-setups/company-profile',
+    path: '/admin/branch-profile/edit/:id',
     element: (
       <ProtectedLayout>
-        <CompanyProfilePage />
+        <BranchProfileEditPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/counter-profile',
+    element: (
+      <ProtectedLayout>
+        <CounterProfileListPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/counter-profile/create',
+    element: (
+      <ProtectedLayout>
+        <CounterProfileCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/counter-profile/edit/:id',
+    element: (
+      <ProtectedLayout>
+        <CounterProfileEditPage />
       </ProtectedLayout>
     ),
   },
@@ -264,30 +296,6 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/master/system-setups/branch-profile',
-    element: (
-      <ProtectedLayout>
-        <BranchProfileListPage />
-      </ProtectedLayout>
-    ),
-  },
-  {
-    path: '/master/system-setups/branch-profile/create',
-    element: (
-      <ProtectedLayout>
-        <BranchProfileCreatePage />
-      </ProtectedLayout>
-    ),
-  },
-  {
-    path: '/master/system-setups/branch-profile/edit/:id',
-    element: (
-      <ProtectedLayout>
-        <BranchProfileEditPage />
-      </ProtectedLayout>
-    ),
-  },
-  {
     path: '/master/system-setups/product-profile',
     element: (
       <ProtectedLayout>
@@ -308,30 +316,6 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <ProductProfileEditPage />
-      </ProtectedLayout>
-    ),
-  },
-  {
-    path: '/master/system-setups/counter-profile',
-    element: (
-      <ProtectedLayout>
-        <CounterProfileListPage />
-      </ProtectedLayout>
-    ),
-  },
-  {
-    path: '/master/system-setups/counter-profile/create',
-    element: (
-      <ProtectedLayout>
-        <CounterProfileCreatePage />
-      </ProtectedLayout>
-    ),
-  },
-  {
-    path: '/master/system-setups/counter-profile/edit/:id',
-    element: (
-      <ProtectedLayout>
-        <CounterProfileEditPage />
       </ProtectedLayout>
     ),
   },

@@ -51,7 +51,7 @@ export const CounterProfileListView = () => {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">
-              System Setup
+              Admin
             </p>
             <h1 className="mt-2 text-2xl font-semibold text-text-primary">
               {COUNTER_PROFILE_TEXTS.LIST_TITLE}
@@ -64,9 +64,7 @@ export const CounterProfileListView = () => {
           <Button
             type="button"
             className="rounded-sm"
-            onClick={() =>
-              navigate('/master/system-setups/counter-profile/create')
-            }
+            onClick={() => navigate('/admin/counter-profile/create')}
           >
             {COUNTER_PROFILE_TEXTS.CREATE_COUNTER}
           </Button>

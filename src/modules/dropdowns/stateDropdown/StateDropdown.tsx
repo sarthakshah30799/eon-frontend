@@ -18,6 +18,7 @@ export const StateDropdown = ({
   disabled = false,
   className = '',
   error,
+  countryId,
   createLabel = 'Create',
   onCreateState,
 }: StateDropdownProps) => {
@@ -28,7 +29,7 @@ export const StateDropdown = ({
     useState<StateDropdownOption | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [pendingStateName, setPendingStateName] = useState('');
-  const { loadOptions } = useStateDropdown();
+  const { loadOptions } = useStateDropdown(countryId);
   const { submitStateProfile, isPending: isCreatingState } =
     useCreateStateProfile();
 
@@ -110,9 +111,10 @@ export const StateDropdown = ({
   const createStateDefaultValues = useMemo<ICreateStateProfile>(
     () => ({
       ...createEmptyStateProfileFormValues(),
+      countryId: countryId ?? '',
       name: pendingStateName,
     }),
-    [pendingStateName]
+    [countryId, pendingStateName]
   );
 
   const handleCreateState = async (values: ICreateStateProfile) => {
@@ -148,12 +150,12 @@ export const StateDropdown = ({
     <>
       <AsyncSelect
         label={label}
-        placeholder={placeholder}
-        disabled={disabled}
+        placeholder={countryId ? placeholder : 'Select country first'}
+        disabled={disabled || !countryId}
         className={className}
         loadOptions={loadOptions}
         defaultOptions={defaultOptions}
-        isCreatable
+        isCreatable={Boolean(countryId)}
         isClearable
         value={selectedOption as AsyncSelectOption | null}
         onChange={option => {
@@ -162,6 +164,10 @@ export const StateDropdown = ({
         }}
         formatCreateLabel={inputValue => `${createLabel} "${inputValue}"`}
         onCreateOption={inputValue => {
+          if (!countryId) {
+            return;
+          }
+
           setPendingStateName(inputValue);
           setIsCreateModalOpen(true);
         }}

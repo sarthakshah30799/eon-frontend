@@ -3,15 +3,22 @@ import { BackButton } from '@/components/ui';
 import { UserRoleForm } from '../forms';
 import { useGetUserRole, useUpdateUserRole } from '../hooks';
 import { USER_ROLE_TEXTS } from '../constants';
-import { mapRecordToFormValues } from '../utils';
+import {
+  buildUserRightsPermissionGrid,
+  mapRecordToFormValues,
+} from '../utils';
 import type { ICreateUserRole } from '../types';
 import { Loader } from '@/components/ui/loader';
+import { useUserRightsMatrix } from '../hooks';
+import { UserRoleRightsSection } from '../components';
+import { userRoleApi } from '@/api/userRole';
 
 export const UserRoleEditView = () => {
   const navigate = useNavigate();
   const { id = '' } = useParams<{ id: string }>();
   const { data: role, isLoading } = useGetUserRole(id);
   const { submitUserRole, isPending } = useUpdateUserRole(id);
+  const rightsMatrix = useUserRightsMatrix(id);
 
   if (isLoading) {
     return (
@@ -29,7 +36,11 @@ export const UserRoleEditView = () => {
 
   const handleSubmit = async (values: ICreateUserRole) => {
     await submitUserRole(values);
-    navigate('/master/system-setups/roles-profile');
+    await userRoleApi.saveRolePermissions(
+      id,
+      buildUserRightsPermissionGrid(rightsMatrix.rowStateById)
+    );
+    navigate('/master/system-setups/user-role');
   };
 
   return (
@@ -55,8 +66,24 @@ export const UserRoleEditView = () => {
         defaultValues={mapRecordToFormValues(role)}
         onSubmit={handleSubmit}
         submitLabel={USER_ROLE_TEXTS.SAVE_CHANGES}
-        isSubmitting={isPending}
-      />
+        isSubmitting={isPending || rightsMatrix.isSaving}
+      >
+        <UserRoleRightsSection
+          rightsTreeNodes={rightsMatrix.selectableTreeNodes}
+          selectedNodeId={rightsMatrix.selectedNodeId}
+          selectedNodePathIds={rightsMatrix.selectedNodePathIds}
+          selectedNodeLabel={rightsMatrix.selectedNode?.label}
+          visibleRows={rightsMatrix.visibleRows}
+          rowStateById={rightsMatrix.rowStateById}
+          onSelectNode={rightsMatrix.selectNode}
+          onToggleAllRowsSelected={rightsMatrix.toggleAllRowsSelected}
+          onToggleRowSelected={rightsMatrix.toggleRowSelected}
+          onToggleColumnPermission={rightsMatrix.toggleColumnPermission}
+          onTogglePermission={rightsMatrix.togglePermission}
+          isLoading={rightsMatrix.isLoading}
+          error={rightsMatrix.error}
+        />
+      </UserRoleForm>
     </section>
   );
 };

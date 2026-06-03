@@ -6,12 +6,21 @@ interface UseStateDropdownResult {
   loadOptions: (inputValue: string) => Promise<AsyncSelectResponse>;
 }
 
-export const useStateDropdown = (): UseStateDropdownResult => {
+export const useStateDropdown = (
+  countryId?: string
+): UseStateDropdownResult => {
   const loadOptions = useCallback(
     async (inputValue: string): Promise<AsyncSelectResponse> => {
+      if (!countryId) {
+        return {
+          options: [],
+        };
+      }
+
       const response = await stateProfileApi.getStateProfiles({
         page: 1,
         limit: 25,
+        countryId,
         search: inputValue.trim() || undefined,
       });
 
@@ -26,7 +35,7 @@ export const useStateDropdown = (): UseStateDropdownResult => {
         })),
       };
     },
-    []
+    [countryId]
   );
 
   return {

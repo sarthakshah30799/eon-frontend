@@ -9,7 +9,7 @@ export const BRANCH_PROFILE_TEXTS = {
   SAVE_CHANGES: 'Save Changes',
   FORM_TITLE: 'Company Branch Details',
   FORM_SUBTITLE:
-    'Fill in the profile, address, contact, and operational details for the company branch.',
+    'Fill in the profile, address, country, state, contact, and operational details for the company branch.',
   EMPTY_STATE: 'No company branches found. Create your first company branch.',
   LIST_ERROR: 'Error loading company branches',
   EDIT_BRANCH: 'Edit Company Branch',
@@ -30,17 +30,6 @@ export const OPERATIONAL_GROUP_OPTIONS: IBranchProfileOption[] = [
   { value: 'city-location', label: 'City Location' },
   { value: 'rural-location', label: 'Rural Location' },
   { value: 'airport-location', label: 'Airport Location' },
-];
-
-export const STATE_OPTIONS: IBranchProfileOption[] = [
-  { value: 'maharashtra', label: 'Maharashtra' },
-  { value: 'delhi', label: 'Delhi' },
-  { value: 'gujarat', label: 'Gujarat' },
-  { value: 'karnataka', label: 'Karnataka' },
-  { value: 'tamil-nadu', label: 'Tamil Nadu' },
-  { value: 'rajasthan', label: 'Rajasthan' },
-  { value: 'west-bengal', label: 'West Bengal' },
-  { value: 'kerala', label: 'Kerala' },
 ];
 
 export const OPERATIONAL_USER_OPTIONS: IBranchProfileOption[] = [

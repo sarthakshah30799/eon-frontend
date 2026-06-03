@@ -8,6 +8,7 @@ interface FormFieldStateDropdownProps {
   placeholder?: string;
   disabled?: boolean;
   className?: string;
+  countryId?: string;
   createLabel?: string;
   onCreateState?: (inputValue: string) => void | Promise<void>;
 }
@@ -18,6 +19,7 @@ export const FormFieldStateDropdown = ({
   placeholder,
   disabled = false,
   className = '',
+  countryId,
   createLabel,
   onCreateState,
 }: FormFieldStateDropdownProps) => {
@@ -38,6 +40,7 @@ export const FormFieldStateDropdown = ({
       disabled={disabled}
       className={className}
       value={String(field.value ?? '')}
+      countryId={countryId}
       createLabel={createLabel}
       onCreateState={onCreateState}
       onChange={nextValue => {

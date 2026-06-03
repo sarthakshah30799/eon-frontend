@@ -5,13 +5,14 @@ import type {
 } from '../types';
 
 export const createEmptyBranchProfileFormValues = (): ICreateBranchProfile => ({
+  countryId: '',
+  stateId: '',
   code: '',
   branchNumber: '',
   address1: '',
   address2: '',
   address3: '',
   city: '',
-  state: '',
   gstState: '',
   pinCode: '',
   gstNo: '',
@@ -34,13 +35,14 @@ export const createEmptyBranchProfileFormValues = (): ICreateBranchProfile => ({
 export const mapRecordToFormValues = (
   record: IBranchProfile
 ): ICreateBranchProfile => ({
+  countryId: record.countryId || '',
+  stateId: record.stateId || '',
   code: record.code || '',
   branchNumber: record.branchNumber || '',
   address1: record.address1 || '',
   address2: record.address2 || '',
   address3: record.address3 || '',
   city: record.city || '',
-  state: record.state || '',
   gstState: record.gstState || '',
   pinCode: record.pinCode || '',
   gstNo: record.gstNo || '',
@@ -67,6 +69,10 @@ export const mapFormValuesToRecord = (
   updatedAt: string
 ): IBranchProfile => ({
   id,
+  countryCode: '',
+  countryName: '',
+  stateCode: '',
+  stateName: '',
   createdAt,
   updatedAt,
   ...values,

@@ -8,13 +8,18 @@ import type {
 interface BackendBranch {
   id: string;
   company_id?: string | null;
+  countryId?: string | null;
+  countryCode?: string | null;
+  countryName?: string | null;
+  stateId?: string | null;
+  stateCode?: string | null;
+  stateName?: string | null;
   code: string;
   branchNumber: number;
   address1: string;
   address2?: string | null;
   address3?: string | null;
   city: string;
-  state: string;
   gstState?: string | null;
   pinCode: string;
   gstNo?: string | null;
@@ -39,13 +44,18 @@ interface BackendBranch {
 const mapBackendToFrontend = (branch: BackendBranch): IBranchProfile => {
   return {
     id: branch.id,
+    countryId: branch.countryId || '',
+    countryCode: branch.countryCode || '',
+    countryName: branch.countryName || '',
+    stateId: branch.stateId || '',
+    stateCode: branch.stateCode || '',
+    stateName: branch.stateName || '',
     code: branch.code || '',
     branchNumber: branch.branchNumber !== undefined ? String(branch.branchNumber) : '',
     address1: branch.address1 || '',
     address2: branch.address2 || '',
     address3: branch.address3 || '',
     city: branch.city || '',
-    state: branch.state || '',
     gstState: branch.gstState || '',
     pinCode: branch.pinCode || '',
     gstNo: branch.gstNo || '',
@@ -74,13 +84,14 @@ const mapFrontendToBackend = (
 ) => {
   return {
     companyId: companyId || undefined,
+    countryId: form.countryId,
+    stateId: form.stateId,
     code: form.code,
     branchNumber: parseInt(form.branchNumber, 10) || 1,
     address1: form.address1,
     address2: form.address2 || undefined,
     address3: form.address3 || undefined,
     city: form.city,
-    state: form.state,
     gstState: form.gstState || undefined,
     pinCode: form.pinCode,
     gstNo: form.gstNo || undefined,

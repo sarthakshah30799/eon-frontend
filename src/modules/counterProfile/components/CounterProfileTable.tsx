@@ -77,9 +77,7 @@ export const CounterProfileTable = ({
               className="rounded-sm bg-transparent text-text-secondary hover:bg-surface-secondary hover:text-text-primary"
               onClick={event => {
                 event.stopPropagation();
-                navigate(
-                  `/master/system-setups/counter-profile/edit/${counterId}`
-                );
+                navigate(`/admin/counter-profile/edit/${counterId}`);
               }}
             >
               <PencilSquareIcon className="h-5 w-5" />
@@ -100,7 +98,7 @@ export const CounterProfileTable = ({
       enableRowSelection={false}
       enableColumnVisibility={false}
       onRowClick={row => {
-        navigate(`/master/system-setups/counter-profile/edit/${row.id}`);
+        navigate(`/admin/counter-profile/edit/${row.id}`);
       }}
       emptyMessage="No counters found. Create your first counter."
     />

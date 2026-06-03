@@ -11,8 +11,6 @@ interface UserRoleTableProps {
   onDelete: (id: string) => void | Promise<void>;
   isUpdatingStatus?: boolean;
   isDeleting?: boolean;
-  selectedRoleId?: string | null;
-  onSelectRole?: (id: string) => void;
 }
 
 interface UserRoleTableRow {
@@ -26,7 +24,6 @@ export const UserRoleTable = ({
   roles,
   onToggleStatus,
   isUpdatingStatus = false,
-  onSelectRole,
 }: UserRoleTableProps) => {
   const navigate = useNavigate();
 
@@ -102,11 +99,7 @@ export const UserRoleTable = ({
       enableRowSelection={false}
       enableColumnVisibility={false}
       onRowClick={row => {
-        if (onSelectRole) {
-          onSelectRole(row.id);
-        } else {
-          navigate(`/master/system-setups/user-role/edit/${row.id}`);
-        }
+        navigate(`/master/system-setups/user-role/edit/${row.id}`);
       }}
       emptyMessage="No roles found. Create your first role."
     />

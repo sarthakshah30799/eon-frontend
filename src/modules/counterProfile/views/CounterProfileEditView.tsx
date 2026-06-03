@@ -26,7 +26,7 @@ export const CounterProfileEditView = () => {
 
   const handleSubmit = async (values: ICreateCounterProfile) => {
     await submitCounterProfile(values);
-    navigate('/master/system-setups/counter-profile');
+    navigate('/admin/counter-profile');
   };
 
   return (

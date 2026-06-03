@@ -1,6 +1,8 @@
 import * as yup from 'yup';
 
 export const branchProfileSchema = yup.object({
+  countryId: yup.string().trim().required('Country is required'),
+  stateId: yup.string().trim().required('State is required'),
   code: yup.string().trim().required('Branch Code is required').max(20, 'Branch Code must be at most 20 characters'),
   branchNumber: yup
     .string()
@@ -11,7 +13,6 @@ export const branchProfileSchema = yup.object({
   address2: yup.string().trim().max(250, 'Address must be at most 250 characters').default(''),
   address3: yup.string().trim().max(250, 'Address must be at most 250 characters').default(''),
   city: yup.string().trim().required('City is required').max(250, 'City must be at most 250 characters'),
-  state: yup.string().trim().required('State is required').max(250, 'State must be at most 250 characters'),
   gstState: yup.string().trim().max(250, 'GST State must be at most 250 characters').default(''),
   pinCode: yup
     .string()

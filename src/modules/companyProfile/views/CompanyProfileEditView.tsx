@@ -42,7 +42,7 @@ export const CompanyProfileEditView = ({ id: propId }: CompanyProfileEditViewPro
     <section className="space-y-6">
       <div className="rounded-sm border border-border-primary bg-surface-primary p-6 shadow-sm">
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">
-          Master / System setups
+          Admin
         </p>
         <h1 className="mt-2 text-2xl font-semibold text-text-primary">
           Edit Company Profile

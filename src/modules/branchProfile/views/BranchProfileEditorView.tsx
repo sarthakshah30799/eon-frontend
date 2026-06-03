@@ -32,14 +32,12 @@ export const BranchProfileEditorView = ({
     <section className="rounded-sm border border-border-primary bg-surface-primary p-6 shadow-sm">
       <div className="mb-6 space-y-4">
         <BackButton
-          onClick={() =>
-            navigate('/master/system-setups/branch-profile')
-          }
+          onClick={() => navigate('/admin/branch-profile')}
           label="Back"
         />
 
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">
-          System Setup
+          Admin
         </p>
         <h1 className="mt-2 text-2xl font-semibold text-text-primary">
           {heading}

@@ -17,6 +17,7 @@ export interface StateDropdownProps {
   disabled?: boolean;
   className?: string;
   error?: string;
+  countryId?: string;
   createLabel?: string;
   onCreateState?: (inputValue: string) => void | Promise<void>;
 }

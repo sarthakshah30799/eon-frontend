@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Button } from '@/components/ui/button1';
 import {
@@ -11,6 +12,7 @@ import type { ICreateUserRole } from '../types';
 interface UserRoleFormProps {
   defaultValues: ICreateUserRole;
   onSubmit: (values: ICreateUserRole) => void | Promise<void>;
+  children?: ReactNode;
   submitLabel?: string;
   isSubmitting?: boolean;
 }
@@ -18,6 +20,7 @@ interface UserRoleFormProps {
 export const UserRoleForm = ({
   defaultValues,
   onSubmit,
+  children,
   submitLabel = 'Save Role',
   isSubmitting = false,
 }: UserRoleFormProps) => {
@@ -71,6 +74,8 @@ export const UserRoleForm = ({
       <section className="rounded-sm border border-border-primary bg-surface-secondary p-4">
         <FormFieldCheckbox name="isActive" label="Is Active" disabled={isSubmitting} />
       </section>
+
+      {children}
 
       <div className="flex justify-end border-t border-border-primary pt-4">
         <Button type="submit" disabled={isSubmitting}>

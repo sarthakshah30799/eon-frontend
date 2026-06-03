@@ -14,8 +14,9 @@ interface BranchProfileTableRow {
   id: string;
   code: string;
   branchNumber: string;
-  city: string;
+  country: string;
   state: string;
+  city: string;
   contactName: string;
   contactNo: string;
   branchEmail: string;
@@ -43,8 +44,9 @@ export const BranchProfileTable = ({
       id: branch.id,
       code: branch.code || '',
       branchNumber: branch.branchNumber || '',
+      country: branch.countryName || '-',
+      state: branch.stateName || '-',
       city: branch.city || '',
-      state: branch.state || '',
       contactName: branch.contactName || '-',
       contactNo: branch.contactNo || '-',
       branchEmail: branch.branchEmail || '-',
@@ -56,8 +58,9 @@ export const BranchProfileTable = ({
   const columns: TableColumnDef<BranchProfileTableRow>[] = [
     { accessorKey: 'code', header: 'Branch Code' },
     { accessorKey: 'branchNumber', header: 'Branch Number' },
-    { accessorKey: 'city', header: 'City' },
+    { accessorKey: 'country', header: 'Country' },
     { accessorKey: 'state', header: 'State' },
+    { accessorKey: 'city', header: 'City' },
     { accessorKey: 'contactName', header: 'Contact Name' },
     { accessorKey: 'contactNo', header: 'Contact No' },
     { accessorKey: 'branchEmail', header: 'Email' },
@@ -83,7 +86,7 @@ export const BranchProfileTable = ({
               className='border-0! bg-transparent! text-black!'
               onClick={event => {
                 event.stopPropagation();
-                navigate(`/master/system-setups/branch-profile/edit/${branchId}`);
+                navigate(`/admin/branch-profile/edit/${branchId}`);
               }}
             >
               <PencilSquareIcon className="h-5 w-5" />
@@ -104,7 +107,7 @@ export const BranchProfileTable = ({
       enableRowSelection={false}
       enableColumnVisibility={false}
       onRowClick={row => {
-        navigate(`/master/system-setups/branch-profile/edit/${row.id}`);
+        navigate(`/admin/branch-profile/edit/${row.id}`);
       }}
       emptyMessage="No company branches found. Create your first company branch."
     />

@@ -1,5 +1,9 @@
 import type { QueryClient } from '@tanstack/react-query';
-import type { ICreateUserRole, IUserRole } from '../types';
+import type {
+  ICreateUserRole,
+  IUserRole,
+  UserRightsRowState,
+} from '../types';
 
 export const createEmptyUserRoleFormValues = (): ICreateUserRole => ({
   code: '',
@@ -68,4 +72,19 @@ export const syncUserRoleCache = (
   );
 
   queryClient.setQueryData(['user-role', updatedRole.id], updatedRole);
+};
+
+export const buildUserRightsPermissionGrid = (
+  rowStateById: Record<string, UserRightsRowState>
+): Record<string, Record<string, boolean>> => {
+  const grid: Record<string, Record<string, boolean>> = {};
+
+  for (const [menuId, state] of Object.entries(rowStateById)) {
+    const hasAnyActive = Object.values(state.permissions).some(Boolean);
+    if (hasAnyActive) {
+      grid[menuId] = { ...state.permissions };
+    }
+  }
+
+  return grid;
 };

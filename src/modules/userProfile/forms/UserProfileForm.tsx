@@ -45,17 +45,31 @@ const UserProfileFormFields = ({
   const selectedRoleId = watch('roleId');
 
   // Load backend data dynamically
-  const { data: roles = [] } = useQuery({
+  const {
+    data: roles = [],
+    isLoading: isRolesLoading,
+    isFetching: isRolesFetching,
+  } = useQuery({
     queryKey: ['roles'],
     queryFn: () => userRoleApi.getUserRoles(),
   });
 
-  const { data: branches = [] } = useQuery({
+  const {
+    data: branches = [],
+    isLoading: isBranchesLoading,
+    isFetching: isBranchesFetching,
+    dataUpdatedAt: branchesUpdatedAt,
+  } = useQuery({
     queryKey: ['branches'],
     queryFn: () => branchProfileApi.getBranchProfiles(),
   });
 
-  const { data: counters = [] } = useQuery({
+  const {
+    data: counters = [],
+    isLoading: isCountersLoading,
+    isFetching: isCountersFetching,
+    dataUpdatedAt: countersUpdatedAt,
+  } = useQuery({
     queryKey: ['counters'],
     queryFn: () => counterProfileApi.getCounterProfiles(),
   });
@@ -94,6 +108,15 @@ const UserProfileFormFields = ({
     return createStaticLoadOptions(opts);
   }, [branches]);
 
+  const branchDefaultOptions = useMemo(
+    () =>
+      branches.map(b => ({
+        value: b.id,
+        label: b.code,
+      })),
+    [branches]
+  );
+
   const roleLoadOptions = useMemo(() => {
     const opts = roles.map(r => ({
       value: r.id,
@@ -101,6 +124,15 @@ const UserProfileFormFields = ({
     }));
     return createStaticLoadOptions(opts);
   }, [roles]);
+
+  const roleDefaultOptions = useMemo(
+    () =>
+      roles.map(r => ({
+        value: r.id,
+        label: r.name || r.code,
+      })),
+    [roles]
+  );
 
   const counterLoadOptions = useMemo(() => {
     if (!selectedBranchId) return createStaticLoadOptions([]);
@@ -114,6 +146,20 @@ const UserProfileFormFields = ({
       label: c.name || `Counter ${c.counterNo}`,
     }));
     return createStaticLoadOptions(opts);
+  }, [counters, branches, selectedBranchId]);
+
+  const counterDefaultOptions = useMemo(() => {
+    if (!selectedBranchId) return [];
+    const selectedBranch = branches.find(b => b.id === selectedBranchId);
+    if (!selectedBranch) return [];
+
+    const connectedCounterIds = selectedBranch.connectCounterIds || [];
+    return counters
+      .filter(c => connectedCounterIds.includes(c.id))
+      .map(c => ({
+        value: c.id,
+        label: c.name || `Counter ${c.counterNo}`,
+      }));
   }, [counters, branches, selectedBranchId]);
 
   return (
@@ -147,6 +193,8 @@ const UserProfileFormFields = ({
               label="User Role / Group"
               placeholder="Select Role"
               loadOptions={roleLoadOptions}
+              defaultOptions={roleDefaultOptions}
+              isLoading={isRolesLoading || isRolesFetching}
               pagination={false}
               disabled={isSubmitting}
             />
@@ -155,20 +203,26 @@ const UserProfileFormFields = ({
 
           <div className="space-y-2">
             <FormFieldSelect
+              key={`branch-select-${branchesUpdatedAt || 'loading'}`}
               name="branchId"
               label="Associated Branch"
               placeholder="Select Branch"
               loadOptions={branchLoadOptions}
+              defaultOptions={branchDefaultOptions}
+              isLoading={isBranchesLoading || isBranchesFetching}
               pagination={false}
               disabled={isSubmitting}
             />
           </div>
           <div className="space-y-2">
             <FormFieldSelect
+              key={`counter-select-${selectedBranchId || 'no-branch'}-${countersUpdatedAt || 'loading'}`}
               name="counterId"
               label="Associated Counter"
               placeholder={selectedBranchId ? "Select Counter" : "Please select associated branch first"}
               loadOptions={counterLoadOptions}
+              defaultOptions={counterDefaultOptions}
+              isLoading={isCountersLoading || isCountersFetching}
               pagination={false}
               disabled={isSubmitting || !selectedBranchId}
             />

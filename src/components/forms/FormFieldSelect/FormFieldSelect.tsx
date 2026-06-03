@@ -34,9 +34,6 @@ const flattenOptions = (
   return response.options;
 };
 
-const normalizeSelectValue = (value: string | number): string | number =>
-  typeof value === 'string' ? value.toUpperCase() : value;
-
 export const FormFieldSelect = ({
   name,
   label,
@@ -209,11 +206,7 @@ export const FormFieldSelect = ({
         if (isMulti) {
           const nextOptions = Array.isArray(option) ? option : [];
           setSelectedOption(nextOptions);
-          field.onChange(
-            nextOptions.map(selectedOptionItem =>
-              normalizeSelectValue(selectedOptionItem.value)
-            )
-          );
+          field.onChange(nextOptions.map(selectedOptionItem => selectedOptionItem.value));
           return;
         }
 
@@ -225,9 +218,7 @@ export const FormFieldSelect = ({
 
         const nextOption = option;
         setSelectedOption(nextOption);
-        field.onChange(
-          normalizeSelectValue((nextOption as AsyncSelectOption).value)
-        );
+        field.onChange((nextOption as AsyncSelectOption).value);
       }}
       onCreateOption={handleCreateOption}
       error={error?.message}

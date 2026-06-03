@@ -2,9 +2,7 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button1';
 import { Input } from '@/components/ui/input';
-import { Loader } from '@/components/ui/loader';
-import { PaginationControls } from '@/components/ui/pagination';
-import { usePermission } from '@/hooks';
+import { useDebounce, usePermission } from '@/hooks';
 import { COUNTRY_PROFILE_TEXTS } from '../constants';
 import { CountryProfileTable } from '../components';
 import { useListCountryProfiles } from '../hooks';
@@ -13,27 +11,23 @@ export const CountryProfileListView = () => {
   const navigate = useNavigate();
   const { canAdd } = usePermission('/master/system-setups/country-profile');
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize] = useState(10);
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 400);
 
   const query = useMemo(
     () => ({
       page,
       limit: pageSize,
-      search: search.trim() || undefined,
+      search: debouncedSearch.trim() || undefined,
     }),
-    [page, pageSize, search]
+    [page, pageSize, debouncedSearch]
   );
 
-  const { data: countryResponse, isLoading, error } =
+  const { data: countryResponse, isLoading, isFetching, error } =
     useListCountryProfiles(query);
   const countries = countryResponse?.data ?? [];
-  const totalPages = countryResponse?.totalPages ?? 0;
   const totalItems = countryResponse?.totalItems ?? 0;
-
-  if (isLoading) {
-    return <Loader />;
-  }
 
   if (error) {
     return (
@@ -88,20 +82,7 @@ export const CountryProfileListView = () => {
           <div className="text-sm text-text-secondary">{totalItems} total records</div>
         </div>
 
-        <CountryProfileTable countries={countries} />
-
-        <PaginationControls
-          page={page}
-          pageSize={pageSize}
-          totalItems={totalItems}
-          totalPages={totalPages}
-          itemLabel="countries"
-          onPageChange={setPage}
-          onPageSizeChange={nextPageSize => {
-            setPage(1);
-            setPageSize(nextPageSize);
-          }}
-        />
+        <CountryProfileTable countries={countries} loading={isLoading || isFetching} />
       </section>
     </div>
   );

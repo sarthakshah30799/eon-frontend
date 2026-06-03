@@ -11,7 +11,7 @@ import type { MultiValue, SingleValue } from 'react-select';
 
 interface FormFieldSelectProps extends Omit<
   AsyncSelectProps<boolean>,
-  'value' | 'onChange' | 'error'
+  'value' | 'onChange' | 'error' | 'onCreateOption'
 > {
   name: string;
   label?: string;
@@ -19,6 +19,9 @@ interface FormFieldSelectProps extends Omit<
   disabled?: boolean;
   className?: string;
   isMulti?: boolean;
+  onCreateOption?: (
+    inputValue: string
+  ) => void | Promise<AsyncSelectOption | void | null> | AsyncSelectOption | null;
 }
 
 const flattenOptions = (
@@ -44,6 +47,7 @@ export const FormFieldSelect = ({
   size,
   variant,
   isMulti = false,
+  onCreateOption,
   ...props
 }: FormFieldSelectProps) => {
   const form = useFormContext();
@@ -133,6 +137,47 @@ export const FormFieldSelect = ({
     };
   }, [field.value, isMulti, loadOptions]);
 
+  const handleCreateOption = async (inputValue: string) => {
+    if (!onCreateOption) {
+      return;
+    }
+
+    let createdOption: Awaited<ReturnType<typeof onCreateOption>>;
+
+    try {
+      createdOption = await onCreateOption(inputValue);
+    } catch (error) {
+      console.error('Failed to create select option:', error);
+      return;
+    }
+
+    if (!createdOption) {
+      return;
+    }
+
+    if (isMulti) {
+      const currentValues = Array.isArray(field.value) ? field.value : [];
+      const nextValue = String(createdOption.value);
+      const nextValues = currentValues.includes(nextValue)
+        ? currentValues
+        : [...currentValues, nextValue];
+      setSelectedOption(prevOptions => {
+        const existingOptions = Array.isArray(prevOptions) ? prevOptions : [];
+
+        return existingOptions.some(
+          option => String(option.value) === String(createdOption.value)
+        )
+          ? existingOptions
+          : [...existingOptions, createdOption];
+      });
+      field.onChange(nextValues);
+      return;
+    }
+
+    setSelectedOption(createdOption);
+    field.onChange(createdOption.value);
+  };
+
   return (
     <AsyncSelect
       label={label}
@@ -173,6 +218,7 @@ export const FormFieldSelect = ({
         setSelectedOption(nextOption);
         field.onChange((nextOption as AsyncSelectOption | null)?.value ?? null);
       }}
+      onCreateOption={handleCreateOption}
       error={error?.message}
     />
   );

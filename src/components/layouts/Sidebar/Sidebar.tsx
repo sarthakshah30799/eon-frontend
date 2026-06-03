@@ -59,6 +59,11 @@ const ADMIN_DROPDOWN_SECTION: SidebarSection = {
       label: 'Counter Profile',
       path: '/admin/counter-profile',
     },
+    {
+      id: 'admin-category-options',
+      label: 'Category Options',
+      path: '/admin/category-options',
+    },
   ],
 };
 
@@ -354,7 +359,13 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
             return {
               id: group.id,
               label: group.name,
-              children: mappedChildren.map(({ visible, ...rest }) => rest),
+              children: mappedChildren.map(item => {
+                const { visible, ...rest } = item as SidebarMenuItem & {
+                  visible?: boolean;
+                };
+                void visible;
+                return rest;
+              }),
               visible: mappedChildren.length > 0,
             };
           })
@@ -362,12 +373,24 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
 
         return {
           title: root.name,
-          items: items.map(({ visible, ...rest }) => rest as SidebarMenuItem),
+          items: items.map(item => {
+            const { visible, ...rest } = item as SidebarMenuItem & {
+              visible?: boolean;
+            };
+            void visible;
+            return rest as SidebarMenuItem;
+          }),
           visible: items.length > 0,
         };
       })
       .filter(section => section.visible)
-      .map(({ visible, ...rest }) => rest as SidebarSection);
+      .map(section => {
+        const { visible, ...rest } = section as SidebarSection & {
+          visible?: boolean;
+        };
+        void visible;
+        return rest as SidebarSection;
+      });
 
     if (isAdminUser) {
       return [ADMIN_DROPDOWN_SECTION, ...dynamicSections];

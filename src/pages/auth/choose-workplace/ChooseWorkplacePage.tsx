@@ -90,7 +90,7 @@ const ChooseWorkplacePage: React.FC = () => {
       setWorkplace(selectedBranchId, selectedCounterId);
       toast.success('Workplace set successfully!');
       navigate('/');
-    } catch (error) {
+    } catch {
       toast.error('Failed to set workplace. Please try again.');
     } finally {
       setIsSubmitting(false);
@@ -101,7 +101,7 @@ const ChooseWorkplacePage: React.FC = () => {
     try {
       await logout();
       navigate('/login');
-    } catch (err) {
+    } catch {
       toast.error('Failed to logout');
     }
   };

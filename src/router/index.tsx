@@ -90,6 +90,9 @@ const CounterProfileEditPage = lazy(
   () =>
     import('../pages/master/system-setups/counter-profile/edit/[id]/CounterProfileEditPage')
 );
+const CategoryOptionsPage = lazy(
+  () => import('../pages/admin/category-options/CategoryOptionsPage')
+);
 const MasterPagesPage = lazy(
   () => import('../pages/master/system-setups/master-pages/MasterPagesPage')
 );
@@ -244,6 +247,14 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <CounterProfileEditPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/category-options',
+    element: (
+      <ProtectedLayout>
+        <CategoryOptionsPage />
       </ProtectedLayout>
     ),
   },

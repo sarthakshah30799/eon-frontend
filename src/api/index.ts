@@ -12,4 +12,5 @@ export * from './cityDropdown';
 export * from './stateDropdown';
 export * from './countryDropdown';
 export * from './counterProfile';
+export * from './categoryOptions';
 export * from './menu/menu.api';

@@ -1,19 +1,44 @@
 import * as yup from 'yup';
+const gstRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{1}Z[A-Z0-9]{1}$/;
 
 export const branchProfileSchema = yup.object({
   countryId: yup.string().trim().required('Country is required'),
   stateId: yup.string().trim().required('State is required'),
-  code: yup.string().trim().required('Branch Code is required').max(20, 'Branch Code must be at most 20 characters'),
+  code: yup
+    .string()
+    .trim()
+    .required('Branch Code is required')
+    .max(20, 'Branch Code must be at most 20 characters'),
   branchNumber: yup
     .string()
     .trim()
     .required('Branch Number is required')
     .matches(/^\d+$/, 'Branch Number must contain only numbers'),
-  address1: yup.string().trim().required('Address 1 is required').max(250, 'Address must be at most 250 characters'),
-  address2: yup.string().trim().max(250, 'Address must be at most 250 characters').default(''),
-  address3: yup.string().trim().max(250, 'Address must be at most 250 characters').default(''),
-  city: yup.string().trim().required('City is required').max(250, 'City must be at most 250 characters'),
-  gstState: yup.string().trim().max(250, 'GST State must be at most 250 characters').default(''),
+  address1: yup
+    .string()
+    .trim()
+    .required('Address 1 is required')
+    .max(250, 'Address must be at most 250 characters'),
+  address2: yup
+    .string()
+    .trim()
+    .max(250, 'Address must be at most 250 characters')
+    .default(''),
+  address3: yup
+    .string()
+    .trim()
+    .max(250, 'Address must be at most 250 characters')
+    .default(''),
+  city: yup
+    .string()
+    .trim()
+    .required('City is required')
+    .max(250, 'City must be at most 250 characters'),
+  gstState: yup
+    .string()
+    .trim()
+    .max(250, 'GST State must be at most 250 characters')
+    .default(''),
   pinCode: yup
     .string()
     .trim()
@@ -21,14 +46,33 @@ export const branchProfileSchema = yup.object({
     .matches(/^\d+$/, 'Pincode must contain only numbers')
     .min(6, 'Pincode must be 6 digits')
     .max(6, 'Pincode must be 6 digits'),
-  gstNo: yup.string().trim().max(20, 'GST No. must be at most 20 characters').default(''),
-  fxRegNo: yup.string().trim().max(20, 'FX Reg No. must be at most 20 characters').default(''),
+  gstNo: yup
+    .string()
+    .required('GST number is required')
+    .matches(gstRegex, 'Enter a valid GST number'),
+  fxRegNo: yup
+    .string()
+    .trim()
+    .max(20, 'FX Reg No. must be at most 20 characters')
+    .default(''),
   fxRegDate: yup.string().trim().default(''),
-  contactName: yup.string().trim().max(250, 'Contact Name must be at most 250 characters').default(''),
+  contactName: yup
+    .string()
+    .trim()
+    .max(250, 'Contact Name must be at most 250 characters')
+    .default(''),
   contactNo: yup.string().trim().default(''),
   branchEmail: yup.string().trim().email('Invalid email format').default(''),
-  aeonBranchLic: yup.string().trim().max(20, 'AEON Branch Lic must be at most 20 characters').default(''),
-  locationType: yup.string().trim().max(250, 'Location Type must be at most 250 characters').default(''),
+  aeonBranchLic: yup
+    .string()
+    .trim()
+    .max(20, 'AEON Branch Lic must be at most 20 characters')
+    .default(''),
+  locationType: yup
+    .string()
+    .trim()
+    .max(250, 'Location Type must be at most 250 characters')
+    .default(''),
   cashHolding: yup.string().trim().default('0'),
   cashHoldingTemp: yup.string().trim().default('0'),
   currHolding: yup.string().trim().default('0'),

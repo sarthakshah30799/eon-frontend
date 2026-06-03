@@ -1,0 +1,110 @@
+import { useNavigate } from 'react-router-dom';
+import { PencilSquareIcon } from '@heroicons/react/24/outline';
+import { Button } from '@/components/ui/button1';
+import { Table, type TableColumnDef } from '@/components/ui/table';
+import type { ICurrencyProfile } from '../types';
+
+interface CurrencyProfileTableProps {
+  currencies: ICurrencyProfile[];
+}
+
+interface CurrencyProfileTableRow {
+  id: string;
+  currencyCode: string;
+  currencyName: string;
+  countryId: string;
+  priority: string;
+  ratePer: string;
+  calculationMethod: string;
+  group: string;
+  active: boolean;
+  onlyStocking: boolean;
+}
+
+export const CurrencyProfileTable = ({
+  currencies,
+}: CurrencyProfileTableProps) => {
+  const navigate = useNavigate();
+
+  const rows: CurrencyProfileTableRow[] = currencies.map(currency => ({
+    id: currency.id,
+    currencyCode: currency.currencyCode,
+    currencyName: currency.currencyName,
+    countryId: currency.countryId || '-',
+    priority: currency.priority || '-',
+    ratePer: currency.ratePer || '-',
+    calculationMethod: currency.calculationMethod,
+    group: currency.group,
+    active: currency.active,
+    onlyStocking: currency.onlyStocking,
+  }));
+
+  const columns: TableColumnDef<CurrencyProfileTableRow>[] = [
+    { accessorKey: 'currencyCode', header: 'Currency Code' },
+    { accessorKey: 'currencyName', header: 'Currency Name' },
+    { accessorKey: 'countryId', header: 'Countries' },
+    { accessorKey: 'priority', header: 'Priority' },
+    { accessorKey: 'ratePer', header: 'Rate / Per' },
+    {
+      accessorKey: 'calculationMethod',
+      header: 'Calculation Method',
+    },
+    { accessorKey: 'group', header: 'Group' },
+    {
+      accessorKey: 'active',
+      header: 'Active',
+      cell: ({ row }) => (row.original.active ? 'Yes' : 'No'),
+    },
+    {
+      accessorKey: 'onlyStocking',
+      header: 'Only Stocking',
+      cell: ({ row }) => (row.original.onlyStocking ? 'Yes' : 'No'),
+    },
+    {
+      id: 'actions',
+      header: 'Actions',
+      meta: {
+        headerClassName:
+          'sticky right-0 z-20 border-l border-border-primary bg-surface-secondary',
+        cellClassName:
+          'sticky right-0 z-10 border-l border-border-primary bg-surface-primary',
+      },
+      cell: ({ row }) => {
+        const currencyId = row.original.id;
+
+        return (
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              aria-label="Edit currency"
+              variant="ghost"
+              size="icon"
+              className="rounded-sm bg-transparent text-text-secondary hover:bg-surface-secondary hover:text-text-primary"
+              onClick={event => {
+                event.stopPropagation();
+                navigate(`/master/system-setups/currency-profile/edit/${currencyId}`);
+              }}
+            >
+              <PencilSquareIcon className="h-5 w-5" />
+            </Button>
+          </div>
+        );
+      },
+      enableSorting: false,
+    },
+  ];
+
+  return (
+    <Table
+      columns={columns}
+      data={rows}
+      enableFiltering={false}
+      enableRowSelection={false}
+      enableColumnVisibility={false}
+      onRowClick={row =>
+        navigate(`/master/system-setups/currency-profile/edit/${row.id}`)
+      }
+      emptyMessage="No currencies found. Create your first currency."
+    />
+  );
+};

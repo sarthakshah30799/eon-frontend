@@ -12,4 +12,5 @@ export * from './cityDropdown';
 export * from './stateDropdown';
 export * from './countryDropdown';
 export * from './counterProfile';
+export * from './currencyProfile';
 export * from './menu/menu.api';

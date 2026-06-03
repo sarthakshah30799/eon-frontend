@@ -86,6 +86,7 @@ const AsyncSelectComponent = React.forwardRef<
       size,
       variant,
       isCreatable = false,
+      onInputChange: externalOnInputChange,
       ...props
     },
     ref
@@ -93,6 +94,7 @@ const AsyncSelectComponent = React.forwardRef<
     const [currentPage, setCurrentPage] = useState(1);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [allOptions, setAllOptions] = useState<AsyncSelectOption[]>([]);
+    const [inputValue, setInputValue] = useState('');
     const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
       null
     );
@@ -170,16 +172,22 @@ const AsyncSelectComponent = React.forwardRef<
     // Handle input change
     const handleInputChange = useCallback(
       (newValue: string, { action }: { action: string }) => {
+        const nextValue = newValue.toUpperCase();
+        setInputValue(nextValue);
+
         // Reset pagination when user starts typing new search
         if (
           action === 'input-change' &&
-          newValue.trim() !== prevInputValueRef.current.trim()
+          nextValue.trim() !== prevInputValueRef.current.trim()
         ) {
           resetPagination();
-          prevInputValueRef.current = newValue;
+          prevInputValueRef.current = nextValue;
         }
+
+        externalOnInputChange?.(nextValue, { action });
+        return nextValue;
       },
-      [resetPagination]
+      [externalOnInputChange, resetPagination]
     );
 
     // Custom styles
@@ -223,6 +231,7 @@ const AsyncSelectComponent = React.forwardRef<
           {isCreatable ? (
             <AsyncCreatableSelect
               ref={ref}
+              inputValue={inputValue}
               cacheOptions={!pagination}
               defaultOptions
               loadOptions={debouncedLoadOptions}
@@ -239,6 +248,7 @@ const AsyncSelectComponent = React.forwardRef<
           ) : (
             <AsyncSelectBase
               ref={ref}
+              inputValue={inputValue}
               cacheOptions={!pagination}
               defaultOptions
               loadOptions={debouncedLoadOptions}

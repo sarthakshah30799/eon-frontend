@@ -122,6 +122,19 @@ const MasterPageResolverPage = lazy(
     import('../pages/master/system-setups/master-pages/resolve/MasterPageResolverPage')
 );
 
+const CurrencyProfileListPage = lazy(
+  () =>
+    import('../pages/master/system-setups/currency-profile/list/CurrencyProfileListPage')
+);
+const CurrencyProfileCreatePage = lazy(
+  () =>
+    import('../pages/master/system-setups/currency-profile/create/CurrencyProfileCreatePage')
+);
+const CurrencyProfileEditPage = lazy(
+  () =>
+    import('../pages/master/system-setups/currency-profile/edit/[id]/CurrencyProfileEditPage')
+);
+
 const router = createBrowserRouter([
   {
     path: '/login',
@@ -316,6 +329,30 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <ProductProfileEditPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/master/system-setups/currency-profile',
+    element: (
+      <ProtectedLayout>
+        <CurrencyProfileListPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/master/system-setups/currency-profile/create',
+    element: (
+      <ProtectedLayout>
+        <CurrencyProfileCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/master/system-setups/currency-profile/edit/:id',
+    element: (
+      <ProtectedLayout>
+        <CurrencyProfileEditPage />
       </ProtectedLayout>
     ),
   },

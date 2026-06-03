@@ -183,7 +183,7 @@ const DropdownTrigger = ({
       }}
       {...props}
     >
-      <span className="min-w-0">{children}</span>
+      {children}
       <svg
         aria-hidden="true"
         className={cn(

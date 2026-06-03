@@ -64,6 +64,11 @@ const ADMIN_DROPDOWN_SECTION: SidebarSection = {
       label: 'Category Options',
       path: '/admin/category-options',
     },
+    {
+      id: 'admin-menu-management',
+      label: 'Menu Management',
+      path: '/admin/menu-management',
+    },
   ],
 };
 

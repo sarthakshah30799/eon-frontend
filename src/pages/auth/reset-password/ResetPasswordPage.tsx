@@ -14,11 +14,26 @@ const ResetPasswordPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token') || '';
   const email = searchParams.get('email') || '';
+  const isSetupMode = searchParams.get('setup') === '1';
 
   const [isSuccess, setIsSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const onSubmit = async (data: ResetPasswordFormData) => {
+    if (isSetupMode) {
+      setIsLoading(true);
+      try {
+        await authApi.completeInitialPassword(data.password);
+        setIsSuccess(true);
+        toast.success('Password updated successfully. Please sign in again.');
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : 'Failed to update password');
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
+
     if (!token || !email) {
       toast.error('Invalid password reset link. Missing token or email.');
       return;
@@ -41,7 +56,7 @@ const ResetPasswordPage: React.FC = () => {
   };
 
   // If link is invalid
-  const isLinkInvalid = !token || !email;
+  const isLinkInvalid = !isSetupMode && (!token || !email);
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-surface-secondary via-surface-primary to-primary-50">
@@ -55,12 +70,13 @@ const ResetPasswordPage: React.FC = () => {
           />
         </div>
         <div className="relative flex h-full flex-col items-center justify-center px-12 text-text-inverse">
-          <h1 className="mb-6 text-center text-4xl font-bold xl:text-5xl">
-            Secure Password Reset
+            <h1 className="mb-6 text-center text-4xl font-bold xl:text-5xl">
+            {isSetupMode ? 'Set Your Password' : 'Secure Password Reset'}
           </h1>
           <p className="max-w-md text-center text-lg leading-relaxed xl:text-xl">
-            Create a strong new password to protect your account and continue
-            accessing your global trading dashboard.
+            {isSetupMode
+              ? 'Set a new password for your first login before you can access the application.'
+              : 'Create a strong new password to protect your account and continue accessing your global trading dashboard.'}
           </p>
         </div>
       </div>
@@ -70,12 +86,14 @@ const ResetPasswordPage: React.FC = () => {
         <div className="mx-auto w-full max-w-md">
           <div className="mb-8 text-center">
             <h2 className="text-3xl font-bold text-text-primary">
-              Set New Password
+              {isSetupMode ? 'Create Password' : 'Set New Password'}
             </h2>
             <p className="mt-2 text-sm text-text-secondary">
               {isSuccess
                 ? 'Your password has been successfully updated'
-                : 'Please enter your new password below'}
+                : isSetupMode
+                  ? 'Please create a password for your account'
+                  : 'Please enter your new password below'}
             </p>
           </div>
 
@@ -154,7 +172,9 @@ const ResetPasswordPage: React.FC = () => {
                 Success!
               </h3>
               <p className="text-sm text-text-secondary text-center">
-                Your password has been successfully updated. All active sessions have been invalidated for security. You can now log in using your new credentials.
+                {isSetupMode
+                  ? 'Your password has been successfully created. You can now sign in using your new credentials.'
+                  : 'Your password has been successfully updated. All active sessions have been invalidated for security. You can now log in using your new credentials.'}
               </p>
               <div className="pt-2">
                 <Link
@@ -169,15 +189,17 @@ const ResetPasswordPage: React.FC = () => {
 
           {!isSuccess && (
             <div className="mt-8 text-center">
-              <p className="text-sm text-text-secondary">
-                Remember your password?{' '}
-                <Link
-                  to="/login"
-                  className="font-medium text-primary-600 hover:text-primary-700"
-                >
-                  Back to Login
-                </Link>
-              </p>
+              {!isSetupMode ? (
+                <p className="text-sm text-text-secondary">
+                  Remember your password?{' '}
+                  <Link
+                    to="/login"
+                    className="font-medium text-primary-600 hover:text-primary-700"
+                  >
+                    Back to Login
+                  </Link>
+                </p>
+              ) : null}
             </div>
           )}
         </div>

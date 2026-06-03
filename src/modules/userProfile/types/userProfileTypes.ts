@@ -10,7 +10,6 @@ export interface IUserProfile {
   isActive: boolean;
   isLocked: boolean;
   isDormant: boolean;
-  password?: string;
   roleId: string;
   branchId: string;
   counterId: string;

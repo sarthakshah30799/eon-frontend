@@ -5,6 +5,7 @@ export interface ILoginFormData {
 
 export interface ILoginResponse {
   message: string;
+  requiresPasswordChange?: boolean;
 }
 
 export interface IAuthError {

@@ -103,7 +103,7 @@ export const useUserRightsMatrix = (roleId: string | null): UseUserRightsMatrixR
   } = useQuery({
     queryKey: ['menu-tree'],
     queryFn: async () => {
-      const response = await menuApi.getMenuTree();
+      const response = await menuApi.getMenuTree(false);
       if (response.error) {
         throw new Error(response.error);
       }

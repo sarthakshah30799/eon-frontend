@@ -3,24 +3,31 @@ import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { authApi } from '../../../api/auth';
 import { loginSchema } from '../schema';
-import { useAuth } from '../../../lib/AuthContext';
 import type { ILoginFormData } from '../schema';
 import { yupResolver } from '@hookform/resolvers/yup';
+import { useAuth } from '../../../lib/AuthContext';
 
 export const useLogin = () => {
-  const { login: authLogin, otpLogin: contextOtpLogin } = useAuth();
+  const { checkAuth, otpLogin: contextOtpLogin } = useAuth();
   const navigate = useNavigate();
 
   const mutation = useMutation({
     mutationFn: async (data: ILoginFormData) => {
-      await authApi.login(data);
-      return data;
+      return await authApi.login(data);
     },
-    onSuccess: async loginData => {
+    onSuccess: async response => {
+      if (response.requiresPasswordChange) {
+        toast('Please set your password before logging in.', {
+          icon: '🔐',
+        });
+        navigate('/reset-password?setup=1');
+        return;
+      }
+
       toast.success('Login successful!');
 
       try {
-        await authLogin(loginData.email, loginData.password);
+        await checkAuth();
         navigate('/');
       } catch (error) {
         console.error('Failed to complete login:', error);

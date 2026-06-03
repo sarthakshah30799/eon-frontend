@@ -2,13 +2,15 @@ import { apiClient } from '../api';
 import type { ICreateMenu, IMenu, IUpdateMenu } from '@/types/menuTypes';
 
 export const menuApi = {
-  getMenuTree: async () => {
-    const res = await apiClient.get<IMenu[]>('/menus/tree');
+  getMenuTree: async (includeAdmin?: boolean) => {
+    const query = includeAdmin === undefined ? '' : `?includeAdmin=${includeAdmin}`;
+    const res = await apiClient.get<IMenu[]>(`/menus/tree${query}`);
     if (res.error) throw new Error(res.error);
     return res;
   },
-  getMenus: async () => {
-    const res = await apiClient.get<IMenu[]>('/menus');
+  getMenus: async (includeAdmin?: boolean) => {
+    const query = includeAdmin === undefined ? '' : `?includeAdmin=${includeAdmin}`;
+    const res = await apiClient.get<IMenu[]>(`/menus${query}`);
     if (res.error) throw new Error(res.error);
     return res;
   },

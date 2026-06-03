@@ -7,7 +7,6 @@ import {
   FormFieldCheckbox,
   FormFieldInput,
   FormFieldSelect,
-  FormFieldPassword,
 } from '@/components/forms';
 import type { ICreateUserProfile } from '../types';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -121,8 +120,8 @@ const UserProfileFormFields = ({
     <div className="space-y-6">
       {/* 1. Identity & Credentials */}
       <section className={formCardClass}>
-        <h2 className={sectionHeaderClass}>Identity & Credentials</h2>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <h2 className={sectionHeaderClass}>Identity</h2>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
           <FormFieldInput
             name="code"
             label="User Code"
@@ -134,12 +133,6 @@ const UserProfileFormFields = ({
             label="User Name"
             disabled={isSubmitting}
             placeholder="Full Name"
-          />
-          <FormFieldPassword
-            name="password"
-            label="Password"
-            disabled={isSubmitting}
-            placeholder={isEdit ? "Leave empty to keep current password" : "Enter password"}
           />
         </div>
       </section>

@@ -6,6 +6,7 @@ import {
   FormFieldCheckbox,
   FormFieldInput,
 } from '@/components/forms';
+import { useAuth } from '@/lib/AuthContext';
 import { userRoleSchema } from '../schema';
 import type { ICreateUserRole } from '../types';
 
@@ -15,6 +16,7 @@ interface UserRoleFormProps {
   children?: ReactNode;
   submitLabel?: string;
   isSubmitting?: boolean;
+  showAdminControls?: boolean;
 }
 
 export const UserRoleForm = ({
@@ -23,10 +25,19 @@ export const UserRoleForm = ({
   children,
   submitLabel = 'Save Role',
   isSubmitting = false,
+  showAdminControls,
 }: UserRoleFormProps) => {
+  const { user } = useAuth();
+  const canManageAdminControls =
+    showAdminControls ?? user?.isAdmin === true;
+  const handleSubmit = (values: ICreateUserRole) =>
+    onSubmit(
+      canManageAdminControls ? values : { ...values, isAdmin: false }
+    );
+
   return (
     <Form
-      onSubmit={onSubmit}
+      onSubmit={handleSubmit}
       resolver={yupResolver(userRoleSchema)}
       defaultValues={defaultValues}
       className="space-y-6"
@@ -46,7 +57,13 @@ export const UserRoleForm = ({
           Role Classifications
         </h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <FormFieldCheckbox name="isAdmin" label="Is Admin" disabled={isSubmitting} />
+          {canManageAdminControls && (
+            <FormFieldCheckbox
+              name="isAdmin"
+              label="Is Admin"
+              disabled={isSubmitting}
+            />
+          )}
           <FormFieldCheckbox name="isMd" label="Is MD" disabled={isSubmitting} />
           <FormFieldCheckbox name="isCompliance" label="Is Compliance" disabled={isSubmitting} />
           <FormFieldCheckbox name="isSrFinance" label="Is Sr Finance" disabled={isSubmitting} />

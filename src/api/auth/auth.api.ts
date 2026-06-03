@@ -52,6 +52,14 @@ class AuthAPI {
     });
   }
 
+  async completeInitialPassword(password: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>('/auth/setup-password', {
+      method: 'POST',
+      body: JSON.stringify({ password }),
+      credentials: 'include',
+    });
+  }
+
   async sendOtp(
     countryCode: string,
     mobileNumber: string

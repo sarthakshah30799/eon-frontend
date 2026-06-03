@@ -22,7 +22,6 @@ export const createEmptyUserProfileFormValues = (): ICreateUserProfile => ({
   isActive: true,
   isLocked: false,
   isDormant: false,
-  password: '',
   roleId: '',
   branchId: '',
   counterId: '',

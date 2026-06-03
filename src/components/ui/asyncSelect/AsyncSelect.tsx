@@ -4,7 +4,12 @@ import AsyncSelectBase from 'react-select/async';
 import AsyncCreatableSelect, {
   type AsyncCreatableProps,
 } from 'react-select/async-creatable';
-import type { GroupBase, SelectInstance, StylesConfig } from 'react-select';
+import type {
+  GroupBase,
+  InputActionMeta,
+  SelectInstance,
+  StylesConfig,
+} from 'react-select';
 import { Label } from '../label';
 import './AsyncSelect.css';
 
@@ -171,7 +176,7 @@ const AsyncSelectComponent = React.forwardRef<
 
     // Handle input change
     const handleInputChange = useCallback(
-      (newValue: string, { action }: { action: string }) => {
+      (newValue: string, { action, prevInputValue }: InputActionMeta) => {
         const nextValue = newValue.toUpperCase();
         setInputValue(nextValue);
 
@@ -184,7 +189,7 @@ const AsyncSelectComponent = React.forwardRef<
           prevInputValueRef.current = nextValue;
         }
 
-        externalOnInputChange?.(nextValue, { action });
+        externalOnInputChange?.(nextValue, { action, prevInputValue });
         return nextValue;
       },
       [externalOnInputChange, resetPagination]

@@ -16,11 +16,6 @@ export const userProfileSchema = yup.object({
   isActive: yup.boolean().default(true),
   isLocked: yup.boolean().default(false),
   isDormant: yup.boolean().default(false),
-  password: yup.string().trim().when('$isEdit', {
-    is: true,
-    then: (schema) => schema.notRequired(),
-    otherwise: (schema) => schema.required('Password is required').min(6, 'Password must be at least 6 characters'),
-  }),
   roleId: yup.string().trim().nullable(),
   branchId: yup.string().trim().nullable(),
   counterId: yup.string().trim().nullable(),

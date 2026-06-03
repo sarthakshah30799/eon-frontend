@@ -58,12 +58,10 @@ type BackendUserPayload = {
   roleId?: string;
   branchId?: string;
   counterId?: string;
-  password?: string;
 };
 
 const mapFrontendToBackend = (
-  form: ICreateUserProfile,
-  isCreate: boolean
+  form: ICreateUserProfile
 ): BackendUserPayload => {
   const payload: BackendUserPayload = {
     code: form.code,
@@ -80,12 +78,6 @@ const mapFrontendToBackend = (
     branchId: form.branchId || undefined,
     counterId: form.counterId || undefined,
   };
-
-    if (isCreate) {
-      payload.password = form.password || 'temp1234';
-  } else if (form.password) {
-    payload.password = form.password;
-  }
 
   return payload;
 };
@@ -105,7 +97,7 @@ export const userProfileApi = {
   createUserProfile: async (
     data: ICreateUserProfile
   ): Promise<IUserProfile> => {
-    const backendData = mapFrontendToBackend(data, true);
+    const backendData = mapFrontendToBackend(data);
     const res = await apiClient.post<BackendUser>('/users', backendData);
     if (res.error) throw new Error(res.error);
     if (!res.data) throw new Error('Failed to create user');
@@ -115,7 +107,7 @@ export const userProfileApi = {
     id: string,
     data: Partial<ICreateUserProfile>
   ): Promise<IUserProfile> => {
-    const backendData = mapFrontendToBackend(data as ICreateUserProfile, false);
+    const backendData = mapFrontendToBackend(data as ICreateUserProfile);
     const res = await apiClient.put<BackendUser>(`/users/${id}`, backendData);
     if (res.error) throw new Error(res.error);
     if (!res.data) throw new Error('Failed to update user');

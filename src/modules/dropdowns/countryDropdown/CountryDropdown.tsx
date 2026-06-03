@@ -1,12 +1,22 @@
-import { useEffect, useMemo, useState } from 'react';
-import { AsyncSelect, Modal, type AsyncSelectOption } from '@/components/ui';
-import { countryProfileApi } from '@/api/countryProfile';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  AsyncSelect,
+  Modal,
+  type AsyncSelectOption,
+  type AsyncSelectResponse,
+} from '@/components/ui';
 import { CountryProfileForm } from '@/modules/countryProfile/forms';
+import {
+  useCreateCountryProfile,
+  useGetCountryProfile,
+  useListCountryProfiles,
+} from '@/modules/countryProfile/hooks';
 import { createEmptyCountryProfileFormValues } from '@/modules/countryProfile/utils';
-import { useCreateCountryProfile } from '@/modules/countryProfile/hooks';
-import { useCountryDropdown } from './hooks';
-import type { CountryDropdownOption, CountryDropdownProps } from './types/countryDropdown.types';
 import type { ICreateCountryProfile } from '@/modules/countryProfile/types';
+import type {
+  CountryDropdownOption,
+  CountryDropdownProps,
+} from './types/countryDropdown.types';
 
 export const CountryDropdown = ({
   value,
@@ -18,90 +28,156 @@ export const CountryDropdown = ({
   error,
   createLabel = 'Create',
 }: CountryDropdownProps) => {
-  const [defaultOptions, setDefaultOptions] = useState<CountryDropdownOption[]>(
+  const [createdOptions, setCreatedOptions] = useState<CountryDropdownOption[]>(
     []
   );
-  const [selectedOption, setSelectedOption] =
-    useState<CountryDropdownOption | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [pendingCountryName, setPendingCountryName] = useState('');
-  const { loadOptions } = useCountryDropdown();
+  const [searchTerm, setSearchTerm] = useState('');
+  const defaultOptionsRef = useRef<CountryDropdownOption[]>([]);
+  const pendingLoadRef = useRef<{
+    inputValue: string;
+    resolve: (response: AsyncSelectResponse) => void;
+  } | null>(null);
+
+  const {
+    data: countryResponse,
+    isLoading: isLoadingOptions,
+    isFetching: isFetchingOptions,
+  } = useListCountryProfiles({
+    page: 1,
+    limit: 25,
+    search: searchTerm.trim() || undefined,
+  });
+
+  const { data: selectedCountry, isFetching: isResolvingSelectedOption } =
+    useGetCountryProfile(value || '');
   const { submitCountryProfile, isPending: isCreatingCountry } =
     useCreateCountryProfile();
 
+  const defaultOptions = useMemo<CountryDropdownOption[]>(
+    () =>
+      (countryResponse?.data ?? []).map(country => ({
+        value: country.id,
+        label: `${country.code} - ${country.name}`,
+        countryId: country.id,
+        code: country.code,
+        name: country.name,
+      })),
+    [countryResponse?.data]
+  );
+
+  const mergedDefaultOptions = useMemo<CountryDropdownOption[]>(() => {
+    const map = new Map<string, CountryDropdownOption>();
+
+    defaultOptions.forEach(option => {
+      map.set(option.value, option);
+    });
+
+    createdOptions.forEach(option => {
+      map.set(option.value, option);
+    });
+
+    return Array.from(map.values());
+  }, [createdOptions, defaultOptions, searchTerm]);
+
+  const loadOptions = useCallback(
+    async (inputValue: string): Promise<AsyncSelectResponse> => {
+      
+      const normalizedInput = inputValue.trim();
+      const pendingLoad = pendingLoadRef.current;
+      setSearchTerm(inputValue);
+
+      if (!normalizedInput) {
+        const baseOptions =
+          defaultOptionsRef.current.length > 0
+            ? defaultOptionsRef.current
+            : mergedDefaultOptions;
+
+        if (pendingLoad) {
+          pendingLoad.resolve({ options: baseOptions });
+          pendingLoadRef.current = null;
+        }
+
+        return { options: baseOptions };
+      }
+
+      const currentSearch = searchTerm.trim();
+      const isStable = normalizedInput === currentSearch && !isFetchingOptions;
+
+      if (isStable) {
+        return { options: mergedDefaultOptions };
+      }
+
+      if (pendingLoad && pendingLoad.inputValue !== normalizedInput) {
+        pendingLoad.resolve({ options: mergedDefaultOptions });
+      }
+
+      return new Promise<AsyncSelectResponse>(resolve => {
+        pendingLoadRef.current = {
+          inputValue: normalizedInput,
+          resolve,
+        };
+      });
+    },
+    [isFetchingOptions, mergedDefaultOptions, searchTerm]
+  );
+
   useEffect(() => {
-    let isActive = true;
+    const pendingLoad = pendingLoadRef.current;
 
-    const loadInitialOptions = async () => {
-      try {
-        const response = await loadOptions('');
+    if (!pendingLoad) {
+      return;
+    }
 
-        if (isActive) {
-          setDefaultOptions(response.options as CountryDropdownOption[]);
-        }
-      } catch {
-        if (isActive) {
-          setDefaultOptions([]);
-        }
-      }
-    };
+    const normalizedSearch = searchTerm.trim();
+    const isReady =
+      pendingLoad.inputValue === normalizedSearch && !isFetchingOptions;
 
-    loadInitialOptions();
+    if (!isReady) {
+      return;
+    }
 
-    return () => {
-      isActive = false;
-    };
-  }, [loadOptions]);
+    pendingLoad.resolve({ options: mergedDefaultOptions });
+    pendingLoadRef.current = null;
+  }, [isFetchingOptions, mergedDefaultOptions, searchTerm]);
 
   useEffect(() => {
-    let isActive = true;
+    if (
+      searchTerm.trim() !== '' ||
+      isFetchingOptions ||
+      mergedDefaultOptions.length === 0
+    ) {
+      return;
+    }
 
-    const resolveSelectedOption = async () => {
-      if (!value) {
-        if (isActive) {
-          setSelectedOption(null);
-        }
-        return;
-      }
+    defaultOptionsRef.current = mergedDefaultOptions;
+  }, [isFetchingOptions, mergedDefaultOptions, searchTerm]);
 
-      const cachedOption =
-        defaultOptions.find(option => option.value === value) ?? null;
+  const selectedOption = useMemo<CountryDropdownOption | null>(() => {
+    if (!value) {
+      return null;
+    }
 
-      if (cachedOption) {
-        if (isActive) {
-          setSelectedOption(cachedOption);
-        }
-        return;
-      }
+    const cachedOption =
+      mergedDefaultOptions.find(option => option.value === value) ?? null;
 
-      try {
-        const country = await countryProfileApi.getCountryProfileById(value);
-        const nextOption = country
-          ? {
-              value: country.id,
-              label: `${country.code} - ${country.name}`,
-              countryId: country.id,
-              code: country.code,
-              name: country.name,
-            }
-          : null;
+    if (cachedOption) {
+      return cachedOption;
+    }
 
-        if (isActive) {
-          setSelectedOption(nextOption);
-        }
-      } catch {
-        if (isActive) {
-          setSelectedOption(null);
-        }
-      }
+    if (!selectedCountry || selectedCountry.id !== value) {
+      return null;
+    }
+
+    return {
+      value: selectedCountry.id,
+      label: `${selectedCountry.code} - ${selectedCountry.name}`,
+      countryId: selectedCountry.id,
+      code: selectedCountry.code,
+      name: selectedCountry.name,
     };
-
-    void resolveSelectedOption();
-
-    return () => {
-      isActive = false;
-    };
-  }, [defaultOptions, loadOptions, value]);
+  }, [mergedDefaultOptions, selectedCountry, value]);
 
   const createCountryDefaultValues = useMemo<ICreateCountryProfile>(
     () => ({
@@ -122,7 +198,7 @@ export const CountryDropdown = ({
       name: createdCountry.name,
     };
 
-    setDefaultOptions(prevOptions => {
+    setCreatedOptions(prevOptions => {
       const nextOptions = prevOptions.filter(
         option => option.countryId !== nextOption.countryId
       );
@@ -144,8 +220,9 @@ export const CountryDropdown = ({
         className={className}
         isCreatable
         loadOptions={loadOptions}
-        defaultOptions={defaultOptions}
+        defaultOptions={mergedDefaultOptions}
         isClearable
+        isLoading={isLoadingOptions || isFetchingOptions || isResolvingSelectedOption}
         value={selectedOption as AsyncSelectOption | null}
         onChange={option => {
           const nextOption = (option as CountryDropdownOption | null) ?? null;

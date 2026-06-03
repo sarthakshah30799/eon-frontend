@@ -1,4 +1,4 @@
-import { Button } from '../../ui/button1/Button';
+import { Dropdown } from '../../ui/dropdown';
 
 interface HeaderProps {
   userName: string;
@@ -35,38 +35,44 @@ export const Header = ({ userName, onMenuClick, onLogout }: HeaderProps) => {
         </div>
 
         <div className="flex items-center gap-3 sm:gap-4">
-          <div className="flex items-center gap-3 rounded-2xl border border-border-primary bg-surface-primary px-3 py-2 shadow-sm">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-primary-600 to-primary-700 text-text-inverse">
-              <svg
-                aria-hidden="true"
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+          <Dropdown>
+            <Dropdown.Trigger className="flex! gap-3 rounded-2xl border border-border-primary bg-surface-primary px-3 py-2 shadow-sm hover:bg-surface-primary">
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-primary-600 to-primary-700 text-text-inverse">
+                <svg
+                  aria-hidden="true"
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M20 21a8 8 0 10-16 0m16 0a8 8 0 00-16 0m16 0H4m8-11a4 4 0 100-8 4 4 0 000 8z"
+                  />
+                </svg>
+              </span>
+
+              <span className="hidden text-left sm:block">
+                <span className="block text-sm font-semibold text-text-primary">
+                  Admin
+                </span>
+                <span className="block text-xs text-text-tertiary">
+                  {userName}
+                </span>
+              </span>
+            </Dropdown.Trigger>
+
+            <Dropdown.Menu className="min-w-full">
+              <Dropdown.Item
+                className="w-full justify-start px-4 py-2 text-left text-sm font-medium text-text-secondary hover:bg-primary-50 hover:text-primary-700"
+                onClick={onLogout}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M20 21a8 8 0 10-16 0m16 0a8 8 0 00-16 0m16 0H4m8-11a4 4 0 100-8 4 4 0 000 8z"
-                />
-              </svg>
-            </div>
-
-            <div className="hidden text-left sm:block">
-              <p className="text-sm font-semibold text-text-primary">Admin</p>
-              <p className="text-xs text-text-tertiary">{userName}</p>
-            </div>
-          </div>
-
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onLogout}
-            className="border-border-secondary text-text-secondary hover:bg-primary-50"
-          >
-            Logout
-          </Button>
+                Logout
+              </Dropdown.Item>
+            </Dropdown.Menu>
+          </Dropdown>
         </div>
       </div>
     </header>

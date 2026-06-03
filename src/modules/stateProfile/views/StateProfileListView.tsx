@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button1';
 import { Input } from '@/components/ui/input';
 import { Loader } from '@/components/ui/loader';
 import { PaginationControls } from '@/components/ui/pagination';
+import { usePermission } from '@/hooks';
 import { STATE_PROFILE_TEXTS } from '../constants';
 import { StateProfileTable } from '../components';
 import { useListStateProfiles } from '../hooks';
@@ -11,6 +12,7 @@ import { CountryDropdown } from '@/modules/dropdowns/countryDropdown';
 
 export const StateProfileListView = () => {
   const navigate = useNavigate();
+  const { canAdd } = usePermission('/master/system-setups/state-profile');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [search, setSearch] = useState('');
@@ -59,15 +61,17 @@ export const StateProfileListView = () => {
             </p>
           </div>
 
-          <Button
-            type="button"
-            className="rounded-sm"
-            onClick={() =>
-              navigate('/master/system-setups/state-profile/create')
-            }
-          >
-            {STATE_PROFILE_TEXTS.CREATE_STATE}
-          </Button>
+          {canAdd && (
+            <Button
+              type="button"
+              className="rounded-sm"
+              onClick={() =>
+                navigate('/master/system-setups/state-profile/create')
+              }
+            >
+              {STATE_PROFILE_TEXTS.CREATE_STATE}
+            </Button>
+          )}
         </div>
       </section>
 

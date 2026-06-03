@@ -1,5 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { Loader } from '@/components/ui/loader';
+import { usePermission } from '@/hooks';
 import { STATE_PROFILE_TEXTS } from '../constants';
 import { useGetStateProfile, useUpdateStateProfile } from '../hooks';
 import { createEmptyStateProfileFormValues } from '../utils';
@@ -11,6 +12,7 @@ export const StateProfileEditView = () => {
   const { id = '' } = useParams<{ id: string }>();
   const { data: state, isLoading } = useGetStateProfile(id);
   const { submitStateProfile, isPending } = useUpdateStateProfile(id);
+  const { canModify } = usePermission('/master/system-setups/state-profile');
 
   if (isLoading) {
     return <Loader />;
@@ -31,8 +33,8 @@ export const StateProfileEditView = () => {
 
   return (
     <StateProfileEditorView
-      heading={STATE_PROFILE_TEXTS.EDIT_STATE}
-      description="Update the state details."
+      heading={canModify ? STATE_PROFILE_TEXTS.EDIT_STATE : "View State Details"}
+      description={canModify ? "Update the state details." : "View the state details."}
       submitLabel={STATE_PROFILE_TEXTS.SAVE_CHANGES}
       defaultValues={
         state
@@ -46,6 +48,7 @@ export const StateProfileEditView = () => {
       }
       onSubmitState={handleSubmit}
       isSubmitting={isPending}
+      readOnly={!canModify}
     />
   );
 };

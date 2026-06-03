@@ -4,12 +4,14 @@ import { Button } from '@/components/ui/button1';
 import { Input } from '@/components/ui/input';
 import { Loader } from '@/components/ui/loader';
 import { PaginationControls } from '@/components/ui/pagination';
+import { usePermission } from '@/hooks';
 import { COUNTRY_PROFILE_TEXTS } from '../constants';
 import { CountryProfileTable } from '../components';
 import { useListCountryProfiles } from '../hooks';
 
 export const CountryProfileListView = () => {
   const navigate = useNavigate();
+  const { canAdd } = usePermission('/master/system-setups/country-profile');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [search, setSearch] = useState('');
@@ -57,15 +59,17 @@ export const CountryProfileListView = () => {
             </p>
           </div>
 
-          <Button
-            type="button"
-            className="rounded-sm"
-            onClick={() =>
-              navigate('/master/system-setups/country-profile/create')
-            }
-          >
-            {COUNTRY_PROFILE_TEXTS.CREATE_COUNTRY}
-          </Button>
+          {canAdd && (
+            <Button
+              type="button"
+              className="rounded-sm"
+              onClick={() =>
+                navigate('/master/system-setups/country-profile/create')
+              }
+            >
+              {COUNTRY_PROFILE_TEXTS.CREATE_COUNTRY}
+            </Button>
+          )}
         </div>
       </section>
 

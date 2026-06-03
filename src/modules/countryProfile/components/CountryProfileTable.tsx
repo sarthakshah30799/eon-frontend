@@ -1,7 +1,8 @@
 import { useNavigate } from 'react-router-dom';
-import { PencilSquareIcon } from '@heroicons/react/24/outline';
+import { PencilSquareIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button1';
 import { Table, type TableColumnDef } from '@/components/ui/table';
+import { usePermission } from '@/hooks';
 import type { ICountryProfile } from '../types';
 
 interface CountryProfileTableProps {
@@ -19,6 +20,9 @@ export const CountryProfileTable = ({
   countries,
 }: CountryProfileTableProps) => {
   const navigate = useNavigate();
+  const { canModify, canView } = usePermission(
+    '/master/system-setups/country-profile'
+  );
 
   const rows: CountryProfileTableRow[] = countries.map(country => ({
     id: country.id,
@@ -43,11 +47,13 @@ export const CountryProfileTable = ({
       cell: ({ row }) => {
         const countryId = row.original.id;
 
+        if (!canModify && !canView) return null;
+
         return (
           <div className="flex items-center gap-2">
             <Button
               type="button"
-              aria-label="Edit country"
+              aria-label={canModify ? 'Edit country' : 'View country'}
               variant="ghost"
               size="icon"
               className="rounded-sm bg-transparent text-text-secondary hover:bg-surface-secondary hover:text-text-primary"
@@ -56,7 +62,11 @@ export const CountryProfileTable = ({
                 navigate(`/master/system-setups/country-profile/edit/${countryId}`);
               }}
             >
-              <PencilSquareIcon className="h-5 w-5" />
+              {canModify ? (
+                <PencilSquareIcon className="h-5 w-5" />
+              ) : (
+                <EyeIcon className="h-5 w-5" />
+              )}
             </Button>
           </div>
         );
@@ -72,9 +82,12 @@ export const CountryProfileTable = ({
       enableFiltering={false}
       enableRowSelection={false}
       enableColumnVisibility={false}
-      onRowClick={row => {
-        navigate(`/master/system-setups/country-profile/edit/${row.id}`);
-      }}
+      onRowClick={
+        canModify || canView
+          ? row =>
+              navigate(`/master/system-setups/country-profile/edit/${row.id}`)
+          : undefined
+      }
       emptyMessage="No countries found. Create your first country."
     />
   );

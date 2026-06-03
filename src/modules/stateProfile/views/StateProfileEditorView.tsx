@@ -10,6 +10,7 @@ interface StateProfileEditorViewProps {
   defaultValues: ICreateStateProfile;
   onSubmitState: (values: ICreateStateProfile) => void | Promise<void>;
   isSubmitting?: boolean;
+  readOnly?: boolean;
 }
 
 export const StateProfileEditorView = ({
@@ -19,6 +20,7 @@ export const StateProfileEditorView = ({
   defaultValues,
   onSubmitState,
   isSubmitting = false,
+  readOnly = false,
 }: StateProfileEditorViewProps) => {
   const navigate = useNavigate();
 
@@ -46,6 +48,7 @@ export const StateProfileEditorView = ({
         onSubmit={onSubmitState}
         submitLabel={submitLabel}
         isSubmitting={isSubmitting}
+        readOnly={readOnly}
       />
     </section>
   );

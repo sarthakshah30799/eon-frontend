@@ -29,6 +29,8 @@ type SidebarSection = {
 
 
 
+
+
 const isExcludedProfile = (name: string, path?: string) => {
   const lowerName = name.toLowerCase();
   const lowerPath = path?.toLowerCase() || '';
@@ -62,7 +64,6 @@ const ADMIN_DROPDOWN_SECTION: SidebarSection = {
     },
   ],
 };
-
 
 const sidebarSectionTriggerClass = (isActive = false) =>
   [
@@ -295,48 +296,68 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     },
   });
 
+
+
   const { user } = useAuth();
 
   const sections = useMemo<SidebarSection[]>(() => {
-    const userEmail = user?.email?.toLowerCase();
-    const isAdminUser = userEmail === 'admin@maraekat.com';
+    const isAdminUser = user?.isAdmin === true;
 
     if (!menuTree || menuTree.length === 0) {
       return isAdminUser ? [ADMIN_DROPDOWN_SECTION] : [];
     }
 
-    const dynamicSections = menuTree.map(root => {
-      const items = (root.children || [])
-        .filter(group => !isExcludedProfile(group.name, group.path ?? undefined))
-        .map(group => {
-          if (!group.children || group.children.length === 0) {
+    const hasViewPermission = (path?: string) => {
+      if (isAdminUser) return true;
+      if (!path) return false;
+      return user?.permissions?.[path]?.includes('view') === true;
+    };
+
+    const dynamicSections = menuTree
+      .map(root => {
+        const items = (root.children || [])
+          .filter(group => !isExcludedProfile(group.name, group.path ?? undefined))
+          .map(group => {
+            if (!group.children || group.children.length === 0) {
+              const isVisible = hasViewPermission(group.path || undefined);
+              return {
+                id: group.id,
+                label: group.name,
+                path: group.path || undefined,
+                visible: isVisible,
+              };
+            }
+
+            const mappedChildren = group.children
+              .filter(item => !isExcludedProfile(item.name, item.path ?? undefined))
+              .map(item => {
+                const isVisible = hasViewPermission(item.path ?? undefined);
+                return {
+                  id: item.id,
+                  label: item.name,
+                  path: item.path ?? undefined,
+                  visible: isVisible,
+                };
+              })
+              .filter(item => item.visible);
+
             return {
               id: group.id,
               label: group.name,
-              path: group.path || undefined,
+              children: mappedChildren.map(({ visible, ...rest }) => rest),
+              visible: mappedChildren.length > 0,
             };
-          }
+          })
+          .filter(group => group.visible);
 
-          const mappedChildren = group.children
-            .filter(item => !isExcludedProfile(item.name, item.path ?? undefined))
-            .map(item => ({
-              id: item.id,
-              label: item.name,
-              path: item.path ?? undefined,
-            }));
-
-          return {
-            id: group.id,
-            label: group.name,
-            children: mappedChildren,
-          };
-        });
-
-      return {
-        title: root.name,
-        items,
-      };
-    });
+        return {
+          title: root.name,
+          items: items.map(({ visible, ...rest }) => rest as SidebarMenuItem),
+          visible: items.length > 0,
+        };
+      })
+      .filter(section => section.visible)
+      .map(({ visible, ...rest }) => rest as SidebarSection);
 
     if (isAdminUser) {
       return [...dynamicSections, ADMIN_DROPDOWN_SECTION];

@@ -56,8 +56,21 @@ export const usePermission = (path?: string): UsePermissionResult => {
     }
 
     let checkPath = path;
-    if (path.startsWith('/master/system-setups/company-profile')) {
-      checkPath = '/master/system-setups/company-profile';
+    const prefixes = [
+      '/master/system-setups/company-profile',
+      '/master/system-setups/branch-profile',
+      '/master/system-setups/counter-profile',
+      '/master/system-setups/country-profile',
+      '/master/system-setups/state-profile',
+      '/master/system-setups/user-profile',
+      '/master/system-setups/user-role',
+    ];
+
+    for (const prefix of prefixes) {
+      if (path.startsWith(prefix)) {
+        checkPath = prefix;
+        break;
+      }
     }
 
     const permissions = user.permissions?.[checkPath] || [];

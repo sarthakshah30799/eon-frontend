@@ -5,6 +5,9 @@ import { Loader } from '@/components/ui/loader';
 
 // Lazy load pages
 const LoginPage = lazy(() => import('../pages/auth/login/LoginPage'));
+const ChooseWorkplacePage = lazy(
+  () => import('../pages/auth/choose-workplace/ChooseWorkplacePage')
+);
 const ForgotPasswordPage = lazy(
   () => import('../pages/auth/forgot-password/ForgotPasswordPage')
 );
@@ -129,6 +132,10 @@ const router = createBrowserRouter([
     ),
   },
   {
+    path: '/choose-workplace',
+    element: <ChooseWorkplacePage />,
+  },
+  {
     path: '/forgot-password',
     element: (
       <PublicLayout>
@@ -194,6 +201,14 @@ const router = createBrowserRouter([
   },
   {
     path: '/master/system-setups/company-profile/:id',
+    element: (
+      <ProtectedLayout>
+        <CompanyProfilePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/master/system-setups/company-profile',
     element: (
       <ProtectedLayout>
         <CompanyProfilePage />

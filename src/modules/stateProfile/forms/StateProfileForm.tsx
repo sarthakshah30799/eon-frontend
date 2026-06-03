@@ -11,6 +11,7 @@ interface StateProfileFormProps {
   onSubmit: (values: ICreateStateProfile) => void | Promise<void>;
   submitLabel?: string;
   isSubmitting?: boolean;
+  readOnly?: boolean;
 }
 
 export const StateProfileForm = ({
@@ -18,11 +19,14 @@ export const StateProfileForm = ({
   onSubmit,
   submitLabel = STATE_PROFILE_TEXTS.CREATE_STATE,
   isSubmitting = false,
+  readOnly = false,
 }: StateProfileFormProps) => {
   const handleSubmitErrors: SubmitErrorHandler<ICreateStateProfile> =
     errors => {
       console.log('StateProfileForm submit errors:', errors);
     };
+
+  const isDisabled = isSubmitting || readOnly;
 
   return (
     <Form
@@ -38,36 +42,38 @@ export const StateProfileForm = ({
             name="countryId"
             label="Country"
             placeholder="Select country"
-            disabled={isSubmitting}
+            disabled={isDisabled}
           />
         </div>
         <FormFieldInput
           name="code"
           label="State Code"
-          disabled={isSubmitting}
+          disabled={isDisabled}
         />
         <FormFieldInput
           name="name"
           label="State Name"
-          disabled={isSubmitting}
+          disabled={isDisabled}
         />
         <FormFieldInput
           name="gstStateCode"
           label="GST State Code"
-          disabled={isSubmitting}
+          disabled={isDisabled}
         />
         <FormFieldInput
           name="ctrStateCode"
           label="CTR State Code"
-          disabled={isSubmitting}
+          disabled={isDisabled}
         />
       </div>
 
-      <div className="flex justify-end border-t border-border-primary pt-4">
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Saving...' : submitLabel}
-        </Button>
-      </div>
+      {!readOnly && (
+        <div className="flex justify-end border-t border-border-primary pt-4">
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Saving...' : submitLabel}
+          </Button>
+        </div>
+      )}
     </Form>
   );
 };

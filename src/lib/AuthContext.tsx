@@ -7,6 +7,9 @@ interface AuthContextType {
   user: IUser | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  activeBranchId: string | null;
+  activeCounterId: string | null;
+  setWorkplace: (branchId: string, counterId: string) => void;
   login: (email: string, password: string) => Promise<void>;
   otpLogin: (
     countryCode: string,
@@ -26,6 +29,12 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<IUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeBranchId, setActiveBranchId] = useState<string | null>(
+    () => localStorage.getItem('activeBranchId')
+  );
+  const [activeCounterId, setActiveCounterId] = useState<string | null>(
+    () => localStorage.getItem('activeCounterId')
+  );
 
   const isAuthenticated = !!user;
 
@@ -54,6 +63,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     await checkAuth();
   };
 
+  const setWorkplace = (branchId: string, counterId: string) => {
+    setActiveBranchId(branchId);
+    setActiveCounterId(counterId);
+    localStorage.setItem('activeBranchId', branchId);
+    localStorage.setItem('activeCounterId', counterId);
+  };
+
   const logout = async () => {
     try {
       await authApi.logout();
@@ -61,6 +77,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.error('Logout error:', error);
     } finally {
       setUser(null);
+      setActiveBranchId(null);
+      setActiveCounterId(null);
+      localStorage.removeItem('activeBranchId');
+      localStorage.removeItem('activeCounterId');
     }
   };
 
@@ -73,6 +93,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     user,
     isLoading,
     isAuthenticated,
+    activeBranchId,
+    activeCounterId,
+    setWorkplace,
     login,
     otpLogin,
     logout,

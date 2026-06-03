@@ -1,7 +1,8 @@
 import { useNavigate } from 'react-router-dom';
-import { PencilSquareIcon } from '@heroicons/react/24/outline';
+import { PencilSquareIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button1';
 import { Table, type TableColumnDef } from '@/components/ui/table';
+import { usePermission } from '@/hooks';
 import type { IStateProfile } from '../types';
 
 interface StateProfileTableProps {
@@ -19,6 +20,9 @@ interface StateProfileTableRow {
 
 export const StateProfileTable = ({ states }: StateProfileTableProps) => {
   const navigate = useNavigate();
+  const { canModify, canView } = usePermission(
+    '/master/system-setups/state-profile'
+  );
 
   const rows: StateProfileTableRow[] = states.map(state => ({
     id: state.id,
@@ -47,11 +51,13 @@ export const StateProfileTable = ({ states }: StateProfileTableProps) => {
       cell: ({ row }) => {
         const stateId = row.original.id;
 
+        if (!canModify && !canView) return null;
+
         return (
           <div className="flex items-center gap-2">
             <Button
               type="button"
-              aria-label="Edit state"
+              aria-label={canModify ? 'Edit state' : 'View state'}
               variant="ghost"
               size="icon"
               className="rounded-sm bg-transparent text-text-secondary hover:bg-surface-secondary hover:text-text-primary"
@@ -60,7 +66,11 @@ export const StateProfileTable = ({ states }: StateProfileTableProps) => {
                 navigate(`/master/system-setups/state-profile/edit/${stateId}`);
               }}
             >
-              <PencilSquareIcon className="h-5 w-5" />
+              {canModify ? (
+                <PencilSquareIcon className="h-5 w-5" />
+              ) : (
+                <EyeIcon className="h-5 w-5" />
+              )}
             </Button>
           </div>
         );
@@ -77,9 +87,11 @@ export const StateProfileTable = ({ states }: StateProfileTableProps) => {
       enablePagination={false}
       enableRowSelection={false}
       enableColumnVisibility={false}
-      onRowClick={row => {
-        navigate(`/master/system-setups/state-profile/edit/${row.id}`);
-      }}
+      onRowClick={
+        canModify || canView
+          ? row => navigate(`/master/system-setups/state-profile/edit/${row.id}`)
+          : undefined
+      }
       emptyMessage="No states found. Create your first state."
     />
   );

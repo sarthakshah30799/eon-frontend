@@ -28,5 +28,6 @@ export interface IUser {
   lastLogin?: string;
   status?: 'active' | 'inactive' | 'suspended';
   isHo?: boolean;
+  isAdmin?: boolean;
   permissions?: Record<string, string[]>;
 }

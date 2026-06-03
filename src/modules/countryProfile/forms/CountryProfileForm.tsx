@@ -16,6 +16,7 @@ interface CountryProfileFormProps {
   onSubmit: (values: ICreateCountryProfile) => void | Promise<void>;
   submitLabel?: string;
   isSubmitting?: boolean;
+  readOnly?: boolean;
 }
 
 export const CountryProfileForm = ({
@@ -23,11 +24,14 @@ export const CountryProfileForm = ({
   onSubmit,
   submitLabel = COUNTRY_PROFILE_TEXTS.CREATE_COUNTRY,
   isSubmitting = false,
+  readOnly = false,
 }: CountryProfileFormProps) => {
   const handleSubmitErrors: SubmitErrorHandler<ICreateCountryProfile> =
     errors => {
       console.log('CountryProfileForm submit errors:', errors);
     };
+
+  const isDisabled = isSubmitting || readOnly;
 
   return (
     <Form
@@ -41,12 +45,12 @@ export const CountryProfileForm = ({
         <FormFieldInput
           name="code"
           label="Country Code"
-          disabled={isSubmitting}
+          disabled={isDisabled}
         />
         <FormFieldInput
           name="name"
           label="Country Name"
-          disabled={isSubmitting}
+          disabled={isDisabled}
         />
       </div>
 
@@ -54,12 +58,12 @@ export const CountryProfileForm = ({
         <FormFieldInput
           name="lrsCountryCode"
           label="LRS Country Code"
-          disabled={isSubmitting}
+          disabled={isDisabled}
         />
         <FormFieldInput
           name="ctrCountryCode"
           label="CTR Country Code"
-          disabled={isSubmitting}
+          disabled={isDisabled}
         />
       </div>
 
@@ -70,7 +74,7 @@ export const CountryProfileForm = ({
           defaultOptions={riskCategoryOptions}
           loadOptions={loadRiskCategoryOptions}
           placeholder="Select risk category"
-          disabled={isSubmitting}
+          disabled={isDisabled}
           isClearable
           isSearchable={false}
         />
@@ -80,25 +84,27 @@ export const CountryProfileForm = ({
         <FormFieldCheckbox
           name="restrictedCountry"
           label="Restricted Country"
-          disabled={isSubmitting}
+          disabled={isDisabled}
         />
         <FormFieldCheckbox
           name="greyListCountry"
           label="Grey List Country"
-          disabled={isSubmitting}
+          disabled={isDisabled}
         />
         <FormFieldCheckbox
           name="baseCountry"
           label="Base Country"
-          disabled={isSubmitting}
+          disabled={isDisabled}
         />
       </div>
 
-      <div className="flex justify-end border-t border-border-primary pt-4">
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Saving...' : submitLabel}
-        </Button>
-      </div>
+      {!readOnly && (
+        <div className="flex justify-end border-t border-border-primary pt-4">
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Saving...' : submitLabel}
+          </Button>
+        </div>
+      )}
     </Form>
   );
 };

@@ -1,5 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { Loader } from '@/components/ui/loader';
+import { usePermission } from '@/hooks';
 import { COUNTRY_PROFILE_TEXTS } from '../constants';
 import { useGetCountryProfile, useUpdateCountryProfile } from '../hooks';
 import { createEmptyCountryProfileFormValues } from '../utils';
@@ -11,6 +12,7 @@ export const CountryProfileEditView = () => {
   const { id = '' } = useParams<{ id: string }>();
   const { data: country, isLoading } = useGetCountryProfile(id);
   const { submitCountryProfile, isPending } = useUpdateCountryProfile(id);
+  const { canModify } = usePermission('/master/system-setups/country-profile');
 
   if (isLoading) {
     return <Loader />;
@@ -31,8 +33,8 @@ export const CountryProfileEditView = () => {
 
   return (
     <CountryProfileEditorView
-      heading={COUNTRY_PROFILE_TEXTS.EDIT_COUNTRY}
-      description="Update the country details."
+      heading={canModify ? COUNTRY_PROFILE_TEXTS.EDIT_COUNTRY : "View Country Details"}
+      description={canModify ? "Update the country details." : "View the country details."}
       submitLabel={COUNTRY_PROFILE_TEXTS.SAVE_CHANGES}
       defaultValues={
         country
@@ -46,6 +48,7 @@ export const CountryProfileEditView = () => {
       }
       onSubmitCountry={handleSubmit}
       isSubmitting={isPending}
+      readOnly={!canModify}
     />
   );
 };

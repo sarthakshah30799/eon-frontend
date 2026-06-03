@@ -11,7 +11,7 @@ interface ProtectedLayoutProps {
 export const ProtectedLayout: React.FC<ProtectedLayoutProps> = ({
   children,
 }) => {
-  const { isLoading, isAuthenticated } = useAuth();
+  const { isLoading, isAuthenticated, user, activeBranchId, activeCounterId } = useAuth();
 
   if (isLoading) {
     return <Loader />;
@@ -19,6 +19,10 @@ export const ProtectedLayout: React.FC<ProtectedLayoutProps> = ({
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (user && !user.isAdmin && (!activeBranchId || !activeCounterId)) {
+    return <Navigate to="/choose-workplace" replace />;
   }
 
   return <DashboardLayout>{children}</DashboardLayout>;

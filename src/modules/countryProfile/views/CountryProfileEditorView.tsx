@@ -10,6 +10,7 @@ interface CountryProfileEditorViewProps {
   defaultValues: ICreateCountryProfile;
   onSubmitCountry: (values: ICreateCountryProfile) => void | Promise<void>;
   isSubmitting?: boolean;
+  readOnly?: boolean;
 }
 
 export const CountryProfileEditorView = ({
@@ -19,6 +20,7 @@ export const CountryProfileEditorView = ({
   defaultValues,
   onSubmitCountry,
   isSubmitting = false,
+  readOnly = false,
 }: CountryProfileEditorViewProps) => {
   const navigate = useNavigate();
 
@@ -46,6 +48,7 @@ export const CountryProfileEditorView = ({
         onSubmit={onSubmitCountry}
         submitLabel={submitLabel}
         isSubmitting={isSubmitting}
+        readOnly={readOnly}
       />
     </section>
   );

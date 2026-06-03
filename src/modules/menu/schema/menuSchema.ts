@@ -1,6 +1,7 @@
 import * as yup from 'yup';
 
 export const menuSchema = yup.object({
+  isAdmin: yup.boolean().default(false),
   name: yup
     .string()
     .trim()

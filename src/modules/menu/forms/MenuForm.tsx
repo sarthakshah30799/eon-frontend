@@ -46,6 +46,13 @@ export const MenuForm = ({
           Menu Details
         </h2>
         <div className="grid gap-4 md:grid-cols-2">
+          <div className="rounded-sm border border-border-primary bg-surface-primary p-3">
+            <FormFieldCheckbox
+              name="isAdmin"
+              label="Is Admin Menu"
+              disabled={isSubmitting}
+            />
+          </div>
           <FormFieldInput name="name" label="Menu Name" disabled={isSubmitting} />
           <FormFieldInput
             name="path"

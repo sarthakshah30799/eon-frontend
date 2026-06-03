@@ -2,6 +2,7 @@ import type { AsyncSelectOption } from '@/components/ui';
 import type { ICreateMenu, IMenu } from '@/types/menuTypes';
 
 export const createEmptyMenuValues = (): ICreateMenu => ({
+  isAdmin: false,
   name: '',
   path: '',
   icon: '',
@@ -13,6 +14,7 @@ export const createEmptyMenuValues = (): ICreateMenu => ({
 export const mapMenuToCreateValues = (
   menu: IMenu
 ): ICreateMenu => ({
+  isAdmin: menu.isAdmin,
   name: menu.name,
   path: menu.path ?? '',
   icon: menu.icon ?? '',

@@ -329,7 +329,10 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
       return user?.permissions?.[path]?.includes('view') === true;
     };
 
-    const dynamicSections = menuTree
+    const adminRoot = menuTree.find(root => root.isAdmin);
+    const nonAdminRoots = menuTree.filter(root => !root.isAdmin);
+
+    const dynamicSections = nonAdminRoots
       .map(root => {
         const items = (root.children || [])
           .filter(
@@ -398,7 +401,32 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
       });
 
     if (isAdminUser) {
-      return [ADMIN_DROPDOWN_SECTION, ...dynamicSections];
+      const adminSection = adminRoot
+        ? {
+            title: adminRoot.name,
+            items: (adminRoot.children || []).map(group => {
+              if (!group.children || group.children.length === 0) {
+                return {
+                  id: group.id,
+                  label: group.name,
+                  path: group.path || undefined,
+                };
+              }
+
+              return {
+                id: group.id,
+                label: group.name,
+                children: group.children.map(item => ({
+                  id: item.id,
+                  label: item.name,
+                  path: item.path || undefined,
+                })),
+              };
+            }),
+          }
+        : ADMIN_DROPDOWN_SECTION;
+
+      return [adminSection, ...dynamicSections];
     }
 
     return dynamicSections;

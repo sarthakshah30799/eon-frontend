@@ -46,6 +46,11 @@ const MenuTreeRow = ({
             >
               {menu.isActive ? 'Active' : 'Inactive'}
             </span>
+            {menu.isAdmin && (
+              <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-medium uppercase tracking-[0.18em] text-blue-700">
+                Admin
+              </span>
+            )}
           </div>
           <p className="mt-1 text-xs text-text-secondary">
             {menu.path || MENU_TEXTS.ROOT_LABEL} {menu.icon ? `| ${menu.icon}` : ''}

@@ -1,5 +1,6 @@
 export interface IMenu {
   id: string;
+  isAdmin: boolean;
   name: string;
   path: string | null;
   icon: string | null;
@@ -18,6 +19,7 @@ export interface ICreateMenu
     IMenu,
     'id' | 'path' | 'icon' | 'createdAt' | 'updatedAt' | 'createdBy' | 'updatedBy' | 'children'
   > {
+  isAdmin: boolean;
   path: string;
   icon: string;
   parentId: string | null;

@@ -7,6 +7,7 @@ import type { ICountryProfile } from '../types';
 
 interface CountryProfileTableProps {
   countries: ICountryProfile[];
+  loading?: boolean;
 }
 
 interface CountryProfileTableRow {
@@ -18,6 +19,7 @@ interface CountryProfileTableRow {
 
 export const CountryProfileTable = ({
   countries,
+  loading = false,
 }: CountryProfileTableProps) => {
   const navigate = useNavigate();
   const { canModify, canView } = usePermission(
@@ -82,6 +84,7 @@ export const CountryProfileTable = ({
       enableFiltering={false}
       enableRowSelection={false}
       enableColumnVisibility={false}
+      loading={loading}
       onRowClick={
         canModify || canView
           ? row =>

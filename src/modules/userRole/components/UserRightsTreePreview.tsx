@@ -109,14 +109,15 @@ const TreeLevel = ({
 
         return (
           <li key={node.id}>
-            <Dropdown.Item
+            <button
+              type="button"
               className={getLeafItemClassName(isSelected)}
               onClick={() => {
                 onSelectNode(node.id);
               }}
             >
               <span className="truncate">{node.label}</span>
-            </Dropdown.Item>
+            </button>
           </li>
         );
       })}

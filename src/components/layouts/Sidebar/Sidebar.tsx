@@ -402,7 +402,7 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
 
     if (isAdminUser) {
       const adminSection = adminRoot
-        ? {
+        && {
             title: adminRoot.name,
             items: (adminRoot.children || []).map(group => {
               if (!group.children || group.children.length === 0) {
@@ -423,10 +423,9 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                 })),
               };
             }),
-          }
-        : ADMIN_DROPDOWN_SECTION;
+          };
 
-      return [adminSection, ...dynamicSections];
+      return adminSection ? [adminSection, ...dynamicSections] : dynamicSections;
     }
 
     return dynamicSections;

@@ -158,7 +158,7 @@ function Table<T extends object>({
         {columns.map((column, colIndex) => (
           <td
             key={`skeleton-cell-${colIndex}`}
-            className={`border-b border-border-primary px-4 py-3 ${(column.meta as TableColumnMeta | undefined)?.cellClassName ?? ''}`}
+            className={`border-b border-border-secondary px-4 py-3 ${(column.meta as TableColumnMeta | undefined)?.cellClassName ?? ''}`}
           >
             <div className="h-4 rounded bg-surface-secondary"></div>
           </td>

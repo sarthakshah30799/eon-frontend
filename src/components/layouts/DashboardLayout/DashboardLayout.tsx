@@ -29,7 +29,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   };
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-gradient-to-br from-surface-secondary via-surface-primary to-primary-50 text-text-primary">
+    <div className="h-screen overflow-hidden bg-gradient-to-br from-surface-secondary via-surface-primary to-primary-50 text-text-primary">
       {isSidebarOpen && (
         <button
           type="button"
@@ -41,14 +41,14 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
-      <div className="min-h-screen lg:pl-70">
+      <div className="flex h-full flex-col lg:pl-70">
         <Header
           userName={user?.name ?? user?.email ?? 'Admin'}
           onMenuClick={() => setIsSidebarOpen(true)}
           onLogout={handleLogout}
         />
 
-        <main className="px-4 py-6 sm:px-6 lg:px-8">
+        <main className="min-h-0 flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-7xl">{children}</div>
         </main>
       </div>

@@ -28,19 +28,6 @@ type SidebarSection = {
   items: SidebarMenuItem[];
 };
 
-const isExcludedProfile = (name: string, path?: string) => {
-  const lowerName = name.toLowerCase();
-  const lowerPath = path?.toLowerCase() || '';
-  return (
-    lowerName.includes('company') ||
-    lowerName.includes('branch') ||
-    lowerName.includes('counter') ||
-    lowerPath.includes('company-profile') ||
-    lowerPath.includes('branch-profile') ||
-    lowerPath.includes('counter-profile')
-  );
-};
-
 const sidebarSectionTriggerClass = (isActive = false) =>
   [
     'w-full justify-between rounded-none! border-0 border-b-1 border-white! px-4 py-3 text-left text-sm font-semibold shadow-none! transition hover:border-primary-200 hover:bg-white hover:text-primary-700 focus-visible:ring-primary-300',
@@ -305,9 +292,6 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     return roots
       .map(root => {
         const items = (root.children || [])
-          .filter(
-            group => !isExcludedProfile(group.name, group.path ?? undefined)
-          )
           .map(group => {
             if (!group.children || group.children.length === 0) {
               const isVisible = hasViewPermission(group.path || undefined);
@@ -320,9 +304,6 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
             }
 
             const mappedChildren = group.children
-              .filter(
-                item => !isExcludedProfile(item.name, item.path ?? undefined)
-              )
               .map(item => {
                 const isVisible = hasViewPermission(item.path ?? undefined);
                 return {

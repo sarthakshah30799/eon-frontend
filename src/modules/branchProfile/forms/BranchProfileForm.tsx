@@ -221,6 +221,7 @@ const BranchProfileFormFields = ({
             loadOptions={connectedCounterLoadOptions}
             pagination={false}
             isLoading={isCountersLoading || isCountersFetching}
+            defaultOptions={connectedCounterOptions}
             disabled={isSubmitting}
             isMulti
             closeMenuOnSelect={false}

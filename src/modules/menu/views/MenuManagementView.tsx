@@ -201,7 +201,7 @@ export const MenuManagementView = () => {
               </span>
             </div>
 
-            {isLoading ? (
+            {isLoading || isUpdating ? (
               <p className="text-sm text-text-secondary">Loading menus...</p>
             ) : menuTree.length === 0 ? (
               <p className="text-sm text-text-secondary">{MENU_TEXTS.EMPTY_STATE}</p>
@@ -222,7 +222,7 @@ export const MenuManagementView = () => {
             )}
           </div>
 
-          <div className="rounded-sm border border-border-primary bg-surface-primary p-5">
+          <div className="relative rounded-sm border border-border-primary bg-surface-primary p-5">
             <div className="mb-5">
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">
                 {selectedMenu ? 'Edit Menu' : 'Create Menu'}
@@ -245,6 +245,17 @@ export const MenuManagementView = () => {
               isSubmitting={isSubmitting}
               parentOptions={parentOptions}
             />
+
+            {isUpdating && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center rounded-sm bg-surface-primary/80 backdrop-blur-[1px]">
+                <div className="flex flex-col items-center gap-3 rounded-sm border border-border-primary bg-surface-primary px-5 py-4 shadow-lg">
+                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary-200 border-t-primary-600" />
+                  <p className="text-sm font-medium text-text-secondary">
+                    Updating menu...
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

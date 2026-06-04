@@ -85,6 +85,11 @@ const BranchProfileFormFields = ({
             disabled={isSubmitting}
           />
           <FormFieldInput
+            name="name"
+            label="Branch Name"
+            disabled={isSubmitting}
+          />
+          <FormFieldInput
             name="branchNumber"
             label="Branch Number"
             type="number"

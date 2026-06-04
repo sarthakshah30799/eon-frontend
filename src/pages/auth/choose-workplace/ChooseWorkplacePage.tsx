@@ -179,7 +179,7 @@ const ChooseWorkplacePage: React.FC = () => {
                   <option value="" disabled>Select Branch</option>
                   {branches.map((b) => (
                     <option key={b.id} value={b.id}>
-                      {b.code} - {b.city}
+                      {b.name} - {b.code} - {b.city}
                     </option>
                   ))}
                 </select>

@@ -14,6 +14,7 @@ interface BackendBranch {
   country?: ICountryProfile | null;
   state?: IStateProfile | null;
   code: string;
+  name: string;
   branchNumber: number;
   address1: string;
   address2?: string | null;
@@ -46,6 +47,7 @@ const mapBackendToFrontend = (branch: BackendBranch): IBranchProfile => {
     country: branch.country || null,
     state: branch.state || null,
     code: branch.code || '',
+    name: branch.name || '',
     branchNumber: branch.branchNumber !== undefined ? String(branch.branchNumber) : '',
     address1: branch.address1 || '',
     address2: branch.address2 || '',
@@ -82,6 +84,7 @@ const mapFrontendToBackend = (
     countryId: form.countryId,
     stateId: form.stateId,
     code: form.code,
+    name: form.name,
     branchNumber: parseInt(form.branchNumber, 10) || 1,
     address1: form.address1,
     address2: form.address2 || undefined,

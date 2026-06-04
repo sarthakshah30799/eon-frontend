@@ -9,6 +9,11 @@ export const branchProfileSchema = yup.object({
     .trim()
     .required('Branch Code is required')
     .max(20, 'Branch Code must be at most 20 characters'),
+  name: yup
+    .string()
+    .trim()
+    .required('Branch Name is required')
+    .max(250, 'Branch Name must be at most 250 characters'),
   branchNumber: yup
     .string()
     .trim()

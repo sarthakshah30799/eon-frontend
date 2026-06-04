@@ -8,6 +8,7 @@ export const createEmptyBranchProfileFormValues = (): ICreateBranchProfile => ({
   countryId: '',
   stateId: '',
   code: '',
+  name: '',
   branchNumber: '',
   address1: '',
   address2: '',
@@ -38,6 +39,7 @@ export const mapRecordToFormValues = (
   countryId: record.country?.id || '',
   stateId: record.state?.id || '',
   code: record.code || '',
+  name: record.name || '',
   branchNumber: record.branchNumber || '',
   address1: record.address1 || '',
   address2: record.address2 || '',
@@ -77,6 +79,7 @@ export const mapFormValuesToRecord = (
   createdAt,
   updatedAt,
   code: values.code,
+  name: values.name,
   branchNumber: values.branchNumber,
   address1: values.address1,
   address2: values.address2,
@@ -109,6 +112,6 @@ export const toBranchAttachedToOptions = (
     .filter(branch => branch.id !== excludeId)
     .map(branch => ({
       value: branch.id,
-      label: `${branch.branchNumber} (${branch.code})`,
+      label: `${branch.name || branch.branchNumber} (${branch.code})`,
     }));
 };

@@ -14,6 +14,7 @@ interface BranchProfileTableProps {
 interface BranchProfileTableRow {
   id: string;
   code: string;
+  name: string;
   branchNumber: string;
   country: string;
   state: string;
@@ -48,6 +49,7 @@ export const BranchProfileTable = ({
         return {
           id: branch.id,
           code: branch.code || '',
+          name: branch.name || '-',
           branchNumber: branch.branchNumber || '',
           country: branch.country?.name || '-',
           state: branch.state?.name || '-',
@@ -67,6 +69,7 @@ export const BranchProfileTable = ({
 
   const columns: TableColumnDef<BranchProfileTableRow>[] = [
     { accessorKey: 'code', header: 'Branch Code' },
+    { accessorKey: 'name', header: 'Branch Name' },
     { accessorKey: 'branchNumber', header: 'Branch Number' },
     { accessorKey: 'country', header: 'Country' },
     { accessorKey: 'state', header: 'State' },

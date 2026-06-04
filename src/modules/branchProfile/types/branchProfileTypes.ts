@@ -12,6 +12,7 @@ export interface IBranchProfile {
   country: ICountryProfile | null;
   state: IStateProfile | null;
   code: string;
+  name: string;
   branchNumber: string;
   address1: string;
   address2: string;
@@ -44,6 +45,7 @@ export interface ICreateBranchProfile {
   countryId: string;
   stateId: string;
   code: string;
+  name: string;
   branchNumber: string;
   address1: string;
   address2: string;

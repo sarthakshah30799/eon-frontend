@@ -7,6 +7,7 @@ import { companyProfileApi, menuApi } from '../../../api';
 import { useAuth } from '../../../lib/AuthContext';
 import type { ICompanyProfile } from '../../../modules/companyProfile/types';
 import type { IMasterPageTreeNode } from '../../../modules/masterPages/types';
+import type { IMenu } from '../../../types/menuTypes';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -26,6 +27,12 @@ type SidebarMenuItem =
 type SidebarSection = {
   title: string;
   items: SidebarMenuItem[];
+};
+
+const ADMIN_ADDITIONAL_SETTINGS_ITEM: SidebarLeafItem = {
+  id: 'admin-additional-settings',
+  label: 'Additional Settings',
+  path: '/admin/additional-settings',
 };
 
 const sidebarSectionTriggerClass = (isActive = false) =>
@@ -77,6 +84,22 @@ const mapMasterPageNodeToItem = (
     id: page.id,
     label: page.pageName,
     children: page.children.map(mapMasterPageNodeToItem),
+  };
+};
+
+const mapMenuNodeToItem = (node: IMenu): SidebarMenuItem => {
+  if (!node.children || node.children.length === 0) {
+    return {
+      id: node.id,
+      label: node.name,
+      path: node.path || undefined,
+    };
+  }
+
+  return {
+    id: node.id,
+    label: node.name,
+    children: node.children.map(mapMenuNodeToItem),
   };
 };
 
@@ -276,7 +299,14 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     const isAdminUser = user?.isAdmin === true;
 
     if (!menuTree || menuTree.length === 0) {
-      return [];
+      return isAdminUser
+        ? [
+            {
+              title: 'Admin',
+              items: [ADMIN_ADDITIONAL_SETTINGS_ITEM],
+            },
+          ]
+        : [];
     }
 
     const hasViewPermission = (path?: string) => {
@@ -285,11 +315,10 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
       return user?.permissions?.[path]?.includes('view') === true;
     };
 
-    const roots = isAdminUser
-      ? menuTree
-      : menuTree.filter(root => !root.isAdmin);
+    const adminRoot = menuTree.find(root => root.isAdmin);
+    const roots = menuTree.filter(root => !root.isAdmin);
 
-    return roots
+    const dynamicSections = roots
       .map(root => {
         const items = (root.children || [])
           .map(group => {
@@ -350,6 +379,20 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
         void visible;
         return rest as SidebarSection;
       });
+
+    if (!isAdminUser) {
+      return dynamicSections;
+    }
+
+    const adminSection: SidebarSection = {
+      title: adminRoot?.name ?? 'Admin',
+      items: [
+        ...(adminRoot?.children?.map(mapMenuNodeToItem) ?? []),
+        ADMIN_ADDITIONAL_SETTINGS_ITEM,
+      ],
+    };
+
+    return [adminSection, ...dynamicSections];
   }, [menuTree, user]);
 
   const createdPageEntries = useMemo<SidebarMenuItem[]>(

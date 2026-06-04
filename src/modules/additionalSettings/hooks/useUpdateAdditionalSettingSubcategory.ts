@@ -1,0 +1,33 @@
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'react-hot-toast';
+import { additionalSettingsApi } from '@/api/additionalSettings';
+import { ADDITIONAL_SETTINGS_TEXTS } from '../constants';
+
+export const useUpdateAdditionalSettingSubcategory = () => {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: (payload: {
+      categoryId: string;
+      subcategoryId: string;
+      title: string;
+      value: string;
+    }) =>
+      additionalSettingsApi.updateSubcategory(payload.categoryId, payload.subcategoryId, {
+        title: payload.title,
+        value: payload.value,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['additional-settings'] });
+      toast.success(ADDITIONAL_SETTINGS_TEXTS.UPDATE_SUCCESS);
+    },
+    onError: () => {
+      toast.error(ADDITIONAL_SETTINGS_TEXTS.UPDATE_ERROR);
+    },
+  });
+
+  return {
+    ...mutation,
+    submitAdditionalSetting: mutation.mutateAsync,
+  };
+};

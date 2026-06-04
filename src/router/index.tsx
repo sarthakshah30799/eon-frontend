@@ -100,6 +100,9 @@ const CategoryOptionsEditPage = lazy(
   () => import('../pages/admin/category-options/edit/[id]')
 );
 const MenuPage = lazy(() => import('../pages/admin/menu/MenuPage'));
+const AdditionalSettingsPage = lazy(
+  () => import('../pages/admin/additional-settings')
+);
 const MasterPagesPage = lazy(
   () => import('../pages/master/system-setups/master-pages/MasterPagesPage')
 );
@@ -299,6 +302,14 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <MenuPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/additional-settings',
+    element: (
+      <ProtectedLayout>
+        <AdditionalSettingsPage />
       </ProtectedLayout>
     ),
   },

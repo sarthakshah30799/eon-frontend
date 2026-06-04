@@ -8,8 +8,10 @@ import {
 import type { ICreateBranchProfile } from '../types';
 import { useCreateBranchProfile } from '../hooks';
 import { BranchProfileEditorView } from './BranchProfileEditorView';
+import { useNavigate } from 'react-router-dom';
 
 export const BranchProfileCreateView = () => {
+  const navigate = useNavigate();
   const { data: branches = [] } = useListBranchProfiles();
   const { submitBranchProfile, isPending } = useCreateBranchProfile();
 
@@ -20,6 +22,7 @@ export const BranchProfileCreateView = () => {
 
   const handleSubmit = async (values: ICreateBranchProfile) => {
     await submitBranchProfile(values);
+    navigate('/admin/branch-profile');
   };
 
   return (

@@ -15,3 +15,4 @@ export * from './counterProfile';
 export * from './categoryOptions';
 export * from './currencyProfile';
 export * from './menu/menu.api';
+export * from './additionalSettings';

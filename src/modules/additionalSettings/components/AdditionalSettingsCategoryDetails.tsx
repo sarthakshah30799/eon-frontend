@@ -74,7 +74,7 @@ const CategoryTitleEditor = ({
           <h3 className="truncate text-xl font-semibold text-text-primary">
             {category.title}
           </h3>
-          <p className="mt-1 text-xs uppercase tracking-[0.24em] text-text-tertiary">
+          <p className="mt-1 text-xs uppercase text-text-tertiary">
             {category.code}
           </p>
         </div>
@@ -249,7 +249,7 @@ export const AdditionalSettingsCategoryDetails = ({
     <div className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm">
       <div className="mb-4 flex items-start justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">
+          <p className="text-xs font-semibold uppercase text-text-tertiary">
             Details
           </p>
           <h2 className="mt-2 text-lg font-semibold text-text-primary">

@@ -27,6 +27,7 @@ export const CountryDropdown = ({
   className = '',
   error,
   createLabel = 'Create',
+  size,
 }: CountryDropdownProps) => {
   const [createdOptions, setCreatedOptions] = useState<CountryDropdownOption[]>(
     []
@@ -216,9 +217,10 @@ export const CountryDropdown = ({
       <AsyncSelect
         label={label}
         placeholder={placeholder}
-        disabled={disabled}
-        className={className}
-        isCreatable
+      disabled={disabled}
+      className={className}
+      size={size}
+      isCreatable
         loadOptions={loadOptions}
         defaultOptions={mergedDefaultOptions}
         isClearable

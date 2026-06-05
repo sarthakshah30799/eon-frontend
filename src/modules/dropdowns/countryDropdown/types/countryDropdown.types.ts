@@ -23,5 +23,6 @@ export interface CountryDropdownProps {
   className?: string;
   error?: string;
   createLabel?: string;
+  size?: 'sm' | 'md' | 'lg';
   onCreateCountry?: (inputValue: string) => void | Promise<void>;
 }

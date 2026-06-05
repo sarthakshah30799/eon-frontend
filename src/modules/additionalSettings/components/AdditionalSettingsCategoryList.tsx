@@ -14,7 +14,7 @@ export const AdditionalSettingsCategoryList = ({
   return (
     <div className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm">
       <div className="mb-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">
+        <p className="text-xs font-semibold uppercase text-text-tertiary">
           Categories
         </p>
         <h2 className="mt-2 text-lg font-semibold text-text-primary">

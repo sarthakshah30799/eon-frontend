@@ -16,9 +16,6 @@ const UserEditPage = () => {
 
   return (
     <div className="rounded-lg border border-border-primary bg-surface-primary p-6 shadow">
-      <h2 className="mb-4 text-xl font-semibold text-text-primary">
-        Edit User
-      </h2>
       <UserForm
         onSubmit={handleSubmit}
         isLoading={isPending}

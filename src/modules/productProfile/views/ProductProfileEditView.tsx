@@ -1,4 +1,5 @@
 import { useNavigate, useParams } from 'react-router-dom';
+import { BackButton } from '@/components/ui';
 import { ProductProfileEditorView } from './ProductProfileEditorView';
 import { useGetProductProfile, useUpdateProductProfile } from '../hooks';
 import { PRODUCT_PROFILE_TEXTS } from '../constants';
@@ -33,14 +34,20 @@ export const ProductProfileEditView = () => {
   };
 
   return (
-    <ProductProfileEditorView
-      heading={PRODUCT_PROFILE_TEXTS.EDIT_PRODUCT}
-      description="Update the product profile and accounting configuration."
-      submitLabel={PRODUCT_PROFILE_TEXTS.SAVE_CHANGES}
-      defaultValues={mapRecordToFormValues(productProfile)}
-      onSubmitProduct={handleSubmit}
-      isSubmitting={isPending}
-    />
+    <div className="space-y-4">
+      <BackButton
+        onClick={() => navigate('/master/system-setups/product-profile')}
+        label="Back"
+      />
+      <ProductProfileEditorView
+        heading={PRODUCT_PROFILE_TEXTS.EDIT_PRODUCT}
+        description="Update the product profile and accounting configuration."
+        submitLabel={PRODUCT_PROFILE_TEXTS.SAVE_CHANGES}
+        defaultValues={mapRecordToFormValues(productProfile)}
+        onSubmitProduct={handleSubmit}
+        isSubmitting={isPending}
+      />
+    </div>
   );
 };
 

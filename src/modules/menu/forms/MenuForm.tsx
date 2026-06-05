@@ -42,7 +42,7 @@ export const MenuForm = ({
       className="space-y-6"
     >
       <section className="rounded-sm border border-border-primary bg-surface-secondary p-4 space-y-4">
-        <h2 className="text-sm font-semibold uppercase tracking-[0.24em] text-text-tertiary">
+        <h2 className="text-sm font-semibold uppercase text-text-tertiary">
           Menu Details
         </h2>
         <div className="grid gap-4 md:grid-cols-2">
@@ -83,7 +83,7 @@ export const MenuForm = ({
       </section>
 
       <section className="rounded-sm border border-border-primary bg-surface-secondary p-4 space-y-4">
-        <h2 className="text-sm font-semibold uppercase tracking-[0.24em] text-text-tertiary">
+        <h2 className="text-sm font-semibold uppercase text-text-tertiary">
           Hierarchy
         </h2>
         <div className="grid gap-4 md:grid-cols-2">

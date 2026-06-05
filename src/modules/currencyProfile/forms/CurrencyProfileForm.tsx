@@ -41,7 +41,8 @@ interface CurrencyProfileFormProps {
 }
 
 const formCardClass =
-  'rounded-sm border border-border-primary bg-surface-secondary p-4';
+  'rounded-sm border border-border-primary bg-surface-secondary p-3';
+const compactFieldClass = '';
 
 const numericInputProps = {
   inputMode: 'numeric' as const,
@@ -68,77 +69,87 @@ export const CurrencyProfileForm = ({
       onSubmit={onSubmit}
       resolver={yupResolver(currencyProfileSchema)}
       defaultValues={defaultValues}
-      className="space-y-6"
+      className="space-y-3"
     >
       <section className={formCardClass}>
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.24em] text-text-tertiary">
+        <h2 className="mb-2 text-[11px] font-bold uppercase text-black">
           {CURRENCY_PROFILE_TEXTS.BASIC_INFO_TITLE}
         </h2>
 
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-4">
           <FormFieldInput
             name="currencyCode"
             label="Currency Code"
             disabled={isDisabled}
+            className={compactFieldClass}
           />
           <FormFieldInput
             name="currencyName"
             label="Currency Name"
             disabled={isDisabled}
+            className={compactFieldClass}
           />
           <FormFieldCountryDropdown
             name="countryId"
             label="Countries"
             disabled={isDisabled}
+            size="sm"
           />
           <FormFieldInput
             name="amexMapCode"
             label="Amex Map Code"
             disabled={isDisabled}
+            className={compactFieldClass}
           />
         </div>
       </section>
 
       <section className={formCardClass}>
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.24em] text-text-tertiary">
+        <h2 className="mb-2 text-[11px] font-bold uppercase text-black">
           {CURRENCY_PROFILE_TEXTS.RATE_CONFIGURATION_TITLE}
         </h2>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-4">
           <FormFieldInput
             name="priority"
             label="Priority"
             disabled={isDisabled}
+            className={compactFieldClass}
             {...numericInputProps}
           />
           <FormFieldInput
             name="ratePer"
             label="Rate / Per"
             disabled={isDisabled}
+            className={compactFieldClass}
             {...numericInputProps}
           />
           <FormFieldInput
             name="defaultMinRate"
             label="Default Min Rate"
             disabled={isDisabled}
+            className={compactFieldClass}
             {...numericInputProps}
           />
           <FormFieldInput
             name="defaultMaxRate"
             label="Default Max Rate"
             disabled={isDisabled}
+            className={compactFieldClass}
             {...numericInputProps}
           />
           <FormFieldInput
             name="openRatePremium"
             label="Open Rate Premium"
             disabled={isDisabled}
+            className={compactFieldClass}
             {...numericInputProps}
           />
           <FormFieldInput
             name="gulfDiscFactor"
             label="Gulf Disc Factor"
             disabled={isDisabled}
+            className={compactFieldClass}
             {...numericInputProps}
           />
           <FormFieldAsyncSelect
@@ -147,6 +158,7 @@ export const CurrencyProfileForm = ({
             loadOptions={loadCalculationMethodOptions}
             placeholder="Select calculation method"
             disabled={isDisabled}
+            size="sm"
             isSearchable={false}
           />
           <FormFieldAsyncSelect
@@ -155,18 +167,19 @@ export const CurrencyProfileForm = ({
             loadOptions={loadGroupOptions}
             placeholder="Select group"
             disabled={isDisabled}
+            size="sm"
             isSearchable={false}
           />
         </div>
       </section>
 
       <section className={formCardClass}>
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.24em] text-text-tertiary">
+        <h2 className="mb-2 text-[11px] font-bold uppercase text-black">
           {CURRENCY_PROFILE_TEXTS.STATUS_TITLE}
         </h2>
 
-        <div className="grid gap-3 md:grid-cols-2">
-          <div className="rounded-sm border border-border-primary bg-surface-primary p-3">
+        <div className="grid gap-2 md:grid-cols-2">
+          <div className="rounded-sm border border-border-primary bg-surface-primary p-2">
             <FormFieldCheckbox
               name="active"
               label="Active"
@@ -174,7 +187,7 @@ export const CurrencyProfileForm = ({
             />
           </div>
 
-          <div className="rounded-sm border border-border-primary bg-surface-primary p-3">
+          <div className="rounded-sm border border-border-primary bg-surface-primary p-2">
             <FormFieldCheckbox
               name="onlyStocking"
               label="Only Stocking"
@@ -189,7 +202,7 @@ export const CurrencyProfileForm = ({
       </section>
 
       {!readOnly && (
-        <div className="flex justify-end border-t border-border-primary pt-4">
+        <div className="flex justify-end border-t border-border-primary pt-2">
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? 'Saving...' : submitLabel}
           </Button>
@@ -223,13 +236,14 @@ const CurrencyProfileProductAllowedField = ({
   }
 
   return (
-    <div className="mt-3">
+    <div className="mt-2">
       <FormFieldAsyncSelect
         name="productAllowed"
         label="Product Allowed"
         loadOptions={loadProductAllowedOptions}
         placeholder="Select product allowed"
         disabled={isDisabled}
+        size="sm"
         isSearchable={false}
       />
     </div>

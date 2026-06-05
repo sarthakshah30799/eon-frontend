@@ -32,9 +32,7 @@ export const CounterProfileListView = () => {
   };
 
   if (isLoading) {
-    return (
-     <Loader />
-    );
+    return <Loader />;
   }
 
   if (error) {
@@ -47,29 +45,14 @@ export const CounterProfileListView = () => {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-6 shadow-sm">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">
-              Admin
-            </p>
-            <h1 className="mt-2 text-2xl font-semibold text-text-primary">
-              {COUNTER_PROFILE_TEXTS.LIST_TITLE}
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-text-secondary">
-              {COUNTER_PROFILE_TEXTS.LIST_SUBTITLE}
-            </p>
-          </div>
-
-          <Button
-            type="button"
-            className="rounded-sm"
-            onClick={() => navigate('/admin/counter-profile/create')}
-          >
-            {COUNTER_PROFILE_TEXTS.CREATE_COUNTER}
-          </Button>
-        </div>
-      </section>
+      <div className="flex justify-end">
+        <Button
+          type="button"
+          onClick={() => navigate('/admin/counter-profile/create')}
+        >
+          {COUNTER_PROFILE_TEXTS.CREATE_COUNTER}
+        </Button>
+      </div>
 
       <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
         <CounterProfileTable
@@ -83,3 +66,5 @@ export const CounterProfileListView = () => {
     </div>
   );
 };
+
+export default CounterProfileListView;

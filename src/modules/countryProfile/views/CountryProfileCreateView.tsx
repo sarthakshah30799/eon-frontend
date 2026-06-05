@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { BackButton } from '@/components/ui';
 import { COUNTRY_PROFILE_TEXTS } from '../constants';
 import { createEmptyCountryProfileFormValues } from '../utils';
 import { useCreateCountryProfile } from '../hooks';
@@ -15,16 +16,19 @@ export const CountryProfileCreateView = () => {
   };
 
   return (
-    <CountryProfileEditorView
-      heading={COUNTRY_PROFILE_TEXTS.CREATE_COUNTRY}
-      description={COUNTRY_PROFILE_TEXTS.FORM_SUBTITLE}
-      submitLabel={COUNTRY_PROFILE_TEXTS.CREATE_COUNTRY}
-      defaultValues={createEmptyCountryProfileFormValues()}
-      onSubmitCountry={handleSubmit}
-      isSubmitting={isPending}
-    />
+    <div className="space-y-4">
+      <BackButton
+        onClick={() => navigate('/master/system-setups/country-profile')}
+        label="Back"
+      />
+      <CountryProfileEditorView
+        submitLabel={COUNTRY_PROFILE_TEXTS.CREATE_COUNTRY}
+        defaultValues={createEmptyCountryProfileFormValues()}
+        onSubmitCountry={handleSubmit}
+        isSubmitting={isPending}
+      />
+    </div>
   );
 };
 
 export default CountryProfileCreateView;
-

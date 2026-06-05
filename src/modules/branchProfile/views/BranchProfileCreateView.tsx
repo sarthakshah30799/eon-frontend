@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useListBranchProfiles } from '../hooks';
+import { BackButton } from '@/components/ui';
 import { BRANCH_PROFILE_TEXTS } from '../constants';
 import {
   createEmptyBranchProfileFormValues,
@@ -26,15 +27,23 @@ export const BranchProfileCreateView = () => {
   };
 
   return (
-    <BranchProfileEditorView
-      heading={BRANCH_PROFILE_TEXTS.CREATE_BRANCH}
-      description={BRANCH_PROFILE_TEXTS.FORM_SUBTITLE}
-      submitLabel={BRANCH_PROFILE_TEXTS.CREATE_BRANCH}
-      defaultValues={createEmptyBranchProfileFormValues()}
-      onSubmitBranch={handleSubmit}
-      isSubmitting={isPending}
-      branchAttachedToOptions={branchAttachedToOptions}
-    />
+    <div className="space-y-2">
+      <BackButton
+        onClick={() => navigate('/admin/branch-profile')}
+        label="Back"
+      />
+      <BranchProfileEditorView
+        heading={BRANCH_PROFILE_TEXTS.CREATE_BRANCH}
+        description={BRANCH_PROFILE_TEXTS.FORM_SUBTITLE}
+        submitLabel="Submit"
+        cancelLabel="Cancel"
+        defaultValues={createEmptyBranchProfileFormValues()}
+        onSubmitBranch={handleSubmit}
+        onCancel={() => navigate('/admin/branch-profile')}
+        isSubmitting={isPending}
+        branchAttachedToOptions={branchAttachedToOptions}
+      />
+    </div>
   );
 };
 

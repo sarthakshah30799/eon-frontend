@@ -165,20 +165,9 @@ export const MenuManagementView = () => {
             {selectedMenu && (
               <BackButton
                 onClick={() => setSelectedMenu(null)}
-                label="Back to new menu"
+                label="Back"
               />
             )}
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">
-                Admin
-              </p>
-              <h1 className="mt-2 text-2xl font-semibold text-text-primary">
-                {MENU_TEXTS.CREATE_TITLE}
-              </h1>
-              <p className="mt-2 text-sm leading-6 text-text-secondary">
-                {MENU_TEXTS.FORM_SUBTITLE}
-              </p>
-            </div>
           </div>
 
           <button
@@ -193,7 +182,7 @@ export const MenuManagementView = () => {
         <div className="grid gap-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
           <div className="rounded-sm border border-border-primary bg-surface-secondary p-4">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-sm font-semibold uppercase tracking-[0.24em] text-text-tertiary">
+              <h2 className="text-sm font-semibold uppercase text-text-tertiary">
                 Current Menus
               </h2>
               <span className="text-xs text-text-secondary">
@@ -224,13 +213,7 @@ export const MenuManagementView = () => {
 
           <div className="relative rounded-sm border border-border-primary bg-surface-primary p-5">
             <div className="mb-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">
-                {selectedMenu ? 'Edit Menu' : 'Create Menu'}
-              </p>
-              <h2 className="mt-2 text-xl font-semibold text-text-primary">
-                {selectedMenu ? selectedMenu.name : 'New sidebar item'}
-              </h2>
-              <p className="mt-2 text-sm leading-6 text-text-secondary">
+              <p className="text-sm leading-6 text-text-secondary">
                 {selectedMenu
                   ? 'Update the selected menu and the sidebar will refresh after saving.'
                   : 'Create a new menu item to make it available in the dynamic sidebar.'}

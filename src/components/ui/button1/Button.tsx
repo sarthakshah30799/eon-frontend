@@ -2,12 +2,14 @@ import React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center whitespace-nowrap rounded-sm text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed',
+  'inline-flex items-center justify-center whitespace-nowrap rounded-sm text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer',
   {
     variants: {
       variant: {
         default:
           'bg-primary-500 text-text-inverse hover:bg-primary-600 focus:ring-primary-500',
+        accent:
+          'bg-[var(--button-accent)] text-white hover:brightness-95 focus:ring-[var(--button-accent)]',
         destructive:
           'bg-error-500 text-text-inverse hover:bg-error-600 focus:ring-error-500',
         outline:

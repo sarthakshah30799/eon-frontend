@@ -13,6 +13,7 @@ interface FormProps<TFieldValues extends FieldValues = FieldValues> {
   onSubmit: (data: TFieldValues) => void | Promise<void>;
   onError?: SubmitErrorHandler<TFieldValues>;
   className?: string;
+  id?: string;
   resolver?: Resolver<TFieldValues>;
   defaultValues?: DefaultValues<TFieldValues>;
 }
@@ -22,6 +23,7 @@ export const Form = <TFieldValues extends FieldValues = FieldValues>({
   onSubmit,
   onError,
   className = '',
+  id,
   resolver,
   defaultValues,
 }: FormProps<TFieldValues>) => {
@@ -38,7 +40,7 @@ export const Form = <TFieldValues extends FieldValues = FieldValues>({
 
   return (
     <RHFFormProvider {...form}>
-      <form onSubmit={handleFormSubmit} className={className}>
+      <form id={id} onSubmit={handleFormSubmit} className={className}>
         {children}
       </form>
     </RHFFormProvider>

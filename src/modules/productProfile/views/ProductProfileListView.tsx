@@ -1,24 +1,26 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button1';
-import { useListProductProfiles, useUpdateProductProfileStatus } from '../hooks';
+import { Loader } from '@/components/ui/loader';
+import { usePermission } from '@/hooks';
 import { PRODUCT_PROFILE_TEXTS } from '../constants';
 import { ProductProfileTable } from '../components';
-import { Loader } from '@/components/ui/loader';
+import { useListProductProfiles, useUpdateProductProfileStatus } from '../hooks';
 
 export const ProductProfileListView = () => {
   const navigate = useNavigate();
+  const { canAdd } = usePermission('/master/system-setups/product-profile');
   const { data: products = [], isLoading, error } = useListProductProfiles();
-  const { updateProductProfileStatus, isPending: isUpdatingStatus } =
-    useUpdateProductProfileStatus();
+  const {
+    updateProductProfileStatus,
+    isPending: isUpdatingStatus,
+  } = useUpdateProductProfileStatus();
 
   const handleToggleStatus = async (id: string, isActiveProduct: boolean) => {
     await updateProductProfileStatus({ id, isActiveProduct });
   };
 
   if (isLoading) {
-    return (
-     <Loader />
-    );
+    return <Loader />;
   }
 
   if (error) {
@@ -31,20 +33,8 @@ export const ProductProfileListView = () => {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-6 shadow-sm">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">
-              System Setup
-            </p>
-            <h1 className="mt-2 text-2xl font-semibold text-text-primary">
-              {PRODUCT_PROFILE_TEXTS.LIST_TITLE}
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-text-secondary">
-              {PRODUCT_PROFILE_TEXTS.LIST_SUBTITLE}
-            </p>
-          </div>
-
+      <div className="flex justify-end">
+        {canAdd && (
           <Button
             type="button"
             className="rounded-sm"
@@ -54,8 +44,8 @@ export const ProductProfileListView = () => {
           >
             {PRODUCT_PROFILE_TEXTS.CREATE_PRODUCT}
           </Button>
-        </div>
-      </section>
+        )}
+      </div>
 
       <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
         <ProductProfileTable
@@ -67,3 +57,5 @@ export const ProductProfileListView = () => {
     </div>
   );
 };
+
+export default ProductProfileListView;

@@ -17,8 +17,8 @@ const asyncSelectVariants = cva('react-select-container', {
   variants: {
     size: {
       sm: 'text-sm',
-      md: 'text-base',
-      lg: 'text-lg',
+      md: 'text-sm',
+      lg: 'text-sm',
     },
     variant: {
       default: '',
@@ -203,25 +203,29 @@ const AsyncSelectComponent = React.forwardRef<
     > = {
       control: (base, state) => ({
         ...base,
-        borderColor: error ? 'var(--color-error-500)' : base.borderColor,
+        borderColor: error
+          ? 'var(--color-error-500)'
+          : '#94a3b8',
         '&:hover': {
           borderColor: error
             ? 'var(--color-error-500)'
             : state.isFocused
-              ? 'var(--color-primary-500)'
-              : base.borderColor,
+              ? '#64748b'
+              : '#94a3b8',
         },
-        borderRadius: '4px', // Rounded-md
+        borderRadius: '6px',
         boxShadow: error
           ? '0 0 0 1px var(--color-error-500)'
           : state.isFocused
-            ? '0 0 0 1px var(--color-primary-500)'
-            : base.boxShadow,
-        minHeight: size === 'sm' ? '32px' : size === 'lg' ? '48px' : '40px',
+            ? '0 0 0 1px #64748b'
+            : 'none',
+        minHeight: '34px',
+        height: '34px',
+        backgroundColor: 'var(--color-surface-primary)',
       }),
       loadingIndicator: base => ({
         ...base,
-        color: 'var(--color-primary-500)',
+        color: 'var(--color-text-tertiary)',
       }),
       menu: base => ({
         ...base,
@@ -230,7 +234,7 @@ const AsyncSelectComponent = React.forwardRef<
     };
 
     return (
-      <div className="space-y-2">
+      <div className="space-y-1">
         {label && <Label htmlFor={props.id}>{label}</Label>}
         <div className={asyncSelectVariants({ size, variant, className })}>
           {isCreatable ? (

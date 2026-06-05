@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { BackButton } from '@/components/ui';
 import { STATE_PROFILE_TEXTS } from '../constants';
 import { createEmptyStateProfileFormValues } from '../utils';
 import { useCreateStateProfile } from '../hooks';
@@ -15,16 +16,21 @@ export const StateProfileCreateView = () => {
   };
 
   return (
-    <StateProfileEditorView
-      heading={STATE_PROFILE_TEXTS.CREATE_STATE}
-      description={STATE_PROFILE_TEXTS.FORM_SUBTITLE}
-      submitLabel={STATE_PROFILE_TEXTS.CREATE_STATE}
-      defaultValues={createEmptyStateProfileFormValues()}
-      onSubmitState={handleSubmit}
-      isSubmitting={isPending}
-    />
+    <div className="space-y-4">
+      <BackButton
+        onClick={() => navigate('/master/system-setups/state-profile')}
+        label="Back"
+      />
+      <StateProfileEditorView
+        heading={STATE_PROFILE_TEXTS.CREATE_STATE}
+        description={STATE_PROFILE_TEXTS.FORM_SUBTITLE}
+        submitLabel={STATE_PROFILE_TEXTS.CREATE_STATE}
+        defaultValues={createEmptyStateProfileFormValues()}
+        onSubmitState={handleSubmit}
+        isSubmitting={isPending}
+      />
+    </div>
   );
 };
 
 export default StateProfileCreateView;
-

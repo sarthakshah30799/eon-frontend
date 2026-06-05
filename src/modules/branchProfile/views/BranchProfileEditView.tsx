@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import { BackButton } from '@/components/ui';
 import { BRANCH_PROFILE_TEXTS } from '../constants';
 import {
   useGetBranchProfile,
@@ -12,6 +13,7 @@ import { BranchProfileEditorView } from './BranchProfileEditorView';
 import { Loader } from '@/components/ui/loader';
 
 export const BranchProfileEditView = () => {
+  const navigate = useNavigate();
   const { id = '' } = useParams<{ id: string }>();
   const { data: branchProfile, isLoading } = useGetBranchProfile(id);
   const { data: branches = [] } = useListBranchProfiles();
@@ -41,15 +43,23 @@ export const BranchProfileEditView = () => {
   };
 
   return (
-    <BranchProfileEditorView
-      heading={BRANCH_PROFILE_TEXTS.EDIT_BRANCH}
-      description="Update the company branch profile and operational settings."
-      submitLabel={BRANCH_PROFILE_TEXTS.SAVE_CHANGES}
-      defaultValues={mapRecordToFormValues(branchProfile)}
-      onSubmitBranch={handleSubmit}
-      isSubmitting={isPending}
-      branchAttachedToOptions={branchAttachedToOptions}
-    />
+    <div className="space-y-4">
+      <BackButton
+        onClick={() => navigate('/admin/branch-profile')}
+        label="Back"
+      />
+      <BranchProfileEditorView
+        heading={BRANCH_PROFILE_TEXTS.EDIT_BRANCH}
+        description="Update the company branch profile and operational settings."
+        submitLabel={BRANCH_PROFILE_TEXTS.SAVE_CHANGES}
+        cancelLabel="Cancel"
+        defaultValues={mapRecordToFormValues(branchProfile)}
+        onSubmitBranch={handleSubmit}
+        onCancel={() => navigate('/admin/branch-profile')}
+        isSubmitting={isPending}
+        branchAttachedToOptions={branchAttachedToOptions}
+      />
+    </div>
   );
 };
 

@@ -1,6 +1,9 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
-import { ProtectedLayout, PublicLayout } from '../components/layouts';
+import {
+  ProtectedLayout,
+  PublicLayout,
+} from '../components/layouts';
 import { Loader } from '@/components/ui/loader';
 
 // Lazy load pages
@@ -246,6 +249,14 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <BranchProfileEditPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/review/branch-profile',
+    element: (
+      <ProtectedLayout>
+        <BranchProfileCreatePage />
       </ProtectedLayout>
     ),
   },

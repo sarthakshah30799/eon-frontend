@@ -1,5 +1,3 @@
-import { useNavigate } from 'react-router-dom';
-import { BackButton } from '@/components/ui';
 import { BranchProfileForm } from '../forms';
 import { createEmptyBranchProfileFormValues } from '../utils';
 import type {
@@ -11,46 +9,31 @@ interface BranchProfileEditorViewProps {
   heading: string;
   description: string;
   submitLabel: string;
+  cancelLabel?: string;
   defaultValues?: ICreateBranchProfile;
   onSubmitBranch: (values: ICreateBranchProfile) => void | Promise<void>;
+  onCancel?: () => void | Promise<void>;
   isSubmitting?: boolean;
   branchAttachedToOptions: IBranchProfileOption[];
 }
 
 export const BranchProfileEditorView = ({
-  heading,
-  description,
   submitLabel,
+  cancelLabel,
   defaultValues = createEmptyBranchProfileFormValues(),
   onSubmitBranch,
+  onCancel,
   isSubmitting = false,
   branchAttachedToOptions,
 }: BranchProfileEditorViewProps) => {
-  const navigate = useNavigate();
-
   return (
-    <section className="rounded-sm border border-border-primary bg-surface-primary p-6 shadow-sm">
-      <div className="mb-6 space-y-4">
-        <BackButton
-          onClick={() => navigate('/admin/branch-profile')}
-          label="Back"
-        />
-
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">
-          Admin
-        </p>
-        <h1 className="mt-2 text-2xl font-semibold text-text-primary">
-          {heading}
-        </h1>
-        <p className="mt-2 text-sm leading-6 text-text-secondary">
-          {description}
-        </p>
-      </div>
-
+    <section className="mx-auto w-full max-w-7xl rounded-xl border border-sky-100 bg-white/90 p-4 shadow-none backdrop-blur-sm">
       <BranchProfileForm
         defaultValues={defaultValues}
         onSubmit={onSubmitBranch}
         submitLabel={submitLabel}
+        cancelLabel={cancelLabel}
+        onCancel={onCancel}
         isSubmitting={isSubmitting}
         branchAttachedToOptions={branchAttachedToOptions}
       />

@@ -39,16 +39,6 @@ export const UserProfileEditView = () => {
           onClick={() => navigate('/master/system-setups/user-profile')}
           label="Back"
         />
-
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">
-          User Management
-        </p>
-        <h1 className="mt-2 text-2xl font-semibold text-text-primary">
-          {USER_PROFILE_TEXTS.EDIT_USER}
-        </h1>
-        <p className="mt-2 text-sm leading-6 text-text-secondary">
-          Update the user details and control setup values.
-        </p>
       </div>
 
       <UserProfileForm

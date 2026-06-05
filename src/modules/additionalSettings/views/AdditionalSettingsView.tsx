@@ -69,18 +69,6 @@ export const AdditionalSettingsView = () => {
 
   return (
     <section className="space-y-6">
-      <div className="rounded-sm border border-border-primary bg-surface-primary p-6 shadow-sm">
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">
-          {ADDITIONAL_SETTINGS_TEXTS.ADMIN_LABEL}
-        </p>
-        <h1 className="mt-2 text-2xl font-semibold text-text-primary">
-          {ADDITIONAL_SETTINGS_TEXTS.PAGE_TITLE}
-        </h1>
-        <p className="mt-2 max-w-3xl text-sm leading-6 text-text-secondary">
-          {ADDITIONAL_SETTINGS_TEXTS.PAGE_SUBTITLE}
-        </p>
-      </div>
-
       <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
         <AdditionalSettingsCategoryList
           categories={categories}

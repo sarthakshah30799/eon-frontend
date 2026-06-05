@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { BackButton } from '@/components/ui';
 import { ProductProfileEditorView } from './ProductProfileEditorView';
 import { PRODUCT_PROFILE_TEXTS } from '../constants';
 import { createEmptyProductProfileFormValues } from '../utils';
@@ -15,14 +16,20 @@ export const ProductProfileCreateView = () => {
   };
 
   return (
-    <ProductProfileEditorView
-      heading={PRODUCT_PROFILE_TEXTS.CREATE_PRODUCT}
-      description={PRODUCT_PROFILE_TEXTS.FORM_SUBTITLE}
-      submitLabel={PRODUCT_PROFILE_TEXTS.CREATE_PRODUCT}
-      defaultValues={createEmptyProductProfileFormValues()}
-      onSubmitProduct={handleSubmit}
-      isSubmitting={isPending}
-    />
+    <div className="space-y-4">
+      <BackButton
+        onClick={() => navigate('/master/system-setups/product-profile')}
+        label="Back"
+      />
+      <ProductProfileEditorView
+        heading={PRODUCT_PROFILE_TEXTS.CREATE_PRODUCT}
+        description={PRODUCT_PROFILE_TEXTS.FORM_SUBTITLE}
+        submitLabel={PRODUCT_PROFILE_TEXTS.CREATE_PRODUCT}
+        defaultValues={createEmptyProductProfileFormValues()}
+        onSubmitProduct={handleSubmit}
+        isSubmitting={isPending}
+      />
+    </div>
   );
 };
 

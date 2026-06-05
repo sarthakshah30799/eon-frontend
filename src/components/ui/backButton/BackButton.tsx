@@ -14,13 +14,14 @@ export const BackButton = ({
   return (
     <Button
       type="button"
-      variant="ghost"
+      variant="link"
+      size="sm"
       onClick={onClick}
-      className={`inline-flex items-center gap-2 !rounded-sm px-3 py-2 text-sm font-medium ${className}`}
+      className={`inline-flex items-center gap-1.5 !px-0 !py-0 !text-[14px] leading-5 font-medium no-underline ${className}`}
     >
       <svg
         aria-hidden="true"
-        className="h-4 w-4"
+        className="h-3.5 w-3.5"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
@@ -32,7 +33,7 @@ export const BackButton = ({
           d="M15 19l-7-7 7-7"
         />
       </svg>
-      <span>{label}</span>
+      <span className="text-[14px] leading-5">{label}</span>
     </Button>
   );
 };

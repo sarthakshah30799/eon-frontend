@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Modal } from '@/components/ui';
 import type {
   IAdditionalSettingCategory,
   IAdditionalSettingSubcategory,
@@ -11,7 +12,7 @@ interface AdditionalSettingsCategoryDetailsProps {
   onSaveSubcategory: (
     categoryId: string,
     subcategoryId: string,
-    values: { title: string; value: string }
+    values: { description: string; value: string }
   ) => Promise<void>;
 }
 
@@ -85,7 +86,7 @@ const CategoryTitleEditor = ({
           aria-label="Edit category title"
           onClick={() => setIsEditing(true)}
         >
-          {actionIcon('M11 5h2M12 4v2m4.95 1.05l1.414 1.414M20 12h-2m-1 4.95l-1.414-1.414M12 20v-2m-4.95-1.05l-1.414-1.414M4 12h2m1-4.95l1.414 1.414')}
+          {actionIcon('M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z')}
         </button>
       </div>
     );
@@ -121,116 +122,178 @@ const CategoryTitleEditor = ({
   );
 };
 
-const EditableSubcategoryRow = ({
+const SubcategoryRow = ({
   subcategory,
-  categoryId,
-  onSaveSubcategory,
+  onEdit,
 }: {
   subcategory: IAdditionalSettingSubcategory;
-  categoryId: string;
-  onSaveSubcategory: (
-    categoryId: string,
-    subcategoryId: string,
-    values: { title: string; value: string }
-  ) => Promise<void>;
+  onEdit: (sub: IAdditionalSettingSubcategory) => void;
 }) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [draftTitle, setDraftTitle] = useState(subcategory.title);
-  const [draftValue, setDraftValue] = useState(subcategory.value);
+  return (
+    <tr className="border-t border-border-primary hover:bg-surface-secondary/30">
+      <td className="px-4 py-3 text-sm text-text-primary">
+        {subcategory.description || subcategory.title}
+      </td>
+      <td className="px-4 py-3 text-sm text-text-primary font-medium">
+        {subcategory.value}
+      </td>
+      <td className="px-4 py-3">
+        <button
+          type="button"
+          className={iconButtonClass}
+          aria-label={`Edit ${subcategory.title}`}
+          onClick={() => onEdit(subcategory)}
+        >
+          {actionIcon('M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z')}
+        </button>
+      </td>
+    </tr>
+  );
+};
 
-  useEffect(() => {
-    setDraftTitle(subcategory.title);
-    setDraftValue(subcategory.value);
-    setIsEditing(false);
-  }, [subcategory.id, subcategory.title, subcategory.value]);
+interface EditSubcategoryFormProps {
+  subcategory: IAdditionalSettingSubcategory;
+  onSave: (values: { description: string; value: string }) => Promise<void>;
+  onCancel: () => void;
+}
 
-  const handleSave = async () => {
-    const nextTitle = draftTitle.trim();
-    const nextValue = draftValue.trim();
+const EditSubcategoryForm = ({
+  subcategory,
+  onSave,
+  onCancel,
+}: EditSubcategoryFormProps) => {
+  const [description, setDescription] = useState(subcategory.description || subcategory.title);
+  const [code] = useState(subcategory.code);
+  const [categoryType] = useState(subcategory.categoryType || 'text');
+  const [value, setValue] = useState(subcategory.value);
+  const [isSaving, setIsSaving] = useState(false);
 
-    if (!nextTitle || !nextValue) {
-      setDraftTitle(subcategory.title);
-      setDraftValue(subcategory.value);
-      setIsEditing(false);
-      return;
-    }
+  const isBooleanType = categoryType.toLowerCase() === 'boolean';
+  const isNumberType = categoryType.toLowerCase() === 'number' || categoryType.toLowerCase() === 'decimal';
+  const isDateType = categoryType.toLowerCase() === 'date';
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanDesc = description.trim();
+    if (!cleanDesc) return;
+
+    setIsSaving(true);
     try {
-      await onSaveSubcategory(categoryId, subcategory.id, {
-        title: nextTitle,
-        value: nextValue,
+      const cleanValue = isBooleanType ? value.toUpperCase() : value.trim();
+      await onSave({
+        description: cleanDesc,
+        value: cleanValue,
       });
-      setIsEditing(false);
-    } catch {
-      setDraftTitle(subcategory.title);
-      setDraftValue(subcategory.value);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  if (!isEditing) {
-    return (
-      <tr className="border-t border-border-primary">
-        <td className="px-4 py-3 text-sm text-text-primary">
-          {subcategory.title}
-        </td>
-        <td className="px-4 py-3 text-sm text-text-secondary">
-          {subcategory.value}
-        </td>
-        <td className="px-4 py-3">
-          <button
-            type="button"
-            className={iconButtonClass}
-            aria-label={`Edit ${subcategory.title}`}
-            onClick={() => setIsEditing(true)}
-          >
-            {actionIcon('M11 5h2M12 4v2m4.95 1.05l1.414 1.414M20 12h-2m-1 4.95l-1.414-1.414M12 20v-2m-4.95-1.05l-1.414-1.414M4 12h2m1-4.95l1.414 1.414')}
-          </button>
-        </td>
-      </tr>
-    );
-  }
-
   return (
-    <tr className="border-t border-border-primary bg-primary-50/30">
-      <td className="px-4 py-3">
-        <input
-          value={draftTitle}
-          onChange={event => setDraftTitle(event.target.value)}
-          className="w-full rounded-sm border border-border-primary bg-surface-primary px-3 py-2 text-sm text-text-primary outline-none transition focus:border-primary-500"
+    <form onSubmit={handleSubmit} className="space-y-5">
+      <div>
+        <label className="block text-xs font-semibold uppercase tracking-wider text-text-secondary mb-2">
+          Description
+        </label>
+        <textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          required
+          rows={3}
+          className="w-full rounded-sm border border-border-primary bg-surface-primary px-3 py-2 text-sm text-text-primary outline-none transition focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+          placeholder="Enter description"
         />
-      </td>
-      <td className="px-4 py-3">
-        <input
-          value={draftValue}
-          onChange={event => setDraftValue(event.target.value)}
-          className="w-full rounded-sm border border-border-primary bg-surface-primary px-3 py-2 text-sm text-text-primary outline-none transition focus:border-primary-500"
-        />
-      </td>
-      <td className="px-4 py-3">
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            className={iconButtonClass}
-            aria-label={`Save ${subcategory.title}`}
-            onClick={handleSave}
-          >
-            {actionIcon('M5 13l4 4L19 7')}
-          </button>
-          <button
-            type="button"
-            className={iconButtonClass}
-            aria-label={`Cancel ${subcategory.title}`}
-            onClick={() => {
-              setDraftTitle(subcategory.title);
-              setDraftValue(subcategory.value);
-              setIsEditing(false);
-            }}
-          >
-            {actionIcon('M6 18L18 6M6 6l12 12')}
-          </button>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <div>
+          <label className="block text-xs font-semibold uppercase tracking-wider text-text-secondary mb-2">
+            Code (Disabled)
+          </label>
+          <input
+            type="text"
+            value={code}
+            disabled
+            className="w-full rounded-sm border border-border-primary bg-surface-secondary px-3 py-2 text-sm text-text-tertiary cursor-not-allowed outline-none"
+          />
         </div>
-      </td>
-    </tr>
+
+        <div>
+          <label className="block text-xs font-semibold uppercase tracking-wider text-text-secondary mb-2">
+            Type (Disabled)
+          </label>
+          <input
+            type="text"
+            value={categoryType.toUpperCase()}
+            disabled
+            className="w-full rounded-sm border border-border-primary bg-surface-secondary px-3 py-2 text-sm text-text-tertiary cursor-not-allowed outline-none"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-xs font-semibold uppercase tracking-wider text-text-secondary mb-2">
+          Value
+        </label>
+        {isBooleanType ? (
+          <select
+            value={value.toUpperCase() === 'YES' ? 'YES' : 'NO'}
+            onChange={(e) => setValue(e.target.value)}
+            className="w-full rounded-sm border border-border-primary bg-surface-primary px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+          >
+            <option value="YES">YES</option>
+            <option value="NO">NO</option>
+          </select>
+        ) : isDateType ? (
+          <input
+            type="date"
+            value={value.split('T')[0]}
+            onChange={(e) => setValue(e.target.value)}
+            required
+            className="w-full rounded-sm border border-border-primary bg-surface-primary px-3 py-2 text-sm text-text-primary outline-none transition focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+          />
+        ) : isNumberType ? (
+          <input
+            type="number"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            required
+            step="any"
+            className="w-full rounded-sm border border-border-primary bg-surface-primary px-3 py-2 text-sm text-text-primary outline-none transition focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+            placeholder="Enter value"
+          />
+        ) : (
+          <input
+            type="text"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            required
+            className="w-full rounded-sm border border-border-primary bg-surface-primary px-3 py-2 text-sm text-text-primary outline-none transition focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+            placeholder="Enter value"
+          />
+        )}
+      </div>
+
+      <div className="flex justify-end gap-3 border-t border-border-primary pt-4">
+        <button
+          type="button"
+          onClick={onCancel}
+          disabled={isSaving}
+          className="rounded-sm border border-border-primary bg-surface-primary px-4 py-2 text-sm font-medium text-text-primary transition hover:bg-surface-secondary"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          disabled={isSaving || !description.trim()}
+          className="rounded-sm border border-primary-500 bg-primary-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-primary-600 disabled:opacity-50"
+        >
+          {isSaving ? 'Saving...' : 'Save Changes'}
+        </button>
+      </div>
+    </form>
   );
 };
 
@@ -240,6 +303,8 @@ export const AdditionalSettingsCategoryDetails = ({
   onSaveCategoryTitle,
   onSaveSubcategory,
 }: AdditionalSettingsCategoryDetailsProps) => {
+  const [editingSubcategory, setEditingSubcategory] = useState<IAdditionalSettingSubcategory | null>(null);
+
   const hasSubcategories = useMemo(
     () => Boolean(category?.subcategories.length),
     [category]
@@ -298,7 +363,7 @@ export const AdditionalSettingsCategoryDetails = ({
                   Subcategories
                 </p>
                 <p className="text-xs text-text-tertiary">
-                  Title and value can be edited inline.
+                  Manage subcategory definitions for this category.
                 </p>
               </div>
               <p className="text-xs text-text-tertiary">
@@ -311,18 +376,17 @@ export const AdditionalSettingsCategoryDetails = ({
                 <table className="w-full border-collapse">
                   <thead className="bg-surface-secondary">
                     <tr className="text-left text-xs uppercase tracking-[0.2em] text-text-tertiary">
-                      <th className="px-4 py-3">Title</th>
+                      <th className="px-4 py-3">Description</th>
                       <th className="px-4 py-3">Value</th>
                       <th className="px-4 py-3">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {category.subcategories.map(subcategory => (
-                      <EditableSubcategoryRow
+                      <SubcategoryRow
                         key={subcategory.id}
-                        categoryId={category.id}
                         subcategory={subcategory}
-                        onSaveSubcategory={onSaveSubcategory}
+                        onEdit={setEditingSubcategory}
                       />
                     ))}
                   </tbody>
@@ -336,6 +400,29 @@ export const AdditionalSettingsCategoryDetails = ({
           </section>
         </div>
       )}
+
+      <Modal
+        open={editingSubcategory !== null}
+        onOpenChange={(open) => {
+          if (!open) setEditingSubcategory(null);
+        }}
+        title="Edit Subcategory"
+        description="Update subcategory settings below. Once created, code and type cannot be changed."
+        size="md"
+      >
+        {editingSubcategory && (
+          <EditSubcategoryForm
+            subcategory={editingSubcategory}
+            onCancel={() => setEditingSubcategory(null)}
+            onSave={async (values) => {
+              if (category) {
+                await onSaveSubcategory(category.id, editingSubcategory.id, values);
+                setEditingSubcategory(null);
+              }
+            }}
+          />
+        )}
+      </Modal>
     </div>
   );
 };

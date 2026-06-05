@@ -1,100 +1,88 @@
+import { apiClient } from '../api';
 import type {
   IAdditionalSettingCategory,
   IAdditionalSettingCategoryFormValues,
 } from '@/modules/additionalSettings/types';
-import {
-  createCategoryRecord,
-  mapCategoryTitleUpdate,
-  mapSubcategoryUpdate,
-} from '@/modules/additionalSettings/utils';
-import { ADDITIONAL_SETTINGS_STORAGE_KEY } from '@/modules/additionalSettings/constants';
-
-const readStore = (): IAdditionalSettingCategory[] => {
-  if (typeof window === 'undefined') {
-    return [];
-  }
-
-  const raw = window.localStorage.getItem(ADDITIONAL_SETTINGS_STORAGE_KEY);
-  if (!raw) {
-    return [];
-  }
-
-  try {
-    const parsed = JSON.parse(raw) as IAdditionalSettingCategory[];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-};
-
-const writeStore = (categories: IAdditionalSettingCategory[]) => {
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  window.localStorage.setItem(
-    ADDITIONAL_SETTINGS_STORAGE_KEY,
-    JSON.stringify(categories)
-  );
-};
 
 export const additionalSettingsApi = {
   getAdditionalSettings: async (): Promise<IAdditionalSettingCategory[]> => {
-    return readStore();
+    const res = await apiClient.get<IAdditionalSettingCategory[]>('/additional-settings');
+    if (res.error) {
+      throw new Error(res.error);
+    }
+    return res.data ?? [];
+  },
+
+  getValueTypes: async (): Promise<string[]> => {
+    const res = await apiClient.get<string[]>('/additional-settings/value-types');
+    if (res.error) {
+      throw new Error(res.error);
+    }
+    return res.data ?? [];
   },
 
   createAdditionalSetting: async (
     values: IAdditionalSettingCategoryFormValues
   ): Promise<IAdditionalSettingCategory> => {
-    const categories = readStore();
-    const record = createCategoryRecord(values);
-    const nextCategories = [...categories, record];
+    const payload = {
+      title: values.title.trim(),
+      code: values.code.trim(),
+      subcategories: values.subcategories.map(sub => ({
+        title: sub.title.trim(),
+        code: sub.code.trim(),
+        value: sub.value.trim(),
+        valueType: sub.categoryType.trim(),
+      })),
+    };
 
-    writeStore(nextCategories);
-
-    return record;
+    const res = await apiClient.post<IAdditionalSettingCategory>(
+      '/additional-settings',
+      payload
+    );
+    if (res.error) {
+      throw new Error(res.error);
+    }
+    if (!res.data) {
+      throw new Error('Failed to create additional setting category');
+    }
+    return res.data;
   },
 
   updateCategoryTitle: async (
     categoryId: string,
     title: string
   ): Promise<IAdditionalSettingCategory> => {
-    const categories = readStore();
-    const nextCategories = categories.map(category =>
-      category.id === categoryId ? mapCategoryTitleUpdate(category, title) : category
+    const res = await apiClient.put<IAdditionalSettingCategory>(
+      `/additional-settings/${categoryId}`,
+      { title: title.trim() }
     );
-    const updatedCategory =
-      nextCategories.find(category => category.id === categoryId) ?? null;
-
-    writeStore(nextCategories);
-
-    if (!updatedCategory) {
-      throw new Error('Category not found');
+    if (res.error) {
+      throw new Error(res.error);
     }
-
-    return updatedCategory;
+    if (!res.data) {
+      throw new Error('Failed to update category title');
+    }
+    return res.data;
   },
 
   updateSubcategory: async (
     categoryId: string,
     subcategoryId: string,
-    values: { title: string; value: string }
+    values: { description: string; value: string }
   ): Promise<IAdditionalSettingCategory> => {
-    const categories = readStore();
-    const nextCategories = categories.map(category =>
-      category.id === categoryId
-        ? mapSubcategoryUpdate(category, subcategoryId, values)
-        : category
+    const res = await apiClient.put<IAdditionalSettingCategory>(
+      `/additional-settings/${categoryId}/subcategories/${subcategoryId}`,
+      {
+        description: values.description.trim(),
+        value: values.value.trim(),
+      }
     );
-    const updatedCategory =
-      nextCategories.find(category => category.id === categoryId) ?? null;
-
-    writeStore(nextCategories);
-
-    if (!updatedCategory) {
-      throw new Error('Category not found');
+    if (res.error) {
+      throw new Error(res.error);
     }
-
-    return updatedCategory;
+    if (!res.data) {
+      throw new Error('Failed to update subcategory');
+    }
+    return res.data;
   },
 };

@@ -1,7 +1,8 @@
-import { useFieldArray, useFormContext } from 'react-hook-form';
+import { useEffect, useState } from 'react';
+import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Button } from '@/components/ui/button1';
-import { Form, FormFieldInput } from '@/components/forms';
+import { Form, FormFieldInput, FormFieldSelect, FormFieldDatePicker, FormFieldTextarea } from '@/components/forms';
 import { additionalSettingsSchema } from '../schema';
 import {
   createEmptyAdditionalSettingCategoryFormValues,
@@ -9,6 +10,7 @@ import {
 } from '../utils';
 import type { IAdditionalSettingCategoryFormValues } from '../types';
 import { ADDITIONAL_SETTINGS_TEXTS } from '../constants';
+import { useListValueTypes } from '../hooks';
 
 interface AdditionalSettingsCreateFormProps {
   defaultValues?: IAdditionalSettingCategoryFormValues;
@@ -24,6 +26,149 @@ const noTransformInputProps = {
   valueTransform: 'none' as const,
 };
 
+const SubcategoryRowFields = ({
+  index,
+  isSubmitting,
+  loadTypeOptions,
+  remove,
+  fieldsLength,
+}: {
+  index: number;
+  isSubmitting: boolean;
+  loadTypeOptions: () => Promise<{ options: { value: string; label: string }[]; hasMore: boolean }>;
+  remove: (index: number) => void;
+  fieldsLength: number;
+}) => {
+  const { control, setValue } = useFormContext<IAdditionalSettingCategoryFormValues>();
+
+  const categoryType = useWatch({
+    control,
+    name: `subcategories.${index}.categoryType`,
+  });
+
+  const isBooleanType = categoryType?.toLowerCase() === 'boolean';
+  const isDateType = categoryType?.toLowerCase() === 'date';
+  const isJsonType = categoryType?.toLowerCase() === 'json';
+  const isNumberType = categoryType?.toLowerCase() === 'number' || categoryType?.toLowerCase() === 'decimal';
+
+  const [prevType, setPrevType] = useState(categoryType);
+  useEffect(() => {
+    if (categoryType !== prevType) {
+      setPrevType(categoryType);
+      if (categoryType?.toLowerCase() === 'boolean') {
+        setValue(`subcategories.${index}.value`, 'YES');
+      } else {
+        setValue(`subcategories.${index}.value`, '');
+      }
+    }
+  }, [categoryType, prevType, index, setValue]);
+
+  const loadBooleanOptions = async () => {
+    return {
+      options: [
+        { value: 'YES', label: 'YES' },
+        { value: 'NO', label: 'NO' },
+      ],
+      hasMore: false,
+    };
+  };
+
+  return (
+    <div className="relative rounded-sm border border-border-primary bg-surface-primary p-4">
+      {fieldsLength > 0 && (
+        <button
+          type="button"
+          aria-label={`Remove subcategory ${index + 1}`}
+          className="absolute right-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full border border-border-primary bg-surface-primary text-text-tertiary transition hover:border-error-500 hover:bg-error-50 hover:text-error-600 disabled:opacity-50"
+          disabled={isSubmitting}
+          onClick={() => remove(index)}
+        >
+          <svg
+            aria-hidden="true"
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      )}
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <FormFieldInput
+          name={`subcategories.${index}.title`}
+          label="Title"
+          placeholder="Enter subcategory title"
+          disabled={isSubmitting}
+          {...noTransformInputProps}
+        />
+        <FormFieldInput
+          name={`subcategories.${index}.code`}
+          label="Code"
+          placeholder="Enter subcategory code"
+          disabled={isSubmitting}
+          {...noTransformInputProps}
+        />
+        <FormFieldSelect
+          name={`subcategories.${index}.categoryType`}
+          label="Category Type"
+          placeholder="Select type"
+          disabled={isSubmitting}
+          loadOptions={loadTypeOptions}
+        />
+
+        {isBooleanType ? (
+          <FormFieldSelect
+            name={`subcategories.${index}.value`}
+            label="Value"
+            placeholder="Select YES or NO"
+            disabled={isSubmitting}
+            loadOptions={loadBooleanOptions}
+          />
+        ) : isDateType ? (
+          <FormFieldDatePicker
+            name={`subcategories.${index}.value`}
+            label="Value"
+            placeholder="Select date"
+            disabled={isSubmitting}
+          />
+        ) : isJsonType ? (
+          <FormFieldTextarea
+            name={`subcategories.${index}.value`}
+            label="Value (JSON)"
+            placeholder="Enter JSON value"
+            disabled={isSubmitting}
+            rows={3}
+          />
+        ) : isNumberType ? (
+          <FormFieldInput
+            name={`subcategories.${index}.value`}
+            label="Value"
+            placeholder="Enter number value"
+            type="number"
+            disabled={isSubmitting}
+            {...noTransformInputProps}
+          />
+        ) : (
+          <FormFieldInput
+            name={`subcategories.${index}.value`}
+            label="Value"
+            placeholder="Enter value"
+            disabled={isSubmitting}
+            {...noTransformInputProps}
+          />
+        )}
+      </div>
+    </div>
+  );
+};
+
 const SubcategoryFields = ({
   isSubmitting,
 }: {
@@ -34,6 +179,15 @@ const SubcategoryFields = ({
     control,
     name: 'subcategories',
   });
+  const { data: valueTypes = [] } = useListValueTypes();
+
+  const loadTypeOptions = async () => {
+    const options = valueTypes.map(t => ({ value: t, label: t.toUpperCase() }));
+    return {
+      options,
+      hasMore: false,
+    };
+  };
 
   return (
     <div className="space-y-4">
@@ -67,66 +221,14 @@ const SubcategoryFields = ({
       ) : (
         <div className="space-y-4">
           {fields.map((field, index) => (
-            <div
+            <SubcategoryRowFields
               key={field.id}
-              className="relative rounded-sm border border-border-primary bg-surface-primary p-4"
-            >
-              {fields.length > 0 && (
-                <button
-                  type="button"
-                  aria-label={`Remove subcategory ${index + 1}`}
-                  className="absolute right-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full border border-border-primary bg-surface-primary text-text-tertiary transition hover:border-error-500 hover:bg-error-50 hover:text-error-600 disabled:opacity-50"
-                  disabled={isSubmitting}
-                  onClick={() => remove(index)}
-                >
-                  <svg
-                    aria-hidden="true"
-                    className="h-4 w-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              )}
-
-              <div className="grid gap-4 md:grid-cols-2">
-                <FormFieldInput
-                  name={`subcategories.${index}.title`}
-                  label="Title"
-                  placeholder="Enter subcategory title"
-                  disabled={isSubmitting}
-                  {...noTransformInputProps}
-                />
-                <FormFieldInput
-                  name={`subcategories.${index}.code`}
-                  label="Code"
-                  placeholder="Enter subcategory code"
-                  disabled={isSubmitting}
-                  {...noTransformInputProps}
-                />
-                <FormFieldInput
-                  name={`subcategories.${index}.value`}
-                  label="Value"
-                  placeholder="Enter subcategory value"
-                  disabled={isSubmitting}
-                  {...noTransformInputProps}
-                />
-                <FormFieldInput
-                  name={`subcategories.${index}.categoryType`}
-                  label="Category Type"
-                  placeholder="Enter category type"
-                  disabled={isSubmitting}
-                  {...noTransformInputProps}
-                />
-              </div>
-            </div>
+              index={index}
+              isSubmitting={isSubmitting}
+              loadTypeOptions={loadTypeOptions}
+              remove={remove}
+              fieldsLength={fields.length}
+            />
           ))}
         </div>
       )}
@@ -146,7 +248,7 @@ export const AdditionalSettingsCreateForm = ({
   return (
     <Form
       onSubmit={onSubmit}
-      resolver={yupResolver(additionalSettingsSchema)}
+      resolver={yupResolver(additionalSettingsSchema) as any}
       defaultValues={initialValues}
       className="space-y-6"
     >

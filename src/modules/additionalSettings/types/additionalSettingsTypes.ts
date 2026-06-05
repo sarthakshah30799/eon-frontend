@@ -2,6 +2,7 @@ export interface IAdditionalSettingSubcategory {
   id: string;
   categoryId: string;
   title: string;
+  description?: string;
   code: string;
   value: string;
   categoryType: string;

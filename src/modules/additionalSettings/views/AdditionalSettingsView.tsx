@@ -98,7 +98,7 @@ export const AdditionalSettingsView = () => {
             await updateSubcategory({
               categoryId,
               subcategoryId,
-              title: values.title,
+              description: values.description,
               value: values.value,
             });
           }}

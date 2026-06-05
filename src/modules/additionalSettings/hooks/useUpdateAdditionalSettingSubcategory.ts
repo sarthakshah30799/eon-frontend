@@ -10,11 +10,11 @@ export const useUpdateAdditionalSettingSubcategory = () => {
     mutationFn: (payload: {
       categoryId: string;
       subcategoryId: string;
-      title: string;
+      description: string;
       value: string;
     }) =>
       additionalSettingsApi.updateSubcategory(payload.categoryId, payload.subcategoryId, {
-        title: payload.title,
+        description: payload.description,
         value: payload.value,
       }),
     onSuccess: () => {

@@ -1,5 +1,4 @@
 import { useNavigate } from 'react-router-dom';
-import { BackButton } from '@/components/ui';
 import { UserProfileForm } from '../forms';
 import { createEmptyUserProfileFormValues } from '../utils';
 import type { ICreateUserProfile } from '../types';
@@ -17,13 +16,6 @@ export const UserProfileCreateView = () => {
 
   return (
     <section className="rounded-sm border border-border-primary bg-surface-primary p-6 shadow-sm">
-      <div className="mb-6 space-y-4">
-        <BackButton
-          onClick={() => navigate('/master/system-setups/user-profile')}
-          label="Back"
-        />
-      </div>
-
       <UserProfileForm
         defaultValues={createEmptyUserProfileFormValues()}
         onSubmit={handleSubmit}

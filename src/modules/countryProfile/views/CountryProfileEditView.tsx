@@ -1,5 +1,4 @@
 import { useNavigate, useParams } from 'react-router-dom';
-import { BackButton } from '@/components/ui';
 import { Loader } from '@/components/ui/loader';
 import { usePermission } from '@/hooks';
 import { COUNTRY_PROFILE_TEXTS } from '../constants';
@@ -34,10 +33,6 @@ export const CountryProfileEditView = () => {
 
   return (
     <div className="space-y-4">
-      <BackButton
-        onClick={() => navigate('/master/system-setups/country-profile')}
-        label="Back"
-      />
       <CountryProfileEditorView
         submitLabel={COUNTRY_PROFILE_TEXTS.SAVE_CHANGES}
         defaultValues={

@@ -1,5 +1,4 @@
 import { useNavigate } from 'react-router-dom';
-import { BackButton } from '@/components/ui';
 import { ProductProfileEditorView } from './ProductProfileEditorView';
 import { PRODUCT_PROFILE_TEXTS } from '../constants';
 import { createEmptyProductProfileFormValues } from '../utils';
@@ -17,10 +16,6 @@ export const ProductProfileCreateView = () => {
 
   return (
     <div className="space-y-4">
-      <BackButton
-        onClick={() => navigate('/master/system-setups/product-profile')}
-        label="Back"
-      />
       <ProductProfileEditorView
         heading={PRODUCT_PROFILE_TEXTS.CREATE_PRODUCT}
         description={PRODUCT_PROFILE_TEXTS.FORM_SUBTITLE}

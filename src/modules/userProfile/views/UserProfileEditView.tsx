@@ -14,9 +14,7 @@ export const UserProfileEditView = () => {
   const { submitUserProfile, isPending } = useUpdateUserProfile(id);
 
   if (isLoading) {
-    return (
-     <Loader />
-    );
+    return <Loader />;
   }
 
   if (!userProfile) {
@@ -34,13 +32,6 @@ export const UserProfileEditView = () => {
 
   return (
     <section className="rounded-sm border border-border-primary bg-surface-primary p-6 shadow-sm">
-      <div className="mb-6 space-y-4">
-        <BackButton
-          onClick={() => navigate('/master/system-setups/user-profile')}
-          label="Back"
-        />
-      </div>
-
       <UserProfileForm
         defaultValues={mapRecordToFormValues(userProfile)}
         onSubmit={handleSubmit}

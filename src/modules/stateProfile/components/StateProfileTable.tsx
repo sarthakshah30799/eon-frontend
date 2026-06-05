@@ -60,7 +60,7 @@ export const StateProfileTable = ({ states }: StateProfileTableProps) => {
               aria-label={canModify ? 'Edit state' : 'View state'}
               variant="ghost"
               size="icon"
-              className="rounded-sm bg-transparent text-text-secondary hover:bg-surface-secondary hover:text-text-primary"
+              className="rounded-sm bg-transparent text-black! hover:bg-surface-secondary hover:text-text-primary"
               onClick={event => {
                 event.stopPropagation();
                 navigate(`/master/system-setups/state-profile/edit/${stateId}`);

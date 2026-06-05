@@ -1,7 +1,11 @@
 import type { SubmitErrorHandler } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { Button } from '@/components/ui/button1';
-import { Form, FormFieldCheckbox, FormFieldInput, FormFieldSelect } from '@/components/forms';
+import {
+  Form,
+  FormFieldCheckbox,
+  FormFieldInput,
+  FormFieldSelect,
+} from '@/components/forms';
 import type { AsyncSelectResponse } from '@/components/ui';
 import { menuSchema } from '../schema/menuSchema';
 import type { ICreateMenu } from '@/types/menuTypes';
@@ -15,15 +19,15 @@ interface MenuFormProps {
   parentOptions: AsyncSelectOption[];
 }
 
-const createStaticLoadOptions = (options: AsyncSelectOption[]) => async (): Promise<AsyncSelectResponse> => ({
-  options,
-  hasMore: false,
-});
+const createStaticLoadOptions =
+  (options: AsyncSelectOption[]) => async (): Promise<AsyncSelectResponse> => ({
+    options,
+    hasMore: false,
+  });
 
 export const MenuForm = ({
   defaultValues,
   onSubmit,
-  submitLabel = 'Save Changes',
   isSubmitting = false,
   parentOptions,
 }: MenuFormProps) => {
@@ -35,11 +39,15 @@ export const MenuForm = ({
 
   return (
     <Form
+      id={'menu-form-id'}
       onSubmit={onSubmit}
       onError={handleSubmitErrors}
       resolver={yupResolver(menuSchema)}
       defaultValues={defaultValues}
       className="space-y-6"
+      footer={{
+        submitLabel: 'Save Changes',
+      }}
     >
       <section className="rounded-sm border border-border-primary bg-surface-secondary p-4 space-y-4">
         <h2 className="text-sm font-semibold uppercase text-text-tertiary">
@@ -65,7 +73,6 @@ export const MenuForm = ({
             disabled={isSubmitting}
             placeholder="/admin/menu-management"
             valueTransform="none"
-
           />
           <FormFieldInput
             name="icon"
@@ -105,12 +112,6 @@ export const MenuForm = ({
           </div>
         </div>
       </section>
-
-      <div className="flex justify-end border-t border-border-primary pt-4">
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Saving...' : submitLabel}
-        </Button>
-      </div>
     </Form>
   );
 };

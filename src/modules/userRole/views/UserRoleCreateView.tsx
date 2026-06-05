@@ -1,5 +1,4 @@
 import { useNavigate } from 'react-router-dom';
-import { BackButton } from '@/components/ui';
 import { createEmptyUserRoleFormValues } from '../utils';
 import { buildUserRightsPermissionGrid } from '../utils';
 import { UserRoleForm } from '../forms';
@@ -26,10 +25,6 @@ export const UserRoleCreateView = () => {
 
   return (
     <div className="space-y-4">
-      <BackButton
-        onClick={() => navigate('/master/system-setups/user-role')}
-        label="Back"
-      />
       <section className="mx-auto w-full max-w-6xl rounded-md border border-border-primary bg-surface-primary p-5 shadow-sm">
         <UserRoleForm
           defaultValues={createEmptyUserRoleFormValues()}

@@ -7,6 +7,7 @@ import {
   type SubmitErrorHandler,
   type Resolver,
 } from 'react-hook-form';
+import { FormFooter } from '@/components/ui';
 
 interface FormProps<TFieldValues extends FieldValues = FieldValues> {
   children: React.ReactNode;
@@ -16,6 +17,13 @@ interface FormProps<TFieldValues extends FieldValues = FieldValues> {
   id?: string;
   resolver?: Resolver<TFieldValues>;
   defaultValues?: DefaultValues<TFieldValues>;
+  footer?: {
+    submitLabel?: string;
+    backLabel?: string;
+    onBackClick?: () => void;
+    onCancel?: () => void | Promise<void>;
+    accentColor?: string;
+  };
 }
 
 export const Form = <TFieldValues extends FieldValues = FieldValues>({
@@ -26,6 +34,7 @@ export const Form = <TFieldValues extends FieldValues = FieldValues>({
   id,
   resolver,
   defaultValues,
+  footer,
 }: FormProps<TFieldValues>) => {
   const form = useForm<TFieldValues>({
     resolver,
@@ -43,6 +52,14 @@ export const Form = <TFieldValues extends FieldValues = FieldValues>({
       <form id={id} onSubmit={handleFormSubmit} className={className}>
         {children}
       </form>
+      <FormFooter
+        formId={id}
+        submitLabel={footer?.submitLabel}
+        backLabel={footer?.backLabel}
+        onBackClick={footer?.onBackClick}
+        onCancel={footer?.onCancel}
+        isSubmitting={form.formState.isSubmitting}
+      />
     </RHFFormProvider>
   );
 };

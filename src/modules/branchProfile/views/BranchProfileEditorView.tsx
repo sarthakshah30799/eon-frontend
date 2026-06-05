@@ -9,6 +9,8 @@ interface BranchProfileEditorViewProps {
   heading: string;
   description: string;
   submitLabel: string;
+  backLabel?: string;
+  onBackClick?: () => void;
   cancelLabel?: string;
   defaultValues?: ICreateBranchProfile;
   onSubmitBranch: (values: ICreateBranchProfile) => void | Promise<void>;
@@ -19,6 +21,8 @@ interface BranchProfileEditorViewProps {
 
 export const BranchProfileEditorView = ({
   submitLabel,
+  backLabel,
+  onBackClick,
   cancelLabel,
   defaultValues = createEmptyBranchProfileFormValues(),
   onSubmitBranch,
@@ -32,6 +36,8 @@ export const BranchProfileEditorView = ({
         defaultValues={defaultValues}
         onSubmit={onSubmitBranch}
         submitLabel={submitLabel}
+        backLabel={backLabel}
+        onBackClick={onBackClick}
         cancelLabel={cancelLabel}
         onCancel={onCancel}
         isSubmitting={isSubmitting}

@@ -1,5 +1,4 @@
 import { useNavigate, useParams } from 'react-router-dom';
-import { BackButton } from '@/components/ui';
 import { ProductProfileEditorView } from './ProductProfileEditorView';
 import { useGetProductProfile, useUpdateProductProfile } from '../hooks';
 import { PRODUCT_PROFILE_TEXTS } from '../constants';
@@ -15,9 +14,7 @@ export const ProductProfileEditView = () => {
   const { submitProductProfile, isPending } = useUpdateProductProfile(id);
 
   if (isLoading) {
-    return (
-     <Loader />
-    );
+    return <Loader />;
   }
 
   if (!productProfile) {
@@ -35,10 +32,6 @@ export const ProductProfileEditView = () => {
 
   return (
     <div className="space-y-4">
-      <BackButton
-        onClick={() => navigate('/master/system-setups/product-profile')}
-        label="Back"
-      />
       <ProductProfileEditorView
         heading={PRODUCT_PROFILE_TEXTS.EDIT_PRODUCT}
         description="Update the product profile and accounting configuration."

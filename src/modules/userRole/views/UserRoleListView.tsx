@@ -1,10 +1,13 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button1';
-import { useDeleteUserRole, useListUserRoles, useUpdateUserRoleStatus } from '../hooks';
+import {
+  useDeleteUserRole,
+  useListUserRoles,
+  useUpdateUserRoleStatus,
+} from '../hooks';
 import { USER_ROLE_TEXTS } from '../constants';
 import { UserRoleTable } from '../components';
 import { Loader } from '@/components/ui/loader';
-
 
 export const UserRoleListView = () => {
   const navigate = useNavigate();
@@ -14,7 +17,9 @@ export const UserRoleListView = () => {
     useUpdateUserRoleStatus();
 
   const handleDelete = async (id: string) => {
-    const confirmDelete = window.confirm('Are you sure you want to delete this role?');
+    const confirmDelete = window.confirm(
+      'Are you sure you want to delete this role?'
+    );
     if (confirmDelete) {
       await deleteUserRole(id);
     }
@@ -25,9 +30,7 @@ export const UserRoleListView = () => {
   };
 
   if (isLoading) {
-    return (
-      <Loader />
-    );
+    return <Loader />;
   }
 
   if (error) {

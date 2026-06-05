@@ -1,4 +1,3 @@
-import { Button } from '@/components/ui/button1';
 import {
   Form,
   FormFieldFileUploader,
@@ -13,7 +12,7 @@ interface CompanyProfileFormProps {
   onSubmit: (values: ICreateCompanyProfile) => void | Promise<void>;
   isSaving?: boolean;
 }
-
+const COMPANY_FORM_ID = 'company-profile-form';
 export const CompanyProfileForm = ({
   defaultValues,
   onSubmit,
@@ -21,10 +20,14 @@ export const CompanyProfileForm = ({
 }: CompanyProfileFormProps) => {
   return (
     <Form
+      id={COMPANY_FORM_ID}
       onSubmit={onSubmit}
       resolver={yupResolver(companyProfileSchema)}
       defaultValues={defaultValues}
       className="space-y-6"
+      footer={{
+        submitLabel: 'Save Changes',
+      }}
     >
       <div className="rounded-sm border border-border-primary bg-surface-secondary p-4">
         <FormFieldFileUploader
@@ -42,11 +45,7 @@ export const CompanyProfileForm = ({
           label="Short Code"
           disabled={isSaving}
         />
-        <FormFieldInput
-          name="name"
-          label="Name"
-          disabled={isSaving}
-        />
+        <FormFieldInput name="name" label="Name" disabled={isSaving} />
         <FormFieldInput
           name="formerlyKnownName"
           label="Formerly Known Name"
@@ -85,12 +84,6 @@ export const CompanyProfileForm = ({
           type="email"
           disabled={isSaving}
         />
-      </div>
-
-      <div className="flex justify-end border-t border-border-primary pt-4">
-        <Button type="submit" disabled={isSaving}>
-          {isSaving ? 'Saving...' : 'Save Changes'}
-        </Button>
       </div>
     </Form>
   );

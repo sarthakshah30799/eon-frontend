@@ -3,10 +3,7 @@ import { BackButton } from '@/components/ui';
 import { UserRoleForm } from '../forms';
 import { useGetUserRole, useUpdateUserRole } from '../hooks';
 import { USER_ROLE_TEXTS } from '../constants';
-import {
-  buildUserRightsPermissionGrid,
-  mapRecordToFormValues,
-} from '../utils';
+import { buildUserRightsPermissionGrid, mapRecordToFormValues } from '../utils';
 import type { ICreateUserRole } from '../types';
 import { Loader } from '@/components/ui/loader';
 import { useUserRightsMatrix } from '../hooks';
@@ -21,9 +18,7 @@ export const UserRoleEditView = () => {
   const rightsMatrix = useUserRightsMatrix(id);
 
   if (isLoading) {
-    return (
-      <Loader />
-    );
+    return <Loader />;
   }
 
   if (!role) {
@@ -45,10 +40,6 @@ export const UserRoleEditView = () => {
 
   return (
     <div className="space-y-4">
-      <BackButton
-        onClick={() => navigate('/master/system-setups/user-role')}
-        label="Back"
-      />
       <section className="mx-auto w-full max-w-6xl rounded-md border border-border-primary bg-surface-primary p-5 shadow-sm">
         <UserRoleForm
           defaultValues={mapRecordToFormValues(role)}

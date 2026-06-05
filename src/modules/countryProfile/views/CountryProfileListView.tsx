@@ -24,8 +24,12 @@ export const CountryProfileListView = () => {
     [page, pageSize, debouncedSearch]
   );
 
-  const { data: countryResponse, isLoading, isFetching, error } =
-    useListCountryProfiles(query);
+  const {
+    data: countryResponse,
+    isLoading,
+    isFetching,
+    error,
+  } = useListCountryProfiles(query);
   const countries = countryResponse?.data ?? [];
   const totalItems = countryResponse?.totalItems ?? 0;
 
@@ -65,10 +69,15 @@ export const CountryProfileListView = () => {
             }}
             className="sm:max-w-md"
           />
-          <div className="text-sm text-text-secondary">{totalItems} total records</div>
+          <div className="text-sm text-text-secondary">
+            {totalItems} total records
+          </div>
         </div>
 
-        <CountryProfileTable countries={countries} loading={isLoading || isFetching} />
+        <CountryProfileTable
+          countries={countries}
+          loading={isLoading || isFetching}
+        />
       </section>
     </div>
   );

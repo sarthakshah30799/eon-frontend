@@ -1,5 +1,4 @@
 import { useNavigate, useParams } from 'react-router-dom';
-import { BackButton } from '@/components/ui';
 import { Loader } from '@/components/ui/loader';
 import { CURRENCY_PROFILE_TEXTS } from '../constants';
 import { useGetCurrencyProfile, useUpdateCurrencyProfile } from '../hooks';
@@ -35,10 +34,6 @@ export const CurrencyProfileEditView = () => {
 
   return (
     <div className="space-y-4">
-      <BackButton
-        onClick={() => navigate('/master/system-setups/currency-profile')}
-        label="Back"
-      />
       <CurrencyProfileEditorView
         submitLabel={CURRENCY_PROFILE_TEXTS.SAVE_CHANGES}
         defaultValues={

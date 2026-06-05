@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import type { FormEvent } from 'react';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { Button } from '@/components/ui/button1';
 import {
   Form,
   FormFieldAsyncSelect,
@@ -10,6 +9,7 @@ import {
   FormFieldCountryDropdown,
   FormFieldInput,
 } from '@/components/forms';
+import { CardSection } from '@/components/ui';
 import type { AsyncSelectResponse } from '@/components/ui';
 import {
   CURRENCY_CALCULATION_METHOD_OPTIONS,
@@ -19,10 +19,12 @@ import {
 } from '../constants';
 import { currencyProfileSchema } from '../schema';
 import type { ICreateCurrencyProfile } from '../types';
+import { useNavigate } from 'react-router-dom';
 
-const loadCalculationMethodOptions = async (): Promise<AsyncSelectResponse> => ({
-  options: CURRENCY_CALCULATION_METHOD_OPTIONS,
-});
+const loadCalculationMethodOptions =
+  async (): Promise<AsyncSelectResponse> => ({
+    options: CURRENCY_CALCULATION_METHOD_OPTIONS,
+  });
 
 const loadGroupOptions = async (): Promise<AsyncSelectResponse> => ({
   options: CURRENCY_GROUP_OPTIONS,
@@ -40,8 +42,6 @@ interface CurrencyProfileFormProps {
   readOnly?: boolean;
 }
 
-const formCardClass =
-  'rounded-sm border border-border-primary bg-surface-secondary p-3';
 const compactFieldClass = '';
 
 const numericInputProps = {
@@ -62,20 +62,26 @@ export const CurrencyProfileForm = ({
   isSubmitting = false,
   readOnly = false,
 }: CurrencyProfileFormProps) => {
+  const navigate = useNavigate();
   const isDisabled = isSubmitting || readOnly;
-
+  const onCancel = () => {
+    navigate('/master/system-setups/currency-profile');
+  };
   return (
     <Form
       onSubmit={onSubmit}
       resolver={yupResolver(currencyProfileSchema)}
       defaultValues={defaultValues}
       className="space-y-3"
+      footer={{
+        submitLabel,
+        onBackClick: () => {
+          void onCancel?.();
+        },
+        onCancel,
+      }}
     >
-      <section className={formCardClass}>
-        <h2 className="mb-2 text-[11px] font-bold uppercase text-black">
-          {CURRENCY_PROFILE_TEXTS.BASIC_INFO_TITLE}
-        </h2>
-
+      <CardSection heading={CURRENCY_PROFILE_TEXTS.BASIC_INFO_TITLE}>
         <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-4">
           <FormFieldInput
             name="currencyCode"
@@ -102,13 +108,9 @@ export const CurrencyProfileForm = ({
             className={compactFieldClass}
           />
         </div>
-      </section>
+      </CardSection>
 
-      <section className={formCardClass}>
-        <h2 className="mb-2 text-[11px] font-bold uppercase text-black">
-          {CURRENCY_PROFILE_TEXTS.RATE_CONFIGURATION_TITLE}
-        </h2>
-
+      <CardSection heading={CURRENCY_PROFILE_TEXTS.RATE_CONFIGURATION_TITLE}>
         <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-4">
           <FormFieldInput
             name="priority"
@@ -171,13 +173,9 @@ export const CurrencyProfileForm = ({
             isSearchable={false}
           />
         </div>
-      </section>
+      </CardSection>
 
-      <section className={formCardClass}>
-        <h2 className="mb-2 text-[11px] font-bold uppercase text-black">
-          {CURRENCY_PROFILE_TEXTS.STATUS_TITLE}
-        </h2>
-
+      <CardSection heading={CURRENCY_PROFILE_TEXTS.STATUS_TITLE}>
         <div className="grid gap-2 md:grid-cols-2">
           <div className="rounded-sm border border-border-primary bg-surface-primary p-2">
             <FormFieldCheckbox
@@ -194,20 +192,10 @@ export const CurrencyProfileForm = ({
               disabled={isDisabled}
             />
 
-            <CurrencyProfileProductAllowedField
-              isDisabled={isDisabled}
-            />
+            <CurrencyProfileProductAllowedField isDisabled={isDisabled} />
           </div>
         </div>
-      </section>
-
-      {!readOnly && (
-        <div className="flex justify-end border-t border-border-primary pt-2">
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Saving...' : submitLabel}
-          </Button>
-        </div>
-      )}
+      </CardSection>
     </Form>
   );
 };

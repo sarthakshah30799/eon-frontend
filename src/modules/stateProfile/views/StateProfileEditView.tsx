@@ -1,5 +1,4 @@
 import { useNavigate, useParams } from 'react-router-dom';
-import { BackButton } from '@/components/ui';
 import { Loader } from '@/components/ui/loader';
 import { usePermission } from '@/hooks';
 import { STATE_PROFILE_TEXTS } from '../constants';
@@ -34,10 +33,6 @@ export const StateProfileEditView = () => {
 
   return (
     <div className="space-y-4">
-      <BackButton
-        onClick={() => navigate('/master/system-setups/state-profile')}
-        label="Back"
-      />
       <StateProfileEditorView
         heading={canModify ? STATE_PROFILE_TEXTS.EDIT_STATE : "View State Details"}
         description={canModify ? "Update the state details." : "View the state details."}

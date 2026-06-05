@@ -1,6 +1,4 @@
-import { useNavigate } from 'react-router-dom';
 import { Loader } from '@/components/ui/loader';
-import { BackButton } from '@/components/ui';
 import { CompanyProfileForm } from '../forms';
 import { useGetCompanyProfile, useUpdateCompanyProfile, useListCompanyProfiles } from '../hooks';
 import type { ICreateCompanyProfile } from '../types';
@@ -11,7 +9,6 @@ interface CompanyProfileEditViewProps {
 }
 
 export const CompanyProfileEditView = ({ id: propId }: CompanyProfileEditViewProps = {}) => {
-  const navigate = useNavigate();
   const { data: companies = [], isLoading: isListLoading, error: listError } = useListCompanyProfiles();
   const firstCompanyId = propId || companies[0]?.id;
 
@@ -43,10 +40,6 @@ export const CompanyProfileEditView = ({ id: propId }: CompanyProfileEditViewPro
 
   return (
     <section className="space-y-6">
-      <BackButton
-        onClick={() => navigate('/admin/company-profile')}
-        label="Back"
-      />
       <div className="mx-auto w-full max-w-6xl rounded-md border border-border-primary bg-surface-primary p-5 shadow-sm">
         <CompanyProfileForm
           defaultValues={data ? mapCompanyProfileToFormValues(data) : createEmptyCompanyProfileFormValues()}

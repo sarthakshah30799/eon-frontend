@@ -1,5 +1,4 @@
 import { useNavigate } from 'react-router-dom';
-import { BackButton } from '@/components/ui';
 import { CURRENCY_PROFILE_TEXTS } from '../constants';
 import { createEmptyCurrencyProfileFormValues } from '../utils';
 import { useCreateCurrencyProfile } from '../hooks';
@@ -17,10 +16,6 @@ export const CurrencyProfileCreateView = () => {
 
   return (
     <div className="space-y-4">
-      <BackButton
-        onClick={() => navigate('/master/system-setups/currency-profile')}
-        label="Back"
-      />
       <CurrencyProfileEditorView
         submitLabel={CURRENCY_PROFILE_TEXTS.CREATE_CURRENCY}
         defaultValues={createEmptyCurrencyProfileFormValues()}

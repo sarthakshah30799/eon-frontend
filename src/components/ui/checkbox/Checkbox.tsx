@@ -20,7 +20,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
   ...props
 }) => {
   return (
-    <div className={`flex items-center ${className || ''}`}>
+    <div className={`flex items-center  ${className || ''}`}>
       <Input
         type="checkbox"
         checked={checked}

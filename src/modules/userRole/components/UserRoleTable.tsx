@@ -63,8 +63,6 @@ export const UserRoleTable = ({
       meta: {
         headerClassName:
           'sticky right-0 z-20 border-l border-border-primary bg-surface-secondary',
-        cellClassName:
-          'sticky right-0 z-10 border-l border-border-primary bg-surface-primary',
       },
       cell: ({ row }) => {
         const roleId = row.original.id;
@@ -74,8 +72,8 @@ export const UserRoleTable = ({
             <Button
               type="button"
               aria-label="Edit role"
-              variant="ghost"
               size="sm"
+              className='border-0! bg-transparent! text-black!'
               onClick={event => {
                 event.stopPropagation();
                 navigate(`/master/system-setups/user-role/edit/${roleId}`);

@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { BackButton } from '@/components/ui';
 import { Loader } from '@/components/ui/loader';
 import { CATEGORY_OPTIONS_TEXTS } from '../constants';
 import {
@@ -69,10 +68,6 @@ export const CategoryOptionsEditView = () => {
 
   return (
     <div className="space-y-4">
-      <BackButton
-        onClick={() => navigate('/admin/category-options')}
-        label="Back"
-      />
       <section className="mx-auto w-full max-w-6xl rounded-md border border-border-primary bg-surface-primary p-5 shadow-sm">
         <CategoryOptionsForm
           defaultValues={defaultValues}

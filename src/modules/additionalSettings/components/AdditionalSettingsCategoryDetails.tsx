@@ -3,6 +3,12 @@ import type {
   IAdditionalSettingCategory,
   IAdditionalSettingSubcategory,
 } from '../types';
+import { Button, Input, Table, type TableColumnDef } from '@/components/ui';
+import {
+  CheckIcon,
+  PencilSquareIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
 
 interface AdditionalSettingsCategoryDetailsProps {
   category: IAdditionalSettingCategory | null;
@@ -15,25 +21,6 @@ interface AdditionalSettingsCategoryDetailsProps {
   ) => Promise<void>;
 }
 
-const iconButtonClass =
-  'inline-flex h-9 w-9 items-center justify-center rounded-full border border-border-primary bg-surface-primary text-text-tertiary transition hover:border-primary-500 hover:bg-primary-50 hover:text-primary-700';
-
-const actionIcon = (path: string) => (
-  <svg
-    aria-hidden="true"
-    className="h-4 w-4"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="2"
-      d={path}
-    />
-  </svg>
-);
 
 const CategoryTitleEditor = ({
   category,
@@ -79,158 +66,45 @@ const CategoryTitleEditor = ({
           </p>
         </div>
 
-        <button
+        <Button
           type="button"
-          className={iconButtonClass}
           aria-label="Edit category title"
           onClick={() => setIsEditing(true)}
+          className="border-0! bg-transparent! text-black!"
         >
-          {actionIcon('M11 5h2M12 4v2m4.95 1.05l1.414 1.414M20 12h-2m-1 4.95l-1.414-1.414M12 20v-2m-4.95-1.05l-1.414-1.414M4 12h2m1-4.95l1.414 1.414')}
-        </button>
+          <PencilSquareIcon className="h-5 w-5" />
+        </Button>
       </div>
     );
   }
 
   return (
     <div className="flex items-center gap-3">
-      <input
+      <Input
         value={draftTitle}
         onChange={event => setDraftTitle(event.target.value)}
-        className="w-full rounded-sm border border-border-primary bg-surface-primary px-3 py-2 text-sm text-text-primary outline-none ring-0 transition focus:border-primary-500"
+        className="w-full"
       />
-      <button
+      <Button
         type="button"
-        className={iconButtonClass}
+        className="border-0! bg-transparent! text-black!"
         aria-label="Save category title"
         onClick={handleSave}
       >
-        {actionIcon('M5 13l4 4L19 7')}
-      </button>
-      <button
+        <CheckIcon className="h-5 w-5" />
+      </Button>
+      <Button
         type="button"
-        className={iconButtonClass}
+        className="border-0! bg-transparent! text-black!"
         aria-label="Cancel category title edit"
         onClick={() => {
           setDraftTitle(category.title);
           setIsEditing(false);
         }}
       >
-        {actionIcon('M6 18L18 6M6 6l12 12')}
-      </button>
+        <XMarkIcon className="h-5 w-5" />
+      </Button>
     </div>
-  );
-};
-
-const EditableSubcategoryRow = ({
-  subcategory,
-  categoryId,
-  onSaveSubcategory,
-}: {
-  subcategory: IAdditionalSettingSubcategory;
-  categoryId: string;
-  onSaveSubcategory: (
-    categoryId: string,
-    subcategoryId: string,
-    values: { title: string; value: string }
-  ) => Promise<void>;
-}) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [draftTitle, setDraftTitle] = useState(subcategory.title);
-  const [draftValue, setDraftValue] = useState(subcategory.value);
-
-  useEffect(() => {
-    setDraftTitle(subcategory.title);
-    setDraftValue(subcategory.value);
-    setIsEditing(false);
-  }, [subcategory.id, subcategory.title, subcategory.value]);
-
-  const handleSave = async () => {
-    const nextTitle = draftTitle.trim();
-    const nextValue = draftValue.trim();
-
-    if (!nextTitle || !nextValue) {
-      setDraftTitle(subcategory.title);
-      setDraftValue(subcategory.value);
-      setIsEditing(false);
-      return;
-    }
-
-    try {
-      await onSaveSubcategory(categoryId, subcategory.id, {
-        title: nextTitle,
-        value: nextValue,
-      });
-      setIsEditing(false);
-    } catch {
-      setDraftTitle(subcategory.title);
-      setDraftValue(subcategory.value);
-    }
-  };
-
-  if (!isEditing) {
-    return (
-      <tr className="border-t border-border-primary">
-        <td className="px-4 py-3 text-sm text-text-primary">
-          {subcategory.title}
-        </td>
-        <td className="px-4 py-3 text-sm text-text-secondary">
-          {subcategory.value}
-        </td>
-        <td className="px-4 py-3">
-          <button
-            type="button"
-            className={iconButtonClass}
-            aria-label={`Edit ${subcategory.title}`}
-            onClick={() => setIsEditing(true)}
-          >
-            {actionIcon('M11 5h2M12 4v2m4.95 1.05l1.414 1.414M20 12h-2m-1 4.95l-1.414-1.414M12 20v-2m-4.95-1.05l-1.414-1.414M4 12h2m1-4.95l1.414 1.414')}
-          </button>
-        </td>
-      </tr>
-    );
-  }
-
-  return (
-    <tr className="border-t border-border-primary bg-primary-50/30">
-      <td className="px-4 py-3">
-        <input
-          value={draftTitle}
-          onChange={event => setDraftTitle(event.target.value)}
-          className="w-full rounded-sm border border-border-primary bg-surface-primary px-3 py-2 text-sm text-text-primary outline-none transition focus:border-primary-500"
-        />
-      </td>
-      <td className="px-4 py-3">
-        <input
-          value={draftValue}
-          onChange={event => setDraftValue(event.target.value)}
-          className="w-full rounded-sm border border-border-primary bg-surface-primary px-3 py-2 text-sm text-text-primary outline-none transition focus:border-primary-500"
-        />
-      </td>
-      <td className="px-4 py-3">
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            className={iconButtonClass}
-            aria-label={`Save ${subcategory.title}`}
-            onClick={handleSave}
-          >
-            {actionIcon('M5 13l4 4L19 7')}
-          </button>
-          <button
-            type="button"
-            className={iconButtonClass}
-            aria-label={`Cancel ${subcategory.title}`}
-            onClick={() => {
-              setDraftTitle(subcategory.title);
-              setDraftValue(subcategory.value);
-              setIsEditing(false);
-            }}
-          >
-            {actionIcon('M6 18L18 6M6 6l12 12')}
-          </button>
-        </div>
-      </td>
-    </tr>
   );
 };
 
@@ -240,9 +114,201 @@ export const AdditionalSettingsCategoryDetails = ({
   onSaveCategoryTitle,
   onSaveSubcategory,
 }: AdditionalSettingsCategoryDetailsProps) => {
-  const hasSubcategories = useMemo(
-    () => Boolean(category?.subcategories.length),
-    [category]
+  const [editingSubcategoryId, setEditingSubcategoryId] = useState<
+    string | null
+  >(null);
+  const [subcategoryDrafts, setSubcategoryDrafts] = useState<
+    Record<string, { title: string; value: string }>
+  >({});
+
+  useEffect(() => {
+    if (!category) {
+      setEditingSubcategoryId(null);
+      setSubcategoryDrafts({});
+      return;
+    }
+
+    setEditingSubcategoryId(null);
+    setSubcategoryDrafts(prevDrafts => {
+      const nextDrafts: Record<string, { title: string; value: string }> = {};
+
+      category.subcategories.forEach(subcategory => {
+        nextDrafts[subcategory.id] = prevDrafts[subcategory.id] ?? {
+          title: subcategory.title,
+          value: subcategory.value,
+        };
+      });
+
+      return nextDrafts;
+    });
+  }, [category]);
+
+  const subcategoryColumns = useMemo<
+    TableColumnDef<IAdditionalSettingSubcategory>[]
+  >(
+    () => [
+      {
+        accessorKey: 'title',
+        header: 'Title',
+        cell: ({ row }) => {
+          const subcategory = row.original;
+          const isEditing = editingSubcategoryId === subcategory.id;
+          const draft = subcategoryDrafts[subcategory.id] ?? {
+            title: subcategory.title,
+            value: subcategory.value,
+          };
+
+          if (!isEditing) {
+            return (
+              <span className="text-sm text-text-primary">
+                {subcategory.title}
+              </span>
+            );
+          }
+
+          return (
+            <Input
+              value={draft.title}
+              onChange={event =>
+                setSubcategoryDrafts(prev => ({
+                  ...prev,
+                  [subcategory.id]: {
+                    ...draft,
+                    title: event.target.value,
+                  },
+                }))
+              }
+              className="w-full"
+            />
+          );
+        },
+      },
+      {
+        accessorKey: 'value',
+        header: 'Value',
+        cell: ({ row }) => {
+          const subcategory = row.original;
+          const isEditing = editingSubcategoryId === subcategory.id;
+          const draft = subcategoryDrafts[subcategory.id] ?? {
+            title: subcategory.title,
+            value: subcategory.value,
+          };
+
+          if (!isEditing) {
+            return (
+              <span className="text-sm text-text-secondary">
+                {subcategory.value}
+              </span>
+            );
+          }
+
+          return (
+            <Input
+              value={draft.value}
+              onChange={event =>
+                setSubcategoryDrafts(prev => ({
+                  ...prev,
+                  [subcategory.id]: {
+                    ...draft,
+                    value: event.target.value,
+                  },
+                }))
+              }
+              className="w-full"
+            />
+          );
+        },
+      },
+      {
+        id: 'actions',
+        header: 'Actions',
+        cell: ({ row }) => {
+          const subcategory = row.original;
+          const isEditing = editingSubcategoryId === subcategory.id;
+          const draft = subcategoryDrafts[subcategory.id] ?? {
+            title: subcategory.title,
+            value: subcategory.value,
+          };
+
+          const handleSave = async () => {
+            const nextTitle = draft.title.trim();
+            const nextValue = draft.value.trim();
+
+            if (!nextTitle || !nextValue) {
+              setSubcategoryDrafts(prev => ({
+                ...prev,
+                [subcategory.id]: {
+                  title: subcategory.title,
+                  value: subcategory.value,
+                },
+              }));
+              setEditingSubcategoryId(null);
+              return;
+            }
+
+            try {
+              await onSaveSubcategory(category.id, subcategory.id, {
+                title: nextTitle,
+                value: nextValue,
+              });
+              setEditingSubcategoryId(null);
+            } catch {
+              setSubcategoryDrafts(prev => ({
+                ...prev,
+                [subcategory.id]: {
+                  title: subcategory.title,
+                  value: subcategory.value,
+                },
+              }));
+            }
+          };
+
+          if (!isEditing) {
+            return (
+              <Button
+                type="button"
+                aria-label={`Edit ${subcategory.title}`}
+                onClick={() => setEditingSubcategoryId(subcategory.id)}
+                className="border-0! bg-transparent! text-black!"
+              >
+                <PencilSquareIcon className="h-5 w-5" />
+              </Button>
+            );
+          }
+
+          return (
+            <div className="flex items-center gap-3">
+              <Button
+                type="button"
+                aria-label={`Save ${subcategory.title}`}
+                onClick={handleSave}
+                className="border-0! bg-transparent! text-black!"
+              >
+                <CheckIcon className="h-5 w-5" />
+              </Button>
+              <Button
+                type="button"
+                className="border-0! bg-transparent! text-black!"
+                aria-label={`Cancel ${subcategory.title}`}
+                onClick={() => {
+                  setSubcategoryDrafts(prev => ({
+                    ...prev,
+                    [subcategory.id]: {
+                      title: subcategory.title,
+                      value: subcategory.value,
+                    },
+                  }));
+                  setEditingSubcategoryId(null);
+                }}
+              >
+                <XMarkIcon className="h-5 w-5" />
+              </Button>
+            </div>
+          );
+        },
+      },
+    ],
+    [category, editingSubcategoryId, onSaveSubcategory, subcategoryDrafts]
   );
 
   return (
@@ -257,13 +323,9 @@ export const AdditionalSettingsCategoryDetails = ({
           </h2>
         </div>
 
-        <button
-          type="button"
-          onClick={onOpenCreateCategory}
-          className="rounded-sm border border-primary-500 bg-primary-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-primary-600"
-        >
+        <Button type="button" onClick={onOpenCreateCategory}>
           Create Category
-        </button>
+        </Button>
       </div>
 
       {!category ? (
@@ -274,13 +336,9 @@ export const AdditionalSettingsCategoryDetails = ({
           <p className="mt-2 text-sm text-text-tertiary">
             Create a category to start managing additional settings.
           </p>
-          <button
-            type="button"
-            onClick={onOpenCreateCategory}
-            className="mt-4 rounded-sm border border-primary-500 bg-primary-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-primary-600"
-          >
+          <Button type="button" onClick={onOpenCreateCategory}>
             Create Category
-          </button>
+          </Button>
         </div>
       ) : (
         <div className="space-y-5">
@@ -306,28 +364,15 @@ export const AdditionalSettingsCategoryDetails = ({
               </p>
             </div>
 
-            {hasSubcategories ? (
-              <div className="overflow-hidden rounded-sm border border-border-primary bg-surface-primary">
-                <table className="w-full border-collapse">
-                  <thead className="bg-surface-secondary">
-                    <tr className="text-left text-xs uppercase tracking-[0.2em] text-text-tertiary">
-                      <th className="px-4 py-3">Title</th>
-                      <th className="px-4 py-3">Value</th>
-                      <th className="px-4 py-3">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {category.subcategories.map(subcategory => (
-                      <EditableSubcategoryRow
-                        key={subcategory.id}
-                        categoryId={category.id}
-                        subcategory={subcategory}
-                        onSaveSubcategory={onSaveSubcategory}
-                      />
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+            {category.subcategories.length > 0 ? (
+              <Table
+                columns={subcategoryColumns}
+                data={category.subcategories}
+                enableSorting={false}
+                enableFiltering={false}
+                enablePagination={false}
+                className="w-full"
+              />
             ) : (
               <div className="rounded-sm border border-dashed border-border-primary bg-surface-primary p-4 text-sm text-text-tertiary">
                 No subcategories for this category yet.

@@ -1,6 +1,7 @@
 import { useFieldArray, useFormContext } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Button } from '@/components/ui/button1';
+import { CardSection } from '@/components/ui';
 import { Form, FormFieldInput } from '@/components/forms';
 import { additionalSettingsSchema } from '../schema';
 import {
@@ -16,9 +17,6 @@ interface AdditionalSettingsCreateFormProps {
   isSubmitting?: boolean;
   submitLabel?: string;
 }
-
-const formCardClass =
-  'rounded-sm border border-border-primary bg-surface-secondary p-4';
 
 const noTransformInputProps = {
   valueTransform: 'none' as const,
@@ -39,9 +37,6 @@ const SubcategoryFields = ({
     <div className="space-y-4">
       <div className="flex items-center justify-between border-b border-border-primary pb-3">
         <div>
-          <p className="text-sm font-semibold text-text-primary">
-            {ADDITIONAL_SETTINGS_TEXTS.SUBCATEGORIES}
-          </p>
           <p className="text-xs text-text-tertiary">
             Add linked subcategory definitions for this category.
           </p>
@@ -138,7 +133,7 @@ export const AdditionalSettingsCreateForm = ({
   defaultValues,
   onSubmit,
   isSubmitting = false,
-  submitLabel = ADDITIONAL_SETTINGS_TEXTS.ADD_CATEGORY,
+  submitLabel = ADDITIONAL_SETTINGS_TEXTS.CREATE_CATEGORY,
 }: AdditionalSettingsCreateFormProps) => {
   const initialValues =
     defaultValues ?? createEmptyAdditionalSettingCategoryFormValues();
@@ -150,7 +145,7 @@ export const AdditionalSettingsCreateForm = ({
       defaultValues={initialValues}
       className="space-y-6"
     >
-      <section className={formCardClass}>
+      <CardSection heading={ADDITIONAL_SETTINGS_TEXTS.CATEGORY_TITLE}>
         <div className="grid gap-4 md:grid-cols-2">
           <FormFieldInput
             name="title"
@@ -167,11 +162,11 @@ export const AdditionalSettingsCreateForm = ({
             {...noTransformInputProps}
           />
         </div>
-      </section>
+      </CardSection>
 
-      <section className={formCardClass}>
+      <CardSection heading={ADDITIONAL_SETTINGS_TEXTS.SUBCATEGORIES}>
         <SubcategoryFields isSubmitting={isSubmitting} />
-      </section>
+      </CardSection>
 
       <div className="flex justify-end border-t border-border-primary pt-4">
         <Button type="submit" disabled={isSubmitting}>

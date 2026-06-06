@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PencilSquareIcon } from '@heroicons/react/24/outline';
-import { Button } from '@/components/ui/button1';
+import { Button, Table, type TableColumnDef } from '@/components/ui';
 import { Accordion } from '@/components/ui/accordion';
 import { CATEGORY_OPTION_CODE_LABELS } from '../constants';
 import type { ICategoryOption } from '@/types/categoryOptionTypes';
@@ -52,6 +52,45 @@ export const CategoryOptionsTable = ({
   const [openCategories, setOpenCategories] = useState<string[]>([]);
 
   const groupedOptions = useMemo(() => buildGroupedOptions(options), [options]);
+  const optionColumns = useMemo<TableColumnDef<ICategoryOption>[]>(
+    () => [
+      {
+        accessorKey: 'value',
+        header: 'Value',
+        cell: ({ row }) => (
+          <span className="font-medium text-text-primary">
+            {row.original.value}
+          </span>
+        ),
+      },
+      {
+        accessorKey: 'label',
+        header: 'Label',
+        cell: ({ row }) => <span>{row.original.label}</span>,
+      },
+      {
+        accessorKey: 'sortOrder',
+        header: 'Sort Order',
+        cell: ({ row }) => <span>{row.original.sortOrder}</span>,
+      },
+      {
+        accessorKey: 'isActive',
+        header: 'Status',
+        cell: ({ row }) => (
+          <span
+            className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
+              row.original.isActive
+                ? statusClasses.active
+                : statusClasses.inactive
+            }`}
+          >
+            {row.original.isActive ? 'Active' : 'Inactive'}
+          </span>
+        ),
+      },
+    ],
+    []
+  );
 
   if (!groupedOptions.length) {
     return (
@@ -128,7 +167,7 @@ export const CategoryOptionsTable = ({
                   <Button
                     type="button"
                     aria-label={`Edit ${group.label}`}
-                    variant="ghost"
+                    className='border-0! bg-transparent! text-black!'
                     size="sm"
                     onClick={() =>
                       navigate(`/admin/category-options/edit/${encodeURIComponent(group.code)}`)
@@ -141,36 +180,14 @@ export const CategoryOptionsTable = ({
 
               <Accordion.Content className="px-4 pb-5 sm:px-5">
                 <div className="overflow-hidden rounded-sm border border-border-primary">
-                  <table className="min-w-full divide-y divide-border-primary">
-                    <thead className="bg-surface-secondary/60">
-                      <tr className="text-left text-xs font-semibold uppercase tracking-[0.18em] text-text-tertiary">
-                        <th className="px-4 py-3">Value</th>
-                        <th className="px-4 py-3">Label</th>
-                        <th className="px-4 py-3">Sort Order</th>
-                        <th className="px-4 py-3">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border-primary bg-surface-primary">
-                      {group.options.map(option => (
-                        <tr key={option.id} className="text-sm text-text-secondary">
-                          <td className="px-4 py-3 font-medium text-text-primary">{option.value}</td>
-                          <td className="px-4 py-3">{option.label}</td>
-                          <td className="px-4 py-3">{option.sortOrder}</td>
-                          <td className="px-4 py-3">
-                            <span
-                              className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
-                                option.isActive
-                                  ? statusClasses.active
-                                  : statusClasses.inactive
-                              }`}
-                            >
-                              {option.isActive ? 'Active' : 'Inactive'}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                  <Table
+                    columns={optionColumns}
+                    data={group.options}
+                    enableSorting={false}
+                    enableFiltering={false}
+                    enablePagination={false}
+                    className="min-w-full"
+                  />
                 </div>
               </Accordion.Content>
             </Accordion.Item>

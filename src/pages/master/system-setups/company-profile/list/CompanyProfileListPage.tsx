@@ -34,18 +34,6 @@ const CompanyProfileListPage = () => {
     return (
       <div className="space-y-6">
         <div className="rounded-sm border border-border-primary bg-surface-primary p-6 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">
-            Admin
-          </p>
-          <h1 className="mt-2 text-2xl font-semibold text-text-primary">
-            Create Company Profile
-          </h1>
-          <p className="mt-2 text-sm leading-6 text-text-secondary">
-            No company was found, so you can initialize it here now.
-          </p>
-        </div>
-
-        <div className="rounded-sm border border-border-primary bg-surface-primary p-6 shadow-sm">
           <CompanyProfileForm
             defaultValues={createEmptyCompanyProfileFormValues()}
             onSubmit={handleCreate}

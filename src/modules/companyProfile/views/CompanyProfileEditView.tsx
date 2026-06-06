@@ -40,19 +40,7 @@ export const CompanyProfileEditView = ({ id: propId }: CompanyProfileEditViewPro
 
   return (
     <section className="space-y-6">
-      <div className="rounded-sm border border-border-primary bg-surface-primary p-6 shadow-sm">
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">
-          Admin
-        </p>
-        <h1 className="mt-2 text-2xl font-semibold text-text-primary">
-          Edit Company Profile
-        </h1>
-        <p className="mt-2 text-sm leading-6 text-text-secondary">
-          Edit the company profile details.
-        </p>
-      </div>
-
-      <div className="rounded-sm border border-border-primary bg-surface-primary p-6 shadow-sm">
+      <div className="mx-auto w-full max-w-6xl rounded-md border border-border-primary bg-surface-primary p-5 shadow-sm">
         <CompanyProfileForm
           defaultValues={data ? mapCompanyProfileToFormValues(data) : createEmptyCompanyProfileFormValues()}
           onSubmit={handleSubmit}

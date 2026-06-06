@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useFormContext, type Resolver } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { Button } from '@/components/ui/button1';
+import { CardSection } from '@/components/ui';
 import { Form, FormFieldCheckbox, FormFieldInput } from '@/components/forms';
 import {
   PRODUCT_PROFILE_ACCOUNTING_FIELDS,
@@ -9,6 +9,7 @@ import {
 } from '../constants';
 import { productProfileSchema } from '../schema';
 import type { ICreateProductProfile } from '../types';
+import { useNavigate } from 'react-router-dom';
 
 interface ProductProfileFormProps {
   defaultValues: ICreateProductProfile;
@@ -17,10 +18,11 @@ interface ProductProfileFormProps {
   isSubmitting?: boolean;
 }
 
-const formCardClass =
-  'rounded-sm border border-border-primary bg-surface-secondary p-4';
-
-const RetailTransactionConfig = ({ isSubmitting }: { isSubmitting: boolean }) => {
+const RetailTransactionConfig = ({
+  isSubmitting,
+}: {
+  isSubmitting: boolean;
+}) => {
   const { watch, setValue } = useFormContext();
 
   const availableInRetailBuying = watch('availableInRetailBuying');
@@ -61,12 +63,11 @@ const RetailTransactionConfig = ({ isSubmitting }: { isSubmitting: boolean }) =>
     <div className="space-y-6">
       {/* Availability cards with nested series toggles */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        
         {/* Retail Buying Card */}
-        <div 
+        <div
           className={`rounded-md border p-4 flex flex-col justify-between h-36 transition-all duration-300 ${
-            availableInRetailBuying 
-              ? 'border-primary-500 bg-surface-primary shadow-sm ring-1 ring-primary-500/20' 
+            availableInRetailBuying
+              ? 'border-primary-500 bg-surface-primary shadow-sm ring-1 ring-primary-500/20'
               : 'border-border-primary bg-surface-secondary/50 opacity-80'
           }`}
         >
@@ -77,7 +78,9 @@ const RetailTransactionConfig = ({ isSubmitting }: { isSubmitting: boolean }) =>
           />
           {availableInRetailBuying ? (
             <div className="pt-2 border-t border-dashed border-border-secondary flex items-center justify-between">
-              <span className="text-xs font-semibold text-text-secondary">Series Applicable</span>
+              <span className="text-xs font-semibold text-text-secondary">
+                Series Applicable
+              </span>
               <div className="inline-flex rounded-full bg-surface-secondary p-0.5 border border-border-primary">
                 <button
                   type="button"
@@ -85,7 +88,7 @@ const RetailTransactionConfig = ({ isSubmitting }: { isSubmitting: boolean }) =>
                   onClick={() => setValue('retailBuyingSeriesApplicable', true)}
                   className={`rounded-full px-3 py-1 text-xs font-semibold transition-all duration-200 ${
                     retailBuyingSeriesApplicable
-                      ? 'bg-primary-600 text-white shadow-sm'
+                      ? 'bg-primary-500! text-white shadow-sm'
                       : 'text-text-tertiary hover:text-text-secondary'
                   }`}
                 >
@@ -94,7 +97,9 @@ const RetailTransactionConfig = ({ isSubmitting }: { isSubmitting: boolean }) =>
                 <button
                   type="button"
                   disabled={isSubmitting}
-                  onClick={() => setValue('retailBuyingSeriesApplicable', false)}
+                  onClick={() =>
+                    setValue('retailBuyingSeriesApplicable', false)
+                  }
                   className={`rounded-full px-3 py-1 text-xs font-semibold transition-all duration-200 ${
                     !retailBuyingSeriesApplicable
                       ? 'bg-neutral-500 text-white shadow-sm'
@@ -107,16 +112,17 @@ const RetailTransactionConfig = ({ isSubmitting }: { isSubmitting: boolean }) =>
             </div>
           ) : (
             <p className="text-[11px] text-text-tertiary italic leading-relaxed">
-              Product cannot be bought in retail transactions. Check to enable series configurations.
+              Product cannot be bought in retail transactions. Check to enable
+              series configurations.
             </p>
           )}
         </div>
 
         {/* Retail Selling Card */}
-        <div 
+        <div
           className={`rounded-md border p-4 flex flex-col justify-between h-36 transition-all duration-300 ${
-            availableInRetailSelling 
-              ? 'border-primary-500 bg-surface-primary shadow-sm ring-1 ring-primary-500/20' 
+            availableInRetailSelling
+              ? 'border-primary-500 bg-surface-primary shadow-sm ring-1 ring-primary-500/20'
               : 'border-border-primary bg-surface-secondary/50 opacity-80'
           }`}
         >
@@ -127,15 +133,19 @@ const RetailTransactionConfig = ({ isSubmitting }: { isSubmitting: boolean }) =>
           />
           {availableInRetailSelling ? (
             <div className="pt-2 border-t border-dashed border-border-secondary flex items-center justify-between">
-              <span className="text-xs font-semibold text-text-secondary">Series Applicable</span>
+              <span className="text-xs font-semibold text-text-secondary">
+                Series Applicable
+              </span>
               <div className="inline-flex rounded-full bg-surface-secondary p-0.5 border border-border-primary">
                 <button
                   type="button"
                   disabled={isSubmitting}
-                  onClick={() => setValue('retailSellingSeriesApplicable', true)}
+                  onClick={() =>
+                    setValue('retailSellingSeriesApplicable', true)
+                  }
                   className={`rounded-full px-3 py-1 text-xs font-semibold transition-all duration-200 ${
                     retailSellingSeriesApplicable
-                      ? 'bg-primary-600 text-white shadow-sm'
+                      ? 'bg-primary-500 text-white shadow-sm'
                       : 'text-text-tertiary hover:text-text-secondary'
                   }`}
                 >
@@ -144,7 +154,9 @@ const RetailTransactionConfig = ({ isSubmitting }: { isSubmitting: boolean }) =>
                 <button
                   type="button"
                   disabled={isSubmitting}
-                  onClick={() => setValue('retailSellingSeriesApplicable', false)}
+                  onClick={() =>
+                    setValue('retailSellingSeriesApplicable', false)
+                  }
                   className={`rounded-full px-3 py-1 text-xs font-semibold transition-all duration-200 ${
                     !retailSellingSeriesApplicable
                       ? 'bg-neutral-500 text-white shadow-sm'
@@ -157,16 +169,17 @@ const RetailTransactionConfig = ({ isSubmitting }: { isSubmitting: boolean }) =>
             </div>
           ) : (
             <p className="text-[11px] text-text-tertiary italic leading-relaxed">
-              Product cannot be sold in retail transactions. Check to enable series configurations.
+              Product cannot be sold in retail transactions. Check to enable
+              series configurations.
             </p>
           )}
         </div>
 
         {/* Bulk Buying Card */}
-        <div 
+        <div
           className={`rounded-md border p-4 flex flex-col justify-between h-36 transition-all duration-300 ${
-            availableInBulkBuying 
-              ? 'border-primary-500 bg-surface-primary shadow-sm ring-1 ring-primary-500/20' 
+            availableInBulkBuying
+              ? 'border-primary-500 bg-surface-primary shadow-sm ring-1 ring-primary-500/20'
               : 'border-border-primary bg-surface-secondary/50 opacity-80'
           }`}
         >
@@ -177,7 +190,9 @@ const RetailTransactionConfig = ({ isSubmitting }: { isSubmitting: boolean }) =>
           />
           {availableInBulkBuying ? (
             <div className="pt-2 border-t border-dashed border-border-secondary flex items-center justify-between">
-              <span className="text-xs font-semibold text-text-secondary">Series Applicable</span>
+              <span className="text-xs font-semibold text-text-secondary">
+                Series Applicable
+              </span>
               <div className="inline-flex rounded-full bg-surface-secondary p-0.5 border border-border-primary">
                 <button
                   type="button"
@@ -185,7 +200,7 @@ const RetailTransactionConfig = ({ isSubmitting }: { isSubmitting: boolean }) =>
                   onClick={() => setValue('bulkBuyingSeriesApplicable', true)}
                   className={`rounded-full px-3 py-1 text-xs font-semibold transition-all duration-200 ${
                     bulkBuyingSeriesApplicable
-                      ? 'bg-primary-600 text-white shadow-sm'
+                      ? 'bg-primary-500 text-white shadow-sm'
                       : 'text-text-tertiary hover:text-text-secondary'
                   }`}
                 >
@@ -207,16 +222,17 @@ const RetailTransactionConfig = ({ isSubmitting }: { isSubmitting: boolean }) =>
             </div>
           ) : (
             <p className="text-[11px] text-text-tertiary italic leading-relaxed">
-              Product cannot be bought in bulk transactions. Check to enable series configurations.
+              Product cannot be bought in bulk transactions. Check to enable
+              series configurations.
             </p>
           )}
         </div>
 
         {/* Bulk Selling Card */}
-        <div 
+        <div
           className={`rounded-md border p-4 flex flex-col justify-between h-36 transition-all duration-300 ${
-            availableInBulkSelling 
-              ? 'border-primary-500 bg-surface-primary shadow-sm ring-1 ring-primary-500/20' 
+            availableInBulkSelling
+              ? 'border-primary-500 bg-surface-primary shadow-sm ring-1 ring-primary-500/20'
               : 'border-border-primary bg-surface-secondary/50 opacity-80'
           }`}
         >
@@ -227,7 +243,9 @@ const RetailTransactionConfig = ({ isSubmitting }: { isSubmitting: boolean }) =>
           />
           {availableInBulkSelling ? (
             <div className="pt-2 border-t border-dashed border-border-secondary flex items-center justify-between">
-              <span className="text-xs font-semibold text-text-secondary">Series Applicable</span>
+              <span className="text-xs font-semibold text-text-secondary">
+                Series Applicable
+              </span>
               <div className="inline-flex rounded-full bg-surface-secondary p-0.5 border border-border-primary">
                 <button
                   type="button"
@@ -235,7 +253,7 @@ const RetailTransactionConfig = ({ isSubmitting }: { isSubmitting: boolean }) =>
                   onClick={() => setValue('bulkSellingSeriesApplicable', true)}
                   className={`rounded-full px-3 py-1 text-xs font-semibold transition-all duration-200 ${
                     bulkSellingSeriesApplicable
-                      ? 'bg-primary-600 text-white shadow-sm'
+                      ? 'bg-primary-500! text-white shadow-sm'
                       : 'text-text-tertiary hover:text-text-secondary'
                   }`}
                 >
@@ -257,7 +275,8 @@ const RetailTransactionConfig = ({ isSubmitting }: { isSubmitting: boolean }) =>
             </div>
           ) : (
             <p className="text-[11px] text-text-tertiary italic leading-relaxed">
-              Product cannot be sold in bulk transactions. Check to enable series configurations.
+              Product cannot be sold in bulk transactions. Check to enable
+              series configurations.
             </p>
           )}
         </div>
@@ -311,17 +330,29 @@ export const ProductProfileForm = ({
   submitLabel = 'Create Product',
   isSubmitting = false,
 }: ProductProfileFormProps) => {
+  const navigate = useNavigate();
+
+  const onCancel = () => {
+    navigate('/master/system-setups/product-profile');
+  };
   return (
     <Form
+      id="product-profile-form"
       onSubmit={onSubmit}
-      resolver={yupResolver(productProfileSchema) as Resolver<ICreateProductProfile>}
+      resolver={
+        yupResolver(productProfileSchema) as Resolver<ICreateProductProfile>
+      }
       defaultValues={defaultValues}
       className="space-y-6"
+      footer={{
+        submitLabel,
+        onBackClick: () => {
+          void onCancel?.();
+        },
+        onCancel,
+      }}
     >
-      <section className={formCardClass}>
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.24em] text-text-tertiary">
-          Product Info
-        </h2>
+      <CardSection heading="Product Info">
         <div className="grid gap-4 md:grid-cols-2">
           <FormFieldInput
             name="productCode"
@@ -334,12 +365,9 @@ export const ProductProfileForm = ({
             disabled={isSubmitting}
           />
         </div>
-      </section>
+      </CardSection>
 
-      <section className={formCardClass}>
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.24em] text-text-tertiary">
-          Accounting Configuration
-        </h2>
+      <CardSection heading="Accounting Configuration">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {PRODUCT_PROFILE_ACCOUNTING_FIELDS.map(field => (
             <FormFieldInput
@@ -353,12 +381,9 @@ export const ProductProfileForm = ({
             />
           ))}
         </div>
-      </section>
+      </CardSection>
 
-      <section className={formCardClass}>
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.24em] text-text-tertiary">
-          Product Details
-        </h2>
+      <CardSection heading="Product Details">
         <div className="grid gap-4 md:grid-cols-2">
           <FormFieldInput
             name="levelPriority"
@@ -381,20 +406,11 @@ export const ProductProfileForm = ({
             </div>
           ))}
         </div>
-      </section>
+      </CardSection>
 
-      <section className={formCardClass}>
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.24em] text-text-tertiary">
-          Configuration for Retails Transactions
-        </h2>
+      <CardSection heading="Configuration for Retails Transactions">
         <RetailTransactionConfig isSubmitting={isSubmitting} />
-      </section>
-
-      <div className="flex justify-end border-t border-border-primary pt-4">
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Saving...' : submitLabel}
-        </Button>
-      </div>
+      </CardSection>
     </Form>
   );
 };

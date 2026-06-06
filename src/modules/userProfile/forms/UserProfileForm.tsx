@@ -1,7 +1,7 @@
 import { useMemo, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useFormContext } from 'react-hook-form';
-import { Button } from '@/components/ui/button1';
+import { CardSection } from '@/components/ui';
 import {
   Form,
   FormFieldCheckbox,
@@ -13,6 +13,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import type { Resolver } from 'react-hook-form';
 import { userProfileSchema } from '../schema';
 import { userRoleApi, branchProfileApi, counterProfileApi } from '@/api';
+import { useNavigate } from 'react-router-dom';
 
 interface UserProfileFormProps {
   defaultValues: ICreateUserProfile;
@@ -21,10 +22,9 @@ interface UserProfileFormProps {
   isSubmitting?: boolean;
 }
 
-const formCardClass = 'rounded-sm border border-border-primary bg-surface-secondary p-5 space-y-4';
-const sectionHeaderClass = 'text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary border-b border-border-primary pb-2 mb-4';
-
-const createStaticLoadOptions = (options: { value: string; label: string }[]) => {
+const createStaticLoadOptions = (
+  options: { value: string; label: string }[]
+) => {
   return async () => ({
     options,
     hasMore: false,
@@ -34,7 +34,6 @@ const createStaticLoadOptions = (options: { value: string; label: string }[]) =>
 const UserProfileFormFields = ({
   isSubmitting,
   isEdit,
-  submitLabel,
 }: {
   isSubmitting: boolean;
   isEdit: boolean;
@@ -165,8 +164,7 @@ const UserProfileFormFields = ({
   return (
     <div className="space-y-6">
       {/* 1. Identity & Credentials */}
-      <section className={formCardClass}>
-        <h2 className={sectionHeaderClass}>Identity</h2>
+      <CardSection heading="Identity">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
           <FormFieldInput
             name="code"
@@ -181,11 +179,10 @@ const UserProfileFormFields = ({
             placeholder="Full Name"
           />
         </div>
-      </section>
+      </CardSection>
 
       {/* 2. Associations */}
-      <section className={formCardClass}>
-        <h2 className={sectionHeaderClass}>Roles & Workplace Associations</h2>
+      <CardSection heading="Roles & Workplace Associations">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <div className="space-y-2">
             <FormFieldSelect
@@ -200,7 +197,6 @@ const UserProfileFormFields = ({
             />
           </div>
           <div className="hidden lg:block" /> {/* Alignment spacer */}
-
           <div className="space-y-2">
             <FormFieldSelect
               key={`branch-select-${branchesUpdatedAt || 'loading'}`}
@@ -219,7 +215,11 @@ const UserProfileFormFields = ({
               key={`counter-select-${selectedBranchId || 'no-branch'}-${countersUpdatedAt || 'loading'}`}
               name="counterId"
               label="Associated Counter"
-              placeholder={selectedBranchId ? "Select Counter" : "Please select associated branch first"}
+              placeholder={
+                selectedBranchId
+                  ? 'Select Counter'
+                  : 'Please select associated branch first'
+              }
               loadOptions={counterLoadOptions}
               defaultOptions={counterDefaultOptions}
               isLoading={isCountersLoading || isCountersFetching}
@@ -228,11 +228,10 @@ const UserProfileFormFields = ({
             />
           </div>
         </div>
-      </section>
+      </CardSection>
 
       {/* 3. ERP Profile Details */}
-      <section className={formCardClass}>
-        <h2 className={sectionHeaderClass}>ERP Details & Contact</h2>
+      <CardSection heading="ERP Details & Contact">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <FormFieldInput
             name="email"
@@ -266,11 +265,10 @@ const UserProfileFormFields = ({
             placeholder="e.g. LIC-2900"
           />
         </div>
-      </section>
+      </CardSection>
 
       {/* 4. Controls & Setup */}
-      <section className={formCardClass}>
-        <h2 className={sectionHeaderClass}>Account Controls</h2>
+      <CardSection heading="Account Controls">
         <div className="grid gap-4 sm:grid-cols-3">
           <FormFieldCheckbox
             name="isActive"
@@ -288,13 +286,7 @@ const UserProfileFormFields = ({
             disabled={isSubmitting}
           />
         </div>
-      </section>
-
-      <div className="flex justify-end border-t border-border-primary pt-4">
-        <Button type="submit" disabled={isSubmitting} className="min-w-[120px]">
-          {isSubmitting ? 'Saving...' : submitLabel}
-        </Button>
-      </div>
+      </CardSection>
     </div>
   );
 };
@@ -305,16 +297,30 @@ export const UserProfileForm = ({
   submitLabel = 'Create User',
   isSubmitting = false,
 }: UserProfileFormProps) => {
-  const isEdit = !!defaultValues.code;
+  const navigate = useNavigate();
 
+  const isEdit = !!defaultValues.code;
+  const onCancel = () => {
+    navigate('/master/system-setups/user-profile');
+  };
   return (
     <Form
+      id="user-profile-form"
       onSubmit={onSubmit}
       resolver={
-        yupResolver(userProfileSchema, { context: { isEdit } }) as Resolver<ICreateUserProfile>
+        yupResolver(userProfileSchema, {
+          context: { isEdit },
+        }) as Resolver<ICreateUserProfile>
       }
       defaultValues={defaultValues}
       className="space-y-6"
+      footer={{
+        submitLabel,
+        onBackClick: () => {
+          void onCancel?.();
+        },
+        onCancel,
+      }}
     >
       <UserProfileFormFields
         isSubmitting={isSubmitting}

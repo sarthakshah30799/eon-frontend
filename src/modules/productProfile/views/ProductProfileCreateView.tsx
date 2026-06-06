@@ -15,14 +15,16 @@ export const ProductProfileCreateView = () => {
   };
 
   return (
-    <ProductProfileEditorView
-      heading={PRODUCT_PROFILE_TEXTS.CREATE_PRODUCT}
-      description={PRODUCT_PROFILE_TEXTS.FORM_SUBTITLE}
-      submitLabel={PRODUCT_PROFILE_TEXTS.CREATE_PRODUCT}
-      defaultValues={createEmptyProductProfileFormValues()}
-      onSubmitProduct={handleSubmit}
-      isSubmitting={isPending}
-    />
+    <div className="space-y-4">
+      <ProductProfileEditorView
+        heading={PRODUCT_PROFILE_TEXTS.CREATE_PRODUCT}
+        description={PRODUCT_PROFILE_TEXTS.FORM_SUBTITLE}
+        submitLabel={PRODUCT_PROFILE_TEXTS.CREATE_PRODUCT}
+        defaultValues={createEmptyProductProfileFormValues()}
+        onSubmitProduct={handleSubmit}
+        isSubmitting={isPending}
+      />
+    </div>
   );
 };
 

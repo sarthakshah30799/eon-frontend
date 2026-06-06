@@ -11,7 +11,7 @@ export const Label: React.FC<LabelProps> = ({
 }) => {
   return (
     <label
-      className={`block text-sm font-medium text-text-secondary ${className}`}
+      className={`block text-xs font-medium text-text-secondary ${className}`}
       {...props}
     >
       {children}

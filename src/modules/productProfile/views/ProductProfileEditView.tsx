@@ -14,9 +14,7 @@ export const ProductProfileEditView = () => {
   const { submitProductProfile, isPending } = useUpdateProductProfile(id);
 
   if (isLoading) {
-    return (
-     <Loader />
-    );
+    return <Loader />;
   }
 
   if (!productProfile) {
@@ -33,14 +31,16 @@ export const ProductProfileEditView = () => {
   };
 
   return (
-    <ProductProfileEditorView
-      heading={PRODUCT_PROFILE_TEXTS.EDIT_PRODUCT}
-      description="Update the product profile and accounting configuration."
-      submitLabel={PRODUCT_PROFILE_TEXTS.SAVE_CHANGES}
-      defaultValues={mapRecordToFormValues(productProfile)}
-      onSubmitProduct={handleSubmit}
-      isSubmitting={isPending}
-    />
+    <div className="space-y-4">
+      <ProductProfileEditorView
+        heading={PRODUCT_PROFILE_TEXTS.EDIT_PRODUCT}
+        description="Update the product profile and accounting configuration."
+        submitLabel={PRODUCT_PROFILE_TEXTS.SAVE_CHANGES}
+        defaultValues={mapRecordToFormValues(productProfile)}
+        onSubmitProduct={handleSubmit}
+        isSubmitting={isPending}
+      />
+    </div>
   );
 };
 

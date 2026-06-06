@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import type { FormEvent } from 'react';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { Button } from '@/components/ui/button1';
 import {
   Form,
   FormFieldAsyncSelect,
@@ -10,6 +9,7 @@ import {
   FormFieldCountryDropdown,
   FormFieldInput,
 } from '@/components/forms';
+import { CardSection } from '@/components/ui';
 import type { AsyncSelectResponse } from '@/components/ui';
 import {
   CURRENCY_CALCULATION_METHOD_OPTIONS,
@@ -19,10 +19,12 @@ import {
 } from '../constants';
 import { currencyProfileSchema } from '../schema';
 import type { ICreateCurrencyProfile } from '../types';
+import { useNavigate } from 'react-router-dom';
 
-const loadCalculationMethodOptions = async (): Promise<AsyncSelectResponse> => ({
-  options: CURRENCY_CALCULATION_METHOD_OPTIONS,
-});
+const loadCalculationMethodOptions =
+  async (): Promise<AsyncSelectResponse> => ({
+    options: CURRENCY_CALCULATION_METHOD_OPTIONS,
+  });
 
 const loadGroupOptions = async (): Promise<AsyncSelectResponse> => ({
   options: CURRENCY_GROUP_OPTIONS,
@@ -40,8 +42,7 @@ interface CurrencyProfileFormProps {
   readOnly?: boolean;
 }
 
-const formCardClass =
-  'rounded-sm border border-border-primary bg-surface-secondary p-4';
+const compactFieldClass = '';
 
 const numericInputProps = {
   inputMode: 'numeric' as const,
@@ -61,84 +62,96 @@ export const CurrencyProfileForm = ({
   isSubmitting = false,
   readOnly = false,
 }: CurrencyProfileFormProps) => {
+  const navigate = useNavigate();
   const isDisabled = isSubmitting || readOnly;
-
+  const onCancel = () => {
+    navigate('/master/system-setups/currency-profile');
+  };
   return (
     <Form
       onSubmit={onSubmit}
       resolver={yupResolver(currencyProfileSchema)}
       defaultValues={defaultValues}
-      className="space-y-6"
+      className="space-y-3"
+      footer={{
+        submitLabel,
+        onBackClick: () => {
+          void onCancel?.();
+        },
+        onCancel,
+      }}
     >
-      <section className={formCardClass}>
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.24em] text-text-tertiary">
-          {CURRENCY_PROFILE_TEXTS.BASIC_INFO_TITLE}
-        </h2>
-
-        <div className="grid gap-4 md:grid-cols-2">
+      <CardSection heading={CURRENCY_PROFILE_TEXTS.BASIC_INFO_TITLE}>
+        <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-4">
           <FormFieldInput
             name="currencyCode"
             label="Currency Code"
             disabled={isDisabled}
+            className={compactFieldClass}
           />
           <FormFieldInput
             name="currencyName"
             label="Currency Name"
             disabled={isDisabled}
+            className={compactFieldClass}
           />
           <FormFieldCountryDropdown
             name="countryId"
             label="Countries"
             disabled={isDisabled}
+            size="sm"
           />
           <FormFieldInput
             name="amexMapCode"
             label="Amex Map Code"
             disabled={isDisabled}
+            className={compactFieldClass}
           />
         </div>
-      </section>
+      </CardSection>
 
-      <section className={formCardClass}>
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.24em] text-text-tertiary">
-          {CURRENCY_PROFILE_TEXTS.RATE_CONFIGURATION_TITLE}
-        </h2>
-
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <CardSection heading={CURRENCY_PROFILE_TEXTS.RATE_CONFIGURATION_TITLE}>
+        <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-4">
           <FormFieldInput
             name="priority"
             label="Priority"
             disabled={isDisabled}
+            className={compactFieldClass}
             {...numericInputProps}
           />
           <FormFieldInput
             name="ratePer"
             label="Rate / Per"
             disabled={isDisabled}
+            className={compactFieldClass}
             {...numericInputProps}
           />
           <FormFieldInput
             name="defaultMinRate"
             label="Default Min Rate"
             disabled={isDisabled}
+            className={compactFieldClass}
             {...numericInputProps}
           />
           <FormFieldInput
             name="defaultMaxRate"
             label="Default Max Rate"
             disabled={isDisabled}
+            className={compactFieldClass}
             {...numericInputProps}
           />
           <FormFieldInput
             name="openRatePremium"
             label="Open Rate Premium"
             disabled={isDisabled}
+            className={compactFieldClass}
             {...numericInputProps}
           />
           <FormFieldInput
             name="gulfDiscFactor"
             label="Gulf Disc Factor"
             disabled={isDisabled}
+            className={compactFieldClass}
             {...numericInputProps}
           />
           <FormFieldAsyncSelect
@@ -147,6 +160,7 @@ export const CurrencyProfileForm = ({
             loadOptions={loadCalculationMethodOptions}
             placeholder="Select calculation method"
             disabled={isDisabled}
+            size="sm"
             isSearchable={false}
           />
           <FormFieldAsyncSelect
@@ -155,18 +169,15 @@ export const CurrencyProfileForm = ({
             loadOptions={loadGroupOptions}
             placeholder="Select group"
             disabled={isDisabled}
+            size="sm"
             isSearchable={false}
           />
         </div>
-      </section>
+      </CardSection>
 
-      <section className={formCardClass}>
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.24em] text-text-tertiary">
-          {CURRENCY_PROFILE_TEXTS.STATUS_TITLE}
-        </h2>
-
-        <div className="grid gap-3 md:grid-cols-2">
-          <div className="rounded-sm border border-border-primary bg-surface-primary p-3">
+      <CardSection heading={CURRENCY_PROFILE_TEXTS.STATUS_TITLE}>
+        <div className="grid gap-2 md:grid-cols-2">
+          <div className="rounded-sm border border-border-primary bg-surface-primary p-2">
             <FormFieldCheckbox
               name="active"
               label="Active"
@@ -174,27 +185,17 @@ export const CurrencyProfileForm = ({
             />
           </div>
 
-          <div className="rounded-sm border border-border-primary bg-surface-primary p-3">
+          <div className="rounded-sm border border-border-primary bg-surface-primary p-2">
             <FormFieldCheckbox
               name="onlyStocking"
               label="Only Stocking"
               disabled={isDisabled}
             />
 
-            <CurrencyProfileProductAllowedField
-              isDisabled={isDisabled}
-            />
+            <CurrencyProfileProductAllowedField isDisabled={isDisabled} />
           </div>
         </div>
-      </section>
-
-      {!readOnly && (
-        <div className="flex justify-end border-t border-border-primary pt-4">
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Saving...' : submitLabel}
-          </Button>
-        </div>
-      )}
+      </CardSection>
     </Form>
   );
 };
@@ -223,13 +224,14 @@ const CurrencyProfileProductAllowedField = ({
   }
 
   return (
-    <div className="mt-3">
+    <div className="mt-2">
       <FormFieldAsyncSelect
         name="productAllowed"
         label="Product Allowed"
         loadOptions={loadProductAllowedOptions}
         placeholder="Select product allowed"
         disabled={isDisabled}
+        size="sm"
         isSearchable={false}
       />
     </div>

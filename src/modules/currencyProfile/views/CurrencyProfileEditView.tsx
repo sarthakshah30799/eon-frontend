@@ -33,18 +33,18 @@ export const CurrencyProfileEditView = () => {
   };
 
   return (
-    <CurrencyProfileEditorView
-      heading={CURRENCY_PROFILE_TEXTS.EDIT_CURRENCY}
-      description="Update the currency details."
-      submitLabel={CURRENCY_PROFILE_TEXTS.SAVE_CHANGES}
-      defaultValues={
-        currency
-          ? mapRecordToFormValues(currency)
-          : createEmptyCurrencyProfileFormValues()
-      }
-      onSubmitCurrency={handleSubmit}
-      isSubmitting={isPending}
-    />
+    <div className="space-y-4">
+      <CurrencyProfileEditorView
+        submitLabel={CURRENCY_PROFILE_TEXTS.SAVE_CHANGES}
+        defaultValues={
+          currency
+            ? mapRecordToFormValues(currency)
+            : createEmptyCurrencyProfileFormValues()
+        }
+        onSubmitCurrency={handleSubmit}
+        isSubmitting={isPending}
+      />
+    </div>
   );
 };
 

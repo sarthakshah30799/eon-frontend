@@ -29,9 +29,13 @@ export const BranchProfileCreateView = () => {
     <BranchProfileEditorView
       heading={BRANCH_PROFILE_TEXTS.CREATE_BRANCH}
       description={BRANCH_PROFILE_TEXTS.FORM_SUBTITLE}
-      submitLabel={BRANCH_PROFILE_TEXTS.CREATE_BRANCH}
+      submitLabel="Submit"
+      backLabel="Back"
+      onBackClick={() => navigate('/admin/branch-profile')}
+      cancelLabel="Cancel"
       defaultValues={createEmptyBranchProfileFormValues()}
       onSubmitBranch={handleSubmit}
+      onCancel={() => navigate('/admin/branch-profile')}
       isSubmitting={isPending}
       branchAttachedToOptions={branchAttachedToOptions}
     />

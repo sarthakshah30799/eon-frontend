@@ -32,24 +32,26 @@ export const StateProfileEditView = () => {
   };
 
   return (
-    <StateProfileEditorView
-      heading={canModify ? STATE_PROFILE_TEXTS.EDIT_STATE : "View State Details"}
-      description={canModify ? "Update the state details." : "View the state details."}
-      submitLabel={STATE_PROFILE_TEXTS.SAVE_CHANGES}
-      defaultValues={
-        state
-          ? {
-              ...createEmptyStateProfileFormValues(),
-              ...state,
-              gstStateCode: state.gstStateCode ?? '',
-              ctrStateCode: state.ctrStateCode ?? '',
-            }
-          : createEmptyStateProfileFormValues()
-      }
-      onSubmitState={handleSubmit}
-      isSubmitting={isPending}
-      readOnly={!canModify}
-    />
+    <div className="space-y-4">
+      <StateProfileEditorView
+        heading={canModify ? STATE_PROFILE_TEXTS.EDIT_STATE : "View State Details"}
+        description={canModify ? "Update the state details." : "View the state details."}
+        submitLabel={STATE_PROFILE_TEXTS.SAVE_CHANGES}
+        defaultValues={
+          state
+            ? {
+                ...createEmptyStateProfileFormValues(),
+                ...state,
+                gstStateCode: state.gstStateCode ?? '',
+                ctrStateCode: state.ctrStateCode ?? '',
+              }
+            : createEmptyStateProfileFormValues()
+        }
+        onSubmitState={handleSubmit}
+        isSubmitting={isPending}
+        readOnly={!canModify}
+      />
+    </div>
   );
 };
 

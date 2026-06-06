@@ -1,6 +1,5 @@
 import type { SubmitErrorHandler } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { Button } from '@/components/ui/button1';
 import {
   Form,
   FormFieldCheckbox,
@@ -11,6 +10,7 @@ import type { AsyncSelectResponse } from '@/components/ui';
 import { countryProfileSchema } from '../schema';
 import { COUNTRY_PROFILE_TEXTS, riskCategoryOptions } from '../constants';
 import type { ICreateCountryProfile } from '../types';
+import { useNavigate } from 'react-router-dom';
 
 const loadRiskCategoryOptions = async (): Promise<AsyncSelectResponse> => {
   return { options: riskCategoryOptions };
@@ -31,20 +31,33 @@ export const CountryProfileForm = ({
   isSubmitting = false,
   readOnly = false,
 }: CountryProfileFormProps) => {
-  const handleSubmitErrors: SubmitErrorHandler<ICreateCountryProfile> =
-    errors => {
-      console.log('CountryProfileForm submit errors:', errors);
-    };
+  const navigate = useNavigate();
+
+  const handleSubmitErrors: SubmitErrorHandler<
+    ICreateCountryProfile
+  > = errors => {
+    console.log('CountryProfileForm submit errors:', errors);
+  };
 
   const isDisabled = isSubmitting || readOnly;
-
+  const onCancel = () => {
+    navigate('/master/system-setups/user-profile');
+  };
   return (
     <Form
+      id="country-profile-form"
       onSubmit={onSubmit}
       onError={handleSubmitErrors}
       resolver={yupResolver(countryProfileSchema)}
       defaultValues={defaultValues}
       className="space-y-6"
+      footer={{
+        submitLabel,
+        onBackClick: () => {
+          void onCancel?.();
+        },
+        onCancel,
+      }}
     >
       <div className="grid gap-4 md:grid-cols-2">
         <FormFieldInput
@@ -102,14 +115,6 @@ export const CountryProfileForm = ({
           disabled={isDisabled}
         />
       </div>
-
-      {!readOnly && (
-        <div className="flex justify-end border-t border-border-primary pt-4">
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Saving...' : submitLabel}
-          </Button>
-        </div>
-      )}
     </Form>
   );
 };

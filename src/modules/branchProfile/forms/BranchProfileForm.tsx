@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import type { Resolver } from 'react-hook-form';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { Button } from '@/components/ui/button1';
+import { CardSection } from '@/components/ui';
 import {
   Form,
   FormFieldCategoryOption,
@@ -21,19 +21,25 @@ interface BranchProfileFormProps {
   defaultValues: ICreateBranchProfile;
   onSubmit: (values: ICreateBranchProfile) => void | Promise<void>;
   submitLabel?: string;
+  backLabel?: string;
+  onBackClick?: () => void;
+  cancelLabel?: string;
+  onCancel?: () => void | Promise<void>;
   isSubmitting?: boolean;
   branchAttachedToOptions?: IBranchProfileOption[];
+  tone?: 'default' | 'review';
 }
 
-const formCardClass =
-  'rounded-sm border border-border-primary bg-surface-secondary p-4';
-
-const createStaticLoadOptions = (options: { value: string; label: string }[]) => {
+const createStaticLoadOptions = (
+  options: { value: string; label: string }[]
+) => {
   return async () => ({
     options,
     hasMore: false,
   });
 };
+
+const BRANCH_FORM_ID = 'branch-profile-form';
 
 const BranchProfileFormFields = ({
   isSubmitting = false,
@@ -71,14 +77,10 @@ const BranchProfileFormFields = ({
     () => createStaticLoadOptions(connectedCounterOptions),
     [connectedCounterOptions]
   );
-
   return (
-    <div className="space-y-6">
-      <section className={formCardClass}>
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.24em] text-text-tertiary">
-          Company Branch Details
-        </h2>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <div className="space-y-3 pb-24">
+      <CardSection heading="Basic Details">
+        <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-4">
           <FormFieldInput
             name="code"
             label="Branch Code"
@@ -95,6 +97,32 @@ const BranchProfileFormFields = ({
             type="number"
             disabled={isSubmitting}
           />
+          <FormFieldInput name="city" label="City" disabled={isSubmitting} />
+          <FormFieldCountryDropdown
+            name="countryId"
+            label="Country"
+            placeholder="Select country"
+            disabled={isSubmitting}
+          />
+          <FormFieldStateDropdown
+            name="stateId"
+            label="State"
+            placeholder={countryId ? 'Select state' : 'Select country first'}
+            countryId={countryId}
+            disabled={isSubmitting || !countryId}
+          />
+          <FormFieldCategoryOption
+            name="locationType"
+            label="Location Type"
+            code={CategoryOptionCodeEnum.LocationType}
+            placeholder="Select location type"
+            disabled={isSubmitting}
+          />
+        </div>
+      </CardSection>
+
+      <CardSection heading="Address Details">
+        <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-4">
           <FormFieldInput
             name="address1"
             label="Address Line 1"
@@ -111,24 +139,6 @@ const BranchProfileFormFields = ({
             disabled={isSubmitting}
           />
           <FormFieldInput
-            name="city"
-            label="City"
-            disabled={isSubmitting}
-          />
-          <FormFieldCountryDropdown
-            name="countryId"
-            label="Country"
-            placeholder="Select country"
-            disabled={isSubmitting}
-          />
-          <FormFieldStateDropdown
-            name="stateId"
-            label="State"
-            placeholder={countryId ? 'Select state' : 'Select country first'}
-            countryId={countryId}
-            disabled={isSubmitting || !countryId}
-          />
-          <FormFieldInput
             name="gstState"
             label="GST State"
             disabled={isSubmitting}
@@ -138,22 +148,11 @@ const BranchProfileFormFields = ({
             label="Pincode"
             disabled={isSubmitting}
           />
-          <FormFieldInput
-            name="gstNo"
-            label="GST No."
-            disabled={isSubmitting}
-          />
-          <FormFieldInput
-            name="fxRegNo"
-            label="FX Reg No."
-            disabled={isSubmitting}
-          />
-          <FormFieldInput
-            name="fxRegDate"
-            label="FX Reg Date"
-            type="date"
-            disabled={isSubmitting}
-          />
+        </div>
+      </CardSection>
+
+      <CardSection heading="Contact Details">
+        <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-4">
           <FormFieldInput
             name="contactName"
             label="Contact Name"
@@ -175,11 +174,25 @@ const BranchProfileFormFields = ({
             label="AEON Branch Lic"
             disabled={isSubmitting}
           />
-          <FormFieldCategoryOption
-            name="locationType"
-            label="Location Type"
-            code={CategoryOptionCodeEnum.LocationType}
-            placeholder="Select location type"
+        </div>
+      </CardSection>
+
+      <CardSection heading="Tax & Finance">
+        <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-4">
+          <FormFieldInput
+            name="gstNo"
+            label="GST No."
+            disabled={isSubmitting}
+          />
+          <FormFieldInput
+            name="fxRegNo"
+            label="FX Reg No."
+            disabled={isSubmitting}
+          />
+          <FormFieldInput
+            name="fxRegDate"
+            label="FX Reg Date"
+            type="date"
             disabled={isSubmitting}
           />
           <FormFieldInput
@@ -207,13 +220,10 @@ const BranchProfileFormFields = ({
             disabled={isSubmitting}
           />
         </div>
-      </section>
+      </CardSection>
 
-      <section className={formCardClass}>
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.24em] text-text-tertiary">
-          Relations & Status
-        </h2>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <CardSection heading="Relations & Status">
+        <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
           <FormFieldSelect
             name="connectCounterIds"
             label="Connect Counters"
@@ -225,9 +235,9 @@ const BranchProfileFormFields = ({
             disabled={isSubmitting}
             isMulti
             closeMenuOnSelect={false}
-            className="md:col-span-2 lg:col-span-3"
+            className={['md:col-span-2 lg:col-span-4'].join(' ')}
           />
-          <div className="md:col-span-2 lg:col-span-3 grid gap-4 md:grid-cols-2 mt-2">
+          <div className="mt-2 grid gap-2 md:col-span-2 md:grid-cols-2 lg:col-span-4">
             <FormFieldCheckbox
               name="isHeadOffice"
               label="Is Head Office"
@@ -240,7 +250,7 @@ const BranchProfileFormFields = ({
             />
           </div>
         </div>
-      </section>
+      </CardSection>
     </div>
   );
 };
@@ -248,27 +258,27 @@ const BranchProfileFormFields = ({
 export const BranchProfileForm = ({
   defaultValues,
   onSubmit,
-  submitLabel = 'Save Company Branch',
+  submitLabel = 'Submit',
+  onCancel,
   isSubmitting = false,
 }: BranchProfileFormProps) => {
   return (
     <Form
+      id={BRANCH_FORM_ID}
       onSubmit={onSubmit}
       resolver={yupResolver(branchProfileSchema) as Resolver<ICreateBranchProfile>}
       defaultValues={defaultValues}
-      className="space-y-6"
+      className={'space-y-6'}
+      footer={{
+        submitLabel,
+        backLabel: 'Back',
+        onBackClick: () => {
+          void onCancel?.();
+        },
+        onCancel,
+      }}
     >
       <BranchProfileFormFields isSubmitting={isSubmitting} />
-
-      <div className="flex justify-end border-t border-border-primary pt-4">
-        <Button
-          type="submit"
-          disabled={isSubmitting}
-          className="rounded-sm"
-        >
-          {isSubmitting ? 'Saving...' : submitLabel}
-        </Button>
-      </div>
     </Form>
   );
 };

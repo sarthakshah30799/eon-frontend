@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { BackButton } from '@/components/ui';
+import { Button } from '@/components/ui';
 import { menuApi } from '@/api';
 import type { ICreateMenu, IMenu } from '@/types/menuTypes';
 import { MenuForm } from '../forms/MenuForm';
@@ -53,7 +53,8 @@ const MenuTreeRow = ({
             )}
           </div>
           <p className="mt-1 text-xs text-text-secondary">
-            {menu.path || MENU_TEXTS.ROOT_LABEL} {menu.icon ? `| ${menu.icon}` : ''}
+            {menu.path || MENU_TEXTS.ROOT_LABEL}{' '}
+            {menu.icon ? `| ${menu.icon}` : ''}
           </p>
         </div>
 
@@ -79,7 +80,10 @@ const MenuTreeRow = ({
         <ul className="space-y-2">
           {menu.children
             .slice()
-            .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name))
+            .sort(
+              (a, b) =>
+                a.sortOrder - b.sortOrder || a.name.localeCompare(b.name)
+            )
             .map(child => (
               <MenuTreeRow
                 key={child.id}
@@ -124,7 +128,9 @@ export const MenuManagementView = () => {
 
   const defaultValues = useMemo<ICreateMenu>(
     () =>
-      selectedMenu ? mapMenuToCreateValues(selectedMenu) : createEmptyMenuValues(),
+      selectedMenu
+        ? mapMenuToCreateValues(selectedMenu)
+        : createEmptyMenuValues(),
     [selectedMenu]
   );
 
@@ -160,40 +166,20 @@ export const MenuManagementView = () => {
   return (
     <section className="space-y-6">
       <div className="rounded-sm border border-border-primary bg-surface-primary p-6 shadow-sm">
-        <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
-          <div className="space-y-3">
-            {selectedMenu && (
-              <BackButton
-                onClick={() => setSelectedMenu(null)}
-                label="Back to new menu"
-              />
-            )}
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">
-                Admin
-              </p>
-              <h1 className="mt-2 text-2xl font-semibold text-text-primary">
-                {MENU_TEXTS.CREATE_TITLE}
-              </h1>
-              <p className="mt-2 text-sm leading-6 text-text-secondary">
-                {MENU_TEXTS.FORM_SUBTITLE}
-              </p>
-            </div>
-          </div>
-
-          <button
+        <div className="mb-4 flex flex-wrap items-start justify-end gap-4">
+          <Button
+            variant={'accent'}
             type="button"
-            className="rounded-sm border border-border-primary bg-surface-secondary px-4 py-2 text-sm font-medium text-text-primary transition hover:bg-surface-tertiary"
             onClick={() => setSelectedMenu(null)}
           >
             New Menu
-          </button>
+          </Button>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
           <div className="rounded-sm border border-border-primary bg-surface-secondary p-4">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-sm font-semibold uppercase tracking-[0.24em] text-text-tertiary">
+              <h2 className="text-sm font-semibold uppercase text-text-tertiary">
                 Current Menus
               </h2>
               <span className="text-xs text-text-secondary">
@@ -204,12 +190,17 @@ export const MenuManagementView = () => {
             {isLoading || isUpdating ? (
               <p className="text-sm text-text-secondary">Loading menus...</p>
             ) : menuTree.length === 0 ? (
-              <p className="text-sm text-text-secondary">{MENU_TEXTS.EMPTY_STATE}</p>
+              <p className="text-sm text-text-secondary">
+                {MENU_TEXTS.EMPTY_STATE}
+              </p>
             ) : (
               <ul className="space-y-3">
                 {menuTree
                   .slice()
-                  .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name))
+                  .sort(
+                    (a, b) =>
+                      a.sortOrder - b.sortOrder || a.name.localeCompare(b.name)
+                  )
                   .map(menu => (
                     <MenuTreeRow
                       key={menu.id}
@@ -224,13 +215,7 @@ export const MenuManagementView = () => {
 
           <div className="relative rounded-sm border border-border-primary bg-surface-primary p-5">
             <div className="mb-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">
-                {selectedMenu ? 'Edit Menu' : 'Create Menu'}
-              </p>
-              <h2 className="mt-2 text-xl font-semibold text-text-primary">
-                {selectedMenu ? selectedMenu.name : 'New sidebar item'}
-              </h2>
-              <p className="mt-2 text-sm leading-6 text-text-secondary">
+              <p className="text-sm leading-6 text-text-secondary">
                 {selectedMenu
                   ? 'Update the selected menu and the sidebar will refresh after saving.'
                   : 'Create a new menu item to make it available in the dynamic sidebar.'}
@@ -241,7 +226,9 @@ export const MenuManagementView = () => {
               key={selectedMenu?.id ?? 'new-menu'}
               defaultValues={defaultValues}
               onSubmit={handleSubmit}
-              submitLabel={selectedMenu ? 'Update Menu' : MENU_TEXTS.SAVE_CHANGES}
+              submitLabel={
+                selectedMenu ? 'Update Menu' : MENU_TEXTS.SAVE_CHANGES
+              }
               isSubmitting={isSubmitting}
               parentOptions={parentOptions}
             />

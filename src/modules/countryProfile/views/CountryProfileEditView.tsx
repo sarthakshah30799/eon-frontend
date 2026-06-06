@@ -32,24 +32,24 @@ export const CountryProfileEditView = () => {
   };
 
   return (
-    <CountryProfileEditorView
-      heading={canModify ? COUNTRY_PROFILE_TEXTS.EDIT_COUNTRY : "View Country Details"}
-      description={canModify ? "Update the country details." : "View the country details."}
-      submitLabel={COUNTRY_PROFILE_TEXTS.SAVE_CHANGES}
-      defaultValues={
-        country
-          ? {
-              ...createEmptyCountryProfileFormValues(),
-              ...country,
-              lrsCountryCode: country.lrsCountryCode ?? '',
-              ctrCountryCode: country.ctrCountryCode ?? '',
-            }
-          : createEmptyCountryProfileFormValues()
-      }
-      onSubmitCountry={handleSubmit}
-      isSubmitting={isPending}
-      readOnly={!canModify}
-    />
+    <div className="space-y-4">
+      <CountryProfileEditorView
+        submitLabel={COUNTRY_PROFILE_TEXTS.SAVE_CHANGES}
+        defaultValues={
+          country
+            ? {
+                ...createEmptyCountryProfileFormValues(),
+                ...country,
+                lrsCountryCode: country.lrsCountryCode ?? '',
+                ctrCountryCode: country.ctrCountryCode ?? '',
+              }
+            : createEmptyCountryProfileFormValues()
+        }
+        onSubmitCountry={handleSubmit}
+        isSubmitting={isPending}
+        readOnly={!canModify}
+      />
+    </div>
   );
 };
 

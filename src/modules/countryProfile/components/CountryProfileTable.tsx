@@ -58,7 +58,7 @@ export const CountryProfileTable = ({
               aria-label={canModify ? 'Edit country' : 'View country'}
               variant="ghost"
               size="icon"
-              className="rounded-sm bg-transparent text-text-secondary hover:bg-surface-secondary hover:text-text-primary"
+              className="rounded-sm bg-transparent text-black! hover:bg-surface-secondary hover:text-text-primary"
               onClick={event => {
                 event.stopPropagation();
                 navigate(`/master/system-setups/country-profile/edit/${countryId}`);

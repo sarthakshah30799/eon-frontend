@@ -15,16 +15,15 @@ export const CountryProfileCreateView = () => {
   };
 
   return (
-    <CountryProfileEditorView
-      heading={COUNTRY_PROFILE_TEXTS.CREATE_COUNTRY}
-      description={COUNTRY_PROFILE_TEXTS.FORM_SUBTITLE}
-      submitLabel={COUNTRY_PROFILE_TEXTS.CREATE_COUNTRY}
-      defaultValues={createEmptyCountryProfileFormValues()}
-      onSubmitCountry={handleSubmit}
-      isSubmitting={isPending}
-    />
+    <div className="space-y-4">
+      <CountryProfileEditorView
+        submitLabel={COUNTRY_PROFILE_TEXTS.CREATE_COUNTRY}
+        defaultValues={createEmptyCountryProfileFormValues()}
+        onSubmitCountry={handleSubmit}
+        isSubmitting={isPending}
+      />
+    </div>
   );
 };
 
 export default CountryProfileCreateView;
-

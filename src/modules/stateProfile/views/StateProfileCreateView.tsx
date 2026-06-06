@@ -15,16 +15,17 @@ export const StateProfileCreateView = () => {
   };
 
   return (
-    <StateProfileEditorView
-      heading={STATE_PROFILE_TEXTS.CREATE_STATE}
-      description={STATE_PROFILE_TEXTS.FORM_SUBTITLE}
-      submitLabel={STATE_PROFILE_TEXTS.CREATE_STATE}
-      defaultValues={createEmptyStateProfileFormValues()}
-      onSubmitState={handleSubmit}
-      isSubmitting={isPending}
-    />
+    <div className="space-y-4">
+      <StateProfileEditorView
+        heading={STATE_PROFILE_TEXTS.CREATE_STATE}
+        description={STATE_PROFILE_TEXTS.FORM_SUBTITLE}
+        submitLabel={STATE_PROFILE_TEXTS.CREATE_STATE}
+        defaultValues={createEmptyStateProfileFormValues()}
+        onSubmitState={handleSubmit}
+        isSubmitting={isPending}
+      />
+    </div>
   );
 };
 
 export default StateProfileCreateView;
-

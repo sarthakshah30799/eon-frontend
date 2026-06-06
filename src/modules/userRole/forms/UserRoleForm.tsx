@@ -1,14 +1,12 @@
 import type { ReactNode } from 'react';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Button } from '@/components/ui/button1';
-import {
-  Form,
-  FormFieldCheckbox,
-  FormFieldInput,
-} from '@/components/forms';
+import { CardSection } from '@/components/ui';
+import { Form, FormFieldCheckbox, FormFieldInput } from '@/components/forms';
 import { useAuth } from '@/lib/AuthContext';
 import { userRoleSchema } from '../schema';
 import type { ICreateUserRole } from '../types';
+import { useNavigate } from 'react-router-dom';
 
 interface UserRoleFormProps {
   defaultValues: ICreateUserRole;
@@ -28,34 +26,45 @@ export const UserRoleForm = ({
   showAdminControls,
 }: UserRoleFormProps) => {
   const { user } = useAuth();
-  const canManageAdminControls =
-    showAdminControls ?? user?.isAdmin === true;
-  const handleSubmit = (values: ICreateUserRole) =>
-    onSubmit(
-      canManageAdminControls ? values : { ...values, isAdmin: false }
-    );
+  const navigate = useNavigate();
 
+  const canManageAdminControls = showAdminControls ?? user?.isAdmin === true;
+  const handleSubmit = (values: ICreateUserRole) =>
+    onSubmit(canManageAdminControls ? values : { ...values, isAdmin: false });
+  const onCancel = () => {
+    navigate('/master/system-setups/user-role');
+  };
   return (
     <Form
+      id="user-role-form"
       onSubmit={handleSubmit}
       resolver={yupResolver(userRoleSchema)}
       defaultValues={defaultValues}
       className="space-y-6"
+      footer={{
+        submitLabel,
+        onBackClick: () => {
+          void onCancel?.();
+        },
+        onCancel,
+      }}
     >
-      <section className="rounded-sm border border-border-primary bg-surface-secondary p-4 space-y-4">
-        <h2 className="text-sm font-semibold uppercase tracking-[0.24em] text-text-tertiary">
-          Role Details
-        </h2>
+      <CardSection heading="Role Details">
         <div className="grid gap-4 md:grid-cols-2">
-          <FormFieldInput name="code" label="Role Code" disabled={isSubmitting} />
-          <FormFieldInput name="name" label="Role Name" disabled={isSubmitting} />
+          <FormFieldInput
+            name="code"
+            label="Role Code"
+            disabled={isSubmitting}
+          />
+          <FormFieldInput
+            name="name"
+            label="Role Name"
+            disabled={isSubmitting}
+          />
         </div>
-      </section>
+      </CardSection>
 
-      <section className="rounded-sm border border-border-primary bg-surface-secondary p-4 space-y-4">
-        <h2 className="text-sm font-semibold uppercase tracking-[0.24em] text-text-tertiary">
-          Role Classifications
-        </h2>
+      <CardSection heading="Role Classifications">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {canManageAdminControls && (
             <FormFieldCheckbox
@@ -64,33 +73,86 @@ export const UserRoleForm = ({
               disabled={isSubmitting}
             />
           )}
-          <FormFieldCheckbox name="isMd" label="Is MD" disabled={isSubmitting} />
-          <FormFieldCheckbox name="isCompliance" label="Is Compliance" disabled={isSubmitting} />
-          <FormFieldCheckbox name="isSrFinance" label="Is Sr Finance" disabled={isSubmitting} />
-          <FormFieldCheckbox name="isFinance" label="Is Finance" disabled={isSubmitting} />
-          <FormFieldCheckbox name="isBrnMgr" label="Is Branch Manager" disabled={isSubmitting} />
-          <FormFieldCheckbox name="isExecutive" label="Is Executive" disabled={isSubmitting} />
-          <FormFieldCheckbox name="isCardStk" label="Is Card Stock" disabled={isSubmitting} />
-          <FormFieldCheckbox name="isDeliveryBoy" label="Is Delivery Boy" disabled={isSubmitting} />
-          <FormFieldCheckbox name="isCashier" label="Is Cashier" disabled={isSubmitting} />
-          <FormFieldCheckbox name="isSalesMgr" label="Is Sales Manager" disabled={isSubmitting} />
+          <FormFieldCheckbox
+            name="isMd"
+            label="Is MD"
+            disabled={isSubmitting}
+          />
+          <FormFieldCheckbox
+            name="isCompliance"
+            label="Is Compliance"
+            disabled={isSubmitting}
+          />
+          <FormFieldCheckbox
+            name="isSrFinance"
+            label="Is Sr Finance"
+            disabled={isSubmitting}
+          />
+          <FormFieldCheckbox
+            name="isFinance"
+            label="Is Finance"
+            disabled={isSubmitting}
+          />
+          <FormFieldCheckbox
+            name="isBrnMgr"
+            label="Is Branch Manager"
+            disabled={isSubmitting}
+          />
+          <FormFieldCheckbox
+            name="isExecutive"
+            label="Is Executive"
+            disabled={isSubmitting}
+          />
+          <FormFieldCheckbox
+            name="isCardStk"
+            label="Is Card Stock"
+            disabled={isSubmitting}
+          />
+          <FormFieldCheckbox
+            name="isDeliveryBoy"
+            label="Is Delivery Boy"
+            disabled={isSubmitting}
+          />
+          <FormFieldCheckbox
+            name="isCashier"
+            label="Is Cashier"
+            disabled={isSubmitting}
+          />
+          <FormFieldCheckbox
+            name="isSalesMgr"
+            label="Is Sales Manager"
+            disabled={isSubmitting}
+          />
         </div>
-      </section>
+      </CardSection>
 
-      <section className="rounded-sm border border-border-primary bg-surface-secondary p-4 space-y-4">
-        <h2 className="text-sm font-semibold uppercase tracking-[0.24em] text-text-tertiary">
-          Portal & Application Access
-        </h2>
+      <CardSection heading="Portal & Application Access">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <FormFieldCheckbox name="isAeonAccess" label="Is AEON Access" disabled={isSubmitting} />
-          <FormFieldCheckbox name="isDelPortalAccess" label="Is Delivery Portal Access" disabled={isSubmitting} />
-          <FormFieldCheckbox name="isDelAppAccess" label="Is Delivery App Access" disabled={isSubmitting} />
+          <FormFieldCheckbox
+            name="isAeonAccess"
+            label="Is AEON Access"
+            disabled={isSubmitting}
+          />
+          <FormFieldCheckbox
+            name="isDelPortalAccess"
+            label="Is Delivery Portal Access"
+            disabled={isSubmitting}
+          />
+          <FormFieldCheckbox
+            name="isDelAppAccess"
+            label="Is Delivery App Access"
+            disabled={isSubmitting}
+          />
         </div>
-      </section>
+      </CardSection>
 
-      <section className="rounded-sm border border-border-primary bg-surface-secondary p-4">
-        <FormFieldCheckbox name="isActive" label="Is Active" disabled={isSubmitting} />
-      </section>
+      <CardSection heading="Status">
+        <FormFieldCheckbox
+          name="isActive"
+          label="Is Active"
+          disabled={isSubmitting}
+        />
+      </CardSection>
 
       {children}
 

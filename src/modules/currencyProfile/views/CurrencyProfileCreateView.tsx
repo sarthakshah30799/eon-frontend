@@ -15,14 +15,14 @@ export const CurrencyProfileCreateView = () => {
   };
 
   return (
-    <CurrencyProfileEditorView
-      heading={CURRENCY_PROFILE_TEXTS.CREATE_CURRENCY}
-      description={CURRENCY_PROFILE_TEXTS.FORM_SUBTITLE}
-      submitLabel={CURRENCY_PROFILE_TEXTS.CREATE_CURRENCY}
-      defaultValues={createEmptyCurrencyProfileFormValues()}
-      onSubmitCurrency={handleSubmit}
-      isSubmitting={isPending}
-    />
+    <div className="space-y-4">
+      <CurrencyProfileEditorView
+        submitLabel={CURRENCY_PROFILE_TEXTS.CREATE_CURRENCY}
+        defaultValues={createEmptyCurrencyProfileFormValues()}
+        onSubmitCurrency={handleSubmit}
+        isSubmitting={isPending}
+      />
+    </div>
   );
 };
 

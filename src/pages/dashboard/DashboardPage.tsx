@@ -6,9 +6,6 @@ const DashboardPage: React.FC = () => {
       <section className="overflow-hidden rounded-sm border border-border-primary bg-surface-primary shadow-sm">
         <div className="grid gap-6 bg-gradient-to-br from-primary-50 via-surface-primary to-primary-100 px-6 py-8 text-text-primary sm:px-8 lg:grid-cols-[minmax(0,1fr)_280px] lg:px-10">
           <div className="space-y-4">
-            <span className="inline-flex rounded-full border border-primary-200 bg-surface-primary px-3 py-1 text-xs font-medium uppercase tracking-[0.24em] text-primary-700">
-              Dashboard Overview
-            </span>
             <div className="space-y-2">
               <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
                 Welcome back, Admin
@@ -31,7 +28,7 @@ const DashboardPage: React.FC = () => {
                 key={label}
                 className="rounded-sm border border-border-primary bg-gradient-to-br from-surface-primary to-surface-secondary px-4 py-3"
               >
-                <p className="text-xs uppercase tracking-[0.2em] text-text-tertiary">
+                <p className="text-xs uppercase text-text-tertiary">
                   {label}
                 </p>
                 <p className="mt-1 text-sm font-medium text-text-primary">

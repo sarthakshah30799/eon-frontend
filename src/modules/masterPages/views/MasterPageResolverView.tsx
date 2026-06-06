@@ -27,7 +27,7 @@ export const MasterPageResolverView = () => {
   return (
     <section className="space-y-6">
       <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
+        <p className="text-xs font-semibold uppercase text-slate-500">
           Generated Page
         </p>
         <h1 className="mt-2 text-2xl font-semibold text-slate-900">

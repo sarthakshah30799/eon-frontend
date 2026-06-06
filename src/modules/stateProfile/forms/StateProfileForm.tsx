@@ -1,10 +1,15 @@
 import type { SubmitErrorHandler } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Button } from '@/components/ui/button1';
-import { Form, FormFieldCountryDropdown, FormFieldInput } from '@/components/forms';
+import {
+  Form,
+  FormFieldCountryDropdown,
+  FormFieldInput,
+} from '@/components/forms';
 import { stateProfileSchema } from '../schema';
 import { STATE_PROFILE_TEXTS } from '../constants';
 import type { ICreateStateProfile } from '../types';
+import { useNavigate } from 'react-router-dom';
 
 interface StateProfileFormProps {
   defaultValues: ICreateStateProfile;
@@ -21,20 +26,33 @@ export const StateProfileForm = ({
   isSubmitting = false,
   readOnly = false,
 }: StateProfileFormProps) => {
-  const handleSubmitErrors: SubmitErrorHandler<ICreateStateProfile> =
-    errors => {
-      console.log('StateProfileForm submit errors:', errors);
-    };
+  const navigate = useNavigate();
+
+  const handleSubmitErrors: SubmitErrorHandler<
+    ICreateStateProfile
+  > = errors => {
+    console.log('StateProfileForm submit errors:', errors);
+  };
 
   const isDisabled = isSubmitting || readOnly;
-
+  const onCancel = () => {
+    navigate('/master/system-setups/state-profile');
+  };
   return (
     <Form
+      id="state-profile-form"
       onSubmit={onSubmit}
       onError={handleSubmitErrors}
       resolver={yupResolver(stateProfileSchema)}
       defaultValues={defaultValues}
       className="space-y-6"
+      footer={{
+        submitLabel,
+        onBackClick: () => {
+          void onCancel?.();
+        },
+        onCancel,
+      }}
     >
       <div className="grid gap-4 md:grid-cols-2">
         <div className="md:col-span-2">
@@ -45,16 +63,8 @@ export const StateProfileForm = ({
             disabled={isDisabled}
           />
         </div>
-        <FormFieldInput
-          name="code"
-          label="State Code"
-          disabled={isDisabled}
-        />
-        <FormFieldInput
-          name="name"
-          label="State Name"
-          disabled={isDisabled}
-        />
+        <FormFieldInput name="code" label="State Code" disabled={isDisabled} />
+        <FormFieldInput name="name" label="State Name" disabled={isDisabled} />
         <FormFieldInput
           name="gstStateCode"
           label="GST State Code"
@@ -66,14 +76,6 @@ export const StateProfileForm = ({
           disabled={isDisabled}
         />
       </div>
-
-      {!readOnly && (
-        <div className="flex justify-end border-t border-border-primary pt-4">
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Saving...' : submitLabel}
-          </Button>
-        </div>
-      )}
     </Form>
   );
 };

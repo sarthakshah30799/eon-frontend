@@ -24,8 +24,12 @@ export const CountryProfileListView = () => {
     [page, pageSize, debouncedSearch]
   );
 
-  const { data: countryResponse, isLoading, isFetching, error } =
-    useListCountryProfiles(query);
+  const {
+    data: countryResponse,
+    isLoading,
+    isFetching,
+    error,
+  } = useListCountryProfiles(query);
   const countries = countryResponse?.data ?? [];
   const totalItems = countryResponse?.totalItems ?? 0;
 
@@ -39,33 +43,19 @@ export const CountryProfileListView = () => {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-6 shadow-sm">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">
-              System Setup
-            </p>
-            <h1 className="mt-2 text-2xl font-semibold text-text-primary">
-              {COUNTRY_PROFILE_TEXTS.LIST_TITLE}
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-text-secondary">
-              {COUNTRY_PROFILE_TEXTS.LIST_SUBTITLE}
-            </p>
-          </div>
-
-          {canAdd && (
-            <Button
-              type="button"
-              className="rounded-sm"
-              onClick={() =>
-                navigate('/master/system-setups/country-profile/create')
-              }
-            >
-              {COUNTRY_PROFILE_TEXTS.CREATE_COUNTRY}
-            </Button>
-          )}
-        </div>
-      </section>
+      <div className="flex justify-end">
+        {canAdd && (
+          <Button
+            type="button"
+            className="rounded-sm"
+            onClick={() =>
+              navigate('/master/system-setups/country-profile/create')
+            }
+          >
+            {COUNTRY_PROFILE_TEXTS.CREATE_COUNTRY}
+          </Button>
+        )}
+      </div>
 
       <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
         <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -79,10 +69,15 @@ export const CountryProfileListView = () => {
             }}
             className="sm:max-w-md"
           />
-          <div className="text-sm text-text-secondary">{totalItems} total records</div>
+          <div className="text-sm text-text-secondary">
+            {totalItems} total records
+          </div>
         </div>
 
-        <CountryProfileTable countries={countries} loading={isLoading || isFetching} />
+        <CountryProfileTable
+          countries={countries}
+          loading={isLoading || isFetching}
+        />
       </section>
     </div>
   );

@@ -19,6 +19,7 @@ import type {
 } from '../utils';
 import { createEmptyCategoryOptionsFormValues } from '../utils';
 import type { CategoryOptionCode } from '@/types/categoryOptionTypes';
+import { useNavigate } from 'react-router-dom';
 
 const loadCodes = async (): Promise<AsyncSelectResponse> => {
   return loadCategoryOptionCodeOptions();
@@ -80,7 +81,8 @@ const CategoryOptionRows = ({
             key={field.id}
             className="relative rounded-sm border border-border-primary bg-surface-secondary p-4"
           >
-            {(mode === 'create' && fields.length > 1) || (mode === 'edit' && !field.id) ? (
+            {(mode === 'create' && fields.length > 1) ||
+            (mode === 'edit' && !field.id) ? (
               <button
                 type="button"
                 aria-label={`Remove option ${index + 1}`}
@@ -136,19 +138,28 @@ export const CategoryOptionsForm = ({
   mode = 'create',
   fixedCode,
 }: CategoryOptionsFormProps) => {
+  const navigate = useNavigate();
   const initialValues =
     defaultValues ?? createEmptyCategoryOptionsFormValues(fixedCode);
 
-  const handleSubmitErrors: SubmitErrorHandler<ICategoryOptionsFormValues> = errors => {
+  const handleSubmitErrors: SubmitErrorHandler<
+    ICategoryOptionsFormValues
+  > = errors => {
     console.log('CategoryOptionsForm submit errors:', errors);
+  };
+  const onCancel = () => {
+    navigate('/admin/category-options');
   };
 
   return (
     <Form
+      id={'category-options-form'}
       onSubmit={onSubmit}
       onError={handleSubmitErrors}
       resolver={
-        yupResolver(categoryOptionsFormSchema) as Resolver<ICategoryOptionsFormValues>
+        yupResolver(
+          categoryOptionsFormSchema
+        ) as Resolver<ICategoryOptionsFormValues>
       }
       defaultValues={{
         ...initialValues,
@@ -159,6 +170,14 @@ export const CategoryOptionsForm = ({
             : [{ value: '', label: '' }],
       }}
       className="space-y-6"
+      footer={{
+        submitLabel,
+        backLabel: 'Back',
+        onBackClick: () => {
+          void onCancel?.();
+        },
+        onCancel,
+      }}
     >
       <div className="grid gap-4 md:grid-cols-2">
         {fixedCode ? (
@@ -167,8 +186,9 @@ export const CategoryOptionsForm = ({
               Category Code
             </p>
             <p className="mt-2 text-sm font-medium text-text-primary">
-              {CATEGORY_OPTION_CODE_OPTIONS.find(option => option.value === fixedCode)
-                ?.label ?? fixedCode}
+              {CATEGORY_OPTION_CODE_OPTIONS.find(
+                option => option.value === fixedCode
+              )?.label ?? fixedCode}
             </p>
           </div>
         ) : (
@@ -199,12 +219,6 @@ export const CategoryOptionsForm = ({
           label="Is Active"
           disabled={isSubmitting}
         />
-      </div>
-
-      <div className="flex justify-end border-t border-border-primary pt-4">
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Saving...' : submitLabel}
-        </Button>
       </div>
     </Form>
   );

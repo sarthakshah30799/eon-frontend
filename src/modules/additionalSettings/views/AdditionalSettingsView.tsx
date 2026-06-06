@@ -106,7 +106,7 @@ export const AdditionalSettingsView = () => {
           defaultValues={createEmptyAdditionalSettingCategoryFormValues()}
           onSubmit={handleCreateSubmit}
           isSubmitting={isCreating}
-          submitLabel={ADDITIONAL_SETTINGS_TEXTS.ADD_CATEGORY}
+          submitLabel={ADDITIONAL_SETTINGS_TEXTS.CREATE_CATEGORY}
         />
       </Modal>
     </section>

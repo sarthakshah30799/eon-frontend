@@ -4,6 +4,12 @@ import type {
   IAdditionalSettingCategory,
   IAdditionalSettingSubcategory,
 } from '../types';
+import { Button, Input } from '@/components/ui';
+import {
+  CheckIcon,
+  PencilSquareIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
 
 interface AdditionalSettingsCategoryDetailsProps {
   category: IAdditionalSettingCategory | null;
@@ -16,25 +22,6 @@ interface AdditionalSettingsCategoryDetailsProps {
   ) => Promise<void>;
 }
 
-const iconButtonClass =
-  'inline-flex h-9 w-9 items-center justify-center rounded-full border border-border-primary bg-surface-primary text-text-tertiary transition hover:border-primary-500 hover:bg-primary-50 hover:text-primary-700';
-
-const actionIcon = (path: string) => (
-  <svg
-    aria-hidden="true"
-    className="h-4 w-4"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="2"
-      d={path}
-    />
-  </svg>
-);
 
 const CategoryTitleEditor = ({
   category,
@@ -80,44 +67,44 @@ const CategoryTitleEditor = ({
           </p>
         </div>
 
-        <button
+        <Button
           type="button"
-          className={iconButtonClass}
           aria-label="Edit category title"
           onClick={() => setIsEditing(true)}
+          className="border-0! bg-transparent! text-black!"
         >
-          {actionIcon('M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z')}
-        </button>
+          <PencilSquareIcon className="h-5 w-5" />
+        </Button>
       </div>
     );
   }
 
   return (
     <div className="flex items-center gap-3">
-      <input
+      <Input
         value={draftTitle}
         onChange={event => setDraftTitle(event.target.value)}
-        className="w-full rounded-sm border border-border-primary bg-surface-primary px-3 py-2 text-sm text-text-primary outline-none ring-0 transition focus:border-primary-500"
+        className="w-full"
       />
-      <button
+      <Button
         type="button"
-        className={iconButtonClass}
+        className="border-0! bg-transparent! text-black!"
         aria-label="Save category title"
         onClick={handleSave}
       >
-        {actionIcon('M5 13l4 4L19 7')}
-      </button>
-      <button
+        <CheckIcon className="h-5 w-5" />
+      </Button>
+      <Button
         type="button"
-        className={iconButtonClass}
+        className="border-0! bg-transparent! text-black!"
         aria-label="Cancel category title edit"
         onClick={() => {
           setDraftTitle(category.title);
           setIsEditing(false);
         }}
       >
-        {actionIcon('M6 18L18 6M6 6l12 12')}
-      </button>
+        <XMarkIcon className="h-5 w-5" />
+      </Button>
     </div>
   );
 };
@@ -140,11 +127,10 @@ const SubcategoryRow = ({
       <td className="px-4 py-3">
         <button
           type="button"
-          className={iconButtonClass}
           aria-label={`Edit ${subcategory.title}`}
           onClick={() => onEdit(subcategory)}
         >
-          {actionIcon('M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z')}
+          <PencilSquareIcon className="h-5 w-5" />
         </button>
       </td>
     </tr>
@@ -322,13 +308,9 @@ export const AdditionalSettingsCategoryDetails = ({
           </h2>
         </div>
 
-        <button
-          type="button"
-          onClick={onOpenCreateCategory}
-          className="rounded-sm border border-primary-500 bg-primary-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-primary-600"
-        >
+        <Button type="button" onClick={onOpenCreateCategory}>
           Create Category
-        </button>
+        </Button>
       </div>
 
       {!category ? (
@@ -339,13 +321,9 @@ export const AdditionalSettingsCategoryDetails = ({
           <p className="mt-2 text-sm text-text-tertiary">
             Create a category to start managing additional settings.
           </p>
-          <button
-            type="button"
-            onClick={onOpenCreateCategory}
-            className="mt-4 rounded-sm border border-primary-500 bg-primary-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-primary-600"
-          >
+          <Button type="button" onClick={onOpenCreateCategory}>
             Create Category
-          </button>
+          </Button>
         </div>
       ) : (
         <div className="space-y-5">

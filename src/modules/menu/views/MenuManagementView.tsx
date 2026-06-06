@@ -168,7 +168,6 @@ export const MenuManagementView = () => {
       <div className="rounded-sm border border-border-primary bg-surface-primary p-6 shadow-sm">
         <div className="mb-4 flex flex-wrap items-start justify-end gap-4">
           <Button
-            variant={'accent'}
             type="button"
             onClick={() => setSelectedMenu(null)}
           >
@@ -187,30 +186,33 @@ export const MenuManagementView = () => {
               </span>
             </div>
 
-            {isLoading || isUpdating ? (
-              <p className="text-sm text-text-secondary">Loading menus...</p>
-            ) : menuTree.length === 0 ? (
-              <p className="text-sm text-text-secondary">
-                {MENU_TEXTS.EMPTY_STATE}
-              </p>
-            ) : (
-              <ul className="space-y-3">
-                {menuTree
-                  .slice()
-                  .sort(
-                    (a, b) =>
-                      a.sortOrder - b.sortOrder || a.name.localeCompare(b.name)
-                  )
-                  .map(menu => (
-                    <MenuTreeRow
-                      key={menu.id}
-                      menu={menu}
-                      onEdit={setSelectedMenu}
-                      onDelete={handleDelete}
-                    />
-                  ))}
-              </ul>
-            )}
+            <div className="max-h-[calc(100vh-18rem)] overflow-y-auto pr-1">
+              {isLoading || isUpdating ? (
+                <p className="text-sm text-text-secondary">Loading menus...</p>
+              ) : menuTree.length === 0 ? (
+                <p className="text-sm text-text-secondary">
+                  {MENU_TEXTS.EMPTY_STATE}
+                </p>
+              ) : (
+                <ul className="space-y-3">
+                  {menuTree
+                    .slice()
+                    .sort(
+                      (a, b) =>
+                        a.sortOrder - b.sortOrder ||
+                        a.name.localeCompare(b.name)
+                    )
+                    .map(menu => (
+                      <MenuTreeRow
+                        key={menu.id}
+                        menu={menu}
+                        onEdit={setSelectedMenu}
+                        onDelete={handleDelete}
+                      />
+                    ))}
+                </ul>
+              )}
+            </div>
           </div>
 
           <div className="relative rounded-sm border border-border-primary bg-surface-primary p-5">

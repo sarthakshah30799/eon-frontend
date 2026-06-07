@@ -11,4 +11,5 @@ export const createEmptyCountryProfileFormValues =
     restrictedCountry: false,
     greyListCountry: false,
     baseCountry: false,
+    countryGroupId: undefined,
   });

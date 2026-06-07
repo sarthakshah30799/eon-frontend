@@ -15,6 +15,7 @@ interface CountryProfileTableRow {
   code: string;
   name: string;
   riskCategory: string;
+  countryGroup: string;
 }
 
 export const CountryProfileTable = ({
@@ -31,11 +32,13 @@ export const CountryProfileTable = ({
     code: country.code,
     name: country.name,
     riskCategory: country.riskCategory,
+    countryGroup: country.countryGroup?.name ?? '—',
   }));
 
   const columns: TableColumnDef<CountryProfileTableRow>[] = [
     { accessorKey: 'code', header: 'Country Code' },
     { accessorKey: 'name', header: 'Country Name' },
+    { accessorKey: 'countryGroup', header: 'Country Group' },
     { accessorKey: 'riskCategory', header: 'Risk Category' },
     {
       id: 'actions',

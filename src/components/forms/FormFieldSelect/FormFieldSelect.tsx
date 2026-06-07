@@ -51,6 +51,8 @@ export const FormFieldSelect = ({
   variant,
   isMulti = false,
   onCreateOption,
+  isCreatable = false,
+  isSearchable = true,
   ...props
 }: FormFieldSelectProps) => {
   const form = useFormContext();
@@ -197,6 +199,8 @@ export const FormFieldSelect = ({
       debounceDelay={debounceDelay}
       size={size}
       variant={variant}
+      isCreatable={isCreatable}
+      isSearchable={isSearchable}
       {...props}
       value={selectedOption}
       isMulti={isMulti}

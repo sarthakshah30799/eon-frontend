@@ -91,6 +91,7 @@ const AsyncSelectComponent = React.forwardRef<
       size,
       variant,
       isCreatable = false,
+      isSearchable = true,
       onInputChange: externalOnInputChange,
       ...props
     },
@@ -99,7 +100,6 @@ const AsyncSelectComponent = React.forwardRef<
     const [currentPage, setCurrentPage] = useState(1);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [allOptions, setAllOptions] = useState<AsyncSelectOption[]>([]);
-    const [inputValue, setInputValue] = useState('');
     const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
       null
     );
@@ -178,7 +178,6 @@ const AsyncSelectComponent = React.forwardRef<
     const handleInputChange = useCallback(
       (newValue: string, { action, prevInputValue }: InputActionMeta) => {
         const nextValue = newValue.toUpperCase();
-        setInputValue(nextValue);
 
         // Reset pagination when user starts typing new search
         if (
@@ -240,7 +239,7 @@ const AsyncSelectComponent = React.forwardRef<
           {isCreatable ? (
             <AsyncCreatableSelect
               ref={ref}
-              inputValue={inputValue}
+              isSearchable={isSearchable}
               cacheOptions={!pagination}
               defaultOptions
               loadOptions={debouncedLoadOptions}
@@ -257,7 +256,7 @@ const AsyncSelectComponent = React.forwardRef<
           ) : (
             <AsyncSelectBase
               ref={ref}
-              inputValue={inputValue}
+              isSearchable={isSearchable}
               cacheOptions={!pagination}
               defaultOptions
               loadOptions={debouncedLoadOptions}

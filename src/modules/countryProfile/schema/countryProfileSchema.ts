@@ -14,4 +14,5 @@ export const countryProfileSchema = yup.object({
   restrictedCountry: yup.boolean().default(false),
   greyListCountry: yup.boolean().default(false),
   baseCountry: yup.boolean().default(false),
+  countryGroupId: yup.string().uuid().nullable().optional(),
 });

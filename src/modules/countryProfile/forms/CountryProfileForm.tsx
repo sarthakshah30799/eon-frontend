@@ -1,4 +1,4 @@
-import type { SubmitErrorHandler } from 'react-hook-form';
+import type { SubmitErrorHandler, Resolver } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import {
   Form,
@@ -11,9 +11,26 @@ import { countryProfileSchema } from '../schema';
 import { COUNTRY_PROFILE_TEXTS, riskCategoryOptions } from '../constants';
 import type { ICreateCountryProfile } from '../types';
 import { useNavigate } from 'react-router-dom';
+import { countryGroupApi } from '@/api';
 
 const loadRiskCategoryOptions = async (): Promise<AsyncSelectResponse> => {
   return { options: riskCategoryOptions };
+};
+
+const loadCountryGroupOptions = async (inputValue: string): Promise<AsyncSelectResponse> => {
+  try {
+    const groups = await countryGroupApi.getCountryGroups();
+    const options = groups
+      .filter(g => g.name.toLowerCase().includes(inputValue.toLowerCase()))
+      .map(g => ({
+        value: g.id,
+        label: g.name,
+      }));
+    return { options };
+  } catch (error) {
+    console.error('Failed to load country groups:', error);
+    return { options: [] };
+  }
 };
 
 interface CountryProfileFormProps {
@@ -39,6 +56,19 @@ export const CountryProfileForm = ({
     console.log('CountryProfileForm submit errors:', errors);
   };
 
+  const handleCreateCountryGroup = async (inputValue: string) => {
+    try {
+      const newGroup = await countryGroupApi.createCountryGroup({ name: inputValue });
+      return {
+        value: newGroup.id,
+        label: newGroup.name,
+      };
+    } catch (error) {
+      console.error('Failed to create country group:', error);
+      throw error;
+    }
+  };
+
   const isDisabled = isSubmitting || readOnly;
   const onCancel = () => {
     navigate('/master/system-setups/user-profile');
@@ -48,7 +78,7 @@ export const CountryProfileForm = ({
       id="country-profile-form"
       onSubmit={onSubmit}
       onError={handleSubmitErrors}
-      resolver={yupResolver(countryProfileSchema)}
+      resolver={yupResolver(countryProfileSchema) as Resolver<ICreateCountryProfile>}
       defaultValues={defaultValues}
       className="space-y-6"
       footer={{
@@ -95,6 +125,17 @@ export const CountryProfileForm = ({
           disabled={isDisabled}
           isClearable
           isSearchable={false}
+        />
+        <FormFieldSelect
+          name="countryGroupId"
+          label="Country Group"
+          loadOptions={loadCountryGroupOptions}
+          placeholder="Select country group"
+          disabled={isDisabled}
+          isClearable
+          isSearchable={true}
+          isCreatable={true}
+          onCreateOption={handleCreateCountryGroup}
         />
       </div>
 

@@ -16,6 +16,8 @@ import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import { branchProfileSchema } from '../schema';
 import type { ICreateBranchProfile, IBranchProfileOption } from '../types';
 import { useListCounterProfiles } from '@/modules/counterProfile/hooks';
+import { useGetStateProfile } from '@/modules/stateProfile/hooks';
+import { useListCompanyProfiles } from '@/modules/companyProfile/hooks';
 
 interface BranchProfileFormProps {
   defaultValues: ICreateBranchProfile;
@@ -51,12 +53,23 @@ const BranchProfileFormFields = ({
     control: form.control,
     name: 'countryId',
   });
+  const stateId = useWatch({
+    control: form.control,
+    name: 'stateId',
+  });
+
   const previousCountryIdRef = useRef<string>(countryId);
+  const previousStateIdRef = useRef<string>(stateId);
+
   const {
     data: counterProfiles = [],
     isLoading: isCountersLoading,
     isFetching: isCountersFetching,
   } = useListCounterProfiles();
+
+  const { data: selectedState } = useGetStateProfile(stateId);
+  const { data: companies = [] } = useListCompanyProfiles();
+  const companyPan = companies[0]?.panNo || '';
 
   useEffect(() => {
     if (previousCountryIdRef.current !== countryId) {
@@ -64,6 +77,23 @@ const BranchProfileFormFields = ({
       previousCountryIdRef.current = countryId;
     }
   }, [countryId, form]);
+
+  useEffect(() => {
+    if (stateId && selectedState && stateId !== previousStateIdRef.current) {
+      // 1. Populate gstState with state name
+      const stateNameUpper = selectedState.name.toUpperCase();
+      form.setValue('gstState', stateNameUpper);
+
+      // 2. Populate gstNo following GSTIN structure: StateCode + CompanyPAN
+      const stateGstCode = selectedState.gstStateCode || '';
+      const defaultGstNo = `${stateGstCode}${companyPan.toUpperCase()}`;
+      form.setValue('gstNo', defaultGstNo);
+
+      previousStateIdRef.current = stateId;
+    } else if (!stateId) {
+      previousStateIdRef.current = '';
+    }
+  }, [stateId, selectedState, companyPan, form]);
 
   const connectedCounterOptions = useMemo(
     () =>

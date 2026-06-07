@@ -1,3 +1,5 @@
+import type { ICountryGroup } from '@/api/countryGroup/countryGroup.api';
+
 export const CountryRiskCategory = {
   LOW: 'low',
   MEDIUM: 'medium',
@@ -17,6 +19,8 @@ export interface ICountryProfile {
   restrictedCountry: boolean;
   greyListCountry: boolean;
   baseCountry: boolean;
+  countryGroupId?: string;
+  countryGroup?: ICountryGroup;
   createdAt: string;
   updatedAt: string;
   createdBy?: string;

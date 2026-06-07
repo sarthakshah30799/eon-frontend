@@ -106,6 +106,24 @@ const MenuPage = lazy(() => import('../pages/admin/menu/MenuPage'));
 const AdditionalSettingsPage = lazy(
   () => import('../pages/admin/additional-settings')
 );
+const FinancialCodesListPage = lazy(
+  () => import('../pages/admin/financial-codes/list')
+);
+const FinancialCodesCreatePage = lazy(
+  () => import('../pages/admin/financial-codes/create')
+);
+const FinancialCodesEditPage = lazy(
+  () => import('../pages/admin/financial-codes/edit/[id]')
+);
+const AccountsProfileListPage = lazy(
+  () => import('../pages/admin/accounts-profile/list')
+);
+const AccountsProfileCreatePage = lazy(
+  () => import('../pages/admin/accounts-profile/create')
+);
+const AccountsProfileEditPage = lazy(
+  () => import('../pages/admin/accounts-profile/edit/[id]')
+);
 const MasterPagesPage = lazy(
   () => import('../pages/master/system-setups/master-pages/MasterPagesPage')
 );
@@ -321,6 +339,54 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <AdditionalSettingsPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/financial-profile',
+    element: (
+      <ProtectedLayout>
+        <FinancialCodesListPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/financial-profile/create',
+    element: (
+      <ProtectedLayout>
+        <FinancialCodesCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/financial-profile/edit/:id',
+    element: (
+      <ProtectedLayout>
+        <FinancialCodesEditPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/accounts-profile',
+    element: (
+      <ProtectedLayout>
+        <AccountsProfileListPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/accounts-profile/create',
+    element: (
+      <ProtectedLayout>
+        <AccountsProfileCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/accounts-profile/edit/:id',
+    element: (
+      <ProtectedLayout>
+        <AccountsProfileEditPage />
       </ProtectedLayout>
     ),
   },

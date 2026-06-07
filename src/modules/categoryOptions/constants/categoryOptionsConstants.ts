@@ -28,11 +28,41 @@ export const CATEGORY_OPTION_CODE_OPTIONS = [
     value: CategoryOptionCodeEnum.RiskCategory,
     label: 'Risk Category',
   },
+  {
+    value: CategoryOptionCodeEnum.FinancialType,
+    label: 'Financial Type',
+  },
+  {
+    value: CategoryOptionCodeEnum.DefaultSign,
+    label: 'Default Sign',
+  },
+  {
+    value: CategoryOptionCodeEnum.DivisionDept,
+    label: 'Division/Dept',
+  },
+  {
+    value: CategoryOptionCodeEnum.AccountType,
+    label: 'Account Type',
+  },
+  {
+    value: CategoryOptionCodeEnum.SubLedger,
+    label: 'Sub Ledger',
+  },
+  {
+    value: CategoryOptionCodeEnum.BankNature,
+    label: 'Bank Nature',
+  },
 ];
 
 export const CATEGORY_OPTION_CODE_LABELS = {
   [CategoryOptionCodeEnum.LocationType]: 'Location Type',
   [CategoryOptionCodeEnum.RiskCategory]: 'Risk Category',
+  [CategoryOptionCodeEnum.FinancialType]: 'Financial Type',
+  [CategoryOptionCodeEnum.DefaultSign]: 'Default Sign',
+  [CategoryOptionCodeEnum.DivisionDept]: 'Division/Dept',
+  [CategoryOptionCodeEnum.AccountType]: 'Account Type',
+  [CategoryOptionCodeEnum.SubLedger]: 'Sub Ledger',
+  [CategoryOptionCodeEnum.BankNature]: 'Bank Nature',
 } as const;
 
 export const loadCategoryOptionCodeOptions = async (): Promise<AsyncSelectResponse> => {

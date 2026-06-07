@@ -1,5 +1,4 @@
 import { useNavigate, useParams } from 'react-router-dom';
-import { BackButton } from '@/components/ui';
 import { UserProfileForm } from '../forms';
 import { useGetUserProfile, useUpdateUserProfile } from '../hooks';
 import { USER_PROFILE_TEXTS } from '../constants';

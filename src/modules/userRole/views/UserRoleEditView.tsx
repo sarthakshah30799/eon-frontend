@@ -1,5 +1,4 @@
 import { useNavigate, useParams } from 'react-router-dom';
-import { BackButton } from '@/components/ui';
 import { UserRoleForm } from '../forms';
 import { useGetUserRole, useUpdateUserRole } from '../hooks';
 import { USER_ROLE_TEXTS } from '../constants';

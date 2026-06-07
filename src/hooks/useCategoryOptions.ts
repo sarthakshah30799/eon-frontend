@@ -10,8 +10,8 @@ import type {
 
 const CATEGORY_OPTIONS_STALE_TIME = 5 * 60 * 1000;
 
-const toAsyncSelectOption = (option: ICategoryOption): AsyncSelectOption => ({
-  value: option.id,
+const toAsyncSelectOption = (option: ICategoryOption, useValueAsId = false): AsyncSelectOption => ({
+  value: useValueAsId ? option.value : option.id,
   label: option.label,
 });
 
@@ -47,7 +47,7 @@ const sortCategoryOptions = (options: ICategoryOption[]) =>
     return left.label.localeCompare(right.label);
   });
 
-export const useCategoryOptions = (code: CategoryOptionCode) => {
+export const useCategoryOptions = (code: CategoryOptionCode, useValueAsId = false) => {
   const normalizedCode = code.trim() as CategoryOptionCode;
   const queryClient = useQueryClient();
   const queryKey = useMemo(() => createQueryKey(normalizedCode), [normalizedCode]);
@@ -72,10 +72,10 @@ export const useCategoryOptions = (code: CategoryOptionCode) => {
       });
 
       return {
-        options: filterOptions(options, inputValue).map(toAsyncSelectOption),
+        options: filterOptions(options, inputValue).map(opt => toAsyncSelectOption(opt, useValueAsId)),
       };
     },
-    [normalizedCode, queryClient, queryKey]
+    [normalizedCode, queryClient, queryKey, useValueAsId]
   );
 
   const createOptions = useCallback(
@@ -116,9 +116,9 @@ export const useCategoryOptions = (code: CategoryOptionCode) => {
         return sortCategoryOptions(Array.from(nextOptionsMap.values()));
       });
 
-      return created.map(toAsyncSelectOption);
+      return created.map(opt => toAsyncSelectOption(opt, useValueAsId));
     },
-    [normalizedCode, queryClient, queryKey]
+    [normalizedCode, queryClient, queryKey, useValueAsId]
   );
 
   const createOption = useCallback(
@@ -141,8 +141,8 @@ export const useCategoryOptions = (code: CategoryOptionCode) => {
 
   return {
     defaultOptions: useMemo(
-      () => (query.data ?? []).map(toAsyncSelectOption),
-      [query.data]
+      () => (query.data ?? []).map(opt => toAsyncSelectOption(opt, useValueAsId)),
+      [query.data, useValueAsId]
     ),
     loadOptions,
     createOption,

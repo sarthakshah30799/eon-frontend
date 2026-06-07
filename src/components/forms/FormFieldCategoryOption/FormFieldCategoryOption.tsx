@@ -22,6 +22,7 @@ interface FormFieldCategoryOptionProps
   createLabel?: string;
   isCreatable?: boolean;
   isSearchable?: boolean;
+  useValueAsId?: boolean;
   onCreateTransform?: (
     inputValue: string
   ) => { value: string; label: string } | Promise<{ value: string; label: string }>;
@@ -32,11 +33,12 @@ export const FormFieldCategoryOption = ({
   createLabel = 'Create',
   isCreatable = true,
   isSearchable = true,
+  useValueAsId = false,
   onCreateTransform,
   ...props
 }: FormFieldCategoryOptionProps) => {
   const { defaultOptions, loadOptions, createOptions, isLoading } =
-    useCategoryOptions(code);
+    useCategoryOptions(code, useValueAsId);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);

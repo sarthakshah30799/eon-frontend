@@ -1,0 +1,85 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'react-hot-toast';
+import { accountProfileApi } from '@/api/accountProfile';
+import type {
+  ICreateAccountProfile,
+  IAccountProfileListQuery,
+} from '../types/accountProfileTypes';
+
+export const useListAccountProfiles = (params?: IAccountProfileListQuery) => {
+  return useQuery({
+    queryKey: ['account-profiles', params],
+    queryFn: () => accountProfileApi.getAccountProfiles(params),
+  });
+};
+
+export const useGetAccountProfile = (id: string) => {
+  return useQuery({
+    queryKey: ['account-profile', id],
+    queryFn: () => accountProfileApi.getAccountProfileById(id),
+    enabled: Boolean(id),
+  });
+};
+
+export const useCreateAccountProfile = () => {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: (data: ICreateAccountProfile) =>
+      accountProfileApi.createAccountProfile(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['account-profiles'] });
+      toast.success('Account Profile created successfully!');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to create account profile');
+    },
+  });
+
+  return {
+    ...mutation,
+    submitAccountProfile: mutation.mutateAsync,
+  };
+};
+
+export const useUpdateAccountProfile = () => {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: ICreateAccountProfile }) =>
+      accountProfileApi.updateAccountProfile(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['account-profiles'] });
+      queryClient.invalidateQueries({ queryKey: ['account-profile', variables.id] });
+      toast.success('Account Profile updated successfully!');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to update account profile');
+    },
+  });
+
+  return {
+    ...mutation,
+    updateAccountProfile: mutation.mutateAsync,
+  };
+};
+
+export const useDeleteAccountProfile = () => {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: (id: string) => accountProfileApi.deleteAccountProfile(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['account-profiles'] });
+      toast.success('Account Profile deleted successfully!');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to delete account profile');
+    },
+  });
+
+  return {
+    ...mutation,
+    deleteAccountProfile: mutation.mutateAsync,
+  };
+};

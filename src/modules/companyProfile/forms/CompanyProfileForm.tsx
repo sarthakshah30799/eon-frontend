@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import {
   Form,
   FormFieldFileUploader,
@@ -18,6 +19,7 @@ export const CompanyProfileForm = ({
   onSubmit,
   isSaving = false,
 }: CompanyProfileFormProps) => {
+  const navigate = useNavigate();
   return (
     <Form
       id={COMPANY_FORM_ID}
@@ -27,6 +29,8 @@ export const CompanyProfileForm = ({
       className="space-y-6"
       footer={{
         submitLabel: 'Save Changes',
+        onCancel: () => navigate('/admin/company-profile'),
+        onBackClick: () => navigate('/admin/company-profile'),
       }}
     >
       <div className="rounded-sm border border-border-primary bg-surface-secondary p-4">

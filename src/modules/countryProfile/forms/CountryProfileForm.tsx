@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import type { SubmitErrorHandler, Resolver } from 'react-hook-form';
+import { useFormContext } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import {
   Form,
@@ -6,12 +8,14 @@ import {
   FormFieldInput,
   FormFieldSelect,
 } from '@/components/forms';
+import { Button } from '@/components/ui/button1';
 import type { AsyncSelectResponse } from '@/components/ui';
 import { countryProfileSchema } from '../schema';
 import { COUNTRY_PROFILE_TEXTS, riskCategoryOptions } from '../constants';
 import type { ICreateCountryProfile } from '../types';
 import { useNavigate } from 'react-router-dom';
 import { countryGroupApi } from '@/api';
+import { CountryGroupModal } from '../components';
 
 const loadRiskCategoryOptions = async (): Promise<AsyncSelectResponse> => {
   return { options: riskCategoryOptions };
@@ -31,6 +35,75 @@ const loadCountryGroupOptions = async (inputValue: string): Promise<AsyncSelectR
     console.error('Failed to load country groups:', error);
     return { options: [] };
   }
+};
+
+const CountryGroupField = ({ isDisabled }: { isDisabled: boolean }) => {
+  const { setValue } = useFormContext();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleSuccess = (newGroupId: string) => {
+    setValue('countryGroupId', newGroupId, { shouldValidate: true, shouldDirty: true });
+  };
+
+  const handleCreateCountryGroup = async (inputValue: string) => {
+    try {
+      const newGroup = await countryGroupApi.createCountryGroup({ name: inputValue });
+      return {
+        value: newGroup.id,
+        label: newGroup.name,
+      };
+    } catch (error) {
+      console.error('Failed to create country group:', error);
+      throw error;
+    }
+  };
+
+  return (
+    <div className="flex items-end gap-2 w-full">
+      <div className="flex-grow">
+        <FormFieldSelect
+          name="countryGroupId"
+          label="Country Group"
+          loadOptions={loadCountryGroupOptions}
+          placeholder="Select country group"
+          disabled={isDisabled}
+          isClearable
+          isSearchable={true}
+          isCreatable={true}
+          onCreateOption={handleCreateCountryGroup}
+        />
+      </div>
+      <Button
+        type="button"
+        variant="outline"
+        className="h-10 px-3 flex items-center justify-center shrink-0 border border-border-primary rounded-xl text-primary-600 hover:bg-surface-secondary mb-[1px]"
+        onClick={() => setIsModalOpen(true)}
+        disabled={isDisabled}
+      >
+        <svg
+          className="h-4 w-4 mr-1"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+            d="M12 4v16m8-8H4"
+          />
+        </svg>
+        New
+      </Button>
+
+      <CountryGroupModal
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        onSuccess={handleSuccess}
+      />
+    </div>
+  );
 };
 
 interface CountryProfileFormProps {
@@ -56,18 +129,7 @@ export const CountryProfileForm = ({
     console.log('CountryProfileForm submit errors:', errors);
   };
 
-  const handleCreateCountryGroup = async (inputValue: string) => {
-    try {
-      const newGroup = await countryGroupApi.createCountryGroup({ name: inputValue });
-      return {
-        value: newGroup.id,
-        label: newGroup.name,
-      };
-    } catch (error) {
-      console.error('Failed to create country group:', error);
-      throw error;
-    }
-  };
+
 
   const isDisabled = isSubmitting || readOnly;
   const onCancel = () => {
@@ -126,17 +188,7 @@ export const CountryProfileForm = ({
           isClearable
           isSearchable={false}
         />
-        <FormFieldSelect
-          name="countryGroupId"
-          label="Country Group"
-          loadOptions={loadCountryGroupOptions}
-          placeholder="Select country group"
-          disabled={isDisabled}
-          isClearable
-          isSearchable={true}
-          isCreatable={true}
-          onCreateOption={handleCreateCountryGroup}
-        />
+        <CountryGroupField isDisabled={isDisabled} />
       </div>
 
       <div className="grid gap-3 rounded-sm border border-border-primary bg-surface-secondary p-4 sm:grid-cols-3">

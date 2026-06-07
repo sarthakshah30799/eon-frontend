@@ -33,6 +33,14 @@ const CompanyProfilePage = lazy(
   () =>
     import('../pages/master/system-setups/company-profile/list/CompanyProfileListPage')
 );
+const CompanyProfileCreatePage = lazy(
+  () =>
+    import('../pages/master/system-setups/company-profile/create/CompanyProfileCreatePage')
+);
+const CompanyProfileEditPage = lazy(
+  () =>
+    import('../pages/master/system-setups/company-profile/edit/[id]/CompanyProfileEditPage')
+);
 const CountryProfileListPage = lazy(
   () =>
     import('../pages/master/system-setups/country-profile/list/CountryProfileListPage')
@@ -243,6 +251,22 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <CompanyProfilePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/company-profile/create',
+    element: (
+      <ProtectedLayout>
+        <CompanyProfileCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/company-profile/edit/:id',
+    element: (
+      <ProtectedLayout>
+        <CompanyProfileEditPage />
       </ProtectedLayout>
     ),
   },

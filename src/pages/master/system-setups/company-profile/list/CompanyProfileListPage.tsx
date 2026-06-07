@@ -1,51 +1,7 @@
-import { Loader } from '@/components/ui/loader';
-import { useListCompanyProfiles } from '@/modules/companyProfile/hooks';
-import { CompanyProfileEditView } from '@/modules/companyProfile/views';
-import { CompanyProfileForm } from '@/modules/companyProfile/forms';
-import { createEmptyCompanyProfileFormValues } from '@/modules/companyProfile/utils';
-import { useCreateCompanyProfile } from '@/modules/companyProfile/hooks';
-import type { ICreateCompanyProfile } from '@/modules/companyProfile/types';
+import { CompanyProfileListView } from '@/modules/companyProfile';
 
 const CompanyProfileListPage = () => {
-  const { data: companies = [], isLoading, error } = useListCompanyProfiles();
-  const { createCompanyProfile, isPending: isCreating } =
-    useCreateCompanyProfile();
-
-  const handleCreate = async (values: ICreateCompanyProfile) => {
-    await createCompanyProfile(values);
-  };
-
-  if (isLoading) {
-    return (
-      <Loader />
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="rounded-3xl border border-error-500 bg-error-50 p-6 text-error-600 shadow-sm">
-        <p className="text-sm">Unable to load company details.</p>
-      </div>
-    );
-  }
-
-  // If no company exists in the database, instruct the user to initialize it on the backend
-  if (companies.length === 0) {
-    return (
-      <div className="space-y-6">
-        <div className="rounded-sm border border-border-primary bg-surface-primary p-6 shadow-sm">
-          <CompanyProfileForm
-            defaultValues={createEmptyCompanyProfileFormValues()}
-            onSubmit={handleCreate}
-            isSaving={isCreating}
-          />
-        </div>
-      </div>
-    );
-  }
-
-  // Otherwise, render the Edit Form directly for the single onboarded company
-  return <CompanyProfileEditView id={companies[0].id} />;
+  return <CompanyProfileListView />;
 };
 
 export default CompanyProfileListPage;

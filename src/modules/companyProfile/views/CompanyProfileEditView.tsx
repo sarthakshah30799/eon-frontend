@@ -1,3 +1,4 @@
+import { useNavigate, useParams } from 'react-router-dom';
 import { Loader } from '@/components/ui/loader';
 import { CompanyProfileForm } from '../forms';
 import { useGetCompanyProfile, useUpdateCompanyProfile, useListCompanyProfiles } from '../hooks';
@@ -9,28 +10,32 @@ interface CompanyProfileEditViewProps {
 }
 
 export const CompanyProfileEditView = ({ id: propId }: CompanyProfileEditViewProps = {}) => {
+  const navigate = useNavigate();
+  const { id: paramId } = useParams<{ id: string }>();
   const { data: companies = [], isLoading: isListLoading, error: listError } = useListCompanyProfiles();
-  const firstCompanyId = propId || companies[0]?.id;
+  
+  const activeCompanyId = propId || paramId || companies[0]?.id;
 
-  const { data, isLoading: isGetLoading, error: getError } = useGetCompanyProfile(firstCompanyId);
-  const { updateCompanyProfile, isPending: isSaving } = useUpdateCompanyProfile(firstCompanyId || '');
+  const { data, isLoading: isGetLoading, error: getError } = useGetCompanyProfile(activeCompanyId);
+  const { updateCompanyProfile, isPending: isSaving } = useUpdateCompanyProfile(activeCompanyId || '');
 
   const isLoading = isListLoading || isGetLoading;
   const error = listError || getError;
 
   const handleSubmit = async (values: ICreateCompanyProfile) => {
-    if (firstCompanyId) {
+    if (activeCompanyId) {
       await updateCompanyProfile(values);
+      navigate('/admin/company-profile');
     }
   };
 
   if (isLoading) {
     return (
-     <Loader />
+      <Loader />
     );
   }
 
-  if (error || (!firstCompanyId && !isListLoading)) {
+  if (error || (!activeCompanyId && !isListLoading)) {
     return (
       <div className="rounded-sm border border-error-500 bg-error-50 p-6 text-error-600 shadow-sm">
         <p className="text-sm">Unable to load company profile. Make sure it is initialized in the database.</p>

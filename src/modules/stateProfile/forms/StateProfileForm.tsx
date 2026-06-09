@@ -35,7 +35,7 @@ export const StateProfileForm = ({
 
   const isDisabled = isSubmitting || readOnly;
   const onCancel = () => {
-    navigate('/master/system-setups/state-profile');
+    navigate('/admin/state-profile');
   };
   return (
     <Form

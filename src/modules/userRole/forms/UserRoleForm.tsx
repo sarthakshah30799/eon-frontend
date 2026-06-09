@@ -32,7 +32,7 @@ export const UserRoleForm = ({
   const handleSubmit = (values: ICreateUserRole) =>
     onSubmit(canManageAdminControls ? values : { ...values, isAdmin: false });
   const onCancel = () => {
-    navigate('/master/system-setups/user-role');
+    navigate('/admin/user-role');
   };
   return (
     <Form

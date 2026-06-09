@@ -24,7 +24,7 @@ export const CountryProfileTable = ({
 }: CountryProfileTableProps) => {
   const navigate = useNavigate();
   const { canModify, canView } = usePermission(
-    '/master/system-setups/country-profile'
+    '/admin/country-profile'
   );
 
   const rows: CountryProfileTableRow[] = countries.map(country => ({
@@ -64,7 +64,7 @@ export const CountryProfileTable = ({
               className="rounded-sm bg-transparent text-black! hover:bg-surface-secondary hover:text-text-primary"
               onClick={event => {
                 event.stopPropagation();
-                navigate(`/master/system-setups/country-profile/edit/${countryId}`);
+                navigate(`/admin/country-profile/edit/${countryId}`);
               }}
             >
               {canModify ? (
@@ -91,7 +91,7 @@ export const CountryProfileTable = ({
       onRowClick={
         canModify || canView
           ? row =>
-              navigate(`/master/system-setups/country-profile/edit/${row.id}`)
+              navigate(`/admin/country-profile/edit/${row.id}`)
           : undefined
       }
       emptyMessage="No countries found. Create your first country."

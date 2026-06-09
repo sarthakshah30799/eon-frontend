@@ -88,7 +88,7 @@ export const ProductProfileTable = ({
               className="rounded-sm bg-transparent text-black! hover:bg-surface-secondary hover:text-text-primary"
               onClick={event => {
                 event.stopPropagation();
-                navigate(`/master/system-setups/product-profile/edit/${productId}`);
+                navigate(`/admin/product-profile/edit/${productId}`);
               }}
             >
               <PencilSquareIcon className="h-5 w-5" />
@@ -109,7 +109,7 @@ export const ProductProfileTable = ({
       enableRowSelection={false}
       enableColumnVisibility={false}
       onRowClick={row => {
-        navigate(`/master/system-setups/product-profile/edit/${row.id}`);
+        navigate(`/admin/product-profile/edit/${row.id}`);
       }}
       emptyMessage="No products found. Create your first product."
     />

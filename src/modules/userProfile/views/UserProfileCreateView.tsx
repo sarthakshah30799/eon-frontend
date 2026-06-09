@@ -11,7 +11,7 @@ export const UserProfileCreateView = () => {
 
   const handleSubmit = async (values: ICreateUserProfile) => {
     await submitUserProfile(values);
-    navigate('/master/system-setups/user-profile');
+    navigate('/admin/user-profile');
   };
 
   return (

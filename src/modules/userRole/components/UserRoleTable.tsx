@@ -76,7 +76,7 @@ export const UserRoleTable = ({
               className='border-0! bg-transparent! text-black!'
               onClick={event => {
                 event.stopPropagation();
-                navigate(`/master/system-setups/user-role/edit/${roleId}`);
+                navigate(`/admin/user-role/edit/${roleId}`);
               }}
             >
               <PencilSquareIcon className="h-5 w-5" />
@@ -97,7 +97,7 @@ export const UserRoleTable = ({
       enableRowSelection={false}
       enableColumnVisibility={false}
       onRowClick={row => {
-        navigate(`/master/system-setups/user-role/edit/${row.id}`);
+        navigate(`/admin/user-role/edit/${row.id}`);
       }}
       emptyMessage="No roles found. Create your first role."
     />

@@ -20,7 +20,7 @@ export const CountryProfileCreateView = () => {
       ...payload
     } = values as any;
     await submitCountryProfile(payload);
-    navigate('/master/system-setups/country-profile');
+    navigate('/admin/country-profile');
   };
 
   return (

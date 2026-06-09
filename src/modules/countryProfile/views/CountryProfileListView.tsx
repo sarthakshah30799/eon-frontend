@@ -9,7 +9,7 @@ import { useListCountryProfiles } from '../hooks';
 
 export const CountryProfileListView = () => {
   const navigate = useNavigate();
-  const { canAdd } = usePermission('/master/system-setups/country-profile');
+  const { canAdd } = usePermission('/admin/country-profile');
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
   const [search, setSearch] = useState('');
@@ -49,7 +49,7 @@ export const CountryProfileListView = () => {
             type="button"
             className="rounded-sm"
             onClick={() =>
-              navigate('/master/system-setups/country-profile/create')
+              navigate('/admin/country-profile/create')
             }
           >
             {COUNTRY_PROFILE_TEXTS.CREATE_COUNTRY}

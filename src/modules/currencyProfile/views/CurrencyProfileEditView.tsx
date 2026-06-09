@@ -29,7 +29,7 @@ export const CurrencyProfileEditView = () => {
 
   const handleSubmit = async (values: ICreateCurrencyProfile) => {
     await submitCurrencyProfile(values);
-    navigate('/master/system-setups/currency-profile');
+    navigate('/admin/currency-profile');
   };
 
   return (

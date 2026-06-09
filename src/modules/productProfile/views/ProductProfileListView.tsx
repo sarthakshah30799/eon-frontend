@@ -8,7 +8,7 @@ import { useListProductProfiles, useUpdateProductProfileStatus } from '../hooks'
 
 export const ProductProfileListView = () => {
   const navigate = useNavigate();
-  const { canAdd } = usePermission('/master/system-setups/product-profile');
+  const { canAdd } = usePermission('/admin/product-profile');
   const { data: products = [], isLoading, error } = useListProductProfiles();
   const {
     updateProductProfileStatus,
@@ -39,7 +39,7 @@ export const ProductProfileListView = () => {
             type="button"
             className="rounded-sm"
             onClick={() =>
-              navigate('/master/system-setups/product-profile/create')
+              navigate('/admin/product-profile/create')
             }
           >
             {PRODUCT_PROFILE_TEXTS.CREATE_PRODUCT}

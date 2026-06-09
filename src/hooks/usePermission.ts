@@ -70,13 +70,13 @@ export const usePermission = (path?: string): UsePermissionResult => {
 
     let checkPath = path;
     const prefixes = [
-      '/master/system-setups/company-profile',
-      '/master/system-setups/branch-profile',
-      '/master/system-setups/counter-profile',
-      '/master/system-setups/country-profile',
-      '/master/system-setups/state-profile',
-      '/master/system-setups/user-profile',
-      '/master/system-setups/user-role',
+      '/admin/company-profile',
+      '/admin/branch-profile',
+      '/admin/counter-profile',
+      '/admin/country-profile',
+      '/admin/state-profile',
+      '/admin/user-profile',
+      '/admin/user-role',
     ];
 
     for (const prefix of prefixes) {

@@ -16,7 +16,7 @@ export const MasterPageResolverView = () => {
           This route has not been created yet in Master Pages.
         </p>
         <div className="mt-4">
-          <Button type="button" onClick={() => navigate('/master/system-setups/master-pages')}>
+          <Button type="button" onClick={() => navigate('/admin/master-pages')}>
             Go to Page Builder
           </Button>
         </div>

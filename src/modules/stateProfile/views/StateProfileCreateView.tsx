@@ -11,7 +11,7 @@ export const StateProfileCreateView = () => {
 
   const handleSubmit = async (values: ICreateStateProfile) => {
     await submitStateProfile(values);
-    navigate('/master/system-setups/state-profile');
+    navigate('/admin/state-profile');
   };
 
   return (

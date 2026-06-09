@@ -12,7 +12,7 @@ export const CountryProfileEditView = () => {
   const { id = '' } = useParams<{ id: string }>();
   const { data: country, isLoading } = useGetCountryProfile(id);
   const { submitCountryProfile, isPending } = useUpdateCountryProfile(id);
-  const { canModify } = usePermission('/master/system-setups/country-profile');
+  const { canModify } = usePermission('/admin/country-profile');
 
   if (isLoading) {
     return <Loader />;
@@ -37,7 +37,7 @@ export const CountryProfileEditView = () => {
       ...payload
     } = values as any;
     await submitCountryProfile(payload);
-    navigate('/master/system-setups/country-profile');
+    navigate('/admin/country-profile');
   };
 
   return (

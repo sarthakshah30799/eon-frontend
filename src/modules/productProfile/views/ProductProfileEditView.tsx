@@ -27,7 +27,7 @@ export const ProductProfileEditView = () => {
 
   const handleSubmit = async (values: ICreateProductProfile) => {
     await submitProductProfile(values);
-    navigate('/master/system-setups/product-profile');
+    navigate('/admin/product-profile');
   };
 
   return (

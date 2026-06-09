@@ -415,7 +415,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/master/system-setups/country-profile',
+    path: '/admin/country-profile',
     element: (
       <ProtectedLayout>
         <CountryProfileListPage />
@@ -423,7 +423,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/master/system-setups/country-profile/create',
+    path: '/admin/country-profile/create',
     element: (
       <ProtectedLayout>
         <CountryProfileCreatePage />
@@ -431,7 +431,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/master/system-setups/country-profile/edit/:id',
+    path: '/admin/country-profile/edit/:id',
     element: (
       <ProtectedLayout>
         <CountryProfileEditPage />
@@ -439,7 +439,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/master/system-setups/state-profile',
+    path: '/admin/state-profile',
     element: (
       <ProtectedLayout>
         <StateProfileListPage />
@@ -447,7 +447,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/master/system-setups/state-profile/create',
+    path: '/admin/state-profile/create',
     element: (
       <ProtectedLayout>
         <StateProfileCreatePage />
@@ -455,7 +455,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/master/system-setups/state-profile/edit/:id',
+    path: '/admin/state-profile/edit/:id',
     element: (
       <ProtectedLayout>
         <StateProfileEditPage />
@@ -463,7 +463,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/master/system-setups/product-profile',
+    path: '/admin/product-profile',
     element: (
       <ProtectedLayout>
         <ProductProfileListPage />
@@ -471,7 +471,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/master/system-setups/product-profile/create',
+    path: '/admin/product-profile/create',
     element: (
       <ProtectedLayout>
         <ProductProfileCreatePage />
@@ -479,7 +479,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/master/system-setups/product-profile/edit/:id',
+    path: '/admin/product-profile/edit/:id',
     element: (
       <ProtectedLayout>
         <ProductProfileEditPage />
@@ -487,7 +487,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/master/system-setups/currency-profile',
+    path: '/admin/currency-profile',
     element: (
       <ProtectedLayout>
         <CurrencyProfileListPage />
@@ -495,7 +495,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/master/system-setups/currency-profile/create',
+    path: '/admin/currency-profile/create',
     element: (
       <ProtectedLayout>
         <CurrencyProfileCreatePage />
@@ -503,7 +503,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/master/system-setups/currency-profile/edit/:id',
+    path: '/admin/currency-profile/edit/:id',
     element: (
       <ProtectedLayout>
         <CurrencyProfileEditPage />
@@ -511,7 +511,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/master/system-setups/master-pages',
+    path: '/admin/master-pages',
     element: (
       <ProtectedLayout>
         <MasterPagesPage />
@@ -519,7 +519,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/master/system-setups/user-profile',
+    path: '/admin/user-profile',
     element: (
       <ProtectedLayout>
         <UserProfileListPage />
@@ -527,7 +527,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/master/system-setups/user-profile/create',
+    path: '/admin/user-profile/create',
     element: (
       <ProtectedLayout>
         <UserProfileCreatePage />
@@ -535,7 +535,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/master/system-setups/user-profile/edit/:id',
+    path: '/admin/user-profile/edit/:id',
     element: (
       <ProtectedLayout>
         <UserProfileEditPage />
@@ -543,7 +543,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/master/system-setups/user-role',
+    path: '/admin/user-role',
     element: (
       <ProtectedLayout>
         <UserRoleListPage />
@@ -551,7 +551,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/master/system-setups/user-role/create',
+    path: '/admin/user-role/create',
     element: (
       <ProtectedLayout>
         <UserRoleCreatePage />
@@ -559,7 +559,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/master/system-setups/user-role/edit/:id',
+    path: '/admin/user-role/edit/:id',
     element: (
       <ProtectedLayout>
         <UserRoleEditPage />

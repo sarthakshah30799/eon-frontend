@@ -12,7 +12,7 @@ export const StateProfileEditView = () => {
   const { id = '' } = useParams<{ id: string }>();
   const { data: state, isLoading } = useGetStateProfile(id);
   const { submitStateProfile, isPending } = useUpdateStateProfile(id);
-  const { canModify } = usePermission('/master/system-setups/state-profile');
+  const { canModify } = usePermission('/admin/state-profile');
 
   if (isLoading) {
     return <Loader />;
@@ -28,7 +28,7 @@ export const StateProfileEditView = () => {
 
   const handleSubmit = async (values: ICreateStateProfile) => {
     await submitStateProfile(values);
-    navigate('/master/system-setups/state-profile');
+    navigate('/admin/state-profile');
   };
 
   return (

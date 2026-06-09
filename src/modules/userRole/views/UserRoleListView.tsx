@@ -46,7 +46,7 @@ export const UserRoleListView = () => {
       <div className="flex justify-end">
         <Button
           type="button"
-          onClick={() => navigate('/master/system-setups/user-role/create')}
+          onClick={() => navigate('/admin/user-role/create')}
         >
           {USER_ROLE_TEXTS.CREATE_ROLE}
         </Button>

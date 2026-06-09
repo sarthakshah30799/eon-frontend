@@ -21,7 +21,7 @@ interface StateProfileTableRow {
 export const StateProfileTable = ({ states }: StateProfileTableProps) => {
   const navigate = useNavigate();
   const { canModify, canView } = usePermission(
-    '/master/system-setups/state-profile'
+    '/admin/state-profile'
   );
 
   const rows: StateProfileTableRow[] = states.map(state => ({
@@ -63,7 +63,7 @@ export const StateProfileTable = ({ states }: StateProfileTableProps) => {
               className="rounded-sm bg-transparent text-black! hover:bg-surface-secondary hover:text-text-primary"
               onClick={event => {
                 event.stopPropagation();
-                navigate(`/master/system-setups/state-profile/edit/${stateId}`);
+                navigate(`/admin/state-profile/edit/${stateId}`);
               }}
             >
               {canModify ? (
@@ -89,7 +89,7 @@ export const StateProfileTable = ({ states }: StateProfileTableProps) => {
       enableColumnVisibility={false}
       onRowClick={
         canModify || canView
-          ? row => navigate(`/master/system-setups/state-profile/edit/${row.id}`)
+          ? row => navigate(`/admin/state-profile/edit/${row.id}`)
           : undefined
       }
       emptyMessage="No states found. Create your first state."

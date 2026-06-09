@@ -333,7 +333,7 @@ export const ProductProfileForm = ({
   const navigate = useNavigate();
 
   const onCancel = () => {
-    navigate('/master/system-setups/product-profile');
+    navigate('/admin/product-profile');
   };
   return (
     <Form

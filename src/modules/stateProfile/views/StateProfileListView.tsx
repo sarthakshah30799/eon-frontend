@@ -8,7 +8,7 @@ import { useListStateProfiles } from '../hooks';
 
 export const StateProfileListView = () => {
   const navigate = useNavigate();
-  const { canAdd } = usePermission('/master/system-setups/state-profile');
+  const { canAdd } = usePermission('/admin/state-profile');
   const { data: stateResponse, isLoading, error } = useListStateProfiles();
   const states = stateResponse?.data ?? [];
 
@@ -32,7 +32,7 @@ export const StateProfileListView = () => {
             type="button"
             className="rounded-sm"
             onClick={() =>
-              navigate('/master/system-setups/state-profile/create')
+              navigate('/admin/state-profile/create')
             }
           >
             {STATE_PROFILE_TEXTS.CREATE_STATE}

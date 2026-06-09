@@ -41,79 +41,79 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
   { path: '/admin/menu-management', meta: { title: 'Menu Management' } },
   { path: '/admin/additional-settings', meta: { title: 'Additional Settings' } },
   {
-    path: '/master/system-setups/country-profile',
+    path: '/admin/country-profile',
     meta: { title: 'Country Profile' },
   },
   {
-    path: '/master/system-setups/country-profile/create',
+    path: '/admin/country-profile/create',
     meta: { title: 'Create Country Profile' },
   },
   {
-    path: '/master/system-setups/country-profile/edit/:id',
+    path: '/admin/country-profile/edit/:id',
     meta: { title: 'Edit Country Profile' },
   },
   {
-    path: '/master/system-setups/state-profile',
+    path: '/admin/state-profile',
     meta: { title: 'State Profile' },
   },
   {
-    path: '/master/system-setups/state-profile/create',
+    path: '/admin/state-profile/create',
     meta: { title: 'Create State Profile' },
   },
   {
-    path: '/master/system-setups/state-profile/edit/:id',
+    path: '/admin/state-profile/edit/:id',
     meta: { title: 'Edit State Profile' },
   },
   {
-    path: '/master/system-setups/product-profile',
+    path: '/admin/product-profile',
     meta: { title: 'Product Profile' },
   },
   {
-    path: '/master/system-setups/product-profile/create',
+    path: '/admin/product-profile/create',
     meta: { title: 'Create Product Profile' },
   },
   {
-    path: '/master/system-setups/product-profile/edit/:id',
+    path: '/admin/product-profile/edit/:id',
     meta: { title: 'Edit Product Profile' },
   },
   {
-    path: '/master/system-setups/currency-profile',
+    path: '/admin/currency-profile',
     meta: { title: 'Currency Profile' },
   },
   {
-    path: '/master/system-setups/currency-profile/create',
+    path: '/admin/currency-profile/create',
     meta: { title: 'Create Currency Profile' },
   },
   {
-    path: '/master/system-setups/currency-profile/edit/:id',
+    path: '/admin/currency-profile/edit/:id',
     meta: { title: 'Edit Currency Profile' },
   },
   {
-    path: '/master/system-setups/master-pages',
+    path: '/admin/master-pages',
     meta: { title: 'Page Builder' },
   },
   {
-    path: '/master/system-setups/user-profile',
+    path: '/admin/user-profile',
     meta: { title: 'User Profile' },
   },
   {
-    path: '/master/system-setups/user-profile/create',
+    path: '/admin/user-profile/create',
     meta: { title: 'Create User Profile' },
   },
   {
-    path: '/master/system-setups/user-profile/edit/:id',
+    path: '/admin/user-profile/edit/:id',
     meta: { title: 'Edit User Profile' },
   },
   {
-    path: '/master/system-setups/user-role',
+    path: '/admin/user-role',
     meta: { title: 'User Role' },
   },
   {
-    path: '/master/system-setups/user-role/create',
+    path: '/admin/user-role/create',
     meta: { title: 'Create User Role' },
   },
   {
-    path: '/master/system-setups/user-role/edit/:id',
+    path: '/admin/user-role/edit/:id',
     meta: { title: 'Edit User Role' },
   },
   {

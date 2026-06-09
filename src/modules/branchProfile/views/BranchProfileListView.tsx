@@ -19,13 +19,13 @@ export const BranchProfileListView = () => {
     return <Loader />;
   }
 
-  if (error) {
-    return (
-      <div className="py-6 text-center text-error-600">
-        {BRANCH_PROFILE_TEXTS.LIST_ERROR}
-      </div>
-    );
-  }
+  // if (error) {
+  //   return (
+  //     <div className="py-6 text-center text-error-600">
+  //       {BRANCH_PROFILE_TEXTS.LIST_ERROR}
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="space-y-6">

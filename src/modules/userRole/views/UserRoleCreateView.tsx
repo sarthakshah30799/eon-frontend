@@ -20,7 +20,7 @@ export const UserRoleCreateView = () => {
       createdRole.id,
       buildUserRightsPermissionGrid(rightsMatrix.rowStateById)
     );
-    navigate('/master/system-setups/user-role');
+    navigate('/admin/user-role');
   };
 
   return (

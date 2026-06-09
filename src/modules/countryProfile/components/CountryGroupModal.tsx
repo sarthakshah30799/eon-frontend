@@ -8,14 +8,16 @@ interface CountryGroupModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: (newGroupId: string) => void;
+  initialName?: string;
 }
 
 export const CountryGroupModal = ({
   open,
   onOpenChange,
   onSuccess,
+  initialName = '',
 }: CountryGroupModalProps) => {
-  const [name, setName] = useState('');
+  const [name, setName] = useState(initialName);
   const [code, setCode] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);

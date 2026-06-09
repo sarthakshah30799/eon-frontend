@@ -217,14 +217,16 @@ export const CountryDropdown = ({
       <AsyncSelect
         label={label}
         placeholder={placeholder}
-      disabled={disabled}
-      className={className}
-      size={size}
-      isCreatable
+        disabled={disabled}
+        className={className}
+        size={size}
+        isCreatable
         loadOptions={loadOptions}
         defaultOptions={mergedDefaultOptions}
         isClearable
-        isLoading={isLoadingOptions || isFetchingOptions || isResolvingSelectedOption}
+        isLoading={
+          isLoadingOptions || isFetchingOptions || isResolvingSelectedOption
+        }
         value={selectedOption as AsyncSelectOption | null}
         onChange={option => {
           const nextOption = (option as CountryDropdownOption | null) ?? null;
@@ -256,6 +258,7 @@ export const CountryDropdown = ({
           onSubmit={handleCreateCountry}
           submitLabel="Create Country"
           isSubmitting={isCreatingCountry}
+          insideModal
         />
       </Modal>
     </>

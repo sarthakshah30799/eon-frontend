@@ -21,7 +21,9 @@ const loadRiskCategoryOptions = async (): Promise<AsyncSelectResponse> => {
   return { options: riskCategoryOptions };
 };
 
-const loadCountryGroupOptions = async (inputValue: string): Promise<AsyncSelectResponse> => {
+const loadCountryGroupOptions = async (
+  inputValue: string
+): Promise<AsyncSelectResponse> => {
   try {
     const groups = await countryGroupApi.getCountryGroups();
     const options = groups
@@ -40,67 +42,44 @@ const loadCountryGroupOptions = async (inputValue: string): Promise<AsyncSelectR
 const CountryGroupField = ({ isDisabled }: { isDisabled: boolean }) => {
   const { setValue } = useFormContext();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [pendingGroupName, setPendingGroupName] = useState('');
 
   const handleSuccess = (newGroupId: string) => {
-    setValue('countryGroupId', newGroupId, { shouldValidate: true, shouldDirty: true });
-  };
-
-  const handleCreateCountryGroup = async (inputValue: string) => {
-    try {
-      const newGroup = await countryGroupApi.createCountryGroup({ name: inputValue });
-      return {
-        value: newGroup.id,
-        label: newGroup.name,
-      };
-    } catch (error) {
-      console.error('Failed to create country group:', error);
-      throw error;
-    }
+    setValue('countryGroupId', newGroupId, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
   };
 
   return (
-    <div className="flex items-end gap-2 w-full">
-      <div className="flex-grow">
-        <FormFieldSelect
-          name="countryGroupId"
-          label="Country Group"
-          loadOptions={loadCountryGroupOptions}
-          placeholder="Select country group"
-          disabled={isDisabled}
-          isClearable
-          isSearchable={true}
-          isCreatable={true}
-          onCreateOption={handleCreateCountryGroup}
-        />
-      </div>
-      <Button
-        type="button"
-        variant="outline"
-        className="h-10 px-3 flex items-center justify-center shrink-0 border border-border-primary rounded-xl text-primary-600 hover:bg-surface-secondary mb-[1px]"
-        onClick={() => setIsModalOpen(true)}
+    <div className="w-full">
+      <FormFieldSelect
+        name="countryGroupId"
+        label="Country Group"
+        loadOptions={loadCountryGroupOptions}
+        placeholder="Select country group"
         disabled={isDisabled}
-      >
-        <svg
-          className="h-4 w-4 mr-1"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M12 4v16m8-8H4"
-          />
-        </svg>
-        New
-      </Button>
+        isClearable
+        isSearchable={true}
+        isCreatable={true}
+        onCreateOption={inputValue => {
+          setPendingGroupName(inputValue);
+          setIsModalOpen(true);
+        }}
+      />
 
       <CountryGroupModal
+        key={`${isModalOpen ? 'open' : 'closed'}-${pendingGroupName}`}
         open={isModalOpen}
-        onOpenChange={setIsModalOpen}
+        onOpenChange={open => {
+          setIsModalOpen(open);
+
+          if (!open) {
+            setPendingGroupName('');
+          }
+        }}
         onSuccess={handleSuccess}
+        initialName={pendingGroupName}
       />
     </div>
   );
@@ -112,6 +91,7 @@ interface CountryProfileFormProps {
   submitLabel?: string;
   isSubmitting?: boolean;
   readOnly?: boolean;
+  insideModal?: boolean;
 }
 
 export const CountryProfileForm = ({
@@ -120,6 +100,7 @@ export const CountryProfileForm = ({
   submitLabel = COUNTRY_PROFILE_TEXTS.CREATE_COUNTRY,
   isSubmitting = false,
   readOnly = false,
+  insideModal = false,
 }: CountryProfileFormProps) => {
   const navigate = useNavigate();
 
@@ -129,18 +110,18 @@ export const CountryProfileForm = ({
     console.log('CountryProfileForm submit errors:', errors);
   };
 
-
-
   const isDisabled = isSubmitting || readOnly;
   const onCancel = () => {
     navigate('/master/system-setups/user-profile');
   };
   return (
     <Form
-      id="country-profile-form"
+      id={insideModal? "" : "country-profile-form"}
       onSubmit={onSubmit}
       onError={handleSubmitErrors}
-      resolver={yupResolver(countryProfileSchema) as Resolver<ICreateCountryProfile>}
+      resolver={
+        yupResolver(countryProfileSchema) as Resolver<ICreateCountryProfile>
+      }
       defaultValues={defaultValues}
       className="space-y-6"
       footer={{
@@ -208,6 +189,14 @@ export const CountryProfileForm = ({
           disabled={isDisabled}
         />
       </div>
+
+      {!readOnly && insideModal && (
+        <div className="flex justify-end border-t border-border-primary pt-4">
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Saving...' : submitLabel}
+          </Button>
+        </div>
+      )}
     </Form>
   );
 };

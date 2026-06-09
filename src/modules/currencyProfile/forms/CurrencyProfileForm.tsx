@@ -69,6 +69,7 @@ export const CurrencyProfileForm = ({
   };
   return (
     <Form
+      id="currency-profile-form"
       onSubmit={onSubmit}
       resolver={yupResolver(currencyProfileSchema)}
       defaultValues={defaultValues}

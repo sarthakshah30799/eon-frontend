@@ -1,8 +1,14 @@
 import { useState } from 'react';
+import { FormProvider, useForm } from 'react-hook-form';
 import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button1';
-import { Input } from '@/components/ui/input';
+import { FormFieldInput } from '@/components/forms';
 import { countryGroupApi } from '@/api';
+
+interface CountryGroupModalFormValues {
+  name: string;
+  code: string;
+}
 
 interface CountryGroupModalProps {
   open: boolean;
@@ -17,43 +23,55 @@ export const CountryGroupModal = ({
   onSuccess,
   initialName = '',
 }: CountryGroupModalProps) => {
-  const [name, setName] = useState(initialName);
-  const [code, setCode] = useState('');
+  const form = useForm<CountryGroupModalFormValues>({
+    defaultValues: {
+      name: initialName,
+      code: '',
+    },
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [nameError, setNameError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim()) {
-      setNameError('Name is required');
+  const handleSubmit = form.handleSubmit(async values => {
+    const nextName = values.name.trim();
+    const nextCode = values.code.trim();
+
+    if (!nextName) {
+      form.setError('name', {
+        type: 'manual',
+        message: 'Name is required',
+      });
       return;
     }
-    setNameError(null);
+
     setError(null);
     setIsSubmitting(true);
 
     try {
       const newGroup = await countryGroupApi.createCountryGroup({
-        name: name.trim(),
-        code: code.trim() || undefined,
+        name: nextName,
+        code: nextCode || undefined,
       });
       onSuccess(newGroup.id);
-      // Reset form fields
-      setName('');
-      setCode('');
+      form.reset({
+        name: '',
+        code: '',
+      });
       onOpenChange(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create country group');
+      setError(
+        err instanceof Error ? err.message : 'Failed to create country group'
+      );
     } finally {
       setIsSubmitting(false);
     }
-  };
+  });
 
   const handleClose = () => {
-    setName('');
-    setCode('');
-    setNameError(null);
+    form.reset({
+      name: '',
+      code: '',
+    });
     setError(null);
     onOpenChange(false);
   };
@@ -66,49 +84,45 @@ export const CountryGroupModal = ({
       description="Add a new country group to assign to country profiles."
       size="md"
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {error && (
-          <div className="rounded-sm border border-error-500 bg-error-55 p-3 text-sm text-error-700">
-            {error}
-          </div>
-        )}
+      <FormProvider {...form}>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {error && (
+            <div className="rounded-sm border border-error-500 bg-error-55 p-3 text-sm text-error-700">
+              {error}
+            </div>
+          )}
 
-        <Input
-          label="Country Group Name *"
-          placeholder="e.g. Europe"
-          value={name}
-          onChange={(e) => {
-            setName(e.target.value);
-            if (e.target.value.trim()) {
-              setNameError(null);
-            }
-          }}
-          error={nameError || undefined}
-          disabled={isSubmitting}
-        />
-
-        <Input
-          label="Country Group Code"
-          placeholder="e.g. EU"
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-          disabled={isSubmitting}
-        />
-
-        <div className="flex justify-end gap-3 border-t border-border-primary pt-4 mt-6">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleClose}
+          <FormFieldInput
+            name="name"
+            label="Country Group Name *"
+            placeholder="e.g. Europe"
             disabled={isSubmitting}
-          >
-            Cancel
-          </Button>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Creating...' : 'Create'}
-          </Button>
-        </div>
-      </form>
+            valueTransform="none"
+          />
+
+          <FormFieldInput
+            name="code"
+            label="Country Group Code"
+            placeholder="e.g. EU"
+            disabled={isSubmitting}
+            valueTransform="none"
+          />
+
+          <div className="flex justify-end gap-3 border-t border-border-primary pt-4 mt-6">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleClose}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Creating...' : 'Create'}
+            </Button>
+          </div>
+        </form>
+      </FormProvider>
     </Modal>
   );
 };

@@ -112,7 +112,7 @@ export const CountryProfileForm = ({
 
   const isDisabled = isSubmitting || readOnly;
   const onCancel = () => {
-    navigate('/admin/user-profile');
+    navigate('/admin/country-profile');
   };
   return (
     <Form

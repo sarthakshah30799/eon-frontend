@@ -4,7 +4,7 @@ import { usePermission } from '@/hooks';
 import { COUNTRY_PROFILE_TEXTS } from '../constants';
 import { useGetCountryProfile, useUpdateCountryProfile } from '../hooks';
 import { createEmptyCountryProfileFormValues } from '../utils';
-import type { ICreateCountryProfile } from '../types';
+import type { ICountryProfile, ICreateCountryProfile } from '../types';
 import { CountryProfileEditorView } from './CountryProfileEditorView';
 
 export const CountryProfileEditView = () => {
@@ -27,13 +27,15 @@ export const CountryProfileEditView = () => {
   }
 
   const handleSubmit = async (values: ICreateCountryProfile) => {
-    const {
+     const {
       id,
+      countryCode,
+      countryName,
       createdAt,
       updatedAt,
       createdBy,
       updatedBy,
-      countryGroup,
+      country,
       ...payload
     } = values as any;
     await submitCountryProfile(payload);

@@ -11,12 +11,14 @@ export const CountryProfileCreateView = () => {
 
   const handleSubmit = async (values: ICreateCountryProfile) => {
     const {
-      id,
+       id,
+      countryCode,
+      countryName,
       createdAt,
       updatedAt,
       createdBy,
       updatedBy,
-      countryGroup,
+      country,
       ...payload
     } = values as any;
     await submitCountryProfile(payload);

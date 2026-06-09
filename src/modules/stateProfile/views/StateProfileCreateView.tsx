@@ -10,7 +10,18 @@ export const StateProfileCreateView = () => {
   const { submitStateProfile, isPending } = useCreateStateProfile();
 
   const handleSubmit = async (values: ICreateStateProfile) => {
-    await submitStateProfile(values);
+    const {
+      id,
+      countryCode,
+      countryName,
+      createdAt,
+      updatedAt,
+      createdBy,
+      updatedBy,
+      country,
+      ...payload
+    } = values as any;
+    await submitStateProfile(payload);
     navigate('/master/system-setups/state-profile');
   };
 

@@ -24,7 +24,12 @@ export const FinancialCodeListView = () => {
     [page, pageSize, debouncedSearch]
   );
 
-  const { data: listResponse, isLoading, isFetching, error } = useListFinancialCodes(query);
+  const {
+    data: listResponse,
+    isLoading,
+    isFetching,
+    error,
+  } = useListFinancialCodes(query);
   const financialCodes = listResponse?.data ?? [];
   const totalItems = listResponse?.totalItems ?? 0;
 
@@ -38,32 +43,16 @@ export const FinancialCodeListView = () => {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-6 shadow-sm">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">
-              Admin Menu
-            </p>
-            <h1 className="mt-2 text-2xl font-semibold text-text-primary">
-              {FINANCIAL_CODE_TEXTS.LIST_TITLE}
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-text-secondary">
-              {FINANCIAL_CODE_TEXTS.LIST_SUBTITLE}
-            </p>
-          </div>
-
-          {canAdd && (
-            <Button
-              type="button"
-              className="rounded-sm"
-              onClick={() => navigate('/admin/financial-profile/create')}
-            >
-              {FINANCIAL_CODE_TEXTS.CREATE_CODE}
-            </Button>
-          )}
+      {canAdd && (
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            onClick={() => navigate('/admin/financial-profile/create')}
+          >
+            {FINANCIAL_CODE_TEXTS.CREATE_CODE}
+          </Button>
         </div>
-      </section>
-
+      )}
       <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
         <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <Input
@@ -76,10 +65,15 @@ export const FinancialCodeListView = () => {
             }}
             className="sm:max-w-md"
           />
-          <div className="text-sm text-text-secondary">{totalItems} total records</div>
+          <div className="text-sm text-text-secondary">
+            {totalItems} total records
+          </div>
         </div>
 
-        <FinancialCodeTable financialCodes={financialCodes} loading={isLoading || isFetching} />
+        <FinancialCodeTable
+          financialCodes={financialCodes}
+          loading={isLoading || isFetching}
+        />
       </section>
     </div>
   );

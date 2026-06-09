@@ -1,5 +1,4 @@
 import { useNavigate, useParams } from 'react-router-dom';
-import { BackButton } from '@/components/ui';
 import { Loader } from '@/components/ui/loader';
 import { COUNTER_PROFILE_TEXTS } from '../constants';
 import { useGetCounterProfile, useUpdateCounterProfile } from '../hooks';
@@ -32,10 +31,6 @@ export const CounterProfileEditView = () => {
 
   return (
     <div className="space-y-4">
-      <BackButton
-        onClick={() => navigate('/admin/counter-profile')}
-        label="Back"
-      />
       <CounterProfileEditorView
         heading={COUNTER_PROFILE_TEXTS.EDIT_COUNTER}
         description="Update the counter details."

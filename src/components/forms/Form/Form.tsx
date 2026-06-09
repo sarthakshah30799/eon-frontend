@@ -52,14 +52,16 @@ export const Form = <TFieldValues extends FieldValues = FieldValues>({
       <form id={id} onSubmit={handleFormSubmit} className={className}>
         {children}
       </form>
-      <FormFooter
-        formId={id}
-        submitLabel={footer?.submitLabel}
-        backLabel={footer?.backLabel}
-        onBackClick={footer?.onBackClick}
-        onCancel={footer?.onCancel}
-        isSubmitting={form.formState.isSubmitting}
-      />
+      {footer ? (
+        <FormFooter
+          formId={id}
+          submitLabel={footer.submitLabel}
+          backLabel={footer.backLabel}
+          onBackClick={footer.onBackClick}
+          onCancel={footer.onCancel}
+          isSubmitting={form.formState.isSubmitting}
+        />
+      ) : null}
     </RHFFormProvider>
   );
 };

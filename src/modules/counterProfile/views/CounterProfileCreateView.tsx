@@ -1,5 +1,4 @@
 import { useNavigate } from 'react-router-dom';
-import { BackButton } from '@/components/ui';
 import { COUNTER_PROFILE_TEXTS } from '../constants';
 import { createEmptyCounterProfileFormValues } from '../utils';
 import { useCreateCounterProfile } from '../hooks';
@@ -17,10 +16,6 @@ export const CounterProfileCreateView = () => {
 
   return (
     <div className="space-y-4">
-      <BackButton
-        onClick={() => navigate('/admin/counter-profile')}
-        label="Back"
-      />
       <CounterProfileEditorView
         heading={COUNTER_PROFILE_TEXTS.CREATE_COUNTER}
         description={COUNTER_PROFILE_TEXTS.FORM_SUBTITLE}

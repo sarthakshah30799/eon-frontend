@@ -3,11 +3,16 @@ import { useFormContext, useFieldArray } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { TrashIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button1';
-import { Form, FormFieldInput, FormFieldCategoryOption } from '@/components/forms';
+import {
+  Form,
+  FormFieldInput,
+  FormFieldCategoryOption,
+} from '@/components/forms';
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import { financialCodeSchema } from '../schema/financialCodeSchema';
 import { FINANCIAL_CODE_TEXTS } from '../constants/financialCodeConstants';
 import type { ICreateFinancialCode } from '../types/financialCodeTypes';
+import { useNavigate } from 'react-router-dom';
 
 interface FinancialCodeFormProps {
   defaultValues: ICreateFinancialCode;
@@ -35,7 +40,13 @@ const SubProfilesFieldArray = ({ isDisabled }: { isDisabled: boolean }) => {
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => append({ financialSubCode: '', financialSubName: '', priority: 0 })}
+            onClick={() =>
+              append({
+                financialSubCode: '',
+                financialSubName: '',
+                priority: 0,
+              })
+            }
             className="flex items-center gap-1.5"
           >
             <PlusIcon className="h-4 w-4" />
@@ -64,7 +75,9 @@ const SubProfilesFieldArray = ({ isDisabled }: { isDisabled: boolean }) => {
                 className="grid grid-cols-1 md:grid-cols-[1fr_2fr_120px_48px] gap-4 items-start p-3 md:p-2 rounded-sm border border-border-secondary md:border-none bg-surface-primary md:bg-transparent"
               >
                 <div>
-                  <span className="block md:hidden text-xs font-semibold text-text-secondary mb-1">Sub Code</span>
+                  <span className="block md:hidden text-xs font-semibold text-text-secondary mb-1">
+                    Sub Code
+                  </span>
                   <FormFieldInput
                     name={`subProfiles.${index}.financialSubCode`}
                     placeholder="e.g. HDFCA"
@@ -72,7 +85,9 @@ const SubProfilesFieldArray = ({ isDisabled }: { isDisabled: boolean }) => {
                   />
                 </div>
                 <div>
-                  <span className="block md:hidden text-xs font-semibold text-text-secondary mb-1">Sub Name</span>
+                  <span className="block md:hidden text-xs font-semibold text-text-secondary mb-1">
+                    Sub Name
+                  </span>
                   <FormFieldInput
                     name={`subProfiles.${index}.financialSubName`}
                     placeholder="e.g. HDFC CURRENT A/C"
@@ -80,7 +95,9 @@ const SubProfilesFieldArray = ({ isDisabled }: { isDisabled: boolean }) => {
                   />
                 </div>
                 <div>
-                  <span className="block md:hidden text-xs font-semibold text-text-secondary mb-1">Priority</span>
+                  <span className="block md:hidden text-xs font-semibold text-text-secondary mb-1">
+                    Priority
+                  </span>
                   <FormFieldInput
                     name={`subProfiles.${index}.priority`}
                     type="number"
@@ -118,19 +135,35 @@ export const FinancialCodeForm = ({
   isSubmitting = false,
   readOnly = false,
 }: FinancialCodeFormProps) => {
-  const handleSubmitErrors: SubmitErrorHandler<ICreateFinancialCode> = errors => {
+  const navigate = useNavigate();
+
+  const handleSubmitErrors: SubmitErrorHandler<
+    ICreateFinancialCode
+  > = errors => {
     console.log('FinancialCodeForm submit errors:', errors);
   };
 
   const isDisabled = isSubmitting || readOnly;
-
+  const onCancel = () => {
+    navigate('/admin/financial-profile');
+  };
   return (
     <Form
       onSubmit={onSubmit}
       onError={handleSubmitErrors}
-      resolver={yupResolver(financialCodeSchema) as Resolver<ICreateFinancialCode>}
+      resolver={
+        yupResolver(financialCodeSchema) as Resolver<ICreateFinancialCode>
+      }
       defaultValues={defaultValues}
       className="space-y-6"
+      footer={{
+        submitLabel,
+        backLabel: 'Back',
+        onBackClick: () => {
+          void onCancel?.();
+        },
+        onCancel,
+      }}
     >
       <div className="grid gap-4 md:grid-cols-2">
         <FormFieldCategoryOption
@@ -177,14 +210,6 @@ export const FinancialCodeForm = ({
       </div>
 
       <SubProfilesFieldArray isDisabled={isDisabled} />
-
-      {!readOnly && (
-        <div className="flex justify-end border-t border-border-primary pt-4">
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Saving...' : submitLabel}
-          </Button>
-        </div>
-      )}
     </Form>
   );
 };

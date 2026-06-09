@@ -1,9 +1,8 @@
 import { yupResolver } from '@hookform/resolvers/yup';
-import { Button } from '@/components/ui/button1';
 import { Form, FormFieldCheckbox, FormFieldInput } from '@/components/forms';
 import { counterProfileSchema } from '../schema';
 import type { ICreateCounterProfile } from '../types';
-
+import { useNavigate } from 'react-router-dom';
 
 interface CounterProfileFormProps {
   defaultValues: ICreateCounterProfile;
@@ -18,12 +17,25 @@ export const CounterProfileForm = ({
   submitLabel = 'Save Counter',
   isSubmitting = false,
 }: CounterProfileFormProps) => {
+  const navigate = useNavigate();
+
+  const onCancel = () => {
+    navigate('/admin/counter-profile');
+  };
   return (
     <Form
       onSubmit={onSubmit}
       resolver={yupResolver(counterProfileSchema)}
       defaultValues={defaultValues}
       className="space-y-6"
+      footer={{
+        submitLabel,
+        backLabel: 'Back',
+        onBackClick: () => {
+          void onCancel?.();
+        },
+        onCancel,
+      }}
     >
       <div className="grid gap-4 md:grid-cols-2">
         <FormFieldInput
@@ -59,12 +71,6 @@ export const CounterProfileForm = ({
           label="Is Combine Counter"
           disabled={isSubmitting}
         />
-      </div>
-
-      <div className="flex justify-end border-t border-border-primary pt-4">
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Saving...' : submitLabel}
-        </Button>
       </div>
     </Form>
   );

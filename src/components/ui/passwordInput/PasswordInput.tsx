@@ -33,7 +33,7 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
           size="icon"
           type="button"
           onClick={togglePasswordVisibility}
-          className="absolute top-8 right-0"
+          className="absolute top-5 right-0 bg-transparent! focus:ring-0! focus:ring-offset-0!"
           aria-label={
             showPassword ? AUTH_TEXTS.HIDE_PASSWORD : AUTH_TEXTS.SHOW_PASSWORD
           }

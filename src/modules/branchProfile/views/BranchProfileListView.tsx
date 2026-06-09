@@ -7,7 +7,7 @@ import { Loader } from '@/components/ui/loader';
 
 export const BranchProfileListView = () => {
   const navigate = useNavigate();
-  const { data: branches = [], isLoading, error } = useListBranchProfiles();
+  const { data: branches = [], isLoading } = useListBranchProfiles();
   const { deleteBranchProfile, isPending: isDeleting } =
     useDeleteBranchProfile();
 

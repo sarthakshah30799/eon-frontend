@@ -17,13 +17,13 @@ export const ProtectedLayout: React.FC<ProtectedLayoutProps> = ({
     return <Loader />;
   }
 
-  // if (!isAuthenticated) {
-  //   return <Navigate to="/login" replace />;
-  // }
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
 
-  // if (user && !user.isAdmin && (!activeBranchId || !activeCounterId)) {
-  //   return <Navigate to="/choose-workplace" replace />;
-  // }
+  if (user && !user.isAdmin && (!activeBranchId || !activeCounterId)) {
+    return <Navigate to="/choose-workplace" replace />;
+  }
 
   return <DashboardLayout>{children}</DashboardLayout>;
 };

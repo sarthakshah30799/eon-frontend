@@ -52,6 +52,35 @@ export const CATEGORY_OPTION_CODE_OPTIONS = [
     value: CategoryOptionCodeEnum.BankNature,
     label: 'Bank Nature',
   },
+  {
+    value: CategoryOptionCodeEnum.KycRiskCategory,
+    label: 'KYC Risk Category',
+  },
+  {
+    value: CategoryOptionCodeEnum.EntityType,
+    label: 'Entity Type',
+  },
+  {
+    value: CategoryOptionCodeEnum.DefaultAgent,
+    label: 'Default Agent',
+  },
+  {
+    value: CategoryOptionCodeEnum.Group,
+    label: 'Group',
+  },
+  {
+    value: CategoryOptionCodeEnum.MarketingExecutive,
+    label: 'Marketing Executive',
+  },
+  {
+    value: CategoryOptionCodeEnum.BusinessNature,
+    label: 'Business Nature',
+  },
+  {
+    value: CategoryOptionCodeEnum.TdsGroup,
+    label: 'TDS Group',
+  },
+
 ];
 
 export const CATEGORY_OPTION_CODE_LABELS = {
@@ -63,6 +92,14 @@ export const CATEGORY_OPTION_CODE_LABELS = {
   [CategoryOptionCodeEnum.AccountType]: 'Account Type',
   [CategoryOptionCodeEnum.SubLedger]: 'Sub Ledger',
   [CategoryOptionCodeEnum.BankNature]: 'Bank Nature',
+  [CategoryOptionCodeEnum.KycRiskCategory]: 'KYC Risk Category',
+  [CategoryOptionCodeEnum.EntityType]: 'Entity Type',
+  [CategoryOptionCodeEnum.DefaultAgent]: 'Default Agent',
+  [CategoryOptionCodeEnum.Group]: 'Group',
+  [CategoryOptionCodeEnum.MarketingExecutive]: 'Marketing Executive',
+  [CategoryOptionCodeEnum.BusinessNature]: 'Business Nature',
+  [CategoryOptionCodeEnum.TdsGroup]: 'TDS Group',
+
 } as const;
 
 export const loadCategoryOptionCodeOptions = async (): Promise<AsyncSelectResponse> => {

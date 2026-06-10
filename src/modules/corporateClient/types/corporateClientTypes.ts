@@ -1,0 +1,95 @@
+export interface ICorporateClient {
+  id: string;
+  dateOfIntro: string;
+  code: string;
+  name: string;
+  isIndividual: boolean;
+  creditLimit?: number;
+  creditDays?: number;
+  temporaryCreditLimit?: number;
+  temporaryCreditDays?: number;
+  permanentCreditLimit?: number;
+  permanentCreditDays?: number;
+  address1: string;
+  address2?: string;
+  address3?: string;
+  city: string;
+  pinCode: string;
+  kycApprovalNumber?: string;
+  kycRiskCategory?: string;
+  chqTrxnLimit?: number;
+  defaultHandlingCharges?: number;
+  defaultAgent?: string;
+  phoneNo?: string;
+  blockDateFrom?: string;
+  establishmentDate?: string;
+  remarks?: string;
+  email?: string;
+  contactName?: string;
+  designation?: string;
+  group?: string;
+  entityType?: string;
+  panName?: string;
+  panDob?: string;
+  panNo?: string;
+  marketingExecutive?: string;
+  businessNature?: string;
+  isTdsDeducted: boolean;
+  tds?: string;
+  tdsGroup?: string;
+  active: boolean;
+  isActive: boolean;
+  printAddress: boolean;
+  eefcClient: boolean;
+  sale: boolean;
+  purchase: boolean;
+  applyTax: boolean;
+  igstOnly: boolean;
+  gstNo?: string;
+  sgstNo?: string;
+  igstNo?: string;
+  gstStateId?: string;
+  gstStateName?: string;
+
+  originBranchId?: string;
+  originBranchName?: string;
+  location?: string;
+  webSite?: string;
+  accountHolderName?: string;
+  bankName?: string;
+  accountNumber?: string;
+  ifscCode?: string;
+  bankAddress?: string;
+  cancelledChequeCopy?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type ICreateCorporateClient = Omit<
+  ICorporateClient,
+  | 'id'
+  | 'gstStateName'
+  | 'originBranchName'
+  | 'createdAt'
+  | 'updatedAt'
+>;
+
+export type IUpdateCorporateClient = Partial<ICreateCorporateClient>;
+
+export interface ICorporateClientListQuery {
+  search?: string;
+  code?: string;
+  name?: string;
+  active?: boolean;
+  page?: number;
+  limit?: number;
+}
+
+export interface ICorporateClientListResponse {
+  data: ICorporateClient[];
+  page: number;
+  limit: number;
+  totalItems: number;
+  totalPages: number;
+}
+

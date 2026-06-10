@@ -99,7 +99,7 @@ const AsyncSelectComponent = React.forwardRef<
   ) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
-    const [allOptions, setAllOptions] = useState<AsyncSelectOption[]>([]);
+    const allOptionsRef = useRef<AsyncSelectOption[]>([]);
     const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
       null
     );
@@ -108,7 +108,7 @@ const AsyncSelectComponent = React.forwardRef<
     // Reset pagination when input changes significantly
     const resetPagination = useCallback(() => {
       setCurrentPage(1);
-      setAllOptions([]);
+      allOptionsRef.current = [];
       setIsLoadingMore(false);
     }, []);
 
@@ -138,11 +138,12 @@ const AsyncSelectComponent = React.forwardRef<
 
             if (pagination && currentPage > 1) {
               // Append to existing options for pagination
-              setAllOptions(prev => [...prev, ...options]);
-              callback([...allOptions, ...options]);
+              const merged = [...allOptionsRef.current, ...options];
+              allOptionsRef.current = merged;
+              callback(merged);
             } else {
               // Replace options for new search
-              setAllOptions(options);
+              allOptionsRef.current = options;
               callback(options);
             }
 
@@ -158,7 +159,6 @@ const AsyncSelectComponent = React.forwardRef<
         loadOptions,
         pagination,
         currentPage,
-        allOptions,
         resetPagination,
         debounceDelay,
       ]

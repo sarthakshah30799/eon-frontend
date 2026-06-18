@@ -1,5 +1,15 @@
 export const ADDITIONAL_SETTINGS_STORAGE_KEY = 'additional-settings';
 
+export const AdditionalSettingsCodeEnum = {
+  PasswordPolicy: 'PASSWORD_POLICY',
+  PasswordMinLength: 'PASSWORD_MIN_LENGTH',
+  PasswordMaxLength: 'PASSWORD_MAX_LENGTH',
+  PasswordMinSpecialCharCount: 'PASSWORD_MIN_SPECIAL_CHAR_COUNT',
+  PasswordMinNumericCharCount: 'PASSWORD_MIN_NUMERIC_CHAR_COUNT',
+  PasswordMinAlphaCharCount: 'PASSWORD_MIN_ALPHA_CHAR_COUNT',
+  PasswordMaxInvalidAttempts: 'PASSWORD_MAX_INVALID_ATTEMPTS',
+} as const;
+
 export const ADDITIONAL_SETTINGS_TEXTS = {
   ADMIN_LABEL: 'Admin',
   PAGE_TITLE: 'Additional Settings',

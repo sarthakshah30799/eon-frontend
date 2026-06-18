@@ -12,6 +12,7 @@ export const useCreateAdditionalSetting = () => {
       additionalSettingsApi.createAdditionalSetting(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['additional-settings'] });
+      queryClient.invalidateQueries({ queryKey: ['password-policy'] });
       toast.success(ADDITIONAL_SETTINGS_TEXTS.CREATE_SUCCESS);
     },
     onError: () => {

@@ -1,11 +1,12 @@
 import { useMutation } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
-import { authApi } from '../../../api/auth';
-import { loginSchema } from '../schema';
+import { ApiError, authApi } from '../../../api/auth';
+import { buildLoginSchema } from '../schema';
 import type { ILoginFormData } from '../schema';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useAuth } from '../../../lib/AuthContext';
+import { PasswordValidationCodeEnum } from '../types/authTypes';
 
 export const useLogin = () => {
   const { checkAuth, otpLogin: contextOtpLogin } = useAuth();
@@ -35,6 +36,14 @@ export const useLogin = () => {
       }
     },
     onError: (error: Error) => {
+      if (
+        error instanceof ApiError &&
+        error.code === PasswordValidationCodeEnum.AccountLocked
+      ) {
+        toast.error(error.message || 'Account is locked');
+        return;
+      }
+
       toast.error(error.message || 'Login failed');
     },
   });
@@ -89,6 +98,6 @@ export const useLogin = () => {
     isLoading: mutation.isPending || sendOtpMutation.isPending,
     isSuccess: mutation.isSuccess,
     error: mutation.error,
-    resolver: yupResolver(loginSchema),
+    resolver: yupResolver(buildLoginSchema()),
   };
 };

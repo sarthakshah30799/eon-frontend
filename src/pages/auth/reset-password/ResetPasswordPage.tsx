@@ -1,23 +1,54 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Button } from '../../../components/ui/button1/Button';
 import { Form, FormFieldInput } from '../../../components/forms';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { resetPasswordSchema } from '../../../modules/auth/schema';
+import {
+  DEFAULT_PASSWORD_POLICY,
+  buildResetPasswordSchema,
+} from '../../../modules/auth/schema';
 import { authApi } from '../../../api/auth/auth.api';
 import { toast } from 'react-hot-toast';
-import type { InferType } from 'yup';
+import { usePasswordPolicy } from '../../../modules/auth/hooks';
+import { Loader } from '../../../components/ui/loader';
 
-type ResetPasswordFormData = InferType<typeof resetPasswordSchema>;
+type ResetPasswordFormData = {
+  password: string;
+  confirmPassword: string;
+};
 
 const ResetPasswordPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token') || '';
   const email = searchParams.get('email') || '';
   const isSetupMode = searchParams.get('setup') === '1';
+  const { data: passwordPolicy, isLoading: isPolicyLoading } = usePasswordPolicy();
 
   const [isSuccess, setIsSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const resolvedPolicy = passwordPolicy ?? DEFAULT_PASSWORD_POLICY;
+  const passwordSchema = useMemo(
+    () => buildResetPasswordSchema(resolvedPolicy),
+    [resolvedPolicy]
+  );
+  const formKey = useMemo(
+    () => JSON.stringify(resolvedPolicy),
+    [resolvedPolicy]
+  );
+  const policySummary = useMemo(() => {
+    const parts = [`${resolvedPolicy.minLength}-${resolvedPolicy.maxLength} characters`];
+    if (resolvedPolicy.minSpecialCharCount > 0) {
+      parts.push(`${resolvedPolicy.minSpecialCharCount}+ special character(s)`);
+    }
+    if (resolvedPolicy.minNumericCount > 0) {
+      parts.push(`${resolvedPolicy.minNumericCount}+ numeric character(s)`);
+    }
+    if (resolvedPolicy.minAlphaCount > 0) {
+      parts.push(`${resolvedPolicy.minAlphaCount}+ alphabetic character(s)`);
+    }
+
+    return `Password requirements: ${parts.join(', ')}.`;
+  }, [resolvedPolicy]);
 
   const onSubmit = async (data: ResetPasswordFormData) => {
     if (isSetupMode) {
@@ -57,6 +88,7 @@ const ResetPasswordPage: React.FC = () => {
 
   // If link is invalid
   const isLinkInvalid = !isSetupMode && (!token || !email);
+  const isFormLoading = isPolicyLoading && !isLinkInvalid;
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-surface-secondary via-surface-primary to-primary-50">
@@ -95,6 +127,9 @@ const ResetPasswordPage: React.FC = () => {
                   ? 'Please create a password for your account'
                   : 'Please enter your new password below'}
             </p>
+            {!isSuccess && !isLinkInvalid ? (
+              <p className="mt-3 text-xs text-text-tertiary">{policySummary}</p>
+            ) : null}
           </div>
 
           {isLinkInvalid ? (
@@ -129,10 +164,15 @@ const ResetPasswordPage: React.FC = () => {
                 </Link>
               </div>
             </div>
+          ) : !isSuccess && isFormLoading ? (
+            <div className="flex justify-center py-10">
+              <Loader />
+            </div>
           ) : !isSuccess ? (
             <Form
+              key={formKey}
               onSubmit={onSubmit}
-              resolver={yupResolver(resetPasswordSchema)}
+              resolver={yupResolver(passwordSchema)}
               className="space-y-4"
             >
               <FormFieldInput

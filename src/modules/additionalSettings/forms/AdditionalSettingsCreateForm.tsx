@@ -10,8 +10,15 @@ import {
   createEmptyAdditionalSettingSubcategoryFormValues,
 } from '../utils';
 import type { IAdditionalSettingCategoryFormValues } from '../types';
-import { ADDITIONAL_SETTINGS_TEXTS } from '../constants';
+import {
+  ADDITIONAL_SETTINGS_TEXTS,
+} from '../constants';
 import { useListValueTypes } from '../hooks';
+import {
+  getAdditionalSettingCategoryCodeOptions,
+  getAdditionalSettingSubcategoryCodeOptions,
+  getAdditionalSettingSubcategoryDefinition,
+} from '../registry/additionalSettingsRegistry';
 
 interface AdditionalSettingsCreateFormProps {
   defaultValues?: IAdditionalSettingCategoryFormValues;
@@ -26,12 +33,14 @@ const noTransformInputProps = {
 
 const SubcategoryRowFields = ({
   index,
+  categoryCode,
   isSubmitting,
   loadTypeOptions,
   remove,
   fieldsLength,
 }: {
   index: number;
+  categoryCode?: string;
   isSubmitting: boolean;
   loadTypeOptions: () => Promise<{ options: { value: string; label: string }[]; hasMore: boolean }>;
   remove: (index: number) => void;
@@ -39,15 +48,28 @@ const SubcategoryRowFields = ({
 }) => {
   const { control, setValue } = useFormContext<IAdditionalSettingCategoryFormValues>();
 
+  const subcategoryCode = useWatch({
+    control,
+    name: `subcategories.${index}.code`,
+  });
   const categoryType = useWatch({
     control,
     name: `subcategories.${index}.categoryType`,
   });
 
+  const subcategoryDefinition = getAdditionalSettingSubcategoryDefinition(
+    categoryCode,
+    subcategoryCode
+  );
+
   const isBooleanType = categoryType?.toLowerCase() === 'boolean';
   const isDateType = categoryType?.toLowerCase() === 'date';
   const isJsonType = categoryType?.toLowerCase() === 'json';
-  const isNumberType = categoryType?.toLowerCase() === 'number' || categoryType?.toLowerCase() === 'decimal';
+  const isNumberType =
+    subcategoryDefinition?.valueType === 'number' ||
+    subcategoryDefinition?.valueType === 'decimal' ||
+    categoryType?.toLowerCase() === 'number' ||
+    categoryType?.toLowerCase() === 'decimal';
 
   const [prevType, setPrevType] = useState(categoryType);
   useEffect(() => {
@@ -61,6 +83,18 @@ const SubcategoryRowFields = ({
     }
   }, [categoryType, prevType, index, setValue]);
 
+  useEffect(() => {
+    if (subcategoryDefinition) {
+      setValue(
+        `subcategories.${index}.categoryType`,
+        subcategoryDefinition.valueType,
+      );
+      if (subcategoryDefinition.valueType === 'number' && subcategoryDefinition.required) {
+        setValue(`subcategories.${index}.value`, '');
+      }
+    }
+  }, [index, subcategoryDefinition, setValue]);
+
   const loadBooleanOptions = async () => {
     return {
       options: [
@@ -70,6 +104,14 @@ const SubcategoryRowFields = ({
       hasMore: false,
     };
   };
+
+  const loadCodeOptions = async () => ({
+    options: getAdditionalSettingSubcategoryCodeOptions(categoryCode).map(option => ({
+      value: option.value,
+      label: option.label,
+    })),
+    hasMore: false,
+  });
 
   return (
     <div className="relative rounded-sm border border-border-primary bg-surface-primary p-4">
@@ -106,19 +148,21 @@ const SubcategoryRowFields = ({
           disabled={isSubmitting}
           {...noTransformInputProps}
         />
-        <FormFieldInput
+        <FormFieldSelect
           name={`subcategories.${index}.code`}
           label="Code"
-          placeholder="Enter subcategory code"
-          disabled={isSubmitting}
-          {...noTransformInputProps}
+          placeholder="Select subcategory code"
+          disabled={isSubmitting || !categoryCode}
+          loadOptions={loadCodeOptions}
+          isSearchable={false}
         />
         <FormFieldSelect
           name={`subcategories.${index}.categoryType`}
           label="Category Type"
           placeholder="Select type"
-          disabled={isSubmitting}
+          disabled={isSubmitting || Boolean(subcategoryDefinition)}
           loadOptions={loadTypeOptions}
+          isSearchable={false}
         />
 
         {isBooleanType ? (
@@ -148,17 +192,19 @@ const SubcategoryRowFields = ({
           <FormFieldInput
             name={`subcategories.${index}.value`}
             label="Value"
-            placeholder="Enter number value"
+            placeholder={subcategoryDefinition?.placeholder ?? 'Enter number value'}
             type="number"
             disabled={isSubmitting}
+            required={subcategoryDefinition?.required ?? true}
             {...noTransformInputProps}
           />
         ) : (
           <FormFieldInput
             name={`subcategories.${index}.value`}
             label="Value"
-            placeholder="Enter value"
+            placeholder={subcategoryDefinition?.placeholder ?? 'Enter value'}
             disabled={isSubmitting}
+            required={subcategoryDefinition?.required ?? true}
             {...noTransformInputProps}
           />
         )}
@@ -172,12 +218,36 @@ const SubcategoryFields = ({
 }: {
   isSubmitting: boolean;
 }) => {
-  const { control } = useFormContext<IAdditionalSettingCategoryFormValues>();
+  const { control, setValue } = useFormContext<IAdditionalSettingCategoryFormValues>();
   const { fields, append, remove } = useFieldArray({
     control,
     name: 'subcategories',
   });
   const { data: valueTypes = [] } = useListValueTypes();
+  const categoryCode = useWatch({
+    control,
+    name: 'code',
+  });
+  const subcategories = useWatch({
+    control,
+    name: 'subcategories',
+  }) as IAdditionalSettingCategoryFormValues['subcategories'];
+
+  useEffect(() => {
+    const allowedCodes = new Set(
+      getAdditionalSettingSubcategoryCodeOptions(categoryCode).map(option => option.value)
+    );
+
+    subcategories?.forEach((subcategory, index) => {
+      const code = String(subcategory?.code ?? '').trim().toUpperCase();
+
+      if (code && !allowedCodes.has(code as never)) {
+        setValue(`subcategories.${index}.code`, '');
+        setValue(`subcategories.${index}.categoryType`, '');
+        setValue(`subcategories.${index}.value`, '');
+      }
+    });
+  }, [categoryCode, setValue, subcategories]);
 
   const loadTypeOptions = async () => {
     const options = valueTypes.map(t => ({ value: t, label: t.toUpperCase() }));
@@ -222,6 +292,7 @@ const SubcategoryFields = ({
             <SubcategoryRowFields
               key={field.id}
               index={index}
+              categoryCode={categoryCode}
               isSubmitting={isSubmitting}
               loadTypeOptions={loadTypeOptions}
               remove={remove}
@@ -242,6 +313,13 @@ export const AdditionalSettingsCreateForm = ({
 }: AdditionalSettingsCreateFormProps) => {
   const initialValues =
     defaultValues ?? createEmptyAdditionalSettingCategoryFormValues();
+  const loadCategoryCodeOptions = async () => ({
+    options: getAdditionalSettingCategoryCodeOptions().map(option => ({
+      value: option.value,
+      label: option.label,
+    })),
+    hasMore: false,
+  });
 
   return (
     <Form
@@ -259,12 +337,13 @@ export const AdditionalSettingsCreateForm = ({
             disabled={isSubmitting}
             {...noTransformInputProps}
           />
-          <FormFieldInput
+          <FormFieldSelect
             name="code"
             label={ADDITIONAL_SETTINGS_TEXTS.CATEGORY_CODE}
-            placeholder="Enter category code"
+            placeholder="Select category code"
             disabled={isSubmitting}
-            {...noTransformInputProps}
+            loadOptions={loadCategoryCodeOptions}
+            isSearchable={false}
           />
         </div>
       </CardSection>

@@ -10,6 +10,10 @@ import {
   PencilSquareIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
+import {
+  getAdditionalSettingCategoryDefinition,
+  getAdditionalSettingSubcategoryDefinition,
+} from '../registry/additionalSettingsRegistry';
 
 interface AdditionalSettingsCategoryDetailsProps {
   category: IAdditionalSettingCategory | null;
@@ -25,9 +29,11 @@ interface AdditionalSettingsCategoryDetailsProps {
 
 const CategoryTitleEditor = ({
   category,
+  isReadOnly = false,
   onSaveCategoryTitle,
 }: {
   category: IAdditionalSettingCategory;
+  isReadOnly?: boolean;
   onSaveCategoryTitle: (categoryId: string, title: string) => Promise<void>;
 }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -55,7 +61,7 @@ const CategoryTitleEditor = ({
     }
   };
 
-  if (!isEditing) {
+  if (!isEditing || isReadOnly) {
     return (
       <div className="flex items-start gap-3">
         <div className="min-w-0">
@@ -67,14 +73,16 @@ const CategoryTitleEditor = ({
           </p>
         </div>
 
-        <Button
-          type="button"
-          aria-label="Edit category title"
-          onClick={() => setIsEditing(true)}
-          className="border-0! bg-transparent! text-black!"
-        >
-          <PencilSquareIcon className="h-5 w-5" />
-        </Button>
+        {!isReadOnly ? (
+          <Button
+            type="button"
+            aria-label="Edit category title"
+            onClick={() => setIsEditing(true)}
+            className="border-0! bg-transparent! text-black!"
+          >
+            <PencilSquareIcon className="h-5 w-5" />
+          </Button>
+        ) : null}
       </div>
     );
   }
@@ -138,13 +146,17 @@ const SubcategoryRow = ({
 };
 
 interface EditSubcategoryFormProps {
+  categoryCode?: string;
   subcategory: IAdditionalSettingSubcategory;
+  isPasswordPolicy?: boolean;
   onSave: (values: { description: string; value: string }) => Promise<void>;
   onCancel: () => void;
 }
 
 const EditSubcategoryForm = ({
+  categoryCode,
   subcategory,
+  isPasswordPolicy = false,
   onSave,
   onCancel,
 }: EditSubcategoryFormProps) => {
@@ -153,6 +165,11 @@ const EditSubcategoryForm = ({
   const [categoryType] = useState(subcategory.categoryType || 'text');
   const [value, setValue] = useState(subcategory.value);
   const [isSaving, setIsSaving] = useState(false);
+  const subcategoryDefinition = getAdditionalSettingSubcategoryDefinition(
+    categoryCode,
+    subcategory.code
+  );
+  const isRequiredPolicyValue = subcategoryDefinition?.required ?? true;
 
   const isBooleanType = categoryType.toLowerCase() === 'boolean';
   const isNumberType = categoryType.toLowerCase() === 'number' || categoryType.toLowerCase() === 'decimal';
@@ -183,14 +200,20 @@ const EditSubcategoryForm = ({
         <label className="block text-xs font-semibold uppercase tracking-wider text-text-secondary mb-2">
           Description
         </label>
-        <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          required
-          rows={3}
-          className="w-full rounded-sm border border-border-primary bg-surface-primary px-3 py-2 text-sm text-text-primary outline-none transition focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
-          placeholder="Enter description"
-        />
+        {isPasswordPolicy ? (
+          <div className="w-full rounded-sm border border-border-primary bg-surface-secondary px-3 py-2 text-sm text-text-primary">
+            {description}
+          </div>
+        ) : (
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            required
+            rows={3}
+            className="w-full rounded-sm border border-border-primary bg-surface-primary px-3 py-2 text-sm text-text-primary outline-none transition focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+            placeholder="Enter description"
+          />
+        )}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -245,19 +268,23 @@ const EditSubcategoryForm = ({
             type="number"
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            required
-            step="any"
+            required={isRequiredPolicyValue}
+            min={subcategoryDefinition?.valueType === 'number' ? 0 : undefined}
+            step={subcategoryDefinition?.valueType === 'number' ? '1' : 'any'}
             className="w-full rounded-sm border border-border-primary bg-surface-primary px-3 py-2 text-sm text-text-primary outline-none transition focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
-            placeholder="Enter value"
+            placeholder={
+              subcategoryDefinition?.placeholder ??
+              (isRequiredPolicyValue ? 'Enter value' : 'Enter value or leave blank')
+            }
           />
         ) : (
           <input
             type="text"
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            required
+            required={isRequiredPolicyValue}
             className="w-full rounded-sm border border-border-primary bg-surface-primary px-3 py-2 text-sm text-text-primary outline-none transition focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
-            placeholder="Enter value"
+            placeholder={subcategoryDefinition?.placeholder ?? 'Enter value'}
           />
         )}
       </div>
@@ -290,6 +317,8 @@ export const AdditionalSettingsCategoryDetails = ({
   onSaveSubcategory,
 }: AdditionalSettingsCategoryDetailsProps) => {
   const [editingSubcategory, setEditingSubcategory] = useState<IAdditionalSettingSubcategory | null>(null);
+  const categoryDefinition = getAdditionalSettingCategoryDefinition(category?.code);
+  const isPasswordPolicyCategory = categoryDefinition?.rendererKey === 'password-policy';
 
   const hasSubcategories = useMemo(
     () => Boolean(category?.subcategories.length),
@@ -330,6 +359,7 @@ export const AdditionalSettingsCategoryDetails = ({
           <section className="rounded-sm border border-border-primary bg-surface-secondary p-4">
             <CategoryTitleEditor
               category={category}
+              isReadOnly={Boolean(categoryDefinition?.titleLocked)}
               onSaveCategoryTitle={onSaveCategoryTitle}
             />
           </section>
@@ -385,12 +415,18 @@ export const AdditionalSettingsCategoryDetails = ({
           if (!open) setEditingSubcategory(null);
         }}
         title="Edit Subcategory"
-        description="Update subcategory settings below. Once created, code and type cannot be changed."
+        description={
+          isPasswordPolicyCategory
+            ? 'Update the password policy value only. Codes and labels are locked.'
+            : 'Update subcategory settings below. Once created, code and type cannot be changed.'
+        }
         size="md"
       >
         {editingSubcategory && (
           <EditSubcategoryForm
+            categoryCode={category?.code}
             subcategory={editingSubcategory}
+            isPasswordPolicy={isPasswordPolicyCategory}
             onCancel={() => setEditingSubcategory(null)}
             onSave={async (values) => {
               if (category) {

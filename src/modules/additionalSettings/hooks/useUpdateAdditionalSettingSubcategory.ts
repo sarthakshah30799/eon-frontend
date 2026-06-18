@@ -19,6 +19,7 @@ export const useUpdateAdditionalSettingSubcategory = () => {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['additional-settings'] });
+      queryClient.invalidateQueries({ queryKey: ['password-policy'] });
       toast.success(ADDITIONAL_SETTINGS_TEXTS.UPDATE_SUCCESS);
     },
     onError: () => {

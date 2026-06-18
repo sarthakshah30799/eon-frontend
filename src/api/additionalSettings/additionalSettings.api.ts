@@ -3,6 +3,7 @@ import type {
   IAdditionalSettingCategory,
   IAdditionalSettingCategoryFormValues,
 } from '@/modules/additionalSettings/types';
+import type { IPasswordPolicy } from '@/modules/auth/types/authTypes';
 
 export const additionalSettingsApi = {
   getAdditionalSettings: async (): Promise<IAdditionalSettingCategory[]> => {
@@ -19,6 +20,17 @@ export const additionalSettingsApi = {
       throw new Error(res.error);
     }
     return res.data ?? [];
+  },
+
+  getPasswordPolicy: async (): Promise<IPasswordPolicy> => {
+    const res = await apiClient.get<IPasswordPolicy>('/additional-settings/password-policy');
+    if (res.error) {
+      throw new Error(res.error);
+    }
+    if (!res.data) {
+      throw new Error('Failed to load password policy');
+    }
+    return res.data;
   },
 
   createAdditionalSetting: async (

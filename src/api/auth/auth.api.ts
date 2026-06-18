@@ -5,6 +5,20 @@ import type {
   IUser,
 } from '../../modules/auth/types';
 
+export class ApiError extends Error {
+  code?: string;
+  details?: unknown;
+  status?: number;
+
+  constructor(message: string, options?: { code?: string; details?: unknown; status?: number }) {
+    super(message);
+    this.name = 'ApiError';
+    this.code = options?.code;
+    this.details = options?.details;
+    this.status = options?.status;
+  }
+}
+
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
@@ -27,12 +41,31 @@ class AuthAPI {
       const response = await fetch(url, config);
 
       if (!response.ok) {
-        const errorData: IAuthError = await response.json().catch(() => ({
+        const errorData: IAuthError & { error?: string } = await response.json().catch(() => ({
           message: 'Network error occurred',
         }));
-        throw new Error(
-          errorData.message || `HTTP error! status: ${response.status}`
-        );
+        const nestedResponse =
+          typeof errorData.message === 'object' && errorData.message !== null
+            ? errorData.message
+            : undefined;
+        const nestedMessage =
+          nestedResponse
+            ? nestedResponse.message
+            : undefined;
+        const code = errorData.code || nestedResponse?.code;
+        const details = errorData.details || nestedResponse?.details;
+        const message =
+          typeof errorData.message === 'string'
+            ? errorData.message
+            : typeof nestedMessage === 'string'
+              ? nestedMessage
+              : errorData.error || `HTTP error! status: ${response.status}`;
+
+        throw new ApiError(message, {
+          code,
+          details,
+          status: response.status,
+        });
       }
 
       return await response.json();

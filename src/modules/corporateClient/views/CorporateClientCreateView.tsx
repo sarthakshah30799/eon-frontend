@@ -80,11 +80,11 @@ export const CorporateClientCreateView = () => {
       email: values.email || undefined,
     };
     await submitCorporateClient(sanitized);
-    navigate('/admin/corporate-client-profile');
+    navigate('/corporate-client-profile');
   };
 
   const handleCancel = () => {
-    navigate('/admin/corporate-client-profile');
+    navigate('/corporate-client-profile');
   };
 
   return (

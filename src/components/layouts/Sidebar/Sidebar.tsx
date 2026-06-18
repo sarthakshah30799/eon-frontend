@@ -13,6 +13,7 @@ import { useAuth } from '../../../lib/AuthContext';
 import type { ICompanyProfile } from '../../../modules/companyProfile/types';
 import type { IMasterPageTreeNode } from '../../../modules/masterPages/types';
 import type { IMenu } from '../../../types/menuTypes';
+import { Loader } from '@/components/ui/loader';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -46,12 +47,6 @@ type SidebarLeafSection = SidebarLeafItem & {
 
 type SidebarSection = SidebarGroupSection | SidebarLeafSection;
 
-const ADMIN_ADDITIONAL_SETTINGS_ITEM: SidebarLeafItem = {
-  id: 'admin-additional-settings',
-  label: 'Additional Settings',
-  path: '/admin/additional-settings',
-};
-
 const compactLabel = (label: string) =>
   label
     .split(/\s+/)
@@ -60,9 +55,8 @@ const compactLabel = (label: string) =>
     .join('')
     .slice(0, 2) || label.slice(0, 2).toUpperCase();
 
-const isGroupItem = (
-  item: SidebarItem
-): item is SidebarGroupItem => 'children' in item;
+const isGroupItem = (item: SidebarItem): item is SidebarGroupItem =>
+  'children' in item;
 
 const normalizePath = (path: string) =>
   path !== '/' ? path.replace(/\/+$/, '') : path;
@@ -87,9 +81,7 @@ const isMenuItemActive = (item: SidebarItem, currentPath: string): boolean => {
   return isPathActive(currentPath, item.path);
 };
 
-const mapMasterPageNodeToItem = (
-  page: IMasterPageTreeNode
-): SidebarItem => {
+const mapMasterPageNodeToItem = (page: IMasterPageTreeNode): SidebarItem => {
   if (page.children.length === 0) {
     return {
       id: page.id,
@@ -210,20 +202,24 @@ const SidebarTree = ({
         if (!isGroupItem(item)) {
           const isActive = isPathActive(currentPath, item.path);
 
-            return (
-              <button
-                key={item.id}
-                type="button"
-                className={[
-                  'group flex w-full cursor-pointer items-center rounded-md text-left text-sm transition',
-                  depth === 0 ? 'px-2 py-2' : depth === 1 ? 'pl-5 pr-2 py-2' : 'pl-8 pr-2 py-2',
-                  isActive
-                    ? 'bg-sky-100 text-sky-800 shadow-sm'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900',
-                ].join(' ')}
-                aria-current={isActive ? 'page' : undefined}
-                onClick={() => onNavigate(item.path)}
-                title={item.label}
+          return (
+            <button
+              key={item.id}
+              type="button"
+              className={[
+                'group flex w-full cursor-pointer items-center rounded-md text-left text-sm transition',
+                depth === 0
+                  ? 'px-2 py-2'
+                  : depth === 1
+                    ? 'pl-5 pr-2 py-2'
+                    : 'pl-8 pr-2 py-2',
+                isActive
+                  ? 'bg-sky-100 text-sky-800 shadow-sm'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900',
+              ].join(' ')}
+              aria-current={isActive ? 'page' : undefined}
+              onClick={() => onNavigate(item.path)}
+              title={item.label}
             >
               <span className="min-w-0 flex-1 truncate text-sm font-medium">
                 {isCollapsed ? compactLabel(item.label) : item.label}
@@ -245,8 +241,12 @@ const SidebarTree = ({
               type="button"
               className={[
                 'group flex w-full cursor-pointer items-center justify-between gap-2 rounded-md text-left text-sm font-medium transition',
-                depth === 0 ? 'px-2 py-2' : depth === 1 ? 'pl-5 pr-2 py-2' : 'pl-8 pr-2 py-2',
-                  isOpen
+                depth === 0
+                  ? 'px-2 py-2'
+                  : depth === 1
+                    ? 'pl-5 pr-2 py-2'
+                    : 'pl-8 pr-2 py-2',
+                isOpen
                   ? 'bg-sky-100 text-sky-800 shadow-sm'
                   : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900',
               ].join(' ')}
@@ -277,7 +277,9 @@ const SidebarTree = ({
                 <span
                   className={[
                     'mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full transition',
-                    isOpen ? 'bg-sky-500' : 'bg-slate-300 group-hover:bg-slate-500',
+                    isOpen
+                      ? 'bg-sky-500'
+                      : 'bg-slate-300 group-hover:bg-slate-500',
                   ].join(' ')}
                 />
                 <span className="text-sm">
@@ -288,7 +290,7 @@ const SidebarTree = ({
             </button>
 
             {isOpen && !isCollapsed && (
-                    <div className="ml-2 border-l border-slate-200 pl-2.5">
+              <div className="ml-2 border-l border-slate-200 pl-2.5">
                 <SidebarTree
                   items={item.children}
                   currentPath={currentPath}
@@ -326,7 +328,7 @@ export const Sidebar = ({
     Record<string, string>
   >({});
 
-  const { data: menuTree = [] } = useQuery({
+  const { data: menuTree = [], isLoading: isMenuTreeLoading } = useQuery({
     queryKey: ['menu-tree'],
     queryFn: async () => {
       const response = await menuApi.getMenuTree();
@@ -382,12 +384,14 @@ export const Sidebar = ({
 
     const adminRoot = menuTree.find(root => root.isAdmin);
     const adminItems = (adminRoot?.children ?? [])
-      .map(child => mapVisibleMenuNodeToItem(child, hasViewPermission, '/admin'))
+      .map(child =>
+        mapVisibleMenuNodeToItem(child, hasViewPermission, '/admin')
+      )
       .filter(Boolean) as SidebarItem[];
 
     const adminSection: SidebarGroupSection = {
       title: adminRoot?.name ?? 'Admin',
-      items: [...adminItems, ADMIN_ADDITIONAL_SETTINGS_ITEM],
+      items: [...adminItems],
     };
 
     const masterPagesSection: SidebarSection = {
@@ -405,8 +409,7 @@ export const Sidebar = ({
   }, [createdPages, menuTree, user]);
 
   const sectionsSignature = useMemo(
-    () =>
-      sections.map(serializeSidebarSection).join('||'),
+    () => sections.map(serializeSidebarSection).join('||'),
     [sections]
   );
 
@@ -417,8 +420,11 @@ export const Sidebar = ({
         : isPathActive(location.pathname, section.path)
     );
 
-    const nextOpenSectionId = firstOpenSection?.title ?? sections[0]?.title ?? null;
-    setOpenSectionId(prev => (prev === nextOpenSectionId ? prev : nextOpenSectionId));
+    const nextOpenSectionId =
+      firstOpenSection?.title ?? sections[0]?.title ?? null;
+    setOpenSectionId(prev =>
+      prev === nextOpenSectionId ? prev : nextOpenSectionId
+    );
 
     const nextOpenByParent: Record<string, string> = {};
 
@@ -439,7 +445,9 @@ export const Sidebar = ({
       }
     });
     setOpenByParent(prev =>
-      JSON.stringify(prev) === JSON.stringify(nextOpenByParent) ? prev : nextOpenByParent
+      JSON.stringify(prev) === JSON.stringify(nextOpenByParent)
+        ? prev
+        : nextOpenByParent
     );
     setCollapsedByParent(prev => (Object.keys(prev).length === 0 ? prev : {}));
   }, [location.pathname, sectionsSignature]);
@@ -540,144 +548,159 @@ export const Sidebar = ({
 
         <nav className="flex-1 overflow-y-auto px-2 py-2">
           <div className="space-y-1.5">
-            {sections.map(section => {
-              if (isGroupSection(section)) {
-                const isOpen = openSectionId === section.title;
-                const isActiveSection = section.items.some(item =>
-                  isMenuItemActive(item, location.pathname)
-                );
+            {isMenuTreeLoading ? (
+              <div className="flex min-h-[12rem] items-center justify-center px-3 py-6">
+                <Loader />
+              </div>
+            ) : (
+              sections.map(section => {
+                if (isGroupSection(section)) {
+                  const isOpen = openSectionId === section.title;
+                  const isActiveSection = section.items.some(item =>
+                    isMenuItemActive(item, location.pathname)
+                  );
+
+                  return (
+                    <section key={section.title} className="space-y-0.5">
+                      <button
+                        type="button"
+                        className={[
+                          'group flex w-full cursor-pointer items-center justify-between rounded-md border-b border-slate-200 text-left text-sm font-medium transition',
+                          isActiveSection
+                            ? 'bg-sky-100 text-sky-800 shadow-sm'
+                            : 'bg-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900',
+                          isCollapsed
+                            ? 'mx-auto h-10 w-10 justify-center rounded-full px-0'
+                            : 'px-2.5 py-2.5',
+                        ].join(' ')}
+                        onClick={() =>
+                          setOpenSectionId(prev =>
+                            prev === section.title ? null : section.title
+                          )
+                        }
+                        aria-expanded={isOpen}
+                        title={section.title}
+                      >
+                        <span className="flex min-w-0 items-center gap-2 truncate text-sm">
+                          {isCollapsed
+                            ? compactLabel(section.title)
+                            : section.title}
+                        </span>
+                        {!isCollapsed && (
+                          <span className="text-slate-400">
+                            <SidebarChevron isOpen={isOpen} />
+                          </span>
+                        )}
+                      </button>
+
+                      {isOpen && !isCollapsed && (
+                        <div className="ml-2 border-l border-slate-200 pl-2 pt-1.5">
+                          <SidebarTree
+                            items={section.items}
+                            currentPath={location.pathname}
+                            onNavigate={handleMenuClick}
+                            isCollapsed={isCollapsed}
+                            parentKey={section.title}
+                            openByParent={openByParent}
+                            collapsedByParent={collapsedByParent}
+                            setOpenByParent={setOpenByParent}
+                            setCollapsedByParent={setCollapsedByParent}
+                          />
+                        </div>
+                      )}
+                    </section>
+                  );
+                }
+
+                const isActive = isPathActive(location.pathname, section.path);
 
                 return (
-                  <section key={section.title} className="space-y-0.5">
-                    <button
-                      type="button"
-                      className={[
-                        'group flex w-full cursor-pointer items-center justify-between rounded-md border-b border-slate-200 text-left text-sm font-medium transition',
-                        isActiveSection
-                          ? 'bg-sky-100 text-sky-800 shadow-sm'
-                          : 'bg-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900',
-                        isCollapsed
-                          ? 'mx-auto h-10 w-10 justify-center rounded-full px-0'
-                          : 'px-2.5 py-2.5',
-                      ].join(' ')}
-                      onClick={() =>
-                        setOpenSectionId(prev =>
-                          prev === section.title ? null : section.title
-                        )
-                      }
-                      aria-expanded={isOpen}
-                      title={section.title}
-                    >
-                      <span className="flex min-w-0 items-center gap-2 truncate text-sm">
-                        {isCollapsed ? compactLabel(section.title) : section.title}
-                      </span>
-                      {!isCollapsed && (
-                        <span className="text-slate-400">
-                          <SidebarChevron isOpen={isOpen} />
-                        </span>
-                      )}
-                    </button>
-
-                    {isOpen && !isCollapsed && (
-                      <div className="ml-2 border-l border-slate-200 pl-2 pt-1.5">
-                        <SidebarTree
-                          items={section.items}
-                          currentPath={location.pathname}
-                          onNavigate={handleMenuClick}
-                          isCollapsed={isCollapsed}
-                          parentKey={section.title}
-                          openByParent={openByParent}
-                          collapsedByParent={collapsedByParent}
-                          setOpenByParent={setOpenByParent}
-                          setCollapsedByParent={setCollapsedByParent}
-                        />
-                      </div>
-                    )}
-                  </section>
+                  <button
+                    key={section.title}
+                    type="button"
+                    className={[
+                      'group flex w-full cursor-pointer items-center rounded-md border-b border-slate-200 text-left text-sm font-medium transition',
+                      isActive
+                        ? 'bg-sky-100 text-sky-800 shadow-sm'
+                        : 'bg-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900',
+                      isCollapsed
+                        ? 'mx-auto h-10 w-10 justify-center rounded-full px-0'
+                        : 'px-2.5 py-2.5',
+                    ].join(' ')}
+                    aria-current={isActive ? 'page' : undefined}
+                    onClick={() => handleMenuClick(section.path)}
+                    title={section.title}
+                  >
+                    <span className="flex min-w-0 items-center gap-2 truncate text-sm">
+                      {isCollapsed
+                        ? compactLabel(section.title)
+                        : section.label}
+                    </span>
+                  </button>
                 );
-              }
-
-              const isActive = isPathActive(location.pathname, section.path);
-
-              return (
-                <button
-                  key={section.title}
-                  type="button"
-                  className={[
-                    'group flex w-full cursor-pointer items-center rounded-md border-b border-slate-200 text-left text-sm font-medium transition',
-                    isActive
-                      ? 'bg-sky-100 text-sky-800 shadow-sm'
-                      : 'bg-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900',
-                    isCollapsed
-                      ? 'mx-auto h-10 w-10 justify-center rounded-full px-0'
-                      : 'px-2.5 py-2.5',
-                  ].join(' ')}
-                  aria-current={isActive ? 'page' : undefined}
-                  onClick={() => handleMenuClick(section.path)}
-                  title={section.title}
-                >
-                  <span className="flex min-w-0 items-center gap-2 truncate text-sm">
-                    {isCollapsed ? compactLabel(section.title) : section.label}
-                  </span>
-                </button>
-              );
-            })}
+              })
+            )}
 
             {createdPages.length > 0 && (
               <section className="space-y-0.5">
                 {(() => {
                   const isMasterPagesActive = createdPages.some(page =>
-                    isMenuItemActive(mapMasterPageNodeToItem(page), location.pathname)
+                    isMenuItemActive(
+                      mapMasterPageNodeToItem(page),
+                      location.pathname
+                    )
                   );
 
                   return (
                     <>
-                <button
-                  type="button"
-                  className={[
-                    'group flex w-full cursor-pointer items-center justify-between rounded-md border-b border-slate-200 text-left text-sm font-medium transition',
-                    isMasterPagesActive
-                      ? 'bg-sky-100 text-sky-800 shadow-sm'
-                      : 'bg-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900',
-                    isCollapsed
-                      ? 'mx-auto h-10 w-10 justify-center rounded-full px-0'
-                      : 'px-2.5 py-2.5',
-                  ].join(' ')}
-                  onClick={() =>
-                    setOpenSectionId(prev =>
-                      prev === 'Master Pages' ? null : 'Master Pages'
-                    )
-                  }
-                  aria-expanded={openSectionId === 'Master Pages'}
-                  title="Master Pages"
-                >
-                  <span className="flex min-w-0 items-center gap-2 truncate text-sm">
-                    {isCollapsed
-                      ? compactLabel('Master Pages')
-                      : 'Master Pages'}
-                  </span>
-                  {!isCollapsed && (
-                    <span className="text-slate-400">
-                      <SidebarChevron isOpen={openSectionId === 'Master Pages'} />
-                    </span>
-                  )}
-                </button>
+                      <button
+                        type="button"
+                        className={[
+                          'group flex w-full cursor-pointer items-center justify-between rounded-md border-b border-slate-200 text-left text-sm font-medium transition',
+                          isMasterPagesActive
+                            ? 'bg-sky-100 text-sky-800 shadow-sm'
+                            : 'bg-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900',
+                          isCollapsed
+                            ? 'mx-auto h-10 w-10 justify-center rounded-full px-0'
+                            : 'px-2.5 py-2.5',
+                        ].join(' ')}
+                        onClick={() =>
+                          setOpenSectionId(prev =>
+                            prev === 'Master Pages' ? null : 'Master Pages'
+                          )
+                        }
+                        aria-expanded={openSectionId === 'Master Pages'}
+                        title="Master Pages"
+                      >
+                        <span className="flex min-w-0 items-center gap-2 truncate text-sm">
+                          {isCollapsed
+                            ? compactLabel('Master Pages')
+                            : 'Master Pages'}
+                        </span>
+                        {!isCollapsed && (
+                          <span className="text-slate-400">
+                            <SidebarChevron
+                              isOpen={openSectionId === 'Master Pages'}
+                            />
+                          </span>
+                        )}
+                      </button>
 
-                {openSectionId === 'Master Pages' && !isCollapsed && (
-                  <div className="ml-2 border-l border-slate-200 pl-2 pt-1.5">
-                    <SidebarTree
-                      items={createdPages.map(mapMasterPageNodeToItem)}
-                      currentPath={location.pathname}
-                      onNavigate={handleMenuClick}
-                      isCollapsed={isCollapsed}
-                      parentKey="Master Pages"
-                      openByParent={openByParent}
-                      collapsedByParent={collapsedByParent}
-                      setOpenByParent={setOpenByParent}
-                      setCollapsedByParent={setCollapsedByParent}
-                    />
-                  </div>
-                )}
+                      {openSectionId === 'Master Pages' && !isCollapsed && (
+                        <div className="ml-2 border-l border-slate-200 pl-2 pt-1.5">
+                          <SidebarTree
+                            items={createdPages.map(mapMasterPageNodeToItem)}
+                            currentPath={location.pathname}
+                            onNavigate={handleMenuClick}
+                            isCollapsed={isCollapsed}
+                            parentKey="Master Pages"
+                            openByParent={openByParent}
+                            collapsedByParent={collapsedByParent}
+                            setOpenByParent={setOpenByParent}
+                            setCollapsedByParent={setCollapsedByParent}
+                          />
+                        </div>
+                      )}
                     </>
                   );
                 })()}

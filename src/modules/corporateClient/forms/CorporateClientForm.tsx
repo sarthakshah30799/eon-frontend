@@ -41,9 +41,12 @@ const CorporateClientFormFields = ({
   const branchLoadOptions = useCallback(async (inputValue: string) => {
     const branches = await branchProfileApi.getBranchProfiles();
     const options = branches
-      .filter(branch =>
-        !inputValue ||
-        `${branch.code} - ${branch.name}`.toLowerCase().includes(inputValue.toLowerCase())
+      .filter(
+        branch =>
+          !inputValue ||
+          `${branch.code} - ${branch.name}`
+            .toLowerCase()
+            .includes(inputValue.toLowerCase())
       )
       .map(branch => ({
         value: branch.id,
@@ -55,9 +58,12 @@ const CorporateClientFormFields = ({
   const stateLoadOptions = useCallback(async (inputValue: string) => {
     const res = await stateProfileApi.getStateProfiles({ limit: 1000 });
     const options = (res.data ?? [])
-      .filter(state =>
-        !inputValue ||
-        `${state.code} - ${state.name}`.toLowerCase().includes(inputValue.toLowerCase())
+      .filter(
+        state =>
+          !inputValue ||
+          `${state.code} - ${state.name}`
+            .toLowerCase()
+            .includes(inputValue.toLowerCase())
       )
       .map(state => ({
         value: state.id,
@@ -185,7 +191,7 @@ const CorporateClientFormFields = ({
       </CardSection>
 
       <CardSection heading="KYC & Default Controls">
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
           <FormFieldInput
             name="kycApprovalNumber"
             label="KYC Approval Number"
@@ -236,31 +242,29 @@ const CorporateClientFormFields = ({
             label="Establishment Date"
             disabled={isSubmitting}
           />
-          <div className="md:col-span-2">
-            <FormFieldInput
-              name="email"
-              label="Email"
-              placeholder="Enter email address"
-              type="email"
-              disabled={isSubmitting}
-            />
-          </div>
-          <div className="md:col-span-2">
-            <FormFieldInput
-              name="webSite"
-              label="Web Site"
-              placeholder="Enter website URL"
-              disabled={isSubmitting}
-            />
-          </div>
-          <div className="md:col-span-4">
-            <FormFieldTextarea
-              name="remarks"
-              label="Remarks"
-              placeholder="Enter any additional remarks..."
-              disabled={isSubmitting}
-            />
-          </div>
+        </div>
+        <div className="grid md:grid-cols-2 lg:grid-cols-2 mt-2 gap-2">
+          <FormFieldInput
+            name="email"
+            label="Email"
+            placeholder="Enter email address"
+            type="email"
+            disabled={isSubmitting}
+          />
+           <FormFieldInput
+            name="webSite"
+            label="Web Site"
+            placeholder="Enter website URL"
+            disabled={isSubmitting}
+          />
+        </div>
+        <div className="md:col-span-4 mt-2">
+          <FormFieldTextarea
+            name="remarks"
+            label="Remarks"
+            placeholder="Enter any additional remarks..."
+            disabled={isSubmitting}
+          />
         </div>
       </CardSection>
 
@@ -320,7 +324,7 @@ const CorporateClientFormFields = ({
       </CardSection>
 
       <CardSection heading="TDS Configuration">
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
           <FormFieldCategoryOption
             name="marketingExecutive"
             label="Marketing Executive"
@@ -363,13 +367,37 @@ const CorporateClientFormFields = ({
 
       <CardSection heading="Tax Settings & Status">
         <div className="grid gap-2 grid-cols-2 md:grid-cols-4 lg:grid-cols-7">
-          <FormFieldCheckbox name="active" label="Active" disabled={isSubmitting} />
-          <FormFieldCheckbox name="printAddress" label="Print Address" disabled={isSubmitting} />
-          <FormFieldCheckbox name="eefcClient" label="EEFC Client" disabled={isSubmitting} />
+          <FormFieldCheckbox
+            name="active"
+            label="Active"
+            disabled={isSubmitting}
+          />
+          <FormFieldCheckbox
+            name="printAddress"
+            label="Print Address"
+            disabled={isSubmitting}
+          />
+          <FormFieldCheckbox
+            name="eefcClient"
+            label="EEFC Client"
+            disabled={isSubmitting}
+          />
           <FormFieldCheckbox name="sale" label="Sale" disabled={isSubmitting} />
-          <FormFieldCheckbox name="purchase" label="Purchase" disabled={isSubmitting} />
-          <FormFieldCheckbox name="applyTax" label="Apply Tax" disabled={isSubmitting} />
-          <FormFieldCheckbox name="igstOnly" label="IGST Only" disabled={isSubmitting} />
+          <FormFieldCheckbox
+            name="purchase"
+            label="Purchase"
+            disabled={isSubmitting}
+          />
+          <FormFieldCheckbox
+            name="applyTax"
+            label="Apply Tax"
+            disabled={isSubmitting}
+          />
+          <FormFieldCheckbox
+            name="igstOnly"
+            label="IGST Only"
+            disabled={isSubmitting}
+          />
         </div>
       </CardSection>
 
@@ -472,19 +500,23 @@ export const CorporateClientForm = ({
     <Form
       id={FORM_ID}
       onSubmit={onSubmit}
-      resolver={yupResolver(corporateClientSchema) as Resolver<ICreateCorporateClient>}
+      resolver={
+        yupResolver(corporateClientSchema) as Resolver<ICreateCorporateClient>
+      }
       defaultValues={defaultValues}
       className="space-y-6"
       footer={{
         submitLabel,
-        backLabel: 'Cancel',
         onBackClick: () => {
           void onCancel?.();
         },
         onCancel,
       }}
     >
-      <CorporateClientFormFields isSubmitting={isSubmitting} disabled={disabled} />
+      <CorporateClientFormFields
+        isSubmitting={isSubmitting}
+        disabled={disabled}
+      />
     </Form>
   );
 };

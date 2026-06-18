@@ -60,6 +60,34 @@ export const additionalSettingsApi = {
     return res.data;
   },
 
+  updateAdditionalSetting: async (
+    categoryId: string,
+    values: IAdditionalSettingCategoryFormValues
+  ): Promise<IAdditionalSettingCategory> => {
+    const payload = {
+      title: values.title.trim(),
+      code: values.code.trim(),
+      subcategories: values.subcategories.map(sub => ({
+        title: sub.title.trim(),
+        code: sub.code.trim(),
+        value: sub.value.trim(),
+        valueType: sub.categoryType.trim(),
+      })),
+    };
+
+    const res = await apiClient.put<IAdditionalSettingCategory>(
+      `/additional-settings/${categoryId}`,
+      payload
+    );
+    if (res.error) {
+      throw new Error(res.error);
+    }
+    if (!res.data) {
+      throw new Error('Failed to update additional setting category');
+    }
+    return res.data;
+  },
+
   updateCategoryTitle: async (
     categoryId: string,
     title: string

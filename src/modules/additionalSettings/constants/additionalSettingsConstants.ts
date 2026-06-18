@@ -26,6 +26,10 @@ export const ADDITIONAL_SETTINGS_TEXTS = {
   ADD_MORE: 'Add More',
   ADD_CATEGORY: 'Add category',
   CATEGORY_DETAILS: 'Category Details',
+  UPDATE_CATEGORY_TITLE: 'Update Category',
+  UPDATE_CATEGORY_SUBTITLE:
+    'Edit the category and linked subcategories, then save your changes.',
+  UPDATE_CATEGORY: 'Update Category',
   NO_CATEGORIES: 'No categories yet',
   NO_CATEGORIES_SUBTITLE:
     'Create your first category to start managing additional settings.',

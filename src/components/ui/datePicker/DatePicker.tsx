@@ -31,10 +31,10 @@ const DatePickerInput = forwardRef<
     <button
       ref={ref}
       type="button"
-      className={`flex min-h-10 w-full items-center justify-between gap-3 rounded-md border border-border-secondary bg-surface-primary px-3 py-2 text-left text-sm text-text-primary shadow-none transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+      className={`flex min-h-7.5 w-full items-center justify-between gap-3 rounded-md border border-border-secondary bg-surface-primary px-3 py-1 text-left text-sm text-text-primary shadow-none transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
       {...props}
     >
-      <span className={isEmpty ? 'text-text-tertiary' : 'text-text-primary'}>
+      <span className={`text-sm ${isEmpty ? 'text-text-tertiary' : 'text-text-primary'}`}>
         {isEmpty ? placeholder ?? 'Select date' : displayValue}
       </span>
       <svg
@@ -74,7 +74,7 @@ export const DatePicker = ({
   const inputId = id ?? generatedId;
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-1">
       {label && <Label htmlFor={inputId}>{label}</Label>}
       <ReactDatePicker
         id={inputId}

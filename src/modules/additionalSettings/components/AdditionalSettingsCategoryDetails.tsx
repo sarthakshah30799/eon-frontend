@@ -1,15 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Modal } from '@/components/ui';
 import type {
   IAdditionalSettingCategory,
   IAdditionalSettingSubcategory,
 } from '../types';
-import { Button, Input } from '@/components/ui';
-import {
-  CheckIcon,
-  PencilSquareIcon,
-  XMarkIcon,
-} from '@heroicons/react/24/outline';
+import { Button } from '@/components/ui';
+import { PencilSquareIcon } from '@heroicons/react/24/outline';
 import {
   getAdditionalSettingCategoryDefinition,
   getAdditionalSettingSubcategoryDefinition,
@@ -18,7 +14,7 @@ import {
 interface AdditionalSettingsCategoryDetailsProps {
   category: IAdditionalSettingCategory | null;
   onOpenCreateCategory: () => void;
-  onSaveCategoryTitle: (categoryId: string, title: string) => Promise<void>;
+  onOpenEditCategory: (category: IAdditionalSettingCategory) => void;
   onSaveSubcategory: (
     categoryId: string,
     subcategoryId: string,
@@ -30,89 +26,33 @@ interface AdditionalSettingsCategoryDetailsProps {
 const CategoryTitleEditor = ({
   category,
   isReadOnly = false,
-  onSaveCategoryTitle,
+  onOpenEditCategory,
 }: {
   category: IAdditionalSettingCategory;
   isReadOnly?: boolean;
-  onSaveCategoryTitle: (categoryId: string, title: string) => Promise<void>;
+  onOpenEditCategory: (category: IAdditionalSettingCategory) => void;
 }) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [draftTitle, setDraftTitle] = useState(category.title);
-
-  useEffect(() => {
-    setDraftTitle(category.title);
-    setIsEditing(false);
-  }, [category.id, category.title]);
-
-  const handleSave = async () => {
-    const nextTitle = draftTitle.trim();
-
-    if (!nextTitle) {
-      setDraftTitle(category.title);
-      setIsEditing(false);
-      return;
-    }
-
-    try {
-      await onSaveCategoryTitle(category.id, nextTitle);
-      setIsEditing(false);
-    } catch {
-      setDraftTitle(category.title);
-    }
-  };
-
-  if (!isEditing || isReadOnly) {
-    return (
-      <div className="flex items-start gap-3">
-        <div className="min-w-0">
-          <h3 className="truncate text-xl font-semibold text-text-primary">
-            {category.title}
-          </h3>
-          <p className="mt-1 text-xs uppercase text-text-tertiary">
-            {category.code}
-          </p>
-        </div>
-
-        {!isReadOnly ? (
-          <Button
-            type="button"
-            aria-label="Edit category title"
-            onClick={() => setIsEditing(true)}
-            className="border-0! bg-transparent! text-black!"
-          >
-            <PencilSquareIcon className="h-5 w-5" />
-          </Button>
-        ) : null}
-      </div>
-    );
-  }
-
   return (
-    <div className="flex items-center gap-3">
-      <Input
-        value={draftTitle}
-        onChange={event => setDraftTitle(event.target.value)}
-        className="w-full"
-      />
-      <Button
-        type="button"
-        className="border-0! bg-transparent! text-black!"
-        aria-label="Save category title"
-        onClick={handleSave}
-      >
-        <CheckIcon className="h-5 w-5" />
-      </Button>
-      <Button
-        type="button"
-        className="border-0! bg-transparent! text-black!"
-        aria-label="Cancel category title edit"
-        onClick={() => {
-          setDraftTitle(category.title);
-          setIsEditing(false);
-        }}
-      >
-        <XMarkIcon className="h-5 w-5" />
-      </Button>
+    <div className="flex items-start gap-3">
+      <div className="min-w-0">
+        <h3 className="truncate text-xl font-semibold text-text-primary">
+          {category.title}
+        </h3>
+        <p className="mt-1 text-xs uppercase text-text-tertiary">
+          {category.code}
+        </p>
+      </div>
+
+      {!isReadOnly ? (
+        <Button
+          type="button"
+          aria-label="Edit category"
+          onClick={() => onOpenEditCategory(category)}
+          className="border-0! bg-transparent! text-black!"
+        >
+          <PencilSquareIcon className="h-5 w-5" />
+        </Button>
+      ) : null}
     </div>
   );
 };
@@ -133,13 +73,14 @@ const SubcategoryRow = ({
         {subcategory.value}
       </td>
       <td className="px-4 py-3">
-        <button
+        <Button
           type="button"
           aria-label={`Edit ${subcategory.title}`}
           onClick={() => onEdit(subcategory)}
+          className="border-0! bg-transparent! text-black!"
         >
           <PencilSquareIcon className="h-5 w-5" />
-        </button>
+        </Button>
       </td>
     </tr>
   );
@@ -313,7 +254,7 @@ const EditSubcategoryForm = ({
 export const AdditionalSettingsCategoryDetails = ({
   category,
   onOpenCreateCategory,
-  onSaveCategoryTitle,
+  onOpenEditCategory,
   onSaveSubcategory,
 }: AdditionalSettingsCategoryDetailsProps) => {
   const [editingSubcategory, setEditingSubcategory] = useState<IAdditionalSettingSubcategory | null>(null);
@@ -359,8 +300,7 @@ export const AdditionalSettingsCategoryDetails = ({
           <section className="rounded-sm border border-border-primary bg-surface-secondary p-4">
             <CategoryTitleEditor
               category={category}
-              isReadOnly={Boolean(categoryDefinition?.titleLocked)}
-              onSaveCategoryTitle={onSaveCategoryTitle}
+              onOpenEditCategory={onOpenEditCategory}
             />
           </section>
 

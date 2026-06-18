@@ -8,7 +8,7 @@ import { useListCorporateClients } from '../hooks';
 
 export const CorporateClientListView = () => {
   const navigate = useNavigate();
-  const { canAdd } = usePermission('/admin/corporate-client-profile');
+  const { canAdd } = usePermission('/corporate-client-profile');
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
   const [search, setSearch] = useState('');
@@ -47,7 +47,7 @@ export const CorporateClientListView = () => {
           <Button
             type="button"
             className="rounded-sm"
-            onClick={() => navigate('/admin/corporate-client-profile/create')}
+            onClick={() => navigate('/corporate-client-profile/create')}
           >
             Create Corporate Client Profile
           </Button>

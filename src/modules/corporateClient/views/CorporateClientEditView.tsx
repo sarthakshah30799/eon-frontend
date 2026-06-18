@@ -14,7 +14,7 @@ const formatDateForInput = (dateString?: string | Date) => {
 export const CorporateClientEditView = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { canModify } = usePermission('/admin/corporate-client-profile');
+  const { canModify } = usePermission('/corporate-client-profile');
 
   const { data: client, isLoading, error } = useGetCorporateClient(id || '');
   const { updateCorporateClient, isPending } = useUpdateCorporateClient();
@@ -31,11 +31,11 @@ export const CorporateClientEditView = () => {
       email: values.email || undefined,
     };
     await updateCorporateClient({ id, data: sanitized });
-    navigate('/admin/corporate-client-profile');
+    navigate('/corporate-client-profile');
   };
 
   const handleCancel = () => {
-    navigate('/admin/corporate-client-profile');
+    navigate('/corporate-client-profile');
   };
 
   if (isLoading) {

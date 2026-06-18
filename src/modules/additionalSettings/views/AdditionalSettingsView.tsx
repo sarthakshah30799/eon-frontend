@@ -5,11 +5,12 @@ import { AdditionalSettingsCreateForm } from '../forms';
 import {
   useCreateAdditionalSetting,
   useListAdditionalSettings,
-  useUpdateAdditionalSetting,
+  useUpdateAdditionalSettingCategory,
   useUpdateAdditionalSettingSubcategory,
 } from '../hooks';
 import {
   createEmptyAdditionalSettingCategoryFormValues,
+  mapCategoryToFormValues,
 } from '../utils';
 import { ADDITIONAL_SETTINGS_TEXTS } from '../constants';
 import { AdditionalSettingsCategoryDetails } from '../components';
@@ -23,7 +24,11 @@ export const AdditionalSettingsView = () => {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
     null
   );
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [categoryModalMode, setCategoryModalMode] = useState<
+    'create' | 'edit' | null
+  >(null);
+  const [editingCategory, setEditingCategory] =
+    useState<IAdditionalSettingCategory | null>(null);
 
   const {
     data: categories = [],
@@ -32,8 +37,10 @@ export const AdditionalSettingsView = () => {
   } = useListAdditionalSettings();
   const { submitAdditionalSetting: createAdditionalSetting, isPending: isCreating } =
     useCreateAdditionalSetting();
-  const { submitAdditionalSetting: updateCategoryTitle } =
-    useUpdateAdditionalSetting();
+  const {
+    submitAdditionalSettingCategory: updateAdditionalSettingCategory,
+    isPending: isUpdatingCategory,
+  } = useUpdateAdditionalSettingCategory();
   const { submitAdditionalSetting: updateSubcategory } =
     useUpdateAdditionalSettingSubcategory();
 
@@ -52,7 +59,24 @@ export const AdditionalSettingsView = () => {
   ) => {
     const createdCategory = await createAdditionalSetting(values);
     setSelectedCategoryId(createdCategory.id);
-    setIsCreateModalOpen(false);
+    setCategoryModalMode(null);
+    setEditingCategory(null);
+  };
+
+  const handleUpdateSubmit = async (
+    values: IAdditionalSettingCategoryFormValues
+  ) => {
+    if (!editingCategory) {
+      return;
+    }
+
+    const updatedCategory = await updateAdditionalSettingCategory({
+      categoryId: editingCategory.id,
+      values,
+    });
+    setSelectedCategoryId(updatedCategory.id);
+    setCategoryModalMode(null);
+    setEditingCategory(null);
   };
 
   if (isLoading) {
@@ -78,9 +102,13 @@ export const AdditionalSettingsView = () => {
 
         <AdditionalSettingsCategoryDetails
           category={activeCategory}
-          onOpenCreateCategory={() => setIsCreateModalOpen(true)}
-          onSaveCategoryTitle={async (categoryId, title) => {
-            await updateCategoryTitle({ categoryId, title });
+          onOpenCreateCategory={() => {
+            setEditingCategory(null);
+            setCategoryModalMode('create');
+          }}
+          onOpenEditCategory={category => {
+            setEditingCategory(category);
+            setCategoryModalMode('edit');
           }}
           onSaveSubcategory={async (categoryId, subcategoryId, values) => {
             await updateSubcategory({
@@ -94,19 +122,40 @@ export const AdditionalSettingsView = () => {
       </div>
 
       <Modal
-        open={isCreateModalOpen}
+        open={categoryModalMode !== null}
         onOpenChange={nextOpen => {
-          setIsCreateModalOpen(nextOpen);
+          if (!nextOpen) {
+            setCategoryModalMode(null);
+            setEditingCategory(null);
+          }
         }}
-        title={ADDITIONAL_SETTINGS_TEXTS.CREATE_CATEGORY_TITLE}
-        description={ADDITIONAL_SETTINGS_TEXTS.CREATE_CATEGORY_SUBTITLE}
+        title={
+          categoryModalMode === 'edit'
+            ? ADDITIONAL_SETTINGS_TEXTS.UPDATE_CATEGORY_TITLE
+            : ADDITIONAL_SETTINGS_TEXTS.CREATE_CATEGORY_TITLE
+        }
+        description={
+          categoryModalMode === 'edit'
+            ? ADDITIONAL_SETTINGS_TEXTS.UPDATE_CATEGORY_SUBTITLE
+            : ADDITIONAL_SETTINGS_TEXTS.CREATE_CATEGORY_SUBTITLE
+        }
         size="xl"
       >
         <AdditionalSettingsCreateForm
-          defaultValues={createEmptyAdditionalSettingCategoryFormValues()}
-          onSubmit={handleCreateSubmit}
-          isSubmitting={isCreating}
-          submitLabel={ADDITIONAL_SETTINGS_TEXTS.CREATE_CATEGORY}
+          defaultValues={
+            categoryModalMode === 'edit' && editingCategory
+              ? mapCategoryToFormValues(editingCategory)
+              : createEmptyAdditionalSettingCategoryFormValues()
+          }
+          onSubmit={
+            categoryModalMode === 'edit' ? handleUpdateSubmit : handleCreateSubmit
+          }
+          isSubmitting={isCreating || isUpdatingCategory}
+          submitLabel={
+            categoryModalMode === 'edit'
+              ? ADDITIONAL_SETTINGS_TEXTS.UPDATE_CATEGORY
+              : ADDITIONAL_SETTINGS_TEXTS.CREATE_CATEGORY
+          }
         />
       </Modal>
     </section>

@@ -149,6 +149,7 @@ export const FinancialCodeForm = ({
   };
   return (
     <Form
+      id='financial-profile-form'
       onSubmit={onSubmit}
       onError={handleSubmitErrors}
       resolver={
@@ -158,7 +159,6 @@ export const FinancialCodeForm = ({
       className="space-y-6"
       footer={{
         submitLabel,
-        backLabel: 'Back',
         onBackClick: () => {
           void onCancel?.();
         },

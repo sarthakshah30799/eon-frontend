@@ -14,30 +14,64 @@ const countMatches = (value: string, pattern: RegExp) => {
   return value.match(pattern)?.length ?? 0;
 };
 
-const buildPasswordSchema = (policy: IPasswordPolicy = DEFAULT_PASSWORD_POLICY) =>
-  yup
-    .string()
-    .required('Password is required')
-    .min(policy.minLength, `Password must be at least ${policy.minLength} characters`)
-    .max(policy.maxLength, `Password must be at most ${policy.maxLength} characters`)
-    .test('min-special-characters', `Password must contain at least ${policy.minSpecialCharCount} special character(s)`, value => {
-      if (!value || policy.minSpecialCharCount <= 0) {
-        return true;
+const buildPasswordSchema = (policy: Partial<IPasswordPolicy> = {}) => {
+  let schema = yup.string().required('Password is required');
+
+  if (typeof policy.minLength === 'number') {
+    schema = schema.min(
+      policy.minLength,
+      `Password must be at least ${policy.minLength} characters`
+    );
+  }
+
+  if (typeof policy.maxLength === 'number') {
+    schema = schema.max(
+      policy.maxLength,
+      `Password must be at most ${policy.maxLength} characters`
+    );
+  }
+
+  if (typeof policy.minSpecialCharCount === 'number' && policy.minSpecialCharCount > 0) {
+    schema = schema.test(
+      'min-special-characters',
+      `Password must contain at least ${policy.minSpecialCharCount} special character(s)`,
+      value => {
+        if (!value) {
+          return true;
+        }
+        return countMatches(value, /[^A-Za-z0-9]/g) >= policy.minSpecialCharCount!;
       }
-      return countMatches(value, /[^A-Za-z0-9]/g) >= policy.minSpecialCharCount;
-    })
-    .test('min-numeric-characters', `Password must contain at least ${policy.minNumericCount} numeric character(s)`, value => {
-      if (!value || policy.minNumericCount <= 0) {
-        return true;
+    );
+  }
+
+  if (typeof policy.minNumericCount === 'number' && policy.minNumericCount > 0) {
+    schema = schema.test(
+      'min-numeric-characters',
+      `Password must contain at least ${policy.minNumericCount} numeric character(s)`,
+      value => {
+        if (!value) {
+          return true;
+        }
+        return countMatches(value, /[0-9]/g) >= policy.minNumericCount!;
       }
-      return countMatches(value, /[0-9]/g) >= policy.minNumericCount;
-    })
-    .test('min-alpha-characters', `Password must contain at least ${policy.minAlphaCount} alphabetic character(s)`, value => {
-      if (!value || policy.minAlphaCount <= 0) {
-        return true;
+    );
+  }
+
+  if (typeof policy.minAlphaCount === 'number' && policy.minAlphaCount > 0) {
+    schema = schema.test(
+      'min-alpha-characters',
+      `Password must contain at least ${policy.minAlphaCount} alphabetic character(s)`,
+      value => {
+        if (!value) {
+          return true;
+        }
+        return countMatches(value, /[A-Za-z]/g) >= policy.minAlphaCount!;
       }
-      return countMatches(value, /[A-Za-z]/g) >= policy.minAlphaCount;
-    });
+    );
+  }
+
+  return schema;
+};
 
 export const loginSchema = yup.object({
   email: yup
@@ -80,7 +114,7 @@ export const forgotPasswordSchema = yup.object({
 });
 
 export const buildResetPasswordSchema = (
-  policy: IPasswordPolicy = DEFAULT_PASSWORD_POLICY
+  policy: Partial<IPasswordPolicy> = {}
 ) =>
   yup.object({
     password: buildPasswordSchema(policy),

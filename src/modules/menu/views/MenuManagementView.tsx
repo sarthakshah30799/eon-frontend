@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui';
 import { menuApi } from '@/api';
 import type { ICreateMenu, IMenu } from '@/types/menuTypes';
@@ -58,21 +59,25 @@ const MenuTreeRow = ({
           </p>
         </div>
 
-        <div className="flex gap-2">
-          <button
+        <div className="flex">
+          <Button
             type="button"
-            className="rounded-sm border border-border-primary px-3 py-1.5 text-xs font-medium text-text-primary transition hover:bg-surface-secondary"
+            aria-label={`Edit ${menu.name}`}
             onClick={() => onEdit(menu)}
+            className="border-0! bg-transparent! text-black!"
+            size="sm"
           >
-            Edit
-          </button>
-          <button
+            <PencilSquareIcon className="h-4 w-4" aria-hidden="true" />
+          </Button>
+          <Button
             type="button"
-            className="rounded-sm border border-red-200 px-3 py-1.5 text-xs font-medium text-red-700 transition hover:bg-red-50"
+            aria-label={`Delete ${menu.name}`}
+            className="border-0! bg-transparent! text-red-700!"
             onClick={() => onDelete(menu)}
+            size="sm"
           >
-            Delete
-          </button>
+            <TrashIcon className="h-4 w-4" aria-hidden="true" />
+          </Button>
         </div>
       </div>
 
@@ -167,10 +172,7 @@ export const MenuManagementView = () => {
     <section className="space-y-6">
       <div className="rounded-sm border border-border-primary bg-surface-primary p-6 shadow-sm">
         <div className="mb-4 flex flex-wrap items-start justify-end gap-4">
-          <Button
-            type="button"
-            onClick={() => setSelectedMenu(null)}
-          >
+          <Button type="button" onClick={() => setSelectedMenu(null)}>
             New Menu
           </Button>
         </div>

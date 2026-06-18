@@ -25,7 +25,7 @@ export const CorporateClientTable = ({
   loading = false,
 }: CorporateClientTableProps) => {
   const navigate = useNavigate();
-  const { canModify, canView } = usePermission('/admin/corporate-client-profile');
+  const { canModify, canView } = usePermission('/corporate-client-profile');
 
   const rows: CorporateClientTableRow[] = clients.map(client => ({
     id: client.id,
@@ -68,7 +68,7 @@ export const CorporateClientTable = ({
               className="rounded-sm bg-transparent text-black! hover:bg-surface-secondary hover:text-text-primary"
               onClick={event => {
                 event.stopPropagation();
-                navigate(`/admin/corporate-client-profile/edit/${clientId}`);
+                navigate(`/corporate-client-profile/edit/${clientId}`);
               }}
             >
               {canModify ? (
@@ -94,7 +94,7 @@ export const CorporateClientTable = ({
       loading={loading}
       onRowClick={
         canModify || canView
-          ? row => navigate(`/admin/corporate-client-profile/edit/${row.id}`)
+          ? row => navigate(`/corporate-client-profile/edit/${row.id}`)
           : undefined
       }
       emptyMessage="No corporate client profiles found. Create your first profile."

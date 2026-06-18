@@ -133,13 +133,13 @@ const AccountsProfileEditPage = lazy(
   () => import('../pages/admin/accounts-profile/edit/[id]')
 );
 const CorporateClientListPage = lazy(
-  () => import('../pages/admin/corporate-client-profile/list')
+  () => import('../pages/corporate-client-profile/list')
 );
 const CorporateClientCreatePage = lazy(
-  () => import('../pages/admin/corporate-client-profile/create')
+  () => import('../pages/corporate-client-profile/create')
 );
 const CorporateClientEditPage = lazy(
-  () => import('../pages/admin/corporate-client-profile/edit/[id]')
+  () => import('../pages/corporate-client-profile/edit/[id]')
 );
 const MasterPagesPage = lazy(
   () => import('../pages/master/system-setups/master-pages/MasterPagesPage')
@@ -424,7 +424,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/admin/corporate-client-profile',
+    path: '/corporate-client-profile',
     element: (
       <ProtectedLayout>
         <CorporateClientListPage />
@@ -432,7 +432,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/admin/corporate-client-profile/create',
+    path: '/corporate-client-profile/create',
     element: (
       <ProtectedLayout>
         <CorporateClientCreatePage />
@@ -440,7 +440,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/admin/corporate-client-profile/edit/:id',
+    path: '/corporate-client-profile/edit/:id',
     element: (
       <ProtectedLayout>
         <CorporateClientEditPage />

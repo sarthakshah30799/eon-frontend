@@ -89,9 +89,6 @@ const SubcategoryRowFields = ({
         `subcategories.${index}.categoryType`,
         subcategoryDefinition.valueType,
       );
-      if (subcategoryDefinition.valueType === 'number' && subcategoryDefinition.required) {
-        setValue(`subcategories.${index}.value`, '');
-      }
     }
   }, [index, subcategoryDefinition, setValue]);
 
@@ -119,7 +116,7 @@ const SubcategoryRowFields = ({
         <button
           type="button"
           aria-label={`Remove subcategory ${index + 1}`}
-          className="absolute right-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full border border-border-primary bg-surface-primary text-text-tertiary transition hover:border-error-500 hover:bg-error-50 hover:text-error-600 disabled:opacity-50"
+          className="absolute right-3 top-0 inline-flex h-9 w-9 items-center justify-center rounded-full border border-border-primary bg-surface-primary text-text-tertiary transition hover:border-error-500 hover:bg-error-50 hover:text-error-600 disabled:opacity-50"
           disabled={isSubmitting}
           onClick={() => remove(index)}
         >

@@ -3,10 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { Button } from '../../../components/ui/button1/Button';
 import { Form, FormFieldInput } from '../../../components/forms';
 import { yupResolver } from '@hookform/resolvers/yup';
-import {
-  DEFAULT_PASSWORD_POLICY,
-  buildResetPasswordSchema,
-} from '../../../modules/auth/schema';
+import { buildResetPasswordSchema } from '../../../modules/auth/schema';
 import { authApi } from '../../../api/auth/auth.api';
 import { toast } from 'react-hot-toast';
 import { usePasswordPolicy } from '../../../modules/auth/hooks';
@@ -26,28 +23,50 @@ const ResetPasswordPage: React.FC = () => {
 
   const [isSuccess, setIsSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const resolvedPolicy = passwordPolicy ?? DEFAULT_PASSWORD_POLICY;
+  const resolvedPolicy = passwordPolicy;
   const passwordSchema = useMemo(
-    () => buildResetPasswordSchema(resolvedPolicy),
+    () => buildResetPasswordSchema(resolvedPolicy ?? {}),
     [resolvedPolicy]
   );
   const formKey = useMemo(
-    () => JSON.stringify(resolvedPolicy),
+    () => JSON.stringify(resolvedPolicy ?? {}),
     [resolvedPolicy]
   );
   const policySummary = useMemo(() => {
-    const parts = [`${resolvedPolicy.minLength}-${resolvedPolicy.maxLength} characters`];
-    if (resolvedPolicy.minSpecialCharCount > 0) {
+    const parts: string[] = [];
+
+    if (typeof resolvedPolicy?.minLength === 'number') {
+      const maxLengthText =
+        typeof resolvedPolicy?.maxLength === 'number'
+          ? `-${resolvedPolicy.maxLength}`
+          : '+';
+      parts.push(`${resolvedPolicy.minLength}${maxLengthText} characters`);
+    }
+
+    if (
+      typeof resolvedPolicy?.minSpecialCharCount === 'number' &&
+      resolvedPolicy.minSpecialCharCount > 0
+    ) {
       parts.push(`${resolvedPolicy.minSpecialCharCount}+ special character(s)`);
     }
-    if (resolvedPolicy.minNumericCount > 0) {
+
+    if (
+      typeof resolvedPolicy?.minNumericCount === 'number' &&
+      resolvedPolicy.minNumericCount > 0
+    ) {
       parts.push(`${resolvedPolicy.minNumericCount}+ numeric character(s)`);
     }
-    if (resolvedPolicy.minAlphaCount > 0) {
+
+    if (
+      typeof resolvedPolicy?.minAlphaCount === 'number' &&
+      resolvedPolicy.minAlphaCount > 0
+    ) {
       parts.push(`${resolvedPolicy.minAlphaCount}+ alphabetic character(s)`);
     }
 
-    return `Password requirements: ${parts.join(', ')}.`;
+    return parts.length > 0
+      ? `Password requirements: ${parts.join(', ')}.`
+      : '';
   }, [resolvedPolicy]);
 
   const onSubmit = async (data: ResetPasswordFormData) => {
@@ -127,7 +146,7 @@ const ResetPasswordPage: React.FC = () => {
                   ? 'Please create a password for your account'
                   : 'Please enter your new password below'}
             </p>
-            {!isSuccess && !isLinkInvalid ? (
+            {!isSuccess && !isLinkInvalid && policySummary ? (
               <p className="mt-3 text-xs text-text-tertiary">{policySummary}</p>
             ) : null}
           </div>

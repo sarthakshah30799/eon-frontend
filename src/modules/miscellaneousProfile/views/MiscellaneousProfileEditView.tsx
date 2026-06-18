@@ -1,0 +1,87 @@
+import { useMemo } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Loader } from '@/components/ui/loader';
+import { CATEGORY_OPTIONS_TEXTS } from '../constants';
+import {
+  buildCategoryOptionPayloads,
+  mapCategoryOptionsToFormValues,
+} from '../utils';
+import {
+  useGetMiscellaneousProfilesByCode,
+  useSaveMiscellaneousProfiles,
+} from '../hooks';
+import { MiscellaneousProfileForm } from '../forms';
+import type { ICategoryOptionsFormValues } from '../utils';
+import type { CategoryOptionCode } from '@/types/categoryOptionTypes';
+
+export const MiscellaneousProfileEditView = () => {
+  const navigate = useNavigate();
+  const { code = '' } = useParams<{ code: string }>();
+  const normalizedCode = code as CategoryOptionCode;
+  const { data: categoryOptions = [], isLoading } =
+    useGetMiscellaneousProfilesByCode(normalizedCode);
+  const { submitCategoryOptions, isPending } = useSaveMiscellaneousProfiles();
+
+  const defaultValues: ICategoryOptionsFormValues | null = useMemo(() => {
+    if (!categoryOptions.length) {
+      return null;
+    }
+
+    return mapCategoryOptionsToFormValues(categoryOptions);
+  }, [categoryOptions]);
+
+  const handleSubmit = async (values: ICategoryOptionsFormValues) => {
+    const updates = values.items
+      .filter(item => Boolean(item.id))
+      .map(item => ({
+        id: item.id as string,
+        data: buildCategoryOptionPayloads({
+          ...values,
+          items: [item],
+        })[0]!,
+      }));
+
+    const creates = buildCategoryOptionPayloads({
+      ...values,
+      items: values.items.filter(item => !item.id),
+    });
+
+    await submitCategoryOptions({
+      updates,
+      creates,
+    });
+
+    navigate('/admin/miscellaneous-profile');
+  };
+
+  if (isLoading) {
+    return <Loader />;
+  }
+
+  if (!defaultValues) {
+    return (
+      <div className="rounded-sm border border-border-primary bg-surface-primary p-6 shadow-sm">
+        <p className="text-center text-text-secondary">
+          Miscellaneous profile not found
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <section className="mx-auto w-full max-w-6xl rounded-md border border-border-primary bg-surface-primary p-5 shadow-sm">
+        <MiscellaneousProfileForm
+          defaultValues={defaultValues}
+          onSubmit={handleSubmit}
+          submitLabel={CATEGORY_OPTIONS_TEXTS.SAVE_CHANGES}
+          isSubmitting={isPending}
+          mode="edit"
+          fixedCode={defaultValues.code}
+        />
+      </section>
+    </div>
+  );
+};
+
+export default MiscellaneousProfileEditView;

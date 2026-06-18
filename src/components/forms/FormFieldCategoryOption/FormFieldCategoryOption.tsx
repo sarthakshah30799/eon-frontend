@@ -2,14 +2,14 @@ import { useCallback, useRef, useState } from 'react';
 import { Modal, type AsyncSelectOption } from '@/components/ui';
 import { FormFieldSelect } from '../FormFieldSelect';
 import {
-  CategoryOptionsForm,
+  MiscellaneousProfileForm,
   buildCategoryOptionPayloads,
   createEmptyCategoryOptionsFormValues,
-} from '@/modules/categoryOptions';
+} from '@/modules/miscellaneousProfile';
 import { useCategoryOptions } from '@/hooks';
 import type { ComponentProps } from 'react';
 import type { CategoryOptionCode } from '@/types/categoryOptionTypes';
-import type { ICategoryOptionsFormValues } from '@/modules/categoryOptions';
+import type { ICategoryOptionsFormValues } from '@/modules/miscellaneousProfile';
 
 type FormFieldSelectProps = ComponentProps<typeof FormFieldSelect>;
 
@@ -147,7 +147,7 @@ export const FormFieldCategoryOption = ({
           </div>
         )}
 
-        <CategoryOptionsForm
+        <MiscellaneousProfileForm
           defaultValues={pendingDefaultValues}
           fixedCode={code}
           onSubmit={handleBulkSubmit}

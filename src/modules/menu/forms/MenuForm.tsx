@@ -102,6 +102,7 @@ export const MenuForm = ({
             defaultOptions={parentOptions}
             disabled={isSubmitting}
             isSearchable={false}
+            isClearable
           />
           <div className="rounded-sm border border-border-primary bg-surface-primary p-3">
             <FormFieldCheckbox

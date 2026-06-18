@@ -101,14 +101,14 @@ const CounterProfileEditPage = lazy(
   () =>
     import('../pages/master/system-setups/counter-profile/edit/[id]/CounterProfileEditPage')
 );
-const CategoryOptionsListPage = lazy(
-  () => import('../pages/admin/category-options/list')
+const MiscellaneousProfileListPage = lazy(
+  () => import('../pages/admin/miscellaneous-profile/list')
 );
-const CategoryOptionsCreatePage = lazy(
-  () => import('../pages/admin/category-options/create')
+const MiscellaneousProfileCreatePage = lazy(
+  () => import('../pages/admin/miscellaneous-profile/create')
 );
-const CategoryOptionsEditPage = lazy(
-  () => import('../pages/admin/category-options/edit/[id]')
+const MiscellaneousProfileEditPage = lazy(
+  () => import('../pages/admin/miscellaneous-profile/edit/[id]')
 );
 const MenuPage = lazy(() => import('../pages/admin/menu/MenuPage'));
 const AdditionalSettingsPage = lazy(
@@ -336,26 +336,26 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/admin/category-options',
+    path: '/admin/miscellaneous-profile',
     element: (
       <ProtectedLayout>
-        <CategoryOptionsListPage />
+        <MiscellaneousProfileListPage />
       </ProtectedLayout>
     ),
   },
   {
-    path: '/admin/category-options/create',
+    path: '/admin/miscellaneous-profile/create',
     element: (
       <ProtectedLayout>
-        <CategoryOptionsCreatePage />
+        <MiscellaneousProfileCreatePage />
       </ProtectedLayout>
     ),
   },
   {
-    path: '/admin/category-options/edit/:code',
+    path: '/admin/miscellaneous-profile/edit/:code',
     element: (
       <ProtectedLayout>
-        <CategoryOptionsEditPage />
+        <MiscellaneousProfileEditPage />
       </ProtectedLayout>
     ),
   },

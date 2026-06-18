@@ -35,10 +35,16 @@ type SidebarGroupItem = {
 
 type SidebarItem = SidebarLeafItem | SidebarGroupItem;
 
-type SidebarSection = {
+type SidebarGroupSection = {
   title: string;
   items: SidebarItem[];
 };
+
+type SidebarLeafSection = SidebarLeafItem & {
+  title: string;
+};
+
+type SidebarSection = SidebarGroupSection | SidebarLeafSection;
 
 const ADMIN_ADDITIONAL_SETTINGS_ITEM: SidebarLeafItem = {
   id: 'admin-additional-settings',
@@ -99,19 +105,41 @@ const mapMasterPageNodeToItem = (
   };
 };
 
-const mapMenuNodeToItem = (node: IMenu): SidebarItem => {
-  if (!node.children || node.children.length === 0) {
+const resolveMenuPath = (path?: string, basePath = '') => {
+  if (!path) return undefined;
+  if (!basePath) return path;
+  if (path.startsWith(basePath)) return path;
+  return `${basePath}${path.startsWith('/') ? path : `/${path}`}`;
+};
+
+const mapVisibleMenuNodeToItem = (
+  node: IMenu,
+  hasViewPermission: (path?: string) => boolean,
+  basePath = ''
+): SidebarItem | null => {
+  const visibleChildren = (node.children || [])
+    .map(child => mapVisibleMenuNodeToItem(child, hasViewPermission, basePath))
+    .filter(Boolean) as SidebarItem[];
+
+  const resolvedPath = resolveMenuPath(node.path || undefined, basePath);
+  const canViewSelf = hasViewPermission(resolvedPath);
+
+  if (visibleChildren.length > 0) {
     return {
       id: node.id,
       label: node.name,
-      path: node.path || undefined,
+      children: visibleChildren,
     };
+  }
+
+  if (!canViewSelf) {
+    return null;
   }
 
   return {
     id: node.id,
     label: node.name,
-    children: node.children.map(mapMenuNodeToItem),
+    path: resolvedPath,
   };
 };
 
@@ -141,6 +169,15 @@ const serializeSidebarItems = (items: SidebarItem[]): string =>
         : `${item.id}:${item.path ?? ''}`
     )
     .join('|');
+
+const serializeSidebarSection = (section: SidebarSection): string =>
+  isGroupSection(section)
+    ? `${section.title}:${serializeSidebarItems(section.items)}`
+    : `${section.title}:${section.id}:${section.path ?? ''}`;
+
+const isGroupSection = (
+  section: SidebarSection
+): section is SidebarGroupSection => 'items' in section;
 
 interface SidebarTreeProps {
   items: SidebarItem[];
@@ -319,53 +356,38 @@ export const Sidebar = ({
     const dynamicSections = (menuTree || [])
       .filter(root => !root.isAdmin)
       .map<SidebarSection>(root => {
-        const items = (root.children || [])
-          .map(group => {
-            if (!group.children || group.children.length === 0) {
-              if (!hasViewPermission(group.path || undefined)) return null;
+        const rootItem = mapVisibleMenuNodeToItem(root, hasViewPermission);
 
-              return {
-                id: group.id,
-                label: group.name,
-                path: group.path || undefined,
-              } satisfies SidebarLeafItem;
-            }
+        if (!rootItem) {
+          return {
+            title: root.name,
+            items: [],
+          } satisfies SidebarGroupSection;
+        }
 
-            const mappedChildren = (group.children || [])
-              .map(item => {
-                if (!hasViewPermission(item.path ?? undefined)) return null;
-
-                return {
-                  id: item.id,
-                  label: item.name,
-                  path: item.path ?? undefined,
-                } satisfies SidebarLeafItem;
-              })
-              .filter(Boolean) as SidebarLeafItem[];
-
-            if (mappedChildren.length === 0) return null;
-
-            return {
-              id: group.id,
-              label: group.name,
-              children: mappedChildren,
-            } satisfies SidebarGroupItem;
-          })
-          .filter(Boolean) as SidebarItem[];
+        if ('children' in rootItem) {
+          return {
+            title: root.name,
+            items: [rootItem],
+          } satisfies SidebarGroupSection;
+        }
 
         return {
           title: root.name,
-          items,
-        } satisfies SidebarSection;
+          id: rootItem.id,
+          label: rootItem.label,
+          path: rootItem.path,
+        } satisfies SidebarLeafSection;
       });
 
     const adminRoot = menuTree.find(root => root.isAdmin);
-    const adminSection: SidebarSection = {
+    const adminItems = (adminRoot?.children ?? [])
+      .map(child => mapVisibleMenuNodeToItem(child, hasViewPermission, '/admin'))
+      .filter(Boolean) as SidebarItem[];
+
+    const adminSection: SidebarGroupSection = {
       title: adminRoot?.name ?? 'Admin',
-      items: [
-        ...(adminRoot?.children?.map(mapMenuNodeToItem) ?? []),
-        ADMIN_ADDITIONAL_SETTINGS_ITEM,
-      ],
+      items: [...adminItems, ADMIN_ADDITIONAL_SETTINGS_ITEM],
     };
 
     const masterPagesSection: SidebarSection = {
@@ -377,22 +399,22 @@ export const Sidebar = ({
       ? [adminSection, ...dynamicSections]
       : dynamicSections;
 
-    return [...nextSections, masterPagesSection].filter(
-      section => section.items.length > 0
+    return [...nextSections, masterPagesSection].filter(section =>
+      isGroupSection(section) ? section.items.length > 0 : true
     );
   }, [createdPages, menuTree, user]);
 
   const sectionsSignature = useMemo(
     () =>
-      sections
-        .map(section => `${section.title}:${serializeSidebarItems(section.items)}`)
-        .join('||'),
+      sections.map(serializeSidebarSection).join('||'),
     [sections]
   );
 
   useEffect(() => {
     const firstOpenSection = sections.find(section =>
-      section.items.some(item => isMenuItemActive(item, location.pathname))
+      isGroupSection(section)
+        ? section.items.some(item => isMenuItemActive(item, location.pathname))
+        : isPathActive(location.pathname, section.path)
     );
 
     const nextOpenSectionId = firstOpenSection?.title ?? sections[0]?.title ?? null;
@@ -411,7 +433,11 @@ export const Sidebar = ({
       }
     };
 
-    sections.forEach(section => collectOpenGroups(section.items, section.title));
+    sections.forEach(section => {
+      if (isGroupSection(section)) {
+        collectOpenGroups(section.items, section.title);
+      }
+    });
     setOpenByParent(prev =>
       JSON.stringify(prev) === JSON.stringify(nextOpenByParent) ? prev : nextOpenByParent
     );
@@ -515,58 +541,85 @@ export const Sidebar = ({
         <nav className="flex-1 overflow-y-auto px-2 py-2">
           <div className="space-y-1.5">
             {sections.map(section => {
-              const isOpen = openSectionId === section.title;
-              const isActiveSection = section.items.some(item =>
-                isMenuItemActive(item, location.pathname)
-              );
+              if (isGroupSection(section)) {
+                const isOpen = openSectionId === section.title;
+                const isActiveSection = section.items.some(item =>
+                  isMenuItemActive(item, location.pathname)
+                );
+
+                return (
+                  <section key={section.title} className="space-y-0.5">
+                    <button
+                      type="button"
+                      className={[
+                        'group flex w-full cursor-pointer items-center justify-between rounded-md border-b border-slate-200 text-left text-sm font-medium transition',
+                        isActiveSection
+                          ? 'bg-sky-100 text-sky-800 shadow-sm'
+                          : 'bg-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900',
+                        isCollapsed
+                          ? 'mx-auto h-10 w-10 justify-center rounded-full px-0'
+                          : 'px-2.5 py-2.5',
+                      ].join(' ')}
+                      onClick={() =>
+                        setOpenSectionId(prev =>
+                          prev === section.title ? null : section.title
+                        )
+                      }
+                      aria-expanded={isOpen}
+                      title={section.title}
+                    >
+                      <span className="flex min-w-0 items-center gap-2 truncate text-sm">
+                        {isCollapsed ? compactLabel(section.title) : section.title}
+                      </span>
+                      {!isCollapsed && (
+                        <span className="text-slate-400">
+                          <SidebarChevron isOpen={isOpen} />
+                        </span>
+                      )}
+                    </button>
+
+                    {isOpen && !isCollapsed && (
+                      <div className="ml-2 border-l border-slate-200 pl-2 pt-1.5">
+                        <SidebarTree
+                          items={section.items}
+                          currentPath={location.pathname}
+                          onNavigate={handleMenuClick}
+                          isCollapsed={isCollapsed}
+                          parentKey={section.title}
+                          openByParent={openByParent}
+                          collapsedByParent={collapsedByParent}
+                          setOpenByParent={setOpenByParent}
+                          setCollapsedByParent={setCollapsedByParent}
+                        />
+                      </div>
+                    )}
+                  </section>
+                );
+              }
+
+              const isActive = isPathActive(location.pathname, section.path);
 
               return (
-                <section key={section.title} className="space-y-0.5">
-              <button
-                type="button"
-                className={[
-                  'group flex w-full cursor-pointer items-center justify-between rounded-md border-b border-slate-200 text-left text-sm font-medium transition',
-                  isActiveSection
-                    ? 'bg-sky-100 text-sky-800 shadow-sm'
-                    : 'bg-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900',
-                  isCollapsed
-                    ? 'mx-auto h-10 w-10 justify-center rounded-full px-0'
-                    : 'px-2.5 py-2.5',
-                ].join(' ')}
-                onClick={() =>
-                  setOpenSectionId(prev =>
-                    prev === section.title ? null : section.title
-                  )
-                }
-                aria-expanded={isOpen}
-                title={section.title}
-              >
-                <span className="flex min-w-0 items-center gap-2 truncate text-sm">
-                  {isCollapsed ? compactLabel(section.title) : section.title}
-                </span>
-                {!isCollapsed && (
-                  <span className="text-slate-400">
-                    <SidebarChevron isOpen={isOpen} />
+                <button
+                  key={section.title}
+                  type="button"
+                  className={[
+                    'group flex w-full cursor-pointer items-center rounded-md border-b border-slate-200 text-left text-sm font-medium transition',
+                    isActive
+                      ? 'bg-sky-100 text-sky-800 shadow-sm'
+                      : 'bg-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900',
+                    isCollapsed
+                      ? 'mx-auto h-10 w-10 justify-center rounded-full px-0'
+                      : 'px-2.5 py-2.5',
+                  ].join(' ')}
+                  aria-current={isActive ? 'page' : undefined}
+                  onClick={() => handleMenuClick(section.path)}
+                  title={section.title}
+                >
+                  <span className="flex min-w-0 items-center gap-2 truncate text-sm">
+                    {isCollapsed ? compactLabel(section.title) : section.label}
                   </span>
-                )}
-              </button>
-
-                  {isOpen && !isCollapsed && (
-                    <div className="ml-2 border-l border-slate-200 pl-2 pt-1.5">
-                      <SidebarTree
-                        items={section.items}
-                        currentPath={location.pathname}
-                        onNavigate={handleMenuClick}
-                        isCollapsed={isCollapsed}
-                        parentKey={section.title}
-                        openByParent={openByParent}
-                        collapsedByParent={collapsedByParent}
-                        setOpenByParent={setOpenByParent}
-                        setCollapsedByParent={setCollapsedByParent}
-                      />
-                  </div>
-                )}
-                </section>
+                </button>
               );
             })}
 

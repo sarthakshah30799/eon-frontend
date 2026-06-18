@@ -29,14 +29,17 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
     path: '/admin/counter-profile/edit/:id',
     meta: { title: 'Edit Counter Profile' },
   },
-  { path: '/admin/category-options', meta: { title: 'Category Options' } },
   {
-    path: '/admin/category-options/create',
-    meta: { title: 'Create Category Option' },
+    path: '/admin/miscellaneous-profile',
+    meta: { title: 'Miscellaneous Profile' },
   },
   {
-    path: '/admin/category-options/edit/:code',
-    meta: { title: 'Edit Category Option' },
+    path: '/admin/miscellaneous-profile/create',
+    meta: { title: 'Create Miscellaneous Profile' },
+  },
+  {
+    path: '/admin/miscellaneous-profile/edit/:code',
+    meta: { title: 'Edit Miscellaneous Profile' },
   },
   { path: '/admin/menu-management', meta: { title: 'Menu Management' } },
   { path: '/admin/additional-settings', meta: { title: 'Additional Settings' } },

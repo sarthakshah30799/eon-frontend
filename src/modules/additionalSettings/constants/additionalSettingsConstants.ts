@@ -8,6 +8,9 @@ export const AdditionalSettingsCodeEnum = {
   PasswordMinNumericCharCount: 'PASSWORD_MIN_NUMERIC_CHAR_COUNT',
   PasswordMinAlphaCharCount: 'PASSWORD_MIN_ALPHA_CHAR_COUNT',
   PasswordMaxInvalidAttempts: 'PASSWORD_MAX_INVALID_ATTEMPTS',
+  SessionPolicy: 'SESSION_POLICY',
+  SessionAllowMultipleLogin: 'ALLOW_MULTIPLE_LOGIN',
+  SessionIdleTimeoutSeconds: 'IDLE_TIMEOUT_SECONDS',
 } as const;
 
 export const ADDITIONAL_SETTINGS_TEXTS = {

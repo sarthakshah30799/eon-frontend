@@ -89,7 +89,7 @@ const SubcategoryRow = ({
 interface EditSubcategoryFormProps {
   categoryCode?: string;
   subcategory: IAdditionalSettingSubcategory;
-  isPasswordPolicy?: boolean;
+  isPolicyCategory?: boolean;
   onSave: (values: { description: string; value: string }) => Promise<void>;
   onCancel: () => void;
 }
@@ -97,7 +97,7 @@ interface EditSubcategoryFormProps {
 const EditSubcategoryForm = ({
   categoryCode,
   subcategory,
-  isPasswordPolicy = false,
+  isPolicyCategory = false,
   onSave,
   onCancel,
 }: EditSubcategoryFormProps) => {
@@ -141,7 +141,7 @@ const EditSubcategoryForm = ({
         <label className="block text-xs font-semibold uppercase tracking-wider text-text-secondary mb-2">
           Description
         </label>
-        {isPasswordPolicy ? (
+        {isPolicyCategory ? (
           <div className="w-full rounded-sm border border-border-primary bg-surface-secondary px-3 py-2 text-sm text-text-primary">
             {description}
           </div>
@@ -259,7 +259,7 @@ export const AdditionalSettingsCategoryDetails = ({
 }: AdditionalSettingsCategoryDetailsProps) => {
   const [editingSubcategory, setEditingSubcategory] = useState<IAdditionalSettingSubcategory | null>(null);
   const categoryDefinition = getAdditionalSettingCategoryDefinition(category?.code);
-  const isPasswordPolicyCategory = categoryDefinition?.rendererKey === 'password-policy';
+  const isLockedCategory = Boolean(categoryDefinition?.titleLocked);
 
   const hasSubcategories = useMemo(
     () => Boolean(category?.subcategories.length),
@@ -300,6 +300,7 @@ export const AdditionalSettingsCategoryDetails = ({
           <section className="rounded-sm border border-border-primary bg-surface-secondary p-4">
             <CategoryTitleEditor
               category={category}
+              isReadOnly={Boolean(categoryDefinition?.titleLocked)}
               onOpenEditCategory={onOpenEditCategory}
             />
           </section>
@@ -356,8 +357,8 @@ export const AdditionalSettingsCategoryDetails = ({
         }}
         title="Edit Subcategory"
         description={
-          isPasswordPolicyCategory
-            ? 'Update the password policy value only. Codes and labels are locked.'
+          isLockedCategory
+            ? 'Update the policy value only. Codes and labels are locked.'
             : 'Update subcategory settings below. Once created, code and type cannot be changed.'
         }
         size="md"
@@ -366,7 +367,7 @@ export const AdditionalSettingsCategoryDetails = ({
           <EditSubcategoryForm
             categoryCode={category?.code}
             subcategory={editingSubcategory}
-            isPasswordPolicy={isPasswordPolicyCategory}
+            isPolicyCategory={isLockedCategory}
             onCancel={() => setEditingSubcategory(null)}
             onSave={async (values) => {
               if (category) {

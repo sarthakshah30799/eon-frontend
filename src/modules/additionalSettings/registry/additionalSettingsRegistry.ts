@@ -3,7 +3,10 @@ import { AdditionalSettingsCodeEnum } from '../constants';
 export type AdditionalSettingsCode =
   (typeof AdditionalSettingsCodeEnum)[keyof typeof AdditionalSettingsCodeEnum];
 
-export type AdditionalSettingsRendererKey = 'default' | 'password-policy';
+export type AdditionalSettingsRendererKey =
+  | 'default'
+  | 'password-policy'
+  | 'session-policy';
 
 export type AdditionalSettingsValueType =
   | 'text'
@@ -82,6 +85,22 @@ const PASSWORD_POLICY_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefini
   },
 ];
 
+const SESSION_POLICY_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] = [
+  {
+    code: AdditionalSettingsCodeEnum.SessionAllowMultipleLogin,
+    label: 'ALLOW MULTIPLE LOGIN',
+    valueType: 'boolean',
+    required: true,
+  },
+  {
+    code: AdditionalSettingsCodeEnum.SessionIdleTimeoutSeconds,
+    label: 'IDLE TIMEOUT (SECONDS)',
+    valueType: 'number',
+    required: false,
+    placeholder: 'Leave empty or 0 to disable inactivity logout',
+  },
+];
+
 export const ADDITIONAL_SETTING_DEFINITIONS: readonly AdditionalSettingCategoryDefinition[] = [
   {
     code: AdditionalSettingsCodeEnum.PasswordPolicy,
@@ -89,6 +108,13 @@ export const ADDITIONAL_SETTING_DEFINITIONS: readonly AdditionalSettingCategoryD
     rendererKey: 'password-policy',
     titleLocked: true,
     subcategories: PASSWORD_POLICY_SUBCATEGORIES,
+  },
+  {
+    code: AdditionalSettingsCodeEnum.SessionPolicy,
+    label: 'SESSION POLICY',
+    rendererKey: 'session-policy',
+    titleLocked: true,
+    subcategories: SESSION_POLICY_SUBCATEGORIES,
   },
 ];
 

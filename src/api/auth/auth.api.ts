@@ -4,6 +4,15 @@ import type {
   IAuthError,
   IUser,
 } from '../../modules/auth/types';
+import { dispatchSessionExpired } from '@/lib/authSessionEvents';
+
+const SESSION_PROTECTED_ENDPOINTS = new Set([
+  '/auth/setup-password',
+  '/auth/logout',
+  '/auth/me',
+  '/auth/check',
+  '/auth/sessions',
+]);
 
 export class ApiError extends Error {
   code?: string;
@@ -44,6 +53,18 @@ class AuthAPI {
         const errorData: IAuthError & { error?: string } = await response.json().catch(() => ({
           message: 'Network error occurred',
         }));
+        if (response.status === 401 && SESSION_PROTECTED_ENDPOINTS.has(endpoint)) {
+          const errorMessage =
+            typeof errorData.message === 'string'
+              ? errorData.message
+              : typeof errorData.message === 'object' && errorData.message !== null
+                ? errorData.message.message
+                : undefined;
+          dispatchSessionExpired({
+            message: errorMessage,
+            status: response.status,
+          });
+        }
         const nestedResponse =
           typeof errorData.message === 'object' && errorData.message !== null
             ? errorData.message

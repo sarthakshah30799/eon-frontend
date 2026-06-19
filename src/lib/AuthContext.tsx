@@ -2,6 +2,9 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { authApi } from '../api/auth';
 import type { IUser } from '../modules/auth/types';
+import { toast } from 'react-hot-toast';
+import { AUTH_SESSION_EXPIRED_EVENT } from './authSessionEvents';
+import { AUTH_CONSTANTS } from '../modules/auth/constants/authConstants';
 
 interface AuthContextType {
   user: IUser | null;
@@ -37,6 +40,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   );
 
   const isAuthenticated = !!user;
+
+  const clearSessionState = () => {
+    setUser(null);
+    setActiveBranchId(null);
+    setActiveCounterId(null);
+    localStorage.removeItem('activeBranchId');
+    localStorage.removeItem('activeCounterId');
+  };
+
+  const handleSessionExpired = (message?: string) => {
+    clearSessionState();
+    toast.error(message || AUTH_CONSTANTS.MESSAGES.SESSION_EXPIRED);
+
+    if (window.location.pathname !== '/login') {
+      window.location.replace('/login');
+    }
+  };
 
   const checkAuth = async () => {
     try {
@@ -76,17 +96,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      setUser(null);
-      setActiveBranchId(null);
-      setActiveCounterId(null);
-      localStorage.removeItem('activeBranchId');
-      localStorage.removeItem('activeCounterId');
+      clearSessionState();
     }
   };
 
   useEffect(() => {
     // eslint-disable-next-line
     checkAuth();
+  }, []);
+
+  useEffect(() => {
+    const onSessionExpired = (event: Event) => {
+      const customEvent = event as CustomEvent<{ message?: string; status?: number }>;
+      handleSessionExpired(customEvent.detail?.message);
+    };
+
+    window.addEventListener(AUTH_SESSION_EXPIRED_EVENT, onSessionExpired);
+
+    return () => {
+      window.removeEventListener(AUTH_SESSION_EXPIRED_EVENT, onSessionExpired);
+    };
   }, []);
 
   const value: AuthContextType = {

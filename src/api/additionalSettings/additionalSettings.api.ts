@@ -38,10 +38,10 @@ export const additionalSettingsApi = {
   ): Promise<IAdditionalSettingCategory> => {
     const payload = {
       title: values.title.trim(),
-      code: values.code.trim(),
+      code: values.code.trim().toUpperCase(),
       subcategories: values.subcategories.map(sub => ({
         title: sub.title.trim(),
-        code: sub.code.trim(),
+        code: sub.code.trim().toUpperCase(),
         value: sub.value.trim(),
         valueType: sub.categoryType.trim(),
       })),
@@ -66,10 +66,10 @@ export const additionalSettingsApi = {
   ): Promise<IAdditionalSettingCategory> => {
     const payload = {
       title: values.title.trim(),
-      code: values.code.trim(),
+      code: values.code.trim().toUpperCase(),
       subcategories: values.subcategories.map(sub => ({
         title: sub.title.trim(),
-        code: sub.code.trim(),
+        code: sub.code.trim().toUpperCase(),
         value: sub.value.trim(),
         valueType: sub.categoryType.trim(),
       })),

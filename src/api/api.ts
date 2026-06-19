@@ -1,3 +1,5 @@
+import { dispatchSessionExpired } from '@/lib/authSessionEvents';
+
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
@@ -31,6 +33,15 @@ class ApiClient {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        if (response.status === 401) {
+          dispatchSessionExpired({
+            message:
+              typeof errorData?.message === 'string'
+                ? errorData.message
+                : undefined,
+            status: response.status,
+          });
+        }
         throw new Error(
           errorData.message || `HTTP error! status: ${response.status}`
         );

@@ -141,6 +141,15 @@ const CorporateClientCreatePage = lazy(
 const CorporateClientEditPage = lazy(
   () => import('../pages/corporate-client-profile/edit/[id]')
 );
+const FfmcClientListPage = lazy(
+  () => import('../pages/admin/ffmc-client-profile/list')
+);
+const FfmcClientCreatePage = lazy(
+  () => import('../pages/admin/ffmc-client-profile/create')
+);
+const FfmcClientEditPage = lazy(
+  () => import('../pages/admin/ffmc-client-profile/edit/[id]')
+);
 const MasterPagesPage = lazy(
   () => import('../pages/master/system-setups/master-pages/MasterPagesPage')
 );
@@ -596,6 +605,30 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <UserRoleEditPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/ffmc-client-profile',
+    element: (
+      <ProtectedLayout>
+        <FfmcClientListPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/ffmc-client-profile/create',
+    element: (
+      <ProtectedLayout>
+        <FfmcClientCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/ffmc-client-profile/edit/:id',
+    element: (
+      <ProtectedLayout>
+        <FfmcClientEditPage />
       </ProtectedLayout>
     ),
   },

@@ -24,7 +24,8 @@ export const menuApi = {
       ...data,
       path: data.path.trim() || undefined,
       icon: data.icon.trim() || undefined,
-      parentId: data.parentId || undefined,
+      // Use ?? so an explicit null (no parent) is preserved in the request body
+      parentId: data.parentId ?? null,
     };
 
     const res = await apiClient.post<IMenu>('/menus', payload);
@@ -39,7 +40,10 @@ export const menuApi = {
         data.path !== undefined ? data.path.trim() || undefined : undefined,
       icon:
         data.icon !== undefined ? data.icon.trim() || undefined : undefined,
-      parentId: data.parentId || undefined,
+      // Use ?? null so an explicit null (clearing the parent) is sent to the backend
+      // Previously `null || undefined` was evaluated to `undefined`, omitting the key
+      // entirely and leaving the parent unchanged on the server.
+      parentId: data.parentId ?? null,
     };
 
     const res = await apiClient.put<IMenu>(`/menus/${id}`, payload);

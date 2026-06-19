@@ -56,7 +56,7 @@ const CorporateClientFormFields = ({
   }, []);
 
   const stateLoadOptions = useCallback(async (inputValue: string) => {
-    const res = await stateProfileApi.getStateProfiles({ limit: 1000 });
+    const res = await stateProfileApi.getStateProfiles({ limit: 100 });
     const options = (res.data ?? [])
       .filter(
         state =>

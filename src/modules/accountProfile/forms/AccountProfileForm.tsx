@@ -246,13 +246,13 @@ export const AccountProfileForm = ({
           <div className="grid gap-4 grid-cols-2">
             <FormFieldInput
               name="accountCode"
-              label="A/c Code"
+              label="Account Code"
               placeholder="e.g. ACCINT"
               disabled={isDisabled}
             />
             <FormFieldInput
               name="accountName"
-              label="A/c Name"
+              label="Account Name"
               placeholder="e.g. ACCRUED FD INTEREST"
               disabled={isDisabled}
             />
@@ -262,7 +262,7 @@ export const AccountProfileForm = ({
         <div className="grid gap-4 md:grid-cols-2 mt-4">
           <FormFieldCategoryOption
             name="accountType"
-            label="A/c Type"
+            label="Account Type"
             code={CategoryOptionCodeEnum.AccountType}
             placeholder="Select Account Type"
             disabled={isDisabled}

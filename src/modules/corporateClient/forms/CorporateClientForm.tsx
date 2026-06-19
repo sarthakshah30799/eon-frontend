@@ -208,7 +208,7 @@ const CorporateClientFormFields = ({
           />
           <FormFieldInput
             name="chqTrxnLimit"
-            label="Chq Trxn Limit"
+            label="Cheque Transaction Limit"
             type="number"
             disabled={isSubmitting}
           />
@@ -311,7 +311,7 @@ const CorporateClientFormFields = ({
           />
           <FormFieldDatePicker
             name="panDob"
-            label="PAN DOB"
+            label="PAN Date of Birth"
             disabled={isSubmitting}
           />
           <FormFieldInput

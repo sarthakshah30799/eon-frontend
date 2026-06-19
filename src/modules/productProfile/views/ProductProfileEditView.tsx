@@ -31,7 +31,7 @@ export const ProductProfileEditView = () => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 h-full!">
       <ProductProfileEditorView
         heading={PRODUCT_PROFILE_TEXTS.EDIT_PRODUCT}
         description="Update the product profile and accounting configuration."

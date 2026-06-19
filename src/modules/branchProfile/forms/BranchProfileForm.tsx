@@ -216,12 +216,12 @@ const BranchProfileFormFields = ({
           />
           <FormFieldInput
             name="fxRegNo"
-            label="FX Reg No."
+            label="Foreign Exchange registration No."
             disabled={isSubmitting}
           />
           <FormFieldInput
             name="fxRegDate"
-            label="FX Reg Date"
+            label="Foreign Exchange registration Date"
             type="date"
             disabled={isSubmitting}
           />
@@ -233,7 +233,7 @@ const BranchProfileFormFields = ({
           />
           <FormFieldInput
             name="cashHoldingTemp"
-            label="Cash Holding Temp"
+            label="Cash Holding Temporary"
             type="number"
             disabled={isSubmitting}
           />
@@ -245,7 +245,7 @@ const BranchProfileFormFields = ({
           />
           <FormFieldInput
             name="currHoldingTemp"
-            label="Currency Holding Temp"
+            label="Currency Holding Temporary"
             type="number"
             disabled={isSubmitting}
           />

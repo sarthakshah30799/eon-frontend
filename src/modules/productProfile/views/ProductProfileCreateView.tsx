@@ -15,7 +15,7 @@ export const ProductProfileCreateView = () => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 h-full!">
       <ProductProfileEditorView
         heading={PRODUCT_PROFILE_TEXTS.CREATE_PRODUCT}
         description={PRODUCT_PROFILE_TEXTS.FORM_SUBTITLE}

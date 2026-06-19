@@ -30,7 +30,7 @@ export const UserForm = ({
   });
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 h-full">
       <Input
         label={USER_TEXTS.NAME}
         {...register('name')}

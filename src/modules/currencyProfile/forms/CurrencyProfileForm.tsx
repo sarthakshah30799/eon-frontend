@@ -129,14 +129,14 @@ export const CurrencyProfileForm = ({
           />
           <FormFieldInput
             name="defaultMinRate"
-            label="Default Min Rate"
+            label="Default Minimum Rate"
             disabled={isDisabled}
             className={compactFieldClass}
             {...numericInputProps}
           />
           <FormFieldInput
             name="defaultMaxRate"
-            label="Default Max Rate"
+            label="Default Maximum Rate"
             disabled={isDisabled}
             className={compactFieldClass}
             {...numericInputProps}

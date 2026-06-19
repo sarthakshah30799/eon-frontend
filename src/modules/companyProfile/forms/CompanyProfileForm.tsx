@@ -57,10 +57,14 @@ export const CompanyProfileForm = ({
         />
         <FormFieldInput name="cinNo" label="CIN No." disabled={isSaving} />
         <FormFieldInput name="panNo" label="PAN No." disabled={isSaving} />
-        <FormFieldInput name="fxRegNo" label="FX Reg No." disabled={isSaving} />
+        <FormFieldInput
+          name="fxRegNo"
+          label="Foreign Exchange registration No."
+          disabled={isSaving}
+        />
         <FormFieldInput
           name="fxRegDate"
-          label="FX Reg Date"
+          label="Foreign Exchange registration Date"
           type="date"
           disabled={isSaving}
         />

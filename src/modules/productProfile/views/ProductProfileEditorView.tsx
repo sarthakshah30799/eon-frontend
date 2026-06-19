@@ -17,7 +17,7 @@ export const ProductProfileEditorView = ({
   isSubmitting = false,
 }: ProductProfileEditorViewProps) => {
   return (
-    <section className="mx-auto w-full max-w-6xl rounded-md border border-border-primary bg-surface-primary p-5 shadow-sm">
+    <section className="mx-auto w-full max-w-6xl h-full! rounded-md border border-border-primary bg-surface-primary p-5 shadow-sm">
       <ProductProfileForm
         defaultValues={defaultValues}
         onSubmit={onSubmitProduct}

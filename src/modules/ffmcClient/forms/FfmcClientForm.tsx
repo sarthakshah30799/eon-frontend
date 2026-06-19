@@ -179,12 +179,12 @@ const FfmcClientFormFields = ({
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           <FormFieldInput name="contactName" label="Contact Name" placeholder="Enter contact name" disabled={isDisabled} />
           <FormFieldInput name="designation" label="Designation" placeholder="Enter designation" disabled={isDisabled} />
-          {/* Group uses same 'group' category option code as corporate client */}
+          {/* Group uses FFMC-specific category option code */}
           <FormFieldCategoryOption
             name="group"
             label="Group"
-            code={CategoryOptionCodeEnum.Group}
-            placeholder="Select group"
+            code={CategoryOptionCodeEnum.FfmcGroup}
+            placeholder="Select FFMC group"
             disabled={isDisabled}
             isCreatable={true}
           />

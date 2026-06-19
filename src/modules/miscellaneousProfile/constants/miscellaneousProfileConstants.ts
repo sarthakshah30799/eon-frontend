@@ -80,7 +80,10 @@ export const CATEGORY_OPTION_CODE_OPTIONS = [
     value: CategoryOptionCodeEnum.TdsGroup,
     label: 'TDS Group',
   },
-
+  {
+    value: CategoryOptionCodeEnum.FfmcGroup,
+    label: 'FFMC Group',
+  },
 ];
 
 export const CATEGORY_OPTION_CODE_LABELS = {
@@ -99,7 +102,7 @@ export const CATEGORY_OPTION_CODE_LABELS = {
   [CategoryOptionCodeEnum.MarketingExecutive]: 'Marketing Executive',
   [CategoryOptionCodeEnum.BusinessNature]: 'Business Nature',
   [CategoryOptionCodeEnum.TdsGroup]: 'TDS Group',
-
+  [CategoryOptionCodeEnum.FfmcGroup]: 'FFMC Group',
 } as const;
 
 export const loadCategoryOptionCodeOptions = async (): Promise<AsyncSelectResponse> => {

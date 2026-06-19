@@ -1,18 +1,31 @@
 import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button1';
 import { Input } from '@/components/ui/input';
 import { useDebounce, usePermission } from '@/hooks';
-import { CorporateClientTable } from '../components';
+import {
+  CorporateClientProfileTypeSelect,
+  CorporateClientTable,
+} from '../components';
 import { useListCorporateClients } from '../hooks';
+import {
+  getCorporateClientProfileTypeConfig,
+  normalizeCorporateClientProfileType,
+} from '../constants';
 
 export const CorporateClientListView = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { canAdd } = usePermission('/corporate-client-profile');
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 400);
+  const selectedProfileType = normalizeCorporateClientProfileType(
+    searchParams.get('type')
+  );
+  const selectedProfileTypeConfig =
+    getCorporateClientProfileTypeConfig(selectedProfileType);
 
   const query = useMemo(
     () => ({
@@ -28,9 +41,8 @@ export const CorporateClientListView = () => {
     isLoading,
     isFetching,
     error,
-  } = useListCorporateClients(query);
+  } = useListCorporateClients(query, selectedProfileType);
   const clients = clientResponse?.data ?? [];
-  const totalItems = clientResponse?.totalItems ?? 0;
 
   if (error) {
     return (
@@ -42,14 +54,19 @@ export const CorporateClientListView = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
+      <div className="flex md:justify-end">
         {canAdd && (
           <Button
             type="button"
-            className="rounded-sm"
-            onClick={() => navigate('/corporate-client-profile/create')}
+            className="rounded-sm md:self-end"
+            onClick={() =>
+              navigate({
+                pathname: '/corporate-client-profile/create',
+                search: `?type=${selectedProfileType}`,
+              })
+            }
           >
-            Create Corporate Client Profile
+            {selectedProfileTypeConfig.createButtonLabel}
           </Button>
         )}
       </div>
@@ -66,14 +83,20 @@ export const CorporateClientListView = () => {
             }}
             className="sm:max-w-md"
           />
-          <div className="text-sm text-text-secondary">
-            {totalItems} total records
-          </div>
+          <CorporateClientProfileTypeSelect
+            value={selectedProfileType}
+            onChange={nextType => {
+              setPage(1);
+              setSearchParams({ type: nextType });
+            }}
+            label="Profile Type"
+          />
         </div>
 
         <CorporateClientTable
           clients={clients}
           loading={isLoading || isFetching}
+          profileType={selectedProfileType}
         />
       </section>
     </div>

@@ -4,10 +4,16 @@ import { Button } from '@/components/ui/button1';
 import { Table, type TableColumnDef } from '@/components/ui/table';
 import { usePermission } from '@/hooks';
 import type { ICorporateClient } from '../types/corporateClientTypes';
+import {
+  DEFAULT_CORPORATE_CLIENT_PROFILE_TYPE,
+  getCorporateClientProfileTypeConfig,
+  type CorporateClientProfileType,
+} from '../constants';
 
 interface CorporateClientTableProps {
   clients: ICorporateClient[];
   loading?: boolean;
+  profileType?: CorporateClientProfileType;
 }
 
 interface CorporateClientTableRow {
@@ -23,9 +29,11 @@ interface CorporateClientTableRow {
 export const CorporateClientTable = ({
   clients,
   loading = false,
+  profileType = DEFAULT_CORPORATE_CLIENT_PROFILE_TYPE,
 }: CorporateClientTableProps) => {
   const navigate = useNavigate();
   const { canModify, canView } = usePermission('/corporate-client-profile');
+  const profileTypeConfig = getCorporateClientProfileTypeConfig(profileType);
 
   const rows: CorporateClientTableRow[] = clients.map(client => ({
     id: client.id,
@@ -68,7 +76,10 @@ export const CorporateClientTable = ({
               className="rounded-sm bg-transparent text-black! hover:bg-surface-secondary hover:text-text-primary"
               onClick={event => {
                 event.stopPropagation();
-                navigate(`/corporate-client-profile/edit/${clientId}`);
+                navigate({
+                  pathname: `/corporate-client-profile/edit/${clientId}`,
+                  search: `?type=${profileType}`,
+                });
               }}
             >
               {canModify ? (
@@ -94,10 +105,14 @@ export const CorporateClientTable = ({
       loading={loading}
       onRowClick={
         canModify || canView
-          ? row => navigate(`/corporate-client-profile/edit/${row.id}`)
+          ? row =>
+              navigate({
+                pathname: `/corporate-client-profile/edit/${row.id}`,
+                search: `?type=${profileType}`,
+              })
           : undefined
       }
-      emptyMessage="No corporate client profiles found. Create your first profile."
+      emptyMessage={profileTypeConfig.listEmptyMessage}
     />
   );
 };

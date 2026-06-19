@@ -12,11 +12,17 @@ import {
   FormFieldTextarea,
   FormFieldFileUploader,
 } from '@/components/forms';
-import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import { corporateClientSchema } from '../schema';
 import type { ICreateCorporateClient } from '../types';
 import { branchProfileApi } from '@/api/branchProfile/branchProfile.api';
 import { stateProfileApi } from '@/api/stateProfile/stateProfile.api';
+import {
+  DEFAULT_CORPORATE_CLIENT_PROFILE_TYPE,
+  getCorporateClientProfileTypeConfig,
+  type CorporateClientProfileType,
+} from '../constants';
+import type { AsyncSelectResponse } from '@/components/ui';
+import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 
 interface CorporateClientFormProps {
   defaultValues: ICreateCorporateClient;
@@ -25,6 +31,7 @@ interface CorporateClientFormProps {
   onCancel?: () => void | Promise<void>;
   isSubmitting?: boolean;
   disabled?: boolean;
+  profileType?: CorporateClientProfileType;
 }
 
 const FORM_ID = 'corporate-client-profile-form';
@@ -32,11 +39,14 @@ const FORM_ID = 'corporate-client-profile-form';
 const CorporateClientFormFields = ({
   isSubmitting: isSubmittingProp = false,
   disabled = false,
+  profileType = DEFAULT_CORPORATE_CLIENT_PROFILE_TYPE,
 }: {
   isSubmitting?: boolean;
   disabled?: boolean;
+  profileType?: CorporateClientProfileType;
 }) => {
   const isSubmitting = isSubmittingProp || disabled;
+  const typeConfig = getCorporateClientProfileTypeConfig(profileType);
 
   const branchLoadOptions = useCallback(async (inputValue: string) => {
     const branches = await branchProfileApi.getBranchProfiles();
@@ -71,6 +81,10 @@ const CorporateClientFormFields = ({
       }));
     return { options };
   }, []);
+
+  const loadGroupOptions = useCallback(async (): Promise<AsyncSelectResponse> => {
+    return { options: typeConfig.groupOptions };
+  }, [typeConfig.groupOptions]);
 
   return (
     <div className="space-y-4 pb-24">
@@ -130,12 +144,12 @@ const CorporateClientFormFields = ({
       <CardSection heading="Client Identity">
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
           <div className="lg:col-span-2">
-            <FormFieldInput
-              name="name"
-              label="Client Name"
-              placeholder="Enter corporate client name"
-              disabled={isSubmitting}
-            />
+          <FormFieldInput
+            name="name"
+            label="Client Name"
+            placeholder={`Enter ${typeConfig.label.toLowerCase()} name`}
+            disabled={isSubmitting}
+          />
           </div>
           <div className="flex items-center pt-6">
             <FormFieldCheckbox
@@ -282,13 +296,14 @@ const CorporateClientFormFields = ({
             placeholder="Enter designation"
             disabled={isSubmitting}
           />
-          <FormFieldCategoryOption
+          <FormFieldSelect
             name="group"
             label="Group"
-            code={CategoryOptionCodeEnum.Group}
             placeholder="Select group"
+            loadOptions={loadGroupOptions}
+            defaultOptions={typeConfig.groupOptions}
             disabled={isSubmitting}
-            isCreatable={true}
+            isSearchable={false}
           />
           <FormFieldCategoryOption
             name="entityType"
@@ -495,6 +510,7 @@ export const CorporateClientForm = ({
   onCancel,
   isSubmitting = false,
   disabled = false,
+  profileType = DEFAULT_CORPORATE_CLIENT_PROFILE_TYPE,
 }: CorporateClientFormProps) => {
   return (
     <Form
@@ -516,6 +532,7 @@ export const CorporateClientForm = ({
       <CorporateClientFormFields
         isSubmitting={isSubmitting}
         disabled={disabled}
+        profileType={profileType}
       />
     </Form>
   );

@@ -1,4 +1,9 @@
 import { apiClient } from '../api';
+import {
+  DEFAULT_CORPORATE_CLIENT_PROFILE_TYPE,
+  getCorporateClientProfileTypeConfig,
+  type CorporateClientProfileType,
+} from '@/modules/corporateClient/constants';
 import type {
   ICorporateClient,
   ICorporateClientListQuery,
@@ -26,12 +31,16 @@ const buildQueryString = (params?: ICorporateClientListQuery) => {
   return queryString ? `?${queryString}` : '';
 };
 
+const getProfileEndpoint = (profileType?: CorporateClientProfileType) =>
+  getCorporateClientProfileTypeConfig(profileType).endpoint;
+
 export const corporateClientApi = {
   getCorporateClients: async (
-    params?: ICorporateClientListQuery
+    params?: ICorporateClientListQuery,
+    profileType: CorporateClientProfileType = DEFAULT_CORPORATE_CLIENT_PROFILE_TYPE
   ): Promise<ICorporateClientListResponse> => {
     const res = await apiClient.get<ICorporateClientListResponse>(
-      `/corporate-clients${buildQueryString(params)}`
+      `${getProfileEndpoint(profileType)}${buildQueryString(params)}`
     );
     if (res.error) throw new Error(res.error);
     if (!res.data) {
@@ -51,17 +60,24 @@ export const corporateClientApi = {
   },
 
   getCorporateClientById: async (
-    id: string
+    id: string,
+    profileType: CorporateClientProfileType = DEFAULT_CORPORATE_CLIENT_PROFILE_TYPE
   ): Promise<ICorporateClient | undefined> => {
-    const res = await apiClient.get<ICorporateClient>(`/corporate-clients/${id}`);
+    const res = await apiClient.get<ICorporateClient>(
+      `${getProfileEndpoint(profileType)}/${id}`
+    );
     if (res.error) throw new Error(res.error);
     return res.data;
   },
 
   createCorporateClient: async (
-    values: ICreateCorporateClient
+    values: ICreateCorporateClient,
+    profileType: CorporateClientProfileType = DEFAULT_CORPORATE_CLIENT_PROFILE_TYPE
   ): Promise<ICorporateClient> => {
-    const res = await apiClient.post<ICorporateClient>('/corporate-clients', values);
+    const res = await apiClient.post<ICorporateClient>(
+      getProfileEndpoint(profileType),
+      values
+    );
     if (res.error) throw new Error(res.error);
     if (!res.data) throw new Error('Failed to create corporate client');
     return res.data;
@@ -69,17 +85,24 @@ export const corporateClientApi = {
 
   updateCorporateClient: async (
     id: string,
-    values: IUpdateCorporateClient
+    values: IUpdateCorporateClient,
+    profileType: CorporateClientProfileType = DEFAULT_CORPORATE_CLIENT_PROFILE_TYPE
   ): Promise<ICorporateClient | undefined> => {
-    const res = await apiClient.put<ICorporateClient>(`/corporate-clients/${id}`, values);
+    const res = await apiClient.put<ICorporateClient>(
+      `${getProfileEndpoint(profileType)}/${id}`,
+      values
+    );
     if (res.error) throw new Error(res.error);
     return res.data;
   },
 
   deleteCorporateClient: async (
-    id: string
+    id: string,
+    profileType: CorporateClientProfileType = DEFAULT_CORPORATE_CLIENT_PROFILE_TYPE
   ): Promise<{ message: string }> => {
-    const res = await apiClient.delete<{ message: string }>(`/corporate-clients/${id}`);
+    const res = await apiClient.delete<{ message: string }>(
+      `${getProfileEndpoint(profileType)}/${id}`
+    );
     if (res.error) throw new Error(res.error);
     if (!res.data) throw new Error('Failed to delete corporate client');
     return res.data;

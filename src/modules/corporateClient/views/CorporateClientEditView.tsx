@@ -1,8 +1,12 @@
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { usePermission } from '@/hooks';
 import { useGetCorporateClient, useUpdateCorporateClient } from '../hooks';
 import { CorporateClientForm } from '../forms/CorporateClientForm';
 import type { ICreateCorporateClient } from '../types';
+import {
+  getCorporateClientProfileTypeConfig,
+  normalizeCorporateClientProfileType,
+} from '../constants';
 
 const formatDateForInput = (dateString?: string | Date) => {
   if (!dateString) return '';
@@ -14,10 +18,21 @@ const formatDateForInput = (dateString?: string | Date) => {
 export const CorporateClientEditView = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const selectedProfileType = normalizeCorporateClientProfileType(
+    searchParams.get('type')
+  );
+  const selectedProfileTypeConfig = getCorporateClientProfileTypeConfig(
+    selectedProfileType
+  );
   const { canModify } = usePermission('/corporate-client-profile');
 
-  const { data: client, isLoading, error } = useGetCorporateClient(id || '');
-  const { updateCorporateClient, isPending } = useUpdateCorporateClient();
+  const { data: client, isLoading, error } = useGetCorporateClient(
+    id || '',
+    selectedProfileType
+  );
+  const { updateCorporateClient, isPending } =
+    useUpdateCorporateClient(selectedProfileType);
 
   const handleSubmit = async (values: ICreateCorporateClient) => {
     if (!id) return;
@@ -31,11 +46,17 @@ export const CorporateClientEditView = () => {
       email: values.email || undefined,
     };
     await updateCorporateClient({ id, data: sanitized });
-    navigate('/corporate-client-profile');
+    navigate({
+      pathname: '/corporate-client-profile',
+      search: `?type=${selectedProfileType}`,
+    });
   };
 
   const handleCancel = () => {
-    navigate('/corporate-client-profile');
+    navigate({
+      pathname: '/corporate-client-profile',
+      search: `?type=${selectedProfileType}`,
+    });
   };
 
   if (isLoading) {
@@ -119,6 +140,11 @@ export const CorporateClientEditView = () => {
         onCancel={handleCancel}
         isSubmitting={isPending}
         disabled={!canModify}
+        submitLabel={selectedProfileTypeConfig.createButtonLabel.replace(
+          /^Create\s+/,
+          'Save '
+        )}
+        profileType={selectedProfileType}
       />
     </section>
   );

@@ -81,6 +81,9 @@ export const corporateClientSchema = yup.object({
   ifscCode: yup.string().trim().optional().nullable(),
   bankAddress: yup.string().trim().optional().nullable(),
   cancelledChequeCopy: yup.string().trim().optional().nullable(),
+  type: yup.string().required('Profile type is required').default('corporate_client'),
+  ffmcRegNo: yup.string().trim().optional().nullable(),
+  ffmcRegDate: yup.string().trim().optional().nullable(),
 });
 
 export default corporateClientSchema;

@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { useFormContext, useWatch } from 'react-hook-form';
 import type { Resolver } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { CardSection } from '@/components/ui';
@@ -23,6 +24,7 @@ import {
 } from '../constants';
 import type { AsyncSelectResponse } from '@/components/ui';
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
+import { useCorporateClientTypes } from '../hooks';
 
 interface CorporateClientFormProps {
   defaultValues: ICreateCorporateClient;
@@ -47,6 +49,16 @@ const CorporateClientFormFields = ({
 }) => {
   const isSubmitting = isSubmittingProp || disabled;
   const typeConfig = getCorporateClientProfileTypeConfig(profileType);
+  const { control } = useFormContext();
+  const currentType = useWatch({
+    control,
+    name: 'type',
+  });
+
+  const { data: typeOptions = [] } = useCorporateClientTypes();
+  const typeLoadOptions = useCallback(async () => {
+    return { options: typeOptions };
+  }, [typeOptions]);
 
   const branchLoadOptions = useCallback(async (inputValue: string) => {
     const branches = await branchProfileApi.getBranchProfiles();
@@ -90,6 +102,15 @@ const CorporateClientFormFields = ({
     <div className="space-y-4 pb-24">
       <CardSection heading="Basic Info & Credit Policy">
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+          <FormFieldSelect
+            name="type"
+            label="Profile Type"
+            placeholder="Select profile type"
+            loadOptions={typeLoadOptions}
+            defaultOptions={typeOptions}
+            disabled={isSubmitting}
+            isSearchable={false}
+          />
           <FormFieldInput
             name="dateOfIntro"
             label="Date of Intro"
@@ -102,6 +123,21 @@ const CorporateClientFormFields = ({
             placeholder="Enter client code (4-20 chars)"
             disabled={isSubmitting}
           />
+          {currentType === 'ffmc' && (
+            <>
+              <FormFieldInput
+                name="ffmcRegNo"
+                label="FFMC Registration Number"
+                placeholder="Enter FFMC Registration No."
+                disabled={isSubmitting}
+              />
+              <FormFieldDatePicker
+                name="ffmcRegDate"
+                label="FFMC Registration Date"
+                disabled={isSubmitting}
+              />
+            </>
+          )}
           <FormFieldInput
             name="creditLimit"
             label="Credit Limit"
@@ -499,6 +535,7 @@ const CorporateClientFormFields = ({
           </div>
         </div>
       </CardSection>
+
     </div>
   );
 };

@@ -107,6 +107,14 @@ export const corporateClientApi = {
     if (!res.data) throw new Error('Failed to delete corporate client');
     return res.data;
   },
+
+  getCorporateClientTypes: async (): Promise<{ value: string; label: string }[]> => {
+    const res = await apiClient.get<{ value: string; label: string }[]>(
+      '/corporate-clients/types'
+    );
+    if (res.error) throw new Error(res.error);
+    return res.data || [];
+  },
 };
 
 export default corporateClientApi;

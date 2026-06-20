@@ -104,3 +104,10 @@ export const useDeleteCorporateClient = (
     deleteCorporateClient: mutation.mutateAsync,
   };
 };
+
+export const useCorporateClientTypes = () => {
+  return useQuery({
+    queryKey: ['corporate-client-types'],
+    queryFn: () => corporateClientApi.getCorporateClientTypes(),
+  });
+};

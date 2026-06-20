@@ -14,6 +14,7 @@ interface CorporateClientTableProps {
   clients: ICorporateClient[];
   loading?: boolean;
   profileType?: CorporateClientProfileType;
+  selectedType?: string;
 }
 
 interface CorporateClientTableRow {
@@ -30,9 +31,10 @@ export const CorporateClientTable = ({
   clients,
   loading = false,
   profileType = DEFAULT_CORPORATE_CLIENT_PROFILE_TYPE,
+  selectedType = 'corporate_client',
 }: CorporateClientTableProps) => {
   const navigate = useNavigate();
-  const { canModify, canView } = usePermission('/corporate-client-profile');
+  const { canModify, canView } = usePermission('/admin/corporate-client-profile');
   const profileTypeConfig = getCorporateClientProfileTypeConfig(profileType);
 
   const rows: CorporateClientTableRow[] = clients.map(client => ({
@@ -77,8 +79,8 @@ export const CorporateClientTable = ({
               onClick={event => {
                 event.stopPropagation();
                 navigate({
-                  pathname: `/corporate-client-profile/edit/${clientId}`,
-                  search: `?type=${profileType}`,
+                  pathname: `/admin/corporate-client-profile/edit/${clientId}`,
+                  search: `?type=${selectedType}`,
                 });
               }}
             >
@@ -107,8 +109,8 @@ export const CorporateClientTable = ({
         canModify || canView
           ? row =>
               navigate({
-                pathname: `/corporate-client-profile/edit/${row.id}`,
-                search: `?type=${profileType}`,
+                pathname: `/admin/corporate-client-profile/edit/${row.id}`,
+                search: `?type=${selectedType}`,
               })
           : undefined
       }

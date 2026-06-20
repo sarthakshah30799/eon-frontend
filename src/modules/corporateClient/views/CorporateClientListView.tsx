@@ -7,33 +7,29 @@ import {
   CorporateClientProfileTypeSelect,
   CorporateClientTable,
 } from '../components';
-import { useListCorporateClients } from '../hooks';
-import {
-  getCorporateClientProfileTypeConfig,
-  normalizeCorporateClientProfileType,
-} from '../constants';
+import { useListCorporateClients, useCorporateClientTypes } from '../hooks';
 
 export const CorporateClientListView = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { canAdd } = usePermission('/corporate-client-profile');
+  const { canAdd } = usePermission('/admin/corporate-client-profile');
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 400);
-  const selectedProfileType = normalizeCorporateClientProfileType(
-    searchParams.get('type')
-  );
-  const selectedProfileTypeConfig =
-    getCorporateClientProfileTypeConfig(selectedProfileType);
+
+  const rawType = searchParams.get('type') || 'corporate_client';
+  const selectedType = rawType === 'corporate-client-profile' ? 'corporate_client' : rawType;
+  const { data: typeOptions = [] } = useCorporateClientTypes();
 
   const query = useMemo(
     () => ({
       page,
       limit: pageSize,
       search: debouncedSearch.trim() || undefined,
+      type: selectedType,
     }),
-    [page, pageSize, debouncedSearch]
+    [page, pageSize, debouncedSearch, selectedType]
   );
 
   const {
@@ -41,7 +37,7 @@ export const CorporateClientListView = () => {
     isLoading,
     isFetching,
     error,
-  } = useListCorporateClients(query, selectedProfileType);
+  } = useListCorporateClients(query);
   const clients = clientResponse?.data ?? [];
 
   if (error) {
@@ -61,12 +57,12 @@ export const CorporateClientListView = () => {
             className="rounded-sm md:self-end"
             onClick={() =>
               navigate({
-                pathname: '/corporate-client-profile/create',
-                search: `?type=${selectedProfileType}`,
+                pathname: '/admin/corporate-client-profile/create',
+                search: `?type=${selectedType}`,
               })
             }
           >
-            {selectedProfileTypeConfig.createButtonLabel}
+            Create Corporate Client
           </Button>
         )}
       </div>
@@ -84,11 +80,12 @@ export const CorporateClientListView = () => {
             className="sm:max-w-md"
           />
           <CorporateClientProfileTypeSelect
-            value={selectedProfileType}
+            value={selectedType}
             onChange={nextType => {
               setPage(1);
               setSearchParams({ type: nextType });
             }}
+            options={typeOptions}
             label="Profile Type"
           />
         </div>
@@ -96,7 +93,7 @@ export const CorporateClientListView = () => {
         <CorporateClientTable
           clients={clients}
           loading={isLoading || isFetching}
-          profileType={selectedProfileType}
+          selectedType={selectedType}
         />
       </section>
     </div>

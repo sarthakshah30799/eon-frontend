@@ -1,18 +1,12 @@
+import { useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useCreateCorporateClient } from '../hooks';
-import { CorporateClientProfileTypeSelect } from '../components';
 import { CorporateClientForm } from '../forms/CorporateClientForm';
 import type { ICreateCorporateClient } from '../types';
-import {
-  getCorporateClientProfileTypeConfig,
-  normalizeCorporateClientProfileType,
-} from '../constants';
 
 const createEmptyCorporateClientValues = (
-  profileType: string
+  type: string
 ): ICreateCorporateClient => {
-  const profileTypeConfig = getCorporateClientProfileTypeConfig(profileType);
-
   return {
     dateOfIntro: new Date().toISOString().split('T')[0],
     code: '',
@@ -41,7 +35,7 @@ const createEmptyCorporateClientValues = (
     email: '',
     contactName: '',
     designation: '',
-    group: String(profileTypeConfig.groupOptions[0]?.value ?? ''),
+    group: '',
     entityType: '',
     panName: '',
     panDob: '',
@@ -72,23 +66,25 @@ const createEmptyCorporateClientValues = (
     ifscCode: '',
     bankAddress: '',
     cancelledChequeCopy: '',
+    type,
+    ffmcRegNo: '',
+    ffmcRegDate: '',
   };
 };
 
 export const CorporateClientCreateView = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const selectedProfileType = normalizeCorporateClientProfileType(
-    searchParams.get('type')
+  const rawType = searchParams.get('type') || 'corporate_client';
+  const selectedType = rawType === 'corporate-client-profile' ? 'corporate_client' : rawType;
+  const { submitCorporateClient, isPending } = useCreateCorporateClient();
+
+  const defaultValues = useMemo(
+    () => createEmptyCorporateClientValues(selectedType),
+    [selectedType]
   );
-  const selectedProfileTypeConfig = getCorporateClientProfileTypeConfig(
-    selectedProfileType
-  );
-  const { submitCorporateClient, isPending } =
-    useCreateCorporateClient(selectedProfileType);
 
   const handleSubmit = async (values: ICreateCorporateClient) => {
-    // Sanitize optional fields to avoid empty string database reference errors
     const sanitized: ICreateCorporateClient = {
       ...values,
       gstStateId: values.gstStateId || undefined,
@@ -100,43 +96,27 @@ export const CorporateClientCreateView = () => {
     };
     await submitCorporateClient(sanitized);
     navigate({
-      pathname: '/corporate-client-profile',
-      search: `?type=${selectedProfileType}`,
+      pathname: '/admin/corporate-client-profile',
+      search: `?type=${values.type || selectedType}`,
     });
   };
 
   const handleCancel = () => {
     navigate({
-      pathname: '/corporate-client-profile',
-      search: `?type=${selectedProfileType}`,
+      pathname: '/admin/corporate-client-profile',
+      search: `?type=${selectedType}`,
     });
   };
 
   return (
     <div className="space-y-6">
       <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
-        <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <CorporateClientProfileTypeSelect
-            value={selectedProfileType}
-            onChange={nextType => {
-              navigate({
-                pathname: '/corporate-client-profile/create',
-                search: `?type=${nextType}`,
-              });
-            }}
-            label="Profile Type"
-          />
-
-          <div className="hidden lg:block" />
-        </div>
-
         <CorporateClientForm
-          defaultValues={createEmptyCorporateClientValues(selectedProfileType)}
+          defaultValues={defaultValues}
           onSubmit={handleSubmit}
           onCancel={handleCancel}
           isSubmitting={isPending}
-          submitLabel={selectedProfileTypeConfig.createButtonLabel}
-          profileType={selectedProfileType}
+          submitLabel="Create Corporate Client"
         />
       </section>
     </div>

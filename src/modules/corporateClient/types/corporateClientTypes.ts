@@ -61,6 +61,9 @@ export interface ICorporateClient {
   ifscCode?: string;
   bankAddress?: string;
   cancelledChequeCopy?: string;
+  ffmcRegNo?: string;
+  ffmcRegDate?: string;
+  type: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -81,6 +84,7 @@ export interface ICorporateClientListQuery {
   code?: string;
   name?: string;
   active?: boolean;
+  type?: string;
   page?: number;
   limit?: number;
 }

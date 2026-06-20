@@ -3,10 +3,6 @@ import { usePermission } from '@/hooks';
 import { useGetCorporateClient, useUpdateCorporateClient } from '../hooks';
 import { CorporateClientForm } from '../forms/CorporateClientForm';
 import type { ICreateCorporateClient } from '../types';
-import {
-  getCorporateClientProfileTypeConfig,
-  normalizeCorporateClientProfileType,
-} from '../constants';
 
 const formatDateForInput = (dateString?: string | Date) => {
   if (!dateString) return '';
@@ -19,20 +15,15 @@ export const CorporateClientEditView = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const selectedProfileType = normalizeCorporateClientProfileType(
-    searchParams.get('type')
-  );
-  const selectedProfileTypeConfig = getCorporateClientProfileTypeConfig(
-    selectedProfileType
-  );
-  const { canModify } = usePermission('/corporate-client-profile');
+  const rawType = searchParams.get('type') || 'corporate_client';
+  const selectedType = rawType === 'corporate-client-profile' ? 'corporate_client' : rawType;
+  const { canModify } = usePermission('/admin/corporate-client-profile');
 
   const { data: client, isLoading, error } = useGetCorporateClient(
-    id || '',
-    selectedProfileType
+    id || ''
   );
   const { updateCorporateClient, isPending } =
-    useUpdateCorporateClient(selectedProfileType);
+    useUpdateCorporateClient();
 
   const handleSubmit = async (values: ICreateCorporateClient) => {
     if (!id) return;
@@ -47,15 +38,15 @@ export const CorporateClientEditView = () => {
     };
     await updateCorporateClient({ id, data: sanitized });
     navigate({
-      pathname: '/corporate-client-profile',
-      search: `?type=${selectedProfileType}`,
+      pathname: '/admin/corporate-client-profile',
+      search: `?type=${values.type || selectedType}`,
     });
   };
 
   const handleCancel = () => {
     navigate({
-      pathname: '/corporate-client-profile',
-      search: `?type=${selectedProfileType}`,
+      pathname: '/admin/corporate-client-profile',
+      search: `?type=${selectedType}`,
     });
   };
 
@@ -130,6 +121,9 @@ export const CorporateClientEditView = () => {
     ifscCode: client.ifscCode || '',
     bankAddress: client.bankAddress || '',
     cancelledChequeCopy: client.cancelledChequeCopy || '',
+    type: client.type,
+    ffmcRegNo: client.ffmcRegNo || '',
+    ffmcRegDate: formatDateForInput(client.ffmcRegDate),
   };
 
   return (
@@ -140,11 +134,7 @@ export const CorporateClientEditView = () => {
         onCancel={handleCancel}
         isSubmitting={isPending}
         disabled={!canModify}
-        submitLabel={selectedProfileTypeConfig.createButtonLabel.replace(
-          /^Create\s+/,
-          'Save '
-        )}
-        profileType={selectedProfileType}
+        submitLabel="Save Changes"
       />
     </section>
   );

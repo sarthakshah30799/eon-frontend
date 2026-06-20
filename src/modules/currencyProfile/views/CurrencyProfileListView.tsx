@@ -28,7 +28,7 @@ export const CurrencyProfileListView = () => {
           type="button"
           className="rounded-sm"
           onClick={() =>
-            navigate('/admin/currency-profile/create')
+            navigate('/currency-profile/create')
           }
         >
           {CURRENCY_PROFILE_TEXTS.CREATE_CURRENCY}

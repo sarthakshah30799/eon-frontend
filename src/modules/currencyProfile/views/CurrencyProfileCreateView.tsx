@@ -11,7 +11,7 @@ export const CurrencyProfileCreateView = () => {
 
   const handleSubmit = async (values: ICreateCurrencyProfile) => {
     await submitCurrencyProfile(values);
-    navigate('/admin/currency-profile');
+    navigate('/currency-profile');
   };
 
   return (

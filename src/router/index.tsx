@@ -521,7 +521,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/admin/currency-profile',
+    path: '/currency-profile',
     element: (
       <ProtectedLayout>
         <CurrencyProfileListPage />
@@ -529,7 +529,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/admin/currency-profile/create',
+    path: '/currency-profile/create',
     element: (
       <ProtectedLayout>
         <CurrencyProfileCreatePage />
@@ -537,7 +537,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/admin/currency-profile/edit/:id',
+    path: '/currency-profile/edit/:id',
     element: (
       <ProtectedLayout>
         <CurrencyProfileEditPage />

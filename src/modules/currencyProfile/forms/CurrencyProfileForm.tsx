@@ -65,7 +65,7 @@ export const CurrencyProfileForm = ({
   const navigate = useNavigate();
   const isDisabled = isSubmitting || readOnly;
   const onCancel = () => {
-    navigate('/admin/currency-profile');
+    navigate('/currency-profile');
   };
   return (
     <Form

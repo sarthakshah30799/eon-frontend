@@ -80,15 +80,15 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
     meta: { title: 'Edit Product Profile' },
   },
   {
-    path: '/admin/currency-profile',
+    path: '/currency-profile',
     meta: { title: 'Currency Profile' },
   },
   {
-    path: '/admin/currency-profile/create',
+    path: '/currency-profile/create',
     meta: { title: 'Create Currency Profile' },
   },
   {
-    path: '/admin/currency-profile/edit/:id',
+    path: '/currency-profile/edit/:id',
     meta: { title: 'Edit Currency Profile' },
   },
   {

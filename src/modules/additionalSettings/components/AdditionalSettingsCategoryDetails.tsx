@@ -300,7 +300,6 @@ export const AdditionalSettingsCategoryDetails = ({
           <section className="rounded-sm border border-border-primary bg-surface-secondary p-4">
             <CategoryTitleEditor
               category={category}
-              isReadOnly={Boolean(categoryDefinition?.titleLocked)}
               onOpenEditCategory={onOpenEditCategory}
             />
           </section>

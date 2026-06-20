@@ -35,8 +35,10 @@ export const AdditionalSettingsView = () => {
     isLoading,
     error,
   } = useListAdditionalSettings();
-  const { submitAdditionalSetting: createAdditionalSetting, isPending: isCreating } =
-    useCreateAdditionalSetting();
+  const {
+    submitAdditionalSetting: createAdditionalSetting,
+    isPending: isCreating,
+  } = useCreateAdditionalSetting();
   const {
     submitAdditionalSettingCategory: updateAdditionalSettingCategory,
     isPending: isUpdatingCategory,
@@ -51,7 +53,9 @@ export const AdditionalSettingsView = () => {
       return null;
     }
 
-    return categories.find(category => category.id === activeCategoryId) ?? null;
+    return (
+      categories.find(category => category.id === activeCategoryId) ?? null
+    );
   }, [activeCategoryId, categories]);
 
   const handleCreateSubmit = async (
@@ -148,7 +152,9 @@ export const AdditionalSettingsView = () => {
               : createEmptyAdditionalSettingCategoryFormValues()
           }
           onSubmit={
-            categoryModalMode === 'edit' ? handleUpdateSubmit : handleCreateSubmit
+            categoryModalMode === 'edit'
+              ? handleUpdateSubmit
+              : handleCreateSubmit
           }
           isSubmitting={isCreating || isUpdatingCategory}
           submitLabel={

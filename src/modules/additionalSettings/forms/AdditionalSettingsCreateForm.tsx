@@ -143,7 +143,6 @@ const SubcategoryRowFields = ({
           label="Title"
           placeholder="Enter subcategory title"
           disabled={isSubmitting}
-          {...noTransformInputProps}
         />
         <FormFieldSelect
           name={`subcategories.${index}.code`}
@@ -332,7 +331,6 @@ export const AdditionalSettingsCreateForm = ({
             label={ADDITIONAL_SETTINGS_TEXTS.CATEGORY_TITLE}
             placeholder="Enter category title"
             disabled={isSubmitting}
-            {...noTransformInputProps}
           />
           <FormFieldSelect
             name="code"

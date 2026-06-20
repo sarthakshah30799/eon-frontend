@@ -96,14 +96,14 @@ export const CorporateClientCreateView = () => {
     };
     await submitCorporateClient(sanitized);
     navigate({
-      pathname: '/admin/corporate-client-profile',
+      pathname: '/corporate-client-profile',
       search: `?type=${values.type || selectedType}`,
     });
   };
 
   const handleCancel = () => {
     navigate({
-      pathname: '/admin/corporate-client-profile',
+      pathname: '/corporate-client-profile',
       search: `?type=${selectedType}`,
     });
   };

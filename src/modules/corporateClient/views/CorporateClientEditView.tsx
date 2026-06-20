@@ -17,7 +17,7 @@ export const CorporateClientEditView = () => {
   const [searchParams] = useSearchParams();
   const rawType = searchParams.get('type') || 'corporate_client';
   const selectedType = rawType === 'corporate-client-profile' ? 'corporate_client' : rawType;
-  const { canModify } = usePermission('/admin/corporate-client-profile');
+  const { canModify } = usePermission('/corporate-client-profile');
 
   const { data: client, isLoading, error } = useGetCorporateClient(
     id || ''
@@ -38,14 +38,14 @@ export const CorporateClientEditView = () => {
     };
     await updateCorporateClient({ id, data: sanitized });
     navigate({
-      pathname: '/admin/corporate-client-profile',
+      pathname: '/corporate-client-profile',
       search: `?type=${values.type || selectedType}`,
     });
   };
 
   const handleCancel = () => {
     navigate({
-      pathname: '/admin/corporate-client-profile',
+      pathname: '/corporate-client-profile',
       search: `?type=${selectedType}`,
     });
   };

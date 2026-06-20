@@ -12,7 +12,7 @@ import { useListCorporateClients, useCorporateClientTypes } from '../hooks';
 export const CorporateClientListView = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { canAdd } = usePermission('/admin/corporate-client-profile');
+  const { canAdd } = usePermission('/corporate-client-profile');
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
   const [search, setSearch] = useState('');
@@ -57,7 +57,7 @@ export const CorporateClientListView = () => {
             className="rounded-sm md:self-end"
             onClick={() =>
               navigate({
-                pathname: '/admin/corporate-client-profile/create',
+                pathname: '/corporate-client-profile/create',
                 search: `?type=${selectedType}`,
               })
             }

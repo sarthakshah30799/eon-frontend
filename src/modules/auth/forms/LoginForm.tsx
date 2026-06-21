@@ -108,6 +108,9 @@ export const LoginForm: React.FC<LoginFormProps> = ({
               type="email"
               placeholder={AUTH_TEXTS.ENTER_YOUR_EMAIL}
               disabled={isLoading}
+              classes={{
+                container: '!max-w-none'
+              }}
             />
 
             <FormFieldPassword
@@ -115,6 +118,9 @@ export const LoginForm: React.FC<LoginFormProps> = ({
               label={AUTH_TEXTS.PASSWORD}
               placeholder={AUTH_TEXTS.ENTER_YOUR_PASSWORD}
               disabled={isLoading}
+              classes={{
+                container: '!max-w-none'
+              }}
             />
 
             {showRememberMe && (

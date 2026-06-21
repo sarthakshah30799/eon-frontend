@@ -53,22 +53,22 @@ export const CounterProfileForm = ({
       <div className="rounded-sm border border-border-primary bg-surface-secondary p-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <FormFieldCheckbox
           name="isActive"
-          label="Is Active"
+          label="Active"
           disabled={isSubmitting}
         />
         <FormFieldCheckbox
           name="isRetail"
-          label="Is Retail Counter"
+          label="Retail Counter"
           disabled={isSubmitting}
         />
         <FormFieldCheckbox
           name="isBulk"
-          label="Is Bulk Counter"
+          label="Bulk Counter"
           disabled={isSubmitting}
         />
         <FormFieldCheckbox
           name="isCombine"
-          label="Is Combine Counter"
+          label="Combine Counter"
           disabled={isSubmitting}
         />
       </div>

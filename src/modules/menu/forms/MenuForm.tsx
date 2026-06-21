@@ -57,7 +57,7 @@ export const MenuForm = ({
           <div className="rounded-sm border border-border-primary bg-surface-primary p-3">
             <FormFieldCheckbox
               name="isAdmin"
-              label="Is Admin Menu"
+              label="Admin Menu"
               disabled={isSubmitting}
             />
           </div>
@@ -107,7 +107,7 @@ export const MenuForm = ({
           <div className="rounded-sm border border-border-primary bg-surface-primary p-3">
             <FormFieldCheckbox
               name="isActive"
-              label="Is Active"
+              label="Active"
               disabled={isSubmitting}
             />
           </div>

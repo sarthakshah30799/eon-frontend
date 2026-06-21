@@ -52,11 +52,11 @@ export const BranchCounterModal = ({
             label="Counter Name"
             disabled={isSubmitting}
           />
-          <FormFieldCheckbox
-            name="isActive"
-            label="Is Active"
-            disabled={isSubmitting}
-          />
+        <FormFieldCheckbox
+          name="isActive"
+          label="Active"
+          disabled={isSubmitting}
+        />
         </div>
 
         <div className="flex justify-end border-t border-border-primary pt-4">

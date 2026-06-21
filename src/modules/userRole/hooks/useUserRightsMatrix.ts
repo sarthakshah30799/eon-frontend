@@ -74,10 +74,27 @@ const isExcludedProfile = (name: string, path?: string) => {
   );
 };
 
+const isAdminSidebarNode = (name: string, path?: string) => {
+  const lowerName = name.toLowerCase();
+  const lowerPath = path?.toLowerCase() || '';
+
+  return (
+    lowerName === 'admin' ||
+    lowerName.includes('admin panel') ||
+    lowerPath === '/admin' ||
+    lowerPath.startsWith('/admin/')
+  );
+};
+
 const filterMenuRecord = (menu: IMenu): IMenu | null => {
   if (isExcludedProfile(menu.name, menu.path ?? undefined)) {
     return null;
   }
+
+  if (isAdminSidebarNode(menu.name, menu.path ?? undefined)) {
+    return null;
+  }
+
   const copy = { ...menu };
   if (copy.children && copy.children.length > 0) {
     copy.children = copy.children
@@ -175,7 +192,11 @@ export const useUserRightsMatrix = (roleId: string | null): UseUserRightsMatrixR
         .filter((m): m is IMenu => m !== null);
 
       const filteredPages = (createdPages as IMasterPageTreeNode[])
-        .filter(p => !isExcludedProfile(p.pageName, p.slug));
+        .filter(
+          p =>
+            !isExcludedProfile(p.pageName, p.slug) &&
+            !isAdminSidebarNode(p.pageName, p.slug)
+        );
 
       return [
         ...filteredMenus.map(mapMenuRecordToRightsTreeNode),

@@ -4,17 +4,26 @@ import { Label } from '../label';
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
+  classes?: {
+    container?: string;
+    input?: string;
+    label?: string;
+  };
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ className = '', type = 'text', label, error, ...props }, ref) => {
+  ({ className = '', type = 'text', label, error, classes, ...props }, ref) => {
     return (
-      <div className="space-y-1">
-        {label && <Label htmlFor={props.id}>{label}</Label>}
+      <div className={`space-y-1 max-w-[350px] ${classes?.container}`}>
+        {label && (
+          <Label htmlFor={props.id} className={classes?.label}>
+            {label}
+          </Label>
+        )}
         <input
           type={type}
           style={{ fontSize: '14px' }}
-          className={`min-h-7.5 block w-full rounded-md border border-slate-400 bg-surface-primary px-3 py-1 text-[14px] text-text-primary shadow-none placeholder:text-text-tertiary focus:border-slate-500! focus:ring-slate-500 focus-visible:border-transparent! focus-visible:outline-slate-500 focus-visible:ring-1 ${error ? 'border-error-500' : ''} ${className}`}
+          className={`min-h-7.5 block w-full rounded-md border border-slate-400 bg-surface-primary px-3 py-1 text-[14px] text-text-primary shadow-none placeholder:text-text-tertiary focus:border-slate-500! focus:ring-slate-500 focus-visible:border-transparent! focus-visible:outline-slate-500 focus-visible:ring-1 ${error ? 'border-error-500' : ''} ${classes?.input} ${className}`}
           ref={ref}
           {...props}
         />

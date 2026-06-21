@@ -1,8 +1,9 @@
 import { useController } from 'react-hook-form';
 import { useFormContext } from 'react-hook-form';
 import { PasswordInput } from '../../ui';
+import type { FormFieldInputProps } from '../FormFieldInput/FormFieldInput';
 
-interface FormFieldPasswordProps {
+interface FormFieldPasswordProps extends FormFieldInputProps {
   name: string;
   label?: string;
   disabled?: boolean;
@@ -18,6 +19,7 @@ export const FormFieldPassword = ({
   className = '',
   showPasswordToggle = true,
   placeholder,
+  ...rest
 }: FormFieldPasswordProps) => {
   const form = useFormContext();
 
@@ -31,6 +33,7 @@ export const FormFieldPassword = ({
 
   return (
     <PasswordInput
+      {...rest}
       id={name}
       label={label}
       disabled={disabled}

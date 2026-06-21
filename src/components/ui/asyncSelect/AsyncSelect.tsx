@@ -233,7 +233,7 @@ const AsyncSelectComponent = React.forwardRef<
     };
 
     return (
-      <div className="space-y-1">
+      <div className="space-y-1 max-w-[350px]">
         {label && <Label htmlFor={props.id}>{label}</Label>}
         <div className={asyncSelectVariants({ size, variant, className })}>
           {isCreatable ? (

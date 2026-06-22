@@ -10,6 +10,7 @@ export const userRoleSchema = yup.object({
   isSrFinance: yup.boolean().default(false),
   isFinance: yup.boolean().default(false),
   isBrnMgr: yup.boolean().default(false),
+  isHoStaff: yup.boolean().default(false),
   isExecutive: yup.boolean().default(false),
   isCardStk: yup.boolean().default(false),
   isDeliveryBoy: yup.boolean().default(false),

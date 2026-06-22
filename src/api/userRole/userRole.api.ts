@@ -14,6 +14,7 @@ interface BackendRole {
   isSrFinance: boolean;
   isFinance: boolean;
   isBrnMgr: boolean;
+  isHoStaff: boolean;
   isExecutive: boolean;
   isCardStk: boolean;
   isDeliveryBoy: boolean;
@@ -38,6 +39,7 @@ const mapBackendToFrontend = (role: BackendRole): IUserRole => {
     isSrFinance: role.isSrFinance,
     isFinance: role.isFinance,
     isBrnMgr: role.isBrnMgr,
+    isHoStaff: role.isHoStaff,
     isExecutive: role.isExecutive,
     isCardStk: role.isCardStk,
     isDeliveryBoy: role.isDeliveryBoy,

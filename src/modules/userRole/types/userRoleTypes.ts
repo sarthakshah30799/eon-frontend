@@ -8,6 +8,7 @@ export interface IUserRole {
   isSrFinance: boolean;
   isFinance: boolean;
   isBrnMgr: boolean;
+  isHoStaff: boolean;
   isExecutive: boolean;
   isCardStk: boolean;
   isDeliveryBoy: boolean;

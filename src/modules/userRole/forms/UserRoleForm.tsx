@@ -99,6 +99,11 @@ export const UserRoleForm = ({
             disabled={isSubmitting}
           />
           <FormFieldCheckbox
+            name="isHoStaff"
+            label="HO Staff"
+            disabled={isSubmitting}
+          />
+          <FormFieldCheckbox
             name="isExecutive"
             label="Executive"
             disabled={isSubmitting}

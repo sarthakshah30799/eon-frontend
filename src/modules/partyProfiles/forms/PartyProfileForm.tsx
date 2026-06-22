@@ -18,8 +18,7 @@ import type { ICreatePartyProfile } from '../types';
 import { branchProfileApi } from '@/api/branchProfile/branchProfile.api';
 import { stateProfileApi } from '@/api/stateProfile/stateProfile.api';
 import {
-  DEFAULT_PARTY_PROFILE_TYPE,
-  getPartyProfileTypeConfig,
+  toPartyProfileDisplayLabel,
   type PartyProfileType,
 } from '../constants';
 import type { AsyncSelectResponse } from '@/components/ui';
@@ -41,14 +40,13 @@ const FORM_ID = 'party-profile-form';
 const PartyProfileFormFields = ({
   isSubmitting: isSubmittingProp = false,
   disabled = false,
-  profileType = DEFAULT_PARTY_PROFILE_TYPE,
+  profileType,
 }: {
   isSubmitting?: boolean;
   disabled?: boolean;
   profileType?: PartyProfileType;
 }) => {
   const isSubmitting = isSubmittingProp || disabled;
-  const typeConfig = getPartyProfileTypeConfig(profileType);
   const { control } = useFormContext();
   const currentType = useWatch({
     control,
@@ -56,6 +54,11 @@ const PartyProfileFormFields = ({
   });
 
   const { data: typeOptions = [] } = usePartyProfileTypes();
+  const profileTypeLabel = toPartyProfileDisplayLabel(profileType);
+  const groupOptions = typeOptions.map(option => ({
+    value: option.label,
+    label: option.label,
+  }));
   const typeLoadOptions = useCallback(async () => {
     return { options: typeOptions };
   }, [typeOptions]);
@@ -95,8 +98,8 @@ const PartyProfileFormFields = ({
   }, []);
 
   const loadGroupOptions = useCallback(async (): Promise<AsyncSelectResponse> => {
-    return { options: typeConfig.groupOptions };
-  }, [typeConfig.groupOptions]);
+    return { options: groupOptions };
+  }, [groupOptions]);
 
   return (
     <div className="space-y-4 pb-24">
@@ -183,7 +186,7 @@ const PartyProfileFormFields = ({
           <FormFieldInput
             name="name"
             label="Client Name"
-            placeholder={`Enter ${typeConfig.label.toLowerCase()} name`}
+            placeholder={`Enter ${profileTypeLabel.toLowerCase()} name`}
             disabled={isSubmitting}
           />
           </div>
@@ -337,7 +340,7 @@ const PartyProfileFormFields = ({
             label="Group"
             placeholder="Select group"
             loadOptions={loadGroupOptions}
-            defaultOptions={typeConfig.groupOptions}
+            defaultOptions={groupOptions}
             disabled={isSubmitting}
             isSearchable={false}
           />
@@ -547,7 +550,7 @@ export const PartyProfileForm = ({
   onCancel,
   isSubmitting = false,
   disabled = false,
-  profileType = DEFAULT_PARTY_PROFILE_TYPE,
+  profileType,
 }: PartyProfileFormProps) => {
   return (
     <Form

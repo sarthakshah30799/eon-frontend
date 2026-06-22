@@ -1,9 +1,5 @@
 import { apiClient } from '../api';
-import {
-  DEFAULT_PARTY_PROFILE_TYPE,
-  getPartyProfileTypeConfig,
-  type PartyProfileType,
-} from '@/modules/partyProfiles/constants';
+import type { PartyProfileType } from '@/modules/partyProfiles/constants';
 import type {
   IPartyProfile,
   IPartyProfileListQuery,
@@ -31,17 +27,15 @@ const buildQueryString = (params?: IPartyProfileListQuery) => {
   return queryString ? `?${queryString}` : '';
 };
 
-const getProfileEndpoint = (profileType?: PartyProfileType) =>
-  getPartyProfileTypeConfig(profileType).endpoint;
-
 export const partyProfileApi = {
   getPartyProfiles: async (
     params?: IPartyProfileListQuery,
-    profileType: PartyProfileType = DEFAULT_PARTY_PROFILE_TYPE
+    profileType?: PartyProfileType
   ): Promise<IPartyProfileListResponse> => {
-    const res = await apiClient.get<IPartyProfileListResponse>(
-      `${getProfileEndpoint(profileType)}${buildQueryString(params)}`
-    );
+    const res = await apiClient.get<IPartyProfileListResponse>(`/party-profiles${buildQueryString({
+      ...params,
+      type: profileType ?? params?.type,
+    })}`);
     if (res.error) throw new Error(res.error);
     if (!res.data) {
       return {
@@ -60,24 +54,17 @@ export const partyProfileApi = {
   },
 
   getPartyProfileById: async (
-    id: string,
-    profileType: PartyProfileType = DEFAULT_PARTY_PROFILE_TYPE
+    id: string
   ): Promise<IPartyProfile | undefined> => {
-    const res = await apiClient.get<IPartyProfile>(
-      `${getProfileEndpoint(profileType)}/${id}`
-    );
+    const res = await apiClient.get<IPartyProfile>(`/party-profiles/${id}`);
     if (res.error) throw new Error(res.error);
     return res.data;
   },
 
   createPartyProfile: async (
-    values: ICreatePartyProfile,
-    profileType: PartyProfileType = DEFAULT_PARTY_PROFILE_TYPE
+    values: ICreatePartyProfile
   ): Promise<IPartyProfile> => {
-    const res = await apiClient.post<IPartyProfile>(
-      getProfileEndpoint(profileType),
-      values
-    );
+    const res = await apiClient.post<IPartyProfile>('/party-profiles', values);
     if (res.error) throw new Error(res.error);
     if (!res.data) throw new Error('Failed to create party profile');
     return res.data;
@@ -85,24 +72,17 @@ export const partyProfileApi = {
 
   updatePartyProfile: async (
     id: string,
-    values: IUpdatePartyProfile,
-    profileType: PartyProfileType = DEFAULT_PARTY_PROFILE_TYPE
+    values: IUpdatePartyProfile
   ): Promise<IPartyProfile | undefined> => {
-    const res = await apiClient.put<IPartyProfile>(
-      `${getProfileEndpoint(profileType)}/${id}`,
-      values
-    );
+    const res = await apiClient.put<IPartyProfile>(`/party-profiles/${id}`, values);
     if (res.error) throw new Error(res.error);
     return res.data;
   },
 
   deletePartyProfile: async (
-    id: string,
-    profileType: PartyProfileType = DEFAULT_PARTY_PROFILE_TYPE
+    id: string
   ): Promise<{ message: string }> => {
-    const res = await apiClient.delete<{ message: string }>(
-      `${getProfileEndpoint(profileType)}/${id}`
-    );
+    const res = await apiClient.delete<{ message: string }>(`/party-profiles/${id}`);
     if (res.error) throw new Error(res.error);
     if (!res.data) throw new Error('Failed to delete party profile');
     return res.data;

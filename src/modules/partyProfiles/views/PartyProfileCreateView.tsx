@@ -1,9 +1,12 @@
-import { useMemo } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useCreatePartyProfile } from '../hooks';
+import { useEffect, useMemo } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useCreatePartyProfile, usePartyProfileTypes } from '../hooks';
 import { PartyProfileForm } from '../forms/PartyProfileForm';
 import type { ICreatePartyProfile } from '../types';
-import { DEFAULT_PARTY_PROFILE_TYPE } from '../constants';
+import {
+  toPartyProfileApiType,
+  toPartyProfileRouteType,
+} from '../constants';
 
 const createEmptyPartyProfileValues = (
   type: string
@@ -75,14 +78,41 @@ const createEmptyPartyProfileValues = (
 
 export const PartyProfileCreateView = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const selectedType = searchParams.get('type') || DEFAULT_PARTY_PROFILE_TYPE;
-  const { submitPartyProfile, isPending } = useCreatePartyProfile();
-
-  const defaultValues = useMemo(
-    () => createEmptyPartyProfileValues(selectedType),
+  const { type: routeType } = useParams<{ type?: string }>();
+  const { data: typeOptions = [] } = usePartyProfileTypes();
+  const routeOptions = useMemo(
+    () =>
+      typeOptions.map(option => ({
+        value: toPartyProfileRouteType(option.value),
+        label: option.label.toUpperCase(),
+      })),
+    [typeOptions]
+  );
+  const selectedType = routeType
+    ? toPartyProfileRouteType(routeType)
+    : routeOptions[0]?.value;
+  const selectedApiType = useMemo(
+    () => toPartyProfileApiType(selectedType),
     [selectedType]
   );
+  const { submitPartyProfile, isPending } = useCreatePartyProfile();
+
+  useEffect(() => {
+    if (!routeType && routeOptions[0]) {
+      navigate(`/party-profiles/${routeOptions[0].value}/create`, {
+        replace: true,
+      });
+    }
+  }, [navigate, routeOptions, routeType]);
+
+  const defaultValues = useMemo(
+    () => createEmptyPartyProfileValues(selectedApiType),
+    [selectedApiType]
+  );
+
+  if (!selectedType) {
+    return <div className="py-6 text-center text-text-secondary">Loading party profile form...</div>;
+  }
 
   const handleSubmit = async (values: ICreatePartyProfile) => {
     const sanitized: ICreatePartyProfile = {
@@ -96,15 +126,13 @@ export const PartyProfileCreateView = () => {
     };
     await submitPartyProfile(sanitized);
     navigate({
-      pathname: '/party-profiles',
-      search: `?type=${values.type || selectedType}`,
+      pathname: `/party-profiles/${toPartyProfileRouteType(values.type || selectedApiType)}`,
     });
   };
 
   const handleCancel = () => {
     navigate({
-      pathname: '/party-profiles',
-      search: `?type=${selectedType}`,
+      pathname: `/party-profiles/${selectedType}`,
     });
   };
 

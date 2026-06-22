@@ -1,9 +1,13 @@
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useEffect, useMemo } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { usePermission } from '@/hooks';
-import { useGetPartyProfile, useUpdatePartyProfile } from '../hooks';
+import { useGetPartyProfile, usePartyProfileTypes, useUpdatePartyProfile } from '../hooks';
 import { PartyProfileForm } from '../forms/PartyProfileForm';
 import type { ICreatePartyProfile } from '../types';
-import { DEFAULT_PARTY_PROFILE_TYPE } from '../constants';
+import {
+  toPartyProfileApiType,
+  toPartyProfileRouteType,
+} from '../constants';
 
 const formatDateForInput = (dateString?: string | Date) => {
   if (!dateString) return '';
@@ -13,17 +17,109 @@ const formatDateForInput = (dateString?: string | Date) => {
 };
 
 export const PartyProfileEditView = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id, type: routeType } = useParams<{ id: string; type?: string }>();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const selectedType = searchParams.get('type') || DEFAULT_PARTY_PROFILE_TYPE;
+  const { data: typeOptions = [] } = usePartyProfileTypes();
+  const routeOptions = useMemo(
+    () =>
+      typeOptions.map(option => ({
+        value: toPartyProfileRouteType(option.value),
+        label: option.label.toUpperCase(),
+      })),
+    [typeOptions]
+  );
+  const selectedType = routeType
+    ? toPartyProfileRouteType(routeType)
+    : routeOptions[0]?.value;
+  const selectedApiType = useMemo(
+    () => toPartyProfileApiType(selectedType),
+    [selectedType]
+  );
   const { canModify } = usePermission('/party-profiles');
 
   const { data: client, isLoading, error } = useGetPartyProfile(
-    id || ''
+    id || '',
+    selectedApiType,
+    Boolean(selectedApiType)
   );
   const { updatePartyProfile, isPending } =
-    useUpdatePartyProfile();
+    useUpdatePartyProfile(selectedApiType);
+
+  useEffect(() => {
+    if (!routeType && routeOptions[0]) {
+      navigate(`/party-profiles/${routeOptions[0].value}/edit/${id}`, {
+        replace: true,
+      });
+    }
+  }, [id, navigate, routeOptions, routeType]);
+
+  const defaultValues: ICreatePartyProfile = {
+    dateOfIntro: formatDateForInput(client?.dateOfIntro),
+    code: client?.code ?? '',
+    name: client?.name ?? '',
+    isIndividual: client?.isIndividual ?? false,
+    creditLimit: client?.creditLimit,
+    creditDays: client?.creditDays,
+    temporaryCreditLimit: client?.temporaryCreditLimit,
+    temporaryCreditDays: client?.temporaryCreditDays,
+    permanentCreditLimit: client?.permanentCreditLimit,
+    permanentCreditDays: client?.permanentCreditDays,
+    address1: client?.address1 ?? '',
+    address2: client?.address2 || '',
+    address3: client?.address3 || '',
+    city: client?.city ?? '',
+    pinCode: client?.pinCode ?? '',
+    kycApprovalNumber: client?.kycApprovalNumber || '',
+    kycRiskCategory: client?.kycRiskCategory || '',
+    chqTrxnLimit: client?.chqTrxnLimit,
+    defaultHandlingCharges: client?.defaultHandlingCharges,
+    defaultAgent: client?.defaultAgent || '',
+    phoneNo: client?.phoneNo || '',
+    blockDateFrom: formatDateForInput(client?.blockDateFrom),
+    establishmentDate: formatDateForInput(client?.establishmentDate),
+    remarks: client?.remarks || '',
+    email: client?.email || '',
+    contactName: client?.contactName || '',
+    designation: client?.designation || '',
+    group: client?.group || '',
+    entityType: client?.entityType || '',
+    panName: client?.panName || '',
+    panDob: formatDateForInput(client?.panDob),
+    panNo: client?.panNo || '',
+    marketingExecutive: client?.marketingExecutive || '',
+    businessNature: client?.businessNature || '',
+    isTdsDeducted: client?.isTdsDeducted ?? false,
+    tds: client?.tds || '',
+    tdsGroup: client?.tdsGroup || '',
+    active: client?.active ?? false,
+    printAddress: client?.printAddress ?? false,
+    eefcClient: client?.eefcClient ?? false,
+    sale: client?.sale ?? false,
+    purchase: client?.purchase ?? false,
+    applyTax: client?.applyTax ?? false,
+    igstOnly: client?.igstOnly ?? false,
+    gstNo: client?.gstNo || '',
+    sgstNo: client?.sgstNo || '',
+    igstNo: client?.igstNo || '',
+    gstStateId: client?.gstStateId || '',
+    originBranchId: client?.originBranchId || '',
+    isActive: client?.isActive ?? false,
+    location: client?.location || '',
+    webSite: client?.webSite || '',
+    accountHolderName: client?.accountHolderName || '',
+    bankName: client?.bankName || '',
+    accountNumber: client?.accountNumber || '',
+    ifscCode: client?.ifscCode || '',
+    bankAddress: client?.bankAddress || '',
+    cancelledChequeCopy: client?.cancelledChequeCopy || '',
+    type: client?.type || selectedApiType,
+    ffmcRegNo: client?.ffmcRegNo || '',
+    ffmcRegDate: formatDateForInput(client?.ffmcRegDate),
+  };
+
+  if (!selectedType) {
+    return <div className="py-6 text-center text-text-secondary">Loading party profile details...</div>;
+  }
 
   const handleSubmit = async (values: ICreatePartyProfile) => {
     if (!id) return;
@@ -38,15 +134,13 @@ export const PartyProfileEditView = () => {
     };
     await updatePartyProfile({ id, data: sanitized });
     navigate({
-      pathname: '/party-profiles',
-      search: `?type=${values.type || selectedType}`,
+      pathname: `/party-profiles/${toPartyProfileRouteType(values.type || selectedApiType)}`,
     });
   };
 
   const handleCancel = () => {
     navigate({
-      pathname: '/party-profiles',
-      search: `?type=${selectedType}`,
+      pathname: `/party-profiles/${selectedType}`,
     });
   };
 
@@ -61,70 +155,6 @@ export const PartyProfileEditView = () => {
       </div>
     );
   }
-
-  const defaultValues: ICreatePartyProfile = {
-    dateOfIntro: formatDateForInput(client.dateOfIntro),
-    code: client.code,
-    name: client.name,
-    isIndividual: client.isIndividual,
-    creditLimit: client.creditLimit,
-    creditDays: client.creditDays,
-    temporaryCreditLimit: client.temporaryCreditLimit,
-    temporaryCreditDays: client.temporaryCreditDays,
-    permanentCreditLimit: client.permanentCreditLimit,
-    permanentCreditDays: client.permanentCreditDays,
-    address1: client.address1,
-    address2: client.address2 || '',
-    address3: client.address3 || '',
-    city: client.city,
-    pinCode: client.pinCode,
-    kycApprovalNumber: client.kycApprovalNumber || '',
-    kycRiskCategory: client.kycRiskCategory || '',
-    chqTrxnLimit: client.chqTrxnLimit,
-    defaultHandlingCharges: client.defaultHandlingCharges,
-    defaultAgent: client.defaultAgent || '',
-    phoneNo: client.phoneNo || '',
-    blockDateFrom: formatDateForInput(client.blockDateFrom),
-    establishmentDate: formatDateForInput(client.establishmentDate),
-    remarks: client.remarks || '',
-    email: client.email || '',
-    contactName: client.contactName || '',
-    designation: client.designation || '',
-    group: client.group || '',
-    entityType: client.entityType || '',
-    panName: client.panName || '',
-    panDob: formatDateForInput(client.panDob),
-    panNo: client.panNo || '',
-    marketingExecutive: client.marketingExecutive || '',
-    businessNature: client.businessNature || '',
-    isTdsDeducted: client.isTdsDeducted,
-    tds: client.tds || '',
-    tdsGroup: client.tdsGroup || '',
-    active: client.active,
-    printAddress: client.printAddress,
-    eefcClient: client.eefcClient,
-    sale: client.sale,
-    purchase: client.purchase,
-    applyTax: client.applyTax,
-    igstOnly: client.igstOnly,
-    gstNo: client.gstNo || '',
-    sgstNo: client.sgstNo || '',
-    igstNo: client.igstNo || '',
-    gstStateId: client.gstStateId || '',
-    originBranchId: client.originBranchId || '',
-    isActive: client.isActive,
-    location: client.location || '',
-    webSite: client.webSite || '',
-    accountHolderName: client.accountHolderName || '',
-    bankName: client.bankName || '',
-    accountNumber: client.accountNumber || '',
-    ifscCode: client.ifscCode || '',
-    bankAddress: client.bankAddress || '',
-    cancelledChequeCopy: client.cancelledChequeCopy || '',
-    type: client.type,
-    ffmcRegNo: client.ffmcRegNo || '',
-    ffmcRegDate: formatDateForInput(client.ffmcRegDate),
-  };
 
   return (
     <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">

@@ -51,6 +51,11 @@ export interface IUser {
   lastLogin?: string;
   status?: 'active' | 'inactive' | 'suspended';
   isHo?: boolean;
+  isHoStaff?: boolean;
   isAdmin?: boolean;
+  branchId?: string;
+  counterId?: string;
+  counterNo?: number;
+  counterName?: string;
   permissions?: Record<string, string[]>;
 }

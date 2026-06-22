@@ -460,6 +460,11 @@ export const Sidebar = ({
     onClose();
   };
 
+  const handleLogoClick = () => {
+    navigate('/');
+    onClose();
+  };
+
   return (
     <aside
       className={[
@@ -474,7 +479,12 @@ export const Sidebar = ({
           className="relative flex items-center justify-between border-b border-slate-200 px-3 py-3.5"
           style={{ backgroundColor: '#ffffff' }}
         >
-          <div className="flex min-w-0 items-center gap-2.5">
+          <button
+            type="button"
+            aria-label="Go to dashboard"
+            className="flex min-w-0 cursor-pointer items-center gap-2.5 text-left transition hover:opacity-90"
+            onClick={handleLogoClick}
+          >
             <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
               {company?.logo ? (
                 <img
@@ -497,7 +507,7 @@ export const Sidebar = ({
                 </p>
               </div>
             )}
-          </div>
+          </button>
 
           <div className="flex items-center gap-2">
             <button

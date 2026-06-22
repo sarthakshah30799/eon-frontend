@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useAuth } from '@/lib/AuthContext';
 import { useCreatePartyProfile } from '../hooks';
 import { PartyProfileForm } from '../forms/PartyProfileForm';
 import type { ICreatePartyProfile } from '../types';
-import { DEFAULT_PARTY_PROFILE_TYPE } from '../constants';
 
 const createEmptyPartyProfileValues = (
   type: string
@@ -46,7 +46,7 @@ const createEmptyPartyProfileValues = (
     isTdsDeducted: false,
     tds: '',
     tdsGroup: '',
-    active: true,
+    active: false,
     printAddress: false,
     eefcClient: false,
     sale: false,
@@ -67,6 +67,7 @@ const createEmptyPartyProfileValues = (
     ifscCode: '',
     bankAddress: '',
     cancelledChequeCopy: '',
+    rejectReason: '',
     type,
     ffmcRegNo: '',
     ffmcRegDate: '',
@@ -76,17 +77,28 @@ const createEmptyPartyProfileValues = (
 export const PartyProfileCreateView = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const selectedType = searchParams.get('type') || DEFAULT_PARTY_PROFILE_TYPE;
+  const { activeBranchId, user } = useAuth();
+  const selectedType = searchParams.get('type') || 'CORPORATE_CLIENT';
   const { submitPartyProfile, isPending } = useCreatePartyProfile();
+  const isAdminUser = user?.isAdmin === true;
 
   const defaultValues = useMemo(
     () => createEmptyPartyProfileValues(selectedType),
     [selectedType]
   );
 
+  const formDefaultValues = useMemo(
+    () => ({
+      ...defaultValues,
+      originBranchId: activeBranchId || '',
+    }),
+    [activeBranchId, defaultValues]
+  );
+
   const handleSubmit = async (values: ICreatePartyProfile) => {
     const sanitized: ICreatePartyProfile = {
       ...values,
+      rejectReason: undefined,
       gstStateId: values.gstStateId || undefined,
       originBranchId: values.originBranchId || undefined,
       blockDateFrom: values.blockDateFrom || undefined,
@@ -112,11 +124,12 @@ export const PartyProfileCreateView = () => {
     <div className="space-y-6">
       <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
         <PartyProfileForm
-          defaultValues={defaultValues}
+          defaultValues={formDefaultValues}
           onSubmit={handleSubmit}
           onCancel={handleCancel}
           isSubmitting={isPending}
           submitLabel="Create Party Profile"
+          originBranchDisabled={!isAdminUser}
         />
       </section>
     </div>

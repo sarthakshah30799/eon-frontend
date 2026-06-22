@@ -29,7 +29,7 @@ export const usePermission = (path?: string): UsePermissionResult => {
       };
     }
 
-    if (user.isHo) {
+    if (user.isHo || user.isHoStaff) {
       return {
         canAdd: true,
         canModify: true,

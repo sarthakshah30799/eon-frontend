@@ -9,6 +9,7 @@ import {
 import type {
   ICreatePartyProfile,
   IPartyProfileListQuery,
+  IReviewPartyProfilePayload,
   IUpdatePartyProfile,
 } from '../types/partyProfileTypes';
 
@@ -102,6 +103,34 @@ export const useDeletePartyProfile = (
   return {
     ...mutation,
     deletePartyProfile: mutation.mutateAsync,
+  };
+};
+
+export const usePendingPartyProfileReviews = () => {
+  return useQuery({
+    queryKey: ['party-profiles', 'review-queue'],
+    queryFn: () => partyProfileApi.getPendingReviewQueue(),
+  });
+};
+
+export const useReviewPartyProfile = () => {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: IReviewPartyProfilePayload }) =>
+      partyProfileApi.reviewPartyProfile(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['party-profiles', 'review-queue'] });
+      queryClient.invalidateQueries({ queryKey: ['party-profiles'] });
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to update party profile status');
+    },
+  });
+
+  return {
+    ...mutation,
+    reviewPartyProfile: mutation.mutateAsync,
   };
 };
 

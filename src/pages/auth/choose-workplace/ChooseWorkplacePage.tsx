@@ -27,9 +27,12 @@ const ChooseWorkplacePage: React.FC = () => {
   const [selectedCounterId, setSelectedCounterId] = useState<string>('');
   const [isDataLoading, setIsDataLoading] = useState<boolean>(true);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const isAdminUser = user?.isAdmin === true;
+  const userBranchId = user?.branchId || '';
+  const userCounterId = user?.counterId || '';
 
   useEffect(() => {
-    if (!isAuthenticated || (user && user.isAdmin)) {
+    if (!isAuthenticated || isAdminUser) {
       return;
     }
 
@@ -50,7 +53,21 @@ const ChooseWorkplacePage: React.FC = () => {
     };
 
     fetchData();
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, isAdminUser]);
+
+  useEffect(() => {
+    if (isAdminUser) {
+      return;
+    }
+
+    if (userBranchId) {
+      setSelectedBranchId(userBranchId);
+    }
+
+    if (userCounterId) {
+      setSelectedCounterId(userCounterId);
+    }
+  }, [isAdminUser, userBranchId, userCounterId]);
 
   if (isAuthLoading) {
     return <Loader />;
@@ -77,6 +94,13 @@ const ChooseWorkplacePage: React.FC = () => {
   const selectedBranch = branches.find(b => b.id === selectedBranchId);
   const allowedCounterIds = selectedBranch?.connectCounterIds || [];
   const filteredCounters = counters.filter(c => allowedCounterIds.includes(c.id));
+  const visibleBranches = isAdminUser
+    ? branches
+    : branches.filter(branch => branch.id === userBranchId);
+  const visibleCounters = isAdminUser
+    ? filteredCounters
+    : counters.filter(counter => counter.id === userCounterId);
+  const isWorkplaceLocked = !isAdminUser;
 
   const handleConfirm = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -173,11 +197,12 @@ const ChooseWorkplacePage: React.FC = () => {
                     setSelectedBranchId(e.target.value);
                     setSelectedCounterId(''); // Reset counter selection on branch change
                   }}
-                  className="block w-full rounded-sm border border-border-secondary bg-surface-primary px-3 py-2.5 text-text-primary shadow-sm focus:border-primary-500 focus:ring-primary-500 focus-visible:outline-primary-500 focus-visible:ring-1 transition"
+                  disabled={isWorkplaceLocked}
+                  className="block w-full rounded-sm border border-border-secondary bg-surface-primary px-3 py-2.5 text-text-primary shadow-sm focus:border-primary-500 focus:ring-primary-500 focus-visible:outline-primary-500 focus-visible:ring-1 disabled:cursor-not-allowed disabled:bg-surface-secondary disabled:text-text-tertiary transition"
                   required
                 >
                   <option value="" disabled>Select Branch</option>
-                  {branches.map((b) => (
+                  {visibleBranches.map((b) => (
                     <option key={b.id} value={b.id}>
                       {b.name} - {b.code} - {b.city}
                     </option>
@@ -192,14 +217,14 @@ const ChooseWorkplacePage: React.FC = () => {
                 <select
                   value={selectedCounterId}
                   onChange={(e) => setSelectedCounterId(e.target.value)}
-                  disabled={!selectedBranchId}
+                  disabled={!selectedBranchId || isWorkplaceLocked}
                   className="block w-full rounded-sm border border-border-secondary bg-surface-primary px-3 py-2.5 text-text-primary shadow-sm focus:border-primary-500 focus:ring-primary-500 focus-visible:outline-primary-500 focus-visible:ring-1 disabled:bg-surface-secondary disabled:text-text-tertiary disabled:cursor-not-allowed transition"
                   required
                 >
                   <option value="" disabled>
                     {!selectedBranchId ? 'Select Branch first' : 'Select Counter'}
                   </option>
-                  {filteredCounters.map((c) => (
+                  {visibleCounters.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.counterNo} - {c.name}
                     </option>
@@ -208,6 +233,11 @@ const ChooseWorkplacePage: React.FC = () => {
                 {selectedBranchId && filteredCounters.length === 0 && (
                   <p className="mt-1 text-xs text-error-600 animate-pulse">
                     No active counters attached to this branch.
+                  </p>
+                )}
+                {isWorkplaceLocked && (
+                  <p className="mt-1 text-xs text-text-tertiary">
+                    Your workplace is assigned by your profile and cannot be changed here.
                   </p>
                 )}
               </div>

@@ -59,7 +59,7 @@ export const partyProfileSchema = yup.object({
   isTdsDeducted: yup.boolean().default(false),
   tds: yup.string().trim().optional().nullable(),
   tdsGroup: yup.string().trim().optional().nullable(),
-  active: yup.boolean().default(true),
+  active: yup.boolean().default(false),
   isActive: yup.boolean().default(false),
   printAddress: yup.boolean().default(false),
   eefcClient: yup.boolean().default(false),
@@ -81,7 +81,8 @@ export const partyProfileSchema = yup.object({
   ifscCode: yup.string().trim().optional().nullable(),
   bankAddress: yup.string().trim().optional().nullable(),
   cancelledChequeCopy: yup.string().trim().optional().nullable(),
-  type: yup.string().required('Profile type is required').default('party-profiles'),
+  rejectReason: yup.string().trim().optional().nullable(),
+  type: yup.string().required('Profile type is required').default('CORPORATE_CLIENT'),
   ffmcRegNo: yup.string().trim().optional().nullable(),
   ffmcRegDate: yup.string().trim().optional().nullable(),
 });

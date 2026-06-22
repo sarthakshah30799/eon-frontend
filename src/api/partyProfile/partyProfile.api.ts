@@ -9,6 +9,7 @@ import type {
   IPartyProfileListQuery,
   IPartyProfileListResponse,
   ICreatePartyProfile,
+  IReviewPartyProfilePayload,
   IUpdatePartyProfile,
 } from '@/modules/partyProfiles/types/partyProfileTypes';
 
@@ -114,6 +115,25 @@ export const partyProfileApi = {
     );
     if (res.error) throw new Error(res.error);
     return res.data || [];
+  },
+
+  getPendingReviewQueue: async (): Promise<IPartyProfile[]> => {
+    const res = await apiClient.get<IPartyProfile[]>('/party-profiles/review-queue');
+    if (res.error) throw new Error(res.error);
+    return res.data || [];
+  },
+
+  reviewPartyProfile: async (
+    id: string,
+    values: IReviewPartyProfilePayload
+  ): Promise<IPartyProfile> => {
+    const res = await apiClient.post<IPartyProfile>(
+      `/party-profiles/${id}/review`,
+      values
+    );
+    if (res.error) throw new Error(res.error);
+    if (!res.data) throw new Error('Failed to review party profile');
+    return res.data;
   },
 };
 

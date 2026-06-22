@@ -7,7 +7,6 @@ import {
   PartyProfileTypeSelect,
   PartyProfileTable,
 } from '../components';
-import { DEFAULT_PARTY_PROFILE_TYPE } from '../constants';
 import { useListPartyProfiles, usePartyProfileTypes } from '../hooks';
 
 export const PartyProfileListView = () => {
@@ -19,7 +18,7 @@ export const PartyProfileListView = () => {
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 400);
 
-  const selectedType = searchParams.get('type') || DEFAULT_PARTY_PROFILE_TYPE;
+  const selectedType = searchParams.get('type') || 'CORPORATE_CLIENT';
   const { data: typeOptions = [] } = usePartyProfileTypes();
 
   const query = useMemo(

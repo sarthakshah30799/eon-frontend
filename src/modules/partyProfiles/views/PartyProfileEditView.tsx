@@ -1,9 +1,13 @@
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useAuth } from '@/lib/AuthContext';
 import { usePermission } from '@/hooks';
-import { useGetPartyProfile, useUpdatePartyProfile } from '../hooks';
+import {
+  useGetPartyProfile,
+  useReviewPartyProfile,
+  useUpdatePartyProfile,
+} from '../hooks';
 import { PartyProfileForm } from '../forms/PartyProfileForm';
-import type { ICreatePartyProfile } from '../types';
-import { DEFAULT_PARTY_PROFILE_TYPE } from '../constants';
+import type { ICreatePartyProfile, IReviewPartyProfilePayload } from '../types';
 
 const formatDateForInput = (dateString?: string | Date) => {
   if (!dateString) return '';
@@ -16,7 +20,13 @@ export const PartyProfileEditView = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const selectedType = searchParams.get('type') || DEFAULT_PARTY_PROFILE_TYPE;
+  const selectedType = searchParams.get('type') || 'CORPORATE_CLIENT';
+  const isReviewMode = searchParams.get('review') === '1';
+  const { user } = useAuth();
+  const isReviewer = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
+  const showReviewControls = Boolean(
+    isReviewer && (isReviewMode || user?.isAdmin)
+  );
   const { canModify } = usePermission('/party-profiles');
 
   const { data: client, isLoading, error } = useGetPartyProfile(
@@ -24,11 +34,13 @@ export const PartyProfileEditView = () => {
   );
   const { updatePartyProfile, isPending } =
     useUpdatePartyProfile();
+  const { reviewPartyProfile, isPending: isReviewing } = useReviewPartyProfile();
 
   const handleSubmit = async (values: ICreatePartyProfile) => {
     if (!id) return;
     const sanitized = {
       ...values,
+      rejectReason: undefined,
       gstStateId: values.gstStateId || undefined,
       originBranchId: values.originBranchId || undefined,
       blockDateFrom: values.blockDateFrom || undefined,
@@ -40,6 +52,20 @@ export const PartyProfileEditView = () => {
     navigate({
       pathname: '/party-profiles',
       search: `?type=${values.type || selectedType}`,
+    });
+  };
+
+  const handleReviewSubmit = async (values: IReviewPartyProfilePayload) => {
+    if (!id) return;
+
+    await reviewPartyProfile({
+      id,
+      data: values,
+    });
+
+    navigate({
+      pathname: '/party-profiles',
+      search: `?type=${selectedType}`,
     });
   };
 
@@ -121,6 +147,7 @@ export const PartyProfileEditView = () => {
     ifscCode: client.ifscCode || '',
     bankAddress: client.bankAddress || '',
     cancelledChequeCopy: client.cancelledChequeCopy || '',
+    rejectReason: '',
     type: client.type,
     ffmcRegNo: client.ffmcRegNo || '',
     ffmcRegDate: formatDateForInput(client.ffmcRegDate),
@@ -130,10 +157,12 @@ export const PartyProfileEditView = () => {
     <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
       <PartyProfileForm
         defaultValues={defaultValues}
-        onSubmit={handleSubmit}
+        onSubmit={showReviewControls ? async () => undefined : handleSubmit}
         onCancel={handleCancel}
-        isSubmitting={isPending}
-        disabled={!canModify}
+        onReviewSubmit={handleReviewSubmit}
+        isSubmitting={isPending || isReviewing}
+        disabled={showReviewControls ? true : !canModify}
+        reviewMode={showReviewControls}
         submitLabel="Save Changes"
       />
     </section>

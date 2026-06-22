@@ -31,7 +31,7 @@ export const PartyProfileTable = ({
   clients,
   loading = false,
   profileType = DEFAULT_PARTY_PROFILE_TYPE,
-  selectedType = 'party-profiles',
+  selectedType = 'CORPORATE_CLIENT',
 }: PartyProfileTableProps) => {
   const navigate = useNavigate();
   const { canModify, canView } = usePermission('/party-profiles');

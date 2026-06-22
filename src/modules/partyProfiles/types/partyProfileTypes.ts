@@ -1,3 +1,5 @@
+export type PartyProfileStatus = 'pending' | 'approve' | 'reject';
+
 export interface IPartyProfile {
   id: string;
   dateOfIntro: string;
@@ -64,6 +66,10 @@ export interface IPartyProfile {
   ffmcRegNo?: string;
   ffmcRegDate?: string;
   type: string;
+  status?: PartyProfileStatus;
+  statusUpdatedById?: string | null;
+  statusUpdatedByName?: string | null;
+  statusUpdatedAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -73,11 +79,23 @@ export type ICreatePartyProfile = Omit<
   | 'id'
   | 'gstStateName'
   | 'originBranchName'
+  | 'status'
+  | 'statusUpdatedById'
+  | 'statusUpdatedByName'
+  | 'statusUpdatedAt'
   | 'createdAt'
   | 'updatedAt'
->;
+> & {
+  rejectReason?: string;
+};
 
 export type IUpdatePartyProfile = Partial<ICreatePartyProfile>;
+
+export interface IReviewPartyProfilePayload {
+  status: Exclude<PartyProfileStatus, 'pending'>;
+  active: boolean;
+  rejectReason?: string;
+}
 
 export interface IPartyProfileListQuery {
   search?: string;
@@ -96,4 +114,3 @@ export interface IPartyProfileListResponse {
   totalItems: number;
   totalPages: number;
 }
-

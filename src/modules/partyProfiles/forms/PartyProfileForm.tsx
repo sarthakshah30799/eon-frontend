@@ -25,6 +25,8 @@ import {
 import type { AsyncSelectResponse } from '@/components/ui';
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import { usePartyProfileTypes } from '../hooks';
+import type { IReviewPartyProfilePayload } from '../types';
+import { PartyProfileReviewActionPanel } from '../components';
 
 interface PartyProfileFormProps {
   defaultValues: ICreatePartyProfile;
@@ -34,6 +36,9 @@ interface PartyProfileFormProps {
   isSubmitting?: boolean;
   disabled?: boolean;
   profileType?: PartyProfileType;
+  reviewMode?: boolean;
+  originBranchDisabled?: boolean;
+  onReviewSubmit?: (values: IReviewPartyProfilePayload) => void | Promise<void>;
 }
 
 const FORM_ID = 'party-profile-form';
@@ -42,12 +47,19 @@ const PartyProfileFormFields = ({
   isSubmitting: isSubmittingProp = false,
   disabled = false,
   profileType = DEFAULT_PARTY_PROFILE_TYPE,
+  reviewMode = false,
+  originBranchDisabled = false,
+  onReviewSubmit,
 }: {
   isSubmitting?: boolean;
   disabled?: boolean;
   profileType?: PartyProfileType;
+  reviewMode?: boolean;
+  originBranchDisabled?: boolean;
+  onReviewSubmit?: (values: IReviewPartyProfilePayload) => void | Promise<void>;
 }) => {
-  const isSubmitting = isSubmittingProp || disabled;
+  const isSubmitting = isSubmittingProp || disabled || reviewMode;
+  const reviewActionsDisabled = isSubmittingProp;
   const typeConfig = getPartyProfileTypeConfig(profileType);
   const { control } = useFormContext();
   const currentType = useWatch({
@@ -123,7 +135,7 @@ const PartyProfileFormFields = ({
             placeholder="Enter client code (4-20 chars)"
             disabled={isSubmitting}
           />
-          {currentType === 'ffmc' && (
+          {currentType === 'FFMC' && (
             <>
               <FormFieldInput
                 name="ffmcRegNo"
@@ -418,11 +430,13 @@ const PartyProfileFormFields = ({
 
       <CardSection heading="Tax Settings & Status">
         <div className="grid gap-2 grid-cols-2 md:grid-cols-4 lg:grid-cols-7">
-          <FormFieldCheckbox
-            name="active"
-            label="Active"
-            disabled={isSubmitting}
-          />
+          {!reviewMode ? (
+            <FormFieldCheckbox
+              name="active"
+              label="Active"
+              disabled={isSubmitting}
+            />
+          ) : null}
           <FormFieldCheckbox
             name="printAddress"
             label="Print Address"
@@ -484,7 +498,7 @@ const PartyProfileFormFields = ({
             label="Origin Branch"
             placeholder="Select branch"
             loadOptions={branchLoadOptions}
-            disabled={isSubmitting}
+            disabled={isSubmitting || originBranchDisabled}
           />
         </div>
       </CardSection>
@@ -536,6 +550,12 @@ const PartyProfileFormFields = ({
         </div>
       </CardSection>
 
+      <PartyProfileReviewActionPanel
+        reviewMode={reviewMode}
+        isSubmitting={reviewActionsDisabled}
+        onReviewSubmit={onReviewSubmit}
+      />
+
     </div>
   );
 };
@@ -548,6 +568,9 @@ export const PartyProfileForm = ({
   isSubmitting = false,
   disabled = false,
   profileType = DEFAULT_PARTY_PROFILE_TYPE,
+  reviewMode = false,
+  originBranchDisabled = false,
+  onReviewSubmit,
 }: PartyProfileFormProps) => {
   return (
     <Form
@@ -558,18 +581,25 @@ export const PartyProfileForm = ({
       }
       defaultValues={defaultValues}
       className="space-y-6"
-      footer={{
-        submitLabel,
-        onBackClick: () => {
-          void onCancel?.();
-        },
-        onCancel,
-      }}
+      footer={
+        reviewMode
+          ? undefined
+          : {
+              submitLabel,
+              onBackClick: () => {
+                void onCancel?.();
+              },
+              onCancel,
+            }
+      }
     >
       <PartyProfileFormFields
         isSubmitting={isSubmitting}
         disabled={disabled}
         profileType={profileType}
+        reviewMode={reviewMode}
+        originBranchDisabled={originBranchDisabled}
+        onReviewSubmit={onReviewSubmit}
       />
     </Form>
   );

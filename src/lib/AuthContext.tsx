@@ -61,7 +61,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const checkAuth = async () => {
     try {
       const currentUser = await authApi.getCurrentUser();
-      setUser(currentUser);
+      setUser({
+        ...currentUser,
+        isHo: currentUser.isHo || currentUser.isHoStaff,
+      });
     } catch {
       setUser(null);
     } finally {

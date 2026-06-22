@@ -7,6 +7,7 @@ interface FormFieldTextareaProps
   extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   name: string;
   label?: string;
+  wrapperClassName?: string;
 }
 
 export const FormFieldTextarea = ({
@@ -16,6 +17,7 @@ export const FormFieldTextarea = ({
   disabled = false,
   className = '',
   rows = 5,
+  wrapperClassName = '',
   ...rest
 }: FormFieldTextareaProps) => {
   const form = useFormContext();
@@ -29,7 +31,7 @@ export const FormFieldTextarea = ({
   });
 
   return (
-    <div className="space-y-2 max-w-[350px]">
+    <div className={`space-y-2 max-w-[350px] ${wrapperClassName}`}>
       {label && <Label htmlFor={name}>{label}</Label>}
       <textarea
         id={name}

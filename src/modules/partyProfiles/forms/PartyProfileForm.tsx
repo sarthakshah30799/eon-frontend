@@ -395,7 +395,7 @@ const PartyProfileFormFields = ({
           <div className="flex items-center pt-6">
             <FormFieldCheckbox
               name="isTdsDeducted"
-              label="Is TDS Deducted?"
+              label="TDS Deducted?"
               disabled={isSubmitting}
             />
           </div>

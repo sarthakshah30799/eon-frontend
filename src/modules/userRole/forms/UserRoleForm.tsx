@@ -65,62 +65,62 @@ export const UserRoleForm = ({
       </CardSection>
 
       <CardSection heading="Role Classifications">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
           {canManageAdminControls && (
             <FormFieldCheckbox
               name="isAdmin"
-              label="Is Admin"
+              label="Admin"
               disabled={isSubmitting}
             />
           )}
           <FormFieldCheckbox
             name="isMd"
-            label="Is MD"
+            label="MD"
             disabled={isSubmitting}
           />
           <FormFieldCheckbox
             name="isCompliance"
-            label="Is Compliance"
+            label="Compliance"
             disabled={isSubmitting}
           />
           <FormFieldCheckbox
             name="isSrFinance"
-            label="Is Sr Finance"
+            label="Sr Finance"
             disabled={isSubmitting}
           />
           <FormFieldCheckbox
             name="isFinance"
-            label="Is Finance"
+            label="Finance"
             disabled={isSubmitting}
           />
           <FormFieldCheckbox
             name="isBrnMgr"
-            label="Is Branch Manager"
+            label="Branch Manager"
             disabled={isSubmitting}
           />
           <FormFieldCheckbox
             name="isExecutive"
-            label="Is Executive"
+            label="Executive"
             disabled={isSubmitting}
           />
           <FormFieldCheckbox
             name="isCardStk"
-            label="Is Card Stock"
+            label="Card Stock"
             disabled={isSubmitting}
           />
           <FormFieldCheckbox
             name="isDeliveryBoy"
-            label="Is Delivery Boy"
+            label="Delivery Boy"
             disabled={isSubmitting}
           />
           <FormFieldCheckbox
             name="isCashier"
-            label="Is Cashier"
+            label="Cashier"
             disabled={isSubmitting}
           />
           <FormFieldCheckbox
             name="isSalesMgr"
-            label="Is Sales Manager"
+            label="Sales Manager"
             disabled={isSubmitting}
           />
         </div>
@@ -130,17 +130,17 @@ export const UserRoleForm = ({
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <FormFieldCheckbox
             name="isAeonAccess"
-            label="Is AEON Access"
+            label="AEON Access"
             disabled={isSubmitting}
           />
           <FormFieldCheckbox
             name="isDelPortalAccess"
-            label="Is Delivery Portal Access"
+            label="Delivery Portal Access"
             disabled={isSubmitting}
           />
           <FormFieldCheckbox
             name="isDelAppAccess"
-            label="Is Delivery App Access"
+            label="Delivery App Access"
             disabled={isSubmitting}
           />
         </div>
@@ -149,7 +149,7 @@ export const UserRoleForm = ({
       <CardSection heading="Status">
         <FormFieldCheckbox
           name="isActive"
-          label="Is Active"
+          label="Active"
           disabled={isSubmitting}
         />
       </CardSection>

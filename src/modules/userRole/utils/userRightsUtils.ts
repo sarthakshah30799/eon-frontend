@@ -63,7 +63,6 @@ export const filterSelectableRightsTreeNodes = (
   nodes: UserRightsTreeNode[]
 ): UserRightsTreeNode[] => {
   return nodes
-    .filter(node => node.children.length > 0)
     .map(node => ({
       ...node,
       children: filterSelectableRightsTreeNodes(node.children),

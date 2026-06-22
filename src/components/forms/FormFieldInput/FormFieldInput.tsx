@@ -1,9 +1,9 @@
-import type { ChangeEvent, InputHTMLAttributes } from 'react';
+import type { ChangeEvent } from 'react';
 import { useController } from 'react-hook-form';
 import { useFormContext } from 'react-hook-form';
-import { Input } from '../../ui';
+import { Input, type InputProps } from '../../ui';
 
-interface FormFieldInputProps extends InputHTMLAttributes<HTMLInputElement> {
+export interface FormFieldInputProps extends InputProps {
   name: string;
   label?: string;
   valueTransform?: 'uppercase' | 'none';
@@ -29,12 +29,13 @@ export const FormFieldInput = ({
     control: form.control,
   });
 
-  const shouldUppercaseValue = type !== "email"  && type !== "password";
+  const shouldUppercaseValue = type !== 'email' && type !== 'password';
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>): void => {
-    const nextValue = valueTransform === 'uppercase' && shouldUppercaseValue
-      ? event.target.value.toUpperCase()
-      : event.target.value;
+    const nextValue =
+      valueTransform === 'uppercase' && shouldUppercaseValue
+        ? event.target.value.toUpperCase()
+        : event.target.value;
 
     field.onChange(nextValue);
     rest.onChange?.(event);

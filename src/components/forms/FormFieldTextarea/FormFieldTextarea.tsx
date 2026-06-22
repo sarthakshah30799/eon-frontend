@@ -29,7 +29,7 @@ export const FormFieldTextarea = ({
   });
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 max-w-[350px]">
       {label && <Label htmlFor={name}>{label}</Label>}
       <textarea
         id={name}

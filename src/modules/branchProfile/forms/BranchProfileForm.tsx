@@ -270,12 +270,12 @@ const BranchProfileFormFields = ({
           <div className="mt-2 grid gap-2 md:col-span-2 md:grid-cols-2 lg:col-span-4">
             <FormFieldCheckbox
               name="isHeadOffice"
-              label="Is Head Office"
+              label="Head Office"
               disabled={isSubmitting}
             />
             <FormFieldCheckbox
               name="isActive"
-              label="Is Active"
+              label="Active"
               disabled={isSubmitting}
             />
           </div>

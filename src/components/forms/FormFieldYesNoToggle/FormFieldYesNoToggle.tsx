@@ -32,7 +32,7 @@ export const FormFieldYesNoToggle = ({
   const value = Boolean(field.value);
 
   return (
-    <div className={`space-y-2 ${className}`}>
+    <div className={`max-w-[350px] space-y-2 ${className}`}>
       {label && <Label>{label}</Label>}
 
       <div className="inline-flex rounded-sm border border-border-secondary bg-surface-primary p-1">
@@ -68,4 +68,3 @@ export const FormFieldYesNoToggle = ({
 };
 
 export default FormFieldYesNoToggle;
-

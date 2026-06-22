@@ -42,7 +42,7 @@ export const PhoneInput = ({
   };
 
   return (
-    <div className={`space-y-2 ${className}`}>
+    <div className={`max-w-[350px] space-y-2 ${className}`}>
       {label && <Label>{label}</Label>}
 
       <div className="grid grid-cols-[140px_1fr] gap-3">

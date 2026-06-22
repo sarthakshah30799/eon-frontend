@@ -55,7 +55,7 @@ export const FileUploader = ({
   };
 
   return (
-    <div className={`space-y-2 ${className}`}>
+    <div className={`max-w-[350px] space-y-2 ${className}`}>
       {label && (
         <label
           htmlFor={inputId}

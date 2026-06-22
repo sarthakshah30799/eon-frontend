@@ -74,7 +74,7 @@ export const DatePicker = ({
   const inputId = id ?? generatedId;
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-1 max-w-[350px]">
       {label && <Label htmlFor={inputId}>{label}</Label>}
       <ReactDatePicker
         id={inputId}

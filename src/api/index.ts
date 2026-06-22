@@ -19,4 +19,4 @@ export * from './additionalSettings';
 export * from './financialCodes/financialCodes.api';
 export * from './accountProfile';
 export * from './countryGroup';
-export * from './corporateClient';
+export * from './partyProfile';

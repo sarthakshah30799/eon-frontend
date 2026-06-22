@@ -93,7 +93,7 @@ export const MenuForm = ({
         <h2 className="text-sm font-semibold uppercase text-text-tertiary">
           Hierarchy
         </h2>
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-[70%_30%]">
           <FormFieldSelect
             name="parentId"
             label="Parent Menu"
@@ -104,13 +104,11 @@ export const MenuForm = ({
             isSearchable={false}
             isClearable
           />
-          <div className="rounded-sm border border-border-primary bg-surface-primary p-3">
             <FormFieldCheckbox
               name="isActive"
               label="Is Active"
               disabled={isSubmitting}
             />
-          </div>
         </div>
       </section>
     </Form>

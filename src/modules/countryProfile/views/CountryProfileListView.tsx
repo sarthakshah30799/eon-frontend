@@ -73,7 +73,6 @@ export const CountryProfileListView = () => {
             {totalItems} total records
           </div>
         </div>
-
         <CountryProfileTable
           countries={countries}
           loading={isLoading || isFetching}

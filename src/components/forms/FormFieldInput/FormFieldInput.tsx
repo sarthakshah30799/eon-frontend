@@ -51,6 +51,7 @@ export const FormFieldInput = ({
       {...rest}
       onChange={handleChange}
       error={error?.message}
+      valueTransform={valueTransform}
     />
   );
 };

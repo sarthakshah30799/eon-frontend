@@ -4,16 +4,10 @@ import { Button } from '@/components/ui/button1';
 import { Table, type TableColumnDef } from '@/components/ui/table';
 import { usePermission } from '@/hooks';
 import type { IPartyProfile } from '../types/partyProfileTypes';
-import {
-  DEFAULT_PARTY_PROFILE_TYPE,
-  getPartyProfileTypeConfig,
-  type PartyProfileType,
-} from '../constants';
 
 interface PartyProfileTableProps {
   clients: IPartyProfile[];
   loading?: boolean;
-  profileType?: PartyProfileType;
   selectedType?: string;
 }
 
@@ -30,12 +24,10 @@ interface PartyProfileTableRow {
 export const PartyProfileTable = ({
   clients,
   loading = false,
-  profileType = DEFAULT_PARTY_PROFILE_TYPE,
-  selectedType = 'CORPORATE_CLIENT',
+  selectedType = '',
 }: PartyProfileTableProps) => {
   const navigate = useNavigate();
   const { canModify, canView } = usePermission('/party-profiles');
-  const profileTypeConfig = getPartyProfileTypeConfig(profileType);
 
   const rows: PartyProfileTableRow[] = clients.map(client => ({
     id: client.id,
@@ -79,8 +71,7 @@ export const PartyProfileTable = ({
               onClick={event => {
                 event.stopPropagation();
                 navigate({
-                  pathname: `/party-profiles/edit/${clientId}`,
-                  search: `?type=${selectedType}`,
+                  pathname: `/party-profiles/${selectedType}/edit/${clientId}`,
                 });
               }}
             >
@@ -109,12 +100,15 @@ export const PartyProfileTable = ({
         canModify || canView
           ? row =>
               navigate({
-                pathname: `/party-profiles/edit/${row.id}`,
-                search: `?type=${selectedType}`,
+                pathname: `/party-profiles/${selectedType}/edit/${row.id}`,
               })
           : undefined
       }
-      emptyMessage={profileTypeConfig.listEmptyMessage}
+      emptyMessage={
+        selectedType
+          ? `No ${selectedType.replace(/-/g, ' ').toUpperCase()} found. Create your first profile.`
+          : 'No party profiles found.'
+      }
     />
   );
 };

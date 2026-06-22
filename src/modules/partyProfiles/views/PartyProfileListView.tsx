@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button1';
 import { Input } from '@/components/ui/input';
 import { useDebounce, usePermission } from '@/hooks';
@@ -7,28 +7,55 @@ import {
   PartyProfileTypeSelect,
   PartyProfileTable,
 } from '../components';
+import {
+  toPartyProfileApiType,
+  toPartyProfileRouteType,
+} from '../constants';
 import { useListPartyProfiles, usePartyProfileTypes } from '../hooks';
 
 export const PartyProfileListView = () => {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const { type: routeType } = useParams<{ type?: string }>();
   const { canAdd } = usePermission('/party-profiles');
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 400);
 
-  const selectedType = searchParams.get('type') || 'CORPORATE_CLIENT';
   const { data: typeOptions = [] } = usePartyProfileTypes();
+  const routeOptions = useMemo(
+    () =>
+      typeOptions.map(option => ({
+        value: toPartyProfileRouteType(option.value),
+        label: option.label.toUpperCase(),
+      })),
+    [typeOptions]
+  );
+
+  const selectedType = useMemo(
+    () => (routeType ? toPartyProfileRouteType(routeType) : routeOptions[0]?.value),
+    [routeType, routeOptions]
+  );
+
+  const selectedApiType = useMemo(
+    () => toPartyProfileApiType(selectedType),
+    [selectedType]
+  );
+
+  useEffect(() => {
+    if (!routeType && routeOptions[0]) {
+      navigate(`/party-profiles/${routeOptions[0].value}`, { replace: true });
+    }
+  }, [navigate, routeOptions, routeType]);
 
   const query = useMemo(
     () => ({
       page,
       limit: pageSize,
       search: debouncedSearch.trim() || undefined,
-      type: selectedType,
+      type: selectedApiType,
     }),
-    [page, pageSize, debouncedSearch, selectedType]
+    [page, pageSize, debouncedSearch, selectedApiType]
   );
 
   const {
@@ -36,8 +63,12 @@ export const PartyProfileListView = () => {
     isLoading,
     isFetching,
     error,
-  } = useListPartyProfiles(query);
+  } = useListPartyProfiles(query, selectedApiType, Boolean(selectedApiType));
   const clients = clientResponse?.data ?? [];
+
+  if (!selectedType) {
+    return <div className="py-6 text-center text-text-secondary">Loading party profiles...</div>;
+  }
 
   if (error) {
     return (
@@ -55,11 +86,9 @@ export const PartyProfileListView = () => {
             type="button"
             className="rounded-sm md:self-end"
             onClick={() =>
-              navigate({
-                pathname: '/party-profiles/create',
-              search: `?type=${selectedType}`,
-            })
-          }
+              selectedType &&
+              navigate(`/party-profiles/${selectedType}/create`)
+            }
           >
             Create Party Profile
           </Button>
@@ -78,14 +107,14 @@ export const PartyProfileListView = () => {
             }}
             className="sm:max-w-md"
           />
-          {typeOptions.length > 0 && (
+          {routeOptions.length > 0 && selectedType && (
             <PartyProfileTypeSelect
               value={selectedType}
               onChange={nextType => {
                 setPage(1);
-                setSearchParams({ type: nextType });
+                navigate(`/party-profiles/${nextType}`, { replace: true });
               }}
-              options={typeOptions}
+              options={routeOptions}
               label="Profile Type"
             />
           )}

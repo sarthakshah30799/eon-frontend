@@ -1,13 +1,12 @@
-import { useMemo } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useAuth } from '@/lib/AuthContext';
-import { useCreatePartyProfile } from '../hooks';
+import { useEffect, useMemo } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useCreatePartyProfile, usePartyProfileTypes } from '../hooks';
 import { PartyProfileForm } from '../forms/PartyProfileForm';
 import type { ICreatePartyProfile } from '../types';
+import { toPartyProfileApiType, toPartyProfileRouteType } from '../constants';
+import { useAuth } from '@/lib';
 
-const createEmptyPartyProfileValues = (
-  type: string
-): ICreatePartyProfile => {
+const createEmptyPartyProfileValues = (type: string): ICreatePartyProfile => {
   return {
     dateOfIntro: new Date().toISOString().split('T')[0],
     code: '',
@@ -76,16 +75,48 @@ const createEmptyPartyProfileValues = (
 
 export const PartyProfileCreateView = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const { type: routeType } = useParams<{ type?: string }>();
   const { activeBranchId, user } = useAuth();
-  const selectedType = searchParams.get('type') || 'CORPORATE_CLIENT';
-  const { submitPartyProfile, isPending } = useCreatePartyProfile();
   const isAdminUser = user?.isAdmin === true;
 
-  const defaultValues = useMemo(
-    () => createEmptyPartyProfileValues(selectedType),
+  const { data: typeOptions = [] } = usePartyProfileTypes();
+  const routeOptions = useMemo(
+    () =>
+      typeOptions.map(option => ({
+        value: toPartyProfileRouteType(option.value),
+        label: option.label.toUpperCase(),
+      })),
+    [typeOptions]
+  );
+  const selectedType = routeType
+    ? toPartyProfileRouteType(routeType)
+    : routeOptions[0]?.value;
+  const selectedApiType = useMemo(
+    () => toPartyProfileApiType(selectedType),
     [selectedType]
   );
+  const { submitPartyProfile, isPending } = useCreatePartyProfile();
+
+  useEffect(() => {
+    if (!routeType && routeOptions[0]) {
+      navigate(`/party-profiles/${routeOptions[0].value}/create`, {
+        replace: true,
+      });
+    }
+  }, [navigate, routeOptions, routeType]);
+
+  const defaultValues = useMemo(
+    () => createEmptyPartyProfileValues(selectedApiType),
+    [selectedApiType]
+  );
+
+  if (!selectedType) {
+    return (
+      <div className="py-6 text-center text-text-secondary">
+        Loading party profile form...
+      </div>
+    );
+  }
 
   const formDefaultValues = useMemo(
     () => ({
@@ -108,15 +139,13 @@ export const PartyProfileCreateView = () => {
     };
     await submitPartyProfile(sanitized);
     navigate({
-      pathname: '/party-profiles',
-      search: `?type=${values.type || selectedType}`,
+      pathname: `/party-profiles/${toPartyProfileRouteType(values.type || selectedApiType)}`,
     });
   };
 
   const handleCancel = () => {
     navigate({
-      pathname: '/party-profiles',
-      search: `?type=${selectedType}`,
+      pathname: `/party-profiles/${selectedType}`,
     });
   };
 

@@ -10,11 +10,6 @@ export const useResolveDocumentProfileRules = (
   return useQuery({
     queryKey: ['document-profile-rules', query],
     queryFn: () => documentProfileApi.resolveDocumentProfileRules(query),
-    enabled:
-      hasValue(query.profileSelection) ||
-      hasValue(query.entitySelection) ||
-      hasValue(query.fieldSelection) ||
-      hasValue(query.fieldValue),
+    enabled: hasValue(query.groupSelection) || hasValue(query.entitySelection),
   });
 };
-

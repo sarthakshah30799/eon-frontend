@@ -29,10 +29,6 @@ const ruleSchema = yup.object({
     .typeError('Max size must be a number')
     .positive('Max size must be greater than 0')
     .required('Max size is required'),
-  profileSelection: yup.string().nullable().default(''),
-  entitySelection: yup.string().nullable().default(''),
-  fieldSelection: yup.string().nullable().default(''),
-  fieldValue: yup.string().nullable().default(''),
   active: yup.boolean().default(true),
   sortOrder: yup.number().min(0).default(0),
 });
@@ -45,13 +41,21 @@ export const documentProfileSchema = yup.object({
       'Select a valid specification type'
     )
     .required('Specification type is required'),
-  transactionType: yup
+  type: yup
     .string()
     .oneOf(
       [yup.ref('specificationType')],
-      'Select a valid transaction type'
+      'Select a valid type'
     )
-    .required('Transaction type is required'),
+    .required('Type is required'),
+  groupSelection: yup
+    .string()
+    .trim()
+    .required('Group is required'),
+  entitySelection: yup
+    .string()
+    .trim()
+    .required('Entity Type is required'),
   active: yup.boolean().default(true),
   sortOrder: yup.number().min(0).default(0),
   rules: yup
@@ -60,4 +64,3 @@ export const documentProfileSchema = yup.object({
     .min(1, 'At least one document rule is required')
     .required('Document rules are required'),
 });
-

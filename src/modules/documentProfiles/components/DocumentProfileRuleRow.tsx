@@ -1,14 +1,9 @@
-import { useCallback } from 'react';
 import { Button } from '@/components/ui/button1';
 import {
   FormFieldCheckbox,
   FormFieldInput,
   FormFieldSelect,
-  FormFieldCategoryOption,
 } from '@/components/forms';
-import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
-import type { AsyncSelectResponse } from '@/components/ui';
-import { usePartyProfileTypes } from '@/modules/partyProfiles/hooks';
 import { TrashIcon } from '@heroicons/react/24/outline';
 import {
   getDocumentTypeOptionItems,
@@ -28,17 +23,6 @@ export const DocumentProfileRuleRow = ({
   onRemove,
   canRemove,
 }: DocumentProfileRuleRowProps) => {
-  const { data: typeOptions = [] } = usePartyProfileTypes();
-
-  const groupOptions = typeOptions.map(option => ({
-    value: option.label,
-    label: option.label,
-  }));
-
-  const loadGroupOptions = useCallback(async (): Promise<AsyncSelectResponse> => {
-    return { options: groupOptions };
-  }, [groupOptions]);
-
   return (
     <div className="relative rounded-sm border border-border-primary bg-surface-secondary p-4">
       {canRemove && (
@@ -84,23 +68,6 @@ export const DocumentProfileRuleRow = ({
           type="number"
           placeholder="5"
           disabled={isSubmitting}
-        />
-        <FormFieldSelect
-          name={`rules.${index}.groupSelection`}
-          label="Group"
-          placeholder="Select group"
-          loadOptions={loadGroupOptions}
-          defaultOptions={groupOptions}
-          disabled={isSubmitting}
-          isSearchable={false}
-        />
-        <FormFieldCategoryOption
-          name={`rules.${index}.entitySelection`}
-          label="Entity Type"
-          code={CategoryOptionCodeEnum.EntityType}
-          placeholder="Select entity type"
-          disabled={isSubmitting}
-          isCreatable={true}
         />
         <FormFieldInput
           name={`rules.${index}.sortOrder`}

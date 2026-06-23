@@ -14,7 +14,7 @@ interface DocumentProfileTableProps {
 interface DocumentProfileTableRow {
   id: string;
   specificationType: string;
-  transactionType: string;
+  type: string;
   ruleCount: number;
   active: boolean;
 }
@@ -30,8 +30,8 @@ export const DocumentProfileTable = ({
     () =>
       documentProfiles.map(profile => ({
         id: profile.id,
-        specificationType: profile.specificationType || profile.profileCode || '',
-        transactionType: profile.transactionType || profile.profileName || '',
+        specificationType: profile.specificationType || '',
+        type: profile.type || '',
         ruleCount: profile.rules?.length ?? 0,
         active: profile.active,
       })),
@@ -40,7 +40,7 @@ export const DocumentProfileTable = ({
 
   const columns: TableColumnDef<DocumentProfileTableRow>[] = [
     { accessorKey: 'specificationType', header: 'Specification Type' },
-    { accessorKey: 'transactionType', header: 'Transaction Type' },
+    { accessorKey: 'type', header: 'Type' },
     { accessorKey: 'ruleCount', header: 'Rules' },
     {
       accessorKey: 'active',
@@ -106,4 +106,3 @@ export const DocumentProfileTable = ({
     />
   );
 };
-

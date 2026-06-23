@@ -5,10 +5,6 @@ export interface IDocumentProfileRule {
   documentType: string[];
   isRequired: boolean;
   maxSizeMb: number;
-  profileSelection?: string | null;
-  entitySelection?: string | null;
-  fieldSelection?: string | null;
-  fieldValue?: string | null;
   active: boolean;
   sortOrder: number;
   documentProfileId?: string;
@@ -17,9 +13,9 @@ export interface IDocumentProfileRule {
 export interface IDocumentProfile {
   id: string;
   specificationType: string;
-  transactionType: string;
-  profileCode?: string;
-  profileName?: string;
+  type: string;
+  groupSelection?: string | null;
+  entitySelection?: string | null;
   profileDescription?: string | null;
   active: boolean;
   sortOrder: number;
@@ -34,17 +30,15 @@ export interface ICreateDocumentProfileRule {
   documentType: string[];
   isRequired: boolean;
   maxSizeMb: number;
-  profileSelection?: string | null;
-  entitySelection?: string | null;
-  fieldSelection?: string | null;
-  fieldValue?: string | null;
   active: boolean;
   sortOrder: number;
 }
 
 export interface ICreateDocumentProfile {
   specificationType: string;
-  transactionType: string;
+  type: string;
+  groupSelection: string;
+  entitySelection: string;
   active: boolean;
   sortOrder: number;
   rules: ICreateDocumentProfileRule[];
@@ -60,19 +54,16 @@ export interface IDocumentProfileListQuery {
 }
 
 export interface IResolveDocumentProfileRulesQuery {
-  profileSelection?: string;
+  groupSelection?: string;
   entitySelection?: string;
-  fieldSelection?: string;
-  fieldValue?: string;
 }
 
-export interface IDocumentProfileFormRuleValues extends ICreateDocumentProfileRule {}
+export type IDocumentProfileFormRuleValues = ICreateDocumentProfileRule;
 
-export interface IDocumentProfileFormValues extends ICreateDocumentProfile {}
+export type IDocumentProfileFormValues = ICreateDocumentProfile;
 
 export interface IDocumentUploadValue {
   value: string;
   fileName?: string;
   mimeType?: string;
 }
-

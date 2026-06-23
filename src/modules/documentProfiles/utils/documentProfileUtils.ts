@@ -13,10 +13,6 @@ export const createEmptyDocumentProfileRule = (): IDocumentProfileRule => ({
   documentType: ['PNG'],
   isRequired: false,
   maxSizeMb: 5,
-  profileSelection: '',
-  entitySelection: '',
-  fieldSelection: '',
-  fieldValue: '',
   active: true,
   sortOrder: 0,
 });
@@ -24,7 +20,9 @@ export const createEmptyDocumentProfileRule = (): IDocumentProfileRule => ({
 export const createEmptyDocumentProfileFormValues =
   (): IDocumentProfileFormValues => ({
     specificationType: '',
-    transactionType: '',
+    type: '',
+    groupSelection: '',
+    entitySelection: '',
     active: true,
     sortOrder: 0,
     rules: [createEmptyDocumentProfileRule()],
@@ -43,10 +41,6 @@ export const normalizeDocumentProfileRule = (
         .filter(Boolean)
     )
   ),
-  profileSelection: rule.profileSelection?.trim() || '',
-  entitySelection: rule.entitySelection?.trim() || '',
-  fieldSelection: rule.fieldSelection?.trim() || '',
-  fieldValue: rule.fieldValue?.trim() || '',
 });
 
 export const normalizeDocumentProfileValues = (
@@ -54,7 +48,9 @@ export const normalizeDocumentProfileValues = (
 ): IDocumentProfileFormValues => ({
   ...values,
   specificationType: values.specificationType.trim(),
-  transactionType: values.transactionType.trim(),
+  type: values.type.trim(),
+  groupSelection: values.groupSelection.trim(),
+  entitySelection: values.entitySelection.trim(),
   rules: values.rules.map(normalizeDocumentProfileRule),
 });
 

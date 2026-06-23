@@ -43,12 +43,8 @@ export const documentProfileSchema = yup.object({
     .required('Specification type is required'),
   type: yup
     .string()
-    .oneOf(
-      [yup.ref('specificationType')],
-      'Select a valid type'
-    )
     .required('Type is required'),
-  groupSelection: yup
+  groupSelection: yup 
     .string()
     .trim()
     .required('Group is required'),

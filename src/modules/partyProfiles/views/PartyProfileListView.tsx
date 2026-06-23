@@ -3,14 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button1';
 import { Input } from '@/components/ui/input';
 import { useDebounce, usePermission } from '@/hooks';
-import {
-  PartyProfileTypeSelect,
-  PartyProfileTable,
-} from '../components';
-import {
-  toPartyProfileApiType,
-  toPartyProfileRouteType,
-} from '../constants';
+import { PartyProfileTable } from '../components';
+import { toPartyProfileApiType, toPartyProfileRouteType } from '../constants';
 import { useListPartyProfiles, usePartyProfileTypes } from '../hooks';
 
 export const PartyProfileListView = () => {
@@ -33,7 +27,8 @@ export const PartyProfileListView = () => {
   );
 
   const selectedType = useMemo(
-    () => (routeType ? toPartyProfileRouteType(routeType) : routeOptions[0]?.value),
+    () =>
+      routeType ? toPartyProfileRouteType(routeType) : routeOptions[0]?.value,
     [routeType, routeOptions]
   );
 
@@ -67,7 +62,11 @@ export const PartyProfileListView = () => {
   const clients = clientResponse?.data ?? [];
 
   if (!selectedType) {
-    return <div className="py-6 text-center text-text-secondary">Loading party profiles...</div>;
+    return (
+      <div className="py-6 text-center text-text-secondary">
+        Loading party profiles...
+      </div>
+    );
   }
 
   if (error) {
@@ -86,8 +85,7 @@ export const PartyProfileListView = () => {
             type="button"
             className="rounded-sm md:self-end"
             onClick={() =>
-              selectedType &&
-              navigate(`/party-profiles/${selectedType}/create`)
+              selectedType && navigate(`/party-profiles/${selectedType}/create`)
             }
           >
             Create Party Profile
@@ -107,17 +105,6 @@ export const PartyProfileListView = () => {
             }}
             className="sm:max-w-md"
           />
-          {routeOptions.length > 0 && selectedType && (
-            <PartyProfileTypeSelect
-              value={selectedType}
-              onChange={nextType => {
-                setPage(1);
-                navigate(`/party-profiles/${nextType}`, { replace: true });
-              }}
-              options={routeOptions}
-              label="Profile Type"
-            />
-          )}
         </div>
 
         <PartyProfileTable

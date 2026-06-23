@@ -82,7 +82,6 @@ export const partyProfileSchema = yup.object({
   bankAddress: yup.string().trim().optional().nullable(),
   cancelledChequeCopy: yup.string().trim().optional().nullable(),
   rejectReason: yup.string().trim().optional().nullable(),
-  type: yup.string().required('Profile type is required').default('CORPORATE_CLIENT'),
   ffmcRegNo: yup.string().trim().optional().nullable(),
   ffmcRegDate: yup.string().trim().optional().nullable(),
 });

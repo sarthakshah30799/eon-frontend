@@ -1,4 +1,6 @@
 import { useLocation } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { menuApi } from '@/api/menu/menu.api';
 import { resolveHeaderMeta } from '@/router/headerMeta';
 
 interface HeaderProps {
@@ -8,7 +10,15 @@ interface HeaderProps {
 
 export const Header = ({ onMenuClick, onLogout }: HeaderProps) => {
   const { pathname } = useLocation();
-  const headerMeta = resolveHeaderMeta(pathname);
+  const { data: menuTree = [] } = useQuery({
+    queryKey: ['menu-tree'],
+    queryFn: async () => {
+      const response = await menuApi.getMenuTree();
+      if (response.error) throw new Error(response.error);
+      return response.data || [];
+    },
+  });
+  const headerMeta = resolveHeaderMeta(pathname, menuTree);
 
   return (
     <header className="sticky top-0 z-20 border-b border-border-primary/80 bg-surface-primary/90 backdrop-blur-xl">
@@ -48,7 +58,7 @@ export const Header = ({ onMenuClick, onLogout }: HeaderProps) => {
             type="button"
             onClick={onLogout}
             aria-label="Logout"
-            className="inline-flex items-center gap-2 rounded-lg border border-border-primary bg-surface-primary px-3 py-1.5 text-sm font-medium text-text-secondary shadow-sm transition hover:bg-primary-50 hover:text-primary-700 cursor-pointer"
+            className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border-primary bg-surface-primary px-3 py-1.5 text-sm font-medium text-text-secondary shadow-sm transition hover:bg-primary-50 hover:text-primary-700"
           >
             <span className="hidden sm:inline">Logout</span>
             <svg

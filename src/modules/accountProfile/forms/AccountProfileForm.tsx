@@ -270,7 +270,7 @@ export const AccountProfileForm = ({
               name="accountCode"
               label="Account Code"
               placeholder="e.g. ACCINT"
-              disabled={isDisabled}
+              disabled={isDisabled || Boolean(currentId)}
               asyncValidation={{
                 enabled: !isDisabled,
                 check: validateAccountCode,

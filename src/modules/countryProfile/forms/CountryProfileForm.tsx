@@ -161,7 +161,7 @@ export const CountryProfileForm = ({
         <FormFieldInput
           name="code"
           label="Country Code"
-          disabled={isDisabled}
+          disabled={isDisabled || Boolean(currentId)}
           asyncValidation={{
             enabled: !isDisabled,
             check: validateCountryCode,

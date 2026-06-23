@@ -10,7 +10,7 @@ export const UserProfileListView = () => {
   const navigate = useNavigate();
   const { data: profiles = [], isLoading, error } = useListUserProfiles();
   const { deleteUserProfile, isPending: isDeleting } = useDeleteUserProfile();
-  const { canAdd } = usePermission('/admin/user-profile');
+  const { canAdd } = usePermission('/user-profile');
 
   const handleDelete = async (id: string) => {
     await deleteUserProfile(id);
@@ -35,7 +35,7 @@ export const UserProfileListView = () => {
           <Button
             type="button"
             onClick={() =>
-              navigate('/admin/user-profile/create')
+              navigate('/user-profile/create')
             }
           >
             {USER_PROFILE_TEXTS.CREATE_USER}

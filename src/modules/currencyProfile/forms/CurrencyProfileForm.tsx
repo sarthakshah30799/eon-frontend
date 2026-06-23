@@ -107,7 +107,7 @@ export const CurrencyProfileForm = ({
           <FormFieldInput
             name="currencyCode"
             label="Currency Code"
-            disabled={isDisabled}
+            disabled={isDisabled || Boolean(currentId)}
             className={compactFieldClass}
             asyncValidation={{
               enabled: !isDisabled,

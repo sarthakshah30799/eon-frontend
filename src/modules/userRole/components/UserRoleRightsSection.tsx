@@ -52,6 +52,8 @@ export const UserRoleRightsSection = ({
       </div>
     );
   }
+  console.log("rightsTreeNodes", rightsTreeNodes);
+  
 
   return (
     <section className="rounded-sm border border-border-primary bg-surface-secondary p-4 space-y-4">
@@ -65,7 +67,7 @@ export const UserRoleRightsSection = ({
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
-        <div className="rounded-sm border border-border-primary bg-surface-primary p-4">
+        <div className="max-h-[500px] overflow-y-scroll overflow-x-hidden rounded-sm border border-border-primary bg-surface-primary p-4">
           {isLoading ? (
             <p className="text-sm text-text-secondary">Loading options...</p>
           ) : (

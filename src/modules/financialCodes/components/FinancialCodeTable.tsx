@@ -24,7 +24,7 @@ export const FinancialCodeTable = ({
   loading = false,
 }: FinancialCodeTableProps) => {
   const navigate = useNavigate();
-  const { canModify, canView } = usePermission('/admin/financial-profile');
+  const { canModify, canView } = usePermission('/financial-profile');
 
   const rows: FinancialCodeTableRow[] = financialCodes.map(code => ({
     id: code.id,
@@ -65,7 +65,7 @@ export const FinancialCodeTable = ({
               className="rounded-sm bg-transparent text-text-secondary hover:bg-surface-secondary hover:text-text-primary"
               onClick={event => {
                 event.stopPropagation();
-                navigate(`/admin/financial-profile/edit/${codeId}`);
+                navigate(`/financial-profile/edit/${codeId}`);
               }}
             >
               {canModify ? (
@@ -91,7 +91,7 @@ export const FinancialCodeTable = ({
       loading={loading}
       onRowClick={
         canModify || canView
-          ? row => navigate(`/admin/financial-profile/edit/${row.id}`)
+          ? row => navigate(`/financial-profile/edit/${row.id}`)
           : undefined
       }
       emptyMessage="No financial codes found. Create your first code."

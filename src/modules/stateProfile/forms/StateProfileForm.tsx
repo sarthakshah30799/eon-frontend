@@ -60,7 +60,7 @@ const StateCodeField = ({
     <FormFieldInput
       name="code"
       label="State Code"
-      disabled={isDisabled}
+      disabled={isDisabled || Boolean(currentId)}
       asyncValidation={{
         enabled: !isDisabled && Boolean(countryId),
         check: validateStateCode,

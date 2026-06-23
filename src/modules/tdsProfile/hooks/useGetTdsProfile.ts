@@ -6,5 +6,8 @@ export const useGetTdsProfile = (id: string, enabled = true) => {
     queryKey: ['tds-profiles', id],
     queryFn: () => tdsProfileApi.getTdsProfileById(id),
     enabled: enabled && Boolean(id),
+    retry: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
   });
 };

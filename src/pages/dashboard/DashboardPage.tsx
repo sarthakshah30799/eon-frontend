@@ -50,7 +50,7 @@ const DashboardPage: React.FC = () => {
           isLoading={isLoading}
           onReviewProfile={profile => {
             navigate(
-              `/party-profiles/edit/${profile.id}?review=1${profile.type ? `&type=${profile.type}` : ''}`
+              `/party-profiles/${profile.type}/edit/${profile.id}?review=1`
             );
           }}
         />

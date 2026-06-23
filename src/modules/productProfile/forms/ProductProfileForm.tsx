@@ -377,7 +377,7 @@ export const ProductProfileForm = ({
           <FormFieldInput
             name="productCode"
             label="Product Code"
-            disabled={isSubmitting}
+            disabled={isSubmitting || Boolean(currentId)}
             asyncValidation={{
               enabled: !isSubmitting,
               check: validateProductCode,

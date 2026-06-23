@@ -12,7 +12,7 @@ export const FinancialCodeEditView = () => {
   const { id = '' } = useParams<{ id: string }>();
   const { data: code, isLoading } = useGetFinancialCode(id);
   const { submitFinancialCodeUpdate, isPending } = useUpdateFinancialCode();
-  const { canModify } = usePermission('/admin/financial-profile');
+  const { canModify } = usePermission('/financial-profile');
 
   if (isLoading) {
     return <Loader />;
@@ -28,7 +28,7 @@ export const FinancialCodeEditView = () => {
 
   const handleSubmit = async (values: ICreateFinancialCode) => {
     await submitFinancialCodeUpdate({ id, values });
-    navigate('/admin/financial-profile');
+    navigate('/financial-profile');
   };
 
   return (

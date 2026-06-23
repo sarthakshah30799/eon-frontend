@@ -76,7 +76,7 @@ export const usePermission = (path?: string): UsePermissionResult => {
       '/admin/document-profile',
       '/admin/country-profile',
       '/admin/state-profile',
-      '/admin/user-profile',
+      '/user-profile',
       '/admin/user-role',
     ];
 

@@ -221,6 +221,7 @@ const AsyncSelectComponent = React.forwardRef<
         minHeight: '34px',
         height: '34px',
         backgroundColor: 'var(--color-surface-primary)',
+        cursor: state.isDisabled ? 'not-allowed' : 'default',
       }),
       loadingIndicator: base => ({
         ...base,

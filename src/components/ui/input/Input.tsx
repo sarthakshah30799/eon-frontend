@@ -59,7 +59,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         <input
           type={type}
           style={{ fontSize: '14px' }}
-          className={`min-h-7.5 block w-full rounded-md border border-slate-400 bg-surface-primary px-3 py-1 text-[14px] text-text-primary shadow-none placeholder:text-text-tertiary focus:border-slate-500! focus:ring-slate-500 focus-visible:border-transparent! focus-visible:outline-slate-500 focus-visible:ring-1 ${error ? 'border-error-500' : ''} ${classes?.input} ${className}`}
+          className={`min-h-7.5 block w-full rounded-md border border-slate-400 bg-surface-primary px-3 py-1 text-[14px] text-text-primary shadow-none placeholder:text-text-tertiary focus:border-slate-500! focus:ring-slate-500 focus-visible:border-transparent! focus-visible:outline-slate-500 focus-visible:ring-1 disabled:cursor-not-allowed! disabled:opacity-50 disabled:bg-slate-100 disabled:text-text-tertiary ${error ? 'border-error-500' : ''} ${classes?.input} ${className}`}
           ref={ref}
           {...props}
           onChange={handleChange}

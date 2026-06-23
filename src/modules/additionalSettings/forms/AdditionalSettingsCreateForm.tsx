@@ -25,6 +25,7 @@ interface AdditionalSettingsCreateFormProps {
   onSubmit: (values: IAdditionalSettingCategoryFormValues) => void | Promise<void>;
   isSubmitting?: boolean;
   submitLabel?: string;
+  currentId?: string;
 }
 
 const noTransformInputProps = {
@@ -306,6 +307,7 @@ export const AdditionalSettingsCreateForm = ({
   onSubmit,
   isSubmitting = false,
   submitLabel = ADDITIONAL_SETTINGS_TEXTS.CREATE_CATEGORY,
+  currentId,
 }: AdditionalSettingsCreateFormProps) => {
   const initialValues =
     defaultValues ?? createEmptyAdditionalSettingCategoryFormValues();
@@ -336,7 +338,7 @@ export const AdditionalSettingsCreateForm = ({
             name="code"
             label={ADDITIONAL_SETTINGS_TEXTS.CATEGORY_CODE}
             placeholder="Select category code"
-            disabled={isSubmitting}
+            disabled={isSubmitting || Boolean(currentId)}
             loadOptions={loadCategoryCodeOptions}
             isSearchable={false}
           />

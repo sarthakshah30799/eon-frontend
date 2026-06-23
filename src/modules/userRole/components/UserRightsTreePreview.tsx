@@ -27,7 +27,7 @@ const isHighlightedNode = (
 
 const getTriggerClassName = (isHighlighted: boolean, level: number) =>
   [
-    'flex w-full items-center justify-between gap-2 rounded-sm !border-0 !bg-transparent !shadow-none px-0 py-1 text-left text-sm transition',
+    'flex w-full items-center justify-between gap-2 rounded-sm !border-0 !bg-transparent !shadow-none px-0! py-1 text-left text-sm transition',
     level === 0 ? 'font-semibold' : 'font-medium',
     isHighlighted
       ? '!text-primary-700'
@@ -65,7 +65,7 @@ const TreeLevel = ({
           return (
             <li key={node.id}>
               <Dropdown
-                className="w-full"
+                className="w-full px-0!"
                 align="start"
                 closeOnOutsideClick={false}
                 closeOnEscape={false}
@@ -132,12 +132,14 @@ export const UserRightsTreePreview = ({
   onSelectNode,
 }: UserRightsTreePreviewProps) => {
   return (
-    <TreeLevel
-      key={selectedNodeId ?? 'default-rights-tree'}
-      nodes={nodes}
-      selectedNodeId={selectedNodeId}
-      selectedNodePathIds={selectedNodePathIds}
-      onSelectNode={onSelectNode}
-    />
+    <div className="pr-2">
+      <TreeLevel
+        key={selectedNodeId ?? 'default-rights-tree'}
+        nodes={nodes}
+        selectedNodeId={selectedNodeId}
+        selectedNodePathIds={selectedNodePathIds}
+        onSelectNode={onSelectNode}
+      />
+    </div>
   );
 };

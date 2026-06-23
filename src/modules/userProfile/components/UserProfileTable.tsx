@@ -78,7 +78,7 @@ export const UserProfileTable = ({
               onClick={event => {
                 event.stopPropagation();
                 navigate(
-                  `/admin/user-profile/edit/${profileId}`
+                  `/user-profile/edit/${profileId}`
                 );
               }}
             >
@@ -100,7 +100,7 @@ export const UserProfileTable = ({
       enableRowSelection={false}
       enableColumnVisibility={false}
       onRowClick={row => {
-        navigate(`/admin/user-profile/edit/${row.id}`);
+        navigate(`/user-profile/edit/${row.id}`);
       }}
       emptyMessage="No users found. Create your first user."
     />

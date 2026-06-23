@@ -29,6 +29,15 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
     path: '/admin/counter-profile/edit/:id',
     meta: { title: 'Edit Counter Profile' },
   },
+  { path: '/admin/document-profile', meta: { title: 'Document Profile' } },
+  {
+    path: '/admin/document-profile/create',
+    meta: { title: 'Create Document Profile' },
+  },
+  {
+    path: '/admin/document-profile/edit/:id',
+    meta: { title: 'Edit Document Profile' },
+  },
   {
     path: '/admin/miscellaneous-profile',
     meta: { title: 'Miscellaneous Profile' },

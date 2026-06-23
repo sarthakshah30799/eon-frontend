@@ -73,6 +73,7 @@ export const usePermission = (path?: string): UsePermissionResult => {
       '/admin/company-profile',
       '/admin/branch-profile',
       '/admin/counter-profile',
+      '/admin/document-profile',
       '/admin/country-profile',
       '/admin/state-profile',
       '/admin/user-profile',

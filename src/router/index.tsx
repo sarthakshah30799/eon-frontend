@@ -101,6 +101,17 @@ const CounterProfileEditPage = lazy(
   () =>
     import('../pages/master/system-setups/counter-profile/edit/[id]/CounterProfileEditPage')
 );
+const DocumentProfileListPage = lazy(
+  () => import('../pages/admin/document-profiles/list/DocumentProfileListPage')
+);
+const DocumentProfileCreatePage = lazy(
+  () =>
+    import('../pages/admin/document-profiles/create/DocumentProfileCreatePage')
+);
+const DocumentProfileEditPage = lazy(
+  () =>
+    import('../pages/admin/document-profiles/edit/[id]/DocumentProfileEditPage')
+);
 const MiscellaneousProfileListPage = lazy(
   () => import('../pages/admin/miscellaneous-profile/list')
 );
@@ -327,6 +338,30 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <CounterProfileEditPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/document-profile',
+    element: (
+      <ProtectedLayout>
+        <DocumentProfileListPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/document-profile/create',
+    element: (
+      <ProtectedLayout>
+        <DocumentProfileCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/document-profile/edit/:id',
+    element: (
+      <ProtectedLayout>
+        <DocumentProfileEditPage />
       </ProtectedLayout>
     ),
   },

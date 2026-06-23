@@ -6,7 +6,7 @@ import type { ICreatePartyProfile } from '../types';
 import { toPartyProfileApiType, toPartyProfileRouteType } from '../constants';
 import { useAuth } from '@/lib';
 
-const createEmptyPartyProfileValues = (type: string): ICreatePartyProfile => {
+const createEmptyPartyProfileValues = (): Omit<ICreatePartyProfile, 'type'> => {
   return {
     dateOfIntro: new Date().toISOString().split('T')[0],
     code: '',
@@ -67,7 +67,6 @@ const createEmptyPartyProfileValues = (type: string): ICreatePartyProfile => {
     bankAddress: '',
     cancelledChequeCopy: '',
     rejectReason: '',
-    type,
     ffmcRegNo: '',
     ffmcRegDate: '',
   };
@@ -105,9 +104,14 @@ export const PartyProfileCreateView = () => {
     }
   }, [navigate, routeOptions, routeType]);
 
-  const defaultValues = useMemo(
-    () => createEmptyPartyProfileValues(selectedApiType),
-    [selectedApiType]
+  const defaultValues = useMemo(() => createEmptyPartyProfileValues(), []);
+
+  const formDefaultValues = useMemo(
+    () => ({
+      ...defaultValues,
+      originBranchId: activeBranchId || '',
+    }),
+    [activeBranchId, defaultValues]
   );
 
   if (!selectedType) {
@@ -118,17 +122,10 @@ export const PartyProfileCreateView = () => {
     );
   }
 
-  const formDefaultValues = useMemo(
-    () => ({
-      ...defaultValues,
-      originBranchId: activeBranchId || '',
-    }),
-    [activeBranchId, defaultValues]
-  );
-
-  const handleSubmit = async (values: ICreatePartyProfile) => {
+  const handleSubmit = async (values: Omit<ICreatePartyProfile, 'type'>) => {
     const sanitized: ICreatePartyProfile = {
       ...values,
+      type: selectedApiType,
       rejectReason: undefined,
       gstStateId: values.gstStateId || undefined,
       originBranchId: values.originBranchId || undefined,
@@ -139,7 +136,7 @@ export const PartyProfileCreateView = () => {
     };
     await submitPartyProfile(sanitized);
     navigate({
-      pathname: `/party-profiles/${toPartyProfileRouteType(values.type || selectedApiType)}`,
+      pathname: `/party-profiles/${selectedType}`,
     });
   };
 
@@ -159,6 +156,7 @@ export const PartyProfileCreateView = () => {
           isSubmitting={isPending}
           submitLabel="Create Party Profile"
           originBranchDisabled={!isAdminUser}
+          profileType={selectedApiType}
         />
       </section>
     </div>

@@ -66,7 +66,7 @@ export const PartyProfileEditView = () => {
     }
   }, [id, navigate, routeOptions, routeType]);
 
-  const defaultValues: ICreatePartyProfile = useMemo(
+  const defaultValues: Omit<ICreatePartyProfile, 'type'> = useMemo(
     () => ({
       dateOfIntro: formatDateForInput(client?.dateOfIntro),
       code: client?.code ?? '',
@@ -127,17 +127,17 @@ export const PartyProfileEditView = () => {
       bankAddress: client?.bankAddress || '',
       cancelledChequeCopy: client?.cancelledChequeCopy || '',
       rejectReason: '',
-      type: client?.type || selectedApiType,
       ffmcRegNo: client?.ffmcRegNo || '',
       ffmcRegDate: formatDateForInput(client?.ffmcRegDate),
     }),
     [client, selectedApiType]
   );
 
-  const handleSubmit = async (values: ICreatePartyProfile) => {
+  const handleSubmit = async (values: Omit<ICreatePartyProfile, 'type'>) => {
     if (!id) return;
-    const sanitized = {
+    const sanitized: ICreatePartyProfile = {
       ...values,
+      type: selectedApiType,
       rejectReason: undefined,
       gstStateId: values.gstStateId || undefined,
       originBranchId: values.originBranchId || undefined,
@@ -148,7 +148,7 @@ export const PartyProfileEditView = () => {
     };
     await updatePartyProfile({ id, data: sanitized });
     navigate({
-      pathname: `/party-profiles/${toPartyProfileRouteType(values.type || selectedApiType)}`,
+      pathname: `/party-profiles/${selectedType}`,
     });
   };
 
@@ -192,6 +192,7 @@ export const PartyProfileEditView = () => {
       <PartyProfileForm
         defaultValues={defaultValues}
         onSubmit={showReviewControls ? async () => undefined : handleSubmit}
+        profileType={selectedApiType}
         onCancel={handleCancel}
         onReviewSubmit={handleReviewSubmit}
         isSubmitting={isPending || isReviewing}

@@ -1,5 +1,4 @@
 import { useCallback } from 'react';
-import { useFormContext, useWatch } from 'react-hook-form';
 import type { Resolver } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { CardSection } from '@/components/ui';
@@ -15,6 +14,7 @@ import {
 } from '@/components/forms';
 import { partyProfileSchema } from '../schema';
 import type { ICreatePartyProfile } from '../types';
+
 import { branchProfileApi } from '@/api/branchProfile/branchProfile.api';
 import { stateProfileApi } from '@/api/stateProfile/stateProfile.api';
 import {
@@ -27,9 +27,11 @@ import { usePartyProfileTypes } from '../hooks';
 import type { IReviewPartyProfilePayload } from '../types';
 import { PartyProfileReviewActionPanel } from '../components';
 
+type PartyProfileFormValues = Omit<ICreatePartyProfile, 'type'>;
+
 interface PartyProfileFormProps {
-  defaultValues: ICreatePartyProfile;
-  onSubmit: (values: ICreatePartyProfile) => void | Promise<void>;
+  defaultValues: PartyProfileFormValues;
+  onSubmit: (values: PartyProfileFormValues) => void | Promise<void>;
   submitLabel?: string;
   onCancel?: () => void | Promise<void>;
   isSubmitting?: boolean;
@@ -59,21 +61,12 @@ const PartyProfileFormFields = ({
 }) => {
   const isSubmitting = isSubmittingProp || disabled || reviewMode;
   const reviewActionsDisabled = isSubmittingProp;
-  const { control } = useFormContext();
-  const currentType = useWatch({
-    control,
-    name: 'type',
-  });
-
   const { data: typeOptions = [] } = usePartyProfileTypes();
   const profileTypeLabel = toPartyProfileDisplayLabel(profileType);
   const groupOptions = typeOptions.map(option => ({
     value: option.label,
     label: option.label,
   }));
-  const typeLoadOptions = useCallback(async () => {
-    return { options: typeOptions };
-  }, [typeOptions]);
 
   const branchLoadOptions = useCallback(async (inputValue: string) => {
     const branches = await branchProfileApi.getBranchProfiles();
@@ -117,15 +110,6 @@ const PartyProfileFormFields = ({
     <div className="space-y-4 pb-24">
       <CardSection heading="Basic Info & Credit Policy">
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-          <FormFieldSelect
-            name="type"
-            label="Profile Type"
-            placeholder="Select profile type"
-            loadOptions={typeLoadOptions}
-            defaultOptions={typeOptions}
-            disabled={isSubmitting}
-            isSearchable={false}
-          />
           <FormFieldInput
             name="dateOfIntro"
             label="Date of Intro"
@@ -138,7 +122,7 @@ const PartyProfileFormFields = ({
             placeholder="Enter client code (4-20 chars)"
             disabled={isSubmitting}
           />
-          {currentType === 'FFMC' && (
+          {profileType?.toUpperCase() === 'FFMC' && (
             <>
               <FormFieldInput
                 name="ffmcRegNo"
@@ -580,7 +564,7 @@ export const PartyProfileForm = ({
       id={FORM_ID}
       onSubmit={onSubmit}
       resolver={
-        yupResolver(partyProfileSchema) as Resolver<ICreatePartyProfile>
+        yupResolver(partyProfileSchema) as unknown as Resolver<PartyProfileFormValues>
       }
       defaultValues={defaultValues}
       className="space-y-6"

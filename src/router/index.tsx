@@ -430,7 +430,7 @@ const router = createBrowserRouter([
   },
 
   {
-    path: '/admin/financial-profile',
+    path: '/financial-profile',
     element: (
       <ProtectedLayout>
         <FinancialCodesListPage />
@@ -438,7 +438,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/admin/financial-profile/create',
+    path: '/financial-profile/create',
     element: (
       <ProtectedLayout>
         <FinancialCodesCreatePage />
@@ -446,7 +446,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/admin/financial-profile/edit/:id',
+    path: '/financial-profile/edit/:id',
     element: (
       <ProtectedLayout>
         <FinancialCodesEditPage />
@@ -638,7 +638,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/admin/user-profile',
+    path: '/user-profile',
     element: (
       <ProtectedLayout>
         <UserProfileListPage />
@@ -646,7 +646,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/admin/user-profile/create',
+    path: '/user-profile/create',
     element: (
       <ProtectedLayout>
         <UserProfileCreatePage />
@@ -654,7 +654,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/admin/user-profile/edit/:id',
+    path: '/user-profile/edit/:id',
     element: (
       <ProtectedLayout>
         <UserProfileEditPage />

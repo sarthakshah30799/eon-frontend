@@ -11,7 +11,7 @@ export const FinancialCodeCreateView = () => {
 
   const handleSubmit = async (values: ICreateFinancialCode) => {
     await submitFinancialCode(values);
-    navigate('/admin/financial-profile');
+    navigate('/financial-profile');
   };
 
   return (

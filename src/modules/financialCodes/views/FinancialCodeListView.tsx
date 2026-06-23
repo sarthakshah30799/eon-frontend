@@ -9,7 +9,7 @@ import { useListFinancialCodes } from '../hooks/useListFinancialCodes';
 
 export const FinancialCodeListView = () => {
   const navigate = useNavigate();
-  const { canAdd } = usePermission('/admin/financial-profile');
+  const { canAdd } = usePermission('/financial-profile');
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
   const [search, setSearch] = useState('');
@@ -47,7 +47,7 @@ export const FinancialCodeListView = () => {
         <div className="flex justify-end">
           <Button
             type="button"
-            onClick={() => navigate('/admin/financial-profile/create')}
+            onClick={() => navigate('/financial-profile/create')}
           >
             {FINANCIAL_CODE_TEXTS.CREATE_CODE}
           </Button>

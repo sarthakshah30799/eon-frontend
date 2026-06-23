@@ -625,17 +625,13 @@ export const PartyProfileForm = ({
       }
       defaultValues={defaultValues}
       className="space-y-6"
-      footer={
-        reviewMode
-          ? undefined
-          : {
-              submitLabel,
-              onBackClick: () => {
-                void onCancel?.();
-              },
-              onCancel,
-            }
-      }
+      footer={{
+        submitLabel,
+        onBackClick: () => {
+          void onCancel?.();
+        },
+        onCancel,
+      }}
     >
       <PartyProfileFormFields
         isSubmitting={isSubmitting}

@@ -162,7 +162,7 @@ export const FinancialCodeForm = ({
 
   const isDisabled = isSubmitting || readOnly;
   const onCancel = () => {
-    navigate('/admin/financial-profile');
+    navigate('/financial-profile');
   };
   return (
     <Form
@@ -195,7 +195,7 @@ export const FinancialCodeForm = ({
           name="financialCode"
           label="Financial Code"
           placeholder="e.g. BANKBL"
-          disabled={isDisabled}
+          disabled={isDisabled || Boolean(currentId)}
           asyncValidation={{
             enabled: !isDisabled,
             check: validateFinancialCode,

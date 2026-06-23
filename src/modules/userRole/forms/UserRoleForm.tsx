@@ -74,7 +74,7 @@ export const UserRoleForm = ({
           <FormFieldInput
             name="code"
             label="Role Code"
-            disabled={isSubmitting}
+            disabled={isSubmitting || Boolean(currentId)}
             asyncValidation={{
               enabled: !isSubmitting,
               check: validateRoleCode,

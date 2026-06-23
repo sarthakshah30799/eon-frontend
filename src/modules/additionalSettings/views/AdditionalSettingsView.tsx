@@ -162,6 +162,7 @@ export const AdditionalSettingsView = () => {
               ? ADDITIONAL_SETTINGS_TEXTS.UPDATE_CATEGORY
               : ADDITIONAL_SETTINGS_TEXTS.CREATE_CATEGORY
           }
+          currentId={categoryModalMode === 'edit' ? editingCategory?.id : undefined}
         />
       </Modal>
     </section>

@@ -135,9 +135,9 @@ const BranchProfileFormFields = ({
           <FormFieldInput
             name="code"
             label="Branch Code"
-            disabled={isSubmitting}
+            disabled={isSubmitting || Boolean(currentId)}
             asyncValidation={{
-              enabled: !isSubmitting,
+              enabled: !isSubmitting && !currentId,
               check: validateBranchCode,
               message: 'Branch code already exists',
               normalize: normalizeCodeValue,

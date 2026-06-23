@@ -330,7 +330,7 @@ export const UserProfileForm = ({
 
   const isEdit = !!defaultValues.code;
   const onCancel = () => {
-    navigate('/admin/user-profile');
+    navigate('/user-profile');
   };
   return (
     <Form

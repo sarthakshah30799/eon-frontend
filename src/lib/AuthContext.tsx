@@ -51,11 +51,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const handleSessionExpired = (message?: string) => {
     clearSessionState();
-    toast.error(message || AUTH_CONSTANTS.MESSAGES.SESSION_EXPIRED);
-
-    if (window.location.pathname !== '/login') {
-      window.location.replace('/login');
+    
+    const publicPaths = ['/login', '/forgot-password', '/reset-password', '/mail-console'];
+    if (publicPaths.includes(window.location.pathname)) {
+      return;
     }
+
+    toast.error(message || AUTH_CONSTANTS.MESSAGES.SESSION_EXPIRED);
+    window.location.replace('/login');
   };
 
   const checkAuth = async () => {

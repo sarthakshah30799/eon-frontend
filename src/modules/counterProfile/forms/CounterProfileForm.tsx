@@ -24,6 +24,7 @@ export const CounterProfileForm = ({
   };
   return (
     <Form
+      id="counter-profile-form"
       onSubmit={onSubmit}
       resolver={yupResolver(counterProfileSchema)}
       defaultValues={defaultValues}

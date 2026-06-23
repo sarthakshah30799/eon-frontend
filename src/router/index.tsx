@@ -125,6 +125,9 @@ const MenuPage = lazy(() => import('../pages/admin/menu/MenuPage'));
 const AdditionalSettingsPage = lazy(
   () => import('../pages/admin/additional-settings')
 );
+const MailConsolePage = lazy(
+  () => import('../pages/auth/mail-console/MailConsolePage')
+);
 const FinancialCodesListPage = lazy(
   () => import('../pages/admin/financial-codes/list')
 );
@@ -218,6 +221,14 @@ const router = createBrowserRouter([
     element: (
       <PublicLayout>
         <ResetPasswordPage />
+      </PublicLayout>
+    ),
+  },
+  {
+    path: '/mail-console',
+    element: (
+      <PublicLayout>
+        <MailConsolePage />
       </PublicLayout>
     ),
   },
@@ -405,6 +416,7 @@ const router = createBrowserRouter([
       </ProtectedLayout>
     ),
   },
+
   {
     path: '/admin/financial-profile',
     element: (

@@ -52,6 +52,7 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
   },
   { path: '/admin/menu-management', meta: { title: 'Menu Management' } },
   { path: '/admin/additional-settings', meta: { title: 'Additional Settings' } },
+  { path: '/mail-console', meta: { title: 'Mail Console' } },
   {
     path: '/admin/country-profile',
     meta: { title: 'Country Profile' },

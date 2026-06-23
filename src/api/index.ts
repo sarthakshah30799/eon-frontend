@@ -20,3 +20,4 @@ export * from './financialCodes/financialCodes.api';
 export * from './accountProfile';
 export * from './countryGroup';
 export * from './partyProfile';
+export * from './mail/mail.api';

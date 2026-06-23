@@ -194,6 +194,18 @@ const CurrencyProfileEditPage = lazy(
   () =>
     import('../pages/master/system-setups/currency-profile/edit/[id]/CurrencyProfileEditPage')
 );
+const TdsProfileListPage = lazy(
+  () =>
+    import('../pages/master/system-setups/tds-profile/list/TdsProfileListPage')
+);
+const TdsProfileCreatePage = lazy(
+  () =>
+    import('../pages/master/system-setups/tds-profile/create/TdsProfileCreatePage')
+);
+const TdsProfileEditPage = lazy(
+  () =>
+    import('../pages/master/system-setups/tds-profile/edit/[id]/TdsProfileEditPage')
+);
 
 const router = createBrowserRouter([
   {
@@ -590,6 +602,30 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <CurrencyProfileEditPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/tds-profile',
+    element: (
+      <ProtectedLayout>
+        <TdsProfileListPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/tds-profile/create',
+    element: (
+      <ProtectedLayout>
+        <TdsProfileCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/tds-profile/edit/:id',
+    element: (
+      <ProtectedLayout>
+        <TdsProfileEditPage />
       </ProtectedLayout>
     ),
   },

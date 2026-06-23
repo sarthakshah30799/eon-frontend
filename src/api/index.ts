@@ -21,3 +21,4 @@ export * from './accountProfile';
 export * from './countryGroup';
 export * from './partyProfile';
 export * from './mail/mail.api';
+export * from './tdsProfile';

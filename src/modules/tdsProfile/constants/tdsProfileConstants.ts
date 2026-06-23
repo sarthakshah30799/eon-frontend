@@ -1,0 +1,16 @@
+export const TDS_PROFILE_TEXTS = {
+  LIST_TITLE: 'TDS Profile',
+  LIST_SUBTITLE: 'Manage reusable TDS profiles with date ranges and percentage values.',
+  CREATE_TITLE: 'Create TDS Profile',
+  EDIT_TITLE: 'Edit TDS Profile',
+  FORM_SUBTITLE: 'Enter the code, name, active period, and percentage value.',
+  CREATE_BUTTON: 'Create TDS Profile',
+  SAVE_CHANGES: 'Save Changes',
+  LIST_ERROR: 'Failed to load TDS profiles',
+  CREATE_SUCCESS: 'TDS profile created successfully!',
+  UPDATE_SUCCESS: 'TDS profile updated successfully!',
+  CREATE_ERROR: 'Failed to create TDS profile',
+  UPDATE_ERROR: 'Failed to update TDS profile',
+  DELETE_ERROR: 'Failed to delete TDS profile',
+  EMPTY_STATE: 'No TDS profiles found. Create your first profile.',
+} as const;

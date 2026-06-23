@@ -22,13 +22,17 @@ class ApiClient {
   ): Promise<ApiResponse<T>> {
     try {
       const url = `${this.baseURL}${endpoint}`;
+      const headers = new Headers(options.headers);
+      if (options.body instanceof FormData) {
+        headers.delete('Content-Type');
+      } else if (options.body !== undefined && !headers.has('Content-Type')) {
+        headers.set('Content-Type', 'application/json');
+      }
+
       const response = await fetch(url, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...options.headers,
-        },
-        credentials: 'include',
         ...options,
+        headers,
+        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -47,7 +51,10 @@ class ApiClient {
         );
       }
 
-      const data = await response.json();
+      const contentType = response.headers.get('content-type') || '';
+      const data = contentType.includes('application/json')
+        ? await response.json()
+        : await response.text();
       return { data };
     } catch (error) {
       return {
@@ -93,6 +100,18 @@ class ApiClient {
     options?: RequestInit
   ): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, { ...options, method: 'DELETE' });
+  }
+
+  async postFormData<T>(
+    endpoint: string,
+    data: FormData,
+    options?: RequestInit
+  ): Promise<ApiResponse<T>> {
+    return this.request<T>(endpoint, {
+      ...options,
+      method: 'POST',
+      body: data,
+    });
   }
 }
 

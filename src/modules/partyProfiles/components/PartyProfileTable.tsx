@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button1';
 import { Table, type TableColumnDef } from '@/components/ui/table';
 import { usePermission } from '@/hooks';
 import type { IPartyProfile } from '../types/partyProfileTypes';
+import { PartyProfileDocumentsActionButton } from './PartyProfileDocumentsActionButton';
 
 interface PartyProfileTableProps {
   clients: IPartyProfile[];
@@ -13,6 +14,7 @@ interface PartyProfileTableProps {
 
 interface PartyProfileTableRow {
   id: string;
+  type: string;
   code: string;
   name: string;
   city: string;
@@ -31,6 +33,7 @@ export const PartyProfileTable = ({
 
   const rows: PartyProfileTableRow[] = clients.map(client => ({
     id: client.id,
+    type: client.type,
     code: client.code,
     name: client.name,
     city: client.city,
@@ -62,6 +65,12 @@ export const PartyProfileTable = ({
 
         return (
           <div className="flex items-center gap-2">
+            <PartyProfileDocumentsActionButton
+              partyProfileId={clientId}
+              partyProfileType={row.original.type}
+              label="Upload Documents"
+              compact
+            />
             <Button
               type="button"
               aria-label={canModify ? 'Edit party profile' : 'View party profile'}

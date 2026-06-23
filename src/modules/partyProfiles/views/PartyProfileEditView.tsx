@@ -14,6 +14,7 @@ import {
   toPartyProfileApiType,
   toPartyProfileRouteType,
 } from '../constants';
+import { PartyProfileDocumentsActionButton } from '../components';
 
 const formatDateForInput = (dateString?: string | Date) => {
   if (!dateString) return '';
@@ -188,20 +189,29 @@ export const PartyProfileEditView = () => {
   }
 
   return (
-    <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
-      <PartyProfileForm
-        defaultValues={defaultValues}
-        onSubmit={showReviewControls ? async () => undefined : handleSubmit}
-        profileType={selectedApiType}
-        onCancel={handleCancel}
-        onReviewSubmit={handleReviewSubmit}
-        isSubmitting={isPending || isReviewing}
-        disabled={showReviewControls ? true : !canModify}
-        reviewMode={showReviewControls}
-        submitLabel="Save Changes"
-        currentId={id}
-      />
-    </section>
+    <div className="space-y-4">
+      <div className="flex justify-end">
+        <PartyProfileDocumentsActionButton
+          partyProfileId={id || ''}
+          partyProfileType={selectedApiType}
+          label="Upload Documents"
+        />
+      </div>
+      <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
+        <PartyProfileForm
+          defaultValues={defaultValues}
+          onSubmit={showReviewControls ? async () => undefined : handleSubmit}
+          profileType={selectedApiType}
+          onCancel={handleCancel}
+          onReviewSubmit={handleReviewSubmit}
+          isSubmitting={isPending || isReviewing}
+          disabled={showReviewControls ? true : !canModify}
+          reviewMode={showReviewControls}
+          submitLabel="Save Changes"
+          currentId={id}
+        />
+      </section>
+    </div>
   );
 };
 

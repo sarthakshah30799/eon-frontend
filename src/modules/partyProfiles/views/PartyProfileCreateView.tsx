@@ -5,6 +5,7 @@ import { PartyProfileForm } from '../forms/PartyProfileForm';
 import type { ICreatePartyProfile } from '../types';
 import { toPartyProfileApiType, toPartyProfileRouteType } from '../constants';
 import { useAuth } from '@/lib';
+import { buildPartyProfileDocumentsPath } from '@/modules/partyProfileDocuments/utils/partyProfileDocumentRoutes';
 
 const createEmptyPartyProfileValues = (): Omit<ICreatePartyProfile, 'type'> => {
   return {
@@ -134,10 +135,8 @@ export const PartyProfileCreateView = () => {
       panDob: values.panDob || undefined,
       email: values.email || undefined,
     };
-    await submitPartyProfile(sanitized);
-    navigate({
-      pathname: `/party-profiles/${selectedType}`,
-    });
+    const created = await submitPartyProfile(sanitized);
+    navigate(buildPartyProfileDocumentsPath(selectedApiType, created.id));
   };
 
   const handleCancel = () => {

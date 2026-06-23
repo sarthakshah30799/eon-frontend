@@ -149,6 +149,9 @@ const AccountsProfileEditPage = lazy(
 const PartyProfileListPage = lazy(() => import('../pages/party-profiles/list'));
 const PartyProfileCreatePage = lazy(() => import('../pages/party-profiles/create'));
 const PartyProfileEditPage = lazy(() => import('../pages/party-profiles/edit/[id]'));
+const PartyProfileDocumentsPage = lazy(
+  () => import('../pages/party-profiles/documents/[id]')
+);
 
 const MasterPagesPage = lazy(
   () => import('../pages/master/system-setups/master-pages/MasterPagesPage')
@@ -506,6 +509,14 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <PartyProfileEditPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/party-profiles/:type/documents/:id',
+    element: (
+      <ProtectedLayout>
+        <PartyProfileDocumentsPage />
       </ProtectedLayout>
     ),
   },

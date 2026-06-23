@@ -20,8 +20,10 @@ export const DocumentProfileEditView = () => {
     }
 
     return {
-      specificationType: data.specificationType || data.profileCode || '',
-      transactionType: data.transactionType || data.profileName || '',
+      specificationType: data.specificationType || '',
+      type: data.type || '',
+      groupSelection: data.groupSelection || '',
+      entitySelection: data.entitySelection || '',
       active: data.active,
       sortOrder: data.sortOrder,
       rules:
@@ -35,10 +37,6 @@ export const DocumentProfileEditView = () => {
               : ['ANY'],
           isRequired: rule.isRequired,
           maxSizeMb: rule.maxSizeMb,
-          groupSelection: rule.profileSelection || '',
-          entitySelection: rule.entitySelection || '',
-          fieldSelection: rule.fieldSelection || '',
-          fieldValue: rule.fieldValue || '',
           active: rule.active,
           sortOrder: rule.sortOrder,
         })) ?? createEmptyDocumentProfileFormValues().rules,

@@ -35,7 +35,7 @@ export const loadDocumentSpecificationTypeOptions =
     options: DOCUMENT_PROFILE_SPECIFICATION_TYPE_OPTIONS,
   });
 
-export const loadDocumentTransactionTypeOptions = async (
+export const loadDocumentProfileTypeOptions = async (
   specificationType: string
 ): Promise<AsyncSelectResponse> => ({
   options: specificationType

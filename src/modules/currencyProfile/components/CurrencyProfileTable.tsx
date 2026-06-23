@@ -12,7 +12,7 @@ interface CurrencyProfileTableRow {
   id: string;
   currencyCode: string;
   currencyName: string;
-  countryId: string;
+  countryName: string;
   priority: string;
   ratePer: string;
   calculationMethod: string;
@@ -30,7 +30,7 @@ export const CurrencyProfileTable = ({
     id: currency.id,
     currencyCode: currency.currencyCode,
     currencyName: currency.currencyName,
-    countryId: currency.countryId || '-',
+    countryName: currency.country?.name || '-',
     priority: currency.priority || '-',
     ratePer: currency.ratePer || '-',
     calculationMethod: currency.calculationMethod,
@@ -42,7 +42,7 @@ export const CurrencyProfileTable = ({
   const columns: TableColumnDef<CurrencyProfileTableRow>[] = [
     { accessorKey: 'currencyCode', header: 'Currency Code' },
     { accessorKey: 'currencyName', header: 'Currency Name' },
-    { accessorKey: 'countryId', header: 'Countries' },
+    { accessorKey: 'countryName', header: 'Country' },
     { accessorKey: 'priority', header: 'Priority' },
     { accessorKey: 'ratePer', header: 'Rate / Per' },
     {

@@ -33,6 +33,11 @@ export interface ICurrencyProfile {
   currencyCode: string;
   currencyName: string;
   countryId: string;
+  country?: {
+    id: string;
+    name: string;
+    code?: string;
+  } | null;
   priority: string;
   ratePer: string;
   defaultMinRate: string;

@@ -6,6 +6,7 @@ import type {
 
 interface BackendCurrencyProfile extends Omit<ICurrencyProfile, 'countryId'> {
   countryId: string | null;
+  country?: ICurrencyProfile['country'];
 }
 
 const mapBackendToFrontend = (
@@ -13,6 +14,7 @@ const mapBackendToFrontend = (
 ): ICurrencyProfile => ({
   ...currency,
   countryId: currency.countryId || '',
+  country: currency.country ?? null,
 });
 
 export const currencyProfileApi = {

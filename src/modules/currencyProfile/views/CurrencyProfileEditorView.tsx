@@ -7,6 +7,7 @@ interface CurrencyProfileEditorViewProps {
   onSubmitCurrency: (values: ICreateCurrencyProfile) => void | Promise<void>;
   isSubmitting?: boolean;
   readOnly?: boolean;
+  currentId?: string;
 }
 
 export const CurrencyProfileEditorView = ({
@@ -15,6 +16,7 @@ export const CurrencyProfileEditorView = ({
   onSubmitCurrency,
   isSubmitting = false,
   readOnly = false,
+  currentId,
 }: CurrencyProfileEditorViewProps) => {
   return (
     <section className="mx-auto w-full max-w-7xl rounded-md border border-border-primary bg-surface-primary p-3 shadow-none">
@@ -24,6 +26,7 @@ export const CurrencyProfileEditorView = ({
         submitLabel={submitLabel}
         isSubmitting={isSubmitting}
         readOnly={readOnly}
+        currentId={currentId}
       />
     </section>
   );

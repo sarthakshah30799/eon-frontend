@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import type { Resolver } from 'react-hook-form';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -18,6 +18,8 @@ import type { ICreateBranchProfile, IBranchProfileOption } from '../types';
 import { useListCounterProfiles } from '@/modules/counterProfile/hooks';
 import { useGetStateProfile } from '@/modules/stateProfile/hooks';
 import { useListCompanyProfiles } from '@/modules/companyProfile/hooks';
+import { branchProfileApi } from '@/api/branchProfile/branchProfile.api';
+import { normalizeCodeValue } from '@/utils';
 
 interface BranchProfileFormProps {
   defaultValues: ICreateBranchProfile;
@@ -30,6 +32,7 @@ interface BranchProfileFormProps {
   isSubmitting?: boolean;
   branchAttachedToOptions?: IBranchProfileOption[];
   tone?: 'default' | 'review';
+  currentId?: string;
 }
 
 const createStaticLoadOptions = (
@@ -45,8 +48,10 @@ const BRANCH_FORM_ID = 'branch-profile-form';
 
 const BranchProfileFormFields = ({
   isSubmitting = false,
+  currentId,
 }: {
   isSubmitting?: boolean;
+  currentId?: string;
 }) => {
   const form = useFormContext<ICreateBranchProfile>();
   const countryId = useWatch({
@@ -107,6 +112,22 @@ const BranchProfileFormFields = ({
     () => createStaticLoadOptions(connectedCounterOptions),
     [connectedCounterOptions]
   );
+  const validateBranchCode = useCallback(
+    async (value: string) => {
+      const normalizedCode = normalizeCodeValue(value);
+      if (!normalizedCode) {
+        return false;
+      }
+
+      const branches = await branchProfileApi.getBranchProfiles();
+      return branches.some(
+        branch =>
+          branch.code.trim().toUpperCase() === normalizedCode &&
+          branch.id !== currentId
+      );
+    },
+    [currentId]
+  );
   return (
     <div className="space-y-3 pb-24">
       <CardSection heading="Basic Details">
@@ -115,6 +136,12 @@ const BranchProfileFormFields = ({
             name="code"
             label="Branch Code"
             disabled={isSubmitting}
+            asyncValidation={{
+              enabled: !isSubmitting,
+              check: validateBranchCode,
+              message: 'Branch code already exists',
+              normalize: normalizeCodeValue,
+            }}
           />
           <FormFieldInput
             name="name"
@@ -291,6 +318,7 @@ export const BranchProfileForm = ({
   submitLabel = 'Submit',
   onCancel,
   isSubmitting = false,
+  currentId,
 }: BranchProfileFormProps) => {
   return (
     <Form
@@ -308,7 +336,7 @@ export const BranchProfileForm = ({
         onCancel,
       }}
     >
-      <BranchProfileFormFields isSubmitting={isSubmitting} />
+      <BranchProfileFormFields isSubmitting={isSubmitting} currentId={currentId} />
     </Form>
   );
 };

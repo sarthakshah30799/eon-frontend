@@ -43,6 +43,7 @@ export const CurrencyProfileEditView = () => {
         }
         onSubmitCurrency={handleSubmit}
         isSubmitting={isPending}
+        currentId={id}
       />
     </div>
   );

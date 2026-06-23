@@ -17,6 +17,7 @@ import { partyProfileSchema } from '../schema';
 import type { ICreatePartyProfile } from '../types';
 import { branchProfileApi } from '@/api/branchProfile/branchProfile.api';
 import { stateProfileApi } from '@/api/stateProfile/stateProfile.api';
+import { partyProfileApi } from '@/api/partyProfile';
 import {
   toPartyProfileDisplayLabel,
   type PartyProfileType,
@@ -26,6 +27,7 @@ import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import { usePartyProfileTypes } from '../hooks';
 import type { IReviewPartyProfilePayload } from '../types';
 import { PartyProfileReviewActionPanel } from '../components';
+import { normalizeCodeValue } from '@/utils';
 
 interface PartyProfileFormProps {
   defaultValues: ICreatePartyProfile;
@@ -38,6 +40,7 @@ interface PartyProfileFormProps {
   reviewMode?: boolean;
   originBranchDisabled?: boolean;
   onReviewSubmit?: (values: IReviewPartyProfilePayload) => void | Promise<void>;
+  currentId?: string;
 }
 
 const FORM_ID = 'party-profile-form';
@@ -49,6 +52,7 @@ const PartyProfileFormFields = ({
   reviewMode = false,
   originBranchDisabled = false,
   onReviewSubmit,
+  currentId,
 }: {
   isSubmitting?: boolean;
   disabled?: boolean;
@@ -56,6 +60,7 @@ const PartyProfileFormFields = ({
   reviewMode?: boolean;
   originBranchDisabled?: boolean;
   onReviewSubmit?: (values: IReviewPartyProfilePayload) => void | Promise<void>;
+  currentId?: string;
 }) => {
   const isSubmitting = isSubmittingProp || disabled || reviewMode;
   const reviewActionsDisabled = isSubmittingProp;
@@ -64,9 +69,12 @@ const PartyProfileFormFields = ({
     control,
     name: 'type',
   });
+  const effectiveProfileType = (profileType ?? currentType) as
+    | PartyProfileType
+    | undefined;
 
   const { data: typeOptions = [] } = usePartyProfileTypes();
-  const profileTypeLabel = toPartyProfileDisplayLabel(profileType);
+  const profileTypeLabel = toPartyProfileDisplayLabel(effectiveProfileType);
   const groupOptions = typeOptions.map(option => ({
     value: option.label,
     label: option.label,
@@ -112,6 +120,25 @@ const PartyProfileFormFields = ({
   const loadGroupOptions = useCallback(async (): Promise<AsyncSelectResponse> => {
     return { options: groupOptions };
   }, [groupOptions]);
+  const validatePartyCode = useCallback(
+    async (value: string) => {
+      const normalizedCode = normalizeCodeValue(value);
+      if (!normalizedCode) {
+        return false;
+      }
+
+      const partyProfiles = await partyProfileApi.getPartyProfiles(
+        { page: 1, limit: 20, code: normalizedCode, type: effectiveProfileType },
+        effectiveProfileType
+      );
+
+      return (partyProfiles.data ?? []).some(
+        party =>
+          normalizeCodeValue(party.code) === normalizedCode && party.id !== currentId
+      );
+    },
+    [currentId, effectiveProfileType]
+  );
 
   return (
     <div className="space-y-4 pb-24">
@@ -137,6 +164,12 @@ const PartyProfileFormFields = ({
             label="Client Code"
             placeholder="Enter client code (4-20 chars)"
             disabled={isSubmitting}
+            asyncValidation={{
+              enabled: !isSubmitting,
+              check: validatePartyCode,
+              message: 'Client code already exists',
+              normalize: normalizeCodeValue,
+            }}
           />
           {currentType === 'FFMC' && (
             <>

@@ -1,4 +1,6 @@
+import { useCallback } from 'react';
 import type { SubmitErrorHandler } from 'react-hook-form';
+import { useFormContext, useWatch } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import {
   Form,
@@ -9,6 +11,8 @@ import { stateProfileSchema } from '../schema';
 import { STATE_PROFILE_TEXTS } from '../constants';
 import type { ICreateStateProfile } from '../types';
 import { useNavigate } from 'react-router-dom';
+import { stateProfileApi } from '@/api/stateProfile/stateProfile.api';
+import { normalizeCodeValue } from '@/utils';
 
 interface StateProfileFormProps {
   defaultValues: ICreateStateProfile;
@@ -16,7 +20,57 @@ interface StateProfileFormProps {
   submitLabel?: string;
   isSubmitting?: boolean;
   readOnly?: boolean;
+  currentId?: string;
 }
+
+const StateCodeField = ({
+  isDisabled,
+  currentId,
+}: {
+  isDisabled: boolean;
+  currentId?: string;
+}) => {
+  const { control } = useFormContext<ICreateStateProfile>();
+  const countryId = useWatch({ control, name: 'countryId' });
+
+  const validateStateCode = useCallback(
+    async (value: string) => {
+      const normalizedCode = normalizeCodeValue(value);
+      if (!normalizedCode || !countryId) {
+        return false;
+      }
+
+      const res = await stateProfileApi.getStateProfiles({
+        page: 1,
+        limit: 20,
+        countryId,
+        code: normalizedCode,
+      });
+
+      return (res.data ?? []).some(
+        state =>
+          normalizeCodeValue(state.code) === normalizedCode &&
+          state.id !== currentId
+      );
+    },
+    [countryId, currentId]
+  );
+
+  return (
+    <FormFieldInput
+      name="code"
+      label="State Code"
+      disabled={isDisabled}
+      asyncValidation={{
+        enabled: !isDisabled && Boolean(countryId),
+        check: validateStateCode,
+        message: 'State code already exists for this country',
+        normalize: normalizeCodeValue,
+        dependencies: [countryId],
+      }}
+    />
+  );
+};
 
 export const StateProfileForm = ({
   defaultValues,
@@ -24,6 +78,7 @@ export const StateProfileForm = ({
   submitLabel = STATE_PROFILE_TEXTS.CREATE_STATE,
   isSubmitting = false,
   readOnly = false,
+  currentId,
 }: StateProfileFormProps) => {
   const navigate = useNavigate();
 
@@ -62,7 +117,7 @@ export const StateProfileForm = ({
             disabled={isDisabled}
           />
         </div>
-        <FormFieldInput name="code" label="State Code" disabled={isDisabled} />
+        <StateCodeField isDisabled={isDisabled} currentId={currentId} />
         <FormFieldInput name="name" label="State Name" disabled={isDisabled} />
         <FormFieldInput
           name="gstStateCode"

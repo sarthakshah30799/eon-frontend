@@ -1,4 +1,4 @@
-import { useMemo, useEffect } from 'react';
+import { useCallback, useMemo, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useFormContext } from 'react-hook-form';
 import { CardSection } from '@/components/ui';
@@ -14,12 +14,15 @@ import type { Resolver } from 'react-hook-form';
 import { userProfileSchema } from '../schema';
 import { userRoleApi, branchProfileApi, counterProfileApi } from '@/api';
 import { useNavigate } from 'react-router-dom';
+import { userProfileApi } from '@/api/userProfile';
+import { normalizeCodeValue } from '@/utils';
 
 interface UserProfileFormProps {
   defaultValues: ICreateUserProfile;
   onSubmit: (values: ICreateUserProfile) => void | Promise<void>;
   submitLabel?: string;
   isSubmitting?: boolean;
+  currentId?: string;
 }
 
 const createStaticLoadOptions = (
@@ -34,10 +37,12 @@ const createStaticLoadOptions = (
 const UserProfileFormFields = ({
   isSubmitting,
   isEdit,
+  currentId,
 }: {
   isSubmitting: boolean;
   isEdit: boolean;
   submitLabel: string;
+  currentId?: string;
 }) => {
   const { watch, setValue } = useFormContext();
   const selectedBranchId = watch('branchId');
@@ -161,6 +166,23 @@ const UserProfileFormFields = ({
       }));
   }, [counters, branches, selectedBranchId]);
 
+  const validateUserCode = useCallback(
+    async (value: string) => {
+      const normalizedCode = normalizeCodeValue(value);
+      if (!normalizedCode) {
+        return false;
+      }
+
+      const users = await userProfileApi.getUserProfiles();
+      return users.some(
+        user =>
+          normalizeCodeValue(user.code) === normalizedCode &&
+          user.id !== currentId
+      );
+    },
+    [currentId]
+  );
+
   return (
     <div className="space-y-6">
       {/* 1. Identity & Credentials */}
@@ -171,6 +193,12 @@ const UserProfileFormFields = ({
             label="User Code"
             disabled={isSubmitting || isEdit}
             placeholder="e.g. ADM001"
+            asyncValidation={{
+              enabled: !isSubmitting && !isEdit,
+              check: validateUserCode,
+              message: 'User code already exists',
+              normalize: normalizeCodeValue,
+            }}
           />
           <FormFieldInput
             name="name"
@@ -296,6 +324,7 @@ export const UserProfileForm = ({
   onSubmit,
   submitLabel = 'Create User',
   isSubmitting = false,
+  currentId,
 }: UserProfileFormProps) => {
   const navigate = useNavigate();
 
@@ -326,6 +355,7 @@ export const UserProfileForm = ({
         isSubmitting={isSubmitting}
         isEdit={isEdit}
         submitLabel={submitLabel}
+        currentId={currentId}
       />
     </Form>
   );

@@ -39,6 +39,7 @@ export const ProductProfileEditView = () => {
         defaultValues={mapRecordToFormValues(productProfile)}
         onSubmitProduct={handleSubmit}
         isSubmitting={isPending}
+        currentId={id}
       />
     </div>
   );

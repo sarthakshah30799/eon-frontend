@@ -7,6 +7,7 @@ interface CountryProfileEditorViewProps {
   onSubmitCountry: (values: ICreateCountryProfile) => void | Promise<void>;
   isSubmitting?: boolean;
   readOnly?: boolean;
+  currentId?: string;
 }
 
 export const CountryProfileEditorView = ({
@@ -15,6 +16,7 @@ export const CountryProfileEditorView = ({
   onSubmitCountry,
   isSubmitting = false,
   readOnly = false,
+  currentId,
 }: CountryProfileEditorViewProps) => {
   return (
     <section className="mx-auto w-full max-w-6xl rounded-md border border-border-primary bg-surface-primary p-5 shadow-sm">
@@ -24,6 +26,7 @@ export const CountryProfileEditorView = ({
         submitLabel={submitLabel}
         isSubmitting={isSubmitting}
         readOnly={readOnly}
+        currentId={currentId}
       />
     </section>
   );

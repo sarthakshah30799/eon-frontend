@@ -9,6 +9,7 @@ interface FinancialCodeEditorViewProps {
   onSubmitCode: (values: ICreateFinancialCode) => void | Promise<void>;
   isSubmitting?: boolean;
   readOnly?: boolean;
+  currentId?: string;
 }
 
 export const FinancialCodeEditorView = ({
@@ -17,6 +18,7 @@ export const FinancialCodeEditorView = ({
   onSubmitCode,
   isSubmitting = false,
   readOnly = false,
+  currentId,
 }: FinancialCodeEditorViewProps) => {
   return (
     <section className="rounded-sm border border-border-primary bg-surface-primary p-6 shadow-sm">
@@ -26,6 +28,7 @@ export const FinancialCodeEditorView = ({
         submitLabel={submitLabel}
         isSubmitting={isSubmitting}
         readOnly={readOnly}
+        currentId={currentId}
       />
     </section>
   );

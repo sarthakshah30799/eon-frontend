@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import type { ReactNode } from 'react';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Button } from '@/components/ui/button1';
@@ -7,6 +8,8 @@ import { useAuth } from '@/lib/AuthContext';
 import { userRoleSchema } from '../schema';
 import type { ICreateUserRole } from '../types';
 import { useNavigate } from 'react-router-dom';
+import { userRoleApi } from '@/api';
+import { normalizeCodeValue } from '@/utils';
 
 interface UserRoleFormProps {
   defaultValues: ICreateUserRole;
@@ -15,6 +18,7 @@ interface UserRoleFormProps {
   submitLabel?: string;
   isSubmitting?: boolean;
   showAdminControls?: boolean;
+  currentId?: string;
 }
 
 export const UserRoleForm = ({
@@ -24,6 +28,7 @@ export const UserRoleForm = ({
   submitLabel = 'Save Role',
   isSubmitting = false,
   showAdminControls,
+  currentId,
 }: UserRoleFormProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -31,6 +36,21 @@ export const UserRoleForm = ({
   const canManageAdminControls = showAdminControls ?? user?.isAdmin === true;
   const handleSubmit = (values: ICreateUserRole) =>
     onSubmit(canManageAdminControls ? values : { ...values, isAdmin: false });
+  const validateRoleCode = useCallback(
+    async (value: string) => {
+      const normalizedCode = normalizeCodeValue(value);
+      if (!normalizedCode) {
+        return false;
+      }
+
+      const roles = await userRoleApi.getUserRoles();
+      return roles.some(
+        role =>
+          normalizeCodeValue(role.code) === normalizedCode && role.id !== currentId
+      );
+    },
+    [currentId]
+  );
   const onCancel = () => {
     navigate('/admin/user-role');
   };
@@ -55,6 +75,12 @@ export const UserRoleForm = ({
             name="code"
             label="Role Code"
             disabled={isSubmitting}
+            asyncValidation={{
+              enabled: !isSubmitting,
+              check: validateRoleCode,
+              message: 'Role code already exists',
+              normalize: normalizeCodeValue,
+            }}
           />
           <FormFieldInput
             name="name"

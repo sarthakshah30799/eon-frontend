@@ -23,9 +23,9 @@ export const DocumentProfileCreateView = () => {
       onSubmit={handleSubmit}
       isSubmitting={isPending}
       submitLabel="Create Document Profile"
+      currentId={undefined}
     />
   );
 };
 
 export default DocumentProfileCreateView;
-

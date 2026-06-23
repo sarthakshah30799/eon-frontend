@@ -159,6 +159,7 @@ export const PartyProfileCreateView = () => {
           isSubmitting={isPending}
           submitLabel="Create Party Profile"
           originBranchDisabled={!isAdminUser}
+          currentId={undefined}
         />
       </section>
     </div>

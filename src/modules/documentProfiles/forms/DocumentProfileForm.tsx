@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import type { Resolver, SubmitErrorHandler } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useNavigate } from 'react-router-dom';
@@ -7,12 +8,15 @@ import { documentProfileSchema } from '../schema';
 import type { IDocumentProfileFormValues } from '../types';
 import { DOCUMENT_PROFILE_TEXTS } from '../constants/documentProfileConstants';
 import { DocumentProfileRuleRows } from '../components/DocumentProfileRuleRows';
+import { documentProfileApi } from '@/api/documentProfile';
+import { normalizeCodeValue } from '@/utils';
 
 interface DocumentProfileFormProps {
   defaultValues: IDocumentProfileFormValues;
   onSubmit: (values: IDocumentProfileFormValues) => void | Promise<void>;
   submitLabel?: string;
   isSubmitting?: boolean;
+  currentId?: string;
 }
 
 export const DocumentProfileForm = ({
@@ -20,8 +24,29 @@ export const DocumentProfileForm = ({
   onSubmit,
   submitLabel = DOCUMENT_PROFILE_TEXTS.SAVE_CHANGES,
   isSubmitting = false,
+  currentId,
 }: DocumentProfileFormProps) => {
   const navigate = useNavigate();
+  const validateProfileCode = useCallback(
+    async (value: string) => {
+      const normalizedCode = normalizeCodeValue(value);
+      if (!normalizedCode) {
+        return false;
+      }
+
+      const documents = await documentProfileApi.getDocumentProfiles({
+        page: 1,
+        limit: 20,
+      });
+
+      return documents.some(
+        document =>
+          normalizeCodeValue(document.profileCode) === normalizedCode &&
+          document.id !== currentId
+      );
+    },
+    [currentId]
+  );
 
   const handleSubmitErrors: SubmitErrorHandler<IDocumentProfileFormValues> = errors => {
     console.log('DocumentProfileForm submit errors:', errors);
@@ -51,6 +76,12 @@ export const DocumentProfileForm = ({
             label="Profile Code"
             placeholder="KYC_MASTER"
             disabled={isSubmitting}
+            asyncValidation={{
+              enabled: !isSubmitting,
+              check: validateProfileCode,
+              message: 'Document profile code already exists',
+              normalize: normalizeCodeValue,
+            }}
           />
           <FormFieldInput
             name="profileName"
@@ -88,4 +119,3 @@ export const DocumentProfileForm = ({
     </Form>
   );
 };
-

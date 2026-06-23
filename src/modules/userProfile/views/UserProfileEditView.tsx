@@ -36,6 +36,7 @@ export const UserProfileEditView = () => {
         onSubmit={handleSubmit}
         submitLabel={USER_PROFILE_TEXTS.SAVE_CHANGES}
         isSubmitting={isPending}
+        currentId={id}
       />
     </section>
   );

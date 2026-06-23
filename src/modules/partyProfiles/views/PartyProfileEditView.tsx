@@ -198,6 +198,7 @@ export const PartyProfileEditView = () => {
         disabled={showReviewControls ? true : !canModify}
         reviewMode={showReviewControls}
         submitLabel="Save Changes"
+        currentId={id}
       />
     </section>
   );

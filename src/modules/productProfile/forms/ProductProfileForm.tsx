@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useFormContext, type Resolver } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { CardSection } from '@/components/ui';
@@ -10,12 +10,15 @@ import {
 import { productProfileSchema } from '../schema';
 import type { ICreateProductProfile } from '../types';
 import { useNavigate } from 'react-router-dom';
+import { productProfileApi } from '@/api/productProfile';
+import { normalizeCodeValue } from '@/utils';
 
 interface ProductProfileFormProps {
   defaultValues: ICreateProductProfile;
   onSubmit: (values: ICreateProductProfile) => void | Promise<void>;
   submitLabel?: string;
   isSubmitting?: boolean;
+  currentId?: string;
 }
 
 const RetailTransactionConfig = ({
@@ -329,8 +332,25 @@ export const ProductProfileForm = ({
   onSubmit,
   submitLabel = 'Create Product',
   isSubmitting = false,
+  currentId,
 }: ProductProfileFormProps) => {
   const navigate = useNavigate();
+  const validateProductCode = useCallback(
+    async (value: string) => {
+      const normalizedCode = normalizeCodeValue(value);
+      if (!normalizedCode) {
+        return false;
+      }
+
+      const products = await productProfileApi.getProductProfiles();
+      return products.some(
+        product =>
+          normalizeCodeValue(product.productCode) === normalizedCode &&
+          product.id !== currentId
+      );
+    },
+    [currentId]
+  );
 
   const onCancel = () => {
     navigate('/admin/product-profile');
@@ -358,6 +378,12 @@ export const ProductProfileForm = ({
             name="productCode"
             label="Product Code"
             disabled={isSubmitting}
+            asyncValidation={{
+              enabled: !isSubmitting,
+              check: validateProductCode,
+              message: 'Product code already exists',
+              normalize: normalizeCodeValue,
+            }}
           />
           <FormFieldInput
             name="productDescription"

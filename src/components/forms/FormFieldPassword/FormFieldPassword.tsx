@@ -40,6 +40,7 @@ export const FormFieldPassword = ({
       className={className}
       showPasswordToggle={showPasswordToggle}
       placeholder={placeholder}
+      valueTransform="none"
       error={error?.message}
       value={field.value}
       onChange={field.onChange}

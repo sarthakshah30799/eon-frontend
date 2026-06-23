@@ -29,9 +29,7 @@ export const FormFieldInput = ({
     control: form.control,
   });
 
-  const isPasswordField = /password/i.test(name);
-  const shouldUppercaseValue =
-    type !== 'email' && type !== 'password' && !isPasswordField;
+  const shouldUppercaseValue = type !== 'email' && type !== 'password';
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>): void => {
     const nextValue =

@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Button } from '../../../components/ui/button1/Button';
-import { Form, FormFieldInput } from '../../../components/forms';
+import { Form, FormFieldPassword } from '../../../components/forms';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { buildResetPasswordSchema } from '../../../modules/auth/schema';
 import { authApi } from '../../../api/auth/auth.api';
@@ -194,16 +194,14 @@ const ResetPasswordPage: React.FC = () => {
               resolver={yupResolver(passwordSchema)}
               className="space-y-4"
             >
-              <FormFieldInput
+              <FormFieldPassword
                 name="password"
                 label="New Password"
-                type="password"
                 placeholder="Enter new password"
               />
-              <FormFieldInput
+              <FormFieldPassword
                 name="confirmPassword"
                 label="Confirm New Password"
-                type="password"
                 placeholder="Confirm new password"
               />
               <Button type="submit" className="w-full" size="lg" disabled={isLoading}>

@@ -1,6 +1,12 @@
 import type { AsyncSelectResponse } from '@/components/ui';
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 
+export interface CategoryOptionCodeOption {
+  value: string;
+  label: string;
+  type?: 'DOCUMENT';
+}
+
 export const CATEGORY_OPTIONS_TEXTS = {
   LIST_TITLE: 'Miscellaneous Profile',
   LIST_SUBTITLE: 'Manage reusable dropdown values for miscellaneous profiles.',
@@ -19,7 +25,7 @@ export const CATEGORY_OPTIONS_TEXTS = {
   BULK_SAVE_CHANGES: 'Save Options',
 } as const;
 
-export const CATEGORY_OPTION_CODE_OPTIONS = [
+export const CATEGORY_OPTION_CODE_OPTIONS: CategoryOptionCodeOption[] = [
   {
     value: CategoryOptionCodeEnum.LocationType,
     label: 'Location Type',
@@ -84,6 +90,16 @@ export const CATEGORY_OPTION_CODE_OPTIONS = [
     value: CategoryOptionCodeEnum.FfmcGroup,
     label: 'FFMC Group',
   },
+  {
+    value: CategoryOptionCodeEnum.MasterDocument,
+    label: 'Master Document',
+    type: 'DOCUMENT'
+  },
+  {
+    value: CategoryOptionCodeEnum.TransactionDocument,
+    label: 'Transaction Document',
+    type: 'DOCUMENT'
+  },
 ];
 
 export const CATEGORY_OPTION_CODE_LABELS = {
@@ -103,6 +119,8 @@ export const CATEGORY_OPTION_CODE_LABELS = {
   [CategoryOptionCodeEnum.BusinessNature]: 'Business Nature',
   [CategoryOptionCodeEnum.TdsGroup]: 'TDS Group',
   [CategoryOptionCodeEnum.FfmcGroup]: 'FFMC Group',
+  [CategoryOptionCodeEnum.MasterDocument]: 'Master Document',
+  [CategoryOptionCodeEnum.TransactionDocument]: 'Transaction Document',
 } as const;
 
 export const loadCategoryOptionCodeOptions = async (): Promise<AsyncSelectResponse> => {

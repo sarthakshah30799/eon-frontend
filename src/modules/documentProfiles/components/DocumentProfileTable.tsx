@@ -13,8 +13,8 @@ interface DocumentProfileTableProps {
 
 interface DocumentProfileTableRow {
   id: string;
-  profileCode: string;
-  profileName: string;
+  specificationType: string;
+  transactionType: string;
   ruleCount: number;
   active: boolean;
 }
@@ -30,8 +30,8 @@ export const DocumentProfileTable = ({
     () =>
       documentProfiles.map(profile => ({
         id: profile.id,
-        profileCode: profile.profileCode,
-        profileName: profile.profileName,
+        specificationType: profile.specificationType || profile.profileCode || '',
+        transactionType: profile.transactionType || profile.profileName || '',
         ruleCount: profile.rules?.length ?? 0,
         active: profile.active,
       })),
@@ -39,8 +39,8 @@ export const DocumentProfileTable = ({
   );
 
   const columns: TableColumnDef<DocumentProfileTableRow>[] = [
-    { accessorKey: 'profileCode', header: 'Profile Code' },
-    { accessorKey: 'profileName', header: 'Profile Name' },
+    { accessorKey: 'specificationType', header: 'Specification Type' },
+    { accessorKey: 'transactionType', header: 'Transaction Type' },
     { accessorKey: 'ruleCount', header: 'Rules' },
     {
       accessorKey: 'active',

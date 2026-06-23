@@ -9,7 +9,7 @@ import { getDocumentTypeLabel } from '../utils';
 interface DocumentRuleUploadRowProps {
   label: string;
   description?: string;
-  documentType: string;
+  documentType: string[];
   maxSizeMb: number;
   required?: boolean;
   value?: string;

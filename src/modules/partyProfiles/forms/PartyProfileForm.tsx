@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useFormContext, useWatch, type Resolver } from 'react-hook-form';
+import type { Resolver } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { CardSection } from '@/components/ui';
 import {
@@ -16,10 +16,11 @@ import { partyProfileSchema } from '../schema';
 import type { ICreatePartyProfile } from '../types';
 
 import { branchProfileApi } from '@/api/branchProfile/branchProfile.api';
-import { stateProfileApi } from '@/api/stateProfile/stateProfile.api';
 import { partyProfileApi } from '@/api/partyProfile';
+import { stateProfileApi } from '@/api/stateProfile/stateProfile.api';
 import {
   toPartyProfileDisplayLabel,
+  toPartyProfileApiType,
   type PartyProfileType,
 } from '../constants';
 import type { AsyncSelectResponse } from '@/components/ui';
@@ -66,17 +67,15 @@ const PartyProfileFormFields = ({
 }) => {
   const isSubmitting = isSubmittingProp || disabled || reviewMode;
   const reviewActionsDisabled = isSubmittingProp;
-  const { control } = useFormContext();
-  const currentType = useWatch({
-    control,
-    name: 'type',
-  });
-  const effectiveProfileType = (profileType ?? currentType) as
-    | PartyProfileType
-    | undefined;
+  const effectiveProfileType = profileType;
 
   const { data: typeOptions = [] } = usePartyProfileTypes();
   const profileTypeLabel = toPartyProfileDisplayLabel(effectiveProfileType);
+  const showTdsFields =
+    toPartyProfileApiType(effectiveProfileType) === 'AGENT' ||
+    toPartyProfileApiType(effectiveProfileType) === 'MISC_PROFILE';
+  const showCorporateClientTaxFields =
+    toPartyProfileApiType(effectiveProfileType) === 'CORPORATE_CLIENT';
   const groupOptions = typeOptions.map(option => ({
     value: option.label,
     label: option.label,
@@ -116,9 +115,10 @@ const PartyProfileFormFields = ({
     return { options };
   }, []);
 
-  const loadGroupOptions = useCallback(async (): Promise<AsyncSelectResponse> => {
-    return { options: groupOptions };
-  }, [groupOptions]);
+  const loadGroupOptions =
+    useCallback(async (): Promise<AsyncSelectResponse> => {
+      return { options: groupOptions };
+    }, [groupOptions]);
   const validatePartyCode = useCallback(
     async (value: string) => {
       const normalizedCode = normalizeCodeValue(value);
@@ -127,13 +127,19 @@ const PartyProfileFormFields = ({
       }
 
       const partyProfiles = await partyProfileApi.getPartyProfiles(
-        { page: 1, limit: 20, code: normalizedCode, type: effectiveProfileType },
+        {
+          page: 1,
+          limit: 20,
+          code: normalizedCode,
+          type: effectiveProfileType,
+        },
         effectiveProfileType
       );
 
       return (partyProfiles.data ?? []).some(
-        party =>
-          normalizeCodeValue(party.code) === normalizedCode && party.id !== currentId
+        (party: { code: string; id: string }) =>
+          normalizeCodeValue(party.code) === normalizedCode &&
+          party.id !== currentId
       );
     },
     [currentId, effectiveProfileType]
@@ -218,12 +224,12 @@ const PartyProfileFormFields = ({
       <CardSection heading="Client Identity">
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
           <div className="lg:col-span-2">
-          <FormFieldInput
-            name="name"
-            label="Client Name"
-            placeholder={`Enter ${profileTypeLabel.toLowerCase()} name`}
-            disabled={isSubmitting}
-          />
+            <FormFieldInput
+              name="name"
+              label="Client Name"
+              placeholder={`Enter ${profileTypeLabel.toLowerCase()} name`}
+              disabled={isSubmitting}
+            />
           </div>
           <div className="flex items-center pt-6">
             <FormFieldCheckbox
@@ -339,7 +345,7 @@ const PartyProfileFormFields = ({
             type="email"
             disabled={isSubmitting}
           />
-           <FormFieldInput
+          <FormFieldInput
             name="webSite"
             label="Web Site"
             placeholder="Enter website URL"
@@ -430,27 +436,31 @@ const PartyProfileFormFields = ({
             disabled={isSubmitting}
             isCreatable={true}
           />
-          <div className="flex items-center pt-6">
-            <FormFieldCheckbox
-              name="isTdsDeducted"
-              label="TDS Deducted?"
-              disabled={isSubmitting}
-            />
-          </div>
-          <FormFieldInput
-            name="tds"
-            label="TDS"
-            placeholder="Enter TDS percentage/value"
-            disabled={isSubmitting}
-          />
-          <FormFieldCategoryOption
-            name="tdsGroup"
-            label="TDS Group"
-            code={CategoryOptionCodeEnum.TdsGroup}
-            placeholder="Select TDS group"
-            disabled={isSubmitting}
-            isCreatable={true}
-          />
+          {showTdsFields && (
+            <>
+              <div className="flex items-center pt-6">
+                <FormFieldCheckbox
+                  name="isTdsDeducted"
+                  label="TDS Deducted?"
+                  disabled={isSubmitting}
+                />
+              </div>
+              <FormFieldInput
+                name="tds"
+                label="TDS"
+                placeholder="Enter TDS percentage/value"
+                disabled={isSubmitting}
+              />
+              <FormFieldCategoryOption
+                name="tdsGroup"
+                label="TDS Group"
+                code={CategoryOptionCodeEnum.TdsGroup}
+                placeholder="Select TDS group"
+                disabled={isSubmitting}
+                isCreatable={true}
+              />
+            </>
+          )}
         </div>
       </CardSection>
 
@@ -479,16 +489,20 @@ const PartyProfileFormFields = ({
             label="Purchase"
             disabled={isSubmitting}
           />
-          <FormFieldCheckbox
-            name="applyTax"
-            label="Apply Tax"
-            disabled={isSubmitting}
-          />
-          <FormFieldCheckbox
-            name="igstOnly"
-            label="IGST Only"
-            disabled={isSubmitting}
-          />
+          {showCorporateClientTaxFields && (
+            <>
+              <FormFieldCheckbox
+                name="applyTax"
+                label="Apply Tax"
+                disabled={isSubmitting}
+              />
+              <FormFieldCheckbox
+                name="igstOnly"
+                label="IGST Only"
+                disabled={isSubmitting}
+              />
+            </>
+          )}
         </div>
       </CardSection>
 
@@ -581,7 +595,6 @@ const PartyProfileFormFields = ({
         isSubmitting={reviewActionsDisabled}
         onReviewSubmit={onReviewSubmit}
       />
-
     </div>
   );
 };
@@ -603,7 +616,9 @@ export const PartyProfileForm = ({
       id={FORM_ID}
       onSubmit={onSubmit}
       resolver={
-        yupResolver(partyProfileSchema) as unknown as Resolver<PartyProfileFormValues>
+        yupResolver(
+          partyProfileSchema
+        ) as unknown as Resolver<PartyProfileFormValues>
       }
       defaultValues={defaultValues}
       className="space-y-6"

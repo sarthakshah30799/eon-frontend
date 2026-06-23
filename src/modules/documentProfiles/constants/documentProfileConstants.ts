@@ -1,3 +1,6 @@
+import type { AsyncSelectResponse } from '@/components/ui';
+import { CATEGORY_OPTION_CODE_OPTIONS } from '@/modules/miscellaneousProfile/constants/miscellaneousProfileConstants';
+
 export const DOCUMENT_PROFILE_TEXTS = {
   LIST_TITLE: 'Document Profiles',
   LIST_SUBTITLE: 'Configure document requirements for profile creation.',
@@ -24,6 +27,24 @@ export const DOCUMENT_TYPE_OPTIONS = [
   { value: 'XLS', label: 'Excel spreadsheet' },
 ];
 
+export const DOCUMENT_PROFILE_SPECIFICATION_TYPE_OPTIONS =
+  CATEGORY_OPTION_CODE_OPTIONS.filter(option => option.type === 'DOCUMENT');
+
+export const loadDocumentSpecificationTypeOptions =
+  async (): Promise<AsyncSelectResponse> => ({
+    options: DOCUMENT_PROFILE_SPECIFICATION_TYPE_OPTIONS,
+  });
+
+export const loadDocumentTransactionTypeOptions = async (
+  specificationType: string
+): Promise<AsyncSelectResponse> => ({
+  options: specificationType
+    ? DOCUMENT_PROFILE_SPECIFICATION_TYPE_OPTIONS.filter(
+        option => option.value === specificationType
+      )
+    : [],
+});
+
 export const DOCUMENT_TYPE_ACCEPT_MAP: Record<string, string> = {
   ANY: '*/*',
   PDF: 'application/pdf',
@@ -33,4 +54,3 @@ export const DOCUMENT_TYPE_ACCEPT_MAP: Record<string, string> = {
   DOC: '.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   XLS: '.xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 };
-

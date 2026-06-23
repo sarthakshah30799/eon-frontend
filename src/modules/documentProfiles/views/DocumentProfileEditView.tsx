@@ -20,16 +20,19 @@ export const DocumentProfileEditView = () => {
     }
 
     return {
-      profileCode: data.profileCode,
-      profileName: data.profileName,
-      profileDescription: data.profileDescription || '',
+      specificationType: data.specificationType || data.profileCode || '',
+      transactionType: data.transactionType || data.profileName || '',
       active: data.active,
       sortOrder: data.sortOrder,
       rules:
         data.rules?.map(rule => ({
           documentCode: rule.documentCode,
           documentDescription: rule.documentDescription,
-          documentType: rule.documentType,
+          documentType: Array.isArray(rule.documentType)
+            ? rule.documentType
+            : rule.documentType
+              ? [rule.documentType]
+              : ['ANY'],
           isRequired: rule.isRequired,
           maxSizeMb: rule.maxSizeMb,
           profileSelection: rule.profileSelection || '',
@@ -78,7 +81,6 @@ export const DocumentProfileEditView = () => {
       onSubmit={handleSubmit}
       isSubmitting={isPending}
       submitLabel="Update Document Profile"
-      currentId={id}
     />
   );
 };

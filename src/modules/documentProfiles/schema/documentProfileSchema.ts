@@ -1,5 +1,8 @@
 import * as yup from 'yup';
-import { DOCUMENT_TYPE_OPTIONS } from '../constants/documentProfileConstants';
+import {
+  DOCUMENT_PROFILE_SPECIFICATION_TYPE_OPTIONS,
+  DOCUMENT_TYPE_OPTIONS,
+} from '../constants/documentProfileConstants';
 
 const ruleSchema = yup.object({
   documentCode: yup.string().trim().required('Document code is required'),
@@ -8,11 +11,17 @@ const ruleSchema = yup.object({
     .trim()
     .required('Document description is required'),
   documentType: yup
-    .string()
-    .oneOf(
-      DOCUMENT_TYPE_OPTIONS.map(option => option.value),
-      'Select a valid document type'
+    .array()
+    .of(
+      yup
+        .string()
+        .oneOf(
+          DOCUMENT_TYPE_OPTIONS.map(option => option.value),
+          'Select a valid document type'
+        )
+        .required('Document type is required')
     )
+    .min(1, 'Select at least one document type')
     .required('Document type is required'),
   isRequired: yup.boolean().default(false),
   maxSizeMb: yup
@@ -29,9 +38,20 @@ const ruleSchema = yup.object({
 });
 
 export const documentProfileSchema = yup.object({
-  profileCode: yup.string().trim().required('Profile code is required'),
-  profileName: yup.string().trim().required('Profile name is required'),
-  profileDescription: yup.string().nullable().default(''),
+  specificationType: yup
+    .string()
+    .oneOf(
+      DOCUMENT_PROFILE_SPECIFICATION_TYPE_OPTIONS.map(option => option.value),
+      'Select a valid specification type'
+    )
+    .required('Specification type is required'),
+  transactionType: yup
+    .string()
+    .oneOf(
+      [yup.ref('specificationType')],
+      'Select a valid transaction type'
+    )
+    .required('Transaction type is required'),
   active: yup.boolean().default(true),
   sortOrder: yup.number().min(0).default(0),
   rules: yup

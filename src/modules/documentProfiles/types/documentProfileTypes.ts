@@ -2,7 +2,7 @@ export interface IDocumentProfileRule {
   id?: string;
   documentCode: string;
   documentDescription: string;
-  documentType: string;
+  documentType: string[];
   isRequired: boolean;
   maxSizeMb: number;
   profileSelection?: string | null;
@@ -16,8 +16,10 @@ export interface IDocumentProfileRule {
 
 export interface IDocumentProfile {
   id: string;
-  profileCode: string;
-  profileName: string;
+  specificationType: string;
+  transactionType: string;
+  profileCode?: string;
+  profileName?: string;
   profileDescription?: string | null;
   active: boolean;
   sortOrder: number;
@@ -29,7 +31,7 @@ export interface IDocumentProfile {
 export interface ICreateDocumentProfileRule {
   documentCode: string;
   documentDescription: string;
-  documentType: string;
+  documentType: string[];
   isRequired: boolean;
   maxSizeMb: number;
   profileSelection?: string | null;
@@ -41,9 +43,8 @@ export interface ICreateDocumentProfileRule {
 }
 
 export interface ICreateDocumentProfile {
-  profileCode: string;
-  profileName: string;
-  profileDescription?: string | null;
+  specificationType: string;
+  transactionType: string;
   active: boolean;
   sortOrder: number;
   rules: ICreateDocumentProfileRule[];

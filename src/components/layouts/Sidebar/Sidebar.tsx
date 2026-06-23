@@ -359,7 +359,6 @@ export const Sidebar = ({
       .filter(root => !root.isAdmin)
       .map<SidebarSection>(root => {
         const rootItem = mapVisibleMenuNodeToItem(root, hasViewPermission);
-
         if (!rootItem) {
           return {
             title: root.name,
@@ -370,7 +369,7 @@ export const Sidebar = ({
         if ('children' in rootItem) {
           return {
             title: root.name,
-            items: [rootItem],
+            items: rootItem.children,
           } satisfies SidebarGroupSection;
         }
 

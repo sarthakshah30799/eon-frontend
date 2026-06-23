@@ -104,11 +104,11 @@ export const MenuForm = ({
             isSearchable={false}
             isClearable
           />
-            <FormFieldCheckbox
-              name="isActive"
-              label="Active"
-              disabled={isSubmitting}
-            />
+          <FormFieldCheckbox
+            name="isActive"
+            label="Active"
+            disabled={isSubmitting}
+          />
         </div>
       </section>
     </Form>

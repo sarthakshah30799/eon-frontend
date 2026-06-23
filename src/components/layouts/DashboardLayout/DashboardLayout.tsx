@@ -69,7 +69,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       >
         <Header onMenuClick={() => setIsSidebarOpen(true)} onLogout={handleLogout} />
 
-        <main className="h-[calc(100vh-121px)] flex-1 overflow-y-auto p-2 pb-0!">
+        <main className="h-[calc(100vh-121px)] flex-1 overflow-y-auto p-2 pb-0! mb-16">
           <div className="mx-auto max-w-7xl h-full!">{children}</div>
         </main>
       </div>

@@ -13,7 +13,7 @@ export const createEmptyDocumentProfileRule = (): IDocumentProfileRule => ({
   documentType: ['PNG'],
   isRequired: false,
   maxSizeMb: 5,
-  profileSelection: '',
+  groupSelection: '',
   entitySelection: '',
   fieldSelection: '',
   fieldValue: '',
@@ -43,7 +43,7 @@ export const normalizeDocumentProfileRule = (
         .filter(Boolean)
     )
   ),
-  profileSelection: rule.profileSelection?.trim() || '',
+  groupSelection: rule.groupSelection?.trim() || '',
   entitySelection: rule.entitySelection?.trim() || '',
   fieldSelection: rule.fieldSelection?.trim() || '',
   fieldValue: rule.fieldValue?.trim() || '',
@@ -55,7 +55,10 @@ export const normalizeDocumentProfileValues = (
   ...values,
   specificationType: values.specificationType.trim(),
   transactionType: values.transactionType.trim(),
-  rules: values.rules.map(normalizeDocumentProfileRule),
+  rules: values.rules.map(rule => ({
+    ...normalizeDocumentProfileRule(rule),
+    profileSelection: rule.groupSelection?.trim() || '',
+  })),
 });
 
 export const loadDocumentTypeOptions = async () => ({

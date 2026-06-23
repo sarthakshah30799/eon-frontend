@@ -6,6 +6,7 @@ export interface IDocumentProfileRule {
   isRequired: boolean;
   maxSizeMb: number;
   profileSelection?: string | null;
+  groupSelection?: string | null;
   entitySelection?: string | null;
   fieldSelection?: string | null;
   fieldValue?: string | null;
@@ -35,6 +36,7 @@ export interface ICreateDocumentProfileRule {
   isRequired: boolean;
   maxSizeMb: number;
   profileSelection?: string | null;
+  groupSelection?: string | null;
   entitySelection?: string | null;
   fieldSelection?: string | null;
   fieldValue?: string | null;
@@ -61,6 +63,7 @@ export interface IDocumentProfileListQuery {
 
 export interface IResolveDocumentProfileRulesQuery {
   profileSelection?: string;
+  groupSelection?: string;
   entitySelection?: string;
   fieldSelection?: string;
   fieldValue?: string;

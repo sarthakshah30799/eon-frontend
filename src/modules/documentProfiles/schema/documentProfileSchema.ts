@@ -29,7 +29,7 @@ const ruleSchema = yup.object({
     .typeError('Max size must be a number')
     .positive('Max size must be greater than 0')
     .required('Max size is required'),
-  profileSelection: yup.string().nullable().default(''),
+  groupSelection: yup.string().nullable().default(''),
   entitySelection: yup.string().nullable().default(''),
   fieldSelection: yup.string().nullable().default(''),
   fieldValue: yup.string().nullable().default(''),

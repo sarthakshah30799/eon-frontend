@@ -35,7 +35,7 @@ export const DocumentProfileEditView = () => {
               : ['ANY'],
           isRequired: rule.isRequired,
           maxSizeMb: rule.maxSizeMb,
-          profileSelection: rule.profileSelection || '',
+          groupSelection: rule.profileSelection || '',
           entitySelection: rule.entitySelection || '',
           fieldSelection: rule.fieldSelection || '',
           fieldValue: rule.fieldValue || '',

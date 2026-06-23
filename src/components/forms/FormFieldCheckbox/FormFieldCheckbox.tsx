@@ -7,6 +7,7 @@ interface FormFieldCheckboxProps {
   label?: string;
   disabled?: boolean;
   className?: string;
+  onChange?: (checked: boolean) => void;
 }
 
 export const FormFieldCheckbox = ({
@@ -14,6 +15,7 @@ export const FormFieldCheckbox = ({
   label,
   disabled = false,
   className = '',
+  onChange,
 }: FormFieldCheckboxProps) => {
   const form = useFormContext();
 
@@ -28,7 +30,10 @@ export const FormFieldCheckbox = ({
       checked={field.value}
       disabled={disabled}
       className={className}
-      onChange={field.onChange}
+      onChange={val => {
+        field.onChange(val);
+        onChange?.(val);
+      }}
     >
       {label}
     </Checkbox>

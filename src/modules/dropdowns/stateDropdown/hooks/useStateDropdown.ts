@@ -22,7 +22,7 @@ export const useStateDropdown = (
     page: 1,
     limit: 25,
     countryId: countryId || undefined,
-    enabled: Boolean(countryId),
+    enabled: true,
   });
 
   const defaultOptions = useMemo<StateDropdownOption[]>(
@@ -40,21 +40,15 @@ export const useStateDropdown = (
 
   const loadOptions = useCallback(
     async (inputValue: string): Promise<AsyncSelectResponse> => {
-      if (!countryId) {
-        return {
-          options: [],
-        };
-      }
+      const response = await stateProfileApi.getStateProfiles({
+        page: 1,
+        limit: 25,
+        countryId: countryId || undefined,
+        search: inputValue.trim() || undefined,
+      });
 
       return {
-        options: (
-          await stateProfileApi.getStateProfiles({
-            page: 1,
-            limit: 25,
-            countryId,
-            search: inputValue.trim() || undefined,
-          })
-        ).data.map(state => ({
+        options: response.data.map(state => ({
           value: state.id,
           label: `${state.code} - ${state.name}`,
           stateId: state.id,

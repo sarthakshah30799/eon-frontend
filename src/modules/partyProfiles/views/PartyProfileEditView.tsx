@@ -124,13 +124,13 @@ export const PartyProfileEditView = () => {
       bankName: client?.bankName || '',
       accountNumber: client?.accountNumber || '',
       ifscCode: client?.ifscCode || '',
-      bankAddress: client?.bankAddress || '',
+      bankBranchName: client?.bankBranchName || '',
       cancelledChequeCopy: client?.cancelledChequeCopy || '',
       rejectReason: '',
       ffmcRegNo: client?.ffmcRegNo || '',
       ffmcRegDate: formatDateForInput(client?.ffmcRegDate),
     }),
-    [client, selectedApiType]
+    [client]
   );
 
   const handleSubmit = async (values: Omit<ICreatePartyProfile, 'type'>) => {

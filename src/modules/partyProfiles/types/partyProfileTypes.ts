@@ -61,7 +61,7 @@ export interface IPartyProfile {
   bankName?: string;
   accountNumber?: string;
   ifscCode?: string;
-  bankAddress?: string;
+  bankBranchName?: string;
   cancelledChequeCopy?: string;
   ffmcRegNo?: string;
   ffmcRegDate?: string;

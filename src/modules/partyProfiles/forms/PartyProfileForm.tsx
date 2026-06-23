@@ -6,17 +6,16 @@ import {
   Form,
   FormFieldCategoryOption,
   FormFieldCheckbox,
+  FormFieldStateDropdown,
   FormFieldInput,
   FormFieldSelect,
   FormFieldDatePicker,
   FormFieldTextarea,
-  FormFieldFileUploader,
 } from '@/components/forms';
 import { partyProfileSchema } from '../schema';
 import type { ICreatePartyProfile } from '../types';
 
 import { branchProfileApi } from '@/api/branchProfile/branchProfile.api';
-import { stateProfileApi } from '@/api/stateProfile/stateProfile.api';
 import { partyProfileApi } from '@/api/partyProfile';
 import {
   toPartyProfileDisplayLabel,
@@ -99,23 +98,6 @@ const PartyProfileFormFields = ({
     return { options };
   }, []);
 
-  const stateLoadOptions = useCallback(async (inputValue: string) => {
-    const res = await stateProfileApi.getStateProfiles({ limit: 100 });
-    const options = (res.data ?? [])
-      .filter(
-        state =>
-          !inputValue ||
-          `${state.code} - ${state.name}`
-            .toLowerCase()
-            .includes(inputValue.toLowerCase())
-      )
-      .map(state => ({
-        value: state.id,
-        label: `${state.code} - ${state.name}`,
-      }));
-    return { options };
-  }, []);
-
   const loadGroupOptions = useCallback(async (): Promise<AsyncSelectResponse> => {
     return { options: groupOptions };
   }, [groupOptions]);
@@ -141,7 +123,7 @@ const PartyProfileFormFields = ({
 
   return (
     <div className="space-y-4 pb-24">
-      <CardSection heading="Basic Info & Credit Policy">
+      <CardSection heading="Basic Info">
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           <FormFieldInput
             name="dateOfIntro"
@@ -176,18 +158,26 @@ const PartyProfileFormFields = ({
               />
             </>
           )}
-          <FormFieldInput
-            name="creditLimit"
-            label="Credit Limit"
-            type="number"
-            disabled={isSubmitting}
-          />
-          <FormFieldInput
-            name="creditDays"
-            label="Credit Days"
-            type="number"
-            disabled={isSubmitting}
-          />
+          <div className="lg:col-span-2">
+            <FormFieldInput
+              name="name"
+              label="Client Name"
+              placeholder={`Enter ${profileTypeLabel.toLowerCase()} name`}
+              disabled={isSubmitting}
+            />
+          </div>
+          <div className="flex items-center pt-6 lg:col-span-2">
+            <FormFieldCheckbox
+              name="isIndividual"
+              label="Individual Category Customer (not a party profile)"
+              disabled={isSubmitting}
+            />
+          </div>
+        </div>
+      </CardSection>
+
+      <CardSection heading="Credit Policy">
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-2">
           <FormFieldInput
             name="temporaryCreditLimit"
             label="Temporary Credit Limit"
@@ -212,26 +202,6 @@ const PartyProfileFormFields = ({
             type="number"
             disabled={isSubmitting}
           />
-        </div>
-      </CardSection>
-
-      <CardSection heading="Client Identity">
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-          <div className="lg:col-span-2">
-          <FormFieldInput
-            name="name"
-            label="Client Name"
-            placeholder={`Enter ${profileTypeLabel.toLowerCase()} name`}
-            disabled={isSubmitting}
-          />
-          </div>
-          <div className="flex items-center pt-6">
-            <FormFieldCheckbox
-              name="isIndividual"
-              label="Individual Category Customer (not a party profile)"
-              disabled={isSubmitting}
-            />
-          </div>
         </div>
       </CardSection>
 
@@ -385,6 +355,14 @@ const PartyProfileFormFields = ({
             code={CategoryOptionCodeEnum.EntityType}
             placeholder="Select entity type"
             disabled={isSubmitting}
+            isCreatable={false}
+          />
+          <FormFieldCategoryOption
+            name="businessNature"
+            label="Business Nature"
+            code={CategoryOptionCodeEnum.BusinessNature}
+            placeholder="Select Business Nature"
+            disabled={isSubmitting}
             isCreatable={true}
           />
         </div>
@@ -393,20 +371,20 @@ const PartyProfileFormFields = ({
       <CardSection heading="PAN Details">
         <div className="grid gap-3 md:grid-cols-3">
           <FormFieldInput
+            name="panNo"
+            label="PAN Number"
+            placeholder="Enter PAN number"
+            disabled={isSubmitting}
+          />
+          <FormFieldInput
             name="panName"
-            label="PAN Name"
+            label="Name on PAN Card"
             placeholder="Name as on PAN Card"
             disabled={isSubmitting}
           />
           <FormFieldDatePicker
             name="panDob"
-            label="PAN Date of Birth"
-            disabled={isSubmitting}
-          />
-          <FormFieldInput
-            name="panNo"
-            label="PAN No."
-            placeholder="Enter PAN number"
+            label="DOB on PAN Card"
             disabled={isSubmitting}
           />
         </div>
@@ -419,14 +397,6 @@ const PartyProfileFormFields = ({
             label="Marketing Executive"
             code={CategoryOptionCodeEnum.MarketingExecutive}
             placeholder="Select Executive"
-            disabled={isSubmitting}
-            isCreatable={true}
-          />
-          <FormFieldCategoryOption
-            name="businessNature"
-            label="Business Nature"
-            code={CategoryOptionCodeEnum.BusinessNature}
-            placeholder="Select Business Nature"
             disabled={isSubmitting}
             isCreatable={true}
           />
@@ -512,11 +482,10 @@ const PartyProfileFormFields = ({
             placeholder="Enter IGST number"
             disabled={isSubmitting}
           />
-          <FormFieldSelect
+          <FormFieldStateDropdown
             name="gstStateId"
             label="GST State"
             placeholder="Select state"
-            loadOptions={stateLoadOptions}
             disabled={isSubmitting}
           />
           <FormFieldSelect
@@ -555,24 +524,12 @@ const PartyProfileFormFields = ({
             placeholder="Enter IFSC code"
             disabled={isSubmitting}
           />
-          <div className="md:col-span-2">
-            <FormFieldTextarea
-              name="bankAddress"
-              label="Bank Address"
-              placeholder="Enter bank address..."
-              disabled={isSubmitting}
-            />
-          </div>
-          <div className="md:col-span-2">
-            <FormFieldFileUploader
-              name="cancelledChequeCopy"
-              label="Cancelled Cheque Copy"
-              accept="image/*,application/pdf"
-              placeholder="Upload cancelled cheque copy"
-              disabled={isSubmitting}
-              helperText="Upload cheque copy (Max 5MB, JPG/PNG/PDF)"
-            />
-          </div>
+          <FormFieldInput
+            name="bankBranchName"
+            label="Bank Branch Name"
+            placeholder="Enter bank branch name"
+            disabled={isSubmitting}
+          />
         </div>
       </CardSection>
 

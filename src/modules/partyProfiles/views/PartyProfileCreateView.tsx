@@ -64,7 +64,7 @@ const createEmptyPartyProfileValues = (): Omit<ICreatePartyProfile, 'type'> => {
     bankName: '',
     accountNumber: '',
     ifscCode: '',
-    bankAddress: '',
+    bankBranchName: '',
     cancelledChequeCopy: '',
     rejectReason: '',
     ffmcRegNo: '',

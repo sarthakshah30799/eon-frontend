@@ -79,7 +79,7 @@ export const partyProfileSchema = yup.object({
   bankName: yup.string().trim().optional().nullable(),
   accountNumber: yup.string().trim().optional().nullable(),
   ifscCode: yup.string().trim().optional().nullable(),
-  bankAddress: yup.string().trim().optional().nullable(),
+  bankBranchName: yup.string().trim().optional().nullable(),
   cancelledChequeCopy: yup.string().trim().optional().nullable(),
   rejectReason: yup.string().trim().optional().nullable(),
   ffmcRegNo: yup.string().trim().optional().nullable(),

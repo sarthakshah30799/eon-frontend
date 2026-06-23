@@ -143,8 +143,8 @@ export const StateDropdown = ({
     <>
       <AsyncSelect
         label={label}
-        placeholder={countryId ? placeholder : 'Select country first'}
-        disabled={disabled || !countryId}
+        placeholder={placeholder}
+        disabled={disabled}
         className={className}
         loadOptions={loadOptions}
         defaultOptions={mergedDefaultOptions}

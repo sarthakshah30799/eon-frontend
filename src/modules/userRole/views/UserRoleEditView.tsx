@@ -45,6 +45,7 @@ export const UserRoleEditView = () => {
           onSubmit={handleSubmit}
           submitLabel={USER_ROLE_TEXTS.SAVE_CHANGES}
           isSubmitting={isPending || rightsMatrix.isSaving}
+          currentId={id}
         >
           <UserRoleRightsSection
             rightsTreeNodes={rightsMatrix.selectableTreeNodes}

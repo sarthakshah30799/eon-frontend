@@ -61,6 +61,7 @@ export const StateProfileEditView = () => {
         onSubmitState={handleSubmit}
         isSubmitting={isPending}
         readOnly={!canModify}
+        currentId={id}
       />
     </div>
   );

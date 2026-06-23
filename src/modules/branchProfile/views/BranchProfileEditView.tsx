@@ -53,6 +53,7 @@ export const BranchProfileEditView = () => {
         onCancel={() => navigate('/admin/branch-profile')}
         isSubmitting={isPending}
         branchAttachedToOptions={branchAttachedToOptions}
+        currentId={id}
       />
     </div>
   );

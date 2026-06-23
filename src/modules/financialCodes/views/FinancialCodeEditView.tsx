@@ -47,6 +47,7 @@ export const FinancialCodeEditView = () => {
       onSubmitCode={handleSubmit}
       isSubmitting={isPending}
       readOnly={!canModify}
+      currentId={id}
     />
   );
 };

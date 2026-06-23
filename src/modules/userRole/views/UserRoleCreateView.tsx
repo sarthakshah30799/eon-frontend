@@ -31,6 +31,7 @@ export const UserRoleCreateView = () => {
           onSubmit={handleSubmit}
           submitLabel={USER_ROLE_TEXTS.CREATE_ROLE}
           isSubmitting={isPending || rightsMatrix.isSaving}
+          currentId={undefined}
         >
           <UserRoleRightsSection
             rightsTreeNodes={rightsMatrix.selectableTreeNodes}

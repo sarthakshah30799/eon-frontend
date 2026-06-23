@@ -157,6 +157,7 @@ export const PartyProfileCreateView = () => {
           submitLabel="Create Party Profile"
           originBranchDisabled={!isAdminUser}
           profileType={selectedApiType}
+          currentId={undefined}
         />
       </section>
     </div>

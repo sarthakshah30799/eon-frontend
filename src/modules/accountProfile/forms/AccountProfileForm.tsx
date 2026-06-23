@@ -19,6 +19,7 @@ import { accountProfileApi } from '@/api/accountProfile';
 import { useGetFinancialCode } from '@/modules/financialCodes/hooks/useGetFinancialCode';
 import { accountProfileSchema } from '../schema/accountProfileSchema';
 import type { ICreateAccountProfile } from '../types/accountProfileTypes';
+import { normalizeCodeValue } from '@/utils';
 
 interface AccountProfileFormProps {
   defaultValues: ICreateAccountProfile;
@@ -220,6 +221,27 @@ export const AccountProfileForm = ({
     };
   }, [currentId]);
 
+  const validateAccountCode = useCallback(
+    async (value: string) => {
+      const normalizedCode = normalizeCodeValue(value);
+      if (!normalizedCode) {
+        return false;
+      }
+
+      const res = await accountProfileApi.getAccountProfiles({
+        page: 1,
+        limit: 20,
+        search: normalizedCode,
+      });
+      return (res.data || []).some(
+        account =>
+          normalizeCodeValue(account.accountCode) === normalizedCode &&
+          account.id !== currentId
+      );
+    },
+    [currentId]
+  );
+
   return (
     <Form
       id="account-profile-form"
@@ -249,6 +271,12 @@ export const AccountProfileForm = ({
               label="Account Code"
               placeholder="e.g. ACCINT"
               disabled={isDisabled}
+              asyncValidation={{
+                enabled: !isDisabled,
+                check: validateAccountCode,
+                message: 'Account code already exists',
+                normalize: normalizeCodeValue,
+              }}
             />
             <FormFieldInput
               name="accountName"

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import type { FormEvent } from 'react';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -20,6 +20,8 @@ import {
 import { currencyProfileSchema } from '../schema';
 import type { ICreateCurrencyProfile } from '../types';
 import { useNavigate } from 'react-router-dom';
+import { currencyProfileApi } from '@/api/currencyProfile';
+import { normalizeCodeValue } from '@/utils';
 
 const loadCalculationMethodOptions =
   async (): Promise<AsyncSelectResponse> => ({
@@ -40,6 +42,7 @@ interface CurrencyProfileFormProps {
   submitLabel?: string;
   isSubmitting?: boolean;
   readOnly?: boolean;
+  currentId?: string;
 }
 
 const compactFieldClass = '';
@@ -61,9 +64,26 @@ export const CurrencyProfileForm = ({
   submitLabel = CURRENCY_PROFILE_TEXTS.CREATE_CURRENCY,
   isSubmitting = false,
   readOnly = false,
+  currentId,
 }: CurrencyProfileFormProps) => {
   const navigate = useNavigate();
   const isDisabled = isSubmitting || readOnly;
+  const validateCurrencyCode = useCallback(
+    async (value: string) => {
+      const normalizedCode = normalizeCodeValue(value);
+      if (!normalizedCode) {
+        return false;
+      }
+
+      const currencies = await currencyProfileApi.getCurrencyProfiles();
+      return currencies.some(
+        currency =>
+          normalizeCodeValue(currency.currencyCode) === normalizedCode &&
+          currency.id !== currentId
+      );
+    },
+    [currentId]
+  );
   const onCancel = () => {
     navigate('/currency-profile');
   };
@@ -89,6 +109,12 @@ export const CurrencyProfileForm = ({
             label="Currency Code"
             disabled={isDisabled}
             className={compactFieldClass}
+            asyncValidation={{
+              enabled: !isDisabled,
+              check: validateCurrencyCode,
+              message: 'Currency code already exists',
+              normalize: normalizeCodeValue,
+            }}
           />
           <FormFieldInput
             name="currencyName"

@@ -78,9 +78,9 @@ export const DocumentProfileEditView = () => {
       onSubmit={handleSubmit}
       isSubmitting={isPending}
       submitLabel="Update Document Profile"
+      currentId={id}
     />
   );
 };
 
 export default DocumentProfileEditView;
-

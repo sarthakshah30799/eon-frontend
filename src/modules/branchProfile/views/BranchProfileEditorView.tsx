@@ -17,6 +17,7 @@ interface BranchProfileEditorViewProps {
   onCancel?: () => void | Promise<void>;
   isSubmitting?: boolean;
   branchAttachedToOptions: IBranchProfileOption[];
+  currentId?: string;
 }
 
 export const BranchProfileEditorView = ({
@@ -29,6 +30,7 @@ export const BranchProfileEditorView = ({
   onCancel,
   isSubmitting = false,
   branchAttachedToOptions,
+  currentId,
 }: BranchProfileEditorViewProps) => {
   return (
     <section className="mx-auto w-full max-w-7xl rounded-xl border border-sky-100 bg-white/90 p-4 shadow-none backdrop-blur-sm">
@@ -42,6 +44,7 @@ export const BranchProfileEditorView = ({
         onCancel={onCancel}
         isSubmitting={isSubmitting}
         branchAttachedToOptions={branchAttachedToOptions}
+        currentId={currentId}
       />
     </section>
   );

@@ -59,6 +59,7 @@ export const CountryProfileEditView = () => {
         onSubmitCountry={handleSubmit}
         isSubmitting={isPending}
         readOnly={!canModify}
+        currentId={id}
       />
     </div>
   );

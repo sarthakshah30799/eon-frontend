@@ -8,6 +8,7 @@ interface ProductProfileEditorViewProps {
   defaultValues: ICreateProductProfile;
   onSubmitProduct: (values: ICreateProductProfile) => void | Promise<void>;
   isSubmitting?: boolean;
+  currentId?: string;
 }
 
 export const ProductProfileEditorView = ({
@@ -15,6 +16,7 @@ export const ProductProfileEditorView = ({
   defaultValues,
   onSubmitProduct,
   isSubmitting = false,
+  currentId,
 }: ProductProfileEditorViewProps) => {
   return (
     <section className="mx-auto w-full max-w-6xl h-full! rounded-md border border-border-primary bg-surface-primary p-5 shadow-sm">
@@ -23,6 +25,7 @@ export const ProductProfileEditorView = ({
         onSubmit={onSubmitProduct}
         submitLabel={submitLabel}
         isSubmitting={isSubmitting}
+        currentId={currentId}
       />
     </section>
   );

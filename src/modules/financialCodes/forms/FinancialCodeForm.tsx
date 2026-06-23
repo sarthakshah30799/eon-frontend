@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import type { SubmitErrorHandler, Resolver } from 'react-hook-form';
 import { useFormContext, useFieldArray } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -13,6 +14,8 @@ import { financialCodeSchema } from '../schema/financialCodeSchema';
 import { FINANCIAL_CODE_TEXTS } from '../constants/financialCodeConstants';
 import type { ICreateFinancialCode } from '../types/financialCodeTypes';
 import { useNavigate } from 'react-router-dom';
+import { financialCodesApi } from '@/api/financialCodes/financialCodes.api';
+import { normalizeCodeValue } from '@/utils';
 
 interface FinancialCodeFormProps {
   defaultValues: ICreateFinancialCode;
@@ -20,6 +23,7 @@ interface FinancialCodeFormProps {
   submitLabel?: string;
   isSubmitting?: boolean;
   readOnly?: boolean;
+  currentId?: string;
 }
 
 const SubProfilesFieldArray = ({ isDisabled }: { isDisabled: boolean }) => {
@@ -134,8 +138,21 @@ export const FinancialCodeForm = ({
   submitLabel = FINANCIAL_CODE_TEXTS.CREATE_CODE,
   isSubmitting = false,
   readOnly = false,
+  currentId,
 }: FinancialCodeFormProps) => {
   const navigate = useNavigate();
+  const validateFinancialCode = useCallback(
+    async (value: string) => {
+      const normalizedCode = normalizeCodeValue(value);
+      if (!normalizedCode) {
+        return false;
+      }
+
+      const existing = await financialCodesApi.getFinancialCodeByCode(normalizedCode);
+      return Boolean(existing && existing.id !== currentId);
+    },
+    [currentId]
+  );
 
   const handleSubmitErrors: SubmitErrorHandler<
     ICreateFinancialCode
@@ -179,6 +196,12 @@ export const FinancialCodeForm = ({
           label="Financial Code"
           placeholder="e.g. BANKBL"
           disabled={isDisabled}
+          asyncValidation={{
+            enabled: !isDisabled,
+            check: validateFinancialCode,
+            message: 'Financial code already exists',
+            normalize: normalizeCodeValue,
+          }}
         />
       </div>
 

@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button1';
 import { FormFieldInput } from '@/components/forms';
 import { countryGroupApi } from '@/api';
+import { normalizeCodeValue } from '@/utils';
 
 interface CountryGroupModalFormValues {
   name: string;
@@ -31,6 +32,18 @@ export const CountryGroupModal = ({
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const validateCountryGroupCode = useCallback(
+    async (value: string) => {
+      const normalizedCode = normalizeCodeValue(value);
+      if (!normalizedCode) {
+        return false;
+      }
+
+      const groups = await countryGroupApi.getCountryGroups();
+      return groups.some(group => normalizeCodeValue(group.code) === normalizedCode);
+    },
+    []
+  );
 
   const handleSubmit = form.handleSubmit(async values => {
     const nextName = values.name.trim();
@@ -106,6 +119,12 @@ export const CountryGroupModal = ({
             placeholder="e.g. EU"
             disabled={isSubmitting}
             valueTransform="none"
+            asyncValidation={{
+              enabled: !isSubmitting,
+              check: validateCountryGroupCode,
+              message: 'Country group code already exists',
+              normalize: normalizeCodeValue,
+            }}
           />
 
           <div className="flex justify-end gap-3 border-t border-border-primary pt-4 mt-6">

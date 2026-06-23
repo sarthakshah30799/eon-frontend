@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import type { SubmitErrorHandler, Resolver } from 'react-hook-form';
 import { useFormContext } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -16,6 +16,8 @@ import type { ICreateCountryProfile } from '../types';
 import { useNavigate } from 'react-router-dom';
 import { countryGroupApi } from '@/api';
 import { CountryGroupModal } from '../components';
+import { countryProfileApi } from '@/api/countryProfile';
+import { normalizeCodeValue } from '@/utils';
 
 const loadRiskCategoryOptions = async (): Promise<AsyncSelectResponse> => {
   return { options: riskCategoryOptions };
@@ -92,6 +94,7 @@ interface CountryProfileFormProps {
   isSubmitting?: boolean;
   readOnly?: boolean;
   insideModal?: boolean;
+  currentId?: string;
 }
 
 export const CountryProfileForm = ({
@@ -101,8 +104,30 @@ export const CountryProfileForm = ({
   isSubmitting = false,
   readOnly = false,
   insideModal = false,
+  currentId,
 }: CountryProfileFormProps) => {
   const navigate = useNavigate();
+  const validateCountryCode = useCallback(
+    async (value: string) => {
+      const normalizedCode = normalizeCodeValue(value);
+      if (!normalizedCode) {
+        return false;
+      }
+
+      const res = await countryProfileApi.getCountryProfiles({
+        page: 1,
+        limit: 20,
+        code: normalizedCode,
+      });
+
+      return (res.data ?? []).some(
+        country =>
+          normalizeCodeValue(country.code) === normalizedCode &&
+          country.id !== currentId
+      );
+    },
+    [currentId]
+  );
 
   const handleSubmitErrors: SubmitErrorHandler<
     ICreateCountryProfile
@@ -137,6 +162,12 @@ export const CountryProfileForm = ({
           name="code"
           label="Country Code"
           disabled={isDisabled}
+          asyncValidation={{
+            enabled: !isDisabled,
+            check: validateCountryCode,
+            message: 'Country code already exists',
+            normalize: normalizeCodeValue,
+          }}
         />
         <FormFieldInput
           name="name"

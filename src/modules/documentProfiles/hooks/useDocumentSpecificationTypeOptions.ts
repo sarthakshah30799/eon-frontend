@@ -1,9 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 
-export enum DocumentSpecificationTypeEnum {
-  Master = 'MASTER',
-  Transaction = 'TRANSACTION',
-}
+export const DocumentSpecificationTypeEnum = {
+  Master: 'MASTER',
+  Transaction: 'TRANSACTION',
+} as const;
+
+export type DocumentSpecificationTypeEnum = typeof DocumentSpecificationTypeEnum[keyof typeof DocumentSpecificationTypeEnum];
 
 const SPECIFICATION_TYPE_OPTIONS = [
   { value: DocumentSpecificationTypeEnum.Master, label: 'Master' },

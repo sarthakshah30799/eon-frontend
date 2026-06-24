@@ -17,7 +17,7 @@ interface ExpenseIncomeBookingFormViewProps {
 export const ExpenseIncomeBookingFormView = ({ type, mode }: ExpenseIncomeBookingFormViewProps) => {
   const navigate = useNavigate();
   const { id = '' } = useParams<{ id: string }>();
-  const basePath = type === 'EXPENSE' ? '/admin/expense-booking' : '/admin/income-booking';
+  const basePath = type === 'EXPENSE' ? '/expense-booking' : '/income-booking';
   const { canModify } = usePermission(basePath);
 
   const { data: master, isLoading } = useGetBookingMaster(id);

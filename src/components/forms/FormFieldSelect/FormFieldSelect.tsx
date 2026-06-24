@@ -150,7 +150,7 @@ export const FormFieldSelect = ({
     return () => {
       isActive = false;
     };
-  }, [field.value, isMulti]);
+  }, [field.value, isMulti, loadOptions]);
 
   const handleCreateOption = async (inputValue: string) => {
     if (!onCreateOption) {

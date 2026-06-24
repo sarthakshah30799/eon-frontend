@@ -1,3 +1,12 @@
+export interface IUserProfileAssignment {
+  roleId: string;
+  roleLabel: string;
+  branchId: string;
+  branchLabel: string;
+  counterId: string;
+  counterLabel: string;
+}
+
 export interface IUserProfile {
   id: string;
   code: string;
@@ -11,8 +20,12 @@ export interface IUserProfile {
   isLocked: boolean;
   isDormant: boolean;
   roleId: string;
+  roleName?: string;
   branchId: string;
+  branchName?: string;
   counterId: string;
+  counterName?: string;
+  assignments: IUserProfileAssignment[];
   createdAt: string;
   updatedAt: string;
   createdBy?: string;

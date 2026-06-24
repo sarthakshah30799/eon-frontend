@@ -41,6 +41,15 @@ export interface IOtpFormData {
   otp: string;
 }
 
+export interface IUserAssignment {
+  roleId: string;
+  roleName?: string;
+  branchId: string;
+  branchName?: string;
+  counterId: string;
+  counterName?: string;
+}
+
 export interface IUser {
   id: string;
   email: string;
@@ -54,8 +63,10 @@ export interface IUser {
   isHoStaff?: boolean;
   isAdmin?: boolean;
   branchId?: string;
+  branchName?: string;
   counterId?: string;
-  counterNo?: number;
   counterName?: string;
+  counterNo?: number;
+  assignments?: IUserAssignment[];
   permissions?: Record<string, string[]>;
 }

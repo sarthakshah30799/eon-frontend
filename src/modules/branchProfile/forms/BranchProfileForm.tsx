@@ -280,7 +280,6 @@ const BranchProfileFormFields = ({
       </CardSection>
 
       <CardSection heading="Relations & Status">
-        <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
           <FormFieldSelect
             name="connectCounterIds"
             label="Connect Counters"
@@ -294,18 +293,17 @@ const BranchProfileFormFields = ({
             closeMenuOnSelect={false}
             className={['md:col-span-2 lg:col-span-4'].join(' ')}
           />
-          <div className="mt-2 grid gap-2 md:col-span-2 md:grid-cols-2 lg:col-span-4">
-            <FormFieldCheckbox
-              name="isHeadOffice"
-              label="Head Office"
-              disabled={isSubmitting}
-            />
-            <FormFieldCheckbox
-              name="isActive"
-              label="Active"
-              disabled={isSubmitting}
-            />
-          </div>
+        <div className="mt-2 grid gap-2 md:col-span-2 md:grid-cols-2 lg:col-span-4">
+          <FormFieldCheckbox
+            name="isHeadOffice"
+            label="Head Office"
+            disabled={isSubmitting}
+          />
+          <FormFieldCheckbox
+            name="isActive"
+            label="Active"
+            disabled={isSubmitting}
+          />
         </div>
       </CardSection>
     </div>
@@ -324,7 +322,9 @@ export const BranchProfileForm = ({
     <Form
       id={BRANCH_FORM_ID}
       onSubmit={onSubmit}
-      resolver={yupResolver(branchProfileSchema) as Resolver<ICreateBranchProfile>}
+      resolver={
+        yupResolver(branchProfileSchema) as Resolver<ICreateBranchProfile>
+      }
       defaultValues={defaultValues}
       className={'space-y-6'}
       footer={{
@@ -336,7 +336,10 @@ export const BranchProfileForm = ({
         onCancel,
       }}
     >
-      <BranchProfileFormFields isSubmitting={isSubmitting} currentId={currentId} />
+      <BranchProfileFormFields
+        isSubmitting={isSubmitting}
+        currentId={currentId}
+      />
     </Form>
   );
 };

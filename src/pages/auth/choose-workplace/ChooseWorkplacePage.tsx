@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../../../lib/AuthContext';
-import { branchProfileApi } from '../../../api/branchProfile';
-import { counterProfileApi } from '../../../api/counterProfile';
-import type { IBranchProfile } from '../../../modules/branchProfile/types';
-import type { ICounterProfile } from '../../../modules/counterProfile/types';
 import { Button } from '../../../components/ui/button1/Button';
 import { Loader } from '../../../components/ui/loader';
 import { toast } from 'react-hot-toast';
+import { branchProfileApi } from '../../../api/branchProfile';
+import { counterProfileApi } from '../../../api/counterProfile';
 
 const ChooseWorkplacePage: React.FC = () => {
   const {
@@ -21,53 +20,73 @@ const ChooseWorkplacePage: React.FC = () => {
   } = useAuth();
   const navigate = useNavigate();
 
-  const [branches, setBranches] = useState<IBranchProfile[]>([]);
-  const [counters, setCounters] = useState<ICounterProfile[]>([]);
   const [selectedBranchId, setSelectedBranchId] = useState<string>('');
   const [selectedCounterId, setSelectedCounterId] = useState<string>('');
-  const [isDataLoading, setIsDataLoading] = useState<boolean>(true);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const isAdminUser = user?.isAdmin === true;
-  const userBranchId = user?.branchId || '';
-  const userCounterId = user?.counterId || '';
+  const userAssignments = useMemo(() => user?.assignments ?? [], [user?.assignments]);
+  const initialAssignment = userAssignments[0] ?? null;
+  const effectiveSelectedBranchId =
+    selectedBranchId || initialAssignment?.branchId || '';
+  const effectiveSelectedCounterId =
+    selectedBranchId
+      ? selectedCounterId
+      : selectedCounterId || initialAssignment?.counterId || '';
 
-  useEffect(() => {
-    if (!isAuthenticated || isAdminUser) {
-      return;
-    }
+  const {
+    data: branches = [],
+    isLoading: isBranchesLoading,
+    isFetching: isBranchesFetching,
+  } = useQuery({
+    queryKey: ['choose-workplace-branches'],
+    queryFn: async () => {
+      const branchesList = await branchProfileApi.getBranchProfiles();
+      return branchesList.filter(branch => branch.isActive);
+    },
+    enabled: isAuthenticated && !isAdminUser,
+  });
 
-    const fetchData = async () => {
-      try {
-        const [branchesList, countersList] = await Promise.all([
-          branchProfileApi.getBranchProfiles(),
-          counterProfileApi.getCounterProfiles(),
-        ]);
-        setBranches(branchesList.filter(b => b.isActive));
-        setCounters(countersList.filter(c => c.isActive));
-      } catch (error) {
-        console.error('Failed to load workplace data:', error);
-        toast.error('Failed to load branches or counters. Please try again.');
-      } finally {
-        setIsDataLoading(false);
-      }
-    };
+  const {
+    data: counters = [],
+    isLoading: isCountersLoading,
+    isFetching: isCountersFetching,
+  } = useQuery({
+    queryKey: ['choose-workplace-counters'],
+    queryFn: async () => {
+      const countersList = await counterProfileApi.getCounterProfiles();
+      return countersList.filter(counter => counter.isActive);
+    },
+    enabled: isAuthenticated && !isAdminUser,
+  });
 
-    fetchData();
-  }, [isAuthenticated, isAdminUser]);
+  const assignmentsByBranch = new Map<string, typeof userAssignments>();
 
-  useEffect(() => {
-    if (isAdminUser) {
-      return;
-    }
+  for (const assignment of userAssignments) {
+    const list = assignmentsByBranch.get(assignment.branchId) || [];
+    list.push(assignment);
+    assignmentsByBranch.set(assignment.branchId, list);
+  }
 
-    if (userBranchId) {
-      setSelectedBranchId(userBranchId);
-    }
+  const visibleBranches = isAdminUser
+    ? branches
+    : branches.filter(branch => assignmentsByBranch.has(branch.id));
 
-    if (userCounterId) {
-      setSelectedCounterId(userCounterId);
-    }
-  }, [isAdminUser, userBranchId, userCounterId]);
+  const selectedBranch = branches.find(
+    branch => branch.id === effectiveSelectedBranchId
+  );
+  const allowedAssignmentCounterIds =
+    assignmentsByBranch
+      .get(effectiveSelectedBranchId)
+      ?.map(assignment => assignment.counterId) || [];
+  const allowedCounterIdsFromBranch = selectedBranch?.connectCounterIds || [];
+  const allowedCounterIds =
+    allowedAssignmentCounterIds.length > 0
+      ? allowedAssignmentCounterIds
+      : allowedCounterIdsFromBranch;
+
+  const visibleCounters = counters.filter(c =>
+    allowedCounterIds.includes(c.id)
+  );
 
   if (isAuthLoading) {
     return <Loader />;
@@ -86,32 +105,24 @@ const ChooseWorkplacePage: React.FC = () => {
     return <Navigate to="/" replace />;
   }
 
-  if (isDataLoading) {
+  if (
+    (!isAdminUser && (isBranchesLoading || isCountersLoading)) ||
+    isBranchesFetching ||
+    isCountersFetching
+  ) {
     return <Loader />;
   }
 
-  // Filter counters based on the selected branch's connectCounterIds
-  const selectedBranch = branches.find(b => b.id === selectedBranchId);
-  const allowedCounterIds = selectedBranch?.connectCounterIds || [];
-  const filteredCounters = counters.filter(c => allowedCounterIds.includes(c.id));
-  const visibleBranches = isAdminUser
-    ? branches
-    : branches.filter(branch => branch.id === userBranchId);
-  const visibleCounters = isAdminUser
-    ? filteredCounters
-    : counters.filter(counter => counter.id === userCounterId);
-  const isWorkplaceLocked = !isAdminUser;
-
   const handleConfirm = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedBranchId || !selectedCounterId) {
+    if (!effectiveSelectedBranchId || !effectiveSelectedCounterId) {
       toast.error('Please select both branch and counter');
       return;
     }
 
     setIsSubmitting(true);
     try {
-      setWorkplace(selectedBranchId, selectedCounterId);
+      setWorkplace(effectiveSelectedBranchId, effectiveSelectedCounterId);
       toast.success('Workplace set successfully!');
       navigate('/');
     } catch {
@@ -129,6 +140,7 @@ const ChooseWorkplacePage: React.FC = () => {
       toast.error('Failed to logout');
     }
   };
+
 
   return (
     <div className="relative flex min-h-screen overflow-hidden bg-gradient-to-br from-primary-50 via-surface-primary to-primary-100">
@@ -153,7 +165,8 @@ const ChooseWorkplacePage: React.FC = () => {
             Workplace Selection
           </h1>
           <p className="max-w-md text-center text-lg leading-relaxed text-white/90 xl:text-xl">
-            Please select your active branch and assigned transaction counter to access the currency exchange platform.
+            Please select your active branch and assigned transaction counter to
+            access the currency exchange platform.
           </p>
         </div>
       </div>
@@ -192,17 +205,18 @@ const ChooseWorkplacePage: React.FC = () => {
                   Branch
                 </label>
                 <select
-                  value={selectedBranchId}
-                  onChange={(e) => {
+                  value={effectiveSelectedBranchId}
+                  onChange={e => {
                     setSelectedBranchId(e.target.value);
-                    setSelectedCounterId(''); // Reset counter selection on branch change
+                    setSelectedCounterId('');
                   }}
-                  disabled={isWorkplaceLocked}
                   className="block w-full rounded-sm border border-border-secondary bg-surface-primary px-3 py-2.5 text-text-primary shadow-sm focus:border-primary-500 focus:ring-primary-500 focus-visible:outline-primary-500 focus-visible:ring-1 disabled:cursor-not-allowed disabled:bg-surface-secondary disabled:text-text-tertiary transition"
                   required
                 >
-                  <option value="" disabled>Select Branch</option>
-                  {visibleBranches.map((b) => (
+                  <option value="" disabled>
+                    Select Branch
+                  </option>
+                  {visibleBranches.map(b => (
                     <option key={b.id} value={b.id}>
                       {b.name} - {b.code} - {b.city}
                     </option>
@@ -215,29 +229,26 @@ const ChooseWorkplacePage: React.FC = () => {
                   Counter
                 </label>
                 <select
-                  value={selectedCounterId}
-                  onChange={(e) => setSelectedCounterId(e.target.value)}
-                  disabled={!selectedBranchId || isWorkplaceLocked}
+                  value={effectiveSelectedCounterId}
+                  onChange={e => setSelectedCounterId(e.target.value)}
+                  disabled={!effectiveSelectedBranchId}
                   className="block w-full rounded-sm border border-border-secondary bg-surface-primary px-3 py-2.5 text-text-primary shadow-sm focus:border-primary-500 focus:ring-primary-500 focus-visible:outline-primary-500 focus-visible:ring-1 disabled:bg-surface-secondary disabled:text-text-tertiary disabled:cursor-not-allowed transition"
                   required
                 >
                   <option value="" disabled>
-                    {!selectedBranchId ? 'Select Branch first' : 'Select Counter'}
+                    {!effectiveSelectedBranchId
+                      ? 'Select Branch first'
+                      : 'Select Counter'}
                   </option>
-                  {visibleCounters.map((c) => (
+                  {visibleCounters.map(c => (
                     <option key={c.id} value={c.id}>
                       {c.counterNo} - {c.name}
                     </option>
                   ))}
                 </select>
-                {selectedBranchId && filteredCounters.length === 0 && (
+                {effectiveSelectedBranchId && visibleCounters.length === 0 && (
                   <p className="mt-1 text-xs text-error-600 animate-pulse">
                     No active counters attached to this branch.
-                  </p>
-                )}
-                {isWorkplaceLocked && (
-                  <p className="mt-1 text-xs text-text-tertiary">
-                    Your workplace is assigned by your profile and cannot be changed here.
                   </p>
                 )}
               </div>
@@ -246,7 +257,11 @@ const ChooseWorkplacePage: React.FC = () => {
                 type="submit"
                 className="w-full mt-4"
                 size="lg"
-                disabled={isSubmitting || !selectedBranchId || !selectedCounterId}
+              disabled={
+                  isSubmitting ||
+                  !effectiveSelectedBranchId ||
+                  !effectiveSelectedCounterId
+                }
               >
                 {isSubmitting ? 'Confirming...' : 'Confirm & Continue'}
               </Button>

@@ -1,7 +1,23 @@
 import type {
   ICreateUserProfile,
   IUserProfile,
+  IUserProfileAssignment,
 } from '../types';
+
+const createAssignmentLabel = (
+  assignment: Partial<IUserProfileAssignment> & {
+    roleName?: string;
+    branchName?: string;
+    counterName?: string;
+  }
+): IUserProfileAssignment => ({
+  roleId: assignment.roleId || '',
+  roleLabel: assignment.roleLabel || assignment.roleName || '',
+  branchId: assignment.branchId || '',
+  branchLabel: assignment.branchLabel || assignment.branchName || '',
+  counterId: assignment.counterId || '',
+  counterLabel: assignment.counterLabel || assignment.counterName || '',
+});
 
 export const createEmptyUserProfileFormValues = (): ICreateUserProfile => ({
   code: '',
@@ -15,8 +31,12 @@ export const createEmptyUserProfileFormValues = (): ICreateUserProfile => ({
   isLocked: false,
   isDormant: false,
   roleId: '',
+  roleName: '',
   branchId: '',
+  branchName: '',
   counterId: '',
+  counterName: '',
+  assignments: [],
 });
 
 export const mapRecordToFormValues = (
@@ -32,9 +52,27 @@ export const mapRecordToFormValues = (
   isActive: record.isActive !== false,
   isLocked: !!record.isLocked,
   isDormant: !!record.isDormant,
-  roleId: record.roleId || '',
-  branchId: record.branchId || '',
-  counterId: record.counterId || '',
+  roleId: '',
+  roleName: '',
+  branchId: '',
+  branchName: '',
+  counterId: '',
+  counterName: '',
+  assignments:
+    record.assignments?.length > 0
+      ? record.assignments.map(createAssignmentLabel)
+      : record.roleId && record.branchId && record.counterId
+        ? [
+            createAssignmentLabel({
+              roleId: record.roleId,
+              roleName: record.roleName,
+              branchId: record.branchId,
+              branchName: record.branchName,
+              counterId: record.counterId,
+              counterName: record.counterName,
+            }),
+          ]
+        : [],
 });
 
 export const mapFormValuesToRecord = (
@@ -57,6 +95,10 @@ export const mapFormValuesToRecord = (
   isLocked: values.isLocked,
   isDormant: values.isDormant,
   roleId: values.roleId,
+  roleName: values.roleName,
   branchId: values.branchId,
+  branchName: values.branchName,
   counterId: values.counterId,
+  counterName: values.counterName,
+  assignments: values.assignments,
 });

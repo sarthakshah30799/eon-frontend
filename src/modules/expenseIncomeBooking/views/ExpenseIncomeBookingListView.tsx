@@ -11,7 +11,7 @@ interface ExpenseIncomeBookingListViewProps {
 
 export const ExpenseIncomeBookingListView = ({ type }: ExpenseIncomeBookingListViewProps) => {
   const navigate = useNavigate();
-  const basePath = type === 'EXPENSE' ? '/admin/expense-booking' : '/admin/income-booking';
+  const basePath = type === 'EXPENSE' ? '/expense-booking' : '/income-booking';
   const { canAdd } = usePermission(basePath);
   
   const { data: masters = [], isLoading, error } = useListBookingMasters({ type });

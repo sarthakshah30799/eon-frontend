@@ -29,14 +29,14 @@ export const PartyProfileDocumentsView = () => {
   } = useGetPartyProfileDocuments(id || '', Boolean(id));
   const { uploadPartyProfileDocument, isPending: isUploading } = useUploadPartyProfileDocument();
 
-  const handleUpload = async (ruleId: string, file: File) => {
+  const handleUpload = async (documentProfileId: string, file: File) => {
     if (!id) {
       return;
     }
 
     await uploadPartyProfileDocument({
       partyProfileId: id,
-      documentProfileRuleId: ruleId,
+      documentProfileId,
       file,
     });
   };

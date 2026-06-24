@@ -14,7 +14,7 @@ export const DOCUMENT_PROFILE_TEXTS = {
   UPDATE_ERROR: 'Failed to update document profile',
   DELETE_ERROR: 'Failed to delete document profile',
   FORM_TITLE: 'Document Profile',
-  FORM_SUBTITLE: 'Define profile-, entity-, and field-specific document rules.',
+  FORM_SUBTITLE: 'Define profile-, entity-, and field-specific document requirements.',
   SAVE_CHANGES: 'Save Changes',
 };
 

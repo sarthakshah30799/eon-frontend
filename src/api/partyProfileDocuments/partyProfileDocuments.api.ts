@@ -4,9 +4,9 @@ import type {
   IUploadPartyProfileDocumentPayload,
 } from '@/modules/partyProfileDocuments/types/partyProfileDocumentTypes';
 
-const buildDownloadUrl = (partyProfileId: string, documentProfileRuleId: string) => {
+const buildDownloadUrl = (partyProfileId: string, documentProfileId: string) => {
   const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
-  return `${baseUrl}/party-profiles/${partyProfileId}/documents/${documentProfileRuleId}/download`;
+  return `${baseUrl}/party-profiles/${partyProfileId}/documents/${documentProfileId}/download`;
 };
 
 export const partyProfileDocumentsApi = {
@@ -35,7 +35,7 @@ export const partyProfileDocumentsApi = {
     formData.append('file', payload.file);
 
     const res = await apiClient.postFormData<IPartyProfileDocumentsResponse>(
-      `/party-profiles/${payload.partyProfileId}/documents/${payload.documentProfileRuleId}`,
+      `/party-profiles/${payload.partyProfileId}/documents/${payload.documentProfileId}`,
       formData,
     );
 

@@ -2,56 +2,40 @@ import {
   DOCUMENT_TYPE_ACCEPT_MAP,
   DOCUMENT_TYPE_OPTIONS,
 } from '../constants/documentProfileConstants';
-import type {
-  IDocumentProfileFormValues,
-  IDocumentProfileRule,
-} from '../types';
-
-export const createEmptyDocumentProfileRule = (): IDocumentProfileRule => ({
-  documentCode: '',
-  documentDescription: '',
-  documentType: ['PNG'],
-  isRequired: false,
-  maxSizeMb: 5,
-  active: true,
-  sortOrder: 0,
-});
+import type { IDocumentProfileFormValues } from '../types';
 
 export const createEmptyDocumentProfileFormValues =
   (): IDocumentProfileFormValues => ({
+    documentCode: '',
+    documentDescription: '',
+    documentType: ['PNG'],
+    isRequired: false,
+    maxSizeMb: 5,
     specificationType: '',
     type: '',
     groupSelection: '',
     entitySelection: '',
     active: true,
     sortOrder: 0,
-    rules: [createEmptyDocumentProfileRule()],
   });
-
-export const normalizeDocumentProfileRule = (
-  rule: IDocumentProfileRule
-): IDocumentProfileRule => ({
-  ...rule,
-  documentCode: rule.documentCode.trim().toUpperCase(),
-  documentDescription: rule.documentDescription.trim(),
-  documentType: Array.from(
-    new Set(
-      (Array.isArray(rule.documentType) ? rule.documentType : [rule.documentType])
-        .map(type => type.trim().toUpperCase())
-        .filter(Boolean)
-    )
-  ),
-});
 
 export const normalizeDocumentProfileValues = (
   values: IDocumentProfileFormValues
 ): IDocumentProfileFormValues => ({
   ...values,
-  specificationType: values.specificationType.trim(),
+  documentCode: values.documentCode.trim().toUpperCase(),
+  documentDescription: values.documentDescription.trim(),
+  documentType: Array.from(
+    new Set(
+      (Array.isArray(values.documentType) ? values.documentType : [values.documentType])
+        .map(type => type.trim().toUpperCase())
+        .filter(Boolean)
+    )
+  ),
+  specificationType: values.specificationType.trim().toUpperCase(),
   type: values.type.trim(),
   groupSelection: values.groupSelection.trim(),
   entitySelection: values.entitySelection.trim(),
-  rules: values.rules.map(normalizeDocumentProfileRule),
 });
 
 export const loadDocumentTypeOptions = async () => ({

@@ -65,6 +65,7 @@ export interface IPartyProfile {
   cancelledChequeCopy?: string;
   ffmcRegNo?: string;
   ffmcRegDate?: string;
+  divisionFactor?: number;
   type: string;
   status?: PartyProfileStatus;
   statusUpdatedById?: string | null;

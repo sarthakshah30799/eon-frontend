@@ -17,7 +17,6 @@ import type { ICreatePartyProfile } from '../types';
 
 import { branchProfileApi } from '@/api/branchProfile/branchProfile.api';
 import { partyProfileApi } from '@/api/partyProfile';
-import { stateProfileApi } from '@/api/stateProfile/stateProfile.api';
 import {
   toPartyProfileDisplayLabel,
   toPartyProfileApiType,
@@ -76,6 +75,7 @@ const PartyProfileFormFields = ({
     toPartyProfileApiType(effectiveProfileType) === 'MISC_PROFILE';
   const showCorporateClientTaxFields =
     toPartyProfileApiType(effectiveProfileType) === 'CORPORATE_CLIENT';
+  const showRfFields = toPartyProfileApiType(effectiveProfileType) === 'RF';
   const groupOptions = typeOptions.map(option => ({
     value: option.label,
     label: option.label,
@@ -94,23 +94,6 @@ const PartyProfileFormFields = ({
       .map(branch => ({
         value: branch.id,
         label: `${branch.code} - ${branch.name}`,
-      }));
-    return { options };
-  }, []);
-
-  const stateLoadOptions = useCallback(async (inputValue: string) => {
-    const res = await stateProfileApi.getStateProfiles({ limit: 100 });
-    const options = (res.data ?? [])
-      .filter(
-        state =>
-          !inputValue ||
-          `${state.code} - ${state.name}`
-            .toLowerCase()
-            .includes(inputValue.toLowerCase())
-      )
-      .map(state => ({
-        value: state.id,
-        label: `${state.code} - ${state.name}`,
       }));
     return { options };
   }, []);
@@ -181,6 +164,15 @@ const PartyProfileFormFields = ({
                 disabled={isSubmitting}
               />
             </>
+          )}
+          {showRfFields && (
+            <FormFieldInput
+              name="divisionFactor"
+              label="Division Factor"
+              placeholder="Enter division factor"
+              type="number"
+              disabled={isSubmitting}
+            />
           )}
           <div className="lg:col-span-2">
             <FormFieldInput

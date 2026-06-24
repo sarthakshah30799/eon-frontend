@@ -84,6 +84,7 @@ export const partyProfileSchema = yup.object({
   rejectReason: yup.string().trim().optional().nullable(),
   ffmcRegNo: yup.string().trim().optional().nullable(),
   ffmcRegDate: yup.string().trim().optional().nullable(),
+  divisionFactor: yup.number().typeError('Division Factor must be a number').optional().nullable(),
 });
 
 export default partyProfileSchema;

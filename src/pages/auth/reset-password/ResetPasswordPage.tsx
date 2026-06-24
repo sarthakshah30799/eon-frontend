@@ -19,7 +19,8 @@ const ResetPasswordPage: React.FC = () => {
   const token = searchParams.get('token') || '';
   const email = searchParams.get('email') || '';
   const isSetupMode = searchParams.get('setup') === '1';
-  const { data: passwordPolicy, isLoading: isPolicyLoading } = usePasswordPolicy();
+  const { data: passwordPolicy, isLoading: isPolicyLoading } =
+    usePasswordPolicy();
 
   const [isSuccess, setIsSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -77,7 +78,9 @@ const ResetPasswordPage: React.FC = () => {
         setIsSuccess(true);
         toast.success('Password updated successfully. Please sign in again.');
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Failed to update password');
+        toast.error(
+          error instanceof Error ? error.message : 'Failed to update password'
+        );
       } finally {
         setIsLoading(false);
       }
@@ -97,9 +100,13 @@ const ResetPasswordPage: React.FC = () => {
         password: data.password,
       });
       setIsSuccess(true);
-      toast.success('Password successfully reset! Existing sessions logged out.');
+      toast.success(
+        'Password successfully reset! Existing sessions logged out.'
+      );
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to reset password');
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to reset password'
+      );
     } finally {
       setIsLoading(false);
     }
@@ -121,7 +128,7 @@ const ResetPasswordPage: React.FC = () => {
           />
         </div>
         <div className="relative flex h-full flex-col items-center justify-center px-12 text-text-inverse">
-            <h1 className="mb-6 text-center text-4xl font-bold xl:text-5xl">
+          <h1 className="mb-6 text-center text-4xl font-bold xl:text-5xl">
             {isSetupMode ? 'Set Your Password' : 'Secure Password Reset'}
           </h1>
           <p className="max-w-md text-center text-lg leading-relaxed xl:text-xl">
@@ -172,7 +179,8 @@ const ResetPasswordPage: React.FC = () => {
                 Invalid Reset Link
               </h3>
               <p className="text-sm text-text-secondary">
-                This password reset link is invalid or incomplete. Please request a new link from the forgot password screen.
+                This password reset link is invalid or incomplete. Please
+                request a new link from the forgot password screen.
               </p>
               <div className="pt-2">
                 <Link
@@ -198,13 +206,24 @@ const ResetPasswordPage: React.FC = () => {
                 name="password"
                 label="New Password"
                 placeholder="Enter new password"
+                classes={{
+                  container: '!max-w-none',
+                }}
               />
               <FormFieldPassword
                 name="confirmPassword"
                 label="Confirm New Password"
                 placeholder="Confirm new password"
+                classes={{
+                  container: '!max-w-none',
+                }}
               />
-              <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
+              <Button
+                type="submit"
+                className="w-full"
+                size="lg"
+                disabled={isLoading}
+              >
                 {isLoading ? 'Resetting password...' : 'Update Password'}
               </Button>
             </Form>

@@ -1,7 +1,9 @@
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { menuApi } from '@/api/menu/menu.api';
 import { resolveHeaderMeta } from '@/router/headerMeta';
+import { useAuth } from '@/lib/AuthContext';
+import { Button } from '@/components/ui';
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -10,6 +12,22 @@ interface HeaderProps {
 
 export const Header = ({ onMenuClick, onLogout }: HeaderProps) => {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const { user, activeBranchId, activeCounterId } = useAuth();
+
+  const activeAssignment = user?.assignments?.find(
+    assignment =>
+      assignment.branchId === activeBranchId &&
+      assignment.counterId === activeCounterId
+  );
+
+  const activeBranchLabel =
+    activeAssignment?.branchName || user?.branchName || 'Not selected';
+
+  const activeCounterLabel =
+    activeAssignment?.counterName ||
+    user?.counterName ||
+    (user?.counterNo ? `Counter ${user.counterNo}` : 'Not selected');
   const { data: menuTree = [] } = useQuery({
     queryKey: ['menu-tree'],
     queryFn: async () => {
@@ -18,11 +36,12 @@ export const Header = ({ onMenuClick, onLogout }: HeaderProps) => {
       return response.data || [];
     },
   });
+
   const headerMeta = resolveHeaderMeta(pathname, menuTree);
 
   return (
     <header className="sticky top-0 z-20 border-b border-border-primary/80 bg-surface-primary/90 backdrop-blur-xl">
-      <div className="flex items-center justify-between gap-3 px-4 py-2 sm:px-6 lg:px-8">
+      <div className="flex flex-col gap-3 px-4 py-2 sm:px-6 lg:px-8 xl:flex-row xl:items-center xl:justify-between">
         <div className="flex min-w-0 items-center gap-2.5">
           <button
             type="button"
@@ -50,6 +69,20 @@ export const Header = ({ onMenuClick, onLogout }: HeaderProps) => {
             <h1 className="truncate text-base font-semibold text-text-primary sm:text-lg">
               {headerMeta.title}
             </h1>
+
+            <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-text-secondary">
+              <span>Branch: {activeBranchLabel || 'Not selected'}</span>
+              <span>Counter: {activeCounterLabel || 'Not selected'}</span>
+              <Button
+                type="button"
+                onClick={e => {
+                  navigate('/choose-workplace');
+                }}
+                className="rounded-md border border-border-primary px-2 py-0.5 text-xs font-medium text-text-secondary transition hover:bg-primary-50 hover:text-primary-700"
+              >
+                Change
+              </Button>
+            </div>
           </div>
         </div>
 

@@ -3,11 +3,11 @@ import type {
   IDocumentProfile,
   IDocumentProfileListQuery,
   ICreateDocumentProfile,
-  IResolveDocumentProfileRulesQuery,
+  IResolveDocumentProfileQuery,
 } from '@/modules/documentProfiles/types';
 
 const buildQueryString = (
-  params?: IDocumentProfileListQuery | IResolveDocumentProfileRulesQuery
+  params?: IDocumentProfileListQuery | IResolveDocumentProfileQuery
 ) => {
   if (!params) {
     return '';
@@ -98,8 +98,8 @@ export const documentProfileApi = {
     return res.data;
   },
 
-  resolveDocumentProfileRules: async (
-    params?: IResolveDocumentProfileRulesQuery
+  resolveDocumentProfiles: async (
+    params?: IResolveDocumentProfileQuery
   ): Promise<IDocumentProfile[]> => {
     const res = await apiClient.get<IDocumentProfile[]>(
       `/document-profiles/resolve${buildQueryString(params)}`
@@ -112,4 +112,3 @@ export const documentProfileApi = {
     return res.data || [];
   },
 };
-

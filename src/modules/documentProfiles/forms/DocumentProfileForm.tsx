@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { useFormContext, useWatch } from 'react-hook-form';
 import type { Resolver, SubmitErrorHandler } from 'react-hook-form';
+import { useFormContext, useWatch } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useNavigate } from 'react-router-dom';
 import { CardSection } from '@/components/ui';
@@ -15,9 +15,12 @@ import type { AsyncSelectResponse } from '@/components/ui';
 import { documentProfileSchema } from '../schema';
 import type { IDocumentProfileFormValues } from '../types';
 import { DOCUMENT_PROFILE_TEXTS } from '../constants/documentProfileConstants';
-import { DocumentProfileRuleRows } from '../components/DocumentProfileRuleRows';
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import { useDocumentSpecificationTypeOptions } from '../hooks';
+import {
+  getDocumentTypeOptionItems,
+  loadDocumentTypeOptions,
+} from '../utils';
 
 interface DocumentProfileFormProps {
   defaultValues: IDocumentProfileFormValues;
@@ -26,11 +29,7 @@ interface DocumentProfileFormProps {
   isSubmitting?: boolean;
 }
 
-const DocumentProfileTypeFields = ({
-  isSubmitting,
-}: {
-  isSubmitting: boolean;
-}) => {
+const DocumentProfileFields = ({ isSubmitting }: { isSubmitting: boolean }) => {
   const { control, setValue } = useFormContext<IDocumentProfileFormValues>();
   const specificationType = useWatch({ control, name: 'specificationType' });
   const { data: specificationTypeOptions = [] } = useDocumentSpecificationTypeOptions();
@@ -41,14 +40,12 @@ const DocumentProfileTypeFields = ({
   );
 
   const loadSpecificationTypeOptions = useCallback(
-    async (): Promise<AsyncSelectResponse> => {
-      return {
-        options: specificationTypeOptions.map(option => ({
-          value: option.value,
-          label: option.label,
-        })),
-      };
-    },
+    async (): Promise<AsyncSelectResponse> => ({
+      options: specificationTypeOptions.map(option => ({
+        value: option.value,
+        label: option.label,
+      })),
+    }),
     [specificationTypeOptions]
   );
 
@@ -75,8 +72,31 @@ const DocumentProfileTypeFields = ({
     selectedSpecificationType?.value === 'TRANSACTION'
       ? CategoryOptionCodeEnum.Transaction
       : CategoryOptionCodeEnum.Master;
+
   return (
-    <>
+    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <FormFieldInput
+        name="documentCode"
+        label="Document Code"
+        placeholder="PAN_CARD_FRONT"
+        disabled={isSubmitting}
+      />
+      <FormFieldInput
+        name="documentDescription"
+        label="Document Description"
+        placeholder="PAN card copy front side"
+        disabled={isSubmitting}
+      />
+      <FormFieldSelect
+        name="documentType"
+        label="Document Type"
+        placeholder="Select document type"
+        loadOptions={loadDocumentTypeOptions}
+        defaultOptions={getDocumentTypeOptionItems()}
+        disabled={isSubmitting}
+        isSearchable={false}
+        isMulti
+      />
       <FormFieldSelect
         name="specificationType"
         label="Specification Type"
@@ -109,9 +129,26 @@ const DocumentProfileTypeFields = ({
         code={CategoryOptionCodeEnum.EntityType}
         placeholder="Select entity type"
         disabled={isSubmitting}
-        isCreatable={true}
+        isCreatable={false}
       />
-    </>
+      <FormFieldInput
+        name="maxSizeMb"
+        label="Max Size (MB)"
+        type="number"
+        placeholder="5"
+        disabled={isSubmitting}
+      />
+      <FormFieldInput
+        name="sortOrder"
+        label="Sort Order"
+        type="number"
+        disabled={isSubmitting}
+      />
+      <div className="flex items-end gap-6">
+        <FormFieldCheckbox name="isRequired" label="Required" disabled={isSubmitting} />
+        <FormFieldCheckbox name="active" label="Active" disabled={isSubmitting} />
+      </div>
+    </div>
   );
 };
 
@@ -122,7 +159,6 @@ export const DocumentProfileForm = ({
   isSubmitting = false,
 }: DocumentProfileFormProps) => {
   const navigate = useNavigate();
-
   const handleSubmitErrors: SubmitErrorHandler<IDocumentProfileFormValues> = errors => {
     console.log('DocumentProfileForm submit errors:', errors);
   };
@@ -145,27 +181,10 @@ export const DocumentProfileForm = ({
       }}
     >
       <CardSection heading="Document Details">
-        <div className="grid gap-4 md:grid-cols-2">
-          <DocumentProfileTypeFields isSubmitting={isSubmitting} />
-          <FormFieldInput
-            name="sortOrder"
-            label="Sort Order"
-            type="number"
-            disabled={isSubmitting}
-          />
-          <div className="flex items-end gap-6">
-            <FormFieldCheckbox
-              name="active"
-              label="Active"
-              disabled={isSubmitting}
-            />
-          </div>
-        </div>
-      </CardSection>
-
-      <CardSection heading="Document Rule Setup">
-        <DocumentProfileRuleRows isSubmitting={isSubmitting} />
+        <DocumentProfileFields isSubmitting={isSubmitting} />
       </CardSection>
     </Form>
   );
 };
+
+export default DocumentProfileForm;

@@ -7,29 +7,21 @@ export interface IPartyProfileDocumentFile {
   updatedAt: string;
 }
 
-export interface IPartyProfileDocumentRule {
+export interface IPartyProfileDocumentProfile {
   id: string;
   documentCode: string;
   documentDescription: string;
   documentType: string[];
   isRequired: boolean;
   maxSizeMb: number;
-  active: boolean;
-  sortOrder: number;
-  partyProfileDocumentId?: string | null;
-  documentFile?: IPartyProfileDocumentFile | null;
-}
-
-export interface IPartyProfileDocumentProfile {
-  id: string;
   specificationType: string;
   type: string;
   groupSelection: string | null;
   entitySelection: string | null;
-  profileDescription?: string | null;
   active: boolean;
   sortOrder: number;
-  rules: IPartyProfileDocumentRule[];
+  partyProfileDocumentId?: string | null;
+  documentFile?: IPartyProfileDocumentFile | null;
 }
 
 export interface IPartyProfileDocumentsResponse {
@@ -39,6 +31,6 @@ export interface IPartyProfileDocumentsResponse {
 
 export interface IUploadPartyProfileDocumentPayload {
   partyProfileId: string;
-  documentProfileRuleId: string;
+  documentProfileId: string;
   file: File;
 }

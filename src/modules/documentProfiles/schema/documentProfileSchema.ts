@@ -1,8 +1,11 @@
 import * as yup from 'yup';
 import { DOCUMENT_TYPE_OPTIONS } from '../constants/documentProfileConstants';
 
-const ruleSchema = yup.object({
-  documentCode: yup.string().trim().required('Document code is required'),
+export const documentProfileSchema = yup.object({
+  documentCode: yup
+    .string()
+    .trim()
+    .required('Document code is required'),
   documentDescription: yup
     .string()
     .trim()
@@ -26,20 +29,15 @@ const ruleSchema = yup.object({
     .typeError('Max size must be a number')
     .positive('Max size must be greater than 0')
     .required('Max size is required'),
-  active: yup.boolean().default(true),
-  sortOrder: yup.number().min(0).default(0),
-});
-
-export const documentProfileSchema = yup.object({
-  specificationType: yup.string().oneOf(['MASTER', 'TRANSACTION'], 'Select a valid specification type').required('Specification type is required'),
+  specificationType: yup
+    .string()
+    .oneOf(['MASTER', 'TRANSACTION'], 'Select a valid specification type')
+    .required('Specification type is required'),
   type: yup.string().uuid('Select a valid type').required('Type is required'),
   groupSelection: yup.string().uuid('Select a valid group').required('Group is required'),
   entitySelection: yup.string().uuid('Select a valid entity type').required('Entity Type is required'),
   active: yup.boolean().default(true),
   sortOrder: yup.number().min(0).default(0),
-  rules: yup
-    .array()
-    .of(ruleSchema)
-    .min(1, 'At least one document rule is required')
-    .required('Document rules are required'),
 });
+
+export default documentProfileSchema;

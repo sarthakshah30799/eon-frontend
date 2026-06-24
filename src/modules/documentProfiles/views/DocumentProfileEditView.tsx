@@ -20,26 +20,17 @@ export const DocumentProfileEditView = () => {
     }
 
     return {
+      documentCode: data.documentCode || '',
+      documentDescription: data.documentDescription || '',
+      documentType: Array.isArray(data.documentType) ? data.documentType : [],
+      isRequired: data.isRequired,
+      maxSizeMb: data.maxSizeMb,
       specificationType: data.specificationType || '',
       type: data.type || '',
       groupSelection: data.groupSelection || '',
       entitySelection: data.entitySelection || '',
       active: data.active,
       sortOrder: data.sortOrder,
-      rules:
-        data.rules?.map(rule => ({
-          documentCode: rule.documentCode,
-          documentDescription: rule.documentDescription,
-          documentType: Array.isArray(rule.documentType)
-            ? rule.documentType
-            : rule.documentType
-              ? [rule.documentType]
-              : ['ANY'],
-          isRequired: rule.isRequired,
-          maxSizeMb: rule.maxSizeMb,
-          active: rule.active,
-          sortOrder: rule.sortOrder,
-        })) ?? createEmptyDocumentProfileFormValues().rules,
     };
   }, [data]);
 

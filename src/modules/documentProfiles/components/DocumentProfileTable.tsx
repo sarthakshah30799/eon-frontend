@@ -3,7 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button1';
 import { Table, type TableColumnDef } from '@/components/ui/table';
+import { useCategoryOptions } from '@/hooks';
+import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import type { IDocumentProfile } from '../types';
+import {
+  buildCategoryOptionLabelMap,
+  resolveCategoryOptionLabel,
+} from '../utils/categoryOptionLabelUtils';
+import { getDocumentTypeLabel } from '../utils';
 
 interface DocumentProfileTableProps {
   documentProfiles: IDocumentProfile[];
@@ -13,9 +20,15 @@ interface DocumentProfileTableProps {
 
 interface DocumentProfileTableRow {
   id: string;
+  documentCode: string;
+  documentDescription: string;
   specificationType: string;
   type: string;
-  ruleCount: number;
+  groupSelection: string;
+  entitySelection: string;
+  documentType: string;
+  isRequired: string;
+  maxSizeMb: number;
   active: boolean;
 }
 
@@ -25,23 +38,67 @@ export const DocumentProfileTable = ({
   isDeleting = false,
 }: DocumentProfileTableProps) => {
   const navigate = useNavigate();
+  const { defaultOptions: masterTypeOptions = [] } = useCategoryOptions(
+    CategoryOptionCodeEnum.Master
+  );
+  const { defaultOptions: transactionTypeOptions = [] } = useCategoryOptions(
+    CategoryOptionCodeEnum.Transaction
+  );
+  const { defaultOptions: groupOptions = [] } = useCategoryOptions(
+    CategoryOptionCodeEnum.Group
+  );
+  const { defaultOptions: entityTypeOptions = [] } = useCategoryOptions(
+    CategoryOptionCodeEnum.EntityType
+  );
+
+  const typeLabelMap = useMemo(
+    () =>
+      buildCategoryOptionLabelMap([
+        ...masterTypeOptions,
+        ...transactionTypeOptions,
+      ]),
+    [masterTypeOptions, transactionTypeOptions]
+  );
+  const groupLabelMap = useMemo(
+    () => buildCategoryOptionLabelMap(groupOptions),
+    [groupOptions]
+  );
+  const entityTypeLabelMap = useMemo(
+    () => buildCategoryOptionLabelMap(entityTypeOptions),
+    [entityTypeOptions]
+  );
 
   const rows: DocumentProfileTableRow[] = useMemo(
     () =>
       documentProfiles.map(profile => ({
         id: profile.id,
-        specificationType: profile.specificationType || '',
-        type: profile.type || '',
-        ruleCount: profile.rules?.length ?? 0,
+        documentCode: profile.documentCode,
+        documentDescription: profile.documentDescription,
+        specificationType: profile.specificationType,
+        type: resolveCategoryOptionLabel(typeLabelMap, profile.type),
+        groupSelection: resolveCategoryOptionLabel(groupLabelMap, profile.groupSelection),
+        entitySelection: resolveCategoryOptionLabel(
+          entityTypeLabelMap,
+          profile.entitySelection
+        ),
+        documentType: getDocumentTypeLabel(profile.documentType),
+        isRequired: profile.isRequired ? 'Required' : 'Optional',
+        maxSizeMb: profile.maxSizeMb,
         active: profile.active,
       })),
-    [documentProfiles]
+    [documentProfiles, entityTypeLabelMap, groupLabelMap, typeLabelMap]
   );
 
   const columns: TableColumnDef<DocumentProfileTableRow>[] = [
+    { accessorKey: 'documentCode', header: 'Code' },
+    { accessorKey: 'documentDescription', header: 'Description' },
     { accessorKey: 'specificationType', header: 'Specification Type' },
     { accessorKey: 'type', header: 'Type' },
-    { accessorKey: 'ruleCount', header: 'Rules' },
+    { accessorKey: 'groupSelection', header: 'Group' },
+    { accessorKey: 'entitySelection', header: 'Entity Type' },
+    { accessorKey: 'documentType', header: 'Document Type' },
+    { accessorKey: 'isRequired', header: 'Required' },
+    { accessorKey: 'maxSizeMb', header: 'Max Size (MB)' },
     {
       accessorKey: 'active',
       header: 'Status',

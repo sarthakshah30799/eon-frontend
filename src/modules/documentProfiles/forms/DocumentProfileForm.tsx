@@ -12,7 +12,6 @@ import {
   FormFieldCheckbox,
 } from '@/components/forms';
 import type { AsyncSelectResponse } from '@/components/ui';
-import type { CategoryOptionCode } from '@/types/categoryOptionTypes';
 import { documentProfileSchema } from '../schema';
 import type { IDocumentProfileFormValues } from '../types';
 import { DOCUMENT_PROFILE_TEXTS } from '../constants/documentProfileConstants';
@@ -38,14 +37,14 @@ const DocumentProfileTypeFields = ({
   const previousSpecificationTypeRef = useRef<string | null>(null);
 
   const selectedSpecificationType = specificationTypeOptions.find(
-    option => option.id === specificationType
+    option => option.value === specificationType
   );
 
   const loadSpecificationTypeOptions = useCallback(
     async (): Promise<AsyncSelectResponse> => {
       return {
         options: specificationTypeOptions.map(option => ({
-          value: option.id,
+          value: option.value,
           label: option.label,
         })),
       };
@@ -72,25 +71,27 @@ const DocumentProfileTypeFields = ({
     previousSpecificationTypeRef.current = currentSpecificationType;
   }, [setValue, specificationType]);
 
+  const selectedSpecificationTypeCode =
+    selectedSpecificationType?.value === 'TRANSACTION'
+      ? CategoryOptionCodeEnum.Transaction
+      : CategoryOptionCodeEnum.Master;
   return (
     <>
       <FormFieldSelect
         name="specificationType"
         label="Specification Type"
         placeholder="Select specification type"
-        loadOptions={loadSpecificationTypeOptions}
         disabled={isSubmitting}
         isSearchable={false}
+        defaultOptions={specificationTypeOptions}
+        loadOptions={loadSpecificationTypeOptions}
       />
       <FormFieldCategoryOption
         name="type"
         label="Type"
         placeholder="Select type"
-        code={
-          (selectedSpecificationType?.code as CategoryOptionCode) ||
-          CategoryOptionCodeEnum.MasterDocument
-        }
-        disabled={isSubmitting || !selectedSpecificationType?.code}
+        code={selectedSpecificationTypeCode}
+        disabled={isSubmitting || !selectedSpecificationType}
         isCreatable={false}
         isSearchable={false}
       />

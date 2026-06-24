@@ -31,7 +31,7 @@ const ruleSchema = yup.object({
 });
 
 export const documentProfileSchema = yup.object({
-  specificationType: yup.string().uuid('Select a valid specification type').required('Specification type is required'),
+  specificationType: yup.string().oneOf(['MASTER', 'TRANSACTION'], 'Select a valid specification type').required('Specification type is required'),
   type: yup.string().uuid('Select a valid type').required('Type is required'),
   groupSelection: yup.string().uuid('Select a valid group').required('Group is required'),
   entitySelection: yup.string().uuid('Select a valid entity type').required('Entity Type is required'),

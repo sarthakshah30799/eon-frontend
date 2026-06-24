@@ -33,7 +33,7 @@ const filterOptions = (
   });
 };
 
-const createQueryKey = (code: CategoryOptionCode) => [
+const createQueryKey = (code: string) => [
   'category-options',
   code.trim().toLowerCase(),
 ];
@@ -47,14 +47,14 @@ const sortCategoryOptions = (options: ICategoryOption[]) =>
     return left.label.localeCompare(right.label);
   });
 
-export const useCategoryOptions = (code: CategoryOptionCode, useValueAsId = false) => {
-  const normalizedCode = code.trim() as CategoryOptionCode;
+export const useCategoryOptions = (code?: CategoryOptionCode, useValueAsId = false) => {
+  const normalizedCode = code?.trim() ?? '';
   const queryClient = useQueryClient();
   const queryKey = useMemo(() => createQueryKey(normalizedCode), [normalizedCode]);
 
   const query = useQuery({
     queryKey,
-    queryFn: () => categoryOptionsApi.getCategoryOptionsByCode(normalizedCode),
+    queryFn: () => categoryOptionsApi.getCategoryOptionsByCode(normalizedCode as CategoryOptionCode),
     enabled: Boolean(normalizedCode),
     staleTime: CATEGORY_OPTIONS_STALE_TIME,
   });
@@ -67,7 +67,7 @@ export const useCategoryOptions = (code: CategoryOptionCode, useValueAsId = fals
 
       const options = await queryClient.fetchQuery({
         queryKey,
-        queryFn: () => categoryOptionsApi.getCategoryOptionsByCode(normalizedCode),
+        queryFn: () => categoryOptionsApi.getCategoryOptionsByCode(normalizedCode as CategoryOptionCode),
         staleTime: CATEGORY_OPTIONS_STALE_TIME,
       });
 
@@ -86,7 +86,7 @@ export const useCategoryOptions = (code: CategoryOptionCode, useValueAsId = fals
     ): Promise<AsyncSelectOption[]> => {
       const payload = options
         .map(option => ({
-          code: normalizedCode,
+          code: normalizedCode as CategoryOptionCode,
           value: option.value.trim(),
           label: option.label.trim(),
           sortOrder: option.sortOrder ?? 0,

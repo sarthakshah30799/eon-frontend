@@ -15,8 +15,8 @@ export const CategoryOptionCodeEnum = {
   BusinessNature: 'businessNature',
   TdsGroup: 'tdsGroup',
   FfmcGroup: 'ffmcGroup',
-  MasterDocument: 'masterDocument',
-  TransactionDocument: 'transactionDocument',
+  Master: 'MASTER',
+  Transaction: 'TRANSACTION',
 } as const;
 
 export type CategoryOptionCode =

@@ -21,7 +21,11 @@ interface FormFieldSelectProps extends Omit<
   isMulti?: boolean;
   onCreateOption?: (
     inputValue: string
-  ) => void | Promise<AsyncSelectOption | void | null> | AsyncSelectOption | null;
+  ) =>
+    | void
+    | Promise<AsyncSelectOption | void | null>
+    | AsyncSelectOption
+    | null;
 }
 
 const flattenOptions = (
@@ -35,7 +39,9 @@ const flattenOptions = (
 };
 
 const normalizeComparableValue = (value: unknown) =>
-  String(value ?? '').trim().toLowerCase();
+  String(value ?? '')
+    .trim()
+    .toLowerCase();
 
 export const FormFieldSelect = ({
   name,
@@ -183,9 +189,9 @@ export const FormFieldSelect = ({
       return;
     }
 
-      setSelectedOption(createdOption);
-      field.onChange(createdOption.value);
-    };
+    setSelectedOption(createdOption);
+    field.onChange(createdOption.value);
+  };
 
   return (
     <AsyncSelect
@@ -217,7 +223,9 @@ export const FormFieldSelect = ({
         if (isMulti) {
           const nextOptions = Array.isArray(option) ? option : [];
           setSelectedOption(nextOptions);
-          field.onChange(nextOptions.map(selectedOptionItem => selectedOptionItem.value));
+          field.onChange(
+            nextOptions.map(selectedOptionItem => selectedOptionItem.value)
+          );
           return;
         }
 

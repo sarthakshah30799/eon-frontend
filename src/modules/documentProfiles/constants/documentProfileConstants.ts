@@ -1,4 +1,5 @@
 import type { AsyncSelectResponse } from '@/components/ui';
+import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import { CATEGORY_OPTION_CODE_OPTIONS } from '@/modules/miscellaneousProfile/constants/miscellaneousProfileConstants';
 
 export const DOCUMENT_PROFILE_TEXTS = {
@@ -35,15 +36,24 @@ export const loadDocumentSpecificationTypeOptions =
     options: DOCUMENT_PROFILE_SPECIFICATION_TYPE_OPTIONS,
   });
 
+const SPECIFICATION_TYPE_TO_DOCUMENT_CODE: Record<string, string> = {
+  MASTER: CategoryOptionCodeEnum.Master,
+  TRANSACTION: CategoryOptionCodeEnum.Transaction,
+};
+
 export const loadDocumentProfileTypeOptions = async (
   specificationType: string
-): Promise<AsyncSelectResponse> => ({
-  options: specificationType
-    ? DOCUMENT_PROFILE_SPECIFICATION_TYPE_OPTIONS.filter(
-        option => option.value === specificationType
-      )
-    : [],
-});
+): Promise<AsyncSelectResponse> => {
+  const documentCode = SPECIFICATION_TYPE_TO_DOCUMENT_CODE[specificationType.trim().toUpperCase()];
+
+  return {
+    options: documentCode
+      ? DOCUMENT_PROFILE_SPECIFICATION_TYPE_OPTIONS.filter(
+          option => option.value === documentCode
+        )
+      : [],
+  };
+};
 
 export const DOCUMENT_TYPE_ACCEPT_MAP: Record<string, string> = {
   ANY: '*/*',

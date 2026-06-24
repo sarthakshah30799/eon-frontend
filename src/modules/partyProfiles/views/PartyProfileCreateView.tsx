@@ -71,6 +71,7 @@ const createEmptyPartyProfileValues = (): Omit<ICreatePartyProfile, 'type'> => {
     rejectReason: '',
     ffmcRegNo: '',
     ffmcRegDate: '',
+    divisionFactor: undefined,
   };
 };
 

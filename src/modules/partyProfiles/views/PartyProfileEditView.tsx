@@ -131,6 +131,7 @@ export const PartyProfileEditView = () => {
       rejectReason: '',
       ffmcRegNo: client?.ffmcRegNo || '',
       ffmcRegDate: formatDateForInput(client?.ffmcRegDate),
+      divisionFactor: client?.divisionFactor,
     }),
     [client]
   );

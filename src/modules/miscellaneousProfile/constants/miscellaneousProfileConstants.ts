@@ -91,14 +91,14 @@ export const CATEGORY_OPTION_CODE_OPTIONS: CategoryOptionCodeOption[] = [
     label: 'FFMC Group',
   },
   {
-    value: CategoryOptionCodeEnum.MasterDocument,
-    label: 'Master Document',
-    type: 'DOCUMENT'
+    value: CategoryOptionCodeEnum.Master,
+    label: 'Master',
+    type: 'DOCUMENT',
   },
   {
-    value: CategoryOptionCodeEnum.TransactionDocument,
-    label: 'Transaction Document',
-    type: 'DOCUMENT'
+    value: CategoryOptionCodeEnum.Transaction,
+    label: 'Transaction',
+    type: 'DOCUMENT',
   },
 ];
 
@@ -119,12 +119,13 @@ export const CATEGORY_OPTION_CODE_LABELS = {
   [CategoryOptionCodeEnum.BusinessNature]: 'Business Nature',
   [CategoryOptionCodeEnum.TdsGroup]: 'TDS Group',
   [CategoryOptionCodeEnum.FfmcGroup]: 'FFMC Group',
-  [CategoryOptionCodeEnum.MasterDocument]: 'Master Document',
-  [CategoryOptionCodeEnum.TransactionDocument]: 'Transaction Document',
+  [CategoryOptionCodeEnum.Master]: 'MASTER',
+  [CategoryOptionCodeEnum.Transaction]: 'TRANSACTION',
 } as const;
 
-export const loadCategoryOptionCodeOptions = async (): Promise<AsyncSelectResponse> => {
-  return {
-    options: CATEGORY_OPTION_CODE_OPTIONS,
+export const loadCategoryOptionCodeOptions =
+  async (): Promise<AsyncSelectResponse> => {
+    return {
+      options: CATEGORY_OPTION_CODE_OPTIONS,
+    };
   };
-};

@@ -72,6 +72,8 @@ const PartyProfileFormFields = ({
     toPartyProfileApiType(effectiveProfileType) === 'MISC_PROFILE';
   const showCorporateClientTaxFields =
     toPartyProfileApiType(effectiveProfileType) === 'CORPORATE_CLIENT';
+  const showRfFields = toPartyProfileApiType(effectiveProfileType) === 'RF';
+
   const branchLoadOptions = useCallback(async (inputValue: string) => {
     const branches = await branchProfileApi.getBranchProfiles();
     const options = branches
@@ -151,6 +153,15 @@ const PartyProfileFormFields = ({
                 disabled={isSubmitting}
               />
             </>
+          )}
+          {showRfFields && (
+            <FormFieldInput
+              name="divisionFactor"
+              label="Division Factor"
+              placeholder="Enter division factor"
+              type="number"
+              disabled={isSubmitting}
+            />
           )}
           <div className="lg:col-span-2">
             <FormFieldInput

@@ -263,7 +263,6 @@ export const AccountProfileForm = ({
             code={CategoryOptionCodeEnum.DivisionDept}
             placeholder="Select Division/Dept"
             disabled={isDisabled}
-            useValueAsId={true}
           />
           <div className="grid gap-4 grid-cols-2">
             <FormFieldInput
@@ -294,7 +293,6 @@ export const AccountProfileForm = ({
             code={CategoryOptionCodeEnum.AccountType}
             placeholder="Select Account Type"
             disabled={isDisabled}
-            useValueAsId={true}
           />
           <FormFieldCategoryOption
             name="subLedger"
@@ -302,7 +300,6 @@ export const AccountProfileForm = ({
             code={CategoryOptionCodeEnum.SubLedger}
             placeholder="Select Sub Ledger"
             disabled={isDisabled}
-            useValueAsId={true}
           />
         </div>
 
@@ -313,7 +310,6 @@ export const AccountProfileForm = ({
             code={CategoryOptionCodeEnum.BankNature}
             placeholder="Select Bank Nature"
             disabled={isDisabled}
-            useValueAsId={true}
           />
           <FormFieldSelect
             name="currencyId"

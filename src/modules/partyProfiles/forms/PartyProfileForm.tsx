@@ -17,15 +17,12 @@ import type { ICreatePartyProfile } from '../types';
 
 import { branchProfileApi } from '@/api/branchProfile/branchProfile.api';
 import { partyProfileApi } from '@/api/partyProfile';
-import { stateProfileApi } from '@/api/stateProfile/stateProfile.api';
 import {
   toPartyProfileDisplayLabel,
   toPartyProfileApiType,
   type PartyProfileType,
 } from '../constants';
-import type { AsyncSelectResponse } from '@/components/ui';
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
-import { usePartyProfileTypes } from '../hooks';
 import type { IReviewPartyProfilePayload } from '../types';
 import { PartyProfileReviewActionPanel } from '../components';
 import { normalizeCodeValue } from '@/utils';
@@ -69,18 +66,12 @@ const PartyProfileFormFields = ({
   const reviewActionsDisabled = isSubmittingProp;
   const effectiveProfileType = profileType;
 
-  const { data: typeOptions = [] } = usePartyProfileTypes();
   const profileTypeLabel = toPartyProfileDisplayLabel(effectiveProfileType);
   const showTdsFields =
     toPartyProfileApiType(effectiveProfileType) === 'AGENT' ||
     toPartyProfileApiType(effectiveProfileType) === 'MISC_PROFILE';
   const showCorporateClientTaxFields =
     toPartyProfileApiType(effectiveProfileType) === 'CORPORATE_CLIENT';
-  const groupOptions = typeOptions.map(option => ({
-    value: option.label,
-    label: option.label,
-  }));
-
   const branchLoadOptions = useCallback(async (inputValue: string) => {
     const branches = await branchProfileApi.getBranchProfiles();
     const options = branches
@@ -98,27 +89,6 @@ const PartyProfileFormFields = ({
     return { options };
   }, []);
 
-  const stateLoadOptions = useCallback(async (inputValue: string) => {
-    const res = await stateProfileApi.getStateProfiles({ limit: 100 });
-    const options = (res.data ?? [])
-      .filter(
-        state =>
-          !inputValue ||
-          `${state.code} - ${state.name}`
-            .toLowerCase()
-            .includes(inputValue.toLowerCase())
-      )
-      .map(state => ({
-        value: state.id,
-        label: `${state.code} - ${state.name}`,
-      }));
-    return { options };
-  }, []);
-
-  const loadGroupOptions =
-    useCallback(async (): Promise<AsyncSelectResponse> => {
-      return { options: groupOptions };
-    }, [groupOptions]);
   const validatePartyCode = useCallback(
     async (value: string) => {
       const normalizedCode = normalizeCodeValue(value);
@@ -384,14 +354,13 @@ const PartyProfileFormFields = ({
             placeholder="Enter designation"
             disabled={isSubmitting}
           />
-          <FormFieldSelect
+          <FormFieldCategoryOption
             name="group"
             label="Group"
             placeholder="Select group"
-            loadOptions={loadGroupOptions}
-            defaultOptions={groupOptions}
+            code={CategoryOptionCodeEnum.Group}
             disabled={isSubmitting}
-            isSearchable={false}
+            isCreatable={false}
           />
           <FormFieldCategoryOption
             name="entityType"

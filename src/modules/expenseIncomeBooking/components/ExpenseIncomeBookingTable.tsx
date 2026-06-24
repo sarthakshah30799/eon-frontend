@@ -23,7 +23,7 @@ interface ExpenseIncomeBookingTableRow {
 
 export const ExpenseIncomeBookingTable = ({ masters, type }: ExpenseIncomeBookingTableProps) => {
   const navigate = useNavigate();
-  const basePath = type === 'EXPENSE' ? '/admin/expense-booking' : '/admin/income-booking';
+  const basePath = type === 'EXPENSE' ? '/expense-booking' : '/income-booking';
   const { canModify, canView } = usePermission(basePath);
 
   const rows: ExpenseIncomeBookingTableRow[] = masters.map(m => {

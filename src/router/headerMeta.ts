@@ -133,35 +133,55 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
     meta: { title: 'Branch Profile' },
   },
   {
-    path: '/admin/expense-booking',
+    path: '/expense-booking',
     meta: { title: 'Expense Booking Master' },
   },
   {
-    path: '/admin/expense-booking/create',
+    path: '/expense-booking/create',
     meta: { title: 'Create Expense Booking Master' },
   },
   {
-    path: '/admin/expense-booking/edit/:id',
+    path: '/expense-booking/edit/:id',
     meta: { title: 'Edit Expense Booking Master' },
   },
   {
-    path: '/admin/income-booking',
+    path: '/income-booking',
     meta: { title: 'Income Booking Master' },
   },
   {
-    path: '/admin/income-booking/create',
+    path: '/income-booking/create',
     meta: { title: 'Create Income Booking Master' },
   },
   {
-    path: '/admin/income-booking/edit/:id',
+    path: '/income-booking/edit/:id',
     meta: { title: 'Edit Income Booking Master' },
   },
 ];
 
-export const resolveHeaderMeta = (pathname: string): HeaderMeta => {
+const findMenuName = (nodes: any[], pathname: string): string | null => {
+  for (const node of nodes) {
+    if (node.path && matchPath({ path: node.path, end: true }, pathname)) {
+      return node.name;
+    }
+    if (node.children && node.children.length > 0) {
+      const found = findMenuName(node.children, pathname);
+      if (found) return found;
+    }
+  }
+  return null;
+};
+
+export const resolveHeaderMeta = (pathname: string, menuTree?: any[]): HeaderMeta => {
   for (const route of HEADER_ROUTES) {
     if (matchPath({ path: route.path, end: true }, pathname)) {
       return route.meta;
+    }
+  }
+
+  if (menuTree && menuTree.length > 0) {
+    const name = findMenuName(menuTree, pathname);
+    if (name) {
+      return { title: name };
     }
   }
 

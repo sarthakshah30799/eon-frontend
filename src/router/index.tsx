@@ -589,7 +589,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/admin/expense-booking',
+    path: '/expense-booking',
     element: (
       <ProtectedLayout>
         <ExpenseBookingListPage />
@@ -597,7 +597,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/admin/expense-booking/create',
+    path: '/expense-booking/create',
     element: (
       <ProtectedLayout>
         <ExpenseBookingCreatePage />
@@ -605,7 +605,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/admin/expense-booking/edit/:id',
+    path: '/expense-booking/edit/:id',
     element: (
       <ProtectedLayout>
         <ExpenseBookingEditPage />
@@ -613,7 +613,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/admin/income-booking',
+    path: '/income-booking',
     element: (
       <ProtectedLayout>
         <IncomeBookingListPage />
@@ -621,7 +621,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/admin/income-booking/create',
+    path: '/income-booking/create',
     element: (
       <ProtectedLayout>
         <IncomeBookingCreatePage />
@@ -629,7 +629,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/admin/income-booking/edit/:id',
+    path: '/income-booking/edit/:id',
     element: (
       <ProtectedLayout>
         <IncomeBookingEditPage />

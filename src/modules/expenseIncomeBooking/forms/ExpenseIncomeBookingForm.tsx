@@ -247,7 +247,7 @@ export const ExpenseIncomeBookingForm = ({
   };
 
   const onCancel = () => {
-    navigate(type === 'EXPENSE' ? '/admin/expense-booking' : '/admin/income-booking');
+    navigate(type === 'EXPENSE' ? '/expense-booking' : '/income-booking');
   };
 
   return (

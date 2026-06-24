@@ -71,6 +71,7 @@ export const partyProfileSchema = yup.object({
   sgstNo: yup.string().trim().optional().nullable(),
   igstNo: yup.string().trim().optional().nullable(),
   gstStateId: yup.string().trim().optional().nullable(),
+  stateId: yup.string().trim().optional().nullable(),
 
   originBranchId: yup.string().trim().optional().nullable(),
   location: yup.string().trim().optional().nullable(),

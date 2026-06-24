@@ -245,6 +245,12 @@ const PartyProfileFormFields = ({
             placeholder="Enter city"
             disabled={isSubmitting}
           />
+          <FormFieldStateDropdown
+            name="stateId"
+            label="State"
+            placeholder="Select state"
+            disabled={isSubmitting}
+          />
           <FormFieldInput
             name="pinCode"
             label="Pin Code"

@@ -52,6 +52,8 @@ export interface IPartyProfile {
   igstNo?: string;
   gstStateId?: string;
   gstStateName?: string;
+  stateId?: string;
+  stateName?: string;
 
   originBranchId?: string;
   originBranchName?: string;
@@ -78,6 +80,7 @@ export type ICreatePartyProfile = Omit<
   IPartyProfile,
   | 'id'
   | 'gstStateName'
+  | 'stateName'
   | 'originBranchName'
   | 'status'
   | 'statusUpdatedById'

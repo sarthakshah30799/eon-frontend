@@ -97,6 +97,8 @@ export type ICreatePartyProfile = Omit<
   | 'statusUpdatedById'
   | 'statusUpdatedByName'
   | 'statusUpdatedAt'
+  | 'active'
+  | 'isActive'
   | 'createdAt'
   | 'updatedAt'
 > & {

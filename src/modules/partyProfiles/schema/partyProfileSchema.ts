@@ -59,8 +59,6 @@ export const partyProfileSchema = yup.object({
   isTdsDeducted: yup.boolean().default(false),
   tds: yup.string().trim().optional().nullable(),
   tdsGroup: yup.string().trim().optional().nullable(),
-  active: yup.boolean().default(false),
-  isActive: yup.boolean().default(false),
   printAddress: yup.boolean().default(false),
   eefcClient: yup.boolean().default(false),
   sale: yup.boolean().default(false),

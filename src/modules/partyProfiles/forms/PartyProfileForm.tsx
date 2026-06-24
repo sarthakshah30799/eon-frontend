@@ -448,13 +448,6 @@ const PartyProfileFormFields = ({
 
       <CardSection heading="Tax Settings & Status">
         <div className="grid gap-2 grid-cols-2 md:grid-cols-4 lg:grid-cols-7">
-          {!reviewMode ? (
-            <FormFieldCheckbox
-              name="active"
-              label="Active"
-              disabled={isSubmitting}
-            />
-          ) : null}
           <FormFieldCheckbox
             name="printAddress"
             label="Print Address"

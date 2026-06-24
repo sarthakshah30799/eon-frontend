@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { Button, Modal } from '@/components/ui';
-import { FormFieldCheckbox, FormFieldTextarea } from '@/components/forms';
+import { FormFieldTextarea } from '@/components/forms';
 import type {
   ICreatePartyProfile,
   IReviewPartyProfilePayload,
@@ -23,13 +23,7 @@ export const PartyProfileReviewActionPanel = ({
   const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
   const [isRejectExpanded, setIsRejectExpanded] = useState(false);
   const [isReviewing, setIsReviewing] = useState(false);
-
-  useEffect(() => {
-    if (!reviewMode) {
-      setIsApproveModalOpen(false);
-      setIsRejectExpanded(false);
-    }
-  }, [reviewMode]);
+  const [isActive, setIsActive] = useState(true);
 
   const submitReview = useCallback(
     async (status: IReviewPartyProfilePayload['status']) => {
@@ -37,7 +31,6 @@ export const PartyProfileReviewActionPanel = ({
         return;
       }
 
-      const active = Boolean(getValues('active'));
       const rejectReason = String(getValues('rejectReason') || '').trim();
 
       if (status === 'reject' && !rejectReason) {
@@ -54,7 +47,7 @@ export const PartyProfileReviewActionPanel = ({
       try {
         await onReviewSubmit({
           status,
-          active,
+          active: isActive,
           rejectReason: status === 'reject' ? rejectReason : undefined,
         });
 
@@ -68,7 +61,7 @@ export const PartyProfileReviewActionPanel = ({
         setIsReviewing(false);
       }
     },
-    [clearErrors, getValues, onReviewSubmit, resetField, setError]
+    [clearErrors, getValues, isActive, onReviewSubmit, resetField, setError]
   );
 
   const isDisabled = !reviewMode || isSubmitting || isReviewing;
@@ -82,15 +75,20 @@ export const PartyProfileReviewActionPanel = ({
       <div className="rounded-xl border border-border-primary bg-surface-primary p-4 shadow-sm">
         <div className="space-y-4">
           <p className="text-sm text-text-secondary">
-            Choose the active state and then approve or reject this profile.
+            Review the profile, choose whether it should be active, then approve or reject it.
           </p>
 
           <div className="flex flex-wrap items-center gap-4">
-            <FormFieldCheckbox
-              name="active"
-              label="Active"
-              disabled={isDisabled}
-            />
+            <label className="flex items-center gap-2 text-sm font-medium text-text-primary">
+              <input
+                type="checkbox"
+                checked={isActive}
+                onChange={event => setIsActive(event.target.checked)}
+                disabled={isDisabled}
+                className="h-4 w-4 rounded border-border-secondary text-primary-600 focus:ring-primary-500"
+              />
+              Active on approval
+            </label>
             <p className="text-xs text-text-tertiary">
               Approving or rejecting will also record who updated the status and when.
             </p>

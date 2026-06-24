@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Loader } from '@/components/ui/loader';
 import { Button } from '@/components/ui/button1';
 import { CardSection } from '@/components/ui';
+import { Accordion } from '@/components/ui/accordion';
 import { useGetPartyProfile } from '@/modules/partyProfiles/hooks';
 import { toPartyProfileApiType, toPartyProfileRouteType } from '@/modules/partyProfiles/constants';
 import { useGetPartyProfileDocuments, useUploadPartyProfileDocument } from '../hooks';
@@ -84,17 +85,31 @@ export const PartyProfileDocumentsView = () => {
       </CardSection>
 
       {documentProfiles.length > 0 ? (
-        <div className="space-y-4">
+        <Accordion type="single" collapsible defaultValue="">
           {documentProfiles.map(profile => (
-            <PartyProfileDocumentProfileSection
-              key={profile.id}
-              partyProfileId={id || ''}
-              profile={profile}
-              disabled={isUploading}
-              onUpload={handleUpload}
-            />
+            <Accordion.Item key={profile.id} value={profile.id}>
+              <Accordion.Trigger>
+                <div className="flex min-w-0 flex-col gap-1 text-left">
+                  <span className="text-sm font-semibold text-text-primary">
+                    {profile.documentCode} · {profile.documentDescription}
+                  </span>
+                  <span className="text-xs font-normal text-text-tertiary">
+                    {profile.specificationType} · {profile.isRequired ? 'Required' : 'Optional'} ·
+                    {profile.documentFile ? ` Uploaded: ${profile.documentFile.fileName}` : ' Not uploaded'}
+                  </span>
+                </div>
+              </Accordion.Trigger>
+              <Accordion.Content>
+                <PartyProfileDocumentProfileSection
+                  partyProfileId={id || ''}
+                  profile={profile}
+                  disabled={isUploading}
+                  onUpload={handleUpload}
+                />
+              </Accordion.Content>
+            </Accordion.Item>
           ))}
-        </div>
+        </Accordion>
       ) : (
         <CardSection heading="No Document Requirements">
           <p className="text-sm text-text-secondary">

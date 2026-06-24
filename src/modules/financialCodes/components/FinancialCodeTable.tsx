@@ -28,10 +28,10 @@ export const FinancialCodeTable = ({
 
   const rows: FinancialCodeTableRow[] = financialCodes.map(code => ({
     id: code.id,
-    financialType: code.financialType,
+    financialType: code.financialType?.label ?? '',
     financialCode: code.financialCode,
     financialName: code.financialName,
-    defaultSign: code.defaultSign,
+    defaultSign: code.defaultSign?.label ?? '',
     priority: code.priority,
   }));
 

@@ -5,11 +5,18 @@ export const DocumentSpecificationTypeEnum = {
   Transaction: 'TRANSACTION',
 } as const;
 
-export type DocumentSpecificationTypeEnum = typeof DocumentSpecificationTypeEnum[keyof typeof DocumentSpecificationTypeEnum];
+export type DocumentSpecificationTypeEnum =
+  (typeof DocumentSpecificationTypeEnum)[keyof typeof DocumentSpecificationTypeEnum];
 
 const SPECIFICATION_TYPE_OPTIONS = [
-  { value: DocumentSpecificationTypeEnum.Master, label: 'Master' },
-  { value: DocumentSpecificationTypeEnum.Transaction, label: 'Transaction' },
+  {
+    value: DocumentSpecificationTypeEnum.Master,
+    label: DocumentSpecificationTypeEnum.Master,
+  },
+  {
+    value: DocumentSpecificationTypeEnum.Transaction,
+    label: DocumentSpecificationTypeEnum.Transaction,
+  },
 ] as const;
 
 export const useDocumentSpecificationTypeOptions = () => {

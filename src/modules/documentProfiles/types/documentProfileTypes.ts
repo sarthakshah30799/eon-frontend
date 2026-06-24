@@ -1,3 +1,5 @@
+import type { ICategoryOption } from '@/types/categoryOptionTypes';
+
 export interface IDocumentProfile {
   id: string;
   documentCode: string;
@@ -6,9 +8,9 @@ export interface IDocumentProfile {
   isRequired: boolean;
   maxSizeMb: number;
   specificationType: string;
-  type: string;
-  groupSelection?: string | null;
-  entitySelection?: string | null;
+  type: ICategoryOption | null;
+  groupSelection?: ICategoryOption | null;
+  entitySelection?: ICategoryOption | null;
   active: boolean;
   sortOrder: number;
   createdAt?: string;

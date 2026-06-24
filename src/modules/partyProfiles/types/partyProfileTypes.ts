@@ -1,3 +1,5 @@
+import type { ICategoryOption } from '@/types/categoryOptionTypes';
+
 export type PartyProfileStatus = 'pending' | 'approve' | 'reject';
 
 export interface IPartyProfile {
@@ -18,10 +20,10 @@ export interface IPartyProfile {
   city: string;
   pinCode: string;
   kycApprovalNumber?: string;
-  kycRiskCategory?: string;
+  kycRiskCategory?: ICategoryOption | null;
   chqTrxnLimit?: number;
   defaultHandlingCharges?: number;
-  defaultAgent?: string;
+  defaultAgent?: ICategoryOption | null;
   phoneNo?: string;
   blockDateFrom?: string;
   establishmentDate?: string;
@@ -29,16 +31,16 @@ export interface IPartyProfile {
   email?: string;
   contactName?: string;
   designation?: string;
-  group?: string;
-  entityType?: string;
+  group?: ICategoryOption | null;
+  entityType?: ICategoryOption | null;
   panName?: string;
   panDob?: string;
   panNo?: string;
-  marketingExecutive?: string;
-  businessNature?: string;
+  marketingExecutive?: ICategoryOption | null;
+  businessNature?: ICategoryOption | null;
   isTdsDeducted: boolean;
   tds?: string;
-  tdsGroup?: string;
+  tdsGroup?: ICategoryOption | null;
   active: boolean;
   isActive: boolean;
   printAddress: boolean;
@@ -57,7 +59,7 @@ export interface IPartyProfile {
 
   originBranchId?: string;
   originBranchName?: string;
-  location?: string;
+  location?: ICategoryOption | null;
   webSite?: string;
   accountHolderName?: string;
   bankName?: string;
@@ -80,9 +82,17 @@ export interface IPartyProfile {
 export type ICreatePartyProfile = Omit<
   IPartyProfile,
   | 'id'
+  | 'kycRiskCategory'
+  | 'defaultAgent'
   | 'gstStateName'
   | 'stateName'
   | 'originBranchName'
+  | 'group'
+  | 'entityType'
+  | 'marketingExecutive'
+  | 'businessNature'
+  | 'tdsGroup'
+  | 'location'
   | 'status'
   | 'statusUpdatedById'
   | 'statusUpdatedByName'
@@ -90,6 +100,14 @@ export type ICreatePartyProfile = Omit<
   | 'createdAt'
   | 'updatedAt'
 > & {
+  kycRiskCategory?: string;
+  defaultAgent?: string;
+  group?: string;
+  entityType?: string;
+  marketingExecutive?: string;
+  businessNature?: string;
+  tdsGroup?: string;
+  location?: string;
   rejectReason?: string;
 };
 

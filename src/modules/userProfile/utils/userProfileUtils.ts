@@ -1,15 +1,7 @@
 import type {
   ICreateUserProfile,
-  IUserProfileOption,
   IUserProfile,
 } from '../types';
-
-export const getOptionLabel = (
-  options: IUserProfileOption[],
-  value: string
-): string => {
-  return options.find(option => option.value === value)?.label ?? value;
-};
 
 export const createEmptyUserProfileFormValues = (): ICreateUserProfile => ({
   code: '',

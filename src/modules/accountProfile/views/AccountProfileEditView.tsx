@@ -15,19 +15,23 @@ export const AccountProfileEditView = () => {
   const handleSubmit = async (values: ICreateAccountProfile) => {
     if (!id) return;
     // Sanitize optional fields to avoid empty string database reference errors
-    const { financialType, ...rest } = values;
     const sanitized = {
-      ...rest,
+      ...values,
       financialSubProfileId: values.financialSubProfileId || undefined,
       branchIdToTransfer: values.branchIdToTransfer || undefined,
       mapToAccountId: values.mapToAccountId || undefined,
-    };
+    } as ICreateAccountProfile;
+    delete sanitized.financialType;
     await updateAccountProfile({ id, data: sanitized });
     navigate('/admin/accounts-profile');
   };
 
   if (isLoading) {
-    return <div className="py-6 text-center text-text-secondary">Loading account details...</div>;
+    return (
+      <div className="py-6 text-center text-text-secondary">
+        Loading account details...
+      </div>
+    );
   }
 
   if (error || !account) {
@@ -39,12 +43,12 @@ export const AccountProfileEditView = () => {
   }
 
   const defaultValues: ICreateAccountProfile = {
-    divisionDept: account.divisionDept || '',
+    divisionDept: account.divisionDept?.id || '',
     accountCode: account.accountCode,
     accountName: account.accountName,
-    accountType: account.accountType || '',
-    subLedger: account.subLedger || '',
-    bankNature: account.bankNature || '',
+    accountType: account.accountType?.id || '',
+    subLedger: account.subLedger?.id || '',
+    bankNature: account.bankNature?.id || '',
     currencyId: account.currencyId,
     financialCodeId: account.financialCodeId,
     financialSubProfileId: account.financialSubProfileId || '',

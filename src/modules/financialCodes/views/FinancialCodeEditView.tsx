@@ -41,6 +41,8 @@ export const FinancialCodeEditView = () => {
           ? {
               ...createEmptyFinancialCodeValues(),
               ...code,
+              financialType: code.financialType?.id ?? '',
+              defaultSign: code.defaultSign?.id ?? '',
             }
           : createEmptyFinancialCodeValues()
       }

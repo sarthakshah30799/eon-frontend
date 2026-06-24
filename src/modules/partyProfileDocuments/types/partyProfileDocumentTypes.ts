@@ -1,3 +1,5 @@
+import type { ICategoryOption } from '@/types/categoryOptionTypes';
+
 export interface IPartyProfileDocumentFile {
   id: string;
   fileName: string;
@@ -15,9 +17,9 @@ export interface IPartyProfileDocumentProfile {
   isRequired: boolean;
   maxSizeMb: number;
   specificationType: string;
-  type: string;
-  groupSelection: string | null;
-  entitySelection: string | null;
+  type: ICategoryOption | null;
+  groupSelection: ICategoryOption | null;
+  entitySelection: ICategoryOption | null;
   active: boolean;
   sortOrder: number;
   partyProfileDocumentId?: string | null;

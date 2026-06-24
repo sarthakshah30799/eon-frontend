@@ -101,8 +101,8 @@ export const MiscellaneousProfileTable = ({
   }
 
   return (
-    <div className="overflow-hidden rounded-sm border border-border-primary bg-surface-primary shadow-sm">
-      <div className="hidden border-b border-border-primary bg-surface-secondary/60 px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-text-tertiary lg:grid lg:grid-cols-[minmax(220px,1.2fr)_minmax(0,1.8fr)_120px_140px] lg:gap-4">
+    <div className="overflow-hidden">
+      <div className="hidden border-b border-border-primary bg-surface-secondary/60 px-2 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-text-tertiary lg:grid lg:grid-cols-[minmax(100px,1.2fr)_minmax(0,1.8fr)_120px_140px] lg:gap-4">
         <div>Category</div>
         <div>Options</div>
         <div>Count</div>
@@ -124,14 +124,14 @@ export const MiscellaneousProfileTable = ({
 
           return (
             <Accordion.Item key={group.code} value={group.code}>
-              <div className="grid gap-4 px-4 py-4 lg:grid-cols-[minmax(220px,1.2fr)_minmax(0,1.8fr)_120px_140px] lg:items-center lg:gap-4 lg:px-5">
+              <div className="grid gap-4 lg:grid-cols-[minmax(100px,1.2fr)_minmax(0,1.8fr)_120px_140px] lg:items-center lg:gap-4 lg:px-5">
                 <Accordion.Trigger className="w-full lg:col-span-3 lg:px-0">
-                  <span className="grid w-full gap-4 text-left lg:grid-cols-[minmax(220px,1.2fr)_minmax(0,1.8fr)_120px] lg:items-center">
+                  <span className="grid w-full gap-4 text-left lg:grid-cols-[minmax(100px,1.2fr)_minmax(0,1.8fr)_120px] lg:items-center">
                     <span className="flex min-w-0 flex-col gap-1">
                       <span className="text-sm font-semibold text-text-primary">
                         {group.label}
                       </span>
-                      <span className="text-xs text-text-tertiary">{group.code}</span>
+                      {/* <span className="text-xs text-text-tertiary">{group.code}</span> */}
                     </span>
 
                     <span className="flex min-w-0 flex-wrap gap-2">

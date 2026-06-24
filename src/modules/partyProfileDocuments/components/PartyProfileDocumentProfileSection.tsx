@@ -1,14 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { Button } from '@/components/ui/button1';
-import { CardSection } from '@/components/ui';
-import { useCategoryOptions } from '@/hooks';
-import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import { partyProfileDocumentsApi } from '@/api/partyProfileDocuments';
 import type { IPartyProfileDocumentProfile } from '../types/partyProfileDocumentTypes';
-import {
-  buildCategoryOptionLabelMap,
-  resolveCategoryOptionLabel,
-} from '@/modules/documentProfiles/utils/categoryOptionLabelUtils';
 import {
   documentTypeToAccept,
   getDocumentTypeLabel,
@@ -44,45 +37,15 @@ export const PartyProfileDocumentProfileSection = ({
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [localError, setLocalError] = useState('');
-
-  const { defaultOptions: masterTypeOptions = [] } = useCategoryOptions(
-    CategoryOptionCodeEnum.Master
-  );
-  const { defaultOptions: transactionTypeOptions = [] } = useCategoryOptions(
-    CategoryOptionCodeEnum.Transaction
-  );
-  const { defaultOptions: groupOptions = [] } = useCategoryOptions(
-    CategoryOptionCodeEnum.DocumentGroup
-  );
-  const { defaultOptions: entityTypeOptions = [] } = useCategoryOptions(
-    CategoryOptionCodeEnum.EntityType
-  );
-
-  const typeLabelMap = useMemo(
-    () =>
-      buildCategoryOptionLabelMap([
-        ...masterTypeOptions,
-        ...transactionTypeOptions,
-      ]),
-    [masterTypeOptions, transactionTypeOptions]
-  );
-  const groupLabelMap = useMemo(
-    () => buildCategoryOptionLabelMap(groupOptions),
-    [groupOptions]
-  );
-  const entityTypeLabelMap = useMemo(
-    () => buildCategoryOptionLabelMap(entityTypeOptions),
-    [entityTypeOptions]
-  );
+  const [uploadedPreviewUrl, setUploadedPreviewUrl] = useState('');
 
   const accept = useMemo(() => documentTypeToAccept(profile.documentType), [profile.documentType]);
   const hasExistingFile = Boolean(profile.documentFile);
-  const typeLabel = resolveCategoryOptionLabel(typeLabelMap, profile.type);
-  const groupLabel = resolveCategoryOptionLabel(groupLabelMap, profile.groupSelection);
-  const entityTypeLabel = resolveCategoryOptionLabel(
-    entityTypeLabelMap,
-    profile.entitySelection
-  );
+  const uploadedMimeType = profile.documentFile?.mimeType ?? '';
+  const canPreviewUploadedFile =
+    uploadedMimeType.startsWith('image/') || uploadedMimeType === 'application/pdf';
+  const groupLabel = profile.groupSelection?.label ?? '-';
+  const entityTypeLabel = profile.entitySelection?.label ?? '-';
 
   const previewUrl = useMemo(
     () => (selectedFile ? URL.createObjectURL(selectedFile) : ''),
@@ -96,6 +59,52 @@ export const PartyProfileDocumentProfileSection = ({
       }
     };
   }, [previewUrl]);
+
+  useEffect(() => {
+    let isMounted = true;
+    let currentObjectUrl = '';
+
+    const loadUploadedPreview = async () => {
+      if (!profile.documentFile || !canPreviewUploadedFile) {
+        setUploadedPreviewUrl('');
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          partyProfileDocumentsApi.getDownloadUrl(partyProfileId, profile.id),
+          {
+            credentials: 'include',
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error('Failed to load uploaded preview');
+        }
+
+        const blob = await response.blob();
+        currentObjectUrl = URL.createObjectURL(blob);
+
+        if (isMounted) {
+          setUploadedPreviewUrl(currentObjectUrl);
+        }
+      } catch {
+        if (isMounted) {
+          setUploadedPreviewUrl('');
+        }
+      }
+    };
+
+    void loadUploadedPreview();
+
+    return () => {
+      isMounted = false;
+      if (currentObjectUrl) {
+        URL.revokeObjectURL(currentObjectUrl);
+      }
+      setUploadedPreviewUrl('');
+    };
+  }, [canPreviewUploadedFile, partyProfileId, profile.documentFile, profile.id]);
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -134,109 +143,127 @@ export const PartyProfileDocumentProfileSection = ({
   };
 
   return (
-    <CardSection heading={`${profile.specificationType} · ${typeLabel}`}>
-      <div className="space-y-4">
-        <div className="space-y-1">
-          <p className="text-sm text-text-secondary">{profile.documentDescription}</p>
-          <p className="text-xs text-text-tertiary">
-            Code: {profile.documentCode} · Type: {getDocumentTypeLabel(profile.documentType)} ·
-            Max: {profile.maxSizeMb} MB · {profile.isRequired ? 'Required' : 'Optional'}
-          </p>
-          <p className="text-sm text-text-secondary">
-            Document Group: {groupLabel} · Entity Type: {entityTypeLabel}
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-          <input
-            ref={inputRef}
-            type="file"
-            accept={accept}
-            className="hidden"
-            onChange={handleFileChange}
-            disabled={disabled}
-          />
-          <div className="flex flex-wrap gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              className="rounded-sm"
-              disabled={disabled}
-              onClick={() => inputRef.current?.click()}
-            >
-              {selectedFile ? 'Change File' : hasExistingFile ? 'Replace File' : 'Choose File'}
-            </Button>
-            <Button
-              type="button"
-              className="rounded-sm"
-              disabled={disabled || !selectedFile}
-              onClick={() => void handleUpload()}
-            >
-              Upload
-            </Button>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            {profile.documentFile && (
-              <a
-                href={partyProfileDocumentsApi.getDownloadUrl(
-                  partyProfileId,
-                  profile.id
-                )}
-                className="rounded-sm border border-border-primary px-3 py-2 text-sm text-text-primary transition-colors hover:bg-surface-secondary"
-              >
-                Download
-              </a>
-            )}
-          </div>
-        </div>
-
-        <div className="rounded-sm border border-dashed border-border-primary bg-surface-secondary p-3">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div className="space-y-1">
-              <p className="text-sm font-medium text-text-primary">
-                {selectedFile
-                  ? selectedFile.name
-                  : hasExistingFile
-                    ? profile.documentFile?.fileName
-                    : 'No file selected'}
-              </p>
-              <p className="text-xs text-text-tertiary">
-                {selectedFile
-                  ? `${formatSizeBytes(selectedFile.size)} · ${selectedFile.type || 'unknown type'}`
-                  : hasExistingFile
-                    ? `${formatSizeBytes(profile.documentFile?.sizeBytes ?? 0)} · ${profile.documentFile?.mimeType ?? ''}`
-                    : 'Choose a file that matches the document requirements.'}
-              </p>
-            </div>
-          </div>
-
-          {(previewUrl || profile.documentFile) && (
-            <div className="mt-3 flex items-center gap-3">
-              <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-sm border border-border-primary bg-surface-primary">
-                {previewUrl && selectedFile?.type.startsWith('image/') ? (
-                  <img
-                    src={previewUrl}
-                    alt={profile.documentCode}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <span className="px-2 text-center text-[10px] font-semibold uppercase tracking-[0.2em] text-text-tertiary">
-                    {previewUrl ? 'File' : 'Uploaded'}
-                  </span>
-                )}
-              </div>
-              <div className="text-sm text-text-secondary">
-                {hasExistingFile && !selectedFile
-                  ? 'This document is already uploaded and can be replaced later.'
-                  : 'This file will be stored in the document tables.'}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {localError && <p className="text-sm text-error-600">{localError}</p>}
+    <div className="space-y-4">
+      <div className="space-y-1">
+        <p className="text-sm text-text-secondary">{profile.documentDescription}</p>
+        <p className="text-xs text-text-tertiary">
+          Code: {profile.documentCode} · Type: {getDocumentTypeLabel(profile.documentType)} ·
+          Max: {profile.maxSizeMb} MB · {profile.isRequired ? 'Required' : 'Optional'}
+        </p>
+        <p className="text-sm text-text-secondary">
+          Document Group: {groupLabel} · Entity Type: {entityTypeLabel}
+        </p>
       </div>
-    </CardSection>
+
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+        <input
+          ref={inputRef}
+          type="file"
+          accept={accept}
+          className="hidden"
+          onChange={handleFileChange}
+          disabled={disabled}
+        />
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            className="rounded-sm"
+            disabled={disabled}
+            onClick={() => inputRef.current?.click()}
+          >
+            {selectedFile ? 'Change File' : hasExistingFile ? 'Replace File' : 'Choose File'}
+          </Button>
+          <Button
+            type="button"
+            className="rounded-sm"
+            disabled={disabled || !selectedFile}
+            onClick={() => void handleUpload()}
+          >
+            Upload
+          </Button>
+        </div>
+
+        {profile.documentFile && (
+          <div className="flex flex-wrap gap-2">
+            <a
+              href={partyProfileDocumentsApi.getDownloadUrl(
+                partyProfileId,
+                profile.id
+              )}
+              className="rounded-sm border border-border-primary px-3 py-2 text-sm text-text-primary transition-colors hover:bg-surface-secondary"
+            >
+              Download
+            </a>
+          </div>
+        )}
+      </div>
+
+      <div className="rounded-sm border border-dashed border-border-primary bg-surface-secondary p-3">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-text-primary">
+              {selectedFile
+                ? selectedFile.name
+                : hasExistingFile
+                  ? profile.documentFile?.fileName
+                  : 'No file selected'}
+            </p>
+            <p className="text-xs text-text-tertiary">
+              {selectedFile
+                ? `${formatSizeBytes(selectedFile.size)} · ${selectedFile.type || 'unknown type'}`
+                : hasExistingFile
+                  ? `${formatSizeBytes(profile.documentFile?.sizeBytes ?? 0)} · ${profile.documentFile?.mimeType ?? ''}`
+                  : 'Choose a file that matches the document requirements.'}
+            </p>
+          </div>
+        </div>
+
+        {(previewUrl || profile.documentFile) && (
+          <div className="mt-3 space-y-3">
+            <div className="overflow-hidden rounded-sm border border-border-primary bg-surface-primary">
+              {previewUrl && selectedFile?.type.startsWith('image/') ? (
+                <img
+                  src={previewUrl}
+                  alt={profile.documentCode}
+                  className="max-h-48 w-full object-contain"
+                />
+              ) : previewUrl && selectedFile?.type === 'application/pdf' ? (
+                <iframe
+                  title={selectedFile.name}
+                  src={previewUrl}
+                  className="h-64 w-full"
+                />
+              ) : uploadedPreviewUrl && uploadedMimeType.startsWith('image/') ? (
+                <img
+                  src={uploadedPreviewUrl}
+                  alt={profile.documentCode}
+                  className="max-h-48 w-full object-contain"
+                />
+              ) : uploadedPreviewUrl && uploadedMimeType === 'application/pdf' ? (
+                <iframe
+                  title={profile.documentFile?.fileName ?? profile.documentCode}
+                  src={uploadedPreviewUrl}
+                  className="h-64 w-full"
+                />
+              ) : (
+                <div className="flex min-h-20 items-center justify-center px-4 py-4 text-center text-sm text-text-secondary">
+                  {hasExistingFile && !selectedFile
+                    ? 'This document is already uploaded. Download it if your browser cannot preview this file type.'
+                    : 'This file will be stored in the document tables.'}
+                </div>
+              )}
+            </div>
+            <div className="text-sm text-text-secondary">
+              {hasExistingFile && !selectedFile
+                ? 'This document is already uploaded and can be replaced later.'
+                : 'This file will be stored in the document tables.'}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {localError && <p className="text-sm text-error-600">{localError}</p>}
+    </div>
   );
 };

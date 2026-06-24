@@ -1,15 +1,8 @@
-import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button1';
 import { Table, type TableColumnDef } from '@/components/ui/table';
-import { useCategoryOptions } from '@/hooks';
-import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import type { IDocumentProfile } from '../types';
-import {
-  buildCategoryOptionLabelMap,
-  resolveCategoryOptionLabel,
-} from '../utils/categoryOptionLabelUtils';
 import { getDocumentTypeLabel } from '../utils';
 
 interface DocumentProfileTableProps {
@@ -38,56 +31,19 @@ export const DocumentProfileTable = ({
   isDeleting = false,
 }: DocumentProfileTableProps) => {
   const navigate = useNavigate();
-  const { defaultOptions: masterTypeOptions = [] } = useCategoryOptions(
-    CategoryOptionCodeEnum.Master
-  );
-  const { defaultOptions: transactionTypeOptions = [] } = useCategoryOptions(
-    CategoryOptionCodeEnum.Transaction
-  );
-  const { defaultOptions: groupOptions = [] } = useCategoryOptions(
-    CategoryOptionCodeEnum.DocumentGroup
-  );
-  const { defaultOptions: entityTypeOptions = [] } = useCategoryOptions(
-    CategoryOptionCodeEnum.EntityType
-  );
-
-  const typeLabelMap = useMemo(
-    () =>
-      buildCategoryOptionLabelMap([
-        ...masterTypeOptions,
-        ...transactionTypeOptions,
-      ]),
-    [masterTypeOptions, transactionTypeOptions]
-  );
-  const groupLabelMap = useMemo(
-    () => buildCategoryOptionLabelMap(groupOptions),
-    [groupOptions]
-  );
-  const entityTypeLabelMap = useMemo(
-    () => buildCategoryOptionLabelMap(entityTypeOptions),
-    [entityTypeOptions]
-  );
-
-  const rows: DocumentProfileTableRow[] = useMemo(
-    () =>
-      documentProfiles.map(profile => ({
-        id: profile.id,
-        documentCode: profile.documentCode,
-        documentDescription: profile.documentDescription,
-        specificationType: profile.specificationType,
-        type: resolveCategoryOptionLabel(typeLabelMap, profile.type),
-        groupSelection: resolveCategoryOptionLabel(groupLabelMap, profile.groupSelection),
-        entitySelection: resolveCategoryOptionLabel(
-          entityTypeLabelMap,
-          profile.entitySelection
-        ),
-        documentType: getDocumentTypeLabel(profile.documentType),
-        isRequired: profile.isRequired ? 'Required' : 'Optional',
-        maxSizeMb: profile.maxSizeMb,
-        active: profile.active,
-      })),
-    [documentProfiles, entityTypeLabelMap, groupLabelMap, typeLabelMap]
-  );
+  const rows: DocumentProfileTableRow[] = documentProfiles.map(profile => ({
+    id: profile.id,
+    documentCode: profile.documentCode,
+    documentDescription: profile.documentDescription,
+    specificationType: profile.specificationType,
+    type: profile.type?.label ?? '-',
+    groupSelection: profile.groupSelection?.label ?? '-',
+    entitySelection: profile.entitySelection?.label ?? '-',
+    documentType: getDocumentTypeLabel(profile.documentType),
+    isRequired: profile.isRequired ? 'Required' : 'Optional',
+    maxSizeMb: profile.maxSizeMb,
+    active: profile.active,
+  }));
 
   const columns: TableColumnDef<DocumentProfileTableRow>[] = [
     { accessorKey: 'documentCode', header: 'Code' },

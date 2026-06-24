@@ -45,14 +45,15 @@ const FinancialCodeObserver = ({ isDisabled }: { isDisabled: boolean }) => {
     queryKey: ['financial-codes-lookup'],
     queryFn: () => financialCodesApi.getFinancialCodes({ page: 1, limit: 100 }),
   });
-  const financialCodes = financialCodesRes?.data || [];
+  const financialCodes = useMemo(() => financialCodesRes?.data || [], [financialCodesRes]);
 
   // Sync Financial Type when Financial Code changes
   useEffect(() => {
-    if (selectedFC && selectedFC.financialType) {
-      if (watch('financialType') !== selectedFC.financialType) {
-        setValue('financialType', selectedFC.financialType);
-        prevFTypeRef.current = selectedFC.financialType;
+    const selectedFinancialTypeId = selectedFC?.financialType?.id ?? '';
+    if (selectedFinancialTypeId) {
+      if (watch('financialType') !== selectedFinancialTypeId) {
+        setValue('financialType', selectedFinancialTypeId);
+        prevFTypeRef.current = selectedFinancialTypeId;
       }
     }
   }, [selectedFC, setValue, watch]);
@@ -62,7 +63,7 @@ const FinancialCodeObserver = ({ isDisabled }: { isDisabled: boolean }) => {
     if (financialType && prevFTypeRef.current !== financialType) {
       prevFTypeRef.current = financialType;
       // Find the first financial code matching this type
-      const matched = financialCodes.find(fc => fc.financialType === financialType);
+      const matched = financialCodes.find(fc => fc.financialType?.id === financialType);
       if (matched && matched.id !== financialCodeId) {
         setValue('financialCodeId', matched.id);
         setValue('financialSubProfileId', ''); // Reset SubCode
@@ -98,7 +99,7 @@ const FinancialCodeObserver = ({ isDisabled }: { isDisabled: boolean }) => {
     const res = await financialCodesApi.getFinancialCodes({ page: 1, limit: 100, search: inputValue });
     let data = res.data || [];
     if (financialType) {
-      data = data.filter(fc => fc.financialType === financialType);
+      data = data.filter(fc => fc.financialType?.id === financialType);
     }
     const options = data.map(fc => ({
       value: fc.id,
@@ -112,12 +113,14 @@ const FinancialCodeObserver = ({ isDisabled }: { isDisabled: boolean }) => {
     const types = new Set<string>();
     const options: { value: string; label: string }[] = [];
     (res.data || []).forEach(fc => {
-      if (fc.financialType && !types.has(fc.financialType)) {
-        types.add(fc.financialType);
-        if (fc.financialType.toLowerCase().includes(inputValue.toLowerCase())) {
+      const typeId = fc.financialType?.id ?? '';
+      const typeLabel = fc.financialType?.label ?? '';
+      if (typeId && !types.has(typeId)) {
+        types.add(typeId);
+        if (typeLabel.toLowerCase().includes(inputValue.toLowerCase())) {
           options.push({
-            value: fc.financialType,
-            label: fc.financialType, // Just show type
+            value: typeId,
+            label: typeLabel,
           });
         }
       }

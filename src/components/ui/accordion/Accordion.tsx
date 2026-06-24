@@ -208,7 +208,7 @@ const AccordionTrigger = ({
       aria-controls={itemContext.contentId}
       disabled={itemContext.disabled}
       className={cn(
-        'flex w-full items-center justify-between gap-4 px-4 py-4 text-left text-sm font-semibold text-text-primary transition hover:bg-surface-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/20 disabled:cursor-not-allowed disabled:opacity-50 sm:px-5',
+        'flex w-full cursor-pointer items-center justify-between gap-4 px-4 py-4 text-left text-sm font-semibold text-text-primary transition hover:bg-surface-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/20 disabled:cursor-not-allowed disabled:opacity-50 sm:px-5',
         className
       )}
       onClick={(event: MouseEvent<HTMLButtonElement>) => {

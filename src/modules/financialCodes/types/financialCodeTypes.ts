@@ -1,3 +1,5 @@
+import type { ICategoryOption } from '@/types/categoryOptionTypes';
+
 export interface IFinancialSubProfileNested {
   id?: string;
   financialSubCode: string;
@@ -7,10 +9,10 @@ export interface IFinancialSubProfileNested {
 
 export interface IFinancialCode {
   id: string;
-  financialType: string;
+  financialType: ICategoryOption | null;
   financialCode: string;
   financialName: string;
-  defaultSign: string;
+  defaultSign: ICategoryOption | null;
   priority: number;
   subProfiles?: IFinancialSubProfileNested[];
   createdAt: string;
@@ -21,8 +23,11 @@ export interface IFinancialCode {
 
 export type ICreateFinancialCode = Omit<
   IFinancialCode,
-  'id' | 'createdAt' | 'updatedAt' | 'createdBy' | 'updatedBy'
->;
+  'id' | 'financialType' | 'defaultSign' | 'createdAt' | 'updatedAt' | 'createdBy' | 'updatedBy'
+> & {
+  financialType?: string;
+  defaultSign?: string;
+};
 
 export type IUpdateFinancialCode = Partial<ICreateFinancialCode>;
 

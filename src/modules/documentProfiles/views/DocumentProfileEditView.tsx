@@ -26,9 +26,9 @@ export const DocumentProfileEditView = () => {
       isRequired: data.isRequired,
       maxSizeMb: data.maxSizeMb,
       specificationType: data.specificationType || '',
-      type: data.type || '',
-      groupSelection: data.groupSelection || '',
-      entitySelection: data.entitySelection || '',
+      type: data.type?.id || '',
+      groupSelection: data.groupSelection?.id || '',
+      entitySelection: data.entitySelection?.id || '',
       active: data.active,
       sortOrder: data.sortOrder,
     };

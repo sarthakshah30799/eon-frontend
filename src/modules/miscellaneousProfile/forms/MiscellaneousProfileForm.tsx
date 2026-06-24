@@ -51,11 +51,11 @@ const CategoryOptionRows = ({
     <div className="space-y-4">
       <div className="flex items-center justify-between border-b border-border-primary pb-3">
         <div>
-          <p className="text-sm font-semibold text-text-primary">Options</p>
+          <p className="text-sm font-semibold text-text-primary">OPTIONS</p>
           <p className="text-xs text-text-tertiary">
             {mode === 'create'
-              ? 'Add one or more values for this category.'
-              : 'Update the selected category.'}
+              ? 'ADD ONE OR MORE VALUES FOR THIS CATEGORY.'
+              : 'UPDATE THE SELECTED CATEGORY.'}
           </p>
         </div>
 
@@ -71,7 +71,7 @@ const CategoryOptionRows = ({
             } satisfies ICategoryOptionFormItemValues)
           }
         >
-          Add more
+          ADD MORE
         </Button>
       </div>
 
@@ -110,16 +110,16 @@ const CategoryOptionRows = ({
             <div className="grid gap-4 md:grid-cols-2">
               <FormFieldInput
                 name={`items.${index}.value`}
-                label={`Value ${index + 1}`}
-                placeholder="e.g. branch"
-                valueTransform="none"
+                label={`VALUE ${index + 1}`}
+                placeholder="E.G. BRANCH"
+                valueTransform="uppercase"
                 disabled={isSubmitting}
               />
               <FormFieldInput
                 name={`items.${index}.label`}
-                label="Label"
-                placeholder="Optional, defaults to value"
-                valueTransform="none"
+                label="LABEL"
+                placeholder="OPTIONAL, DEFAULTS TO VALUE"
+                valueTransform="uppercase"
                 disabled={isSubmitting}
               />
             </div>
@@ -183,7 +183,7 @@ export const MiscellaneousProfileForm = ({
         {fixedCode ? (
           <div className="rounded-sm border border-border-primary bg-surface-secondary p-4">
             <p className="text-xs uppercase tracking-[0.2em] text-text-tertiary">
-              Category Code
+              CATEGORY CODE
             </p>
             <p className="mt-2 text-sm font-medium text-text-primary">
               {CATEGORY_OPTION_CODE_OPTIONS.find(
@@ -194,8 +194,8 @@ export const MiscellaneousProfileForm = ({
         ) : (
           <FormFieldSelect
             name="code"
-            label="Category Code"
-            placeholder="Select category"
+            label="CATEGORY CODE"
+            placeholder="SELECT CATEGORY"
             loadOptions={loadCodes}
             defaultOptions={CATEGORY_OPTION_CODE_OPTIONS}
             disabled={isSubmitting}
@@ -205,7 +205,7 @@ export const MiscellaneousProfileForm = ({
 
         <FormFieldInput
           name="sortOrder"
-          label="Sort Order"
+          label="SORT ORDER"
           type="number"
           disabled={isSubmitting}
         />
@@ -216,7 +216,7 @@ export const MiscellaneousProfileForm = ({
       <div className="rounded-sm border border-border-primary bg-surface-secondary p-4">
         <FormFieldCheckbox
           name="isActive"
-          label="Active"
+          label="ACTIVE"
           disabled={isSubmitting}
         />
       </div>

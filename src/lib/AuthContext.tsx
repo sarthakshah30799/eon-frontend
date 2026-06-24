@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
 import type { ReactNode } from 'react';
 import { authApi } from '../api/auth';
 import type { IUser } from '../modules/auth/types';
@@ -13,6 +19,7 @@ interface AuthContextType {
   activeBranchId: string | null;
   activeCounterId: string | null;
   setWorkplace: (branchId: string, counterId: string) => void;
+  clearWorkplace: () => void;
   login: (email: string, password: string) => Promise<void>;
   otpLogin: (
     countryCode: string,
@@ -41,15 +48,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const isAuthenticated = !!user;
 
-  const clearSessionState = () => {
+  const clearSessionState = useCallback(() => {
     setUser(null);
     setActiveBranchId(null);
     setActiveCounterId(null);
     localStorage.removeItem('activeBranchId');
     localStorage.removeItem('activeCounterId');
-  };
+  }, []);
 
-  const handleSessionExpired = (message?: string) => {
+  const handleSessionExpired = useCallback((message?: string) => {
     clearSessionState();
     
     const publicPaths = ['/login', '/forgot-password', '/reset-password', '/mail-console'];
@@ -59,7 +66,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     toast.error(message || AUTH_CONSTANTS.MESSAGES.SESSION_EXPIRED);
     window.location.replace('/login');
-  };
+  }, [clearSessionState]);
 
   const checkAuth = async () => {
     try {
@@ -96,6 +103,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     localStorage.setItem('activeCounterId', counterId);
   };
 
+  const clearWorkplace = () => {
+    setActiveBranchId(null);
+    setActiveCounterId(null);
+    localStorage.removeItem('activeBranchId');
+    localStorage.removeItem('activeCounterId');
+  };
+
   const logout = async () => {
     try {
       await authApi.logout();
@@ -122,7 +136,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return () => {
       window.removeEventListener(AUTH_SESSION_EXPIRED_EVENT, onSessionExpired);
     };
-  }, []);
+  }, [handleSessionExpired]);
 
   const value: AuthContextType = {
     user,
@@ -131,6 +145,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     activeBranchId,
     activeCounterId,
     setWorkplace,
+    clearWorkplace,
     login,
     otpLogin,
     logout,

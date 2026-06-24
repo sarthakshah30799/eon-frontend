@@ -78,6 +78,8 @@ export const usePermission = (path?: string): UsePermissionResult => {
       '/admin/state-profile',
       '/user-profile',
       '/admin/user-role',
+      '/admin/expense-booking',
+      '/admin/income-booking',
     ];
 
     for (const prefix of prefixes) {

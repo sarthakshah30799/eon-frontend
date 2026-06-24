@@ -117,9 +117,9 @@ const DocumentProfileFields = ({ isSubmitting }: { isSubmitting: boolean }) => {
       />
       <FormFieldCategoryOption
         name="groupSelection"
-        label="Group"
-        placeholder="Select group"
-        code={CategoryOptionCodeEnum.Group}
+        label="Document Group"
+        placeholder="Select document group"
+        code={CategoryOptionCodeEnum.DocumentGroup}
         disabled={isSubmitting}
         isCreatable={false}
       />

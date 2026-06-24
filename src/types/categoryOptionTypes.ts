@@ -11,6 +11,7 @@ export const CategoryOptionCodeEnum = {
   EntityType: 'entityType',
   DefaultAgent: 'defaultAgent',
   Group: 'group',
+  DocumentGroup: 'documentGroup',
   MarketingExecutive: 'marketingExecutive',
   BusinessNature: 'businessNature',
   TdsGroup: 'tdsGroup',

@@ -34,7 +34,10 @@ export const documentProfileSchema = yup.object({
     .oneOf(['MASTER', 'TRANSACTION'], 'Select a valid specification type')
     .required('Specification type is required'),
   type: yup.string().uuid('Select a valid type').required('Type is required'),
-  groupSelection: yup.string().uuid('Select a valid group').required('Group is required'),
+  groupSelection: yup
+    .string()
+    .uuid('Select a valid document group')
+    .required('Document Group is required'),
   entitySelection: yup.string().uuid('Select a valid entity type').required('Entity Type is required'),
   active: yup.boolean().default(true),
   sortOrder: yup.number().min(0).default(0),

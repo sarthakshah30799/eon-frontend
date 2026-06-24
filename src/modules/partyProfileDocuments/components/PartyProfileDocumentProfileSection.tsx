@@ -52,7 +52,7 @@ export const PartyProfileDocumentProfileSection = ({
     CategoryOptionCodeEnum.Transaction
   );
   const { defaultOptions: groupOptions = [] } = useCategoryOptions(
-    CategoryOptionCodeEnum.Group
+    CategoryOptionCodeEnum.DocumentGroup
   );
   const { defaultOptions: entityTypeOptions = [] } = useCategoryOptions(
     CategoryOptionCodeEnum.EntityType
@@ -143,7 +143,7 @@ export const PartyProfileDocumentProfileSection = ({
             Max: {profile.maxSizeMb} MB · {profile.isRequired ? 'Required' : 'Optional'}
           </p>
           <p className="text-sm text-text-secondary">
-            Group: {groupLabel} · Entity Type: {entityTypeLabel}
+            Document Group: {groupLabel} · Entity Type: {entityTypeLabel}
           </p>
         </div>
 

@@ -45,7 +45,7 @@ export const DocumentProfileTable = ({
     CategoryOptionCodeEnum.Transaction
   );
   const { defaultOptions: groupOptions = [] } = useCategoryOptions(
-    CategoryOptionCodeEnum.Group
+    CategoryOptionCodeEnum.DocumentGroup
   );
   const { defaultOptions: entityTypeOptions = [] } = useCategoryOptions(
     CategoryOptionCodeEnum.EntityType
@@ -94,7 +94,7 @@ export const DocumentProfileTable = ({
     { accessorKey: 'documentDescription', header: 'Description' },
     { accessorKey: 'specificationType', header: 'Specification Type' },
     { accessorKey: 'type', header: 'Type' },
-    { accessorKey: 'groupSelection', header: 'Group' },
+    { accessorKey: 'groupSelection', header: 'Document Group' },
     { accessorKey: 'entitySelection', header: 'Entity Type' },
     { accessorKey: 'documentType', header: 'Document Type' },
     { accessorKey: 'isRequired', header: 'Required' },

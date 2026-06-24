@@ -75,6 +75,10 @@ export const CATEGORY_OPTION_CODE_OPTIONS: CategoryOptionCodeOption[] = [
     label: 'Group',
   },
   {
+    value: CategoryOptionCodeEnum.DocumentGroup,
+    label: 'Document Group',
+  },
+  {
     value: CategoryOptionCodeEnum.MarketingExecutive,
     label: 'Marketing Executive',
   },
@@ -115,6 +119,7 @@ export const CATEGORY_OPTION_CODE_LABELS = {
   [CategoryOptionCodeEnum.EntityType]: 'Entity Type',
   [CategoryOptionCodeEnum.DefaultAgent]: 'Default Agent',
   [CategoryOptionCodeEnum.Group]: 'Group',
+  [CategoryOptionCodeEnum.DocumentGroup]: 'Document Group',
   [CategoryOptionCodeEnum.MarketingExecutive]: 'Marketing Executive',
   [CategoryOptionCodeEnum.BusinessNature]: 'Business Nature',
   [CategoryOptionCodeEnum.TdsGroup]: 'TDS Group',

@@ -20,5 +20,7 @@ export * from './financialCodes/financialCodes.api';
 export * from './accountProfile';
 export * from './countryGroup';
 export * from './partyProfile';
+export * from './partyProfileDocuments';
 export * from './mail/mail.api';
 export * from './tdsProfile';
+export * from './expenseIncomeBooking/expenseIncomeBooking.api';

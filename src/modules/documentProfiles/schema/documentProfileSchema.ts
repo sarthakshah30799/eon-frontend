@@ -1,8 +1,5 @@
 import * as yup from 'yup';
-import {
-  DOCUMENT_PROFILE_SPECIFICATION_TYPE_OPTIONS,
-  DOCUMENT_TYPE_OPTIONS,
-} from '../constants/documentProfileConstants';
+import { DOCUMENT_TYPE_OPTIONS } from '../constants/documentProfileConstants';
 
 const ruleSchema = yup.object({
   documentCode: yup.string().trim().required('Document code is required'),
@@ -34,24 +31,10 @@ const ruleSchema = yup.object({
 });
 
 export const documentProfileSchema = yup.object({
-  specificationType: yup
-    .string()
-    .oneOf(
-      DOCUMENT_PROFILE_SPECIFICATION_TYPE_OPTIONS.map(option => option.value),
-      'Select a valid specification type'
-    )
-    .required('Specification type is required'),
-  type: yup
-    .string()
-    .required('Type is required'),
-  groupSelection: yup 
-    .string()
-    .trim()
-    .required('Group is required'),
-  entitySelection: yup
-    .string()
-    .trim()
-    .required('Entity Type is required'),
+  specificationType: yup.string().uuid('Select a valid specification type').required('Specification type is required'),
+  type: yup.string().uuid('Select a valid type').required('Type is required'),
+  groupSelection: yup.string().uuid('Select a valid group').required('Group is required'),
+  entitySelection: yup.string().uuid('Select a valid entity type').required('Entity Type is required'),
   active: yup.boolean().default(true),
   sortOrder: yup.number().min(0).default(0),
   rules: yup

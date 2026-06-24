@@ -6,22 +6,19 @@ import { useNavigate } from 'react-router-dom';
 import { CardSection } from '@/components/ui';
 import {
   Form,
+  FormFieldCategoryOption,
   FormFieldInput,
   FormFieldSelect,
   FormFieldCheckbox,
-  FormFieldCategoryOption,
 } from '@/components/forms';
 import type { AsyncSelectResponse } from '@/components/ui';
 import type { CategoryOptionCode } from '@/types/categoryOptionTypes';
 import { documentProfileSchema } from '../schema';
 import type { IDocumentProfileFormValues } from '../types';
-import {
-  DOCUMENT_PROFILE_TEXTS,
-  loadDocumentSpecificationTypeOptions,
-} from '../constants/documentProfileConstants';
+import { DOCUMENT_PROFILE_TEXTS } from '../constants/documentProfileConstants';
 import { DocumentProfileRuleRows } from '../components/DocumentProfileRuleRows';
-import { usePartyProfileTypes } from '@/modules/partyProfiles/hooks';
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
+import { useDocumentSpecificationTypeOptions } from '../hooks';
 
 interface DocumentProfileFormProps {
   defaultValues: IDocumentProfileFormValues;
@@ -37,16 +34,24 @@ const DocumentProfileTypeFields = ({
 }) => {
   const { control, setValue } = useFormContext<IDocumentProfileFormValues>();
   const specificationType = useWatch({ control, name: 'specificationType' });
-  const { data: typeOptions = [] } = usePartyProfileTypes();
+  const { data: specificationTypeOptions = [] } = useDocumentSpecificationTypeOptions();
   const previousSpecificationTypeRef = useRef<string | null>(null);
-  const groupOptions = typeOptions.map(option => ({
-    value: option.label,
-    label: option.label,
-  }));
 
-  const loadGroupOptions = useCallback(async (): Promise<AsyncSelectResponse> => {
-    return { options: groupOptions };
-  }, [groupOptions]);
+  const selectedSpecificationType = specificationTypeOptions.find(
+    option => option.id === specificationType
+  );
+
+  const loadSpecificationTypeOptions = useCallback(
+    async (): Promise<AsyncSelectResponse> => {
+      return {
+        options: specificationTypeOptions.map(option => ({
+          value: option.id,
+          label: option.label,
+        })),
+      };
+    },
+    [specificationTypeOptions]
+  );
 
   useEffect(() => {
     const currentSpecificationType = specificationType?.trim() || null;
@@ -73,7 +78,7 @@ const DocumentProfileTypeFields = ({
         name="specificationType"
         label="Specification Type"
         placeholder="Select specification type"
-        loadOptions={loadDocumentSpecificationTypeOptions}
+        loadOptions={loadSpecificationTypeOptions}
         disabled={isSubmitting}
         isSearchable={false}
       />
@@ -81,19 +86,21 @@ const DocumentProfileTypeFields = ({
         name="type"
         label="Type"
         placeholder="Select type"
-        code={specificationType as CategoryOptionCode}
-        disabled={isSubmitting || !specificationType}
+        code={
+          (selectedSpecificationType?.code as CategoryOptionCode) ||
+          CategoryOptionCodeEnum.MasterDocument
+        }
+        disabled={isSubmitting || !selectedSpecificationType?.code}
         isCreatable={false}
         isSearchable={false}
       />
-      <FormFieldSelect
+      <FormFieldCategoryOption
         name="groupSelection"
         label="Group"
         placeholder="Select group"
-        loadOptions={loadGroupOptions}
-        defaultOptions={groupOptions}
+        code={CategoryOptionCodeEnum.Group}
         disabled={isSubmitting}
-        isSearchable={false}
+        isCreatable={false}
       />
       <FormFieldCategoryOption
         name="entitySelection"

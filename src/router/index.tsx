@@ -149,6 +149,9 @@ const AccountsProfileEditPage = lazy(
 const PartyProfileListPage = lazy(() => import('../pages/party-profiles/list'));
 const PartyProfileCreatePage = lazy(() => import('../pages/party-profiles/create'));
 const PartyProfileEditPage = lazy(() => import('../pages/party-profiles/edit/[id]'));
+const PartyProfileDocumentsPage = lazy(
+  () => import('../pages/party-profiles/documents/[id]')
+);
 
 const MasterPagesPage = lazy(
   () => import('../pages/master/system-setups/master-pages/MasterPagesPage')
@@ -205,6 +208,26 @@ const TdsProfileCreatePage = lazy(
 const TdsProfileEditPage = lazy(
   () =>
     import('../pages/master/system-setups/tds-profile/edit/[id]/TdsProfileEditPage')
+);
+
+const ExpenseBookingListPage = lazy(
+  () => import('../pages/master/system-setups/expense-booking/ExpenseBookingListPage')
+);
+const ExpenseBookingCreatePage = lazy(
+  () => import('../pages/master/system-setups/expense-booking/ExpenseBookingCreatePage')
+);
+const ExpenseBookingEditPage = lazy(
+  () => import('../pages/master/system-setups/expense-booking/ExpenseBookingEditPage')
+);
+
+const IncomeBookingListPage = lazy(
+  () => import('../pages/master/system-setups/income-booking/IncomeBookingListPage')
+);
+const IncomeBookingCreatePage = lazy(
+  () => import('../pages/master/system-setups/income-booking/IncomeBookingCreatePage')
+);
+const IncomeBookingEditPage = lazy(
+  () => import('../pages/master/system-setups/income-booking/IncomeBookingEditPage')
 );
 
 const router = createBrowserRouter([
@@ -510,6 +533,14 @@ const router = createBrowserRouter([
     ),
   },
   {
+    path: '/party-profiles/:type/documents/:id',
+    element: (
+      <ProtectedLayout>
+        <PartyProfileDocumentsPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
     path: '/admin/country-profile',
     element: (
       <ProtectedLayout>
@@ -554,6 +585,54 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <StateProfileEditPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/expense-booking',
+    element: (
+      <ProtectedLayout>
+        <ExpenseBookingListPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/expense-booking/create',
+    element: (
+      <ProtectedLayout>
+        <ExpenseBookingCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/expense-booking/edit/:id',
+    element: (
+      <ProtectedLayout>
+        <ExpenseBookingEditPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/income-booking',
+    element: (
+      <ProtectedLayout>
+        <IncomeBookingListPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/income-booking/create',
+    element: (
+      <ProtectedLayout>
+        <IncomeBookingCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/income-booking/edit/:id',
+    element: (
+      <ProtectedLayout>
+        <IncomeBookingEditPage />
       </ProtectedLayout>
     ),
   },

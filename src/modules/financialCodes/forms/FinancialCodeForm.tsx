@@ -189,7 +189,6 @@ export const FinancialCodeForm = ({
           code={CategoryOptionCodeEnum.FinancialType}
           placeholder="Select financial type"
           disabled={isDisabled}
-          useValueAsId={true}
         />
         <FormFieldInput
           name="financialCode"
@@ -218,7 +217,6 @@ export const FinancialCodeForm = ({
           code={CategoryOptionCodeEnum.DefaultSign}
           placeholder="Select default sign"
           disabled={isDisabled}
-          useValueAsId={true}
         />
       </div>
 

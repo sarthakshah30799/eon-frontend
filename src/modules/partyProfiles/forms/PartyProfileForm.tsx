@@ -207,26 +207,12 @@ const PartyProfileFormFields = ({
             type="number"
             disabled={isSubmitting}
           />
-        </div>
-      </CardSection>
-
-      <CardSection heading="Client Identity">
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-          <div className="lg:col-span-2">
-            <FormFieldInput
-              name="name"
-              label="Client Name"
-              placeholder={`Enter ${profileTypeLabel.toLowerCase()} name`}
-              disabled={isSubmitting}
-            />
-          </div>
-          <div className="flex items-center pt-6">
-            <FormFieldCheckbox
-              name="isIndividual"
-              label="Individual Category Customer (not a party profile)"
-              disabled={isSubmitting}
-            />
-          </div>
+          <FormFieldInput
+            name="chqTrxnLimit"
+            label="Cheque Transaction Limit"
+            type="number"
+            disabled={isSubmitting}
+          />
         </div>
       </CardSection>
 
@@ -294,12 +280,6 @@ const PartyProfileFormFields = ({
             placeholder="Select Risk Category"
             disabled={isSubmitting}
             isCreatable={true}
-          />
-          <FormFieldInput
-            name="chqTrxnLimit"
-            label="Cheque Transaction Limit"
-            type="number"
-            disabled={isSubmitting}
           />
           <FormFieldInput
             name="defaultHandlingCharges"
@@ -514,18 +494,6 @@ const PartyProfileFormFields = ({
             name="gstNo"
             label="GST No"
             placeholder="Enter GSTIN number"
-            disabled={isSubmitting}
-          />
-          <FormFieldInput
-            name="sgstNo"
-            label="SGST No."
-            placeholder="Enter SGST number"
-            disabled={isSubmitting}
-          />
-          <FormFieldInput
-            name="igstNo"
-            label="IGST No."
-            placeholder="Enter IGST number"
             disabled={isSubmitting}
           />
           <FormFieldStateDropdown

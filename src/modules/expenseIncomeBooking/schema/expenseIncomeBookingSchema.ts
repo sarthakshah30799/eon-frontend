@@ -9,7 +9,7 @@ export const expenseIncomeBookingSchema = yup.object({
   applicableVendor: yup.boolean().default(false),
   applicableEmployee: yup.boolean().default(false),
   applicableAgent: yup.boolean().default(false),
-  applicableTcIssuer: yup.boolean().default(false),
+  applicableCardIssuer: yup.boolean().default(false),
   active: yup.boolean().default(true),
   allowRecPay: yup.boolean().default(false),
   totalGst: yup.number().typeError('Total GST must be a number').min(0, 'Total GST cannot be negative').max(100, 'Total GST cannot exceed 100%').default(0),

@@ -20,7 +20,7 @@ export interface IExpenseIncomeBookingMaster {
   applicableVendor: boolean;
   applicableEmployee: boolean;
   applicableAgent: boolean;
-  applicableTcIssuer: boolean;
+  applicableCardIssuer: boolean;
   active: boolean;
   allowRecPay: boolean;
   totalGst: number;
@@ -41,7 +41,7 @@ export interface ICreateExpenseIncomeBookingMaster {
   applicableVendor: boolean;
   applicableEmployee: boolean;
   applicableAgent: boolean;
-  applicableTcIssuer: boolean;
+  applicableCardIssuer: boolean;
   active: boolean;
   allowRecPay: boolean;
   totalGst: number;

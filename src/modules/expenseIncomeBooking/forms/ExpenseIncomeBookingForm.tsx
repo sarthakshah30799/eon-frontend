@@ -129,7 +129,7 @@ const ApplicabilitySection = ({
       if (type === 'EXPENSE') {
         const fields = [
           'applicableVendor',
-          'applicableTcIssuer',
+          'applicableCardIssuer',
           'applicableAgent',
           'applicableEmployee',
         ];
@@ -139,7 +139,7 @@ const ApplicabilitySection = ({
           }
         });
       } else {
-        const fields = ['applicableCustomer', 'applicableAgent'];
+        const fields = ['applicableCustomer', 'applicableCardIssuer'];
         fields.forEach(field => {
           if (field !== fieldName) {
             setValue(field, false);
@@ -161,10 +161,10 @@ const ApplicabilitySection = ({
               onChange={handleCheckboxChange('applicableVendor')}
             />
             <FormFieldCheckbox
-              name="applicableTcIssuer"
-              label="TC Issuer"
+              name="applicableCardIssuer"
+              label="Card Issuer"
               disabled={isDisabled}
-              onChange={handleCheckboxChange('applicableTcIssuer')}
+              onChange={handleCheckboxChange('applicableCardIssuer')}
             />
             <FormFieldCheckbox
               name="applicableAgent"
@@ -188,10 +188,10 @@ const ApplicabilitySection = ({
               onChange={handleCheckboxChange('applicableCustomer')}
             />
             <FormFieldCheckbox
-              name="applicableAgent"
-              label="Agent"
+              name="applicableCardIssuer"
+              label="Card Issuer"
               disabled={isDisabled}
-              onChange={handleCheckboxChange('applicableAgent')}
+              onChange={handleCheckboxChange('applicableCardIssuer')}
             />
           </>
         )}
@@ -302,11 +302,13 @@ export const ExpenseIncomeBookingForm = ({
               label="Interstate Transaction"
               disabled={isDisabled}
             />
-            <FormFieldCheckbox
-              name="allowRecPay"
-              label="Allow Rec Pay"
-              disabled={isDisabled}
-            />
+            {type === 'INCOME' && (
+              <FormFieldCheckbox
+                name="allowRecPay"
+                label="Allow Rec Pay"
+                disabled={isDisabled}
+              />
+            )}
           </div>
         </div>
       </CardSection>

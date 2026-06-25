@@ -1,7 +1,6 @@
 import { useCallback } from 'react';
 import type { ReactNode } from 'react';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { Button } from '@/components/ui/button1';
 import { CardSection } from '@/components/ui';
 import { Form, FormFieldCheckbox, FormFieldInput } from '@/components/forms';
 import { useAuth } from '@/lib/AuthContext';
@@ -187,11 +186,6 @@ export const UserRoleForm = ({
 
       {children}
 
-      <div className="flex justify-end border-t border-border-primary pt-4">
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Saving...' : submitLabel}
-        </Button>
-      </div>
     </Form>
   );
 };

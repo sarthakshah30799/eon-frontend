@@ -1,12 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../../../lib/AuthContext';
 import { Button } from '../../../components/ui/button1/Button';
 import { Loader } from '../../../components/ui/loader';
 import { toast } from 'react-hot-toast';
-import { branchProfileApi } from '../../../api/branchProfile';
-import { counterProfileApi } from '../../../api/counterProfile';
+import type { IUserAssignment } from '../../../modules/auth/types';
 
 const ChooseWorkplacePage: React.FC = () => {
   const {
@@ -25,66 +23,46 @@ const ChooseWorkplacePage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const isAdminUser = user?.isAdmin === true;
   const userAssignments = useMemo(() => user?.assignments ?? [], [user?.assignments]);
-  const initialAssignment = userAssignments[0] ?? null;
+
+  const assignmentsByBranch = useMemo(() => {
+    const grouped = new Map<string, IUserAssignment[]>();
+
+    for (const assignment of userAssignments) {
+      const list = grouped.get(assignment.branchId) ?? [];
+      list.push(assignment);
+      grouped.set(assignment.branchId, list);
+    }
+
+    return grouped;
+  }, [userAssignments]);
+
+  const visibleBranches = useMemo(() => {
+    return Array.from(assignmentsByBranch.entries()).map(([branchId, branchAssignments]) => ({
+      id: branchId,
+      name: branchAssignments[0]?.branchName || 'Unknown Branch',
+    }));
+  }, [assignmentsByBranch]);
+
   const effectiveSelectedBranchId =
-    selectedBranchId || initialAssignment?.branchId || '';
+    selectedBranchId || visibleBranches[0]?.id || '';
+
+  const selectedBranchAssignments =
+    assignmentsByBranch.get(effectiveSelectedBranchId) ?? [];
+
+  const visibleCounters = useMemo(() => {
+    const seen = new Set<string>();
+
+    return selectedBranchAssignments.filter(assignment => {
+      if (seen.has(assignment.counterId)) {
+        return false;
+      }
+      seen.add(assignment.counterId);
+      return true;
+    });
+  }, [selectedBranchAssignments]);
+
   const effectiveSelectedCounterId =
-    selectedBranchId
-      ? selectedCounterId
-      : selectedCounterId || initialAssignment?.counterId || '';
-
-  const {
-    data: branches = [],
-    isLoading: isBranchesLoading,
-    isFetching: isBranchesFetching,
-  } = useQuery({
-    queryKey: ['choose-workplace-branches'],
-    queryFn: async () => {
-      return branchProfileApi.getBranchProfiles({ activeOnly: true });
-    },
-    enabled: isAuthenticated && !isAdminUser,
-  });
-
-  const {
-    data: counters = [],
-    isLoading: isCountersLoading,
-    isFetching: isCountersFetching,
-  } = useQuery({
-    queryKey: ['choose-workplace-counters'],
-    queryFn: async () => {
-      return counterProfileApi.getCounterProfiles({ activeOnly: true });
-    },
-    enabled: isAuthenticated && !isAdminUser,
-  });
-
-  const assignmentsByBranch = new Map<string, typeof userAssignments>();
-
-  for (const assignment of userAssignments) {
-    const list = assignmentsByBranch.get(assignment.branchId) || [];
-    list.push(assignment);
-    assignmentsByBranch.set(assignment.branchId, list);
-  }
-
-  const visibleBranches = isAdminUser
-    ? branches
-    : branches.filter(branch => assignmentsByBranch.has(branch.id));
-
-  const selectedBranch = branches.find(
-    branch => branch.id === effectiveSelectedBranchId
-  );
-  const allowedAssignmentCounterIds =
-    assignmentsByBranch
-      .get(effectiveSelectedBranchId)
-      ?.map(assignment => assignment.counterId) || [];
-  const allowedCounterIdsFromBranch = selectedBranch?.connectCounterIds || [];
-  const allowedCounterIds =
-    allowedAssignmentCounterIds.length > 0
-      ? allowedAssignmentCounterIds
-      : allowedCounterIdsFromBranch;
-
-  const visibleCounters = counters.filter(c =>
-    allowedCounterIds.includes(c.id)
-  );
+    selectedCounterId || visibleCounters[0]?.counterId || '';
 
   if (isAuthLoading) {
     return <Loader />;
@@ -104,11 +82,13 @@ const ChooseWorkplacePage: React.FC = () => {
   }
 
   if (
-    (!isAdminUser && (isBranchesLoading || isCountersLoading)) ||
-    isBranchesFetching ||
-    isCountersFetching
+    !isAdminUser && userAssignments.length === 0
   ) {
-    return <Loader />;
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader />
+      </div>
+    );
   }
 
   const handleConfirm = async (e: React.FormEvent) => {
@@ -216,7 +196,7 @@ const ChooseWorkplacePage: React.FC = () => {
                   </option>
                   {visibleBranches.map(b => (
                     <option key={b.id} value={b.id}>
-                      {b.name} - {b.code} - {b.city}
+                      {b.name}
                     </option>
                   ))}
                 </select>
@@ -239,14 +219,14 @@ const ChooseWorkplacePage: React.FC = () => {
                       : 'Select Counter'}
                   </option>
                   {visibleCounters.map(c => (
-                    <option key={c.id} value={c.id}>
-                      {c.counterNo} - {c.name}
+                    <option key={c.counterId} value={c.counterId}>
+                      {c.counterName}
                     </option>
                   ))}
                 </select>
                 {effectiveSelectedBranchId && visibleCounters.length === 0 && (
                   <p className="mt-1 text-xs text-error-600 animate-pulse">
-                    No active counters attached to this branch.
+                    No counters assigned to this branch.
                   </p>
                 )}
               </div>

@@ -187,11 +187,6 @@ export const UserRoleForm = ({
 
       {children}
 
-      <div className="flex justify-end border-t border-border-primary pt-4">
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Saving...' : submitLabel}
-        </Button>
-      </div>
     </Form>
   );
 };

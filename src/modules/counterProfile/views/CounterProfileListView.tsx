@@ -11,7 +11,9 @@ import { Loader } from '@/components/ui/loader';
 
 export const CounterProfileListView = () => {
   const navigate = useNavigate();
-  const { data: counters = [], isLoading, error } = useListCounterProfiles();
+  const { data: counters = [], isLoading, error } = useListCounterProfiles({
+    activeOnly: false,
+  });
   const { deleteCounterProfile, isPending: isDeleting } =
     useDeleteCounterProfile();
   const { updateCounterProfileStatus, isPending: isUpdatingStatus } =

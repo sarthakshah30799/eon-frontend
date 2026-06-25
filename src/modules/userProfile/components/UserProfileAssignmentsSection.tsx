@@ -82,7 +82,8 @@ export const UserProfileAssignmentsSection = ({
     dataUpdatedAt: branchesUpdatedAt,
   } = useQuery({
     queryKey: ['user-profile-branch-options'],
-    queryFn: async () => branchProfileApi.getBranchProfiles(),
+    queryFn: async () =>
+      branchProfileApi.getBranchProfiles({ activeOnly: true }),
   });
 
   const {
@@ -92,7 +93,8 @@ export const UserProfileAssignmentsSection = ({
     dataUpdatedAt: countersUpdatedAt,
   } = useQuery({
     queryKey: ['user-profile-counter-options'],
-    queryFn: async () => counterProfileApi.getCounterProfiles(),
+    queryFn: async () =>
+      counterProfileApi.getCounterProfiles({ activeOnly: true }),
   });
 
   const roleOptions = useMemo(

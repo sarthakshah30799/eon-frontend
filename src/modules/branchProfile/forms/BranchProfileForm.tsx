@@ -70,7 +70,7 @@ const BranchProfileFormFields = ({
     data: counterProfiles = [],
     isLoading: isCountersLoading,
     isFetching: isCountersFetching,
-  } = useListCounterProfiles();
+  } = useListCounterProfiles({ activeOnly: true });
 
   const { data: selectedState } = useGetStateProfile(stateId);
   const { data: companies = [] } = useListCompanyProfiles();
@@ -119,7 +119,9 @@ const BranchProfileFormFields = ({
         return false;
       }
 
-      const branches = await branchProfileApi.getBranchProfiles();
+      const branches = await branchProfileApi.getBranchProfiles({
+        activeOnly: true,
+      });
       return branches.some(
         branch =>
           branch.code.trim().toUpperCase() === normalizedCode &&

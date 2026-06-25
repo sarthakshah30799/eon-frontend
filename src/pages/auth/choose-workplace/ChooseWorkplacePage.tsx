@@ -40,8 +40,7 @@ const ChooseWorkplacePage: React.FC = () => {
   } = useQuery({
     queryKey: ['choose-workplace-branches'],
     queryFn: async () => {
-      const branchesList = await branchProfileApi.getBranchProfiles();
-      return branchesList.filter(branch => branch.isActive);
+      return branchProfileApi.getBranchProfiles({ activeOnly: true });
     },
     enabled: isAuthenticated && !isAdminUser,
   });
@@ -53,8 +52,7 @@ const ChooseWorkplacePage: React.FC = () => {
   } = useQuery({
     queryKey: ['choose-workplace-counters'],
     queryFn: async () => {
-      const countersList = await counterProfileApi.getCounterProfiles();
-      return countersList.filter(counter => counter.isActive);
+      return counterProfileApi.getCounterProfiles({ activeOnly: true });
     },
     enabled: isAuthenticated && !isAdminUser,
   });

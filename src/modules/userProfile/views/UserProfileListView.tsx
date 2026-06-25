@@ -8,7 +8,9 @@ import { usePermission } from '@/hooks';
 
 export const UserProfileListView = () => {
   const navigate = useNavigate();
-  const { data: profiles = [], isLoading, error } = useListUserProfiles();
+  const { data: profiles = [], isLoading, error } = useListUserProfiles({
+    activeOnly: false,
+  });
   const { deleteUserProfile, isPending: isDeleting } = useDeleteUserProfile();
   const { canAdd } = usePermission('/user-profile');
 

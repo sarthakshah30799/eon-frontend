@@ -111,8 +111,12 @@ const mapFrontendToBackend = (
 };
 
 export const branchProfileApi = {
-  getBranchProfiles: async (): Promise<IBranchProfile[]> => {
-    const res = await apiClient.get<BackendBranch[]>('/branches');
+  getBranchProfiles: async (options?: {
+    activeOnly?: boolean;
+  }): Promise<IBranchProfile[]> => {
+    const endpoint =
+      options?.activeOnly === false ? '/branches?activeOnly=false' : '/branches';
+    const res = await apiClient.get<BackendBranch[]>(endpoint);
     if (res.error) throw new Error(res.error);
     return (res.data || []).map(mapBackendToFrontend);
   },

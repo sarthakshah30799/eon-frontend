@@ -199,7 +199,9 @@ export const AccountProfileForm = ({
   }, []);
 
   const loadBranchOptions = useCallback(async (inputValue: string) => {
-    const data = await branchProfileApi.getBranchProfiles();
+    const data = await branchProfileApi.getBranchProfiles({
+      activeOnly: true,
+    });
     const filtered = data.filter(
       b =>
         b.code.toLowerCase().includes(inputValue.toLowerCase()) ||

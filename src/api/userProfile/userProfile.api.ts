@@ -140,8 +140,12 @@ const mapFrontendToBackend = (
 };
 
 export const userProfileApi = {
-  getUserProfiles: async (): Promise<IUserProfile[]> => {
-    const res = await apiClient.get<BackendUser[]>('/users');
+  getUserProfiles: async (options?: {
+    activeOnly?: boolean;
+  }): Promise<IUserProfile[]> => {
+    const endpoint =
+      options?.activeOnly === false ? '/users?activeOnly=false' : '/users';
+    const res = await apiClient.get<BackendUser[]>(endpoint);
     if (res.error) throw new Error(res.error);
     return (res.data || []).map(mapBackendToFrontend);
   },

@@ -44,8 +44,12 @@ const mapFrontendToBackend = (values: ICreateCounterProfile) => {
 };
 
 export const counterProfileApi = {
-  getCounterProfiles: async (): Promise<ICounterProfile[]> => {
-    const res = await apiClient.get<BackendCounter[]>('/counters');
+  getCounterProfiles: async (options?: {
+    activeOnly?: boolean;
+  }): Promise<ICounterProfile[]> => {
+    const endpoint =
+      options?.activeOnly === false ? '/counters?activeOnly=false' : '/counters';
+    const res = await apiClient.get<BackendCounter[]>(endpoint);
     if (res.error) throw new Error(res.error);
     return (res.data || []).map(mapBackendToFrontend);
   },

@@ -75,7 +75,9 @@ const PartyProfileFormFields = ({
   const showRfFields = toPartyProfileApiType(effectiveProfileType) === 'RF';
 
   const branchLoadOptions = useCallback(async (inputValue: string) => {
-    const branches = await branchProfileApi.getBranchProfiles();
+    const branches = await branchProfileApi.getBranchProfiles({
+      activeOnly: true,
+    });
     const options = branches
       .filter(
         branch =>

@@ -110,7 +110,6 @@ export const CountryGroupModal = ({
             label="Country Group Name *"
             placeholder="e.g. Europe"
             disabled={isSubmitting}
-            valueTransform="none"
           />
 
           <FormFieldInput
@@ -118,7 +117,6 @@ export const CountryGroupModal = ({
             label="Country Group Code"
             placeholder="e.g. EU"
             disabled={isSubmitting}
-            valueTransform="none"
             asyncValidation={{
               enabled: !isSubmitting,
               check: validateCountryGroupCode,

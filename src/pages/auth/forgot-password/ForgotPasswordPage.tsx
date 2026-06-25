@@ -20,12 +20,13 @@ const ForgotPasswordPage: React.FC = () => {
       setIsSent(true);
       toast.success('Reset link generated! Copy it from your backend console.');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to request reset link');
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to request reset link'
+      );
     } finally {
       setIsLoading(false);
     }
   };
-
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-surface-secondary via-surface-primary to-primary-50">
@@ -72,8 +73,14 @@ const ForgotPasswordPage: React.FC = () => {
                 label="Email Address"
                 type="email"
                 placeholder="Enter your email"
+                classes={{ container: '!max-w-full' }}
               />
-              <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
+              <Button
+                type="submit"
+                className="w-full"
+                size="lg"
+                disabled={isLoading}
+              >
                 {isLoading ? 'Sending...' : 'Send Reset Link'}
               </Button>
             </Form>

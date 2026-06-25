@@ -90,7 +90,7 @@ const TreeLevel = ({
                 </Dropdown.Trigger>
 
                 <Dropdown.Menu
-                  className="w-64 rounded-sm p-0! bg-transparent! ring-0! mt-0! shadow-none!"
+                  className="mt-1 w-full !static !z-auto !min-w-0 !overflow-visible !rounded-none !border-0 !bg-transparent !p-0 !shadow-none !ring-0"
                   placement="bottom"
                   offset={8}
                 >

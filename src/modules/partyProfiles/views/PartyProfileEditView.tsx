@@ -15,6 +15,7 @@ import {
   toPartyProfileRouteType,
 } from '../constants';
 import { PartyProfileDocumentsActionButton } from '../components';
+import { NotFoundState } from '@/components/ui/not-found-state';
 
 const formatDateForInput = (dateString?: string | Date) => {
   if (!dateString) return '';
@@ -31,9 +32,8 @@ export const PartyProfileEditView = () => {
   const { user } = useAuth();
   const isReviewer = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
   const showReviewControls = Boolean(isReviewer && (isReviewMode || user?.isAdmin));
-  const { canModify } = usePermission('/party-profiles');
 
-  const { data: typeOptions = [] } = usePartyProfileTypes();
+  const { data: typeOptions = [], isLoading: isTypesLoading } = usePartyProfileTypes();
   const routeOptions = useMemo(
     () =>
       typeOptions.map(option => ({
@@ -50,11 +50,15 @@ export const PartyProfileEditView = () => {
     () => toPartyProfileApiType(selectedType),
     [selectedType]
   );
+  const { canModify, canView } = usePermission(
+    selectedType ? `/party-profiles/${selectedType}` : '/party-profiles'
+  );
+  const isInvalidTypeRoute = Boolean(routeType) && !routeOptions.some(option => option.value === selectedType);
 
   const { data: client, isLoading, error } = useGetPartyProfile(
     id || '',
     selectedApiType,
-    Boolean(selectedApiType)
+    Boolean(selectedApiType) && !isInvalidTypeRoute
   );
   const { updatePartyProfile, isPending } = useUpdatePartyProfile(selectedApiType);
   const { reviewPartyProfile, isPending: isReviewing } = useReviewPartyProfile();
@@ -173,6 +177,18 @@ export const PartyProfileEditView = () => {
     });
   };
 
+  if (isTypesLoading) {
+    return <div className="py-6 text-center text-text-secondary">Loading party profile details...</div>;
+  }
+
+  if (!routeOptions.length || isInvalidTypeRoute || (!canModify && !canView)) {
+    return (
+      <NotFoundState
+        message="You do not have access to edit this party profile type."
+      />
+    );
+  }
+
   if (!selectedType) {
     return <div className="py-6 text-center text-text-secondary">Loading party profile details...</div>;
   }
@@ -183,9 +199,7 @@ export const PartyProfileEditView = () => {
 
   if (error || !client) {
     return (
-      <div className="py-6 text-center text-error-600">
-        Failed to load party profile details.
-      </div>
+      <NotFoundState message="Party profile details were not found." />
     );
   }
 

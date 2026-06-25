@@ -24,6 +24,7 @@ interface BackendRole {
   isAeonAccess: boolean;
   isDelPortalAccess: boolean;
   isDelAppAccess: boolean;
+  permissions?: Record<string, Record<string, boolean>>;
   createdAt: string;
   updatedAt: string;
 }
@@ -49,6 +50,7 @@ const mapBackendToFrontend = (role: BackendRole): IUserRole => {
     isAeonAccess: role.isAeonAccess,
     isDelPortalAccess: role.isDelPortalAccess,
     isDelAppAccess: role.isDelAppAccess,
+    permissions: role.permissions,
     createdAt: role.createdAt,
     updatedAt: role.updatedAt,
   };

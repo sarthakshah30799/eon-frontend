@@ -18,6 +18,7 @@ export interface IUserRole {
   isAeonAccess: boolean;
   isDelPortalAccess: boolean;
   isDelAppAccess: boolean;
+  permissions?: Record<string, Record<string, boolean>>;
   createdAt: string;
   updatedAt: string;
   createdBy?: string;

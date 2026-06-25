@@ -1,6 +1,9 @@
 import { useAuth } from '../lib/AuthContext';
 import { useMemo } from 'react';
 
+const normalizePermissionPath = (value: string) =>
+  value !== '/' ? value.replace(/\/+$/, '') : value;
+
 export interface UsePermissionResult {
   canAdd: boolean;
   canModify: boolean;
@@ -68,28 +71,16 @@ export const usePermission = (path?: string): UsePermissionResult => {
       };
     }
 
-    let checkPath = path;
-    const prefixes = [
-      '/admin/company-profile',
-      '/admin/branch-profile',
-      '/admin/counter-profile',
-      '/admin/document-profile',
-      '/admin/country-profile',
-      '/admin/state-profile',
-      '/user-profile',
-      '/admin/user-role',
-      '/expense-booking',
-      '/income-booking',
-    ];
+    const normalizedPath = normalizePermissionPath(path);
+    const matchingPermissionEntry = Object.entries(user.permissions || {})
+      .map(([permissionPath, granted]) => [normalizePermissionPath(permissionPath), granted] as const)
+      .filter(([permissionPath]) =>
+        normalizedPath === permissionPath ||
+        normalizedPath.startsWith(`${permissionPath}/`)
+      )
+      .sort((a, b) => b[0].length - a[0].length)[0];
 
-    for (const prefix of prefixes) {
-      if (path.startsWith(prefix)) {
-        checkPath = prefix;
-        break;
-      }
-    }
-
-    const permissions = user.permissions?.[checkPath] || [];
+    const permissions = matchingPermissionEntry?.[1] || user.permissions?.[normalizedPath] || [];
 
     return {
       canAdd: permissions.includes('add'),

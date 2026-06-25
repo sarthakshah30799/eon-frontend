@@ -29,7 +29,9 @@ export const PartyProfileTable = ({
   selectedType = '',
 }: PartyProfileTableProps) => {
   const navigate = useNavigate();
-  const { canModify, canView } = usePermission('/party-profiles');
+  const { canModify, canView } = usePermission(
+    selectedType ? `/party-profiles/${selectedType}` : '/party-profiles'
+  );
 
   const rows: PartyProfileTableRow[] = clients.map(client => ({
     id: client.id,

@@ -4,10 +4,12 @@ import { Loader } from '@/components/ui/loader';
 import { Button } from '@/components/ui/button1';
 import { CardSection } from '@/components/ui';
 import { Accordion } from '@/components/ui/accordion';
+import { usePermission } from '@/hooks';
 import { useGetPartyProfile } from '@/modules/partyProfiles/hooks';
 import { toPartyProfileApiType, toPartyProfileRouteType } from '@/modules/partyProfiles/constants';
 import { useGetPartyProfileDocuments, useUploadPartyProfileDocument } from '../hooks';
 import { PartyProfileDocumentProfileSection } from '../components';
+import { NotFoundState } from '@/components/ui/not-found-state';
 
 export const PartyProfileDocumentsView = () => {
   const { type: routeType, id } = useParams<{ type: string; id: string }>();
@@ -20,9 +22,12 @@ export const PartyProfileDocumentsView = () => {
     () => toPartyProfileApiType(selectedType),
     [selectedType],
   );
+  const { canView: canViewPartyProfileType } = usePermission(
+    selectedType ? `/party-profiles/${selectedType}` : '/party-profiles'
+  );
 
   const { data: partyProfile, isLoading: isPartyProfileLoading, error: partyProfileError } =
-    useGetPartyProfile(id || '', selectedApiType, Boolean(id && selectedApiType));
+    useGetPartyProfile(id || '', selectedApiType, Boolean(id && selectedApiType && canViewPartyProfileType));
   const {
     data: partyProfileDocuments,
     isLoading: isDocumentsLoading,
@@ -46,12 +51,8 @@ export const PartyProfileDocumentsView = () => {
     return <Loader />;
   }
 
-  if (partyProfileError || partyProfileDocumentsError || !partyProfile) {
-    return (
-      <div className="py-6 text-center text-error-600">
-        Failed to load party profile documents.
-      </div>
-    );
+  if (!canViewPartyProfileType || partyProfileError || partyProfileDocumentsError || !partyProfile) {
+    return <NotFoundState message="Party profile documents were not found." />;
   }
 
   const profileLabel = `${partyProfile.code} · ${partyProfile.name}`;

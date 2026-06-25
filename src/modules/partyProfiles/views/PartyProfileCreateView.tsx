@@ -6,6 +6,8 @@ import type { ICreatePartyProfile } from '../types';
 import { toPartyProfileApiType, toPartyProfileRouteType } from '../constants';
 import { useAuth } from '@/lib';
 import { buildPartyProfileDocumentsPath } from '@/modules/partyProfileDocuments/utils/partyProfileDocumentRoutes';
+import { NotFoundState } from '@/components/ui/not-found-state';
+import { usePermission } from '@/hooks';
 
 const createEmptyPartyProfileValues = (): Omit<ICreatePartyProfile, 'type'> => {
   return {
@@ -79,7 +81,7 @@ export const PartyProfileCreateView = () => {
   const { activeBranchId, user } = useAuth();
   const isAdminUser = user?.isAdmin === true;
 
-  const { data: typeOptions = [] } = usePartyProfileTypes();
+  const { data: typeOptions = [], isLoading: isTypesLoading } = usePartyProfileTypes();
   const routeOptions = useMemo(
     () =>
       typeOptions.map(option => ({
@@ -94,6 +96,10 @@ export const PartyProfileCreateView = () => {
   const selectedApiType = useMemo(
     () => toPartyProfileApiType(selectedType),
     [selectedType]
+  );
+  const isInvalidTypeRoute = Boolean(routeType) && !routeOptions.some(option => option.value === selectedType);
+  const { canAdd } = usePermission(
+    selectedType ? `/party-profiles/${selectedType}` : '/party-profiles'
   );
   const { submitPartyProfile, isPending } = useCreatePartyProfile();
 
@@ -114,6 +120,22 @@ export const PartyProfileCreateView = () => {
     }),
     [activeBranchId, defaultValues]
   );
+
+  if (isTypesLoading) {
+    return (
+      <div className="py-6 text-center text-text-secondary">
+        Loading party profile form...
+      </div>
+    );
+  }
+
+  if (!routeOptions.length || isInvalidTypeRoute || !canAdd) {
+    return (
+      <NotFoundState
+        message="You do not have access to create this party profile type."
+      />
+    );
+  }
 
   if (!selectedType) {
     return (

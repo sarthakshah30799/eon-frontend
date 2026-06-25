@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button1';
 import { Input } from '@/components/ui/input';
+import { NotFoundState } from '@/components/ui/not-found-state';
 import { useDebounce, usePermission } from '@/hooks';
 import { PartyProfileTable } from '../components';
 import { toPartyProfileApiType, toPartyProfileRouteType } from '../constants';
@@ -10,13 +11,12 @@ import { useListPartyProfiles, usePartyProfileTypes } from '../hooks';
 export const PartyProfileListView = () => {
   const navigate = useNavigate();
   const { type: routeType } = useParams<{ type?: string }>();
-  const { canAdd } = usePermission('/party-profiles');
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 400);
 
-  const { data: typeOptions = [] } = usePartyProfileTypes();
+  const { data: typeOptions = [], isLoading: isTypesLoading } = usePartyProfileTypes();
   const routeOptions = useMemo(
     () =>
       typeOptions.map(option => ({
@@ -36,6 +36,11 @@ export const PartyProfileListView = () => {
     () => toPartyProfileApiType(selectedType),
     [selectedType]
   );
+  const { canAdd } = usePermission(
+    selectedType ? `/party-profiles/${selectedType}` : '/party-profiles'
+  );
+  const isInvalidTypeRoute = Boolean(routeType) && !routeOptions.some(option => option.value === selectedType);
+  const canLoadList = Boolean(selectedApiType) && !isInvalidTypeRoute;
 
   useEffect(() => {
     if (!routeType && routeOptions[0]) {
@@ -58,8 +63,24 @@ export const PartyProfileListView = () => {
     isLoading,
     isFetching,
     error,
-  } = useListPartyProfiles(query, selectedApiType, Boolean(selectedApiType));
+  } = useListPartyProfiles(query, selectedApiType, canLoadList);
   const clients = clientResponse?.data ?? [];
+
+  if (isTypesLoading) {
+    return (
+      <div className="py-6 text-center text-text-secondary">
+        Loading party profiles...
+      </div>
+    );
+  }
+
+  if (!routeOptions.length || isInvalidTypeRoute) {
+    return (
+      <NotFoundState
+        message="You do not have access to this party profile type."
+      />
+    );
+  }
 
   if (!selectedType) {
     return (

@@ -1,6 +1,10 @@
 import type { ICategoryOption } from '@/types/categoryOptionTypes';
 
-export type PartyProfileStatus = 'pending' | 'approve' | 'reject';
+export enum PartyProfileStatus {
+  PENDING = 'PENDING',
+  APPROVE = 'APPROVE',
+  REJECT = 'REJECT',
+}
 
 export interface IPartyProfile {
   id: string;
@@ -116,7 +120,7 @@ export type ICreatePartyProfile = Omit<
 export type IUpdatePartyProfile = Partial<ICreatePartyProfile>;
 
 export interface IReviewPartyProfilePayload {
-  status: Exclude<PartyProfileStatus, 'pending'>;
+  status: Exclude<PartyProfileStatus, PartyProfileStatus.PENDING>;
   active: boolean;
   rejectReason?: string;
 }

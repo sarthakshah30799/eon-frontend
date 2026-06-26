@@ -15,6 +15,7 @@ export const createEmptyDocumentProfileFormValues =
     type: '',
     groupSelection: '',
     entitySelection: '',
+    financialYearSelection: '',
     active: true,
     sortOrder: 0,
   });
@@ -36,6 +37,7 @@ export const normalizeDocumentProfileValues = (
   type: values.type.trim(),
   groupSelection: values.groupSelection.trim(),
   entitySelection: values.entitySelection.trim(),
+  financialYearSelection: values.financialYearSelection?.trim() || null,
 });
 
 export const loadDocumentTypeOptions = async () => ({

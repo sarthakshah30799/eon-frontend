@@ -29,6 +29,7 @@ export const DocumentProfileEditView = () => {
       type: data.type?.id || '',
       groupSelection: data.groupSelection?.id || '',
       entitySelection: data.entitySelection?.id || '',
+      financialYearSelection: data.financialYearSelection?.id || '',
       active: data.active,
       sortOrder: data.sortOrder,
     };

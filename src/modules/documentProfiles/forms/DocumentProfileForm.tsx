@@ -131,6 +131,14 @@ const DocumentProfileFields = ({ isSubmitting }: { isSubmitting: boolean }) => {
         disabled={isSubmitting}
         isCreatable={false}
       />
+      <FormFieldCategoryOption
+        name="financialYearSelection"
+        label="Financial Year"
+        code={CategoryOptionCodeEnum.FinancialYear}
+        placeholder="Select financial year"
+        disabled={isSubmitting}
+        isCreatable={false}
+      />
       <FormFieldInput
         name="maxSizeMb"
         label="Max Size (MB)"

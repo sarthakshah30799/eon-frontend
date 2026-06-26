@@ -11,6 +11,7 @@ export interface IDocumentProfile {
   type: ICategoryOption | null;
   groupSelection?: ICategoryOption | null;
   entitySelection?: ICategoryOption | null;
+  financialYearSelection?: ICategoryOption | null;
   active: boolean;
   sortOrder: number;
   createdAt?: string;
@@ -27,6 +28,7 @@ export interface ICreateDocumentProfile {
   type: string;
   groupSelection: string;
   entitySelection: string;
+  financialYearSelection?: string | null;
   active: boolean;
   sortOrder: number;
 }

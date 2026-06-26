@@ -34,6 +34,7 @@ interface MiscellaneousProfileFormProps {
   mode?: 'create' | 'edit';
   fixedCode?: CategoryOptionCode;
   codeOptions?: CategoryOptionCodeOption[];
+  insideModal?: boolean;
 }
 
 const CategoryOptionRows = ({
@@ -140,6 +141,7 @@ export const MiscellaneousProfileForm = ({
   mode = 'create',
   fixedCode,
   codeOptions = CATEGORY_OPTION_CODE_OPTIONS,
+  insideModal
 }: MiscellaneousProfileFormProps) => {
   const navigate = useNavigate();
   const initialValues =
@@ -223,6 +225,13 @@ export const MiscellaneousProfileForm = ({
           disabled={isSubmitting}
         />
       </div>
+      { insideModal && (
+        <div className="flex justify-end border-t border-border-primary pt-4">
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Saving...' : submitLabel}
+          </Button>
+        </div>
+      )}
     </Form>
   );
 };

@@ -13,6 +13,7 @@ import type { ICreateStateProfile } from '../types';
 import { useNavigate } from 'react-router-dom';
 import { stateProfileApi } from '@/api/stateProfile/stateProfile.api';
 import { normalizeCodeValue } from '@/utils';
+import { Button } from '@/components/ui';
 
 interface StateProfileFormProps {
   defaultValues: ICreateStateProfile;
@@ -21,6 +22,7 @@ interface StateProfileFormProps {
   isSubmitting?: boolean;
   readOnly?: boolean;
   currentId?: string;
+  insideModal?: boolean;
 }
 
 const StateCodeField = ({
@@ -79,6 +81,7 @@ export const StateProfileForm = ({
   isSubmitting = false,
   readOnly = false,
   currentId,
+  insideModal,
 }: StateProfileFormProps) => {
   const navigate = useNavigate();
 
@@ -130,6 +133,13 @@ export const StateProfileForm = ({
           disabled={isDisabled}
         />
       </div>
+      {insideModal && (
+        <div className="flex justify-end border-t border-border-primary pt-4">
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Saving...' : submitLabel}
+          </Button>
+        </div>
+      )}
     </Form>
   );
 };

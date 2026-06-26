@@ -70,3 +70,8 @@ export interface IUser {
   assignments?: IUserAssignment[];
   permissions?: Record<string, string[]>;
 }
+
+export interface IWorkplaceSession {
+  activeBranchId: string | null;
+  activeCounterId: string | null;
+}

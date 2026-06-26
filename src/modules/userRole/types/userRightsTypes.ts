@@ -30,4 +30,3 @@ export interface UserRightsViewState {
   rows: UserRightsRow[];
   rowStateById: Record<string, UserRightsRowState>;
 }
-

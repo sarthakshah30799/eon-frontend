@@ -21,7 +21,13 @@ export const ProtectedLayout: React.FC<ProtectedLayoutProps> = ({
     return <Navigate to="/login" replace />;
   }
 
-  if (user && !user.isAdmin && (!activeBranchId || !activeCounterId)) {
+  if (
+    user &&
+    !user.isAdmin &&
+    !user.isHo &&
+    !user.isHoStaff &&
+    (!activeBranchId || !activeCounterId)
+  ) {
     return <Navigate to="/choose-workplace" replace />;
   }
 

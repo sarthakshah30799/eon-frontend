@@ -9,7 +9,7 @@ const numericString = (label: string) =>
   yup
     .string()
     .trim()
-    .matches(/^\d+$/, `${label} must contain only numbers`)
+    .matches(/^\d+(\.\d+)?$/, `${label} must be a valid decimal number`)
     .required(`${label} is required`);
 
 export const currencyProfileSchema = yup.object({

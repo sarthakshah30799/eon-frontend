@@ -22,13 +22,9 @@ export const Header = ({ onMenuClick, onLogout }: HeaderProps) => {
       assignment.counterId === activeCounterId
   );
 
-  const activeBranchLabel =
-    activeAssignment?.branchName || user?.branchName || 'Not selected';
+  const activeBranchLabel = activeAssignment?.branchName || 'Not selected';
 
-  const activeCounterLabel =
-    activeAssignment?.counterName ||
-    user?.counterName ||
-    (user?.counterNo ? `Counter ${user.counterNo}` : 'Not selected');
+  const activeCounterLabel = activeAssignment?.counterName || 'Not selected';
   const { data: menuTree = [] } = useQuery({
     queryKey: ['menu-tree'],
     queryFn: async () => {
@@ -65,8 +61,8 @@ export const Header = ({ onMenuClick, onLogout }: HeaderProps) => {
               <span>Counter: {activeCounterLabel || 'Not selected'}</span>
               <Button
                 type="button"
-                onClick={() => {
-                  clearWorkplace();
+                onClick={async () => {
+                  await clearWorkplace();
                   navigate('/choose-workplace');
                 }}
               >

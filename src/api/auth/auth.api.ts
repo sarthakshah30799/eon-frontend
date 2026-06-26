@@ -3,6 +3,7 @@ import type {
   ILoginResponse,
   IAuthError,
   IUser,
+  IWorkplaceSession,
 } from '../../modules/auth/types';
 import { dispatchSessionExpired } from '@/lib/authSessionEvents';
 
@@ -12,6 +13,7 @@ const SESSION_PROTECTED_ENDPOINTS = new Set([
   '/auth/me',
   '/auth/check',
   '/auth/sessions',
+  '/auth/workplace',
 ]);
 
 export class ApiError extends Error {
@@ -147,6 +149,31 @@ class AuthAPI {
   async getCurrentUser(): Promise<IUser> {
     return this.request<IUser>('/auth/me', {
       method: 'GET',
+      credentials: 'include',
+    });
+  }
+
+  async getWorkplace(): Promise<IWorkplaceSession> {
+    return this.request<IWorkplaceSession>('/auth/workplace', {
+      method: 'GET',
+      credentials: 'include',
+    });
+  }
+
+  async setWorkplace(data: {
+    branchId: string;
+    counterId: string;
+  }): Promise<{ message: string; activeBranchId: string; activeCounterId: string }> {
+    return this.request<{ message: string; activeBranchId: string; activeCounterId: string }>('/auth/workplace', {
+      method: 'POST',
+      body: JSON.stringify(data),
+      credentials: 'include',
+    });
+  }
+
+  async clearWorkplace(): Promise<{ message: string }> {
+    return this.request<{ message: string }>('/auth/workplace', {
+      method: 'DELETE',
       credentials: 'include',
     });
   }

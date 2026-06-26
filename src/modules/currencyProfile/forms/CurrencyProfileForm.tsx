@@ -46,7 +46,7 @@ interface CurrencyProfileFormProps {
 
 const compactFieldClass = '';
 
-const numericInputProps = {
+const integerInputProps = {
   inputMode: 'numeric' as const,
   pattern: '[0-9]*',
 };
@@ -137,7 +137,7 @@ export const CurrencyProfileForm = ({
             label="Priority"
             disabled={isDisabled}
             className={compactFieldClass}
-            {...numericInputProps}
+            {...integerInputProps}
           />
           <FormFieldInput
             type="number"
@@ -152,7 +152,6 @@ export const CurrencyProfileForm = ({
             label="Default Minimum Rate"
             disabled={isDisabled}
             className={compactFieldClass}
-            {...numericInputProps}
           />
           <FormFieldInput
             type="number"
@@ -160,7 +159,6 @@ export const CurrencyProfileForm = ({
             label="Default Maximum Rate"
             disabled={isDisabled}
             className={compactFieldClass}
-            {...numericInputProps}
           />
           <FormFieldInput
             type="number"
@@ -168,7 +166,6 @@ export const CurrencyProfileForm = ({
             label="Open Rate Premium"
             disabled={isDisabled}
             className={compactFieldClass}
-            {...numericInputProps}
           />
           <FormFieldInput
             type="number"
@@ -176,7 +173,6 @@ export const CurrencyProfileForm = ({
             label="Gulf Disc Factor"
             disabled={isDisabled}
             className={compactFieldClass}
-            {...numericInputProps}
           />
           <FormFieldAsyncSelect
             name="calculationMethod"

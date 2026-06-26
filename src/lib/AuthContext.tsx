@@ -18,8 +18,8 @@ interface AuthContextType {
   isAuthenticated: boolean;
   activeBranchId: string | null;
   activeCounterId: string | null;
-  setWorkplace: (branchId: string, counterId: string) => void;
-  clearWorkplace: () => void;
+  setWorkplace: (branchId: string, counterId: string) => Promise<void>;
+  clearWorkplace: () => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   otpLogin: (
     countryCode: string,
@@ -39,12 +39,8 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<IUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeBranchId, setActiveBranchId] = useState<string | null>(
-    () => localStorage.getItem('activeBranchId')
-  );
-  const [activeCounterId, setActiveCounterId] = useState<string | null>(
-    () => localStorage.getItem('activeCounterId')
-  );
+  const [activeBranchId, setActiveBranchId] = useState<string | null>(null);
+  const [activeCounterId, setActiveCounterId] = useState<string | null>(null);
 
   const isAuthenticated = !!user;
 
@@ -52,8 +48,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setUser(null);
     setActiveBranchId(null);
     setActiveCounterId(null);
-    localStorage.removeItem('activeBranchId');
-    localStorage.removeItem('activeCounterId');
   }, []);
 
   const handleSessionExpired = useCallback((message?: string) => {
@@ -71,12 +65,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const checkAuth = async () => {
     try {
       const currentUser = await authApi.getCurrentUser();
-      setUser({
+      const workplace = await authApi.getWorkplace().catch(() => ({
+        activeBranchId: null,
+        activeCounterId: null,
+      }));
+      const nextUser = {
         ...currentUser,
         isHo: currentUser.isHo || currentUser.isHoStaff,
-      });
+      };
+
+      if (
+        !nextUser.isAdmin &&
+        !nextUser.isHo &&
+        !nextUser.isHoStaff &&
+        (!workplace.activeBranchId || !workplace.activeCounterId)
+      ) {
+        nextUser.permissions = {};
+      }
+
+      setUser(nextUser);
+      setActiveBranchId(workplace.activeBranchId);
+      setActiveCounterId(workplace.activeCounterId);
     } catch {
       setUser(null);
+      setActiveBranchId(null);
+      setActiveCounterId(null);
     } finally {
       setIsLoading(false);
     }
@@ -96,18 +109,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     await checkAuth();
   };
 
-  const setWorkplace = (branchId: string, counterId: string) => {
-    setActiveBranchId(branchId);
-    setActiveCounterId(counterId);
-    localStorage.setItem('activeBranchId', branchId);
-    localStorage.setItem('activeCounterId', counterId);
+  const setWorkplace = async (branchId: string, counterId: string) => {
+    await authApi.setWorkplace({ branchId, counterId });
+    await checkAuth();
   };
 
-  const clearWorkplace = () => {
+  const clearWorkplace = async () => {
+    await authApi.clearWorkplace().catch(() => undefined);
     setActiveBranchId(null);
     setActiveCounterId(null);
-    localStorage.removeItem('activeBranchId');
-    localStorage.removeItem('activeCounterId');
+    setUser(prev =>
+      prev && !prev.isAdmin && !prev.isHo && !prev.isHoStaff
+        ? { ...prev, permissions: {} }
+        : prev
+    );
   };
 
   const logout = async () => {

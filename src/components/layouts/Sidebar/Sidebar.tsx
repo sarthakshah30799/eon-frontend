@@ -1,5 +1,4 @@
 import {
-  useEffect,
   useMemo,
   useState,
   type Dispatch,
@@ -106,15 +105,13 @@ const resolveMenuPath = (path?: string, basePath = '') => {
 
 const mapVisibleMenuNodeToItem = (
   node: IMenu,
-  hasViewPermission: (path?: string) => boolean,
   basePath = ''
 ): SidebarItem | null => {
   const visibleChildren = (node.children || [])
-    .map(child => mapVisibleMenuNodeToItem(child, hasViewPermission, basePath))
+    .map(child => mapVisibleMenuNodeToItem(child, basePath))
     .filter(Boolean) as SidebarItem[];
 
   const resolvedPath = resolveMenuPath(node.path || undefined, basePath);
-  const canViewSelf = hasViewPermission(resolvedPath);
 
   if (visibleChildren.length > 0) {
     return {
@@ -124,7 +121,7 @@ const mapVisibleMenuNodeToItem = (
     };
   }
 
-  if (!canViewSelf) {
+  if (!resolvedPath) {
     return null;
   }
 
@@ -152,20 +149,6 @@ const SidebarChevron = ({ isOpen }: { isOpen: boolean }) => (
 
 const getParentKey = (parentKey: string, itemId: string) =>
   `${parentKey}::${itemId}`;
-
-const serializeSidebarItems = (items: SidebarItem[]): string =>
-  items
-    .map(item =>
-      isGroupItem(item)
-        ? `${item.id}[${serializeSidebarItems(item.children)}]`
-        : `${item.id}:${item.path ?? ''}`
-    )
-    .join('|');
-
-const serializeSidebarSection = (section: SidebarSection): string =>
-  isGroupSection(section)
-    ? `${section.title}:${serializeSidebarItems(section.items)}`
-    : `${section.title}:${section.id}:${section.path ?? ''}`;
 
 const isGroupSection = (
   section: SidebarSection
@@ -347,18 +330,10 @@ export const Sidebar = ({
   });
 
   const sections = useMemo<SidebarSection[]>(() => {
-    const isAdminUser = user?.isAdmin === true;
-
-    const hasViewPermission = (path?: string) => {
-      if (isAdminUser) return true;
-      if (!path) return false;
-      return user?.permissions?.[path]?.includes('view') === true;
-    };
-
     const dynamicSections = (menuTree || [])
       .filter(root => !root.isAdmin)
       .map<SidebarSection>(root => {
-        const rootItem = mapVisibleMenuNodeToItem(root, hasViewPermission);
+        const rootItem = mapVisibleMenuNodeToItem(root);
         if (!rootItem) {
           return {
             title: root.name,
@@ -383,9 +358,7 @@ export const Sidebar = ({
 
     const adminRoot = menuTree.find(root => root.isAdmin);
     const adminItems = (adminRoot?.children ?? [])
-      .map(child =>
-        mapVisibleMenuNodeToItem(child, hasViewPermission, '/admin')
-      )
+      .map(child => mapVisibleMenuNodeToItem(child, '/admin'))
       .filter(Boolean) as SidebarItem[];
 
     const adminSection: SidebarGroupSection = {
@@ -398,7 +371,7 @@ export const Sidebar = ({
       items: createdPages.map(mapMasterPageNodeToItem),
     };
 
-    const nextSections = isAdminUser
+    const nextSections = user?.isAdmin || user?.isHoStaff || user?.isHo
       ? [adminSection, ...dynamicSections]
       : dynamicSections;
 
@@ -407,24 +380,17 @@ export const Sidebar = ({
     );
   }, [createdPages, menuTree, user]);
 
-  const sectionsSignature = useMemo(
-    () => sections.map(serializeSidebarSection).join('||'),
-    [sections]
-  );
-
-  useEffect(() => {
+  const activeSectionId = useMemo(() => {
     const firstOpenSection = sections.find(section =>
       isGroupSection(section)
         ? section.items.some(item => isMenuItemActive(item, location.pathname))
         : isPathActive(location.pathname, section.path)
     );
 
-    const nextOpenSectionId =
-      firstOpenSection?.title ?? sections[0]?.title ?? null;
-    setOpenSectionId(prev =>
-      prev === nextOpenSectionId ? prev : nextOpenSectionId
-    );
+    return firstOpenSection?.title ?? sections[0]?.title ?? null;
+  }, [location.pathname, sections]);
 
+  const activeOpenByParent = useMemo(() => {
     const nextOpenByParent: Record<string, string> = {};
 
     const collectOpenGroups = (items: SidebarItem[], parentKey: string) => {
@@ -443,13 +409,15 @@ export const Sidebar = ({
         collectOpenGroups(section.items, section.title);
       }
     });
-    setOpenByParent(prev =>
-      JSON.stringify(prev) === JSON.stringify(nextOpenByParent)
-        ? prev
-        : nextOpenByParent
-    );
-    setCollapsedByParent(prev => (Object.keys(prev).length === 0 ? prev : {}));
-  }, [location.pathname, sectionsSignature]);
+    return nextOpenByParent;
+  }, [location.pathname, sections]);
+
+  const resolvedOpenByParent = useMemo(
+    () => ({ ...activeOpenByParent, ...openByParent }),
+    [activeOpenByParent, openByParent]
+  );
+
+  const resolvedCollapsedByParent = collapsedByParent;
 
   const handleMenuClick = (path?: string) => {
     if (path) {
@@ -564,7 +532,7 @@ export const Sidebar = ({
             ) : (
               sections.map(section => {
                 if (isGroupSection(section)) {
-                  const isOpen = openSectionId === section.title;
+                  const isOpen = (openSectionId ?? activeSectionId) === section.title;
                   const isActiveSection = section.items.some(item =>
                     isMenuItemActive(item, location.pathname)
                   );
@@ -610,8 +578,8 @@ export const Sidebar = ({
                             onNavigate={handleMenuClick}
                             isCollapsed={isCollapsed}
                             parentKey={section.title}
-                            openByParent={openByParent}
-                            collapsedByParent={collapsedByParent}
+                            openByParent={resolvedOpenByParent}
+                            collapsedByParent={resolvedCollapsedByParent}
                             setOpenByParent={setOpenByParent}
                             setCollapsedByParent={setCollapsedByParent}
                           />
@@ -678,7 +646,7 @@ export const Sidebar = ({
                             prev === 'Master Pages' ? null : 'Master Pages'
                           )
                         }
-                        aria-expanded={openSectionId === 'Master Pages'}
+                        aria-expanded={(openSectionId ?? activeSectionId) === 'Master Pages'}
                         title="Master Pages"
                       >
                         <span className="flex min-w-0 items-center gap-2 truncate text-sm">
@@ -689,13 +657,13 @@ export const Sidebar = ({
                         {!isCollapsed && (
                           <span className="text-slate-400">
                             <SidebarChevron
-                              isOpen={openSectionId === 'Master Pages'}
+                              isOpen={(openSectionId ?? activeSectionId) === 'Master Pages'}
                             />
                           </span>
                         )}
                       </button>
 
-                      {openSectionId === 'Master Pages' && !isCollapsed && (
+                      {(openSectionId ?? activeSectionId) === 'Master Pages' && !isCollapsed && (
                         <div className="ml-2 border-l border-slate-200 pl-2 pt-1.5">
                           <SidebarTree
                             items={createdPages.map(mapMasterPageNodeToItem)}
@@ -703,8 +671,8 @@ export const Sidebar = ({
                             onNavigate={handleMenuClick}
                             isCollapsed={isCollapsed}
                             parentKey="Master Pages"
-                            openByParent={openByParent}
-                            collapsedByParent={collapsedByParent}
+                            openByParent={resolvedOpenByParent}
+                            collapsedByParent={resolvedCollapsedByParent}
                             setOpenByParent={setOpenByParent}
                             setCollapsedByParent={setCollapsedByParent}
                           />

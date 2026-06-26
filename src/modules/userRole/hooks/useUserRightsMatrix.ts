@@ -74,24 +74,16 @@ const isExcludedProfile = (name: string, path?: string) => {
   );
 };
 
-const isAdminSidebarNode = (name: string, path?: string) => {
-  const lowerName = name.toLowerCase();
-  const lowerPath = path?.toLowerCase() || '';
-
-  return (
-    lowerName === 'admin' ||
-    lowerName.includes('admin panel') ||
-    lowerPath === '/admin' ||
-    lowerPath.startsWith('/admin/')
-  );
-};
-
 const filterMenuRecord = (menu: IMenu): IMenu | null => {
   if (isExcludedProfile(menu.name, menu.path ?? undefined)) {
     return null;
   }
 
-  if (isAdminSidebarNode(menu.name, menu.path ?? undefined)) {
+  if (
+    menu.isAdmin ||
+    menu.name.toLowerCase() === 'admin' ||
+    menu.path?.toLowerCase().startsWith('/admin/')
+  ) {
     return null;
   }
 
@@ -142,61 +134,15 @@ export const useUserRightsMatrix = (roleId: string | null): UseUserRightsMatrixR
     enabled: !!roleId,
   });
 
-  const backendRowStateOverrides = useMemo(() => {
-    if (!activeRolePermissions) {
-      return {};
-    }
-
-    const nextOverrides: Record<string, UserRightsRowState> = {};
-    for (const [menuId, perms] of Object.entries(activeRolePermissions)) {
-      const selected = USER_RIGHTS_PERMISSION_COLUMNS.every(
-        column => perms[column.key]
-      );
-      nextOverrides[menuId] = {
-        selected,
-        permissions: perms as unknown as UserRightsPermissionState,
-      };
-    }
-
-    return nextOverrides;
-  }, [activeRolePermissions]);
-
-  const saveMutation = useMutation({
-    mutationFn: async () => {
-      if (!roleId) {
-        throw new Error('Please select a role first to save permissions.');
-      }
-      const grid: Record<string, Record<string, boolean>> = {};
-      for (const [menuId, state] of Object.entries(rowStateById)) {
-        const hasAnyActive = Object.values(state.permissions).some(v => v);
-        if (hasAnyActive) {
-          grid[menuId] = state.permissions as unknown as Record<string, boolean>;
-        }
-      }
-      await userRoleApi.saveRolePermissions(roleId, grid);
-    },
-    onSuccess: () => {
-      toast.success('Permissions saved successfully!');
-    },
-    onError: (err: unknown) => {
-      toast.error(
-        err instanceof Error ? err.message : 'Failed to save permissions'
-      );
-    },
-  });
-
   const treeNodes = useMemo<UserRightsTreeNode[]>(
     () => {
       const filteredMenus = (menuTree as IMenu[])
         .map(filterMenuRecord)
         .filter((m): m is IMenu => m !== null);
 
-      const filteredPages = (createdPages as IMasterPageTreeNode[])
-        .filter(
-          p =>
-            !isExcludedProfile(p.pageName, p.slug) &&
-            !isAdminSidebarNode(p.pageName, p.slug)
-        );
+      const filteredPages = (createdPages as IMasterPageTreeNode[]).filter(
+        p => !isExcludedProfile(p.pageName, p.slug)
+      );
 
       return [
         ...filteredMenus.map(mapMenuRecordToRightsTreeNode),
@@ -251,6 +197,24 @@ export const useUserRightsMatrix = (roleId: string | null): UseUserRightsMatrixR
   );
 
   const rows = useMemo(() => flattenRightsLeafRows(treeNodes), [treeNodes]);
+  const backendRowStateOverrides = useMemo(() => {
+    if (!activeRolePermissions) {
+      return {};
+    }
+
+    const nextOverrides: Record<string, UserRightsRowState> = {};
+    for (const [menuId, perms] of Object.entries(activeRolePermissions)) {
+      const selected = USER_RIGHTS_PERMISSION_COLUMNS.every(
+        column => perms[column.key]
+      );
+      nextOverrides[menuId] = {
+        selected,
+        permissions: perms as unknown as UserRightsPermissionState,
+      };
+    }
+
+    return nextOverrides;
+  }, [activeRolePermissions]);
 
   const visibleRows = useMemo(() => {
     if (!selectedNode) {
@@ -278,6 +242,30 @@ export const useUserRightsMatrix = (roleId: string | null): UseUserRightsMatrixR
       })),
     [rowStateById, visibleRows]
   );
+
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      if (!roleId) {
+        throw new Error('Please select a role first to save permissions.');
+      }
+      const grid: Record<string, Record<string, boolean>> = {};
+      for (const [menuId, state] of Object.entries(rowStateById)) {
+        const hasAnyActive = Object.values(state.permissions).some(v => v);
+        if (hasAnyActive) {
+          grid[menuId] = state.permissions as unknown as Record<string, boolean>;
+        }
+      }
+      await userRoleApi.saveRolePermissions(roleId, grid);
+    },
+    onSuccess: () => {
+      toast.success('Permissions saved successfully!');
+    },
+    onError: (err: unknown) => {
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to save permissions'
+      );
+    },
+  });
 
   const selectNode = (nodeId: string) => {
     setSelectedNodeId(nodeId);

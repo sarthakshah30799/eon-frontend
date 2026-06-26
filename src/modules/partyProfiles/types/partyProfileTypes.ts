@@ -1,10 +1,13 @@
 import type { ICategoryOption } from '@/types/categoryOptionTypes';
 
-export enum PartyProfileStatus {
-  PENDING = 'PENDING',
-  APPROVE = 'APPROVE',
-  REJECT = 'REJECT',
-}
+export const PartyProfileStatusEnum = {
+  PENDING: 'PENDING',
+  APPROVE: 'APPROVE',
+  REJECT: 'REJECT',
+} as const;
+
+export type PartyProfileStatus =
+  (typeof PartyProfileStatusEnum)[keyof typeof PartyProfileStatusEnum];
 
 export interface IPartyProfile {
   id: string;
@@ -120,7 +123,7 @@ export type ICreatePartyProfile = Omit<
 export type IUpdatePartyProfile = Partial<ICreatePartyProfile>;
 
 export interface IReviewPartyProfilePayload {
-  status: Exclude<PartyProfileStatus, PartyProfileStatus.PENDING>;
+  status: Exclude<PartyProfileStatus, typeof PartyProfileStatusEnum.PENDING>;
   active: boolean;
   rejectReason?: string;
 }

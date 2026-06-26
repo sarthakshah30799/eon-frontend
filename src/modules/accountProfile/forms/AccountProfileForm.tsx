@@ -357,19 +357,31 @@ export const AccountProfileForm = ({
         </div>
       </CardSection>
 
-      <CardSection heading="Configuration Checkboxes">
-        <div className="grid gap-3 grid-cols-2 md:grid-cols-4 lg:grid-cols-7">
+      <CardSection heading="Transaction Permissions">
+        <div className="grid gap-3 grid-cols-2 md:grid-cols-4 lg:grid-cols-4">
           <div className="rounded-sm border border-border-primary bg-surface-primary p-3 hover:border-border-secondary transition-all">
-            <FormFieldCheckbox name="doSale" label="Do Sale" disabled={isDisabled} />
+            <FormFieldCheckbox name="bulkSale" label="Bulk Sale" disabled={isDisabled} />
           </div>
           <div className="rounded-sm border border-border-primary bg-surface-primary p-3 hover:border-border-secondary transition-all">
-            <FormFieldCheckbox name="doPurchase" label="Do Purchase" disabled={isDisabled} />
+            <FormFieldCheckbox name="bulkPurchase" label="Bulk Purchase" disabled={isDisabled} />
           </div>
           <div className="rounded-sm border border-border-primary bg-surface-primary p-3 hover:border-border-secondary transition-all">
-            <FormFieldCheckbox name="doReceipt" label="Do Receipt" disabled={isDisabled} />
+            <FormFieldCheckbox name="retailSale" label="Retail Sale" disabled={isDisabled} />
           </div>
           <div className="rounded-sm border border-border-primary bg-surface-primary p-3 hover:border-border-secondary transition-all">
-            <FormFieldCheckbox name="doPayment" label="Do Payment" disabled={isDisabled} />
+            <FormFieldCheckbox name="retailPurchase" label="Retail Purchase" disabled={isDisabled} />
+          </div>
+          <div className="rounded-sm border border-border-primary bg-surface-primary p-3 hover:border-border-secondary transition-all">
+            <FormFieldCheckbox name="expense" label="Expense" disabled={isDisabled} />
+          </div>
+          <div className="rounded-sm border border-border-primary bg-surface-primary p-3 hover:border-border-secondary transition-all">
+            <FormFieldCheckbox name="receipt" label="Receipt" disabled={isDisabled} />
+          </div>
+          <div className="rounded-sm border border-border-primary bg-surface-primary p-3 hover:border-border-secondary transition-all">
+            <FormFieldCheckbox name="payment" label="Payment" disabled={isDisabled} />
+          </div>
+          <div className="rounded-sm border border-border-primary bg-surface-primary p-3 hover:border-border-secondary transition-all">
+            <FormFieldCheckbox name="journalVoucher" label="Journal Voucher (JV)" disabled={isDisabled} />
           </div>
           <div className="rounded-sm border border-border-primary bg-surface-primary p-3 hover:border-border-secondary transition-all">
             <FormFieldCheckbox name="active" label="Active" disabled={isDisabled} />

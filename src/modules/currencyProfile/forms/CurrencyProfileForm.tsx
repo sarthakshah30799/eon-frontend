@@ -1,6 +1,5 @@
 import { useCallback, useEffect } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
-import type { FormEvent } from 'react';
 import { yupResolver } from '@hookform/resolvers/yup';
 import {
   Form,
@@ -50,12 +49,6 @@ const compactFieldClass = '';
 const numericInputProps = {
   inputMode: 'numeric' as const,
   pattern: '[0-9]*',
-  onInput: (event: FormEvent<HTMLInputElement>) => {
-    event.currentTarget.value = event.currentTarget.value.replace(
-      /[^0-9]/g,
-      ''
-    );
-  },
 };
 
 export const CurrencyProfileForm = ({
@@ -147,13 +140,14 @@ export const CurrencyProfileForm = ({
             {...numericInputProps}
           />
           <FormFieldInput
+            type="number"
             name="ratePer"
             label="Rate / Per"
             disabled={isDisabled}
             className={compactFieldClass}
-            {...numericInputProps}
           />
           <FormFieldInput
+            type="number"
             name="defaultMinRate"
             label="Default Minimum Rate"
             disabled={isDisabled}
@@ -161,6 +155,7 @@ export const CurrencyProfileForm = ({
             {...numericInputProps}
           />
           <FormFieldInput
+            type="number"
             name="defaultMaxRate"
             label="Default Maximum Rate"
             disabled={isDisabled}
@@ -168,6 +163,7 @@ export const CurrencyProfileForm = ({
             {...numericInputProps}
           />
           <FormFieldInput
+            type="number"
             name="openRatePremium"
             label="Open Rate Premium"
             disabled={isDisabled}
@@ -175,6 +171,7 @@ export const CurrencyProfileForm = ({
             {...numericInputProps}
           />
           <FormFieldInput
+            type="number"
             name="gulfDiscFactor"
             label="Gulf Disc Factor"
             disabled={isDisabled}

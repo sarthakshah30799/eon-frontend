@@ -123,12 +123,12 @@ export const FormFieldInput = ({
   return (
     <Input
       label={label}
-      type={type}
       placeholder={placeholder}
       disabled={disabled}
       className={className}
       {...field}
       {...rest}
+      type={type}
       onChange={handleChange}
       error={error?.message}
       valueTransform={valueTransform}

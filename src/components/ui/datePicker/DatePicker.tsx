@@ -1,8 +1,13 @@
-import React, { forwardRef, useId } from 'react';
+import React, { forwardRef, useId, useState } from 'react';
 import ReactDatePicker from 'react-datepicker';
 import { Label } from '../label';
 import 'react-datepicker/dist/react-datepicker.css';
 import './datepicker.css';
+import {
+  formatDateDisplayInput,
+  maskDateInput,
+  parseDateInput,
+} from '@/utils';
 
 export interface DatePickerProps {
   label?: string;
@@ -19,39 +24,42 @@ export interface DatePickerProps {
 }
 
 const DatePickerInput = forwardRef<
-  HTMLButtonElement,
-  React.ButtonHTMLAttributes<HTMLButtonElement> & {
+  HTMLInputElement,
+  React.InputHTMLAttributes<HTMLInputElement> & {
     placeholder?: string;
+    inputValue?: string;
+    onInputValueChange?: (value: string) => void;
+    onParsedDateChange?: (date: Date | null) => void;
   }
->(({ className = '', value, placeholder, ...props }, ref) => {
-  const displayValue = String(value ?? '');
-  const isEmpty = displayValue.trim().length === 0;
+>(({ className = '', value, placeholder, inputValue, onInputValueChange, onParsedDateChange, ...props }, ref) => {
+  const displayValue = inputValue ?? String(value ?? '');
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const nextValue = maskDateInput(event.target.value);
+    onInputValueChange?.(nextValue);
+
+    if (!nextValue) {
+      onParsedDateChange?.(null);
+      return;
+    }
+
+    if (nextValue.length === 10) {
+      const parsed = parseDateInput(nextValue);
+      onParsedDateChange?.(parsed);
+    }
+  };
 
   return (
-    <button
+    <input
       ref={ref}
-      type="button"
+      type="text"
+      inputMode="numeric"
       className={`flex min-h-7.5 w-full items-center justify-between gap-3 rounded-md border border-border-secondary bg-surface-primary px-3 py-1 text-left text-sm text-text-primary shadow-none transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+      value={displayValue}
+      placeholder={placeholder}
       {...props}
-    >
-      <span className={`text-sm ${isEmpty ? 'text-text-tertiary' : 'text-text-primary'}`}>
-        {isEmpty ? placeholder ?? 'Select date' : displayValue}
-      </span>
-      <svg
-        aria-hidden="true"
-        className="h-4 w-4 shrink-0 text-text-tertiary"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="2"
-          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-        />
-      </svg>
-    </button>
+      onChange={handleChange}
+    />
   );
 });
 
@@ -72,6 +80,9 @@ export const DatePicker = ({
 }: DatePickerProps) => {
   const generatedId = useId();
   const inputId = id ?? generatedId;
+  const [inputValue, setInputValue] = useState(
+    () => (selected ? formatDateDisplayInput(selected) : '')
+  );
 
   return (
     <div className="space-y-1 max-w-[350px]">
@@ -86,9 +97,14 @@ export const DatePicker = ({
         minDate={minDate}
         maxDate={maxDate}
         className={className}
-        customInput={<DatePickerInput />}
+        customInput={
+          <DatePickerInput
+            inputValue={inputValue}
+            onInputValueChange={setInputValue}
+            onParsedDateChange={onChange}
+          />
+        }
         showYearDropdown
-
       />
       {error && <p className="mt-1 text-sm text-error-600">{error}</p>}
     </div>

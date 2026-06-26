@@ -44,6 +44,10 @@
   margin: 0;
 }
 
+.react-select-container .react-select__input-container input {
+  text-transform: uppercase;
+}
+
 .react-select-container .react-select__single-value {
   color: var(--color-text-primary);
   font-size: 0.875rem;

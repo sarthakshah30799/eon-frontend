@@ -49,6 +49,7 @@ export const FormFieldDatePicker = ({
 
   return (
     <DatePicker
+      key={`${name}-${String(field.value ?? '')}`}
       label={label}
       placeholder={placeholder}
       disabled={disabled}

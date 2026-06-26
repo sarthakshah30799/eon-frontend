@@ -12,6 +12,7 @@ import {
   CATEGORY_OPTIONS_TEXTS,
   loadCategoryOptionCodeOptions,
 } from '../constants';
+import type { CategoryOptionCodeOption } from '../constants';
 import { miscellaneousProfileFormSchema } from '../schema';
 import type {
   ICategoryOptionFormItemValues,
@@ -32,6 +33,7 @@ interface MiscellaneousProfileFormProps {
   isSubmitting?: boolean;
   mode?: 'create' | 'edit';
   fixedCode?: CategoryOptionCode;
+  codeOptions?: CategoryOptionCodeOption[];
 }
 
 const CategoryOptionRows = ({
@@ -137,6 +139,7 @@ export const MiscellaneousProfileForm = ({
   isSubmitting = false,
   mode = 'create',
   fixedCode,
+  codeOptions = CATEGORY_OPTION_CODE_OPTIONS,
 }: MiscellaneousProfileFormProps) => {
   const navigate = useNavigate();
   const initialValues =
@@ -197,7 +200,7 @@ export const MiscellaneousProfileForm = ({
             label="CATEGORY CODE"
             placeholder="SELECT CATEGORY"
             loadOptions={loadCodes}
-            defaultOptions={CATEGORY_OPTION_CODE_OPTIONS}
+            defaultOptions={codeOptions}
             disabled={isSubmitting}
             isSearchable={false}
           />

@@ -6,6 +6,7 @@ import type {
   ICreatePartyProfile,
   IReviewPartyProfilePayload,
 } from '../types';
+import { PartyProfileStatus } from '../types';
 
 interface PartyProfileReviewActionPanelProps {
   reviewMode?: boolean;
@@ -33,7 +34,7 @@ export const PartyProfileReviewActionPanel = ({
 
       const rejectReason = String(getValues('rejectReason') || '').trim();
 
-      if (status === 'reject' && !rejectReason) {
+      if (status === PartyProfileStatus.REJECT && !rejectReason) {
         setError('rejectReason', {
           type: 'manual',
           message: 'Reject reason is required when rejecting a profile.',
@@ -48,10 +49,10 @@ export const PartyProfileReviewActionPanel = ({
         await onReviewSubmit({
           status,
           active: isActive,
-          rejectReason: status === 'reject' ? rejectReason : undefined,
+          rejectReason: status === PartyProfileStatus.REJECT ? rejectReason : undefined,
         });
 
-        if (status === 'reject') {
+        if (status === PartyProfileStatus.REJECT) {
           setIsRejectExpanded(false);
           resetField('rejectReason', { defaultValue: '' });
         }
@@ -118,7 +119,7 @@ export const PartyProfileReviewActionPanel = ({
                   return;
                 }
 
-                void submitReview('reject');
+                void submitReview(PartyProfileStatus.REJECT);
               }}
             >
               {isRejectExpanded ? 'Submit Reject' : 'Reject'}
@@ -153,7 +154,7 @@ export const PartyProfileReviewActionPanel = ({
             </Button>
             <Button
               type="button"
-              onClick={() => void submitReview('approve')}
+              onClick={() => void submitReview(PartyProfileStatus.APPROVE)}
               disabled={isReviewing}
             >
               Confirm Approve

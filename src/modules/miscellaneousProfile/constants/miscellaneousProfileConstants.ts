@@ -39,6 +39,10 @@ export const CATEGORY_OPTION_CODE_OPTIONS: CategoryOptionCodeOption[] = [
     label: 'FINANCIAL TYPE',
   },
   {
+    value: CategoryOptionCodeEnum.FinancialYear,
+    label: 'FINANCIAL YEAR',
+  },
+  {
     value: CategoryOptionCodeEnum.DefaultSign,
     label: 'DEFAULT SIGN',
   },
@@ -110,6 +114,7 @@ export const CATEGORY_OPTION_CODE_LABELS = {
   [CategoryOptionCodeEnum.LocationType]: 'LOCATION TYPE',
   [CategoryOptionCodeEnum.RiskCategory]: 'RISK CATEGORY',
   [CategoryOptionCodeEnum.FinancialType]: 'FINANCIAL TYPE',
+  [CategoryOptionCodeEnum.FinancialYear]: 'FINANCIAL YEAR',
   [CategoryOptionCodeEnum.DefaultSign]: 'DEFAULT SIGN',
   [CategoryOptionCodeEnum.DivisionDept]: 'DIVISION/DEPT',
   [CategoryOptionCodeEnum.AccountType]: 'ACCOUNT TYPE',

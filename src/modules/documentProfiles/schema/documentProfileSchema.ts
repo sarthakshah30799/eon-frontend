@@ -39,6 +39,11 @@ export const documentProfileSchema = yup.object({
     .uuid('Select a valid document group')
     .required('Document Group is required'),
   entitySelection: yup.string().uuid('Select a valid entity type').required('Entity Type is required'),
+  financialYearSelection: yup
+    .string()
+    .uuid('Select a valid financial year')
+    .optional()
+    .nullable(),
   active: yup.boolean().default(true),
   sortOrder: yup.number().min(0).default(0),
 });

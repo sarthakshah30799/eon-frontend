@@ -154,6 +154,7 @@ export const FormFieldCategoryOption = ({
           submitLabel="Create Options"
           isSubmitting={isCreating}
           mode="create"
+          insideModal
         />
       </Modal>
     </>

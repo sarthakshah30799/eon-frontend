@@ -188,6 +188,7 @@ export const StateDropdown = ({
           onSubmit={handleCreateState}
           submitLabel="Create State"
           isSubmitting={isCreatingState}
+          insideModal
         />
       </Modal>
     </>

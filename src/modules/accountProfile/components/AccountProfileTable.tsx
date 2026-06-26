@@ -35,7 +35,7 @@ export const AccountProfileTable = ({
     divisionDept: account.divisionDept?.label ?? '',
     accountType: account.accountType?.label ?? '',
     currencyCode: account.currencyCode || '',
-    financialCode: account.financialCode?.financialCode || '',
+    financialCode: account.financialCode ?? '',
     active: account.active ? 'Active' : 'Inactive',
   }));
 
@@ -65,7 +65,9 @@ export const AccountProfileTable = ({
           <div className="flex items-center gap-2">
             <Button
               type="button"
-              aria-label={canModify ? 'Edit account profile' : 'View account profile'}
+              aria-label={
+                canModify ? 'Edit account profile' : 'View account profile'
+              }
               variant="ghost"
               size="icon"
               className="rounded-sm bg-transparent text-black! hover:bg-surface-secondary hover:text-text-primary"

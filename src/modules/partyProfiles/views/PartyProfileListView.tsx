@@ -5,7 +5,11 @@ import { Input } from '@/components/ui/input';
 import { NotFoundState } from '@/components/ui/not-found-state';
 import { useDebounce, usePermission } from '@/hooks';
 import { PartyProfileTable } from '../components';
-import { toPartyProfileApiType, toPartyProfileRouteType } from '../constants';
+import {
+  formatPartyProfileLabel,
+  toPartyProfileApiType,
+  toPartyProfileRouteType,
+} from '../constants';
 import { useListPartyProfiles, usePartyProfileTypes } from '../hooks';
 
 export const PartyProfileListView = () => {
@@ -109,7 +113,7 @@ export const PartyProfileListView = () => {
               selectedType && navigate(`/party-profiles/${selectedType}/create`)
             }
           >
-            Create Party Profile
+            {`Create ${formatPartyProfileLabel(selectedType)} Profile`}
           </Button>
         )}
       </div>

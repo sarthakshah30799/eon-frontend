@@ -1,5 +1,4 @@
 import type { ICurrencyProfile } from '@/modules/currencyProfile/types';
-import type { IFinancialCode } from '@/modules/financialCodes/types/financialCodeTypes';
 import type { IBranchProfile } from '@/modules/branchProfile/types';
 import type { ICategoryOption } from '@/types/categoryOptionTypes';
 
@@ -15,7 +14,7 @@ export interface IAccountProfile {
   currencyCode?: string;
   currency?: ICurrencyProfile | null;
   financialCodeId: string;
-  financialCode?: IFinancialCode | null;
+  financialCode?: string;
   financialSubProfileId?: string;
   financialSubCode?: string;
   pettyCashExpenseId: string;

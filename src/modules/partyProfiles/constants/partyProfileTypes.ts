@@ -35,3 +35,15 @@ export const toPartyProfileDisplayLabel = (
   const normalized = value?.trim().replace(/[_-]+/g, ' ');
   return normalized ? normalized.toUpperCase() : 'PARTY PROFILE';
 };
+
+export const formatPartyProfileLabel = (
+  value?: string | null
+): string => {
+  const normalized = value?.trim().replace(/[-_]+/g, ' ');
+
+  if (!normalized) {
+    return 'Party Profile';
+  }
+
+  return normalized.toUpperCase();
+};

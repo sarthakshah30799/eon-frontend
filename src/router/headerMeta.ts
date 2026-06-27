@@ -156,6 +156,14 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
     path: '/income-booking/edit/:id',
     meta: { title: 'Edit Income Booking Master' },
   },
+  {
+    path: '/admin/manual-bill-books',
+    meta: { title: 'Manual Bill Books' },
+  },
+  {
+    path: '/admin/manual-bill-books/create',
+    meta: { title: 'Manual Bill Books' },
+  },
 ];
 
 const findMenuName = (nodes: any[], pathname: string): string | null => {
@@ -172,14 +180,17 @@ const findMenuName = (nodes: any[], pathname: string): string | null => {
 };
 
 export const resolveHeaderMeta = (pathname: string, menuTree?: any[]): HeaderMeta => {
+  const cleanPathname = pathname.endsWith('/') && pathname !== '/' ? pathname.slice(0, -1) : pathname;
+
   for (const route of HEADER_ROUTES) {
-    if (matchPath({ path: route.path, end: true }, pathname)) {
+    const cleanRoutePath = route.path.endsWith('/') && route.path !== '/' ? route.path.slice(0, -1) : route.path;
+    if (matchPath({ path: cleanRoutePath, end: true }, cleanPathname)) {
       return route.meta;
     }
   }
 
   if (menuTree && menuTree.length > 0) {
-    const name = findMenuName(menuTree, pathname);
+    const name = findMenuName(menuTree, cleanPathname);
     if (name) {
       return { title: name };
     }

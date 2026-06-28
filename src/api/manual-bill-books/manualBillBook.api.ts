@@ -49,11 +49,20 @@ export const manualBillBookApi = {
     return res.data;
   },
 
-  findAll: async (branchId?: string, status?: string): Promise<IManualBook[]> => {
+  findAll: async (
+    branchId?: string,
+    status?: string,
+    transactionType?: string,
+    fromDate?: string,
+    toDate?: string
+  ): Promise<IManualBook[]> => {
     let url = '/manual-bill-books/dispatches';
     const params: string[] = [];
-    if (branchId) params.push(`branchId=${branchId}`);
-    if (status) params.push(`status=${status}`);
+    if (branchId) params.push(`branchId=${encodeURIComponent(branchId)}`);
+    if (status) params.push(`status=${encodeURIComponent(status)}`);
+    if (transactionType) params.push(`transactionType=${encodeURIComponent(transactionType)}`);
+    if (fromDate) params.push(`fromDate=${encodeURIComponent(fromDate)}`);
+    if (toDate) params.push(`toDate=${encodeURIComponent(toDate)}`);
     if (params.length > 0) {
       url += `?${params.join('&')}`;
     }
@@ -69,6 +78,12 @@ export const manualBillBookApi = {
     return res.data;
   },
 
+  bulkReview: async (reviews: Array<{ id: string; status: string; approvalRemarks?: string }>): Promise<IManualBook[]> => {
+    const res = await apiClient.put<IManualBook[]>('/manual-bill-books/dispatches/bulk-review', { reviews });
+    if (res.error) throw new Error(res.error);
+    return res.data || [];
+  },
+
   getNextNumber: async (branchId: string, dispatchDate: string): Promise<{ nextNumber: string }> => {
     const res = await apiClient.get<{ nextNumber: string }>(
       `/manual-bill-books/next-number?branchId=${encodeURIComponent(branchId)}&dispatchDate=${encodeURIComponent(dispatchDate)}`
@@ -76,5 +91,27 @@ export const manualBillBookApi = {
     if (res.error) throw new Error(res.error);
     if (!res.data) throw new Error('Failed to fetch next number');
     return res.data;
+  },
+
+  getCashiers: async (branchId: string): Promise<Array<{ id: string; name: string }>> => {
+    const res = await apiClient.get<Array<{ id: string; name: string }>>(
+      `/manual-bill-books/cashiers?branchId=${encodeURIComponent(branchId)}`
+    );
+    if (res.error) throw new Error(res.error);
+    return res.data || [];
+  },
+
+  saveAllocations: async (allocations: Array<{ manualBookId: string; bookNo: number; cashierId: string; remarks?: string }>): Promise<any[]> => {
+    const res = await apiClient.post<any[]>('/manual-bill-books/allocations', { allocations });
+    if (res.error) throw new Error(res.error);
+    return res.data || [];
+  },
+
+  getAllocations: async (manualBookIds: string[]): Promise<Array<{ id: string; manualBookId: string; bookNo: number; cashierId: string; remarks?: string }>> => {
+    const res = await apiClient.get<Array<{ id: string; manualBookId: string; bookNo: number; cashierId: string; remarks?: string }>>(
+      `/manual-bill-books/allocations?manualBookIds=${encodeURIComponent(manualBookIds.join(','))}`
+    );
+    if (res.error) throw new Error(res.error);
+    return res.data || [];
   },
 };

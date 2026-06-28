@@ -164,6 +164,22 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
     path: '/admin/manual-bill-books/create',
     meta: { title: 'Manual Bill Books' },
   },
+  {
+    path: '/manual-bill-books',
+    meta: { title: 'Manual Bill Books' },
+  },
+  {
+    path: '/manual-bill-books/create',
+    meta: { title: 'Manual Bill Books' },
+  },
+  {
+    path: '/manual-bill-books/acknowledgement',
+    meta: { title: 'Branch Acknowledgement' },
+  },
+  {
+    path: '/manual-bill-books/allocation',
+    meta: { title: 'Manager To Cashier Allocation' },
+  },
 ];
 
 const findMenuName = (nodes: any[], pathname: string): string | null => {

@@ -128,6 +128,12 @@ const ManualBillBookPage = lazy(
 const ManualBillBookCreatePage = lazy(
   () => import('../pages/manual-bill-books/ManualBillBookCreatePage')
 );
+const ManualBillBookAcknowledgementPage = lazy(
+  () => import('../pages/manual-bill-books/ManualBillBookAcknowledgementPage')
+);
+const ManagerToCashierAllocationPage = lazy(
+  () => import('../pages/manual-bill-books/ManagerToCashierAllocationPage')
+);
 const AdditionalSettingsPage = lazy(
   () => import('../pages/admin/additional-settings')
 );
@@ -462,6 +468,38 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <ManualBillBookCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/manual-bill-books',
+    element: (
+      <ProtectedLayout>
+        <ManualBillBookPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/manual-bill-books/create',
+    element: (
+      <ProtectedLayout>
+        <ManualBillBookCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/manual-bill-books/acknowledgement',
+    element: (
+      <ProtectedLayout>
+        <ManualBillBookAcknowledgementPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/manual-bill-books/allocation',
+    element: (
+      <ProtectedLayout>
+        <ManagerToCashierAllocationPage />
       </ProtectedLayout>
     ),
   },

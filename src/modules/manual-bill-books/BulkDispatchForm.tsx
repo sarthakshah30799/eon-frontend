@@ -112,13 +112,13 @@ const BulkDispatchFormFields = () => {
       <FormFieldSelect name="transactionType" label="Txn Type" loadOptions={loadTxnTypes} />
       <FormFieldInput name="bookNoFrom" label="Book No. From" type="number" />
       <FormFieldInput name="bookNoTo" label="Book No. To" type="number" />
-      <FormFieldInput name="vouchersPerBook" label="No Of Voucher Per Book" type="number" />
+      <div className="md:col-span-2">
+        <FormFieldInput name="vouchersPerBook" label="No Of Voucher Per Book" type="number" />
+      </div>
       <FormFieldInput name="mvNoFrom" label="MV No. From" type="number" />
       <FormFieldInput name="mvNoTo" label="MV No. To" disabled />
       <FormFieldSelect name="assignedTo" label="Assigned To" loadOptions={loadAssignedTo} />
-      <div className="md:col-span-2">
-        <FormFieldTextarea name="remarks" label="Remarks" rows={3} />
-      </div>
+      <FormFieldTextarea name="remarks" label="Remarks" rows={3} />
     </div>
   );
 };
@@ -167,6 +167,7 @@ export const BulkDispatchForm = ({ onSuccess }: BulkDispatchFormProps) => {
       onSubmit={handleSubmit}
       resolver={yupResolver(bulkDispatchSchema) as any}
       defaultValues={defaultValues}
+      mode="all"
       footer={{
         submitLabel: 'Create',
         onBackClick: () => {

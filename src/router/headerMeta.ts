@@ -1,4 +1,5 @@
 import { matchPath } from 'react-router-dom';
+import type { IMenu } from '@/types/menuTypes';
 
 export type HeaderMeta = {
   title: string;
@@ -51,7 +52,11 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
     meta: { title: 'Edit Miscellaneous Profile' },
   },
   { path: '/admin/menu-management', meta: { title: 'Menu Management' } },
-  { path: '/admin/additional-settings', meta: { title: 'Additional Settings' } },
+  {
+    path: '/admin/additional-settings',
+    meta: { title: 'Additional Settings' },
+  },
+  { path: '/admin/currency-rates', meta: { title: 'Currency Rates' } },
   {
     path: '/admin/country-profile',
     meta: { title: 'Country Profile' },
@@ -182,7 +187,7 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
   },
 ];
 
-const findMenuName = (nodes: any[], pathname: string): string | null => {
+const findMenuName = (nodes: IMenu[], pathname: string): string | null => {
   for (const node of nodes) {
     if (node.path && matchPath({ path: node.path, end: true }, pathname)) {
       return node.name;
@@ -195,11 +200,20 @@ const findMenuName = (nodes: any[], pathname: string): string | null => {
   return null;
 };
 
-export const resolveHeaderMeta = (pathname: string, menuTree?: any[]): HeaderMeta => {
-  const cleanPathname = pathname.endsWith('/') && pathname !== '/' ? pathname.slice(0, -1) : pathname;
+export const resolveHeaderMeta = (
+  pathname: string,
+  menuTree?: IMenu[]
+): HeaderMeta => {
+  const cleanPathname =
+    pathname.endsWith('/') && pathname !== '/'
+      ? pathname.slice(0, -1)
+      : pathname;
 
   for (const route of HEADER_ROUTES) {
-    const cleanRoutePath = route.path.endsWith('/') && route.path !== '/' ? route.path.slice(0, -1) : route.path;
+    const cleanRoutePath =
+      route.path.endsWith('/') && route.path !== '/'
+        ? route.path.slice(0, -1)
+        : route.path;
     if (matchPath({ path: cleanRoutePath, end: true }, cleanPathname)) {
       return route.meta;
     }

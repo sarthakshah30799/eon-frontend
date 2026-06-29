@@ -47,6 +47,14 @@ export interface ICurrencyProfile {
   gulfDiscFactor: string;
   amexMapCode: string;
   group: CurrencyGroup;
+  pricingGroupId?: string | null;
+  pricingGroup?: {
+    id: string;
+    code: string;
+    name: string;
+    description?: string | null;
+    isActive: boolean;
+  } | null;
   active: boolean;
   onlyStocking: boolean;
   productAllowed: CurrencyProductAllowed | '';
@@ -58,7 +66,9 @@ export interface ICurrencyProfile {
 
 export type ICreateCurrencyProfile = Omit<
   ICurrencyProfile,
-  'id' | 'createdAt' | 'updatedAt' | 'createdBy' | 'updatedBy'
->;
+  'id' | 'createdAt' | 'updatedAt' | 'createdBy' | 'updatedBy' | 'pricingGroup'
+> & {
+  pricingGroupId: string;
+};
 
 export type IUpdateCurrencyProfile = Partial<ICreateCurrencyProfile>;

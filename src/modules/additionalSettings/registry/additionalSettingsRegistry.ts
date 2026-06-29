@@ -101,6 +101,16 @@ const SESSION_POLICY_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinit
   },
 ];
 
+const CURRENCY_RATES_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] = [
+  {
+    code: AdditionalSettingsCodeEnum.CurrencyRatesConfig,
+    label: 'CURRENCY RATES CONFIG',
+    valueType: 'json',
+    required: true,
+    placeholder: 'Paste structured currency rates config JSON',
+  },
+];
+
 export const ADDITIONAL_SETTING_DEFINITIONS: readonly AdditionalSettingCategoryDefinition[] = [
   {
     code: AdditionalSettingsCodeEnum.PasswordPolicy,
@@ -115,6 +125,13 @@ export const ADDITIONAL_SETTING_DEFINITIONS: readonly AdditionalSettingCategoryD
     rendererKey: 'session-policy',
     titleLocked: true,
     subcategories: SESSION_POLICY_SUBCATEGORIES,
+  },
+  {
+    code: AdditionalSettingsCodeEnum.CurrencyRates,
+    label: 'CURRENCY RATES',
+    rendererKey: 'default',
+    titleLocked: true,
+    subcategories: CURRENCY_RATES_SUBCATEGORIES,
   },
 ];
 

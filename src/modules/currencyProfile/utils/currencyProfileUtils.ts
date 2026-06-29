@@ -20,6 +20,7 @@ export const createEmptyCurrencyProfileFormValues =
     gulfDiscFactor: '',
     amexMapCode: '',
     group: CurrencyGroup.ASIA,
+    pricingGroupId: '',
     active: false,
     onlyStocking: false,
     productAllowed: '',
@@ -40,6 +41,7 @@ export const mapRecordToFormValues = (
   gulfDiscFactor: record.gulfDiscFactor,
   amexMapCode: record.amexMapCode,
   group: record.group,
+  pricingGroupId: record.pricingGroupId || record.pricingGroup?.id || '',
   active: record.active,
   onlyStocking: record.onlyStocking,
   productAllowed: record.productAllowed,
@@ -55,6 +57,7 @@ export const mapFormValuesToRecord = (
   createdAt,
   updatedAt,
   ...values,
+  pricingGroupId: values.pricingGroupId || null,
   productAllowed: values.onlyStocking
     ? (values.productAllowed || CurrencyProductAllowed.CN)
     : '',

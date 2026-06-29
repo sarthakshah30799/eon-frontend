@@ -20,6 +20,7 @@ import { currencyProfileSchema } from '../schema';
 import type { ICreateCurrencyProfile } from '../types';
 import { useNavigate } from 'react-router-dom';
 import { currencyProfileApi } from '@/api/currencyProfile';
+import { currencyRatesApi } from '@/api/currencyRates';
 import { normalizeCodeValue } from '@/utils';
 
 const loadCalculationMethodOptions =
@@ -34,6 +35,16 @@ const loadGroupOptions = async (): Promise<AsyncSelectResponse> => ({
 const loadProductAllowedOptions = async (): Promise<AsyncSelectResponse> => ({
   options: CURRENCY_PRODUCT_ALLOWED_OPTIONS,
 });
+
+const loadPricingGroupOptions = async (): Promise<AsyncSelectResponse> => {
+  const groups = await currencyRatesApi.getGroups();
+  return {
+    options: groups.map(group => ({
+      value: group.id,
+      label: `${group.code} - ${group.name}`,
+    })),
+  };
+};
 
 interface CurrencyProfileFormProps {
   defaultValues: ICreateCurrencyProfile;
@@ -188,6 +199,15 @@ export const CurrencyProfileForm = ({
             label="Group"
             loadOptions={loadGroupOptions}
             placeholder="Select group"
+            disabled={isDisabled}
+            size="sm"
+            isSearchable={false}
+          />
+          <FormFieldAsyncSelect
+            name="pricingGroupId"
+            label="Pricing Group"
+            loadOptions={loadPricingGroupOptions}
+            placeholder="Select pricing group"
             disabled={isDisabled}
             size="sm"
             isSearchable={false}

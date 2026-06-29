@@ -1,7 +1,11 @@
 import * as yup from 'yup';
 
 export const productProfileSchema = yup.object({
-  productCode: yup.string().trim().required('Product Code is required'),
+  productCode: yup
+    .string()
+    .trim()
+    .required('Product Code is required')
+    .length(2, 'Product Code must be exactly 2 characters'),
   productDescription: yup
     .string()
     .trim()

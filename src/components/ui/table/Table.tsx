@@ -17,6 +17,7 @@ import {
 } from '@tanstack/react-table';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { Button } from '../button1';
+import { Input } from '../input';
 
 interface TableColumnMeta {
   headerClassName?: string;
@@ -69,6 +70,9 @@ export interface TableProps<T extends object>
   emptyMessage?: string;
   loading?: boolean;
   skeletonRows?: number;
+  onSearch?: (value: string) => void;
+  searchValue?: string;
+  searchPlaceholder?: string;
 }
 
 function Table<T extends object>({
@@ -91,6 +95,9 @@ function Table<T extends object>({
   emptyMessage = 'No data available',
   loading = false,
   skeletonRows = 5,
+  onSearch,
+  searchValue = '',
+  searchPlaceholder = 'Search',
   ...props
 }: TableProps<T>) {
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -169,8 +176,20 @@ function Table<T extends object>({
   return (
     <div className="space-y-4">
       {/* Table Controls */}
-      {(enableFiltering || enableColumnVisibility) && (
+      {(onSearch || enableFiltering || enableColumnVisibility) && (
         <div className="flex flex-wrap gap-4 items-center justify-between">
+          {onSearch && (
+            <div className="w-full sm:max-w-md">
+              <Input
+                label="Search"
+                placeholder={searchPlaceholder}
+                value={searchValue}
+                onChange={event => onSearch(event.target.value)}
+                valueTransform="none"
+              />
+            </div>
+          )}
+
           {enableFiltering && (
             <div className="flex flex-wrap gap-2">
               {table

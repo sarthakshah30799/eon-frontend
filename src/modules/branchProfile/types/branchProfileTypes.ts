@@ -7,6 +7,11 @@ export interface IBranchProfileOption {
   label: string;
 }
 
+export interface IBranchProfileListQuery {
+  activeOnly?: boolean;
+  search?: string;
+}
+
 export interface IBranchProfile {
   id: string;
   country: ICountryProfile | null;

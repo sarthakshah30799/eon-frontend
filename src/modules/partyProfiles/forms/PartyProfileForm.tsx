@@ -73,6 +73,12 @@ const PartyProfileFormFields = ({
   const showCorporateClientTaxFields =
     toPartyProfileApiType(effectiveProfileType) === 'CORPORATE_CLIENT';
   const showRfFields = toPartyProfileApiType(effectiveProfileType) === 'RF';
+  const shouldHideCreditLimitFields = [
+    'MISC_PROFILE',
+    'AGENT',
+    'CARD_ISSUER_PROFILE',
+    'FRANCHISE',
+  ].includes(toPartyProfileApiType(effectiveProfileType));
 
   const branchLoadOptions = useCallback(async (inputValue: string) => {
     const branches = await branchProfileApi.getBranchProfiles({
@@ -132,8 +138,9 @@ const PartyProfileFormFields = ({
           <FormFieldInput
             name="code"
             label="Client Code"
-            placeholder="Enter client code (4-20 chars)"
+            placeholder="Enter client code (5-20 chars)"
             disabled={isSubmitting}
+            maxLength={20}
             asyncValidation={{
               enabled: !isSubmitting,
               check: validatePartyCode,
@@ -185,24 +192,28 @@ const PartyProfileFormFields = ({
 
       <CardSection heading="Credit Policy">
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-2">
-          <FormFieldInput
-            name="temporaryCreditLimit"
-            label="Temporary Credit Limit"
-            type="number"
-            disabled={isSubmitting}
-          />
+          {!shouldHideCreditLimitFields && (
+            <FormFieldInput
+              name="temporaryCreditLimit"
+              label="Temporary Credit Limit"
+              type="number"
+              disabled={isSubmitting}
+            />
+          )}
           <FormFieldInput
             name="temporaryCreditDays"
             label="Temporary Credit Days"
             type="number"
             disabled={isSubmitting}
           />
-          <FormFieldInput
-            name="permanentCreditLimit"
-            label="Permanent Credit Limit"
-            type="number"
-            disabled={isSubmitting}
-          />
+          {!shouldHideCreditLimitFields && (
+            <FormFieldInput
+              name="permanentCreditLimit"
+              label="Permanent Credit Limit"
+              type="number"
+              disabled={isSubmitting}
+            />
+          )}
           <FormFieldInput
             name="permanentCreditDays"
             label="Permanent Credit Days"

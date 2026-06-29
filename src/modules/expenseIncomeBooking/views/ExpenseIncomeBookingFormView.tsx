@@ -64,7 +64,6 @@ export const ExpenseIncomeBookingFormView = ({ type, mode }: ExpenseIncomeBookin
   const defaultValues: ICreateExpenseIncomeBookingMaster = mode === 'edit' && master
     ? {
         type: master.type,
-        interstateTransaction: master.interstateTransaction,
         code: master.code,
         description: master.description ?? '',
         applicableCustomer: master.applicableCustomer,
@@ -83,7 +82,6 @@ export const ExpenseIncomeBookingFormView = ({ type, mode }: ExpenseIncomeBookin
       }
     : {
         type,
-        interstateTransaction: false,
         code: '',
         description: '',
         applicableCustomer: false,

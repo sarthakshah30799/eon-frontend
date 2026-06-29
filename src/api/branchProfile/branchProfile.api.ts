@@ -3,10 +3,12 @@ import { companyProfileApi } from '../companyProfile/companyProfile.api';
 import type {
   IBranchProfile,
   ICreateBranchProfile,
+  IBranchProfileListQuery,
 } from '@/modules/branchProfile/types';
 import type { ICountryProfile } from '@/modules/countryProfile/types/countryProfileTypes';
 import type { IStateProfile } from '@/modules/stateProfile/types/stateProfileTypes';
 import type { ICategoryOption } from '@/types/categoryOptionTypes';
+import { buildQueryString } from '@/utils';
 
 interface BackendBranch {
   id: string;
@@ -111,11 +113,8 @@ const mapFrontendToBackend = (
 };
 
 export const branchProfileApi = {
-  getBranchProfiles: async (options?: {
-    activeOnly?: boolean;
-  }): Promise<IBranchProfile[]> => {
-    const endpoint =
-      options?.activeOnly === false ? '/branches?activeOnly=false' : '/branches';
+  getBranchProfiles: async (options?: IBranchProfileListQuery): Promise<IBranchProfile[]> => {
+    const endpoint = `/branches${buildQueryString(options)}`;
     const res = await apiClient.get<BackendBranch[]>(endpoint);
     if (res.error) throw new Error(res.error);
     return (res.data || []).map(mapBackendToFrontend);

@@ -9,6 +9,10 @@ interface BranchProfileTableProps {
   branches: IBranchProfile[];
   onDelete: (id: string) => void | Promise<void>;
   isDeleting?: boolean;
+  loading?: boolean;
+  onSearch?: (value: string) => void;
+  searchValue?: string;
+  searchPlaceholder?: string;
 }
 
 interface BranchProfileTableRow {
@@ -28,6 +32,10 @@ interface BranchProfileTableRow {
 
 export const BranchProfileTable = ({
   branches,
+  loading = false,
+  onSearch,
+  searchValue,
+  searchPlaceholder,
 }: BranchProfileTableProps) => {
   const navigate = useNavigate();
 
@@ -119,6 +127,10 @@ export const BranchProfileTable = ({
       enablePagination={false}
       enableRowSelection={false}
       enableColumnVisibility={false}
+      loading={loading}
+      onSearch={onSearch}
+      searchValue={searchValue}
+      searchPlaceholder={searchPlaceholder}
       onRowClick={row => {
         navigate(`/admin/branch-profile/edit/${row.id}`);
       }}

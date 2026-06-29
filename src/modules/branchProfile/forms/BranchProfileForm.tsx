@@ -138,6 +138,8 @@ const BranchProfileFormFields = ({
             name="code"
             label="Branch Code"
             disabled={isSubmitting || Boolean(currentId)}
+            maxLength={5}
+            placeholder="e.g. BR001"
             asyncValidation={{
               enabled: !isSubmitting && !currentId,
               check: validateBranchCode,

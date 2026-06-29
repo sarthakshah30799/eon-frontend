@@ -1,8 +1,10 @@
 import { apiClient } from '../api';
 import type {
   ICompanyProfile,
+  ICompanyProfileListQuery,
   ICreateCompanyProfile,
 } from '../../modules/companyProfile/types';
+import { buildQueryString } from '@/utils';
 
 const normalizeCompanyProfilePayload = (values: ICreateCompanyProfile) => ({
   ...values,
@@ -12,8 +14,8 @@ const normalizeCompanyProfilePayload = (values: ICreateCompanyProfile) => ({
 });
 
 export const companyProfileApi = {
-  getCompanyProfiles: async () => {
-    return apiClient.get<ICompanyProfile[]>('/companies');
+  getCompanyProfiles: async (params?: ICompanyProfileListQuery) => {
+    return apiClient.get<ICompanyProfile[]>(`/companies${buildQueryString(params)}`);
   },
   getCompanyProfileById: async (id: string) => {
     return apiClient.get<ICompanyProfile>(`/companies/${id}`);

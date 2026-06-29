@@ -14,12 +14,20 @@ export const toPartyProfileRouteType = (value?: string | null): string => {
     return '';
   }
 
+  if (value.trim().toUpperCase() === 'MISC_PROFILE') {
+    return 'misc-supplier-profile';
+  }
+
   return normalizeDelimitedValue(value);
 };
 
 export const toPartyProfileApiType = (value?: string | null): string => {
   if (!value) {
     return '';
+  }
+
+  if (value.trim().toLowerCase() === 'misc-supplier-profile') {
+    return 'MISC_PROFILE';
   }
 
   return value

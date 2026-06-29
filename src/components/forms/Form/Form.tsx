@@ -17,6 +17,7 @@ interface FormProps<TFieldValues extends FieldValues = FieldValues> {
   id?: string;
   resolver?: Resolver<TFieldValues>;
   defaultValues?: DefaultValues<TFieldValues>;
+  mode?: 'onChange' | 'onBlur' | 'onSubmit' | 'onTouched' | 'all';
   footer?: {
     submitLabel?: string;
     backLabel?: string;
@@ -34,11 +35,13 @@ export const Form = <TFieldValues extends FieldValues = FieldValues>({
   id,
   resolver,
   defaultValues,
+  mode,
   footer,
 }: FormProps<TFieldValues>) => {
   const form = useForm<TFieldValues>({
     resolver,
     defaultValues,
+    mode,
   });
 
   const handleSubmit = form.handleSubmit(onSubmit, onError);

@@ -25,3 +25,4 @@ export * from './partyProfileDocuments';
 export * from './mail/mail.api';
 export * from './tdsProfile';
 export * from './expenseIncomeBooking/expenseIncomeBooking.api';
+export * from './manual-bill-books/manualBillBook.api';

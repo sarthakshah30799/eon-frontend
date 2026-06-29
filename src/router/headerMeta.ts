@@ -52,7 +52,10 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
     meta: { title: 'Edit Miscellaneous Profile' },
   },
   { path: '/admin/menu-management', meta: { title: 'Menu Management' } },
-  { path: '/admin/additional-settings', meta: { title: 'Additional Settings' } },
+  {
+    path: '/admin/additional-settings',
+    meta: { title: 'Additional Settings' },
+  },
   { path: '/admin/currency-rates', meta: { title: 'Currency Rates' } },
   {
     path: '/admin/country-profile',
@@ -158,6 +161,30 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
     path: '/income-booking/edit/:id',
     meta: { title: 'Edit Income Booking Master' },
   },
+  {
+    path: '/admin/manual-bill-books',
+    meta: { title: 'Manual Bill Books' },
+  },
+  {
+    path: '/admin/manual-bill-books/create',
+    meta: { title: 'Manual Bill Books' },
+  },
+  {
+    path: '/manual-bill-books',
+    meta: { title: 'Manual Bill Books' },
+  },
+  {
+    path: '/manual-bill-books/create',
+    meta: { title: 'Manual Bill Books' },
+  },
+  {
+    path: '/manual-bill-books/acknowledgement',
+    meta: { title: 'Branch Acknowledgement' },
+  },
+  {
+    path: '/manual-bill-books/allocation',
+    meta: { title: 'Manager To Cashier Allocation' },
+  },
 ];
 
 const findMenuName = (nodes: IMenu[], pathname: string): string | null => {
@@ -173,15 +200,27 @@ const findMenuName = (nodes: IMenu[], pathname: string): string | null => {
   return null;
 };
 
-export const resolveHeaderMeta = (pathname: string, menuTree?: IMenu[]): HeaderMeta => {
+export const resolveHeaderMeta = (
+  pathname: string,
+  menuTree?: IMenu[]
+): HeaderMeta => {
+  const cleanPathname =
+    pathname.endsWith('/') && pathname !== '/'
+      ? pathname.slice(0, -1)
+      : pathname;
+
   for (const route of HEADER_ROUTES) {
-    if (matchPath({ path: route.path, end: true }, pathname)) {
+    const cleanRoutePath =
+      route.path.endsWith('/') && route.path !== '/'
+        ? route.path.slice(0, -1)
+        : route.path;
+    if (matchPath({ path: cleanRoutePath, end: true }, cleanPathname)) {
       return route.meta;
     }
   }
 
   if (menuTree && menuTree.length > 0) {
-    const name = findMenuName(menuTree, pathname);
+    const name = findMenuName(menuTree, cleanPathname);
     if (name) {
       return { title: name };
     }

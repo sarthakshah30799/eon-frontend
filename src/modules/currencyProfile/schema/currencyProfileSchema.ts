@@ -33,6 +33,7 @@ export const currencyProfileSchema = yup.object({
     .trim()
     .oneOf(Object.values(CurrencyGroup))
     .required('Group is required'),
+  pricingGroupId: yup.string().uuid().default('').defined(),
   active: yup.boolean().default(false),
   onlyStocking: yup.boolean().default(false),
   productAllowed: yup

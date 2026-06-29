@@ -1,4 +1,5 @@
 import { matchPath } from 'react-router-dom';
+import type { IMenu } from '@/types/menuTypes';
 
 export type HeaderMeta = {
   title: string;
@@ -52,6 +53,7 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
   },
   { path: '/admin/menu-management', meta: { title: 'Menu Management' } },
   { path: '/admin/additional-settings', meta: { title: 'Additional Settings' } },
+  { path: '/admin/currency-rates', meta: { title: 'Currency Rates' } },
   {
     path: '/admin/country-profile',
     meta: { title: 'Country Profile' },
@@ -158,7 +160,7 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
   },
 ];
 
-const findMenuName = (nodes: any[], pathname: string): string | null => {
+const findMenuName = (nodes: IMenu[], pathname: string): string | null => {
   for (const node of nodes) {
     if (node.path && matchPath({ path: node.path, end: true }, pathname)) {
       return node.name;
@@ -171,7 +173,7 @@ const findMenuName = (nodes: any[], pathname: string): string | null => {
   return null;
 };
 
-export const resolveHeaderMeta = (pathname: string, menuTree?: any[]): HeaderMeta => {
+export const resolveHeaderMeta = (pathname: string, menuTree?: IMenu[]): HeaderMeta => {
   for (const route of HEADER_ROUTES) {
     if (matchPath({ path: route.path, end: true }, pathname)) {
       return route.meta;

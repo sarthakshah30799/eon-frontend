@@ -125,6 +125,9 @@ const MenuPage = lazy(() => import('../pages/admin/menu/MenuPage'));
 const AdditionalSettingsPage = lazy(
   () => import('../pages/admin/additional-settings')
 );
+const CurrencyRatesPage = lazy(
+  () => import('../pages/admin/currency-rates')
+);
 const MailConsolePage = lazy(
   () => import('../pages/auth/mail-console/MailConsolePage')
 );
@@ -448,6 +451,14 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <AdditionalSettingsPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/currency-rates',
+    element: (
+      <ProtectedLayout>
+        <CurrencyRatesPage />
       </ProtectedLayout>
     ),
   },

@@ -14,6 +14,7 @@ export * from './countryDropdown';
 export * from './counterProfile';
 export * from './categoryOptions';
 export * from './currencyProfile';
+export * from './currencyRates';
 export * from './menu/menu.api';
 export * from './additionalSettings';
 export * from './financialCodes/financialCodes.api';

@@ -122,8 +122,23 @@ const MiscellaneousProfileEditPage = lazy(
   () => import('../pages/admin/miscellaneous-profile/edit/[id]')
 );
 const MenuPage = lazy(() => import('../pages/admin/menu/MenuPage'));
+const ManualBillBookPage = lazy(
+  () => import('../pages/manual-bill-books/ManualBillBookPage')
+);
+const ManualBillBookCreatePage = lazy(
+  () => import('../pages/manual-bill-books/ManualBillBookCreatePage')
+);
+const ManualBillBookAcknowledgementPage = lazy(
+  () => import('../pages/manual-bill-books/ManualBillBookAcknowledgementPage')
+);
+const ManagerToCashierAllocationPage = lazy(
+  () => import('../pages/manual-bill-books/ManagerToCashierAllocationPage')
+);
 const AdditionalSettingsPage = lazy(
   () => import('../pages/admin/additional-settings')
+);
+const CurrencyRatesPage = lazy(
+  () => import('../pages/admin/currency-rates')
 );
 const MailConsolePage = lazy(
   () => import('../pages/auth/mail-console/MailConsolePage')
@@ -444,10 +459,66 @@ const router = createBrowserRouter([
     ),
   },
   {
+    path: '/admin/manual-bill-books',
+    element: (
+      <ProtectedLayout>
+        <ManualBillBookPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/manual-bill-books/create',
+    element: (
+      <ProtectedLayout>
+        <ManualBillBookCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/manual-bill-books',
+    element: (
+      <ProtectedLayout>
+        <ManualBillBookPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/manual-bill-books/create',
+    element: (
+      <ProtectedLayout>
+        <ManualBillBookCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/manual-bill-books/acknowledgement',
+    element: (
+      <ProtectedLayout>
+        <ManualBillBookAcknowledgementPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/manual-bill-books/allocation',
+    element: (
+      <ProtectedLayout>
+        <ManagerToCashierAllocationPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
     path: '/admin/additional-settings',
     element: (
       <ProtectedLayout>
         <AdditionalSettingsPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/currency-rates',
+    element: (
+      <ProtectedLayout>
+        <CurrencyRatesPage />
       </ProtectedLayout>
     ),
   },

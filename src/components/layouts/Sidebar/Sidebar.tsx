@@ -330,10 +330,68 @@ export const Sidebar = ({
   });
 
   const sections = useMemo<SidebarSection[]>(() => {
+    const hasRole = (roleCode: string) => {
+      const normalizedRole = roleCode.toUpperCase().replace('_', ' ');
+      if ((user as any)?.roleName?.toUpperCase() === normalizedRole) return true;
+      return user?.assignments?.some(a => a.roleName?.toUpperCase() === normalizedRole) || false;
+    };
+    const isHoUser = user?.isAdmin || user?.isHoStaff || user?.isHo || hasRole('HO STAFF');
+    const isManagerUser = hasRole('MANAGER');
+
+    const mapVisibleMenuNodeToItemCustom = (
+      node: IMenu,
+      basePath = ''
+    ): SidebarItem | null => {
+      const filteredChildren = (node.children || []).filter(child => {
+        const normalizedPath = child.path ? child.path.replace(/^\/+/, '') : '';
+        const cleanPath = normalizedPath.startsWith('admin/') ? normalizedPath.slice(6) : normalizedPath;
+
+        if (cleanPath === 'manual-bill-books') {
+          return isHoUser || user?.isAdmin;
+        }
+        if (cleanPath === 'manual-bill-books/acknowledgement' || cleanPath === 'manual-bill-books/allocation') {
+          return isManagerUser || user?.isAdmin;
+        }
+        return true;
+      });
+
+      const visibleChildren = filteredChildren
+        .map(child => mapVisibleMenuNodeToItemCustom(child, basePath))
+        .filter(Boolean) as SidebarItem[];
+
+      const resolvedPath = resolveMenuPath(node.path || undefined, basePath);
+
+      if (node.name === 'MANUAL BILL') {
+        return {
+          id: node.id,
+          label: 'Manual Bill',
+          children: visibleChildren,
+        };
+      }
+
+      if (visibleChildren.length > 0) {
+        return {
+          id: node.id,
+          label: node.name,
+          children: visibleChildren,
+        };
+      }
+
+      if (!resolvedPath) {
+        return null;
+      }
+
+      return {
+        id: node.id,
+        label: node.name,
+        path: resolvedPath,
+      };
+    };
+
     const dynamicSections = (menuTree || [])
       .filter(root => !root.isAdmin)
       .map<SidebarSection>(root => {
-        const rootItem = mapVisibleMenuNodeToItem(root);
+        const rootItem = mapVisibleMenuNodeToItemCustom(root);
         if (!rootItem) {
           return {
             title: root.name,
@@ -343,13 +401,13 @@ export const Sidebar = ({
 
         if ('children' in rootItem) {
           return {
-            title: root.name,
+            title: rootItem.label,
             items: rootItem.children,
           } satisfies SidebarGroupSection;
         }
 
         return {
-          title: root.name,
+          title: rootItem.label,
           id: rootItem.id,
           label: rootItem.label,
           path: rootItem.path,
@@ -358,7 +416,7 @@ export const Sidebar = ({
 
     const adminRoot = menuTree.find(root => root.isAdmin);
     const adminItems = (adminRoot?.children ?? [])
-      .map(child => mapVisibleMenuNodeToItem(child, '/admin'))
+      .map(child => mapVisibleMenuNodeToItemCustom(child, '/admin'))
       .filter(Boolean) as SidebarItem[];
 
     const adminSection: SidebarGroupSection = {

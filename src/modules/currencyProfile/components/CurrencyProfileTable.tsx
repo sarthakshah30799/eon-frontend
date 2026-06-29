@@ -17,6 +17,7 @@ interface CurrencyProfileTableRow {
   ratePer: string;
   calculationMethod: string;
   group: string;
+  pricingGroup: string;
   active: boolean;
   onlyStocking: boolean;
 }
@@ -35,6 +36,7 @@ export const CurrencyProfileTable = ({
     ratePer: currency.ratePer || '-',
     calculationMethod: currency.calculationMethod,
     group: currency.group,
+    pricingGroup: currency.pricingGroup?.name || '-',
     active: currency.active,
     onlyStocking: currency.onlyStocking,
   }));
@@ -50,6 +52,7 @@ export const CurrencyProfileTable = ({
       header: 'Calculation Method',
     },
     { accessorKey: 'group', header: 'Group' },
+    { accessorKey: 'pricingGroup', header: 'Pricing Group' },
     {
       accessorKey: 'active',
       header: 'Active',

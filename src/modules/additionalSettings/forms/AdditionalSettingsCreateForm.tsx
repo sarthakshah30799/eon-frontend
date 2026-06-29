@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
+import type { Resolver } from 'react-hook-form';
 import { Button } from '@/components/ui/button1';
 import { CardSection } from '@/components/ui';
 import { Form, FormFieldInput, FormFieldSelect, FormFieldDatePicker, FormFieldTextarea } from '@/components/forms';
@@ -65,6 +66,7 @@ const SubcategoryRowFields = ({
 
   const isBooleanType = categoryType?.toLowerCase() === 'boolean';
   const isDateType = categoryType?.toLowerCase() === 'date';
+  const isSelectType = categoryType?.toLowerCase() === 'select';
   const isJsonType = categoryType?.toLowerCase() === 'json';
   const isNumberType =
     subcategoryDefinition?.valueType === 'number' ||
@@ -72,17 +74,17 @@ const SubcategoryRowFields = ({
     categoryType?.toLowerCase() === 'number' ||
     categoryType?.toLowerCase() === 'decimal';
 
-  const [prevType, setPrevType] = useState(categoryType);
+  const prevTypeRef = useRef(categoryType);
   useEffect(() => {
-    if (categoryType !== prevType) {
-      setPrevType(categoryType);
+    if (categoryType !== prevTypeRef.current) {
+      prevTypeRef.current = categoryType;
       if (categoryType?.toLowerCase() === 'boolean') {
         setValue(`subcategories.${index}.value`, 'YES');
       } else {
         setValue(`subcategories.${index}.value`, '');
       }
     }
-  }, [categoryType, prevType, index, setValue]);
+  }, [categoryType, index, setValue]);
 
   useEffect(() => {
     if (subcategoryDefinition) {
@@ -102,6 +104,14 @@ const SubcategoryRowFields = ({
       hasMore: false,
     };
   };
+
+  const loadSelectValueOptions = async () => ({
+    options: (subcategoryDefinition?.options ?? []).map(option => ({
+      value: option.value,
+      label: option.label,
+    })),
+    hasMore: false,
+  });
 
   const loadCodeOptions = async () => ({
     options: getAdditionalSettingSubcategoryCodeOptions(categoryCode).map(option => ({
@@ -176,6 +186,15 @@ const SubcategoryRowFields = ({
             label="Value"
             placeholder="Select date"
             disabled={isSubmitting}
+          />
+        ) : isSelectType ? (
+          <FormFieldSelect
+            name={`subcategories.${index}.value`}
+            label="Value"
+            placeholder="Select value"
+            disabled={isSubmitting}
+            loadOptions={loadSelectValueOptions}
+            isSearchable={false}
           />
         ) : isJsonType ? (
           <FormFieldTextarea
@@ -322,7 +341,7 @@ export const AdditionalSettingsCreateForm = ({
   return (
     <Form
       onSubmit={onSubmit}
-      resolver={yupResolver(additionalSettingsSchema) as any}
+      resolver={yupResolver(additionalSettingsSchema) as Resolver<IAdditionalSettingCategoryFormValues>}
       defaultValues={initialValues}
       className="space-y-6"
     >

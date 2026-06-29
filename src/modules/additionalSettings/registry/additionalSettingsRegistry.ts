@@ -14,6 +14,7 @@ export type AdditionalSettingsValueType =
   | 'decimal'
   | 'boolean'
   | 'date'
+  | 'select'
   | 'json';
 
 export interface AdditionalSettingsOption {
@@ -30,6 +31,7 @@ export interface AdditionalSettingSubcategoryDefinition {
   codeLocked?: boolean;
   valueLocked?: boolean;
   placeholder?: string;
+  options?: readonly { value: string; label: string }[];
 }
 
 export interface AdditionalSettingCategoryDefinition {
@@ -101,13 +103,79 @@ const SESSION_POLICY_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinit
   },
 ];
 
+const CURRENCY_RATE_PROVIDER_OPTIONS = [
+  { value: 'TICKER', label: 'TICKER' },
+  { value: 'FOREX', label: 'FOREX' },
+] as const;
+
+const CURRENCY_RATE_MARGIN_TYPE_OPTIONS = [
+  { value: 'PERCENT', label: 'PERCENT' },
+  { value: 'RATE', label: 'RATE' },
+] as const;
+
 const CURRENCY_RATES_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] = [
   {
-    code: AdditionalSettingsCodeEnum.CurrencyRatesConfig,
-    label: 'CURRENCY RATES CONFIG',
-    valueType: 'json',
+    code: AdditionalSettingsCodeEnum.CurrencyRatesDefaultProvider,
+    label: 'DEFAULT PROVIDER',
+    valueType: 'select',
     required: true,
-    placeholder: 'Paste structured currency rates config JSON',
+    options: CURRENCY_RATE_PROVIDER_OPTIONS,
+  },
+  {
+    code: AdditionalSettingsCodeEnum.CurrencyRatesBuyMarginType,
+    label: 'BUY MARGIN TYPE',
+    valueType: 'select',
+    required: true,
+    options: CURRENCY_RATE_MARGIN_TYPE_OPTIONS,
+  },
+  {
+    code: AdditionalSettingsCodeEnum.CurrencyRatesBuyMarginValue,
+    label: 'BUY MARGIN VALUE',
+    valueType: 'decimal',
+    required: true,
+    placeholder: 'Enter buy margin value',
+  },
+  {
+    code: AdditionalSettingsCodeEnum.CurrencyRatesBuyMinRate,
+    label: 'BUY MIN RATE',
+    valueType: 'decimal',
+    required: true,
+    placeholder: 'Enter minimum buy rate',
+  },
+  {
+    code: AdditionalSettingsCodeEnum.CurrencyRatesBuyMaxRate,
+    label: 'BUY MAX RATE',
+    valueType: 'decimal',
+    required: true,
+    placeholder: 'Enter maximum buy rate',
+  },
+  {
+    code: AdditionalSettingsCodeEnum.CurrencyRatesSaleMarginType,
+    label: 'SALE MARGIN TYPE',
+    valueType: 'select',
+    required: true,
+    options: CURRENCY_RATE_MARGIN_TYPE_OPTIONS,
+  },
+  {
+    code: AdditionalSettingsCodeEnum.CurrencyRatesSaleMarginValue,
+    label: 'SALE MARGIN VALUE',
+    valueType: 'decimal',
+    required: true,
+    placeholder: 'Enter sale margin value',
+  },
+  {
+    code: AdditionalSettingsCodeEnum.CurrencyRatesSaleMinRate,
+    label: 'SALE MIN RATE',
+    valueType: 'decimal',
+    required: true,
+    placeholder: 'Enter minimum sale rate',
+  },
+  {
+    code: AdditionalSettingsCodeEnum.CurrencyRatesSaleMaxRate,
+    label: 'SALE MAX RATE',
+    valueType: 'decimal',
+    required: true,
+    placeholder: 'Enter maximum sale rate',
   },
 ];
 

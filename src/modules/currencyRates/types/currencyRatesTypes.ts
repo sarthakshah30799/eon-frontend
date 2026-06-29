@@ -14,33 +14,16 @@ export const CurrencyRateMarginType = {
 export type CurrencyRateMarginType =
   (typeof CurrencyRateMarginType)[keyof typeof CurrencyRateMarginType];
 
-export const CurrencyRateMarginDirection = {
-  ADD: 'ADD',
-  SUBTRACT: 'SUBTRACT',
-} as const;
-
-export type CurrencyRateMarginDirection =
-  (typeof CurrencyRateMarginDirection)[keyof typeof CurrencyRateMarginDirection];
-
-export interface ICurrencyRateMargin {
-  marginType: CurrencyRateMarginType;
-  marginValue: string;
-  marginDirection: CurrencyRateMarginDirection;
-  minRate: string;
-  maxRate: string;
-}
-
-export interface ICurrencyRateRule {
-  buy: ICurrencyRateMargin;
-  sale: ICurrencyRateMargin;
-}
-
 export interface ICurrencyRateSettings {
   defaultProvider: CurrencyRateProvider;
-  roundingScale: number;
-  global: ICurrencyRateRule;
-  groups: Record<string, ICurrencyRateRule>;
-  currencyOverrides: Record<string, ICurrencyRateRule>;
+  buyMarginType: CurrencyRateMarginType;
+  buyMarginValue: string;
+  buyMinRate: string;
+  buyMaxRate: string;
+  saleMarginType: CurrencyRateMarginType;
+  saleMarginValue: string;
+  saleMinRate: string;
+  saleMaxRate: string;
 }
 
 export interface ICurrencyRateGroup {
@@ -101,5 +84,5 @@ export interface ICurrencyRateQuote {
   baseSaleRate: string;
   buy: ICurrencyRateQuoteSide;
   sale: ICurrencyRateQuoteSide;
-  effectiveSource: 'currency-override' | 'group-default' | 'global-default';
+  effectiveSource: 'advanced-settings' | 'currency-override' | 'group-default' | 'global-default';
 }

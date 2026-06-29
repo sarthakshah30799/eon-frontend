@@ -9,29 +9,18 @@ import type {
   ICurrencyRateSettings,
   ICurrencyRate,
 } from '../types/currencyRatesTypes';
-import { CurrencyRateProvider } from '../types/currencyRatesTypes';
+import { CurrencyRateMarginType, CurrencyRateProvider } from '../types/currencyRatesTypes';
 
 const DEFAULT_SETTINGS: ICurrencyRateSettings = {
   defaultProvider: CurrencyRateProvider.TICKER,
-  roundingScale: 4,
-  global: {
-    buy: {
-      marginType: 'PERCENT',
-      marginValue: '0',
-      marginDirection: 'ADD',
-      minRate: '0',
-      maxRate: '999999999',
-    },
-    sale: {
-      marginType: 'PERCENT',
-      marginValue: '0',
-      marginDirection: 'ADD',
-      minRate: '0',
-      maxRate: '999999999',
-    },
-  },
-  groups: {},
-  currencyOverrides: {},
+  buyMarginType: CurrencyRateMarginType.PERCENT,
+  buyMarginValue: '0',
+  buyMinRate: '0',
+  buyMaxRate: '999999999',
+  saleMarginType: CurrencyRateMarginType.PERCENT,
+  saleMarginValue: '0',
+  saleMinRate: '0',
+  saleMaxRate: '999999999',
 };
 
 const sectionClass =
@@ -43,19 +32,24 @@ const inputClass =
 const labelClass =
   'mb-1 block text-xs font-semibold uppercase tracking-wider text-text-secondary';
 
-function safeJsonParse(value: string): ICurrencyRateSettings | null {
-  try {
-    return JSON.parse(value) as ICurrencyRateSettings;
-  } catch {
-    return null;
-  }
-}
+const settingsFields: Array<{ key: keyof ICurrencyRateSettings; label: string }> = [
+  { key: 'defaultProvider', label: 'Default Provider' },
+  { key: 'buyMarginType', label: 'Buy Margin Type' },
+  { key: 'buyMarginValue', label: 'Buy Margin Value' },
+  { key: 'buyMinRate', label: 'Buy Min Rate' },
+  { key: 'buyMaxRate', label: 'Buy Max Rate' },
+  { key: 'saleMarginType', label: 'Sale Margin Type' },
+  { key: 'saleMarginValue', label: 'Sale Margin Value' },
+  { key: 'saleMinRate', label: 'Sale Min Rate' },
+  { key: 'saleMaxRate', label: 'Sale Max Rate' },
+];
+
+const formatSettingsValue = (value: string) => value || '-';
 
 export const CurrencyRatesView = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [settings, setSettings] = useState<ICurrencyRateSettings>(DEFAULT_SETTINGS);
-  const [settingsText, setSettingsText] = useState(JSON.stringify(DEFAULT_SETTINGS, null, 2));
   const [groups, setGroups] = useState<ICurrencyRateGroup[]>([]);
   const [currencies, setCurrencies] = useState<Array<{
     id: string;
@@ -85,7 +79,6 @@ export const CurrencyRatesView = () => {
   const [previewQuote, setPreviewQuote] = useState<ICurrencyRateQuote | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewError, setPreviewError] = useState<string | null>(null);
-
   const [selectedPreviewCurrencyId, setSelectedPreviewCurrencyId] = useState('');
 
   const defaultCurrencyId = currencies[0]?.id ?? '';
@@ -94,12 +87,63 @@ export const CurrencyRatesView = () => {
 
   const selectedCurrency = useMemo(
     () => currencies.find(currency => currency.id === effectiveRateCurrencyId) ?? null,
-    [currencies, effectiveRateCurrencyId]
+    [currencies, effectiveRateCurrencyId],
   );
 
-  const loadAll = async () => {
+  useEffect(() => {
+    let cancelled = false;
+
+    Promise.all([
+      currencyRatesApi.getSettings(),
+      currencyRatesApi.getGroups(),
+      currencyProfileApi.getCurrencyProfiles(),
+      currencyRatesApi.getLatestRates(),
+    ])
+      .then(([settingsRes, groupsRes, currenciesRes, ratesRes]) => {
+        if (cancelled) {
+          return;
+        }
+
+        setSettings(settingsRes);
+        setGroups(groupsRes);
+        setCurrencies(currenciesRes);
+        setRates(ratesRes);
+
+        if (groupsRes.length > 0) {
+          const first = groupsRes[0];
+          setGroupForm({
+            id: first.id,
+            code: first.code,
+            name: first.name,
+            description: first.description || '',
+            isActive: first.isActive,
+          });
+        }
+
+        if (currenciesRes.length > 0) {
+          const firstCurrencyId = currenciesRes[0].id;
+          setRateForm(form => ({ ...form, currencyId: firstCurrencyId }));
+          setSelectedPreviewCurrencyId(firstCurrencyId);
+        }
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : 'Failed to load currency rate data');
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const refreshData = async () => {
     try {
-      setIsLoading(true);
       setError(null);
       const [settingsRes, groupsRes, currenciesRes, ratesRes] = await Promise.all([
         currencyRatesApi.getSettings(),
@@ -109,7 +153,6 @@ export const CurrencyRatesView = () => {
       ]);
 
       setSettings(settingsRes);
-      setSettingsText(JSON.stringify(settingsRes, null, 2));
       setGroups(groupsRes);
       setCurrencies(currenciesRes);
       setRates(ratesRes);
@@ -132,80 +175,7 @@ export const CurrencyRatesView = () => {
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load currency rate data');
-    } finally {
-      setIsLoading(false);
     }
-  };
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const loadInitialData = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const [settingsRes, groupsRes, currenciesRes, ratesRes] = await Promise.all([
-          currencyRatesApi.getSettings(),
-          currencyRatesApi.getGroups(),
-          currencyProfileApi.getCurrencyProfiles(),
-          currencyRatesApi.getLatestRates(),
-        ]);
-
-        if (cancelled) {
-          return;
-        }
-
-        setSettings(settingsRes);
-        setSettingsText(JSON.stringify(settingsRes, null, 2));
-        setGroups(groupsRes);
-        setCurrencies(currenciesRes);
-        setRates(ratesRes);
-
-        if (groupsRes.length > 0) {
-          const first = groupsRes[0];
-          setGroupForm({
-            id: first.id,
-            code: first.code,
-            name: first.name,
-            description: first.description || '',
-            isActive: first.isActive,
-          });
-        }
-
-        if (currenciesRes.length > 0) {
-          const firstCurrencyId = currenciesRes[0].id;
-          setRateForm(form => ({ ...form, currencyId: firstCurrencyId }));
-          setSelectedPreviewCurrencyId(firstCurrencyId);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Failed to load currency rate data');
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    void loadInitialData();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const handleSaveSettings = async () => {
-    const parsed = safeJsonParse(settingsText);
-    if (!parsed) {
-      setError('Settings JSON is invalid');
-      return;
-    }
-
-    const saved = await currencyRatesApi.saveSettings(parsed);
-    setSettings(saved);
-    setSettingsText(JSON.stringify(saved, null, 2));
-    await loadAll();
   };
 
   const handleSaveGroup = async () => {
@@ -222,7 +192,7 @@ export const CurrencyRatesView = () => {
       await currencyRatesApi.createGroup(payload);
     }
 
-    await loadAll();
+    await refreshData();
   };
 
   const handleLoadGroupForEdit = (group: ICurrencyRateGroup) => {
@@ -255,7 +225,7 @@ export const CurrencyRatesView = () => {
           };
 
     await currencyRatesApi.createRateEntry(payload);
-    await loadAll();
+    await refreshData();
   };
 
   const handlePreview = async () => {
@@ -297,26 +267,23 @@ export const CurrencyRatesView = () => {
   return (
     <div className="space-y-6">
       <section className={sectionClass}>
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-semibold text-text-primary">Currency Rates Settings</h2>
-            <p className="text-sm text-text-tertiary">
-              Stored inside advanced settings as one structured JSON config.
-              <span className="ml-2 font-medium text-text-secondary">
-                Default provider: {settings.defaultProvider} | rounding scale: {settings.roundingScale}
-              </span>
-            </p>
-          </div>
-          <Button type="button" onClick={() => void handleSaveSettings()}>
-            Save Settings
-          </Button>
+        <div>
+          <h2 className="text-lg font-semibold text-text-primary">Currency Rates Settings</h2>
+          <p className="text-sm text-text-tertiary">
+            These values come from Advanced Settings and are shown here for reference only.
+          </p>
         </div>
-        <textarea
-          value={settingsText}
-          onChange={e => setSettingsText(e.target.value)}
-          className={`${inputClass} min-h-[360px] font-mono text-xs`}
-          spellCheck={false}
-        />
+
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {settingsFields.map(field => (
+            <div key={field.key} className="rounded-sm border border-border-primary bg-surface-secondary/20 p-3">
+              <div className={labelClass}>{field.label}</div>
+              <div className="text-sm font-semibold text-text-primary">
+                {formatSettingsValue(String(settings[field.key] ?? ''))}
+              </div>
+            </div>
+          ))}
+        </div>
       </section>
 
       <section className={sectionClass}>
@@ -524,12 +491,12 @@ export const CurrencyRatesView = () => {
           <div className="space-y-3">
             <h2 className="text-lg font-semibold text-text-primary">Preview Result</h2>
             <div>
-            <label className={labelClass}>Preview Currency</label>
-            <select
-              value={effectivePreviewCurrencyId}
-              onChange={e => setSelectedPreviewCurrencyId(e.target.value)}
-              className={inputClass}
-            >
+              <label className={labelClass}>Preview Currency</label>
+              <select
+                value={effectivePreviewCurrencyId}
+                onChange={e => setSelectedPreviewCurrencyId(e.target.value)}
+                className={inputClass}
+              >
                 {currencies.map(currency => (
                   <option key={currency.id} value={currency.id}>
                     {currency.currencyCode} - {currency.currencyName}
@@ -553,7 +520,8 @@ export const CurrencyRatesView = () => {
             {previewQuote ? (
               <div className="space-y-4 rounded-sm border border-border-primary bg-surface-secondary/20 p-4">
                 <div className="text-sm text-text-secondary">
-                  Effective source: <span className="font-medium text-text-primary">{previewQuote.effectiveSource}</span>
+                  Effective source:{' '}
+                  <span className="font-medium text-text-primary">{previewQuote.effectiveSource}</span>
                 </div>
                 <div className="grid gap-3 md:grid-cols-2">
                   <div className="rounded-sm border border-border-primary bg-surface-primary p-3">
@@ -613,7 +581,8 @@ export const CurrencyRatesView = () => {
 
             {selectedCurrency ? (
               <div className="rounded-sm border border-border-primary bg-surface-secondary/20 p-3 text-sm text-text-secondary">
-                Selected currency: <span className="font-medium text-text-primary">{selectedCurrency.currencyCode}</span>
+                Selected currency:{' '}
+                <span className="font-medium text-text-primary">{selectedCurrency.currencyCode}</span>
                 <div className="mt-1">
                   Currency rate group:{' '}
                   <span className="font-medium text-text-primary">

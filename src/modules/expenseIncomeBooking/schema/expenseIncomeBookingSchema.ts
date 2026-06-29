@@ -2,7 +2,6 @@ import * as yup from 'yup';
 
 export const expenseIncomeBookingSchema = yup.object({
   type: yup.string().oneOf(['EXPENSE', 'INCOME']).required('Type is required'),
-  interstateTransaction: yup.boolean().default(false),
   code: yup.string().trim().required('Code is required'),
   description: yup.string().trim().nullable().default(''),
   applicableCustomer: yup.boolean().default(false),
@@ -34,7 +33,7 @@ export const expenseIncomeBookingSchema = yup.object({
   from: yup.string().nullable().default(null),
   to: yup.string().nullable().default(null)
     .when('from', {
-      is: (val: any) => !!val,
+      is: (val: string | null | undefined) => !!val,
       then: (schema) => schema.test('is-greater', 'To date must be equal or after From date', function(value) {
         const { from } = this.parent;
         if (!from || !value) return true;

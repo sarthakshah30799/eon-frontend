@@ -13,7 +13,11 @@ const numericString = (label: string) =>
     .required(`${label} is required`);
 
 export const currencyProfileSchema = yup.object({
-  currencyCode: yup.string().trim().required('Currency Code is required'),
+  currencyCode: yup
+    .string()
+    .trim()
+    .required('Currency Code is required')
+    .length(3, 'Currency Code must be exactly 3 characters'),
   currencyName: yup.string().trim().required('Currency Name is required'),
   countryId: yup.string().trim().required('Countries is required'),
   priority: numericString('Priority'),

@@ -6,7 +6,7 @@ export const partyProfileSchema = yup.object({
     .string()
     .trim()
     .required('Code is required')
-    .min(4, 'Code must be at least 4 characters')
+    .min(5, 'Code must be at least 5 characters')
     .max(20, 'Code must be at most 20 characters'),
   name: yup
     .string()

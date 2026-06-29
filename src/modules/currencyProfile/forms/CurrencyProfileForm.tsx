@@ -113,6 +113,7 @@ export const CurrencyProfileForm = ({
             label="Currency Code"
             disabled={isDisabled || Boolean(currentId)}
             className={compactFieldClass}
+            maxLength={3}
             asyncValidation={{
               enabled: !isDisabled,
               check: validateCurrencyCode,

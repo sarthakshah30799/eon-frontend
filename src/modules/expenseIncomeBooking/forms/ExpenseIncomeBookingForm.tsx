@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import type { SubmitErrorHandler } from 'react-hook-form';
+import type { Resolver, SubmitErrorHandler } from 'react-hook-form';
 import { useWatch, useFormContext } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useNavigate } from 'react-router-dom';
@@ -255,7 +255,7 @@ export const ExpenseIncomeBookingForm = ({
       id="expense-income-booking-form"
       onSubmit={onSubmit}
       onError={handleSubmitErrors}
-      resolver={yupResolver(expenseIncomeBookingSchema) as any}
+      resolver={yupResolver(expenseIncomeBookingSchema) as Resolver<ICreateExpenseIncomeBookingMaster>}
       defaultValues={defaultValues}
       className="space-y-6"
       footer={{
@@ -297,11 +297,6 @@ export const ExpenseIncomeBookingForm = ({
           />
 
           <div className="flex items-center gap-6 mt-6">
-            <FormFieldCheckbox
-              name="interstateTransaction"
-              label="Interstate Transaction"
-              disabled={isDisabled}
-            />
             {type === 'INCOME' && (
               <FormFieldCheckbox
                 name="allowRecPay"

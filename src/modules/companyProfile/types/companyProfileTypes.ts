@@ -17,6 +17,10 @@ export interface ICompanyProfile {
   updatedAt?: string;
 }
 
+export interface ICompanyProfileListQuery {
+  search?: string;
+}
+
 export interface ICreateCompanyProfile {
   shortCode: string;
   name: string;

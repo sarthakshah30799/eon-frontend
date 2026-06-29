@@ -1,12 +1,23 @@
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button1';
+import { useDebounce } from '@/hooks';
 import { useDeleteCompanyProfile, useListCompanyProfiles } from '../hooks';
 import { CompanyProfileTable } from '../components';
 import { Loader } from '@/components/ui/loader';
 
 export const CompanyProfileListView = () => {
   const navigate = useNavigate();
-  const { data: companies = [], isLoading, error } = useListCompanyProfiles();
+  const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 400);
+  const query = useMemo(
+    () => ({
+      search: debouncedSearch.trim() || undefined,
+    }),
+    [debouncedSearch]
+  );
+  const { data: companies = [], isLoading, isFetching, error } =
+    useListCompanyProfiles(query);
   const { deleteCompany, isPending: isDeleting } = useDeleteCompanyProfile();
 
   const handleDelete = async (id: string) => {
@@ -42,6 +53,10 @@ export const CompanyProfileListView = () => {
           companies={companies}
           onDelete={handleDelete}
           isDeleting={isDeleting}
+          onSearch={value => setSearch(value)}
+          searchValue={search}
+          searchPlaceholder="Search company name, short code, PAN, CIN, or email"
+          loading={isLoading || isFetching}
         />
       </section>
     </div>

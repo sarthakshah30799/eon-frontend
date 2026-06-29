@@ -73,7 +73,7 @@ export const DatePicker = ({
   placeholder = 'Select date',
   disabled = false,
   className = '',
-  dateFormat = 'dd/MM/yyyy',
+  dateFormat = 'MM/dd/yyyy',
   minDate,
   maxDate,
   id,

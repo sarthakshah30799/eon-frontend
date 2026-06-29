@@ -9,6 +9,10 @@ interface CompanyProfileTableProps {
   companies: ICompanyProfile[];
   onDelete: (id: string) => void | Promise<void>;
   isDeleting?: boolean;
+  loading?: boolean;
+  onSearch?: (value: string) => void;
+  searchValue?: string;
+  searchPlaceholder?: string;
 }
 
 interface CompanyProfileTableRow {
@@ -25,6 +29,10 @@ export const CompanyProfileTable = ({
   companies,
   onDelete,
   isDeleting = false,
+  loading = false,
+  onSearch,
+  searchValue,
+  searchPlaceholder,
 }: CompanyProfileTableProps) => {
   const navigate = useNavigate();
 
@@ -103,6 +111,10 @@ export const CompanyProfileTable = ({
       enablePagination={false}
       enableRowSelection={false}
       enableColumnVisibility={false}
+      loading={loading}
+      onSearch={onSearch}
+      searchValue={searchValue}
+      searchPlaceholder={searchPlaceholder}
       onRowClick={row => {
         navigate(`/admin/company-profile/edit/${row.id}`);
       }}

@@ -378,6 +378,7 @@ export const ProductProfileForm = ({
             name="productCode"
             label="Product Code"
             disabled={isSubmitting || Boolean(currentId)}
+            maxLength={2}
             asyncValidation={{
               enabled: !isSubmitting,
               check: validateProductCode,

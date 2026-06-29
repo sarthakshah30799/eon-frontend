@@ -13,7 +13,6 @@ export interface IExpenseIncomeBookingMaster {
   createdBy: string;
   updatedBy: string;
   type: BookingMasterType;
-  interstateTransaction: boolean;
   code: string;
   description: string | null;
   applicableCustomer: boolean;
@@ -34,7 +33,6 @@ export interface IExpenseIncomeBookingMaster {
 
 export interface ICreateExpenseIncomeBookingMaster {
   type: BookingMasterType;
-  interstateTransaction: boolean;
   code: string;
   description: string | null;
   applicableCustomer: boolean;

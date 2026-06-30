@@ -52,8 +52,6 @@ export const UserRoleRightsSection = ({
       </div>
     );
   }
-  console.log("rightsTreeNodes", rightsTreeNodes);
-  
 
   return (
     <section className="rounded-sm border border-border-primary bg-surface-secondary p-4 space-y-4">

@@ -54,6 +54,7 @@ export interface IExpenseIncomeBookingMasterListQuery {
   type?: BookingMasterType;
   page?: number;
   limit?: number;
+  search?: string;
 }
 
 export interface IExpenseIncomeBookingMasterListResponse {

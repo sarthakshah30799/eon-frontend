@@ -10,6 +10,9 @@ interface PartyProfileTableProps {
   clients: IPartyProfile[];
   loading?: boolean;
   selectedType?: string;
+  onSearch?: (value: string) => void;
+  searchValue?: string;
+  searchPlaceholder?: string;
 }
 
 interface PartyProfileTableRow {
@@ -27,6 +30,9 @@ export const PartyProfileTable = ({
   clients,
   loading = false,
   selectedType = '',
+  onSearch,
+  searchValue,
+  searchPlaceholder,
 }: PartyProfileTableProps) => {
   const navigate = useNavigate();
   const { canModify, canView } = usePermission(
@@ -107,6 +113,9 @@ export const PartyProfileTable = ({
       enableRowSelection={false}
       enableColumnVisibility={false}
       loading={loading}
+      onSearch={onSearch}
+      searchValue={searchValue}
+      searchPlaceholder={searchPlaceholder}
       onRowClick={
         canModify || canView
           ? row =>

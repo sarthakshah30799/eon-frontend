@@ -8,6 +8,10 @@ import type { IExpenseIncomeBookingMaster } from '../types/expenseIncomeBookingT
 interface ExpenseIncomeBookingTableProps {
   masters: IExpenseIncomeBookingMaster[];
   type: 'EXPENSE' | 'INCOME';
+  loading?: boolean;
+  onSearch?: (value: string) => void;
+  searchValue?: string;
+  searchPlaceholder?: string;
 }
 
 interface ExpenseIncomeBookingTableRow {
@@ -21,7 +25,14 @@ interface ExpenseIncomeBookingTableRow {
   validity: string;
 }
 
-export const ExpenseIncomeBookingTable = ({ masters, type }: ExpenseIncomeBookingTableProps) => {
+export const ExpenseIncomeBookingTable = ({
+  masters,
+  type,
+  loading = false,
+  onSearch,
+  searchValue,
+  searchPlaceholder,
+}: ExpenseIncomeBookingTableProps) => {
   const navigate = useNavigate();
   const basePath = type === 'EXPENSE' ? '/expense-booking' : '/income-booking';
   const { canModify, canView } = usePermission(basePath);
@@ -102,6 +113,10 @@ export const ExpenseIncomeBookingTable = ({ masters, type }: ExpenseIncomeBookin
       enablePagination={false}
       enableRowSelection={false}
       enableColumnVisibility={false}
+      loading={loading}
+      onSearch={onSearch}
+      searchValue={searchValue}
+      searchPlaceholder={searchPlaceholder}
       onRowClick={
         canModify || canView
           ? row => navigate(`${basePath}/edit/${row.id}`)

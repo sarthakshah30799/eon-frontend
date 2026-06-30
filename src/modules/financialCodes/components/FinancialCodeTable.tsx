@@ -8,6 +8,9 @@ import type { IFinancialCode } from '../types/financialCodeTypes';
 interface FinancialCodeTableProps {
   financialCodes: IFinancialCode[];
   loading?: boolean;
+  onSearch?: (value: string) => void;
+  searchValue?: string;
+  searchPlaceholder?: string;
 }
 
 interface FinancialCodeTableRow {
@@ -22,6 +25,9 @@ interface FinancialCodeTableRow {
 export const FinancialCodeTable = ({
   financialCodes,
   loading = false,
+  onSearch,
+  searchValue,
+  searchPlaceholder,
 }: FinancialCodeTableProps) => {
   const navigate = useNavigate();
   const { canModify, canView } = usePermission('/financial-profile');
@@ -89,6 +95,9 @@ export const FinancialCodeTable = ({
       enableRowSelection={false}
       enableColumnVisibility={false}
       loading={loading}
+      onSearch={onSearch}
+      searchValue={searchValue}
+      searchPlaceholder={searchPlaceholder}
       onRowClick={
         canModify || canView
           ? row => navigate(`/financial-profile/edit/${row.id}`)

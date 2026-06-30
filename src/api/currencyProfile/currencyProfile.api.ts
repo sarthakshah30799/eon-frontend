@@ -1,4 +1,5 @@
 import { apiClient } from '../api';
+import { buildQueryString } from '@/utils';
 import type {
   ICreateCurrencyProfile,
   ICurrencyProfile,
@@ -18,8 +19,10 @@ const mapBackendToFrontend = (
 });
 
 export const currencyProfileApi = {
-  getCurrencyProfiles: async (): Promise<ICurrencyProfile[]> => {
-    const res = await apiClient.get<BackendCurrencyProfile[]>('/currencies');
+  getCurrencyProfiles: async (search?: string): Promise<ICurrencyProfile[]> => {
+    const res = await apiClient.get<BackendCurrencyProfile[]>(
+      `/currencies${buildQueryString({ search: search?.trim() || undefined })}`
+    );
     if (res.error) throw new Error(res.error);
     return (res.data || []).map(mapBackendToFrontend);
   },

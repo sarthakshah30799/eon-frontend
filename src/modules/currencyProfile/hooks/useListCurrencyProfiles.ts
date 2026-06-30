@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { currencyProfileApi } from '@/api/currencyProfile';
 
-export const useListCurrencyProfiles = () => {
+export const useListCurrencyProfiles = (search?: string) => {
   return useQuery({
-    queryKey: ['currency-profiles'],
-    queryFn: currencyProfileApi.getCurrencyProfiles,
+    queryKey: ['currency-profiles', search?.trim() || ''],
+    queryFn: () => currencyProfileApi.getCurrencyProfiles(search),
   });
 };

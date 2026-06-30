@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button1';
-import { Input } from '@/components/ui/input';
 import { NotFoundState } from '@/components/ui/not-found-state';
 import { useDebounce, usePermission } from '@/hooks';
 import { PartyProfileTable } from '../components';
@@ -15,8 +14,8 @@ import { useListPartyProfiles, usePartyProfileTypes } from '../hooks';
 export const PartyProfileListView = () => {
   const navigate = useNavigate();
   const { type: routeType } = useParams<{ type?: string }>();
-  const [page, setPage] = useState(1);
-  const [pageSize] = useState(10);
+  const page = 1;
+  const pageSize = 10;
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 400);
 
@@ -119,23 +118,13 @@ export const PartyProfileListView = () => {
       </div>
 
       <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
-        <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <Input
-            label="Search"
-            placeholder="Search client code, name, or city"
-            value={search}
-            onChange={event => {
-              setPage(1);
-              setSearch(event.target.value);
-            }}
-            className="sm:max-w-md"
-          />
-        </div>
-
         <PartyProfileTable
           clients={clients}
           loading={isLoading || isFetching}
           selectedType={selectedType}
+          onSearch={value => setSearch(value)}
+          searchValue={search}
+          searchPlaceholder={`Search ${formatPartyProfileLabel(selectedType).toLowerCase()} code, name, city, pin code, or phone no`}
         />
       </section>
     </div>

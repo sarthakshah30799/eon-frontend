@@ -6,6 +6,10 @@ import type { ICurrencyProfile } from '../types';
 
 interface CurrencyProfileTableProps {
   currencies: ICurrencyProfile[];
+  loading?: boolean;
+  onSearch?: (value: string) => void;
+  searchValue?: string;
+  searchPlaceholder?: string;
 }
 
 interface CurrencyProfileTableRow {
@@ -24,6 +28,10 @@ interface CurrencyProfileTableRow {
 
 export const CurrencyProfileTable = ({
   currencies,
+  loading = false,
+  onSearch,
+  searchValue,
+  searchPlaceholder,
 }: CurrencyProfileTableProps) => {
   const navigate = useNavigate();
 
@@ -104,6 +112,10 @@ export const CurrencyProfileTable = ({
       enableFiltering={false}
       enableRowSelection={false}
       enableColumnVisibility={false}
+      loading={loading}
+      onSearch={onSearch}
+      searchValue={searchValue}
+      searchPlaceholder={searchPlaceholder}
       onRowClick={row =>
         navigate(`/currency-profile/edit/${row.id}`)
       }

@@ -185,7 +185,6 @@ function Table<T extends object>({
                 placeholder={searchPlaceholder}
                 value={searchValue}
                 onChange={event => onSearch(event.target.value)}
-                valueTransform="none"
               />
             </div>
           )}

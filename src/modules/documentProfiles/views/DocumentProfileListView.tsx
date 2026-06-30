@@ -1,16 +1,26 @@
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button1';
 import { Loader } from '@/components/ui/loader';
 import { usePermission } from '@/hooks';
+import { useDebounce } from '@/hooks';
 import { DOCUMENT_PROFILE_TEXTS } from '../constants/documentProfileConstants';
 import { DocumentProfileTable } from '../components';
 import { useDeleteDocumentProfile, useListDocumentProfiles } from '../hooks';
 
 export const DocumentProfileListView = () => {
   const navigate = useNavigate();
+  const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 400);
   const { canAdd } = usePermission('/admin/document-profile');
-  const { data: documentProfiles = [], isLoading, error } =
-    useListDocumentProfiles();
+  const query = useMemo(
+    () => ({
+      search: debouncedSearch.trim() || undefined,
+    }),
+    [debouncedSearch]
+  );
+  const { data: documentProfiles = [], isLoading, isFetching, error } =
+    useListDocumentProfiles(query);
   const { deleteDocumentProfile, isPending: isDeleting } =
     useDeleteDocumentProfile();
 
@@ -49,6 +59,10 @@ export const DocumentProfileListView = () => {
           documentProfiles={documentProfiles}
           onDelete={handleDelete}
           isDeleting={isDeleting}
+          onSearch={value => setSearch(value)}
+          searchValue={search}
+          searchPlaceholder="Search code, specification type, type, entity type, or document type"
+          loading={isLoading || isFetching}
         />
       </section>
     </div>
@@ -56,4 +70,3 @@ export const DocumentProfileListView = () => {
 };
 
 export default DocumentProfileListView;
-

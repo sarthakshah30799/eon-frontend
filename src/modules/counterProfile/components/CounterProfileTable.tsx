@@ -11,6 +11,10 @@ interface CounterProfileTableProps {
   onDelete: (id: string) => void | Promise<void>;
   isUpdatingStatus?: boolean;
   isDeleting?: boolean;
+  loading?: boolean;
+  onSearch?: (value: string) => void;
+  searchValue?: string;
+  searchPlaceholder?: string;
 }
 
 interface CounterProfileTableRow {
@@ -24,6 +28,10 @@ export const CounterProfileTable = ({
   counters,
   onToggleStatus,
   isUpdatingStatus = false,
+  loading = false,
+  onSearch,
+  searchValue,
+  searchPlaceholder,
 }: CounterProfileTableProps) => {
   const navigate = useNavigate();
 
@@ -97,6 +105,10 @@ export const CounterProfileTable = ({
       enablePagination={false}
       enableRowSelection={false}
       enableColumnVisibility={false}
+      loading={loading}
+      onSearch={onSearch}
+      searchValue={searchValue}
+      searchPlaceholder={searchPlaceholder}
       onRowClick={row => {
         navigate(`/admin/counter-profile/edit/${row.id}`);
       }}

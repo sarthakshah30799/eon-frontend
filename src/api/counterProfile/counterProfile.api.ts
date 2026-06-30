@@ -3,6 +3,7 @@ import type {
   ICreateCounterProfile,
   ICounterProfile,
 } from '@/modules/counterProfile/types';
+import { buildQueryString } from '@/utils';
 
 interface BackendCounter {
   id: string;
@@ -46,9 +47,9 @@ const mapFrontendToBackend = (values: ICreateCounterProfile) => {
 export const counterProfileApi = {
   getCounterProfiles: async (options?: {
     activeOnly?: boolean;
+    search?: string;
   }): Promise<ICounterProfile[]> => {
-    const endpoint =
-      options?.activeOnly === false ? '/counters?activeOnly=false' : '/counters';
+    const endpoint = `/counters${buildQueryString(options)}`;
     const res = await apiClient.get<BackendCounter[]>(endpoint);
     if (res.error) throw new Error(res.error);
     return (res.data || []).map(mapBackendToFrontend);

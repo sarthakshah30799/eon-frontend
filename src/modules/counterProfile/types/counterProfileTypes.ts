@@ -12,6 +12,11 @@ export interface ICounterProfile {
   updatedBy?: string;
 }
 
+export interface ICounterProfileListQuery {
+  activeOnly?: boolean;
+  search?: string;
+}
+
 export type ICreateCounterProfile = Omit<
   ICounterProfile,
   'id' | 'createdAt' | 'updatedAt' | 'createdBy' | 'updatedBy'

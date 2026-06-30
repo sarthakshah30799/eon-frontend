@@ -1,5 +1,7 @@
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button1';
+import { useDebounce } from '@/hooks';
 import {
   useDeleteCounterProfile,
   useListCounterProfiles,
@@ -11,9 +13,20 @@ import { Loader } from '@/components/ui/loader';
 
 export const CounterProfileListView = () => {
   const navigate = useNavigate();
-  const { data: counters = [], isLoading, error } = useListCounterProfiles({
-    activeOnly: false,
-  });
+  const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 400);
+  const query = useMemo(
+    () => ({
+      search: debouncedSearch.trim() || undefined,
+    }),
+    [debouncedSearch]
+  );
+  const {
+    data: counters = [],
+    isLoading,
+    isFetching,
+    error,
+  } = useListCounterProfiles(query);
   const { deleteCounterProfile, isPending: isDeleting } =
     useDeleteCounterProfile();
   const { updateCounterProfileStatus, isPending: isUpdatingStatus } =
@@ -63,6 +76,10 @@ export const CounterProfileListView = () => {
           onDelete={handleDelete}
           isDeleting={isDeleting}
           isUpdatingStatus={isUpdatingStatus}
+          loading={isLoading || isFetching}
+          onSearch={value => setSearch(value)}
+          searchValue={search}
+          searchPlaceholder="Search counter name"
         />
       </section>
     </div>

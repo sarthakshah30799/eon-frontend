@@ -1,11 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { counterProfileApi } from '@/api/counterProfile';
+import type { ICounterProfileListQuery } from '../types';
 
-export const useListCounterProfiles = (options?: {
-  activeOnly?: boolean;
-}) => {
+export const useListCounterProfiles = (options?: ICounterProfileListQuery) => {
   return useQuery({
-    queryKey: ['counter-profiles', options?.activeOnly === false],
+    queryKey: ['counter-profiles', options],
     queryFn: () => counterProfileApi.getCounterProfiles(options),
   });
 };

@@ -9,8 +9,11 @@ const normalizeCode = (code: CategoryOptionCode): CategoryOptionCode =>
   code.trim() as CategoryOptionCode;
 
 export const categoryOptionsApi = {
-  getCategoryOptions: async (): Promise<ICategoryOption[]> => {
-    const res = await apiClient.get<ICategoryOption[]>('/select-options/all');
+  getCategoryOptions: async (search?: string): Promise<ICategoryOption[]> => {
+    const query = search?.trim() ? `?search=${encodeURIComponent(search.trim())}` : '';
+    const res = await apiClient.get<ICategoryOption[]>(
+      `/select-options/all${query}`
+    );
 
     if (res.error) throw new Error(res.error);
     return res.data ?? [];

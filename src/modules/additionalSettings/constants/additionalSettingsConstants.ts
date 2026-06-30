@@ -11,8 +11,6 @@ export const AdditionalSettingsCodeEnum = {
   SessionPolicy: 'SESSION_POLICY',
   SessionAllowMultipleLogin: 'ALLOW_MULTIPLE_LOGIN',
   SessionIdleTimeoutSeconds: 'IDLE_TIMEOUT_SECONDS',
-  CurrencyRates: 'CURRENCY_RATES',
-  CurrencyRatesConfig: 'CURRENCY_RATES_CONFIG',
 } as const;
 
 export const ADDITIONAL_SETTINGS_TEXTS = {

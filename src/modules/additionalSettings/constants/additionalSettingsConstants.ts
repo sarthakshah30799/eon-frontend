@@ -11,16 +11,6 @@ export const AdditionalSettingsCodeEnum = {
   SessionPolicy: 'SESSION_POLICY',
   SessionAllowMultipleLogin: 'ALLOW_MULTIPLE_LOGIN',
   SessionIdleTimeoutSeconds: 'IDLE_TIMEOUT_SECONDS',
-  CurrencyRates: 'CURRENCY_RATES',
-  CurrencyRatesDefaultProvider: 'DEFAULT_PROVIDER',
-  CurrencyRatesBuyMarginType: 'BUY_MARGIN_TYPE',
-  CurrencyRatesBuyMarginValue: 'BUY_MARGIN_VALUE',
-  CurrencyRatesBuyMinRate: 'BUY_MIN_RATE',
-  CurrencyRatesBuyMaxRate: 'BUY_MAX_RATE',
-  CurrencyRatesSaleMarginType: 'SALE_MARGIN_TYPE',
-  CurrencyRatesSaleMarginValue: 'SALE_MARGIN_VALUE',
-  CurrencyRatesSaleMinRate: 'SALE_MIN_RATE',
-  CurrencyRatesSaleMaxRate: 'SALE_MAX_RATE',
 } as const;
 
 export const ADDITIONAL_SETTINGS_TEXTS = {

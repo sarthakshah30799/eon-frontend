@@ -1,6 +1,7 @@
 export const CurrencyRateProvider = {
   TICKER: 'TICKER',
   FOREX: 'FOREX',
+  MANUAL: 'MANUAL',
 } as const;
 
 export type CurrencyRateProvider =
@@ -14,16 +15,16 @@ export const CurrencyRateMarginType = {
 export type CurrencyRateMarginType =
   (typeof CurrencyRateMarginType)[keyof typeof CurrencyRateMarginType];
 
-export interface ICurrencyRateSettings {
-  defaultProvider: CurrencyRateProvider;
-  buyMarginType: CurrencyRateMarginType;
-  buyMarginValue: string;
-  buyMinRate: string;
-  buyMaxRate: string;
-  saleMarginType: CurrencyRateMarginType;
-  saleMarginValue: string;
-  saleMinRate: string;
-  saleMaxRate: string;
+export interface ICurrencyRateMargin {
+  marginType: CurrencyRateMarginType | '';
+  marginValue: string | null;
+  minRate: string | null;
+  maxRate: string | null;
+}
+
+export interface ICurrencyRateRule {
+  buy: ICurrencyRateMargin;
+  sale: ICurrencyRateMargin;
 }
 
 export interface ICurrencyRateGroup {
@@ -31,6 +32,10 @@ export interface ICurrencyRateGroup {
   code: string;
   name: string;
   description?: string | null;
+  buyMarginType: CurrencyRateMarginType | null;
+  buyMarginValue: string | null;
+  saleMarginType: CurrencyRateMarginType | null;
+  saleMarginValue: string | null;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -76,7 +81,22 @@ export interface ICurrencyRateQuoteSide {
   reason?: string;
 }
 
+export interface IProductCurrencyRate {
+  id: string;
+  productId: string;
+  currencyId: string;
+  buy: ICurrencyRateMargin;
+  sale: ICurrencyRateMargin;
+  isActive: boolean;
+  product?: { id: string; productCode: string; productDescription: string } | null;
+  currency?: { id: string; currencyCode: string; currencyName: string } | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ICurrencyRateQuote {
+  productId: string;
+  productCode: string;
   currencyId: string;
   currencyCode: string;
   provider: CurrencyRateProvider;
@@ -84,5 +104,6 @@ export interface ICurrencyRateQuote {
   baseSaleRate: string;
   buy: ICurrencyRateQuoteSide;
   sale: ICurrencyRateQuoteSide;
-  effectiveSource: 'advanced-settings' | 'currency-override' | 'group-default' | 'global-default';
+  effectiveSource: 'product-override' | 'group-default';
+  effectiveGroupCode: string | null;
 }

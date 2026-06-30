@@ -53,7 +53,13 @@ export interface ICurrencyProfile {
     code: string;
     name: string;
     description?: string | null;
+    buyMarginType?: string | null;
+    buyMarginValue?: string | null;
+    saleMarginType?: string | null;
+    saleMarginValue?: string | null;
     isActive: boolean;
+    createdAt?: string;
+    updatedAt?: string;
   } | null;
   active: boolean;
   onlyStocking: boolean;

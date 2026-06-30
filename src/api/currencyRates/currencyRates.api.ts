@@ -8,6 +8,12 @@ import type {
   CurrencyRateProvider,
 } from '@/modules/currencyRates/types/currencyRatesTypes';
 
+const omitEmptyFields = <T extends Record<string, unknown>>(payload: T) => {
+  return Object.fromEntries(
+    Object.entries(payload).filter(([, value]) => value !== '' && value !== undefined)
+  ) as Partial<T>;
+};
+
 export const currencyRatesApi = {
   getGroups: async (): Promise<ICurrencyRateGroup[]> => {
     const res = await apiClient.get<ICurrencyRateGroup[]>('/currency-rates/groups');
@@ -108,7 +114,7 @@ export const currencyRatesApi = {
     sale: ICurrencyRateRule['sale'];
     isActive?: boolean;
   }): Promise<IProductCurrencyRate> => {
-    const res = await apiClient.post<IProductCurrencyRate>('/currency-rates/product-rules', {
+    const res = await apiClient.post<IProductCurrencyRate>('/currency-rates/product-rules', omitEmptyFields({
       productId: data.productId,
       currencyId: data.currencyId,
       buyMarginType: data.buy.marginType,
@@ -120,7 +126,7 @@ export const currencyRatesApi = {
       saleMinRate: data.sale.minRate,
       saleMaxRate: data.sale.maxRate,
       isActive: data.isActive ?? true,
-    });
+    }));
     if (res.error) throw new Error(res.error);
     if (!res.data) throw new Error('Failed to create product currency pricing');
     return res.data;
@@ -153,7 +159,7 @@ export const currencyRatesApi = {
     }
     if (data.isActive !== undefined) payload.isActive = data.isActive;
 
-    const res = await apiClient.put<IProductCurrencyRate>(`/currency-rates/product-rules/${id}`, payload);
+    const res = await apiClient.put<IProductCurrencyRate>(`/currency-rates/product-rules/${id}`, omitEmptyFields(payload));
     if (res.error) throw new Error(res.error);
     if (!res.data) throw new Error('Failed to update product currency pricing');
     return res.data;

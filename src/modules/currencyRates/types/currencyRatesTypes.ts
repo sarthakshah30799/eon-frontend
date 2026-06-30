@@ -22,6 +22,36 @@ export interface ICurrencyRateMargin {
   maxRate: string | null;
 }
 
+export interface ICurrencyRateGroupFormValues {
+  id: string;
+  code: string;
+  name: string;
+  description: string;
+  buyMarginType: CurrencyRateMarginType | '';
+  buyMarginValue: string;
+  saleMarginType: CurrencyRateMarginType | '';
+  saleMarginValue: string;
+  isActive: boolean;
+}
+
+export interface ICurrencyRateEntryFormValues {
+  currencyId: string;
+  provider: CurrencyRateProvider | '';
+  baseBuyRate: string;
+  baseSaleRate: string;
+  baseRate: string;
+  notes: string;
+}
+
+export interface IProductCurrencyRateFormValues {
+  id: string;
+  productId: string;
+  currencyId: string;
+  buy: ICurrencyRateMargin;
+  sale: ICurrencyRateMargin;
+  isActive: boolean;
+}
+
 export interface ICurrencyRateRule {
   buy: ICurrencyRateMargin;
   sale: ICurrencyRateMargin;
@@ -106,4 +136,58 @@ export interface ICurrencyRateQuote {
   sale: ICurrencyRateQuoteSide;
   effectiveSource: 'product-override' | 'group-default';
   effectiveGroupCode: string | null;
+}
+
+export interface ICurrencyRateComparisonSide {
+  baseRate: string | null;
+  groupMarginType: CurrencyRateMarginType | null;
+  groupMarginValue: string | null;
+  groupMarginAmount: string | null;
+  groupFinalRate: string | null;
+  overrideMarginType: CurrencyRateMarginType | '';
+  overrideMarginValue: string | null;
+  overrideMarginAmount: string | null;
+  overrideFinalRate: string | null;
+  appliedFinalRate: string | null;
+  appliedSource: 'group' | 'override' | 'none';
+}
+
+export interface ICurrencyRateComparisonPreview {
+  currencyCode: string;
+  currencyName: string | null;
+  provider: CurrencyRateProvider;
+  pricingGroup: ICurrencyRateGroup | null;
+  baseBuyRate: string | null;
+  baseSaleRate: string | null;
+  buy: ICurrencyRateComparisonSide;
+  sale: ICurrencyRateComparisonSide;
+}
+
+export interface ICurrencyRateGroupUpsertPayload {
+  code: string;
+  name: string;
+  description?: string;
+  buyMarginType: CurrencyRateMarginType | null;
+  buyMarginValue: string | null;
+  saleMarginType: CurrencyRateMarginType | null;
+  saleMarginValue: string | null;
+  isActive: boolean;
+}
+
+export interface ICurrencyRateEntryUpsertPayload {
+  currencyId: string;
+  provider: CurrencyRateProvider | '';
+  baseRate?: string;
+  baseBuyRate?: string;
+  baseSaleRate?: string;
+  isActive?: boolean;
+  notes?: string;
+}
+
+export interface IProductCurrencyRateUpsertPayload {
+  productId: string;
+  currencyId: string;
+  buy: ICurrencyRateMargin;
+  sale: ICurrencyRateMargin;
+  isActive?: boolean;
 }

@@ -9,6 +9,10 @@ interface TdsProfileTableProps {
   tdsProfiles: ITdsProfile[];
   onDelete: (id: string) => void | Promise<void>;
   isDeleting?: boolean;
+  loading?: boolean;
+  onSearch?: (value: string) => void;
+  searchValue?: string;
+  searchPlaceholder?: string;
 }
 
 interface TdsProfileTableRow {
@@ -40,6 +44,10 @@ export const TdsProfileTable = ({
   tdsProfiles,
   onDelete,
   isDeleting = false,
+  loading = false,
+  onSearch,
+  searchValue = '',
+  searchPlaceholder = 'Search',
 }: TdsProfileTableProps) => {
   const navigate = useNavigate();
 
@@ -134,6 +142,10 @@ export const TdsProfileTable = ({
       enablePagination={false}
       enableRowSelection={false}
       enableColumnVisibility={false}
+      loading={loading}
+      onSearch={onSearch}
+      searchValue={searchValue}
+      searchPlaceholder={searchPlaceholder}
       onRowClick={row => {
         navigate(`/admin/tds-profile/edit/${row.id}`);
       }}

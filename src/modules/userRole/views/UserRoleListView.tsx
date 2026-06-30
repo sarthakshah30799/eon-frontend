@@ -1,5 +1,7 @@
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button1';
+import { useDebounce } from '@/hooks';
 import {
   useDeleteUserRole,
   useListUserRoles,
@@ -11,7 +13,14 @@ import { Loader } from '@/components/ui/loader';
 
 export const UserRoleListView = () => {
   const navigate = useNavigate();
-  const { data: roles = [], isLoading, error } = useListUserRoles();
+  const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 400);
+  const query = useMemo(
+    () => debouncedSearch.trim() || undefined,
+    [debouncedSearch]
+  );
+  const { data: roles = [], isLoading, isFetching, error } =
+    useListUserRoles(query);
   const { deleteUserRole, isPending: isDeleting } = useDeleteUserRole();
   const { updateUserRoleStatus, isPending: isUpdatingStatus } =
     useUpdateUserRoleStatus();
@@ -59,6 +68,10 @@ export const UserRoleListView = () => {
           onDelete={handleDelete}
           isUpdatingStatus={isUpdatingStatus}
           isDeleting={isDeleting}
+          onSearch={value => setSearch(value)}
+          searchValue={search}
+          searchPlaceholder="Search role code or role name"
+          loading={isLoading || isFetching}
         />
       </section>
     </div>

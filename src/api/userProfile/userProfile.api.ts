@@ -1,4 +1,5 @@
 import { apiClient } from '../api';
+import { buildQueryString } from '@/utils';
 import type {
   ICreateUserProfile,
   IUserProfile,
@@ -142,9 +143,13 @@ const mapFrontendToBackend = (
 export const userProfileApi = {
   getUserProfiles: async (options?: {
     activeOnly?: boolean;
+    search?: string;
   }): Promise<IUserProfile[]> => {
-    const endpoint =
-      options?.activeOnly === false ? '/users?activeOnly=false' : '/users';
+    const endpoint = `/users${buildQueryString({
+      activeOnly:
+        options?.activeOnly === false ? 'false' : undefined,
+      search: options?.search?.trim() || undefined,
+    })}`;
     const res = await apiClient.get<BackendUser[]>(endpoint);
     if (res.error) throw new Error(res.error);
     return (res.data || []).map(mapBackendToFrontend);

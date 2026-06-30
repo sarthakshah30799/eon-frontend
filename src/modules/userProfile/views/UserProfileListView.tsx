@@ -1,16 +1,25 @@
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button1';
+import { useDebounce, usePermission } from '@/hooks';
 import { useDeleteUserProfile, useListUserProfiles } from '../hooks';
 import { USER_PROFILE_TEXTS } from '../constants';
 import { UserProfileTable } from '../components';
 import { Loader } from '@/components/ui/loader';
-import { usePermission } from '@/hooks';
 
 export const UserProfileListView = () => {
   const navigate = useNavigate();
-  const { data: profiles = [], isLoading, error } = useListUserProfiles({
-    activeOnly: false,
-  });
+  const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 400);
+  const query = useMemo(
+    () => ({
+      activeOnly: false,
+      search: debouncedSearch.trim() || undefined,
+    }),
+    [debouncedSearch]
+  );
+  const { data: profiles = [], isLoading, isFetching, error } =
+    useListUserProfiles(query);
   const { deleteUserProfile, isPending: isDeleting } = useDeleteUserProfile();
   const { canAdd } = usePermission('/user-profile');
 
@@ -50,6 +59,10 @@ export const UserProfileListView = () => {
           profiles={profiles}
           onDelete={handleDelete}
           isDeleting={isDeleting}
+          loading={isLoading || isFetching}
+          onSearch={value => setSearch(value)}
+          searchValue={search}
+          searchPlaceholder="Search user code, name, email, contact no, or designation"
         />
       </section>
     </div >

@@ -8,6 +8,9 @@ import type { IAccountProfile } from '../types/accountProfileTypes';
 interface AccountProfileTableProps {
   accounts: IAccountProfile[];
   loading?: boolean;
+  onSearch?: (value: string) => void;
+  searchValue?: string;
+  searchPlaceholder?: string;
 }
 
 interface AccountProfileTableRow {
@@ -24,6 +27,9 @@ interface AccountProfileTableRow {
 export const AccountProfileTable = ({
   accounts,
   loading = false,
+  onSearch,
+  searchValue = '',
+  searchPlaceholder = 'Search',
 }: AccountProfileTableProps) => {
   const navigate = useNavigate();
   const { canModify, canView } = usePermission('/admin/accounts-profile');
@@ -97,6 +103,9 @@ export const AccountProfileTable = ({
       enableRowSelection={false}
       enableColumnVisibility={false}
       loading={loading}
+      onSearch={onSearch}
+      searchValue={searchValue}
+      searchPlaceholder={searchPlaceholder}
       onRowClick={
         canModify || canView
           ? row => navigate(`/admin/accounts-profile/edit/${row.id}`)

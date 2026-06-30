@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { tdsProfileApi } from '@/api/tdsProfile';
 
-export const useListTdsProfiles = () => {
+export const useListTdsProfiles = (search?: string) => {
   return useQuery({
-    queryKey: ['tds-profiles'],
-    queryFn: tdsProfileApi.getTdsProfiles,
+    queryKey: ['tds-profiles', search?.trim() || ''],
+    queryFn: () => tdsProfileApi.getTdsProfiles(search),
   });
 };

@@ -8,6 +8,10 @@ interface UserProfileTableProps {
   profiles: IUserProfile[];
   onDelete: (id: string) => void | Promise<void>;
   isDeleting?: boolean;
+  loading?: boolean;
+  onSearch?: (value: string) => void;
+  searchValue?: string;
+  searchPlaceholder?: string;
 }
 
 interface UserProfileTableRow {
@@ -22,6 +26,10 @@ interface UserProfileTableRow {
 
 export const UserProfileTable = ({
   profiles,
+  loading,
+  onSearch,
+  searchValue,
+  searchPlaceholder,
 }: UserProfileTableProps) => {
   const navigate = useNavigate();
 
@@ -99,6 +107,10 @@ export const UserProfileTable = ({
       enablePagination={false}
       enableRowSelection={false}
       enableColumnVisibility={false}
+      loading={loading}
+      onSearch={onSearch}
+      searchValue={searchValue}
+      searchPlaceholder={searchPlaceholder}
       onRowClick={row => {
         navigate(`/user-profile/edit/${row.id}`);
       }}

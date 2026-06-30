@@ -7,6 +7,10 @@ import type { IStateProfile } from '../types';
 
 interface StateProfileTableProps {
   states: IStateProfile[];
+  loading?: boolean;
+  onSearch?: (value: string) => void;
+  searchValue?: string;
+  searchPlaceholder?: string;
 }
 
 interface StateProfileTableRow {
@@ -18,7 +22,13 @@ interface StateProfileTableRow {
   ctrStateCode: string;
 }
 
-export const StateProfileTable = ({ states }: StateProfileTableProps) => {
+export const StateProfileTable = ({
+  states,
+  loading = false,
+  onSearch,
+  searchValue = '',
+  searchPlaceholder = 'Search',
+}: StateProfileTableProps) => {
   const navigate = useNavigate();
   const { canModify, canView } = usePermission(
     '/admin/state-profile'
@@ -87,6 +97,10 @@ export const StateProfileTable = ({ states }: StateProfileTableProps) => {
       enablePagination={false}
       enableRowSelection={false}
       enableColumnVisibility={false}
+      loading={loading}
+      onSearch={onSearch}
+      searchValue={searchValue}
+      searchPlaceholder={searchPlaceholder}
       onRowClick={
         canModify || canView
           ? row => navigate(`/admin/state-profile/edit/${row.id}`)

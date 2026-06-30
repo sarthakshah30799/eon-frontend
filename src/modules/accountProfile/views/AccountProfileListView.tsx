@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button1';
-import { Input } from '@/components/ui/input';
 import { useDebounce, usePermission } from '@/hooks';
 import { AccountProfileTable } from '../components';
 import { useListAccountProfiles } from '../hooks';
@@ -9,7 +8,7 @@ import { useListAccountProfiles } from '../hooks';
 export const AccountProfileListView = () => {
   const navigate = useNavigate();
   const { canAdd } = usePermission('/admin/accounts-profile');
-  const [page, setPage] = useState(1);
+  const [page] = useState(1);
   const [pageSize] = useState(10);
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 400);
@@ -30,7 +29,6 @@ export const AccountProfileListView = () => {
     error,
   } = useListAccountProfiles(query);
   const accounts = accountResponse?.data ?? [];
-  const totalItems = accountResponse?.totalItems ?? 0;
 
   if (error) {
     return (
@@ -55,25 +53,12 @@ export const AccountProfileListView = () => {
       </div>
 
       <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
-        <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <Input
-            label="Search"
-            placeholder="Search account code, name, or division"
-            value={search}
-            onChange={event => {
-              setPage(1);
-              setSearch(event.target.value);
-            }}
-            className="sm:max-w-md"
-          />
-          <div className="text-sm text-text-secondary">
-            {totalItems} total records
-          </div>
-        </div>
-
         <AccountProfileTable
           accounts={accounts}
           loading={isLoading || isFetching}
+          onSearch={value => setSearch(value)}
+          searchValue={search}
+          searchPlaceholder="Search a/c code, a/c name, division/dept, a/c type, currency, or financial code"
         />
       </section>
     </div>

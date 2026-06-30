@@ -57,8 +57,9 @@ const mapBackendToFrontend = (role: BackendRole): IUserRole => {
 };
 
 export const userRoleApi = {
-  getUserRoles: async (): Promise<IUserRole[]> => {
-    const res = await apiClient.get<BackendRole[]>('/roles');
+  getUserRoles: async (search?: string): Promise<IUserRole[]> => {
+    const query = search?.trim() ? `?search=${encodeURIComponent(search.trim())}` : '';
+    const res = await apiClient.get<BackendRole[]>(`/roles${query}`);
     if (res.error) throw new Error(res.error);
     return (res.data || []).map(mapBackendToFrontend);
   },

@@ -1,7 +1,8 @@
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button1';
 import { Loader } from '@/components/ui/loader';
-import { usePermission } from '@/hooks';
+import { useDebounce, usePermission } from '@/hooks';
 import { STATE_PROFILE_TEXTS } from '../constants';
 import { StateProfileTable } from '../components';
 import { useListStateProfiles } from '../hooks';
@@ -9,7 +10,16 @@ import { useListStateProfiles } from '../hooks';
 export const StateProfileListView = () => {
   const navigate = useNavigate();
   const { canAdd } = usePermission('/admin/state-profile');
-  const { data: stateResponse, isLoading, error } = useListStateProfiles();
+  const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 400);
+  const query = useMemo(
+    () => ({
+      search: debouncedSearch.trim() || undefined,
+    }),
+    [debouncedSearch]
+  );
+  const { data: stateResponse, isLoading, isFetching, error } =
+    useListStateProfiles(query);
   const states = stateResponse?.data ?? [];
 
   if (isLoading) {
@@ -41,7 +51,13 @@ export const StateProfileListView = () => {
       </div>
 
       <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
-        <StateProfileTable states={states} />
+        <StateProfileTable
+          states={states}
+          loading={isLoading || isFetching}
+          onSearch={value => setSearch(value)}
+          searchValue={search}
+          searchPlaceholder="Search country, state name, state code, GST code, or CTR code"
+        />
       </section>
     </div>
   );

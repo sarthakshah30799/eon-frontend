@@ -1,7 +1,9 @@
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button1';
 import { Loader } from '@/components/ui/loader';
 import { usePermission } from '@/hooks';
+import { useDebounce } from '@/hooks';
 import { TDS_PROFILE_TEXTS } from '../constants';
 import { TdsProfileTable } from '../components';
 import { useDeleteTdsProfile, useListTdsProfiles } from '../hooks';
@@ -9,7 +11,14 @@ import { useDeleteTdsProfile, useListTdsProfiles } from '../hooks';
 export const TdsProfileListView = () => {
   const navigate = useNavigate();
   const { canAdd } = usePermission('/admin/tds-profile');
-  const { data: tdsProfiles = [], isLoading, error } = useListTdsProfiles();
+  const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 400);
+  const query = useMemo(
+    () => debouncedSearch.trim() || undefined,
+    [debouncedSearch]
+  );
+  const { data: tdsProfiles = [], isLoading, isFetching, error } =
+    useListTdsProfiles(query);
   const { deleteTdsProfile, isPending: isDeleting } = useDeleteTdsProfile();
 
   const handleDelete = async (id: string) => {
@@ -47,6 +56,10 @@ export const TdsProfileListView = () => {
           tdsProfiles={tdsProfiles}
           onDelete={handleDelete}
           isDeleting={isDeleting}
+          loading={isLoading || isFetching}
+          onSearch={value => setSearch(value)}
+          searchValue={search}
+          searchPlaceholder="Search code, name, value, or sort order"
         />
       </section>
     </div>

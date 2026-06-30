@@ -11,6 +11,10 @@ interface UserRoleTableProps {
   onDelete: (id: string) => void | Promise<void>;
   isUpdatingStatus?: boolean;
   isDeleting?: boolean;
+  loading?: boolean;
+  onSearch?: (value: string) => void;
+  searchValue?: string;
+  searchPlaceholder?: string;
 }
 
 interface UserRoleTableRow {
@@ -24,6 +28,10 @@ export const UserRoleTable = ({
   roles,
   onToggleStatus,
   isUpdatingStatus = false,
+  loading = false,
+  onSearch,
+  searchValue = '',
+  searchPlaceholder = 'Search',
 }: UserRoleTableProps) => {
   const navigate = useNavigate();
 
@@ -96,6 +104,10 @@ export const UserRoleTable = ({
       enablePagination={false}
       enableRowSelection={false}
       enableColumnVisibility={false}
+      loading={loading}
+      onSearch={onSearch}
+      searchValue={searchValue}
+      searchPlaceholder={searchPlaceholder}
       onRowClick={row => {
         navigate(`/admin/user-role/edit/${row.id}`);
       }}

@@ -8,6 +8,9 @@ import type { ICountryProfile } from '../types';
 interface CountryProfileTableProps {
   countries: ICountryProfile[];
   loading?: boolean;
+  onSearch?: (value: string) => void;
+  searchValue?: string;
+  searchPlaceholder?: string;
 }
 
 interface CountryProfileTableRow {
@@ -21,6 +24,9 @@ interface CountryProfileTableRow {
 export const CountryProfileTable = ({
   countries,
   loading = false,
+  onSearch,
+  searchValue = '',
+  searchPlaceholder = 'Search',
 }: CountryProfileTableProps) => {
   const navigate = useNavigate();
   const { canModify, canView } = usePermission(
@@ -88,6 +94,9 @@ export const CountryProfileTable = ({
       enableRowSelection={false}
       enableColumnVisibility={false}
       loading={loading}
+      onSearch={onSearch}
+      searchValue={searchValue}
+      searchPlaceholder={searchPlaceholder}
       onRowClick={
         canModify || canView
           ? row =>

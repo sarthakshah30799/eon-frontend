@@ -1,8 +1,13 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useFormContext, type Resolver } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { CardSection } from '@/components/ui';
-import { Form, FormFieldCheckbox, FormFieldInput } from '@/components/forms';
+import {
+  Form,
+  FormFieldCheckbox,
+  FormFieldInput,
+  FormFieldSelect,
+} from '@/components/forms';
 import {
   PRODUCT_PROFILE_ACCOUNTING_FIELDS,
   PRODUCT_PROFILE_DETAIL_CHECKBOXES,
@@ -12,6 +17,34 @@ import type { ICreateProductProfile } from '../types';
 import { useNavigate } from 'react-router-dom';
 import { productProfileApi } from '@/api/productProfile';
 import { normalizeCodeValue } from '@/utils';
+import { useListAccountProfiles } from '@/modules/accountProfile/hooks';
+
+const ACCOUNT_PROFILE_SELECT_FIELDS: ReadonlySet<keyof ICreateProductProfile> =
+  new Set([
+    'acOfIssuer',
+    'commissionAc',
+    'fakeAccount',
+    'bulkPurAc',
+    'openAc',
+    'closingAc',
+    'expenseAc',
+    'bulkSaleAc',
+    'purchaseAc',
+    'saleAc',
+    'profitAc',
+    'bulkProficAc',
+    'purchaseRetCancAc',
+    'purchaseBlkCancAc',
+    'saleRetCancAc',
+    'saleBlkCancAc',
+    'branchPurAc',
+    'branchSaleAc',
+    'profitAcBrnSale',
+  ]);
+
+const isAccountProfileSelectField = (
+  fieldName: keyof ICreateProductProfile
+) => ACCOUNT_PROFILE_SELECT_FIELDS.has(fieldName);
 
 interface ProductProfileFormProps {
   defaultValues: ICreateProductProfile;
@@ -335,6 +368,36 @@ export const ProductProfileForm = ({
   currentId,
 }: ProductProfileFormProps) => {
   const navigate = useNavigate();
+  const {
+    data: accountProfileResponse,
+    isLoading: isAccountProfilesLoading,
+    isFetching: isAccountProfilesFetching,
+  } = useListAccountProfiles({ page: 1, limit: 1000 });
+
+  const accountProfileOptions = useMemo(
+    () =>
+      accountProfileResponse?.data.map(account => ({
+        value: account.id,
+        label: `${account.accountCode} - ${account.accountName}`,
+      })) ?? [],
+    [accountProfileResponse?.data]
+  );
+
+  const loadAccountProfileOptions = useCallback(
+    async (inputValue: string) => {
+      const search = inputValue.trim().toLowerCase();
+
+      if (!search) {
+        return accountProfileOptions;
+      }
+
+      return accountProfileOptions.filter(option =>
+        option.label.toLowerCase().includes(search)
+      );
+    },
+    [accountProfileOptions]
+  );
+
   const validateProductCode = useCallback(
     async (value: string) => {
       const normalizedCode = normalizeCodeValue(value);
@@ -397,15 +460,30 @@ export const ProductProfileForm = ({
       <CardSection heading="Accounting Configuration">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {PRODUCT_PROFILE_ACCOUNTING_FIELDS.map(field => (
-            <FormFieldInput
-              key={field.name}
-              name={field.name}
-              label={field.label}
-              type={field.inputType ?? 'text'}
-              inputMode={field.inputType === 'number' ? 'decimal' : undefined}
-              step={field.inputType === 'number' ? 'any' : undefined}
-              disabled={isSubmitting}
-            />
+            isAccountProfileSelectField(field.name) ? (
+              <FormFieldSelect
+                key={field.name}
+                name={field.name}
+                label={field.label}
+                placeholder={`Select ${field.label.toLowerCase()}`}
+                loadOptions={loadAccountProfileOptions}
+                disabled={
+                  isSubmitting ||
+                  isAccountProfilesLoading ||
+                  isAccountProfilesFetching
+                }
+              />
+            ) : (
+              <FormFieldInput
+                key={field.name}
+                name={field.name}
+                label={field.label}
+                type={field.inputType ?? 'text'}
+                inputMode={field.inputType === 'number' ? 'decimal' : undefined}
+                step={field.inputType === 'number' ? 'any' : undefined}
+                disabled={isSubmitting}
+              />
+            )
           ))}
         </div>
       </CardSection>

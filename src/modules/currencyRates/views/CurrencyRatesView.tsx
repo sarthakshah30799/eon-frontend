@@ -1,284 +1,259 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useState } from 'react';
+import { Button } from '@/components/ui';
 import { Loader } from '@/components/ui/loader';
-import { Button } from '@/components/ui/button1';
-import { currencyProfileApi } from '@/api/currencyProfile';
 import { currencyRatesApi } from '@/api/currencyRates';
+import {
+  CurrencyRateGroupModal,
+  CurrencyRateEntryModal,
+  CurrencyRateOverridesSection,
+  CurrencyRatesGroupsSection,
+  CurrencyRatesRatesSection,
+  CurrencyRateOverrideModal,
+} from '../components';
+import { useCurrencyRatesViewData } from '../hooks/useCurrencyRatesViewData';
 import type {
-  ICurrencyRateGroup,
-  ICurrencyRateQuote,
-  ICurrencyRateSettings,
   ICurrencyRate,
+  ICurrencyRateEntryFormValues,
+  ICurrencyRateGroup,
+  ICurrencyRateGroupFormValues,
+  IProductCurrencyRate,
+  IProductCurrencyRateFormValues,
+  ICurrencyRateMargin,
 } from '../types/currencyRatesTypes';
-import { CurrencyRateProvider } from '../types/currencyRatesTypes';
 
-const DEFAULT_SETTINGS: ICurrencyRateSettings = {
-  defaultProvider: CurrencyRateProvider.TICKER,
-  roundingScale: 4,
-  global: {
-    buy: {
-      marginType: 'PERCENT',
-      marginValue: '0',
-      marginDirection: 'ADD',
-      minRate: '0',
-      maxRate: '999999999',
-    },
-    sale: {
-      marginType: 'PERCENT',
-      marginValue: '0',
-      marginDirection: 'ADD',
-      minRate: '0',
-      maxRate: '999999999',
-    },
-  },
-  groups: {},
-  currencyOverrides: {},
-};
+type ActiveModal = 'group' | 'rate' | 'rule' | null;
 
-const sectionClass =
-  'rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm space-y-4';
+const createEmptyMargin = (): ICurrencyRateMargin => ({
+  marginType: '',
+  marginValue: '',
+  minRate: '',
+  maxRate: '',
+});
 
-const inputClass =
-  'w-full rounded-sm border border-border-primary bg-surface-primary px-3 py-2 text-sm text-text-primary outline-none transition focus:border-primary-500';
+const createEmptyGroupForm = (): ICurrencyRateGroupFormValues => ({
+  id: '',
+  code: '',
+  name: '',
+  description: '',
+  buyMarginType: '',
+  buyMarginValue: '',
+  saleMarginType: '',
+  saleMarginValue: '',
+  isActive: true,
+});
 
-const labelClass =
-  'mb-1 block text-xs font-semibold uppercase tracking-wider text-text-secondary';
+const createEmptyRateForm = (): ICurrencyRateEntryFormValues => ({
+  currencyId: '',
+  provider: '',
+  baseBuyRate: '',
+  baseSaleRate: '',
+  baseRate: '',
+  notes: '',
+});
 
-function safeJsonParse(value: string): ICurrencyRateSettings | null {
-  try {
-    return JSON.parse(value) as ICurrencyRateSettings;
-  } catch {
-    return null;
-  }
-}
+const createEmptyRuleForm = (): IProductCurrencyRateFormValues => ({
+  id: '',
+  productId: '',
+  currencyId: '',
+  buy: createEmptyMargin(),
+  sale: createEmptyMargin(),
+  isActive: true,
+});
+
+const mapGroupToForm = (group: ICurrencyRateGroup): ICurrencyRateGroupFormValues => ({
+  id: group.id,
+  code: group.code,
+  name: group.name,
+  description: group.description || '',
+  buyMarginType: group.buyMarginType ?? '',
+  buyMarginValue: group.buyMarginValue ?? '',
+  saleMarginType: group.saleMarginType ?? '',
+  saleMarginValue: group.saleMarginValue ?? '',
+  isActive: group.isActive,
+});
+
+const mapRateToForm = (rate: ICurrencyRate): ICurrencyRateEntryFormValues => ({
+  currencyId: rate.currencyId,
+  provider: rate.provider,
+  baseBuyRate: rate.baseBuyRate || '',
+  baseSaleRate: rate.baseSaleRate || '',
+  baseRate: rate.baseRate || '',
+  notes: rate.notes || '',
+});
+
+const mapRuleToForm = (rule: IProductCurrencyRate): IProductCurrencyRateFormValues => ({
+  id: rule.id,
+  productId: rule.productId,
+  currencyId: rule.currencyId,
+  buy: { ...rule.buy },
+  sale: { ...rule.sale },
+  isActive: rule.isActive,
+});
 
 export const CurrencyRatesView = () => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [settings, setSettings] = useState<ICurrencyRateSettings>(DEFAULT_SETTINGS);
-  const [settingsText, setSettingsText] = useState(JSON.stringify(DEFAULT_SETTINGS, null, 2));
-  const [groups, setGroups] = useState<ICurrencyRateGroup[]>([]);
-  const [currencies, setCurrencies] = useState<Array<{
-    id: string;
-    currencyCode: string;
-    currencyName: string;
-    pricingGroup?: { id: string; code: string; name: string } | null;
-  }>>([]);
-  const [rates, setRates] = useState<ICurrencyRate[]>([]);
+  const { data, isLoading, isFetching, error, refetch } =
+    useCurrencyRatesViewData();
 
-  const [groupForm, setGroupForm] = useState({
-    id: '',
-    code: '',
-    name: '',
-    description: '',
-    isActive: true,
-  });
+  const groups = data?.groups ?? [];
+  const products = data?.products ?? [];
+  const currencies = data?.currencies ?? [];
+  const rates = data?.rates ?? [];
+  const productCurrencyRates = data?.productCurrencyRates ?? [];
 
-  const [rateForm, setRateForm] = useState({
-    currencyId: '',
-    provider: CurrencyRateProvider.TICKER as (typeof CurrencyRateProvider)[keyof typeof CurrencyRateProvider],
-    baseBuyRate: '',
-    baseSaleRate: '',
-    baseRate: '',
-    notes: '',
-  });
+  const [activeModal, setActiveModal] = useState<ActiveModal>(null);
+  const [selectedGroup, setSelectedGroup] = useState<ICurrencyRateGroup | null>(null);
+  const [selectedRate, setSelectedRate] = useState<ICurrencyRate | null>(null);
+  const [selectedRule, setSelectedRule] = useState<IProductCurrencyRate | null>(null);
+  const [groupForm, setGroupForm] = useState<ICurrencyRateGroupFormValues>(createEmptyGroupForm());
+  const [rateForm, setRateForm] = useState<ICurrencyRateEntryFormValues>(createEmptyRateForm());
+  const [ruleForm, setRuleForm] = useState<IProductCurrencyRateFormValues>(createEmptyRuleForm());
+  const [savingTarget, setSavingTarget] = useState<ActiveModal>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
-  const [previewQuote, setPreviewQuote] = useState<ICurrencyRateQuote | null>(null);
-  const [previewLoading, setPreviewLoading] = useState(false);
-  const [previewError, setPreviewError] = useState<string | null>(null);
+  const isRefreshing = isFetching && !isLoading;
 
-  const [selectedPreviewCurrencyId, setSelectedPreviewCurrencyId] = useState('');
-
-  const defaultCurrencyId = currencies[0]?.id ?? '';
-  const effectiveRateCurrencyId = rateForm.currencyId || defaultCurrencyId;
-  const effectivePreviewCurrencyId = selectedPreviewCurrencyId || defaultCurrencyId;
-
-  const selectedCurrency = useMemo(
-    () => currencies.find(currency => currency.id === effectiveRateCurrencyId) ?? null,
-    [currencies, effectiveRateCurrencyId]
-  );
-
-  const loadAll = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      const [settingsRes, groupsRes, currenciesRes, ratesRes] = await Promise.all([
-        currencyRatesApi.getSettings(),
-        currencyRatesApi.getGroups(),
-        currencyProfileApi.getCurrencyProfiles(),
-        currencyRatesApi.getLatestRates(),
-      ]);
-
-      setSettings(settingsRes);
-      setSettingsText(JSON.stringify(settingsRes, null, 2));
-      setGroups(groupsRes);
-      setCurrencies(currenciesRes);
-      setRates(ratesRes);
-
-      if (!groupForm.id && groupsRes.length > 0) {
-        const first = groupsRes[0];
-        setGroupForm({
-          id: first.id,
-          code: first.code,
-          name: first.name,
-          description: first.description || '',
-          isActive: first.isActive,
-        });
-      }
-
-      if (!rateForm.currencyId && currenciesRes.length > 0) {
-        const firstCurrencyId = currenciesRes[0].id;
-        setRateForm(form => ({ ...form, currencyId: firstCurrencyId }));
-        setSelectedPreviewCurrencyId(firstCurrencyId);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load currency rate data');
-    } finally {
-      setIsLoading(false);
-    }
+  const closeModal = () => {
+    setActiveModal(null);
+    setSelectedGroup(null);
+    setSelectedRate(null);
+    setSelectedRule(null);
+    setSavingTarget(null);
+    setActionError(null);
   };
 
-  useEffect(() => {
-    let cancelled = false;
+  const openNewGroupModal = () => {
+    setSelectedGroup(null);
+    setGroupForm(createEmptyGroupForm());
+    setActiveModal('group');
+    setActionError(null);
+  };
 
-    const loadInitialData = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const [settingsRes, groupsRes, currenciesRes, ratesRes] = await Promise.all([
-          currencyRatesApi.getSettings(),
-          currencyRatesApi.getGroups(),
-          currencyProfileApi.getCurrencyProfiles(),
-          currencyRatesApi.getLatestRates(),
-        ]);
+  const openEditGroupModal = (group: ICurrencyRateGroup) => {
+    setSelectedGroup(group);
+    setGroupForm(mapGroupToForm(group));
+    setActiveModal('group');
+    setActionError(null);
+  };
 
-        if (cancelled) {
-          return;
-        }
+  const openNewRateModal = () => {
+    setSelectedRate(null);
+    setRateForm(createEmptyRateForm());
+    setActiveModal('rate');
+    setActionError(null);
+  };
 
-        setSettings(settingsRes);
-        setSettingsText(JSON.stringify(settingsRes, null, 2));
-        setGroups(groupsRes);
-        setCurrencies(currenciesRes);
-        setRates(ratesRes);
+  const openRateDetailModal = (rate: ICurrencyRate) => {
+    setSelectedRate(rate);
+    setRateForm(mapRateToForm(rate));
+    setActiveModal('rate');
+    setActionError(null);
+  };
 
-        if (groupsRes.length > 0) {
-          const first = groupsRes[0];
-          setGroupForm({
-            id: first.id,
-            code: first.code,
-            name: first.name,
-            description: first.description || '',
-            isActive: first.isActive,
-          });
-        }
+  const openNewRuleModal = () => {
+    setSelectedRule(null);
+    setRuleForm(createEmptyRuleForm());
+    setActiveModal('rule');
+    setActionError(null);
+  };
 
-        if (currenciesRes.length > 0) {
-          const firstCurrencyId = currenciesRes[0].id;
-          setRateForm(form => ({ ...form, currencyId: firstCurrencyId }));
-          setSelectedPreviewCurrencyId(firstCurrencyId);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Failed to load currency rate data');
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    void loadInitialData();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const handleSaveSettings = async () => {
-    const parsed = safeJsonParse(settingsText);
-    if (!parsed) {
-      setError('Settings JSON is invalid');
-      return;
-    }
-
-    const saved = await currencyRatesApi.saveSettings(parsed);
-    setSettings(saved);
-    setSettingsText(JSON.stringify(saved, null, 2));
-    await loadAll();
+  const openEditRuleModal = (rule: IProductCurrencyRate) => {
+    setSelectedRule(rule);
+    setRuleForm(mapRuleToForm(rule));
+    setActiveModal('rule');
+    setActionError(null);
   };
 
   const handleSaveGroup = async () => {
-    const payload = {
-      code: groupForm.code,
-      name: groupForm.name,
-      description: groupForm.description,
-      isActive: groupForm.isActive,
-    };
+    setSavingTarget('group');
+    setActionError(null);
 
-    if (groupForm.id) {
-      await currencyRatesApi.updateGroup(groupForm.id, payload);
-    } else {
-      await currencyRatesApi.createGroup(payload);
+    try {
+      const payload = {
+        code: groupForm.code.trim().toUpperCase(),
+        name: groupForm.name.trim(),
+        description: groupForm.description.trim() || undefined,
+        buyMarginType: groupForm.buyMarginType || null,
+        buyMarginValue: groupForm.buyMarginValue || null,
+        saleMarginType: groupForm.saleMarginType || null,
+        saleMarginValue: groupForm.saleMarginValue || null,
+        isActive: groupForm.isActive,
+      };
+
+      if (groupForm.id) {
+        await currencyRatesApi.updateGroup(groupForm.id, payload);
+      } else {
+        await currencyRatesApi.createGroup(payload);
+      }
+
+      await refetch();
+      closeModal();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Failed to save group');
+    } finally {
+      setSavingTarget(null);
     }
-
-    await loadAll();
-  };
-
-  const handleLoadGroupForEdit = (group: ICurrencyRateGroup) => {
-    setGroupForm({
-      id: group.id,
-      code: group.code,
-      name: group.name,
-      description: group.description || '',
-      isActive: group.isActive,
-    });
   };
 
   const handleSaveRate = async () => {
-    const payload =
-      rateForm.provider === CurrencyRateProvider.FOREX
-        ? {
-            currencyId: effectiveRateCurrencyId,
-            provider: rateForm.provider,
-            baseRate: rateForm.baseRate,
-            isActive: true,
-            notes: rateForm.notes,
-          }
-        : {
-            currencyId: effectiveRateCurrencyId,
-            provider: rateForm.provider,
-            baseBuyRate: rateForm.baseBuyRate,
-            baseSaleRate: rateForm.baseSaleRate,
-            isActive: true,
-            notes: rateForm.notes,
-          };
+    setSavingTarget('rate');
+    setActionError(null);
 
-    await currencyRatesApi.createRateEntry(payload);
-    await loadAll();
+    try {
+      const payload =
+        rateForm.provider === 'TICKER'
+          ? {
+              currencyId: rateForm.currencyId,
+              provider: rateForm.provider,
+              baseBuyRate: rateForm.baseBuyRate,
+              baseSaleRate: rateForm.baseSaleRate,
+              isActive: true,
+              notes: rateForm.notes,
+            }
+          : {
+              currencyId: rateForm.currencyId,
+              provider: rateForm.provider,
+              baseRate: rateForm.baseRate,
+              isActive: true,
+              notes: rateForm.notes,
+            };
+
+      await currencyRatesApi.createRateEntry(payload);
+      await refetch();
+      closeModal();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Failed to save rate');
+    } finally {
+      setSavingTarget(null);
+    }
   };
 
-  const handlePreview = async () => {
+  const handleSaveRule = async () => {
+    setSavingTarget('rule');
+    setActionError(null);
+
     try {
-      setPreviewLoading(true);
-      setPreviewError(null);
-      const preview = await currencyRatesApi.preview({
-        currencyId: effectivePreviewCurrencyId,
-        provider: rateForm.provider,
-        baseBuyRate:
-          rateForm.provider === CurrencyRateProvider.FOREX
-            ? rateForm.baseRate
-            : rateForm.baseBuyRate,
-        baseSaleRate:
-          rateForm.provider === CurrencyRateProvider.FOREX
-            ? rateForm.baseRate
-            : rateForm.baseSaleRate,
-      });
-      setPreviewQuote(preview);
+      const payload = {
+        productId: ruleForm.productId,
+        currencyId: ruleForm.currencyId,
+        buy: ruleForm.buy,
+        sale: ruleForm.sale,
+        isActive: ruleForm.isActive,
+      };
+
+      if (ruleForm.id) {
+        await currencyRatesApi.updateProductCurrencyRate(ruleForm.id, payload);
+      } else {
+        await currencyRatesApi.createProductCurrencyRate(payload);
+      }
+
+      await refetch();
+      closeModal();
     } catch (err) {
-      setPreviewError(err instanceof Error ? err.message : 'Failed to preview rate');
+      setActionError(
+        err instanceof Error ? err.message : 'Failed to save product override',
+      );
     } finally {
-      setPreviewLoading(false);
+      setSavingTarget(null);
     }
   };
 
@@ -286,345 +261,105 @@ export const CurrencyRatesView = () => {
     return <Loader />;
   }
 
-  if (error) {
-    return (
-      <div className="rounded-sm border border-error-200 bg-error-50 p-4 text-sm text-error-700">
-        {error}
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-6">
-      <section className={sectionClass}>
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-semibold text-text-primary">Currency Rates Settings</h2>
-            <p className="text-sm text-text-tertiary">
-              Stored inside advanced settings as one structured JSON config.
-              <span className="ml-2 font-medium text-text-secondary">
-                Default provider: {settings.defaultProvider} | rounding scale: {settings.roundingScale}
-              </span>
-            </p>
-          </div>
-          <Button type="button" onClick={() => void handleSaveSettings()}>
-            Save Settings
-          </Button>
+    <section className="space-y-6">
+      <div className="flex flex-col gap-4 rounded-xl border border-border-primary bg-surface-primary p-5 shadow-sm md:flex-row md:items-start md:justify-between">
+        <div className="space-y-2">
+          <h1 className="text-2xl font-semibold text-text-primary">
+            Currency Rates
+          </h1>
+          <p className="max-w-3xl text-sm text-text-secondary">
+            Manage group pricing, manual rate entries, and product-currency overrides from one place.
+          </p>
+          {isRefreshing ? (
+            <div className="text-xs font-semibold uppercase tracking-wider text-text-tertiary">
+              Refreshing current data...
+            </div>
+          ) : null}
         </div>
-        <textarea
-          value={settingsText}
-          onChange={e => setSettingsText(e.target.value)}
-          className={`${inputClass} min-h-[360px] font-mono text-xs`}
-          spellCheck={false}
-        />
-      </section>
 
-      <section className={sectionClass}>
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-semibold text-text-primary">Currency Rate Groups</h2>
-            <p className="text-sm text-text-tertiary">
-              Major, Minor, Exotic, or any business group you need.
-            </p>
-          </div>
-          <Button
-            type="button"
-            onClick={() =>
-              setGroupForm({ id: '', code: '', name: '', description: '', isActive: true })
-            }
-          >
+        <div className="flex flex-wrap gap-3">
+          <Button type="button" variant="ghost" onClick={() => void refetch()}>
+            Refresh
+          </Button>
+          <Button type="button" onClick={openNewGroupModal}>
             New Group
           </Button>
-        </div>
-
-        <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
-          <div className="overflow-hidden rounded-sm border border-border-primary">
-            <table className="min-w-full divide-y divide-border-primary text-sm">
-              <thead className="bg-surface-secondary/70 text-left text-xs uppercase tracking-wider text-text-secondary">
-                <tr>
-                  <th className="px-4 py-3">Code</th>
-                  <th className="px-4 py-3">Name</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border-primary">
-                {groups.map(group => (
-                  <tr key={group.id}>
-                    <td className="px-4 py-3 font-medium">{group.code}</td>
-                    <td className="px-4 py-3">{group.name}</td>
-                    <td className="px-4 py-3">{group.isActive ? 'Active' : 'Inactive'}</td>
-                    <td className="px-4 py-3">
-                      <button
-                        type="button"
-                        className="text-primary-600 hover:underline"
-                        onClick={() => handleLoadGroupForEdit(group)}
-                      >
-                        Edit
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-                {!groups.length ? (
-                  <tr>
-                    <td className="px-4 py-6 text-center text-text-tertiary" colSpan={4}>
-                      No rate groups yet.
-                    </td>
-                  </tr>
-                ) : null}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="space-y-3 rounded-sm border border-border-primary p-4">
-            <div>
-              <label className={labelClass}>Code</label>
-              <input
-                value={groupForm.code}
-                onChange={e => setGroupForm(form => ({ ...form, code: e.target.value.toUpperCase() }))}
-                className={inputClass}
-                placeholder="MAJOR"
-              />
-            </div>
-            <div>
-              <label className={labelClass}>Name</label>
-              <input
-                value={groupForm.name}
-                onChange={e => setGroupForm(form => ({ ...form, name: e.target.value }))}
-                className={inputClass}
-                placeholder="Major"
-              />
-            </div>
-            <div>
-              <label className={labelClass}>Description</label>
-              <textarea
-                value={groupForm.description}
-                onChange={e => setGroupForm(form => ({ ...form, description: e.target.value }))}
-                className={inputClass}
-                rows={3}
-              />
-            </div>
-            <label className="flex items-center gap-2 text-sm text-text-primary">
-              <input
-                type="checkbox"
-                checked={groupForm.isActive}
-                onChange={e => setGroupForm(form => ({ ...form, isActive: e.target.checked }))}
-              />
-              Active
-            </label>
-            <Button type="button" onClick={() => void handleSaveGroup()}>
-              {groupForm.id ? 'Update Group' : 'Create Group'}
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      <section className={sectionClass}>
-        <div>
-          <h2 className="text-lg font-semibold text-text-primary">Manual Rate Entry</h2>
-          <p className="text-sm text-text-tertiary">
-            Enter a provider type now, even though the rate is typed manually.
-          </p>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <div>
-            <label className={labelClass}>Currency</label>
-            <select
-              value={effectiveRateCurrencyId}
-              onChange={e => {
-                const value = e.target.value;
-                setRateForm(form => ({ ...form, currencyId: value }));
-                setSelectedPreviewCurrencyId(value);
-              }}
-              className={inputClass}
-            >
-              {currencies.map(currency => (
-                <option key={currency.id} value={currency.id}>
-                  {currency.currencyCode} - {currency.currencyName}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className={labelClass}>Provider</label>
-            <select
-              value={rateForm.provider}
-              onChange={e =>
-                setRateForm(form => ({
-                  ...form,
-                  provider: e.target.value as CurrencyRateProvider,
-                }))
-              }
-              className={inputClass}
-            >
-              <option value={CurrencyRateProvider.TICKER}>TICKER</option>
-              <option value={CurrencyRateProvider.FOREX}>FOREX</option>
-            </select>
-          </div>
-          {rateForm.provider === CurrencyRateProvider.FOREX ? (
-            <div>
-              <label className={labelClass}>Base Rate</label>
-              <input
-                type="number"
-                value={rateForm.baseRate}
-                onChange={e => setRateForm(form => ({ ...form, baseRate: e.target.value }))}
-                className={inputClass}
-                placeholder="82.00"
-              />
-            </div>
-          ) : (
-            <>
-              <div>
-                <label className={labelClass}>Base Buy Rate</label>
-                <input
-                  type="number"
-                  value={rateForm.baseBuyRate}
-                  onChange={e => setRateForm(form => ({ ...form, baseBuyRate: e.target.value }))}
-                  className={inputClass}
-                  placeholder="82.00"
-                />
-              </div>
-              <div>
-                <label className={labelClass}>Base Sale Rate</label>
-                <input
-                  type="number"
-                  value={rateForm.baseSaleRate}
-                  onChange={e => setRateForm(form => ({ ...form, baseSaleRate: e.target.value }))}
-                  className={inputClass}
-                  placeholder="82.10"
-                />
-              </div>
-            </>
-          )}
-        </div>
-
-        <div>
-          <label className={labelClass}>Notes</label>
-          <textarea
-            value={rateForm.notes}
-            onChange={e => setRateForm(form => ({ ...form, notes: e.target.value }))}
-            className={inputClass}
-            rows={2}
-          />
-        </div>
-
-        <div className="flex gap-3">
-          <Button type="button" onClick={() => void handleSaveRate()}>
-            Save Rate
+          <Button type="button" onClick={openNewRateModal}>
+            New Rate
           </Button>
-          <Button type="button" onClick={() => void handlePreview()}>
-            Preview Calculation
+          <Button type="button" onClick={openNewRuleModal}>
+            New Override
           </Button>
         </div>
-      </section>
+      </div>
 
-      <section className={sectionClass}>
-        <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
-          <div className="space-y-3">
-            <h2 className="text-lg font-semibold text-text-primary">Preview Result</h2>
-            <div>
-            <label className={labelClass}>Preview Currency</label>
-            <select
-              value={effectivePreviewCurrencyId}
-              onChange={e => setSelectedPreviewCurrencyId(e.target.value)}
-              className={inputClass}
-            >
-                {currencies.map(currency => (
-                  <option key={currency.id} value={currency.id}>
-                    {currency.currencyCode} - {currency.currencyName}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex items-center gap-3">
-              <Button type="button" onClick={() => void handlePreview()}>
-                Run Preview
-              </Button>
-              {previewLoading ? <span className="text-sm text-text-tertiary">Calculating...</span> : null}
-            </div>
-
-            {previewError ? (
-              <div className="rounded-sm border border-error-200 bg-error-50 p-3 text-sm text-error-700">
-                {previewError}
-              </div>
-            ) : null}
-
-            {previewQuote ? (
-              <div className="space-y-4 rounded-sm border border-border-primary bg-surface-secondary/20 p-4">
-                <div className="text-sm text-text-secondary">
-                  Effective source: <span className="font-medium text-text-primary">{previewQuote.effectiveSource}</span>
-                </div>
-                <div className="grid gap-3 md:grid-cols-2">
-                  <div className="rounded-sm border border-border-primary bg-surface-primary p-3">
-                    <div className="text-xs uppercase tracking-wider text-text-tertiary">Buy</div>
-                    <div className="mt-2 text-lg font-semibold text-text-primary">{previewQuote.buy.finalRate}</div>
-                    <div className="text-xs text-text-tertiary">
-                      Base {previewQuote.buy.baseRate} | Margin {previewQuote.buy.marginAmount}
-                    </div>
-                    <div className={`mt-2 text-sm ${previewQuote.buy.isValid ? 'text-success-600' : 'text-error-600'}`}>
-                      {previewQuote.buy.isValid ? 'Valid' : previewQuote.buy.reason || 'Invalid'}
-                    </div>
-                  </div>
-                  <div className="rounded-sm border border-border-primary bg-surface-primary p-3">
-                    <div className="text-xs uppercase tracking-wider text-text-tertiary">Sale</div>
-                    <div className="mt-2 text-lg font-semibold text-text-primary">{previewQuote.sale.finalRate}</div>
-                    <div className="text-xs text-text-tertiary">
-                      Base {previewQuote.sale.baseRate} | Margin {previewQuote.sale.marginAmount}
-                    </div>
-                    <div className={`mt-2 text-sm ${previewQuote.sale.isValid ? 'text-success-600' : 'text-error-600'}`}>
-                      {previewQuote.sale.isValid ? 'Valid' : previewQuote.sale.reason || 'Invalid'}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : null}
-          </div>
-
-          <div className="space-y-3">
-            <h2 className="text-lg font-semibold text-text-primary">Latest Manual Rates</h2>
-            <div className="overflow-hidden rounded-sm border border-border-primary">
-              <table className="min-w-full divide-y divide-border-primary text-sm">
-                <thead className="bg-surface-secondary/70 text-left text-xs uppercase tracking-wider text-text-secondary">
-                  <tr>
-                    <th className="px-4 py-3">Provider</th>
-                    <th className="px-4 py-3">Buy</th>
-                    <th className="px-4 py-3">Sale</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border-primary">
-                  {rates.slice(0, 8).map(rate => (
-                    <tr key={rate.id}>
-                      <td className="px-4 py-3">{rate.provider}</td>
-                      <td className="px-4 py-3">{rate.baseBuyRate}</td>
-                      <td className="px-4 py-3">{rate.baseSaleRate}</td>
-                    </tr>
-                  ))}
-                  {!rates.length ? (
-                    <tr>
-                      <td className="px-4 py-6 text-center text-text-tertiary" colSpan={3}>
-                        No rates recorded yet.
-                      </td>
-                    </tr>
-                  ) : null}
-                </tbody>
-              </table>
-            </div>
-
-            {selectedCurrency ? (
-              <div className="rounded-sm border border-border-primary bg-surface-secondary/20 p-3 text-sm text-text-secondary">
-                Selected currency: <span className="font-medium text-text-primary">{selectedCurrency.currencyCode}</span>
-                <div className="mt-1">
-                  Currency rate group:{' '}
-                  <span className="font-medium text-text-primary">
-                    {selectedCurrency.pricingGroup?.name || 'Not assigned'}
-                  </span>
-                </div>
-              </div>
-            ) : null}
-          </div>
+      {error || actionError ? (
+        <div className="rounded-sm border border-error-200 bg-error-50 px-4 py-3 text-sm text-error-700">
+          {actionError || (error instanceof Error ? error.message : 'Failed to load currency rate data')}
         </div>
-      </section>
-    </div>
+      ) : null}
+
+      <CurrencyRatesGroupsSection
+        groups={groups}
+        loading={isLoading}
+        refreshing={isRefreshing}
+        onCreateGroup={openNewGroupModal}
+        onOpenGroup={openEditGroupModal}
+      />
+
+      <CurrencyRatesRatesSection
+        rates={rates}
+        loading={isLoading}
+        refreshing={isRefreshing}
+        onOpenRate={openRateDetailModal}
+      />
+
+      <CurrencyRateOverridesSection
+        currencies={currencies}
+        rates={rates}
+        rules={productCurrencyRates}
+        loading={isLoading}
+        refreshing={isRefreshing}
+        onOpenRule={openEditRuleModal}
+      />
+
+      <CurrencyRateGroupModal
+        open={activeModal === 'group'}
+        mode={groupForm.id ? 'edit' : 'create'}
+        form={groupForm}
+        setForm={setGroupForm}
+        selectedGroup={selectedGroup}
+        isSubmitting={savingTarget === 'group'}
+        onSubmit={handleSaveGroup}
+        onClose={closeModal}
+      />
+
+      <CurrencyRateEntryModal
+        open={activeModal === 'rate'}
+        form={rateForm}
+        setForm={setRateForm}
+        currencies={currencies}
+        selectedRate={selectedRate}
+        isSubmitting={savingTarget === 'rate'}
+        onSubmit={handleSaveRate}
+        onClose={closeModal}
+      />
+
+      <CurrencyRateOverrideModal
+        open={activeModal === 'rule'}
+        form={ruleForm}
+        setForm={setRuleForm}
+        products={products}
+        currencies={currencies}
+        rates={rates}
+        selectedRule={selectedRule}
+        isSubmitting={savingTarget === 'rule'}
+        onSubmit={handleSaveRule}
+        onClose={closeModal}
+      />
+    </section>
   );
 };
+
+export default CurrencyRatesView;

@@ -110,7 +110,7 @@ export const useUserRightsMatrix = (roleId: string | null): UseUserRightsMatrixR
     isLoading: isLoadingMenu,
     error: menuError,
   } = useQuery({
-    queryKey: ['menu-tree'],
+    queryKey: ['menu-tree-for-rights'],
     queryFn: async () => {
       const response = await menuApi.getMenuTree(false);
       if (response.error) {

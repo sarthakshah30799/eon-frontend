@@ -115,6 +115,7 @@ const EditSubcategoryForm = ({
   const isBooleanType = categoryType.toLowerCase() === 'boolean';
   const isNumberType = categoryType.toLowerCase() === 'number' || categoryType.toLowerCase() === 'decimal';
   const isDateType = categoryType.toLowerCase() === 'date';
+  const isSelectType = categoryType.toLowerCase() === 'select';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -204,6 +205,20 @@ const EditSubcategoryForm = ({
             required
             className="w-full rounded-sm border border-border-primary bg-surface-primary px-3 py-2 text-sm text-text-primary outline-none transition focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
           />
+        ) : isSelectType ? (
+          <select
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            required={isRequiredPolicyValue}
+            className="w-full rounded-sm border border-border-primary bg-surface-primary px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+          >
+            <option value="">Select value</option>
+            {(subcategoryDefinition?.options ?? []).map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
         ) : isNumberType ? (
           <input
             type="number"

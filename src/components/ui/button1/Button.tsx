@@ -18,7 +18,7 @@ const buttonVariants = cva(
           'bg-secondary-500 text-text-inverse hover:bg-secondary-600 focus:ring-secondary-500',
         ghost:
           'bg-primary-50 text-primary-700 hover:bg-primary-100 focus:ring-primary-500',
-        link: 'text-primary-600 hover:text-primary-700 underline focus:ring-primary-500',
+        link: 'text-primary-500 hover:text-primary-700 underline focus:ring-primary-500',
       },
       size: {
         default: 'px-4 py-2',

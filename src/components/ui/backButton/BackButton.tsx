@@ -17,7 +17,7 @@ export const BackButton = ({
       variant="link"
       size="sm"
       onClick={onClick}
-      className={`inline-flex items-center gap-1.5 !px-0 !py-0 !text-[14px] leading-5 font-medium no-underline ${className}`}
+      className={`inline-flex items-center gap-1.5 px-0! py-0! text-sm leading-5 font-medium no-underline ${className}`}
     >
       <svg
         aria-hidden="true"

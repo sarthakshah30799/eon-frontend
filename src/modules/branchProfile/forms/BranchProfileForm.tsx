@@ -137,7 +137,7 @@ const BranchProfileFormFields = ({
           <FormFieldInput
             name="code"
             label="Branch Code"
-            disabled={isSubmitting || Boolean(currentId)}
+            disabled={isSubmitting}
             maxLength={5}
             placeholder="e.g. BR001"
             asyncValidation={{

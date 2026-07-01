@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useMemo } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button1';
 import { useDebounce } from '@/hooks';
 import {
@@ -9,11 +9,11 @@ import {
 } from '../hooks';
 import { USER_ROLE_TEXTS } from '../constants';
 import { UserRoleTable } from '../components';
-import { Loader } from '@/components/ui/loader';
 
 export const UserRoleListView = () => {
   const navigate = useNavigate();
-  const [search, setSearch] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const search = searchParams.get('search') ?? '';
   const debouncedSearch = useDebounce(search, 400);
   const query = useMemo(
     () => debouncedSearch.trim() || undefined,
@@ -37,10 +37,6 @@ export const UserRoleListView = () => {
   const handleToggleStatus = async (id: string, isActive: boolean) => {
     await updateUserRoleStatus({ id, isActive });
   };
-
-  if (isLoading) {
-    return <Loader />;
-  }
 
   if (error) {
     return (
@@ -68,7 +64,19 @@ export const UserRoleListView = () => {
           onDelete={handleDelete}
           isUpdatingStatus={isUpdatingStatus}
           isDeleting={isDeleting}
-          onSearch={value => setSearch(value)}
+          onSearch={value =>
+            setSearchParams(prev => {
+              const nextParams = new URLSearchParams(prev);
+
+              if (value.trim()) {
+                nextParams.set('search', value.trim());
+              } else {
+                nextParams.delete('search');
+              }
+
+              return nextParams;
+            })
+          }
           searchValue={search}
           searchPlaceholder="Search role code or role name"
           loading={isLoading || isFetching}

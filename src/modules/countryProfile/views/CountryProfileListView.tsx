@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useMemo } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button1';
 import { useDebounce, usePermission } from '@/hooks';
 import { COUNTRY_PROFILE_TEXTS } from '../constants';
@@ -8,10 +8,11 @@ import { useListCountryProfiles } from '../hooks';
 
 export const CountryProfileListView = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { canAdd } = usePermission('/admin/country-profile');
-  const [page] = useState(1);
-  const [pageSize] = useState(10);
-  const [search, setSearch] = useState('');
+  const page = 1;
+  const pageSize = 10;
+  const search = searchParams.get('search') ?? '';
   const debouncedSearch = useDebounce(search, 400);
 
   const query = useMemo(
@@ -59,7 +60,19 @@ export const CountryProfileListView = () => {
         <CountryProfileTable
           countries={countries}
           loading={isLoading || isFetching}
-          onSearch={value => setSearch(value)}
+          onSearch={value =>
+            setSearchParams(prev => {
+              const nextParams = new URLSearchParams(prev);
+
+              if (value.trim()) {
+                nextParams.set('search', value.trim());
+              } else {
+                nextParams.delete('search');
+              }
+
+              return nextParams;
+            })
+          }
           searchValue={search}
           searchPlaceholder="Search country code, name, group, or risk category"
         />

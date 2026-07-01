@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useMemo } from 'react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button1';
 import { NotFoundState } from '@/components/ui/not-found-state';
 import { useDebounce, usePermission } from '@/hooks';
@@ -14,9 +14,10 @@ import { useListPartyProfiles, usePartyProfileTypes } from '../hooks';
 export const PartyProfileListView = () => {
   const navigate = useNavigate();
   const { type: routeType } = useParams<{ type?: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
   const page = 1;
   const pageSize = 10;
-  const [search, setSearch] = useState('');
+  const search = searchParams.get('search') ?? '';
   const debouncedSearch = useDebounce(search, 400);
 
   const { data: typeOptions = [], isLoading: isTypesLoading } = usePartyProfileTypes();
@@ -122,7 +123,19 @@ export const PartyProfileListView = () => {
           clients={clients}
           loading={isLoading || isFetching}
           selectedType={selectedType}
-          onSearch={value => setSearch(value)}
+          onSearch={value =>
+            setSearchParams(prev => {
+              const nextParams = new URLSearchParams(prev);
+
+              if (value.trim()) {
+                nextParams.set('search', value.trim());
+              } else {
+                nextParams.delete('search');
+              }
+
+              return nextParams;
+            })
+          }
           searchValue={search}
           searchPlaceholder={`Search ${formatPartyProfileLabel(selectedType).toLowerCase()} code, name, city, pin code, or phone no`}
         />

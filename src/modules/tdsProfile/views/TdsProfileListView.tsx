@@ -1,7 +1,6 @@
-import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useMemo } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button1';
-import { Loader } from '@/components/ui/loader';
 import { usePermission } from '@/hooks';
 import { useDebounce } from '@/hooks';
 import { TDS_PROFILE_TEXTS } from '../constants';
@@ -10,8 +9,9 @@ import { useDeleteTdsProfile, useListTdsProfiles } from '../hooks';
 
 export const TdsProfileListView = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { canAdd } = usePermission('/admin/tds-profile');
-  const [search, setSearch] = useState('');
+  const search = searchParams.get('search') ?? '';
   const debouncedSearch = useDebounce(search, 400);
   const query = useMemo(
     () => debouncedSearch.trim() || undefined,
@@ -24,10 +24,6 @@ export const TdsProfileListView = () => {
   const handleDelete = async (id: string) => {
     await deleteTdsProfile(id);
   };
-
-  if (isLoading) {
-    return <Loader />;
-  }
 
   if (error) {
     return (
@@ -57,7 +53,19 @@ export const TdsProfileListView = () => {
           onDelete={handleDelete}
           isDeleting={isDeleting}
           loading={isLoading || isFetching}
-          onSearch={value => setSearch(value)}
+          onSearch={value =>
+            setSearchParams(prev => {
+              const nextParams = new URLSearchParams(prev);
+
+              if (value.trim()) {
+                nextParams.set('search', value.trim());
+              } else {
+                nextParams.delete('search');
+              }
+
+              return nextParams;
+            })
+          }
           searchValue={search}
           searchPlaceholder="Search code, name, value, or sort order"
         />

@@ -18,6 +18,7 @@ interface CurrencyRatesViewData {
   }>;
   currencies: ICurrencyProfile[];
   rates: ICurrencyRate[];
+  latestRates: ICurrencyRate[];
   productCurrencyRates: IProductCurrencyRate[];
 }
 
@@ -40,6 +41,7 @@ const loadCurrencyRatesViewData = async (): Promise<CurrencyRatesViewData> => {
     })),
     currencies,
     rates,
+    latestRates: rates,
     productCurrencyRates,
   };
 };
@@ -50,4 +52,3 @@ export const useCurrencyRatesViewData = () => {
     queryFn: loadCurrencyRatesViewData,
   });
 };
-

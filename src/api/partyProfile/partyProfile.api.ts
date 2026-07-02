@@ -21,6 +21,15 @@ const buildQueryString = (params?: IPartyProfileListQuery) => {
       return;
     }
 
+    if (Array.isArray(value)) {
+      value.forEach(item => {
+        if (item !== undefined && item !== null && item !== '') {
+          query.append(key, String(item));
+        }
+      });
+      return;
+    }
+
     query.set(key, String(value));
   });
 
@@ -31,11 +40,12 @@ const buildQueryString = (params?: IPartyProfileListQuery) => {
 export const partyProfileApi = {
   getPartyProfiles: async (
     params?: IPartyProfileListQuery,
-    profileType?: PartyProfileType
+    profileType?: PartyProfileType | PartyProfileType[]
   ): Promise<IPartyProfileListResponse> => {
+    const typeParam = profileType ?? params?.type;
     const res = await apiClient.get<IPartyProfileListResponse>(`/party-profiles${buildQueryString({
       ...params,
-      type: profileType ?? params?.type,
+      type: typeParam,
     })}`);
     if (res.error) throw new Error(res.error);
     if (!res.data) {

@@ -133,7 +133,7 @@ export interface IPartyProfileListQuery {
   code?: string;
   name?: string;
   active?: boolean;
-  type?: string;
+  type?: string | string[];
   page?: number;
   limit?: number;
 }

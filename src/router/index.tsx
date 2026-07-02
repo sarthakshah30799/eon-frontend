@@ -167,6 +167,12 @@ const PartyProfileEditPage = lazy(() => import('../pages/party-profiles/edit/[id
 const PartyProfileDocumentsPage = lazy(
   () => import('../pages/party-profiles/documents/[id]')
 );
+const BuyFromPage = lazy(
+  () => import('../pages/buy-from/[slug]')
+);
+const BuyFromCreatePage = lazy(
+  () => import('../pages/buy-from/[slug]/create')
+);
 
 const MasterPagesPage = lazy(
   () => import('../pages/master/system-setups/master-pages/MasterPagesPage')
@@ -608,6 +614,22 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <PartyProfileDocumentsPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/buy-from/:slug',
+    element: (
+      <ProtectedLayout>
+        <BuyFromPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/buy-from/:slug/create',
+    element: (
+      <ProtectedLayout>
+        <BuyFromCreatePage />
       </ProtectedLayout>
     ),
   },

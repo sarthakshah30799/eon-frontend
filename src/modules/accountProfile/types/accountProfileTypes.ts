@@ -90,6 +90,7 @@ export interface IAccountProfileListQuery {
   financialCodeId?: string;
   currencyId?: string;
   active?: boolean;
+  bulkPurchase?: boolean;
 }
 
 export interface IAccountProfileListResponse {

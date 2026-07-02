@@ -1,6 +1,6 @@
 import { apiClient } from '../api';
 
-export interface ICheckBook {
+export interface IChequeBook {
   id: string;
   dispatchDate: string;
   no: string;
@@ -22,7 +22,7 @@ export interface ICheckBook {
   createdAt: string;
 }
 
-export interface ICreateCheckBook {
+export interface ICreateChequeBook {
   dispatchDate: string;
   branchId: string;
   transactionType: string;
@@ -34,18 +34,33 @@ export interface ICreateCheckBook {
   remarks?: string;
 }
 
-export interface IApproveRejectCheckBook {
+export interface IApproveRejectChequeBook {
   status: 'Approved' | 'Rejected';
   approvalRemarks?: string;
   fromDate?: string;
   toDate?: string;
 }
 
-export const checkbookApi = {
-  create: async (data: ICreateCheckBook): Promise<ICheckBook> => {
-    const res = await apiClient.post<ICheckBook>('/checkbooks/dispatch', data);
+export interface IChequeBookAllocationPayload {
+  checkBookId: string;
+  bookNo: number;
+  cashierId: string;
+  remarks?: string;
+}
+
+export interface IChequeBookAllocation {
+  id: string;
+  checkBookId: string;
+  bookNo: number;
+  cashierId: string;
+  remarks?: string;
+}
+
+export const chequebookApi = {
+  create: async (data: ICreateChequeBook): Promise<IChequeBook> => {
+    const res = await apiClient.post<IChequeBook>('/chequebooks/dispatch', data);
     if (res.error) throw new Error(res.error);
-    if (!res.data) throw new Error('Failed to create checkbook dispatch');
+    if (!res.data) throw new Error('Failed to create chequebook dispatch');
     return res.data;
   },
 
@@ -55,8 +70,8 @@ export const checkbookApi = {
     transactionType?: string,
     fromDate?: string,
     toDate?: string
-  ): Promise<ICheckBook[]> => {
-    let url = '/checkbooks/dispatches';
+  ): Promise<IChequeBook[]> => {
+    let url = '/chequebooks/dispatches';
     const params: string[] = [];
     if (branchId) params.push(`branchId=${encodeURIComponent(branchId)}`);
     if (status) params.push(`status=${encodeURIComponent(status)}`);
@@ -66,27 +81,27 @@ export const checkbookApi = {
     if (params.length > 0) {
       url += `?${params.join('&')}`;
     }
-    const res = await apiClient.get<ICheckBook[]>(url);
+    const res = await apiClient.get<IChequeBook[]>(url);
     if (res.error) throw new Error(res.error);
     return res.data || [];
   },
 
-  approveOrReject: async (id: string, data: IApproveRejectCheckBook): Promise<ICheckBook> => {
-    const res = await apiClient.put<ICheckBook>(`/checkbooks/dispatches/${id}/approve`, data);
+  approveOrReject: async (id: string, data: IApproveRejectChequeBook): Promise<IChequeBook> => {
+    const res = await apiClient.put<IChequeBook>(`/chequebooks/dispatches/${id}/approve`, data);
     if (res.error) throw new Error(res.error);
     if (!res.data) throw new Error('Failed to approve/reject dispatch');
     return res.data;
   },
 
-  bulkReview: async (reviews: Array<{ id: string; status: string; approvalRemarks?: string }>): Promise<ICheckBook[]> => {
-    const res = await apiClient.put<ICheckBook[]>('/checkbooks/dispatches/bulk-review', { reviews });
+  bulkReview: async (reviews: Array<{ id: string; status: string; approvalRemarks?: string }>): Promise<IChequeBook[]> => {
+    const res = await apiClient.put<IChequeBook[]>('/chequebooks/dispatches/bulk-review', { reviews });
     if (res.error) throw new Error(res.error);
     return res.data || [];
   },
 
   getNextNumber: async (branchId: string, dispatchDate: string): Promise<{ nextNumber: string }> => {
     const res = await apiClient.get<{ nextNumber: string }>(
-      `/checkbooks/next-number?branchId=${encodeURIComponent(branchId)}&dispatchDate=${encodeURIComponent(dispatchDate)}`
+      `/chequebooks/next-number?branchId=${encodeURIComponent(branchId)}&dispatchDate=${encodeURIComponent(dispatchDate)}`
     );
     if (res.error) throw new Error(res.error);
     if (!res.data) throw new Error('Failed to fetch next number');
@@ -95,21 +110,30 @@ export const checkbookApi = {
 
   getCashiers: async (branchId: string): Promise<Array<{ id: string; name: string }>> => {
     const res = await apiClient.get<Array<{ id: string; name: string }>>(
-      `/checkbooks/cashiers?branchId=${encodeURIComponent(branchId)}`
+      `/chequebooks/cashiers?branchId=${encodeURIComponent(branchId)}`
     );
     if (res.error) throw new Error(res.error);
     return res.data || [];
   },
 
-  saveAllocations: async (allocations: Array<{ checkBookId: string; bookNo: number; cashierId: string; remarks?: string }>): Promise<any[]> => {
-    const res = await apiClient.post<any[]>('/checkbooks/allocations', { allocations });
+  saveAllocations: async (
+    allocations: IChequeBookAllocationPayload[]
+  ): Promise<IChequeBookAllocation[]> => {
+    const res = await apiClient.post<IChequeBookAllocation[]>(
+      '/chequebooks/allocations',
+      { allocations }
+    );
     if (res.error) throw new Error(res.error);
     return res.data || [];
   },
 
-  getAllocations: async (checkBookIds: string[]): Promise<Array<{ id: string; checkBookId: string; bookNo: number; cashierId: string; remarks?: string }>> => {
-    const res = await apiClient.get<Array<{ id: string; checkBookId: string; bookNo: number; cashierId: string; remarks?: string }>>(
-      `/checkbooks/allocations?checkBookIds=${encodeURIComponent(checkBookIds.join(','))}`
+  getAllocations: async (
+    checkBookIds: string[]
+  ): Promise<IChequeBookAllocation[]> => {
+    const res = await apiClient.get<IChequeBookAllocation[]>(
+      `/chequebooks/allocations?checkBookIds=${encodeURIComponent(
+        checkBookIds.join(',')
+      )}`
     );
     if (res.error) throw new Error(res.error);
     return res.data || [];

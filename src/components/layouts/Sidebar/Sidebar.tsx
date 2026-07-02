@@ -329,10 +329,10 @@ export const Sidebar = ({
         ) {
           return isManagerUser || user?.isAdmin;
         }
-        if (cleanPath === 'checkbooks') {
+        if (cleanPath === 'chequebooks') {
           return isHoUser || user?.isAdmin;
         }
-        if (cleanPath === 'checkbooks/acknowledgement' || cleanPath === 'checkbooks/allocation') {
+        if (cleanPath === 'chequebooks/acknowledgement' || cleanPath === 'chequebooks/allocation') {
           return isManagerUser || user?.isAdmin;
         }
         return true;
@@ -352,10 +352,10 @@ export const Sidebar = ({
         };
       }
 
-      if (node.name === 'CHECKBOOK') {
+      if (node.name === 'CHEQUEBOOK') {
         return {
           id: node.id,
-          label: 'Checkbook',
+          label: 'ChequeBook',
           children: visibleChildren,
         };
       }

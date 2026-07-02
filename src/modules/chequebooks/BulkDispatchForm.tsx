@@ -1,8 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useFormContext, useWatch } from 'react-hook-form';
+import { useFormContext, useWatch, type Resolver } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import * as yup from 'yup';
 import {
   Form,
   FormFieldInput,
@@ -10,53 +9,35 @@ import {
   FormFieldDatePicker,
   FormFieldTextarea,
 } from '@/components/forms';
+import { type AsyncSelectOption } from '@/components/ui';
 import { branchProfileApi } from '@/api/branchProfile/branchProfile.api';
-import { checkbookApi } from '@/api';
+import { chequebookApi } from '@/api';
 import toast from 'react-hot-toast';
+import {
+  bulkDispatchSchema,
+} from './bulkDispatchSchema';
 
-export const bulkDispatchSchema = yup.object().shape({
-  dispatchDate: yup.string().required('Date is required'),
-  branchId: yup.string().required('Branch is required'),
-  transactionType: yup.string().required('Transaction Type is required'),
-  bookNoFrom: yup
-    .number()
-    .typeError('Must be a number')
-    .integer()
-    .positive()
-    .required('Check Book No. From is required'),
-  bookNoTo: yup
-    .number()
-    .typeError('Must be a number')
-    .integer()
-    .positive()
-    .min(
-      yup.ref('bookNoFrom'),
-      'Check Book No. To must be >= Check Book No. From'
-    )
-    .required('Check Book No. To is required'),
-  vouchersPerBook: yup
-    .number()
-    .typeError('Must be a number')
-    .integer()
-    .positive()
-    .min(1, 'Must be at least 1')
-    .required('No Of Leaf Per Book is required'),
-  mvNoFrom: yup
-    .number()
-    .typeError('Must be a number')
-    .integer()
-    .positive()
-    .required('Cheque No. From is required'),
-  mvNoTo: yup.string(),
-  assignedTo: yup.string().required('Assigned To is required'),
-  remarks: yup.string().optional(),
-});
+interface IBulkDispatchFormValues {
+  dispatchDate: string;
+  no: string;
+  branchId: string;
+  transactionType: string;
+  bookNoFrom: string | number;
+  bookNoTo: string | number;
+  vouchersPerBook: string | number;
+  mvNoFrom: string | number;
+  mvNoTo: string;
+  assignedTo: string;
+  remarks: string;
+}
 
 interface BulkDispatchFormProps {
   onSuccess: () => void;
 }
 
-const createStaticLoadOptions = (options: { value: any; label: string }[]) => {
+const createStaticLoadOptions = (
+  options: AsyncSelectOption[]
+): (() => Promise<{ options: AsyncSelectOption[]; hasMore: false }>) => {
   return async () => ({
     options,
     hasMore: false,
@@ -76,7 +57,7 @@ const BulkDispatchFormFields = () => {
     const fetchNextNumber = async () => {
       if (branchId && dispatchDate) {
         try {
-          const res = await checkbookApi.getNextNumber(branchId, dispatchDate);
+          const res = await chequebookApi.getNextNumber(branchId, dispatchDate);
           form.setValue('no', res.nextNumber);
         } catch (err) {
           console.error('Failed to fetch next number', err);
@@ -188,10 +169,10 @@ export const BulkDispatchForm = ({ onSuccess }: BulkDispatchFormProps) => {
   const navigate = useNavigate();
 
   const onCancel = () => {
-    navigate('/admin/checkbooks');
+    navigate('/admin/chequebooks');
   };
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: IBulkDispatchFormValues) => {
     try {
       const formattedValues = {
         ...values,
@@ -200,15 +181,17 @@ export const BulkDispatchForm = ({ onSuccess }: BulkDispatchFormProps) => {
         vouchersPerBook: Number(values.vouchersPerBook),
         mvNoFrom: Number(values.mvNoFrom),
       };
-      await checkbookApi.create(formattedValues);
-      toast.success('Checkbook record saved successfully.');
+      await chequebookApi.create(formattedValues);
+      toast.success('ChequeBook record saved successfully.');
       onSuccess();
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to save checkbook.');
+    } catch (error: unknown) {
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to save chequebook.'
+      );
     }
   };
 
-  const defaultValues = {
+  const defaultValues: IBulkDispatchFormValues = {
     dispatchDate: new Date().toISOString().slice(0, 10),
     no: '',
     branchId: '',
@@ -226,7 +209,9 @@ export const BulkDispatchForm = ({ onSuccess }: BulkDispatchFormProps) => {
     <Form
       id="bulk-dispatch-form"
       onSubmit={handleSubmit}
-      resolver={yupResolver(bulkDispatchSchema) as any}
+      resolver={
+        yupResolver(bulkDispatchSchema) as unknown as Resolver<IBulkDispatchFormValues>
+      }
       defaultValues={defaultValues}
       mode="all"
       footer={{

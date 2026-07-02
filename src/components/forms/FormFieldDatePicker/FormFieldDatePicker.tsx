@@ -12,6 +12,7 @@ interface FormFieldDatePickerProps {
   dateFormat?: string;
   minDate?: Date;
   maxDate?: Date;
+  onValueChange?: (value: string) => void;
 }
 
 const toDateString = (date: Date | null): string => {
@@ -35,6 +36,7 @@ export const FormFieldDatePicker = ({
   dateFormat,
   minDate,
   maxDate,
+  onValueChange,
 }: FormFieldDatePickerProps) => {
   const form = useFormContext();
 
@@ -56,7 +58,9 @@ export const FormFieldDatePicker = ({
       className={className}
       selected={selectedDate}
       onChange={date => {
-        field.onChange(toDateString(date));
+        const nextValue = toDateString(date);
+        field.onChange(nextValue);
+        onValueChange?.(nextValue);
       }}
       error={error?.message}
       dateFormat={dateFormat}

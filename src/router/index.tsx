@@ -134,17 +134,17 @@ const ManualBillBookAcknowledgementPage = lazy(
 const ManagerToCashierAllocationPage = lazy(
   () => import('../pages/manual-bill-books/ManagerToCashierAllocationPage')
 );
-const CheckBookPage = lazy(
-  () => import('../pages/checkbooks/CheckBookPage')
+const   ChequeBookPage = lazy(
+  () => import('../pages/chequebooks/ChequeBookPage')
 );
-const CheckBookCreatePage = lazy(
-  () => import('../pages/checkbooks/CheckBookCreatePage')
+const ChequeBookCreatePage = lazy(
+  () => import('../pages/chequebooks/ChequeBookCreatePage')
 );
-const CheckBookAcknowledgementPage = lazy(
-  () => import('../pages/checkbooks/CheckBookAcknowledgementPage')
+const ChequeBookAcknowledgementPage = lazy(
+  () => import('../pages/chequebooks/ChequeBookAcknowledgementPage')
 );
-const CheckBookAllocationPage = lazy(
-  () => import('../pages/checkbooks/CheckBookAllocationPage')
+const ChequeBookAllocationPage = lazy(
+  () => import('../pages/chequebooks/ChequeBookAllocationPage')
 );
 const AdditionalSettingsPage = lazy(
   () => import('../pages/admin/additional-settings')
@@ -519,50 +519,34 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/admin/checkbooks',
+    path: '/cheque-books/create',
     element: (
       <ProtectedLayout>
-        <CheckBookPage />
+        <ChequeBookCreatePage />
       </ProtectedLayout>
     ),
   },
   {
-    path: '/admin/checkbooks/create',
+    path: '/cheque-books',
     element: (
       <ProtectedLayout>
-        <CheckBookCreatePage />
+        <ChequeBookPage />
       </ProtectedLayout>
     ),
   },
   {
-    path: '/checkbooks',
+    path: '/cheque-books/acknowledgement',
     element: (
       <ProtectedLayout>
-        <CheckBookPage />
+        <ChequeBookAcknowledgementPage />
       </ProtectedLayout>
     ),
   },
   {
-    path: '/checkbooks/create',
+    path: '/cheque-books/allocation',
     element: (
       <ProtectedLayout>
-        <CheckBookCreatePage />
-      </ProtectedLayout>
-    ),
-  },
-  {
-    path: '/checkbooks/acknowledgement',
-    element: (
-      <ProtectedLayout>
-        <CheckBookAcknowledgementPage />
-      </ProtectedLayout>
-    ),
-  },
-  {
-    path: '/checkbooks/allocation',
-    element: (
-      <ProtectedLayout>
-        <CheckBookAllocationPage />
+        <ChequeBookAllocationPage />
       </ProtectedLayout>
     ),
   },

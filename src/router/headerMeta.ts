@@ -186,27 +186,27 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
     meta: { title: 'Manager To Cashier Allocation' },
   },
   {
-    path: '/admin/checkbooks',
-    meta: { title: 'Checkbooks' },
+    path: '/admin/chequebooks',
+    meta: { title: 'Chequebooks' },
   },
   {
-    path: '/admin/checkbooks/create',
-    meta: { title: 'Checkbooks' },
+    path: '/admin/chequebooks/create',
+    meta: { title: 'Chequebooks' },
   },
   {
-    path: '/checkbooks',
-    meta: { title: 'Checkbooks' },
+    path: '/chequebooks',
+    meta: { title: 'Chequebooks' },
   },
   {
-    path: '/checkbooks/create',
-    meta: { title: 'Checkbooks' },
+    path: '/chequebooks/create',
+    meta: { title: 'Chequebooks' },
   },
   {
-    path: '/checkbooks/acknowledgement',
+    path: '/chequebooks/acknowledgement',
     meta: { title: 'Branch Acknowledgement' },
   },
   {
-    path: '/checkbooks/allocation',
+    path: '/chequebooks/allocation',
     meta: { title: 'Manager To Cashier Allocation' },
   },
 ];

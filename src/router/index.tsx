@@ -134,6 +134,18 @@ const ManualBillBookAcknowledgementPage = lazy(
 const ManagerToCashierAllocationPage = lazy(
   () => import('../pages/manual-bill-books/ManagerToCashierAllocationPage')
 );
+const CheckBookPage = lazy(
+  () => import('../pages/checkbooks/CheckBookPage')
+);
+const CheckBookCreatePage = lazy(
+  () => import('../pages/checkbooks/CheckBookCreatePage')
+);
+const CheckBookAcknowledgementPage = lazy(
+  () => import('../pages/checkbooks/CheckBookAcknowledgementPage')
+);
+const CheckBookAllocationPage = lazy(
+  () => import('../pages/checkbooks/CheckBookAllocationPage')
+);
 const AdditionalSettingsPage = lazy(
   () => import('../pages/admin/additional-settings')
 );
@@ -503,6 +515,54 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <ManagerToCashierAllocationPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/checkbooks',
+    element: (
+      <ProtectedLayout>
+        <CheckBookPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/checkbooks/create',
+    element: (
+      <ProtectedLayout>
+        <CheckBookCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/checkbooks',
+    element: (
+      <ProtectedLayout>
+        <CheckBookPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/checkbooks/create',
+    element: (
+      <ProtectedLayout>
+        <CheckBookCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/checkbooks/acknowledgement',
+    element: (
+      <ProtectedLayout>
+        <CheckBookAcknowledgementPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/checkbooks/allocation',
+    element: (
+      <ProtectedLayout>
+        <CheckBookAllocationPage />
       </ProtectedLayout>
     ),
   },

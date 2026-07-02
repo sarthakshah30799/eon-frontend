@@ -185,6 +185,30 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
     path: '/manual-bill-books/allocation',
     meta: { title: 'Manager To Cashier Allocation' },
   },
+  {
+    path: '/admin/checkbooks',
+    meta: { title: 'Checkbooks' },
+  },
+  {
+    path: '/admin/checkbooks/create',
+    meta: { title: 'Checkbooks' },
+  },
+  {
+    path: '/checkbooks',
+    meta: { title: 'Checkbooks' },
+  },
+  {
+    path: '/checkbooks/create',
+    meta: { title: 'Checkbooks' },
+  },
+  {
+    path: '/checkbooks/acknowledgement',
+    meta: { title: 'Branch Acknowledgement' },
+  },
+  {
+    path: '/checkbooks/allocation',
+    meta: { title: 'Manager To Cashier Allocation' },
+  },
 ];
 
 const findMenuName = (nodes: IMenu[], pathname: string): string | null => {

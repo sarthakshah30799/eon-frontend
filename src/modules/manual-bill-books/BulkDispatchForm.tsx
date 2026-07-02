@@ -3,7 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { Form, FormFieldInput, FormFieldSelect, FormFieldDatePicker, FormFieldTextarea } from '@/components/forms';
+import {
+  Form,
+  FormFieldInput,
+  FormFieldSelect,
+  FormFieldDatePicker,
+  FormFieldTextarea,
+} from '@/components/forms';
 import { branchProfileApi } from '@/api/branchProfile/branchProfile.api';
 import { manualBillBookApi } from '@/api';
 import toast from 'react-hot-toast';
@@ -12,10 +18,32 @@ export const bulkDispatchSchema = yup.object().shape({
   dispatchDate: yup.string().required('Date is required'),
   branchId: yup.string().required('Branch is required'),
   transactionType: yup.string().required('Transaction Type is required'),
-  bookNoFrom: yup.number().typeError('Must be a number').integer().positive().required('Book No. From is required'),
-  bookNoTo: yup.number().typeError('Must be a number').integer().positive().min(yup.ref('bookNoFrom'), 'Book No. To must be >= Book No. From').required('Book No. To is required'),
-  vouchersPerBook: yup.number().typeError('Must be a number').integer().positive().min(1, 'Must be at least 1').required('No Of Voucher Per Book is required'),
-  mvNoFrom: yup.number().typeError('Must be a number').integer().positive().required('MV No. From is required'),
+  bookNoFrom: yup
+    .number()
+    .typeError('Must be a number')
+    .integer()
+    .positive()
+    .required('Book No. From is required'),
+  bookNoTo: yup
+    .number()
+    .typeError('Must be a number')
+    .integer()
+    .positive()
+    .min(yup.ref('bookNoFrom'), 'Book No. To must be >= Book No. From')
+    .required('Book No. To is required'),
+  vouchersPerBook: yup
+    .number()
+    .typeError('Must be a number')
+    .integer()
+    .positive()
+    .min(1, 'Must be at least 1')
+    .required('No Of Voucher Per Book is required'),
+  mvNoFrom: yup
+    .number()
+    .typeError('Must be a number')
+    .integer()
+    .positive()
+    .required('MV No. From is required'),
   mvNoTo: yup.string(),
   assignedTo: yup.string().required('Assigned To is required'),
   remarks: yup.string().optional(),
@@ -45,7 +73,10 @@ const BulkDispatchFormFields = () => {
     const fetchNextNumber = async () => {
       if (branchId && dispatchDate) {
         try {
-          const res = await manualBillBookApi.getNextNumber(branchId, dispatchDate);
+          const res = await manualBillBookApi.getNextNumber(
+            branchId,
+            dispatchDate
+          );
           form.setValue('no', res.nextNumber);
         } catch (err) {
           console.error('Failed to fetch next number', err);
@@ -67,7 +98,7 @@ const BulkDispatchFormFields = () => {
     if (!isNaN(fromBook) && !isNaN(toBook) && !isNaN(vpb) && !isNaN(fromMv)) {
       const numBooks = toBook - fromBook + 1;
       if (numBooks > 0) {
-        const calculatedTo = fromMv + (numBooks * vpb);
+        const calculatedTo = fromMv + numBooks * vpb - 1;
         form.setValue('mvNoTo', String(calculatedTo));
       } else {
         form.setValue('mvNoTo', '');
@@ -79,9 +110,14 @@ const BulkDispatchFormFields = () => {
 
   const loadBranches = async () => {
     try {
-      const branches = await branchProfileApi.getBranchProfiles({ activeOnly: true });
+      const branches = await branchProfileApi.getBranchProfiles({
+        activeOnly: true,
+      });
       return {
-        options: branches.map((b) => ({ value: b.id, label: `${b.code} - ${b.name}` })),
+        options: branches.map(b => ({
+          value: b.id,
+          label: `${b.code} - ${b.name}`,
+        })),
         hasMore: false,
       };
     } catch {
@@ -107,17 +143,38 @@ const BulkDispatchFormFields = () => {
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
       <FormFieldDatePicker name="dispatchDate" label="Date" />
-      <FormFieldInput name="no" label="NO" disabled placeholder="Auto-Generated" />
-      <FormFieldSelect name="branchId" label="Branch" loadOptions={loadBranches} />
-      <FormFieldSelect name="transactionType" label="Txn Type" loadOptions={loadTxnTypes} />
+      <FormFieldInput
+        name="no"
+        label="NO"
+        disabled
+        placeholder="Auto-Generated"
+      />
+      <FormFieldSelect
+        name="branchId"
+        label="Branch"
+        loadOptions={loadBranches}
+      />
+      <FormFieldSelect
+        name="transactionType"
+        label="Txn Type"
+        loadOptions={loadTxnTypes}
+      />
       <FormFieldInput name="bookNoFrom" label="Book No. From" type="number" />
       <FormFieldInput name="bookNoTo" label="Book No. To" type="number" />
       <div className="md:col-span-2">
-        <FormFieldInput name="vouchersPerBook" label="No Of Voucher Per Book" type="number" />
+        <FormFieldInput
+          name="vouchersPerBook"
+          label="No Of Voucher Per Book"
+          type="number"
+        />
       </div>
       <FormFieldInput name="mvNoFrom" label="MV No. From" type="number" />
       <FormFieldInput name="mvNoTo" label="MV No. To" disabled />
-      <FormFieldSelect name="assignedTo" label="Assigned To" loadOptions={loadAssignedTo} />
+      <FormFieldSelect
+        name="assignedTo"
+        label="Assigned To"
+        loadOptions={loadAssignedTo}
+      />
       <FormFieldTextarea name="remarks" label="Remarks" rows={3} />
     </div>
   );

@@ -8,8 +8,14 @@ import type { IProductProfile } from '../types';
 
 interface ProductProfileTableProps {
   products: IProductProfile[];
-  onToggleStatus: (id: string, isActiveProduct: boolean) => void | Promise<void>;
+  onToggleStatus: (
+    id: string,
+    isActiveProduct: boolean
+  ) => void | Promise<void>;
   isUpdatingStatus?: boolean;
+  onSearch?: (value: string) => void;
+  searchValue?: string;
+  searchPlaceholder?: string;
 }
 
 interface ProductProfileTableRow {
@@ -25,6 +31,9 @@ export const ProductProfileTable = ({
   products,
   onToggleStatus,
   isUpdatingStatus = false,
+  onSearch,
+  searchValue = '',
+  searchPlaceholder = 'Search',
 }: ProductProfileTableProps) => {
   const navigate = useNavigate();
 
@@ -101,17 +110,22 @@ export const ProductProfileTable = ({
   ];
 
   return (
-    <Table
-      columns={columns}
-      data={rows}
-      enableFiltering={false}
-      enablePagination={false}
-      enableRowSelection={false}
-      enableColumnVisibility={false}
-      onRowClick={row => {
-        navigate(`/admin/product-profile/edit/${row.id}`);
-      }}
-      emptyMessage="No products found. Create your first product."
-    />
+    <div className="space-y-4">
+      <Table
+        columns={columns}
+        data={rows}
+        enableFiltering={false}
+        enablePagination={false}
+        enableRowSelection={false}
+        enableColumnVisibility={false}
+        onSearch={onSearch}
+        searchValue={searchValue}
+        searchPlaceholder={searchPlaceholder}
+        onRowClick={row => {
+          navigate(`/admin/product-profile/edit/${row.id}`);
+        }}
+        emptyMessage="No products found. Create your first product."
+      />
+    </div>
   );
 };

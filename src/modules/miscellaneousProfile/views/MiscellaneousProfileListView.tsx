@@ -1,7 +1,6 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useMemo } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button1';
-import { Loader } from '@/components/ui/loader';
 import { useDebounce } from '@/hooks';
 import { useListMiscellaneousProfiles } from '../hooks';
 import { CATEGORY_OPTIONS_TEXTS } from '../constants';
@@ -9,14 +8,15 @@ import { MiscellaneousProfileTable } from '../components';
 
 export const MiscellaneousProfileListView = () => {
   const navigate = useNavigate();
-  const [search, setSearch] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const search = searchParams.get('search') ?? '';
   const debouncedSearch = useDebounce(search, 400);
-  const { data: options = [], isLoading, error } =
-    useListMiscellaneousProfiles(debouncedSearch);
-
-  if (isLoading) {
-    return <Loader />;
-  }
+  const query = useMemo(
+    () => debouncedSearch.trim(),
+    [debouncedSearch]
+  );
+  const { data: options = [], isLoading, isFetching, error } =
+    useListMiscellaneousProfiles(query);
 
   if (error) {
     return (
@@ -41,9 +41,22 @@ export const MiscellaneousProfileListView = () => {
       <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm">
         <MiscellaneousProfileTable
           options={options}
-          onSearch={value => setSearch(value)}
+          onSearch={value =>
+            setSearchParams(prev => {
+              const nextParams = new URLSearchParams(prev);
+
+              if (value.trim()) {
+                nextParams.set('search', value.trim());
+              } else {
+                nextParams.delete('search');
+              }
+
+              return nextParams;
+            })
+          }
           searchValue={search}
           searchPlaceholder="Search code"
+          loading={isLoading || isFetching}
         />
       </section>
     </div>

@@ -23,6 +23,7 @@ interface FormFieldCategoryOptionProps
   isCreatable?: boolean;
   isSearchable?: boolean;
   useValueAsId?: boolean;
+  onChange?: (value: AsyncSelectOption | AsyncSelectOption[] | null) => void;
   onCreateTransform?: (
     inputValue: string
   ) => { value: string; label: string } | Promise<{ value: string; label: string }>;

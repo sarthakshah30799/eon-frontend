@@ -1,7 +1,6 @@
-import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useMemo } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button1';
-import { Loader } from '@/components/ui/loader';
 import { usePermission } from '@/hooks';
 import { useDebounce } from '@/hooks';
 import { DOCUMENT_PROFILE_TEXTS } from '../constants/documentProfileConstants';
@@ -10,7 +9,8 @@ import { useDeleteDocumentProfile, useListDocumentProfiles } from '../hooks';
 
 export const DocumentProfileListView = () => {
   const navigate = useNavigate();
-  const [search, setSearch] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const search = searchParams.get('search') ?? '';
   const debouncedSearch = useDebounce(search, 400);
   const { canAdd } = usePermission('/admin/document-profile');
   const query = useMemo(
@@ -27,10 +27,6 @@ export const DocumentProfileListView = () => {
   const handleDelete = async (id: string) => {
     await deleteDocumentProfile(id);
   };
-
-  if (isLoading) {
-    return <Loader />;
-  }
 
   if (error) {
     return (
@@ -59,7 +55,19 @@ export const DocumentProfileListView = () => {
           documentProfiles={documentProfiles}
           onDelete={handleDelete}
           isDeleting={isDeleting}
-          onSearch={value => setSearch(value)}
+          onSearch={value =>
+            setSearchParams(prev => {
+              const nextParams = new URLSearchParams(prev);
+
+              if (value.trim()) {
+                nextParams.set('search', value.trim());
+              } else {
+                nextParams.delete('search');
+              }
+
+              return nextParams;
+            })
+          }
           searchValue={search}
           searchPlaceholder="Search code, specification type, type, entity type, or document type"
           loading={isLoading || isFetching}

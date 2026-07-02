@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useMemo } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button1';
 import { Loader } from '@/components/ui/loader';
 import { useDebounce, usePermission } from '@/hooks';
@@ -12,9 +12,10 @@ interface ExpenseIncomeBookingListViewProps {
 
 export const ExpenseIncomeBookingListView = ({ type }: ExpenseIncomeBookingListViewProps) => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const basePath = type === 'EXPENSE' ? '/expense-booking' : '/income-booking';
   const { canAdd } = usePermission(basePath);
-  const [search, setSearch] = useState('');
+  const search = searchParams.get('search') ?? '';
   const debouncedSearch = useDebounce(search, 400);
   const query = useMemo(
     () => ({
@@ -59,7 +60,19 @@ export const ExpenseIncomeBookingListView = ({ type }: ExpenseIncomeBookingListV
           masters={masters}
           type={type}
           loading={isLoading || isFetching}
-          onSearch={value => setSearch(value)}
+          onSearch={value =>
+            setSearchParams(prev => {
+              const nextParams = new URLSearchParams(prev);
+
+              if (value.trim()) {
+                nextParams.set('search', value.trim());
+              } else {
+                nextParams.delete('search');
+              }
+
+              return nextParams;
+            })
+          }
           searchValue={search}
           searchPlaceholder="Search code or description"
         />

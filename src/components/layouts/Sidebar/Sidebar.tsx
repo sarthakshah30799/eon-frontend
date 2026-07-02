@@ -1,9 +1,4 @@
-import {
-  useMemo,
-  useState,
-  type Dispatch,
-  type SetStateAction,
-} from 'react';
+import { useMemo, useState, type Dispatch, type SetStateAction } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useMasterPages } from '../../../lib';
@@ -103,35 +98,6 @@ const resolveMenuPath = (path?: string, basePath = '') => {
   return `${basePath}${path.startsWith('/') ? path : `/${path}`}`;
 };
 
-const mapVisibleMenuNodeToItem = (
-  node: IMenu,
-  basePath = ''
-): SidebarItem | null => {
-  const visibleChildren = (node.children || [])
-    .map(child => mapVisibleMenuNodeToItem(child, basePath))
-    .filter(Boolean) as SidebarItem[];
-
-  const resolvedPath = resolveMenuPath(node.path || undefined, basePath);
-
-  if (visibleChildren.length > 0) {
-    return {
-      id: node.id,
-      label: node.name,
-      children: visibleChildren,
-    };
-  }
-
-  if (!resolvedPath) {
-    return null;
-  }
-
-  return {
-    id: node.id,
-    label: node.name,
-    path: resolvedPath,
-  };
-};
-
 const SidebarChevron = ({ isOpen }: { isOpen: boolean }) => (
   <svg
     aria-hidden="true"
@@ -197,14 +163,14 @@ const SidebarTree = ({
                     ? 'pl-5 pr-2 py-2'
                     : 'pl-8 pr-2 py-2',
                 isActive
-                  ? 'bg-sky-100 text-sky-800 shadow-sm'
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900',
+                  ? 'bg-sidebar-accent text-white shadow-sm border-l-2 border-primary-500'
+                  : 'text-sidebar-muted hover:bg-slate-50 hover:text-sidebar-ink',
               ].join(' ')}
               aria-current={isActive ? 'page' : undefined}
               onClick={() => onNavigate(item.path)}
               title={item.label}
             >
-              <span className="min-w-0 flex-1 truncate text-sm font-medium">
+              <span className="min-w-0 flex-1 truncate text-xs font-medium">
                 {isCollapsed ? compactLabel(item.label) : item.label}
               </span>
             </button>
@@ -230,8 +196,8 @@ const SidebarTree = ({
                     ? 'pl-5 pr-2 py-2'
                     : 'pl-8 pr-2 py-2',
                 isOpen
-                  ? 'bg-sky-100 text-sky-800 shadow-sm'
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900',
+                  ? 'bg-sidebar-accent text-white shadow-sm border-l-2 border-primary-500'
+                  : 'text-sidebar-muted! hover:bg-slate-50 hover:text-sidebar-ink',
               ].join(' ')}
               aria-expanded={isOpen}
               onClick={() => {
@@ -265,7 +231,7 @@ const SidebarTree = ({
                       : 'bg-slate-300 group-hover:bg-slate-500',
                   ].join(' ')}
                 />
-                <span className="text-sm">
+                <span className="text-xs font-medium">
                   {isCollapsed ? compactLabel(item.label) : item.label}
                 </span>
               </span>
@@ -273,7 +239,7 @@ const SidebarTree = ({
             </button>
 
             {isOpen && !isCollapsed && (
-              <div className="ml-2 border-l border-slate-200 pl-2.5">
+              <div className="ml-2 border-l border-sidebar-accent pl-2.5">
                 <SidebarTree
                   items={item.children}
                   currentPath={currentPath}
@@ -332,10 +298,16 @@ export const Sidebar = ({
   const sections = useMemo<SidebarSection[]>(() => {
     const hasRole = (roleCode: string) => {
       const normalizedRole = roleCode.toUpperCase().replace('_', ' ');
-      if ((user as any)?.roleName?.toUpperCase() === normalizedRole) return true;
-      return user?.assignments?.some(a => a.roleName?.toUpperCase() === normalizedRole) || false;
+      if (user?.role?.toUpperCase() === normalizedRole)
+        return true;
+      return (
+        user?.assignments?.some(
+          a => a.roleName?.toUpperCase() === normalizedRole
+        ) || false
+      );
     };
-    const isHoUser = user?.isAdmin || user?.isHoStaff || user?.isHo || hasRole('HO STAFF');
+    const isHoUser =
+      user?.isAdmin || user?.isHoStaff || user?.isHo || hasRole('HO STAFF');
     const isManagerUser = hasRole('MANAGER');
 
     const mapVisibleMenuNodeToItemCustom = (
@@ -344,12 +316,23 @@ export const Sidebar = ({
     ): SidebarItem | null => {
       const filteredChildren = (node.children || []).filter(child => {
         const normalizedPath = child.path ? child.path.replace(/^\/+/, '') : '';
-        const cleanPath = normalizedPath.startsWith('admin/') ? normalizedPath.slice(6) : normalizedPath;
+        const cleanPath = normalizedPath.startsWith('admin/')
+          ? normalizedPath.slice(6)
+          : normalizedPath;
 
         if (cleanPath === 'manual-bill-books') {
           return isHoUser || user?.isAdmin;
         }
-        if (cleanPath === 'manual-bill-books/acknowledgement' || cleanPath === 'manual-bill-books/allocation') {
+        if (
+          cleanPath === 'manual-bill-books/acknowledgement' ||
+          cleanPath === 'manual-bill-books/allocation'
+        ) {
+          return isManagerUser || user?.isAdmin;
+        }
+        if (cleanPath === 'chequebooks') {
+          return isHoUser || user?.isAdmin;
+        }
+        if (cleanPath === 'chequebooks/acknowledgement' || cleanPath === 'chequebooks/allocation') {
           return isManagerUser || user?.isAdmin;
         }
         return true;
@@ -365,6 +348,14 @@ export const Sidebar = ({
         return {
           id: node.id,
           label: 'Manual Bill',
+          children: visibleChildren,
+        };
+      }
+
+      if (node.name === 'CHEQUEBOOK') {
+        return {
+          id: node.id,
+          label: 'ChequeBook',
           children: visibleChildren,
         };
       }
@@ -429,9 +420,10 @@ export const Sidebar = ({
       items: createdPages.map(mapMasterPageNodeToItem),
     };
 
-    const nextSections = user?.isAdmin || user?.isHoStaff || user?.isHo
-      ? [adminSection, ...dynamicSections]
-      : dynamicSections;
+    const nextSections =
+      user?.isAdmin || user?.isHoStaff || user?.isHo
+        ? [adminSection, ...dynamicSections]
+        : dynamicSections;
 
     return [...nextSections, masterPagesSection].filter(section =>
       isGroupSection(section) ? section.items.length > 0 : true
@@ -493,16 +485,16 @@ export const Sidebar = ({
   return (
     <aside
       className={[
-        'fixed inset-y-0 left-0 z-40 border-r border-slate-200 text-slate-700 transition-[width,transform] duration-300 ease-out',
+        'fixed inset-y-0 left-0 z-40 border-r border-slate-200 text-white transition-[width,transform] duration-300 ease-out',
         isCollapsed ? 'w-16' : 'w-64',
         isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
       ].join(' ')}
-      style={{ backgroundColor: '#ffffff' }}
+      style={{ backgroundColor: 'var(--color-sidebar-ink)' }}
     >
       <div className="flex h-full flex-col">
         <div
-          className="relative flex items-center justify-between border-b border-slate-200 px-3 py-3.5"
-          style={{ backgroundColor: '#ffffff' }}
+          className="relative flex items-center justify-between px-3 py-3.5"
+          style={{ backgroundColor: 'var(--color-sidebar-ink)' }}
         >
           <button
             type="button"
@@ -527,7 +519,7 @@ export const Sidebar = ({
             </div>
             {!isCollapsed && (
               <div className="min-w-0">
-                <p className="truncate text-base font-semibold text-slate-900">
+                <p className="truncate text-base font-semibold text-white">
                   {company?.name ?? 'Maraekat FX'}
                 </p>
               </div>
@@ -581,7 +573,8 @@ export const Sidebar = ({
           </div>
         </div>
 
-        <nav className="flex-1 overflow-y-auto px-2 py-2">
+        <nav className="flex-1 overflow-y-auto px-2 py-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+          {' '}
           <div className="space-y-1.5">
             {isMenuTreeLoading ? (
               <div className="flex min-h-[12rem] items-center justify-center px-3 py-6">
@@ -590,7 +583,8 @@ export const Sidebar = ({
             ) : (
               sections.map(section => {
                 if (isGroupSection(section)) {
-                  const isOpen = (openSectionId ?? activeSectionId) === section.title;
+                  const isOpen =
+                    (openSectionId ?? activeSectionId) === section.title;
                   const isActiveSection = section.items.some(item =>
                     isMenuItemActive(item, location.pathname)
                   );
@@ -600,10 +594,10 @@ export const Sidebar = ({
                       <button
                         type="button"
                         className={[
-                          'group flex w-full cursor-pointer items-center justify-between rounded-md border-b border-slate-200 text-left text-sm font-medium transition',
+                          'group flex w-full cursor-pointer items-center justify-between rounded-md text-left text-sm font-medium transition',
                           isActiveSection
-                            ? 'bg-sky-100 text-sky-800 shadow-sm'
-                            : 'bg-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900',
+                            ? 'bg-sidebar-accent text-white shadow-sm border-l-2 border-primary-500'
+                            : 'bg-transparent text-sidebar-muted! hover:bg-slate-50 hover:text-sidebar-ink!',
                           isCollapsed
                             ? 'mx-auto h-10 w-10 justify-center rounded-full px-0'
                             : 'px-2.5 py-2.5',
@@ -616,7 +610,7 @@ export const Sidebar = ({
                         aria-expanded={isOpen}
                         title={section.title}
                       >
-                        <span className="flex min-w-0 items-center gap-2 truncate text-sm">
+                        <span className="flex min-w-0 items-center gap-2 truncate text-xs font-medium">
                           {isCollapsed
                             ? compactLabel(section.title)
                             : section.title}
@@ -629,7 +623,7 @@ export const Sidebar = ({
                       </button>
 
                       {isOpen && !isCollapsed && (
-                        <div className="ml-2 border-l border-slate-200 pl-2 pt-1.5">
+                        <div className="ml-2 border-l border-sidebar-accent pl-2 pt-1.5">
                           <SidebarTree
                             items={section.items}
                             currentPath={location.pathname}
@@ -654,10 +648,10 @@ export const Sidebar = ({
                     key={section.title}
                     type="button"
                     className={[
-                      'group flex w-full cursor-pointer items-center rounded-md border-b border-slate-200 text-left text-sm font-medium transition',
+                      'group flex w-full cursor-pointer items-center rounded-md text-left text-sm transition',
                       isActive
-                        ? 'bg-sky-100 text-sky-800 shadow-sm'
-                        : 'bg-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900',
+                        ? 'bg-sidebar-accent text-white shadow-sm border-l-2 border-primary-500'
+                        : 'bg-transparent text-sidebar-muted! hover:bg-slate-50 hover:text-sidebar-ink!',
                       isCollapsed
                         ? 'mx-auto h-10 w-10 justify-center rounded-full px-0'
                         : 'px-2.5 py-2.5',
@@ -666,7 +660,7 @@ export const Sidebar = ({
                     onClick={() => handleMenuClick(section.path)}
                     title={section.title}
                   >
-                    <span className="flex min-w-0 items-center gap-2 truncate text-sm">
+                    <span className="flex min-w-0 items-center gap-2 truncate text-xs font-medium">
                       {isCollapsed
                         ? compactLabel(section.title)
                         : section.label}
@@ -691,10 +685,10 @@ export const Sidebar = ({
                       <button
                         type="button"
                         className={[
-                          'group flex w-full cursor-pointer items-center justify-between rounded-md border-b border-slate-200 text-left text-sm font-medium transition',
+                          'group flex w-full cursor-pointer items-center justify-between rounded-md text-left text-sm transition',
                           isMasterPagesActive
-                            ? 'bg-sky-100 text-sky-800 shadow-sm'
-                            : 'bg-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900',
+                            ? 'bg-sidebar-accent text-white shadow-sm border-l-2 border-primary-500'
+                            : 'bg-transparent text-sidebar-muted! hover:bg-slate-50 hover:text-sidebar-ink!',
                           isCollapsed
                             ? 'mx-auto h-10 w-10 justify-center rounded-full px-0'
                             : 'px-2.5 py-2.5',
@@ -704,10 +698,12 @@ export const Sidebar = ({
                             prev === 'Master Pages' ? null : 'Master Pages'
                           )
                         }
-                        aria-expanded={(openSectionId ?? activeSectionId) === 'Master Pages'}
+                        aria-expanded={
+                          (openSectionId ?? activeSectionId) === 'Master Pages'
+                        }
                         title="Master Pages"
                       >
-                        <span className="flex min-w-0 items-center gap-2 truncate text-sm">
+                        <span className="flex min-w-0 items-center gap-2 truncate text-xs font-medium">
                           {isCollapsed
                             ? compactLabel('Master Pages')
                             : 'Master Pages'}
@@ -715,27 +711,31 @@ export const Sidebar = ({
                         {!isCollapsed && (
                           <span className="text-slate-400">
                             <SidebarChevron
-                              isOpen={(openSectionId ?? activeSectionId) === 'Master Pages'}
+                              isOpen={
+                                (openSectionId ?? activeSectionId) ===
+                                'Master Pages'
+                              }
                             />
                           </span>
                         )}
                       </button>
 
-                      {(openSectionId ?? activeSectionId) === 'Master Pages' && !isCollapsed && (
-                        <div className="ml-2 border-l border-slate-200 pl-2 pt-1.5">
-                          <SidebarTree
-                            items={createdPages.map(mapMasterPageNodeToItem)}
-                            currentPath={location.pathname}
-                            onNavigate={handleMenuClick}
-                            isCollapsed={isCollapsed}
-                            parentKey="Master Pages"
-                            openByParent={resolvedOpenByParent}
-                            collapsedByParent={resolvedCollapsedByParent}
-                            setOpenByParent={setOpenByParent}
-                            setCollapsedByParent={setCollapsedByParent}
-                          />
-                        </div>
-                      )}
+                      {(openSectionId ?? activeSectionId) === 'Master Pages' &&
+                        !isCollapsed && (
+                          <div className="ml-2 border-l border-sidebar-accent pl-2 pt-1.5">
+                            <SidebarTree
+                              items={createdPages.map(mapMasterPageNodeToItem)}
+                              currentPath={location.pathname}
+                              onNavigate={handleMenuClick}
+                              isCollapsed={isCollapsed}
+                              parentKey="Master Pages"
+                              openByParent={resolvedOpenByParent}
+                              collapsedByParent={resolvedCollapsedByParent}
+                              setOpenByParent={setOpenByParent}
+                              setCollapsedByParent={setCollapsedByParent}
+                            />
+                          </div>
+                        )}
                     </>
                   );
                 })()}

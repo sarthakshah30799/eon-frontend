@@ -12,6 +12,7 @@ interface MiscellaneousProfileTableProps {
   onSearch?: (value: string) => void;
   searchValue?: string;
   searchPlaceholder?: string;
+  loading?: boolean;
 }
 
 interface GroupedMiscellaneousProfiles {
@@ -26,9 +27,13 @@ const statusClasses: Record<'active' | 'inactive', string> = {
 };
 
 const getCategoryLabel = (code: string) =>
-  CATEGORY_OPTION_CODE_LABELS[code as keyof typeof CATEGORY_OPTION_CODE_LABELS] ?? code;
+  CATEGORY_OPTION_CODE_LABELS[
+    code as keyof typeof CATEGORY_OPTION_CODE_LABELS
+  ] ?? code;
 
-const buildGroupedOptions = (options: ICategoryOption[]): GroupedMiscellaneousProfiles[] => {
+const buildGroupedOptions = (
+  options: ICategoryOption[]
+): GroupedMiscellaneousProfiles[] => {
   const grouped = new Map<string, GroupedMiscellaneousProfiles>();
 
   options.forEach(option => {
@@ -49,11 +54,40 @@ const buildGroupedOptions = (options: ICategoryOption[]): GroupedMiscellaneousPr
   return Array.from(grouped.values());
 };
 
+const renderSkeletonGroupRows = (count = 3) =>
+  Array.from({ length: count }).map((_, index) => (
+    <div
+      key={`miscellaneous-profile-skeleton-${index}`}
+      className="grid gap-4 border-b border-border-primary px-2 py-4 lg:grid-cols-[minmax(100px,1.2fr)_minmax(0,1.8fr)_120px_140px] lg:items-center lg:gap-4 lg:px-5"
+    >
+      <div className="space-y-2">
+        <div className="h-4 w-24 animate-pulse rounded bg-surface-secondary" />
+        <div className="h-3 w-16 animate-pulse rounded bg-surface-secondary" />
+      </div>
+
+      <div className="flex min-w-0 flex-wrap gap-2">
+        <div className="h-7 w-20 animate-pulse rounded-full bg-surface-secondary" />
+        <div className="h-7 w-24 animate-pulse rounded-full bg-surface-secondary" />
+        <div className="h-7 w-16 animate-pulse rounded-full bg-surface-secondary" />
+      </div>
+
+      <div className="space-y-2">
+        <div className="h-4 w-14 animate-pulse rounded bg-surface-secondary" />
+        <div className="h-3 w-20 animate-pulse rounded bg-surface-secondary" />
+      </div>
+
+      <div className="flex justify-end">
+        <div className="h-9 w-9 animate-pulse rounded-sm bg-surface-secondary" />
+      </div>
+    </div>
+  ));
+
 export const MiscellaneousProfileTable = ({
   options,
   onSearch,
   searchValue = '',
   searchPlaceholder = 'Search',
+  loading = false,
 }: MiscellaneousProfileTableProps) => {
   const navigate = useNavigate();
   const [openCategories, setOpenCategories] = useState<string[]>([]);
@@ -111,14 +145,12 @@ export const MiscellaneousProfileTable = ({
           />
         </div>
       ) : null}
-
-      {!groupedOptions.length ? (
-        <div className="rounded-sm border border-dashed border-border-primary bg-surface-primary p-8 text-center text-sm text-text-secondary">
-          No miscellaneous profiles found. Create your first profile.
+      {loading ? (
+        <div className="overflow-hidden rounded-sm border border-border-primary">
+          {renderSkeletonGroupRows()}
         </div>
-      ) : null}
-
-      {groupedOptions.length ? (
+      ) : 
+      !loading && groupedOptions.length ? (
         <>
           <div className="hidden border-b border-border-primary bg-surface-secondary/60 px-2 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-text-tertiary lg:grid lg:grid-cols-[minmax(100px,1.2fr)_minmax(0,1.8fr)_120px_140px] lg:gap-4">
             <div>Category</div>
@@ -131,7 +163,9 @@ export const MiscellaneousProfileTable = ({
             type="multiple"
             value={openCategories}
             onValueChange={value =>
-              setOpenCategories(Array.isArray(value) ? value : value ? [value] : [])
+              setOpenCategories(
+                Array.isArray(value) ? value : value ? [value] : []
+              )
             }
             className="rounded-none border-0 shadow-none"
           >
@@ -213,6 +247,7 @@ export const MiscellaneousProfileTable = ({
                         enableFiltering={false}
                         enablePagination={false}
                         className="min-w-full"
+                        loading={loading}
                       />
                     </div>
                   </Accordion.Content>
@@ -221,7 +256,11 @@ export const MiscellaneousProfileTable = ({
             })}
           </Accordion>
         </>
-      ) : null}
+      ) : (
+        <div className="rounded-sm border border-dashed border-border-primary bg-surface-primary p-8 text-center text-sm text-text-secondary">
+          No miscellaneous profiles found. Create your first profile.
+        </div>
+      )}
     </div>
   );
 };

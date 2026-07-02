@@ -1,17 +1,16 @@
-import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useMemo } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button1';
 import { useDebounce } from '@/hooks';
 import { useDeleteBranchProfile, useListBranchProfiles } from '../hooks';
 import { BRANCH_PROFILE_TEXTS } from '../constants';
 import { BranchProfileTable } from '../components';
-import { Loader } from '@/components/ui/loader';
 
 export const BranchProfileListView = () => {
   const navigate = useNavigate();
-  const [search, setSearch] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const search = searchParams.get('search') ?? '';
   const debouncedSearch = useDebounce(search, 400);
-  const normalizedSearch = debouncedSearch.trim().toLowerCase();
   const query = useMemo(
     () => ({
       activeOnly: false,
@@ -28,41 +27,9 @@ export const BranchProfileListView = () => {
   const { deleteBranchProfile, isPending: isDeleting } =
     useDeleteBranchProfile();
 
-  const filteredBranches = useMemo(() => {
-    if (!normalizedSearch) {
-      return branches;
-    }
-
-    return branches.filter(branch => {
-      const haystack = [
-        branch.code,
-        branch.name,
-        branch.branchNumber,
-        branch.city,
-        branch.contactName,
-        branch.contactNo,
-        branch.branchEmail,
-        branch.country?.name,
-        branch.state?.name,
-        typeof branch.locationType === 'string'
-          ? branch.locationType
-          : branch.locationType?.label,
-      ]
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase();
-
-      return haystack.includes(normalizedSearch);
-    });
-  }, [branches, normalizedSearch]);
-
   const handleDelete = async (id: string) => {
     await deleteBranchProfile(id);
   };
-
-  if (isLoading) {
-    return <Loader />;
-  }
 
   if (error) {
     return (
@@ -86,10 +53,22 @@ export const BranchProfileListView = () => {
 
       <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
         <BranchProfileTable
-          branches={filteredBranches}
+          branches={branches}
           onDelete={handleDelete}
           isDeleting={isDeleting}
-          onSearch={value => setSearch(value)}
+          onSearch={value =>
+            setSearchParams(prev => {
+              const nextParams = new URLSearchParams(prev);
+
+              if (value.trim()) {
+                nextParams.set('search', value.trim());
+              } else {
+                nextParams.delete('search');
+              }
+
+              return nextParams;
+            })
+          }
           searchValue={search}
           searchPlaceholder="Search branch code, name, city, state, or country"
           loading={isLoading || isFetching}

@@ -1,15 +1,16 @@
-import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useMemo } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button1';
 import { useDebounce } from '@/hooks';
 import { useDeleteCompanyProfile, useListCompanyProfiles } from '../hooks';
 import { CompanyProfileTable } from '../components';
-import { Loader } from '@/components/ui/loader';
 
 export const CompanyProfileListView = () => {
   const navigate = useNavigate();
-  const [search, setSearch] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const search = searchParams.get('search') ?? '';
   const debouncedSearch = useDebounce(search, 400);
+
   const query = useMemo(
     () => ({
       search: debouncedSearch.trim() || undefined,
@@ -23,10 +24,6 @@ export const CompanyProfileListView = () => {
   const handleDelete = async (id: string) => {
     await deleteCompany(id);
   };
-
-  if (isLoading) {
-    return <Loader />;
-  }
 
   if (error) {
     return (
@@ -53,7 +50,19 @@ export const CompanyProfileListView = () => {
           companies={companies}
           onDelete={handleDelete}
           isDeleting={isDeleting}
-          onSearch={value => setSearch(value)}
+          onSearch={value =>
+            setSearchParams(prev => {
+              const nextParams = new URLSearchParams(prev);
+
+              if (value.trim()) {
+                nextParams.set('search', value.trim());
+              } else {
+                nextParams.delete('search');
+              }
+
+              return nextParams;
+            })
+          }
           searchValue={search}
           searchPlaceholder="Search company name, short code, PAN, CIN, or email"
           loading={isLoading || isFetching}

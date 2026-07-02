@@ -180,7 +180,6 @@ const AsyncSelectComponent = React.forwardRef<
       (newValue: string, { action, prevInputValue }: InputActionMeta) => {
         const nextValue = newValue.toUpperCase();
         setInputValue(nextValue);
-
         // Reset pagination when user starts typing new search
         if (
           action === 'input-change' &&

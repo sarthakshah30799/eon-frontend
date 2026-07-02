@@ -329,6 +329,12 @@ export const Sidebar = ({
         ) {
           return isManagerUser || user?.isAdmin;
         }
+        if (cleanPath === 'checkbooks') {
+          return isHoUser || user?.isAdmin;
+        }
+        if (cleanPath === 'checkbooks/acknowledgement' || cleanPath === 'checkbooks/allocation') {
+          return isManagerUser || user?.isAdmin;
+        }
         return true;
       });
 
@@ -342,6 +348,14 @@ export const Sidebar = ({
         return {
           id: node.id,
           label: 'Manual Bill',
+          children: visibleChildren,
+        };
+      }
+
+      if (node.name === 'CHECKBOOK') {
+        return {
+          id: node.id,
+          label: 'Checkbook',
           children: visibleChildren,
         };
       }

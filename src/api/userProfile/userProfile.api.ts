@@ -144,11 +144,15 @@ export const userProfileApi = {
   getUserProfiles: async (options?: {
     activeOnly?: boolean;
     search?: string;
+    branchId?: string;
+    roleCode?: string;
   }): Promise<IUserProfile[]> => {
     const endpoint = `/users${buildQueryString({
       activeOnly:
         options?.activeOnly === false ? 'false' : undefined,
       search: options?.search?.trim() || undefined,
+      branchId: options?.branchId?.trim() || undefined,
+      roleCode: options?.roleCode?.trim() || undefined,
     })}`;
     const res = await apiClient.get<BackendUser[]>(endpoint);
     if (res.error) throw new Error(res.error);

@@ -13,3 +13,7 @@ export * from './FormFieldCityDropdown';
 export * from './FormFieldStateDropdown';
 export * from './FormFieldCountryDropdown';
 export * from './FormFieldYesNoToggle';
+export * from './TransactionAdditionalChargesFieldArray/TransactionAdditionalChargesFieldArray';
+export * from './TransactionAdditionalChargesFieldArray/transactionAdditionalChargesTypes';
+export * from './TransactionPaymentDetailsFieldArray/TransactionPaymentDetailsFieldArray';
+export * from './TransactionPaymentDetailsFieldArray/transactionPaymentDetailsTypes';

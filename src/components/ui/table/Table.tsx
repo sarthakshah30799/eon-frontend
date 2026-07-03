@@ -73,6 +73,8 @@ export interface TableProps<T extends object>
   onSearch?: (value: string) => void;
   searchValue?: string;
   searchPlaceholder?: string;
+  rowSelection?: RowSelectionState;
+  getRowId?: (originalRow: T, index: number, parent?: unknown) => string;
 }
 
 function Table<T extends object>({
@@ -98,16 +100,20 @@ function Table<T extends object>({
   onSearch,
   searchValue = '',
   searchPlaceholder = 'Search',
+  rowSelection: rowSelectionProp,
+  getRowId,
   ...props
 }: TableProps<T>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
-  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  const [internalRowSelection, setInternalRowSelection] =
+    useState<RowSelectionState>({});
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize,
   });
+  const rowSelection = rowSelectionProp ?? internalRowSelection;
 
   // TanStack Table returns functions that the React Compiler cannot safely memoize.
   // eslint-disable-next-line react-hooks/incompatible-library
@@ -136,7 +142,9 @@ function Table<T extends object>({
     onRowSelectionChange: updater => {
       const newSelection =
         typeof updater === 'function' ? updater(rowSelection) : updater;
-      setRowSelection(newSelection);
+      if (rowSelectionProp === undefined) {
+        setInternalRowSelection(newSelection);
+      }
       onRowSelectionChange?.(newSelection);
     },
     onPaginationChange: updater => {
@@ -157,6 +165,7 @@ function Table<T extends object>({
     enableRowSelection,
     manualPagination: false,
     pageCount: Math.ceil(data.length / pagination.pageSize),
+    getRowId,
   });
 
   const renderSkeleton = () =>
@@ -286,10 +295,13 @@ function Table<T extends object>({
               <tr
                 key={row.id}
                 className={`${variant === 'striped' && index % 2 === 1 ? 'bg-surface-secondary' : ''} ${onRowClick ? 'cursor-pointer' : ''} hover:bg-surface-secondary`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  onRowClick?.(row.original);
-                }}
+                onClick={
+                  onRowClick
+                    ? () => {
+                        onRowClick(row.original);
+                      }
+                    : undefined
+                }
               >
                 {row.getVisibleCells().map(cell => (
                   <td

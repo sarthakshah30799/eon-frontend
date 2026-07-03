@@ -272,6 +272,7 @@ const AsyncSelectComponent = React.forwardRef<
                 inputValue ? 'No options found' : 'Start typing to search...'
               }
               isDisabled={props.disabled}
+              menuPosition='fixed'
               {...props}
             />
           )}

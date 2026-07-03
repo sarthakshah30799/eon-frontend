@@ -12,13 +12,33 @@ import type {
   IUpdatePartyProfile,
 } from '../types/partyProfileTypes';
 
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (error instanceof Error) {
+    return error.message || fallback;
+  }
+
+  return fallback;
+};
+
+const normalizePartyProfileTypeKey = (
+  profileType?: PartyProfileType | PartyProfileType[]
+) => {
+  if (!profileType) {
+    return '';
+  }
+
+  return Array.isArray(profileType)
+    ? [...profileType].sort().join('|')
+    : profileType;
+};
+
 export const useListPartyProfiles = (
   params?: IPartyProfileListQuery,
-  profileType?: PartyProfileType,
+  profileType?: PartyProfileType | PartyProfileType[],
   enabled = true
 ) => {
   return useQuery({
-    queryKey: ['party-profiles', profileType, params],
+    queryKey: ['party-profiles', normalizePartyProfileTypeKey(profileType), params],
     queryFn: () => partyProfileApi.getPartyProfiles(params, profileType),
     enabled,
   });
@@ -49,8 +69,8 @@ export const useCreatePartyProfile = (
       queryClient.invalidateQueries({ queryKey: ['party-profiles', profileType] });
       toast.success(`${typeLabel} created successfully!`);
     },
-    onError: (error: any) => {
-      toast.error(error.message || `Failed to create ${typeLabel.toLowerCase()}`);
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, `Failed to create ${typeLabel.toLowerCase()}`));
     },
   });
 
@@ -74,8 +94,8 @@ export const useUpdatePartyProfile = (
       queryClient.invalidateQueries({ queryKey: ['party-profile', profileType, variables.id] });
       toast.success(`${typeLabel} updated successfully!`);
     },
-    onError: (error: any) => {
-      toast.error(error.message || `Failed to update ${typeLabel.toLowerCase()}`);
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, `Failed to update ${typeLabel.toLowerCase()}`));
     },
   });
 
@@ -97,8 +117,8 @@ export const useDeletePartyProfile = (
       queryClient.invalidateQueries({ queryKey: ['party-profiles', profileType] });
       toast.success(`${typeLabel} deleted successfully!`);
     },
-    onError: (error: any) => {
-      toast.error(error.message || `Failed to delete ${typeLabel.toLowerCase()}`);
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, `Failed to delete ${typeLabel.toLowerCase()}`));
     },
   });
 
@@ -125,8 +145,8 @@ export const useReviewPartyProfile = () => {
       queryClient.invalidateQueries({ queryKey: ['party-profiles', 'review-queue'] });
       queryClient.invalidateQueries({ queryKey: ['party-profiles'] });
     },
-    onError: (error: any) => {
-      toast.error(error.message || 'Failed to update party profile status');
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, 'Failed to update party profile status'));
     },
   });
 

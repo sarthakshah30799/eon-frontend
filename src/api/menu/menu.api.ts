@@ -8,6 +8,11 @@ export const menuApi = {
     if (res.error) throw new Error(res.error);
     return res;
   },
+  getRightsTree: async () => {
+    const res = await apiClient.get<IMenu[]>(`/menus/rights-tree`);
+    if (res.error) throw new Error(res.error);
+    return res;
+  },
   getMenus: async (includeAdmin?: boolean) => {
     const query = includeAdmin === undefined ? '' : `?includeAdmin=${includeAdmin}`;
     const res = await apiClient.get<IMenu[]>(`/menus${query}`);

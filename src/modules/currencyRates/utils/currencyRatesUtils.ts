@@ -25,12 +25,12 @@ export const formatMarginValue = (
 };
 
 export const getLatestRateForCurrency = (
-  rates: ICurrencyRate[],
+  rates: ICurrencyRate[] = [],
   currencyId: string,
 ) => rates.find(rate => rate.currencyId === currencyId) ?? null;
 
 export const getCurrencyPricingGroup = (
-  currencies: ICurrencyProfile[],
+  currencies: ICurrencyProfile[] = [],
   currencyId: string,
 ): ICurrencyRateGroup | null => {
   const pricingGroup = currencies.find(currency => currency.id === currencyId)?.pricingGroup ?? null;

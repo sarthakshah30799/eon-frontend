@@ -4,3 +4,4 @@ export * from './PartyProfileReviewQueue';
 export * from './PartyProfileReviewActionPanel';
 export * from './PartyProfileReviewQueueItem';
 export * from './PartyProfileDocumentsActionButton';
+export * from './SelectPartyProfiles';

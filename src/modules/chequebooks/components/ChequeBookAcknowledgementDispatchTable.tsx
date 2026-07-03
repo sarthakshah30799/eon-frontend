@@ -43,8 +43,9 @@ export const ChequeBookAcknowledgementDispatchTable = ({
         ),
       },
       {
-        accessorKey: 'transactionType',
-        header: 'Txn Type',
+        accessorKey: 'bankAccountCode',
+        header: 'Bank Account Code',
+        cell: ({ row }) => row.original.bankAccountCodeName || row.original.bankAccountCode,
       },
       {
         accessorKey: 'bookNoFrom',

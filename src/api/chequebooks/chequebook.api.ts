@@ -7,7 +7,9 @@ export interface IChequeBook {
   branchId: string;
   branchCode?: string;
   branchName?: string;
-  transactionType: string;
+  bankAccountCode: string;
+  bankAccountCodeLabel?: string;
+  bankAccountCodeName?: string;
   bookNoFrom: number;
   bookNoTo: number;
   vouchersPerBook: number;
@@ -25,7 +27,7 @@ export interface IChequeBook {
 export interface ICreateChequeBook {
   dispatchDate: string;
   branchId: string;
-  transactionType: string;
+  bankAccountCode: string;
   bookNoFrom: number;
   bookNoTo: number;
   vouchersPerBook: number;
@@ -67,7 +69,7 @@ export const chequebookApi = {
   findAll: async (
     branchId?: string,
     status?: string,
-    transactionType?: string,
+    bankAccountCode?: string,
     fromDate?: string,
     toDate?: string
   ): Promise<IChequeBook[]> => {
@@ -75,7 +77,7 @@ export const chequebookApi = {
     const params: string[] = [];
     if (branchId) params.push(`branchId=${encodeURIComponent(branchId)}`);
     if (status) params.push(`status=${encodeURIComponent(status)}`);
-    if (transactionType) params.push(`transactionType=${encodeURIComponent(transactionType)}`);
+    if (bankAccountCode) params.push(`bankAccountCode=${encodeURIComponent(bankAccountCode)}`);
     if (fromDate) params.push(`fromDate=${encodeURIComponent(fromDate)}`);
     if (toDate) params.push(`toDate=${encodeURIComponent(toDate)}`);
     if (params.length > 0) {
@@ -138,4 +140,57 @@ export const chequebookApi = {
     if (res.error) throw new Error(res.error);
     return res.data || [];
   },
+
+  getPagesByAllocationId: async (
+    allocationId: string
+  ): Promise<IChequeBookPageTracking[]> => {
+    const res = await apiClient.get<IChequeBookPageTracking[]>(
+      `/chequebooks/allocations/${allocationId}/pages`
+    );
+    if (res.error) throw new Error(res.error);
+    return res.data || [];
+  },
+
+  updatePagesStatus: async (
+    pageNos: number[],
+    status: 'Void' | 'Lost',
+    remarks?: string
+  ): Promise<{ success: boolean }> => {
+    const res = await apiClient.put<{ success: boolean }>(
+      '/chequebooks/pages/status',
+      { pageNos, status, remarks }
+    );
+    if (res.error) throw new Error(res.error);
+    return res.data || { success: false };
+  },
+
+  returnPages: async (pageNos: number[]): Promise<{ success: boolean }> => {
+    const res = await apiClient.post<{ success: boolean }>(
+      '/chequebooks/pages/return',
+      { pageNos }
+    );
+    if (res.error) throw new Error(res.error);
+    return res.data || { success: false };
+  },
+
+  searchPage: async (pageNo: number): Promise<IChequeBookPageTracking> => {
+    const res = await apiClient.get<IChequeBookPageTracking>(
+      `/chequebooks/pages/search?pageNo=${pageNo}`
+    );
+    if (res.error) throw new Error(res.error);
+    if (!res.data) throw new Error(`Page number ${pageNo} not found`);
+    return res.data;
+  },
 };
+
+export interface IChequeBookPageTracking {
+  id: string;
+  checkBookId: string;
+  allocationId: string;
+  pageNo: number;
+  status: 'Allocated' | 'Used' | 'Void' | 'Lost';
+  remarks?: string;
+  updatedBy?: string;
+  createdAt: string;
+  updatedAt: string;
+}

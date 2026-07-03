@@ -138,4 +138,57 @@ export const manualBillBookApi = {
     if (res.error) throw new Error(res.error);
     return res.data || [];
   },
+
+  getPagesByAllocationId: async (
+    allocationId: string
+  ): Promise<IManualBookPageTracking[]> => {
+    const res = await apiClient.get<IManualBookPageTracking[]>(
+      `/manual-bill-books/allocations/${allocationId}/pages`
+    );
+    if (res.error) throw new Error(res.error);
+    return res.data || [];
+  },
+
+  updatePagesStatus: async (
+    pageNos: number[],
+    status: 'Void' | 'Lost',
+    remarks?: string
+  ): Promise<{ success: boolean }> => {
+    const res = await apiClient.put<{ success: boolean }>(
+      '/manual-bill-books/pages/status',
+      { pageNos, status, remarks }
+    );
+    if (res.error) throw new Error(res.error);
+    return res.data || { success: false };
+  },
+
+  returnPages: async (pageNos: number[]): Promise<{ success: boolean }> => {
+    const res = await apiClient.post<{ success: boolean }>(
+      '/manual-bill-books/pages/return',
+      { pageNos }
+    );
+    if (res.error) throw new Error(res.error);
+    return res.data || { success: false };
+  },
+
+  searchPage: async (pageNo: number): Promise<IManualBookPageTracking> => {
+    const res = await apiClient.get<IManualBookPageTracking>(
+      `/manual-bill-books/pages/search?pageNo=${pageNo}`
+    );
+    if (res.error) throw new Error(res.error);
+    if (!res.data) throw new Error(`Page number ${pageNo} not found`);
+    return res.data;
+  },
 };
+
+export interface IManualBookPageTracking {
+  id: string;
+  manualBookId: string;
+  allocationId: string;
+  pageNo: number;
+  status: 'Allocated' | 'Used' | 'Void' | 'Lost';
+  remarks?: string;
+  updatedBy?: string;
+  createdAt: string;
+  updatedAt: string;
+}

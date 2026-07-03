@@ -12,6 +12,8 @@ import {
 import { type AsyncSelectOption } from '@/components/ui';
 import { branchProfileApi } from '@/api/branchProfile/branchProfile.api';
 import { chequebookApi } from '@/api';
+import { accountProfileApi } from '@/api/accountProfile/accountProfile.api';
+import { useAuth } from '@/lib/AuthContext';
 import toast from 'react-hot-toast';
 import {
   bulkDispatchSchema,
@@ -21,7 +23,7 @@ interface IBulkDispatchFormValues {
   dispatchDate: string;
   no: string;
   branchId: string;
-  transactionType: string;
+  bankAccountCode: string;
   bookNoFrom: string | number;
   bookNoTo: string | number;
   vouchersPerBook: string | number;
@@ -89,6 +91,9 @@ const BulkDispatchFormFields = () => {
     }
   }, [bookNoFrom, bookNoTo, vouchersPerBook, mvNoFrom, form]);
 
+  const { user } = useAuth();
+  const isAdmin = user?.isAdmin === true;
+
   const loadBranches = async () => {
     try {
       const branches = await branchProfileApi.getBranchProfiles({
@@ -109,12 +114,35 @@ const BulkDispatchFormFields = () => {
     }
   };
 
-  const loadTxnTypes = createStaticLoadOptions([
-    { value: 'PB-RETAIL PURCHASE', label: 'PB-RETAIL PURCHASE' },
-    { value: 'PS-RETAIL SALE', label: 'PS-RETAIL SALE' },
-    { value: 'FB-BULK BUY', label: 'FB-BULK BUY' },
-    { value: 'FS-BULK SALE', label: 'FS-BULK SALE' },
-  ]);
+  const loadBankAccounts = async (inputValue: string) => {
+    try {
+      const response = await accountProfileApi.getAccountProfiles({
+        page: 1,
+        limit: 100,
+        search: inputValue,
+        active: true,
+      });
+      const bankAccounts = (response.data || []).filter(acc => {
+        return (
+          (acc.bankNature && acc.bankNature.value !== 'NONE') ||
+          (acc.accountType && acc.accountType.value === 'BANK LEDGER') ||
+          (acc.financialCode && acc.financialCode === 'BANKBL')
+        );
+      });
+      return {
+        options: bankAccounts.map(acc => ({
+          value: acc.id,
+          label: `${acc.accountCode} - ${acc.accountName}`,
+        })),
+        hasMore: false,
+      };
+    } catch {
+      return {
+        options: [],
+        hasMore: false,
+      };
+    }
+  };
 
   const loadAssignedTo = createStaticLoadOptions([
     { value: 'BRANCH MANAGER', label: 'BRANCH MANAGER' },
@@ -134,11 +162,12 @@ const BulkDispatchFormFields = () => {
         name="branchId"
         label="Branch"
         loadOptions={loadBranches}
+        disabled={!isAdmin}
       />
       <FormFieldSelect
-        name="transactionType"
-        label="Txn Type"
-        loadOptions={loadTxnTypes}
+        name="bankAccountCode"
+        label="Bank Account Code"
+        loadOptions={loadBankAccounts}
       />
       <FormFieldInput
         name="bookNoFrom"
@@ -167,6 +196,8 @@ const BulkDispatchFormFields = () => {
 
 export const BulkDispatchForm = ({ onSuccess }: BulkDispatchFormProps) => {
   const navigate = useNavigate();
+  const { user, activeBranchId } = useAuth();
+  const isAdmin = user?.isAdmin === true;
 
   const onCancel = () => {
     navigate('/admin/chequebooks');
@@ -194,8 +225,8 @@ export const BulkDispatchForm = ({ onSuccess }: BulkDispatchFormProps) => {
   const defaultValues: IBulkDispatchFormValues = {
     dispatchDate: new Date().toISOString().slice(0, 10),
     no: '',
-    branchId: '',
-    transactionType: '',
+    branchId: isAdmin ? '' : (activeBranchId || ''),
+    bankAccountCode: '',
     bookNoFrom: '',
     bookNoTo: '',
     vouchersPerBook: 50,

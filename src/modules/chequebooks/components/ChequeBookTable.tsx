@@ -41,11 +41,11 @@ export const ChequeBookTable = ({
         ),
       },
       {
-        accessorKey: 'transactionType',
-        header: 'Txn Type',
+        accessorKey: 'bankAccountCode',
+        header: 'Bank Account Code',
         cell: ({ row }) => (
           <span className="whitespace-nowrap text-text-secondary">
-            {row.original.transactionType}
+            {row.original.bankAccountCodeName || row.original.bankAccountCode}
           </span>
         ),
       },

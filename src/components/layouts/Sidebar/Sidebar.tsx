@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useMasterPages } from '../../../lib';
 import { companyProfileApi, menuApi } from '../../../api';
-import { useAuth } from '../../../lib/AuthContext';
 import type { ICompanyProfile } from '../../../modules/companyProfile/types';
 import type { IMasterPageTreeNode } from '../../../modules/masterPages/types';
 import type { IMenu } from '../../../types/menuTypes';
@@ -96,6 +95,35 @@ const resolveMenuPath = (path?: string, basePath = '') => {
   if (!basePath) return path;
   if (path.startsWith(basePath)) return path;
   return `${basePath}${path.startsWith('/') ? path : `/${path}`}`;
+};
+
+const mapMenuNodeToItem = (
+  node: IMenu,
+  basePath = ''
+): SidebarItem | null => {
+  const children = (node.children ?? [])
+    .map(child => mapMenuNodeToItem(child, node.path ?? basePath))
+    .filter(Boolean) as SidebarItem[];
+
+  const resolvedPath = resolveMenuPath(node.path || undefined, basePath);
+
+  if (children.length > 0) {
+    return {
+      id: node.id,
+      label: node.name,
+      children,
+    };
+  }
+
+  if (!resolvedPath) {
+    return null;
+  }
+
+  return {
+    id: node.id,
+    label: node.name,
+    path: resolvedPath,
+  };
 };
 
 const SidebarChevron = ({ isOpen }: { isOpen: boolean }) => (
@@ -270,7 +298,6 @@ export const Sidebar = ({
   const navigate = useNavigate();
   const location = useLocation();
   const { tree: createdPages } = useMasterPages();
-  const { user } = useAuth();
   const [openSectionId, setOpenSectionId] = useState<string | null>(null);
   const [openByParent, setOpenByParent] = useState<Record<string, string>>({});
   const [collapsedByParent, setCollapsedByParent] = useState<
@@ -296,93 +323,9 @@ export const Sidebar = ({
   });
 
   const sections = useMemo<SidebarSection[]>(() => {
-    const hasRole = (roleCode: string) => {
-      const normalizedRole = roleCode.toUpperCase().replace('_', ' ');
-      if (user?.role?.toUpperCase() === normalizedRole)
-        return true;
-      return (
-        user?.assignments?.some(
-          a => a.roleName?.toUpperCase() === normalizedRole
-        ) || false
-      );
-    };
-    const isHoUser =
-      user?.isAdmin || user?.isHoStaff || user?.isHo || hasRole('HO STAFF');
-    const isManagerUser = hasRole('MANAGER');
-
-    const mapVisibleMenuNodeToItemCustom = (
-      node: IMenu,
-      basePath = ''
-    ): SidebarItem | null => {
-      const filteredChildren = (node.children || []).filter(child => {
-        const normalizedPath = child.path ? child.path.replace(/^\/+/, '') : '';
-        const cleanPath = normalizedPath.startsWith('admin/')
-          ? normalizedPath.slice(6)
-          : normalizedPath;
-
-        if (cleanPath === 'manual-bill-books') {
-          return isHoUser || user?.isAdmin;
-        }
-        if (
-          cleanPath === 'manual-bill-books/acknowledgement' ||
-          cleanPath === 'manual-bill-books/allocation'
-        ) {
-          return isManagerUser || user?.isAdmin;
-        }
-        if (cleanPath === 'chequebooks') {
-          return isHoUser || user?.isAdmin;
-        }
-        if (cleanPath === 'chequebooks/acknowledgement' || cleanPath === 'chequebooks/allocation') {
-          return isManagerUser || user?.isAdmin;
-        }
-        return true;
-      });
-
-      const visibleChildren = filteredChildren
-        .map(child => mapVisibleMenuNodeToItemCustom(child, basePath))
-        .filter(Boolean) as SidebarItem[];
-
-      const resolvedPath = resolveMenuPath(node.path || undefined, basePath);
-
-      if (node.name === 'MANUAL BILL') {
-        return {
-          id: node.id,
-          label: 'Manual Bill',
-          children: visibleChildren,
-        };
-      }
-
-      if (node.name === 'CHEQUEBOOK') {
-        return {
-          id: node.id,
-          label: 'ChequeBook',
-          children: visibleChildren,
-        };
-      }
-
-      if (visibleChildren.length > 0) {
-        return {
-          id: node.id,
-          label: node.name,
-          children: visibleChildren,
-        };
-      }
-
-      if (!resolvedPath) {
-        return null;
-      }
-
-      return {
-        id: node.id,
-        label: node.name,
-        path: resolvedPath,
-      };
-    };
-
     const dynamicSections = (menuTree || [])
-      .filter(root => !root.isAdmin)
       .map<SidebarSection>(root => {
-        const rootItem = mapVisibleMenuNodeToItemCustom(root);
+        const rootItem = mapMenuNodeToItem(root);
         if (!rootItem) {
           return {
             title: root.name,
@@ -405,30 +348,17 @@ export const Sidebar = ({
         } satisfies SidebarLeafSection;
       });
 
-    const adminRoot = menuTree.find(root => root.isAdmin);
-    const adminItems = (adminRoot?.children ?? [])
-      .map(child => mapVisibleMenuNodeToItemCustom(child, '/admin'))
-      .filter(Boolean) as SidebarItem[];
-
-    const adminSection: SidebarGroupSection = {
-      title: adminRoot?.name ?? 'Admin',
-      items: [...adminItems],
-    };
-
     const masterPagesSection: SidebarSection = {
       title: 'Master Pages',
       items: createdPages.map(mapMasterPageNodeToItem),
     };
 
-    const nextSections =
-      user?.isAdmin || user?.isHoStaff || user?.isHo
-        ? [adminSection, ...dynamicSections]
-        : dynamicSections;
+    const nextSections = dynamicSections;
 
     return [...nextSections, masterPagesSection].filter(section =>
       isGroupSection(section) ? section.items.length > 0 : true
     );
-  }, [createdPages, menuTree, user]);
+  }, [createdPages, menuTree]);
 
   const activeSectionId = useMemo(() => {
     const firstOpenSection = sections.find(section =>

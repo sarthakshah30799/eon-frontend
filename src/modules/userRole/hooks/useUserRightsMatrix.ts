@@ -74,28 +74,6 @@ const isExcludedProfile = (name: string, path?: string) => {
   );
 };
 
-const filterMenuRecord = (menu: IMenu): IMenu | null => {
-  if (isExcludedProfile(menu.name, menu.path ?? undefined)) {
-    return null;
-  }
-
-  if (
-    menu.isAdmin ||
-    menu.name.toLowerCase() === 'admin' ||
-    menu.path?.toLowerCase().startsWith('/admin/')
-  ) {
-    return null;
-  }
-
-  const copy = { ...menu };
-  if (copy.children && copy.children.length > 0) {
-    copy.children = copy.children
-      .map(filterMenuRecord)
-      .filter((c): c is IMenu => c !== null);
-  }
-  return copy;
-};
-
 export const useUserRightsMatrix = (roleId: string | null): UseUserRightsMatrixResult => {
   const { tree: createdPages } = useMasterPages();
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
@@ -112,7 +90,7 @@ export const useUserRightsMatrix = (roleId: string | null): UseUserRightsMatrixR
   } = useQuery({
     queryKey: ['menu-tree-for-rights'],
     queryFn: async () => {
-      const response = await menuApi.getMenuTree(false);
+      const response = await menuApi.getRightsTree();
       if (response.error) {
         throw new Error(response.error);
       }
@@ -136,16 +114,12 @@ export const useUserRightsMatrix = (roleId: string | null): UseUserRightsMatrixR
 
   const treeNodes = useMemo<UserRightsTreeNode[]>(
     () => {
-      const filteredMenus = (menuTree as IMenu[])
-        .map(filterMenuRecord)
-        .filter((m): m is IMenu => m !== null);
-
       const filteredPages = (createdPages as IMasterPageTreeNode[]).filter(
         p => !isExcludedProfile(p.pageName, p.slug)
       );
 
       return [
-        ...filteredMenus.map(mapMenuRecordToRightsTreeNode),
+        ...(menuTree as IMenu[]).map(mapMenuRecordToRightsTreeNode),
         ...filteredPages.map(mapMasterPageTreeNodeToRightsTreeNode),
       ];
     },

@@ -11,6 +11,7 @@ import type { IUser } from '../modules/auth/types';
 import { toast } from 'react-hot-toast';
 import { AUTH_SESSION_EXPIRED_EVENT } from './authSessionEvents';
 import { AUTH_CONSTANTS } from '../modules/auth/constants/authConstants';
+import { clearQueryCache } from './queryClient';
 
 interface AuthContextType {
   user: IUser | null;
@@ -51,8 +52,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   const handleSessionExpired = useCallback((message?: string) => {
+    void clearQueryCache();
     clearSessionState();
-    
+
     const publicPaths = ['/login', '/forgot-password', '/reset-password', '/mail-console'];
     if (publicPaths.includes(window.location.pathname)) {
       return;
@@ -131,6 +133,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
+      await clearQueryCache();
       clearSessionState();
     }
   };

@@ -163,7 +163,7 @@ const SidebarTree = ({
                     ? 'pl-5 pr-2 py-2'
                     : 'pl-8 pr-2 py-2',
                 isActive
-                  ? 'bg-sidebar-accent text-white shadow-sm border-l-2 border-primary-500'
+                  ? 'bg-primary-500 text-white shadow-sm'
                   : 'text-sidebar-muted hover:bg-slate-50 hover:text-sidebar-ink',
               ].join(' ')}
               aria-current={isActive ? 'page' : undefined}

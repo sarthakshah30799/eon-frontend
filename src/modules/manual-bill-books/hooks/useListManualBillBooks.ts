@@ -1,11 +1,25 @@
 import { useQuery } from '@tanstack/react-query';
-import { manualBillBookApi } from '@/api';
+import { manualBillBookApi, type IManualBook } from '@/api';
 
-export const useListManualBillBooks = (branchId?: string) => {
-  return useQuery({
-    queryKey: ['manual-bill-books', branchId?.trim() || ''],
-    queryFn: () => manualBillBookApi.findAll(branchId || undefined),
-    enabled: Boolean(branchId),
+export interface IManualBillBookListQuery {
+  branchId?: string;
+  status?: string;
+  transactionType?: string;
+  fromDate?: string;
+  toDate?: string;
+}
+
+export const useListManualBillBooks = (params?: IManualBillBookListQuery) => {
+  return useQuery<IManualBook[]>({
+    queryKey: ['manual-bill-books', params],
+    queryFn: async () => {
+      return manualBillBookApi.findAll(
+        params?.branchId,
+        params?.status,
+        params?.transactionType,
+        params?.fromDate,
+        params?.toDate
+      );
+    },
   });
 };
-

@@ -185,6 +185,9 @@ const BuyFromPage = lazy(
 const BuyFromCreatePage = lazy(
   () => import('../pages/buy-from/[slug]/create')
 );
+const BuyFromDocumentsPage = lazy(
+  () => import('../pages/buy-from/[slug]/documents')
+);
 
 const MasterPagesPage = lazy(
   () => import('../pages/master/system-setups/master-pages/MasterPagesPage')
@@ -674,6 +677,14 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <BuyFromCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/buy-from/:slug/documents',
+    element: (
+      <ProtectedLayout>
+        <BuyFromDocumentsPage />
       </ProtectedLayout>
     ),
   },

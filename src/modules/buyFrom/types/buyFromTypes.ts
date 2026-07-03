@@ -13,6 +13,13 @@ export interface IBuyFromTransactionFormRow {
   quantity: string;
   rate: string;
   total: string;
+  roundOff: string;
+  finalAmount: string;
+}
+
+export interface IBuyFromDraftDocumentAttachment {
+  documentProfileId: string;
+  file: File;
 }
 
 export interface IBuyFromFormValues {

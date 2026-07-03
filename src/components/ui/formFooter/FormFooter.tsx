@@ -9,6 +9,7 @@ interface FormFooterProps {
   onBackClick?: () => void;
   onCancel?: () => void | Promise<void>;
   isSubmitting: boolean;
+  isSubmitDisabled?: boolean;
 }
 
 export const FormFooter = ({
@@ -18,6 +19,7 @@ export const FormFooter = ({
   onBackClick,
   onCancel,
   isSubmitting,
+  isSubmitDisabled = false,
 }: FormFooterProps) => {
   if (typeof document === 'undefined') {
     return null;
@@ -44,7 +46,7 @@ export const FormFooter = ({
         <Button
           type="submit"
           form={formId}
-          disabled={isSubmitting}
+          disabled={isSubmitting || isSubmitDisabled}
           className=" px-4 py-2"
         >
           {isSubmitting ? 'Saving...' : submitLabel}

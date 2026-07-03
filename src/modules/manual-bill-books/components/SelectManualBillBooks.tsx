@@ -114,7 +114,7 @@ export const SelectManualBillBooks = ({
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 350);
   const { data: books = [], isLoading, isFetching } =
-    useListManualBillBooks(branchId);
+    useListManualBillBooks({ branchId });
 
   const rows = useMemo<SelectableManualBillBookRow[]>(
     () =>

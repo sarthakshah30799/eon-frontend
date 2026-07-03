@@ -32,6 +32,8 @@ export const createEmptyBuyFromTransactionRow = (): IBuyFromTransactionFormRow =
   quantity: '',
   rate: '',
   total: '',
+  roundOff: '',
+  finalAmount: '',
 });
 
 export const createEmptyBuyFromFormValues = (branchCode = ''): IBuyFromFormValues => ({
@@ -125,19 +127,47 @@ export const calculateTransactionTotal = (
   return (qty * parsedRate).toFixed(4);
 };
 
+export const calculateRoundedTransactionAmount = (value?: string | null) => {
+  if (!value) {
+    return '';
+  }
+
+  const parsedValue = Number(value);
+  if (!Number.isFinite(parsedValue)) {
+    return '';
+  }
+
+  return Math.round(parsedValue).toFixed(4);
+};
+
+export const calculateTransactionRoundOff = (value?: string | null) => {
+  if (!value) {
+    return '';
+  }
+
+  const parsedValue = Number(value);
+  if (!Number.isFinite(parsedValue)) {
+    return '';
+  }
+
+  const roundedValue = Math.round(parsedValue);
+  return (roundedValue - parsedValue).toFixed(4);
+};
+
 const toNumericTotal = (value?: string | number | null) => {
   const parsedValue = Number(value || 0);
   return Number.isFinite(parsedValue) ? parsedValue : 0;
 };
 
 export const calculateBuyFromPayableTotal = (
-  transactions: Array<{ total?: string | null }>,
+  transactions: Array<{ total?: string | null; finalAmount?: string | null }>,
   additionalCharges: Array<
     Pick<ITransactionAdditionalChargeFormRow, 'totalAmount' | 'amount'>
   >
 ) => {
   const transactionTotal = transactions.reduce(
-    (sum, transaction) => sum + toNumericTotal(transaction.total),
+    (sum, transaction) =>
+      sum + toNumericTotal(transaction.finalAmount || transaction.total),
     0
   );
   const additionalChargeTotal = additionalCharges.reduce(

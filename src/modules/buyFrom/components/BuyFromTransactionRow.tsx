@@ -10,6 +10,8 @@ import type {
 } from '../types/buyFromTypes';
 import {
   calculateTransactionTotal,
+  calculateRoundedTransactionAmount,
+  calculateTransactionRoundOff,
   resolveBuyFromTransactionPreview,
 } from '../utils/buyFromUtils';
 import { EntityPickerField } from './EntityPickerField';
@@ -131,6 +133,14 @@ export const BuyFromTransactionRow = ({
   const total = useMemo(
     () => calculateTransactionTotal(String(quantity || ''), String(rateValue || '')),
     [quantity, rateValue]
+  );
+  const roundedTotal = useMemo(
+    () => calculateRoundedTransactionAmount(total),
+    [total]
+  );
+  const roundOffAmount = useMemo(
+    () => calculateTransactionRoundOff(total),
+    [total]
   );
   const hasCurrencyProductSelection = Boolean(currencyId && productId);
   const rateHelperText = !hasCurrencyProductSelection
@@ -272,6 +282,19 @@ export const BuyFromTransactionRow = ({
     });
   }, [form, index, total]);
 
+  useEffect(() => {
+    form.setValue(`transactions.${index}.roundOff`, roundOffAmount, {
+      shouldDirty: false,
+      shouldTouch: false,
+      shouldValidate: false,
+    });
+    form.setValue(`transactions.${index}.finalAmount`, roundedTotal, {
+      shouldDirty: false,
+      shouldTouch: false,
+      shouldValidate: false,
+    });
+  }, [form, index, roundedTotal, roundOffAmount]);
+
   const productLoadOptions = async (inputValue: string) =>
     loadProductOptions(inputValue, pricingData.products ?? []);
 
@@ -332,7 +355,21 @@ export const BuyFromTransactionRow = ({
         <FormFieldInput
           name={`transactions.${index}.total`}
           label="Total"
-          disabled
+          readOnly
+        />
+      </td>
+      <td className="min-w-[160px] px-3 py-3">
+        <FormFieldInput
+          name={`transactions.${index}.roundOff`}
+          label="Round Off"
+          readOnly
+        />
+      </td>
+      <td className="min-w-[160px] px-3 py-3">
+        <FormFieldInput
+          name={`transactions.${index}.finalAmount`}
+          label="Final Amount"
+          readOnly
         />
       </td>
       <td className="w-[84px] px-3 py-3">

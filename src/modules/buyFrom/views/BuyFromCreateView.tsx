@@ -89,7 +89,7 @@ export const BuyFromCreateView = ({
           {getBuyFromPageTitle(buyFromPageType)}
         </h1>
         <p className="text-sm text-text-secondary">
-          Capture the party profile, transaction number, and per-row currency pricing.
+          Capture the party profile, transaction number, pricing, and draft documents in one form.
         </p>
       </div>
 
@@ -100,8 +100,11 @@ export const BuyFromCreateView = ({
         partyProfileTypes={partyProfileTypes}
         branchId={activeBranchId ?? ''}
         branchCode={branchProfile?.code ?? ''}
-        onSubmit={async values => {
-          console.log('Buy from submit payload:', values);
+        onSubmit={async (values, attachments) => {
+          console.log('Buy from draft payload:', {
+            values,
+            attachments,
+          });
         }}
         onCancel={() => navigate(-1)}
       />

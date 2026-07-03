@@ -41,6 +41,21 @@ export interface IApproveRejectManualBook {
   toDate?: string;
 }
 
+export interface IManualBookAllocationPayload {
+  manualBookId: string;
+  bookNo: number;
+  cashierId: string;
+  remarks?: string;
+}
+
+export interface IManualBookAllocation {
+  id: string;
+  manualBookId: string;
+  bookNo: number;
+  cashierId: string;
+  remarks?: string;
+}
+
 export const manualBillBookApi = {
   create: async (data: ICreateManualBook): Promise<IManualBook> => {
     const res = await apiClient.post<IManualBook>('/manual-bill-books/dispatch', data);
@@ -101,15 +116,24 @@ export const manualBillBookApi = {
     return res.data || [];
   },
 
-  saveAllocations: async (allocations: Array<{ manualBookId: string; bookNo: number; cashierId: string; remarks?: string }>): Promise<any[]> => {
-    const res = await apiClient.post<any[]>('/manual-bill-books/allocations', { allocations });
+  saveAllocations: async (
+    allocations: IManualBookAllocationPayload[]
+  ): Promise<IManualBookAllocation[]> => {
+    const res = await apiClient.post<IManualBookAllocation[]>(
+      '/manual-bill-books/allocations',
+      { allocations }
+    );
     if (res.error) throw new Error(res.error);
     return res.data || [];
   },
 
-  getAllocations: async (manualBookIds: string[]): Promise<Array<{ id: string; manualBookId: string; bookNo: number; cashierId: string; remarks?: string }>> => {
-    const res = await apiClient.get<Array<{ id: string; manualBookId: string; bookNo: number; cashierId: string; remarks?: string }>>(
-      `/manual-bill-books/allocations?manualBookIds=${encodeURIComponent(manualBookIds.join(','))}`
+  getAllocations: async (
+    manualBookIds: string[]
+  ): Promise<IManualBookAllocation[]> => {
+    const res = await apiClient.get<IManualBookAllocation[]>(
+      `/manual-bill-books/allocations?manualBookIds=${encodeURIComponent(
+        manualBookIds.join(',')
+      )}`
     );
     if (res.error) throw new Error(res.error);
     return res.data || [];

@@ -192,7 +192,7 @@ const SidebarTree = ({
                     : 'pl-8 pr-2 py-2',
                 isActive
                   ? 'bg-primary-500 text-white shadow-sm'
-                  : 'text-sidebar-muted hover:bg-slate-50 hover:text-sidebar-ink',
+                  : 'text-sidebar-muted hover:text-white',
               ].join(' ')}
               aria-current={isActive ? 'page' : undefined}
               onClick={() => onNavigate(item.path)}
@@ -225,7 +225,7 @@ const SidebarTree = ({
                     : 'pl-8 pr-2 py-2',
                 isOpen
                   ? 'bg-sidebar-accent text-white shadow-sm border-l-2 border-primary-500'
-                  : 'text-sidebar-muted! hover:bg-slate-50 hover:text-sidebar-ink',
+                  : 'text-sidebar-muted! hover:text-white',
               ].join(' ')}
               aria-expanded={isOpen}
               onClick={() => {
@@ -527,7 +527,7 @@ export const Sidebar = ({
                           'group flex w-full cursor-pointer items-center justify-between rounded-md text-left text-sm font-medium transition',
                           isActiveSection
                             ? 'bg-sidebar-accent text-white shadow-sm border-l-2 border-primary-500'
-                            : 'bg-transparent text-sidebar-muted! hover:bg-slate-50 hover:text-sidebar-ink!',
+                            : 'bg-transparent text-sidebar-muted! hover:text-white!',
                           isCollapsed
                             ? 'mx-auto h-10 w-10 justify-center rounded-full px-0'
                             : 'px-2.5 py-2.5',
@@ -581,7 +581,7 @@ export const Sidebar = ({
                       'group flex w-full cursor-pointer items-center rounded-md text-left text-sm transition',
                       isActive
                         ? 'bg-sidebar-accent text-white shadow-sm border-l-2 border-primary-500'
-                        : 'bg-transparent text-sidebar-muted! hover:bg-slate-50 hover:text-sidebar-ink!',
+                        : 'bg-transparent text-sidebar-muted! hover:text-white!',
                       isCollapsed
                         ? 'mx-auto h-10 w-10 justify-center rounded-full px-0'
                         : 'px-2.5 py-2.5',

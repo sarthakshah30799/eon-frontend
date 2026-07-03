@@ -36,3 +36,13 @@ export interface IUploadPartyProfileDocumentPayload {
   documentProfileId: string;
   file: File;
 }
+
+export interface IPartyProfileDocumentUploadDraft {
+  documentProfileId: string;
+  file: File;
+}
+
+export interface ISavePartyProfileDocumentsPayload {
+  partyProfileId: string;
+  uploads: IPartyProfileDocumentUploadDraft[];
+}

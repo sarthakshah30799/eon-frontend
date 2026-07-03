@@ -21,6 +21,8 @@ const buyFromTransactionSchema = yup.object({
   quantity: decimalStringSchema.required('Quantity is required'),
   rate: decimalStringSchema.default(''),
   total: decimalStringSchema.default(''),
+  roundOff: decimalStringSchema.default(''),
+  finalAmount: decimalStringSchema.default(''),
 });
 
 const additionalChargeSchema = yup.object({

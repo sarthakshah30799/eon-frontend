@@ -1,5 +1,13 @@
 import type { ICategoryOption } from '@/types/categoryOptionTypes';
 
+export interface IDocumentProfileFile {
+  fileName: string;
+  mimeType: string;
+  sizeBytes: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface IDocumentProfile {
   id: string;
   documentCode: string;

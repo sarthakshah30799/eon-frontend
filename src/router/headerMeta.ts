@@ -209,6 +209,12 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
     path: '/chequebooks/allocation',
     meta: { title: 'Manager To Cashier Allocation' },
   },
+  {
+    path: '/party-profiles/:type/documents/:id',
+    meta: {
+      title: 'Party Profile Documents',
+    },
+  },
 ];
 
 const findMenuName = (nodes: IMenu[], pathname: string): string | null => {
@@ -238,7 +244,8 @@ export const resolveHeaderMeta = (
       route.path.endsWith('/') && route.path !== '/'
         ? route.path.slice(0, -1)
         : route.path;
-    if (matchPath({ path: cleanRoutePath, end: true }, cleanPathname)) {
+    const matchedRoute = matchPath({ path: cleanRoutePath, end: true }, cleanPathname);
+    if (matchedRoute) {
       return route.meta;
     }
   }

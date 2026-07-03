@@ -8,6 +8,10 @@ const BUY_FROM_PAGE_TYPE_BY_SLUG: Record<string, BuyFromPageType> = {
   'ffmc-ads': BuyFromPageType.FFMC_ADS,
 };
 
+const BUY_FROM_PAGE_SLUG_BY_TYPE: Record<BuyFromPageType, string> = {
+  [BuyFromPageType.FFMC_ADS]: 'ffmc-ads',
+};
+
 export const getBuyFromPageTypeFromSlug = (
   slug?: string
 ): BuyFromPageType | null => {
@@ -37,6 +41,16 @@ export const getBuyFromPageCreateTitle = (
   return pageTitle.startsWith('Buy From')
     ? `Create ${pageTitle}`
     : 'Create Buy From';
+};
+
+export const getBuyFromPageSlugFromType = (
+  pageType: BuyFromPageType | null
+): string | null => {
+  if (!pageType) {
+    return null;
+  }
+
+  return BUY_FROM_PAGE_SLUG_BY_TYPE[pageType] ?? null;
 };
 
 export const getBuyFromPartyProfileTypes = (

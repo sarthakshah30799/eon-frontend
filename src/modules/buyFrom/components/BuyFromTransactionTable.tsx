@@ -43,6 +43,12 @@ export const BuyFromTransactionTable = ({
                 <th className="min-w-[160px] px-3 py-3 text-left text-xs font-semibold uppercase tracking-[0.2em] text-text-tertiary">
                   Total
                 </th>
+                <th className="min-w-[160px] px-3 py-3 text-left text-xs font-semibold uppercase tracking-[0.2em] text-text-tertiary">
+                  Round Off
+                </th>
+                <th className="min-w-[160px] px-3 py-3 text-left text-xs font-semibold uppercase tracking-[0.2em] text-text-tertiary">
+                  Final Amount
+                </th>
                 <th className="w-[84px] px-3 py-3 text-left text-xs font-semibold uppercase tracking-[0.2em] text-text-tertiary">
                   Action
                 </th>

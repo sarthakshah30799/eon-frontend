@@ -2,15 +2,19 @@ import { useMemo, useState } from 'react';
 import type { Resolver } from 'react-hook-form';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
+import { useQuery } from '@tanstack/react-query';
 import { CardSection } from '@/components/ui';
 import { Form, FormFieldInput } from '@/components/forms';
 import { TransactionAdditionalChargesFieldArray } from '@/components/forms';
 import { TransactionPaymentDetailsFieldArray } from '@/components/forms';
+import { documentProfileApi } from '@/api/documentProfile';
+import { DocumentRequirementCard } from '@/modules/documentProfiles/components/DocumentRequirementCard';
 import { SelectCurrencyProfiles } from '@/modules/currencyProfile/components';
 import type { PartyProfileType } from '@/modules/partyProfiles/constants';
 import type { BuyFromPageType } from '@/pages/buy-from/[slug]/buyFromPage.enum';
 import { getBuyFromPageTitle } from '@/pages/buy-from/[slug]/buyFromPage.enum';
 import type {
+  IBuyFromDraftDocumentAttachment,
   IBuyFromFormValues,
   IBuyFromPricingData,
 } from '../types/buyFromTypes';
@@ -29,7 +33,10 @@ interface BuyFromFormProps {
   branchId?: string;
   branchCode?: string;
   isSubmitting?: boolean;
-  onSubmit: (values: IBuyFromFormValues) => void | Promise<void>;
+  onSubmit: (
+    values: IBuyFromFormValues,
+    attachments: IBuyFromDraftDocumentAttachment[]
+  ) => void | Promise<void>;
   onCancel: () => void;
   submitLabel?: string;
 }
@@ -41,6 +48,9 @@ interface BuyFromFormBodyProps {
   branchId: string;
   branchCode: string;
   isSubmitting: boolean;
+  draftDocuments: Record<string, File | null>;
+  onSelectDraftDocument: (documentProfileId: string, file: File) => void | Promise<void>;
+  onClearDraftDocument: (documentProfileId: string) => void | Promise<void>;
 }
 
 const BuyFromFormBody = ({
@@ -50,6 +60,9 @@ const BuyFromFormBody = ({
   branchId,
   branchCode,
   isSubmitting,
+  draftDocuments,
+  onSelectDraftDocument,
+  onClearDraftDocument,
 }: BuyFromFormBodyProps) => {
   const form = useFormContext<IBuyFromFormValues>();
   const [currencyPickerRowIndex, setCurrencyPickerRowIndex] = useState<
@@ -75,6 +88,19 @@ const BuyFromFormBody = ({
       active: true,
     }),
     []
+  );
+  const { data: documentProfiles = [] } = useQuery({
+    queryKey: ['buy-from-transaction-document-profiles'],
+    queryFn: () => documentProfileApi.getDocumentProfiles({ active: true }),
+  });
+  const transactionDocumentProfiles = useMemo(
+    () =>
+      documentProfiles.filter(
+        profile =>
+          profile.specificationType === 'TRANSACTION' ||
+          profile.type?.value === 'TRANSACTION'
+      ),
+    [documentProfiles]
   );
   const transactions = useWatch({
     control: form.control,
@@ -188,6 +214,36 @@ const BuyFromFormBody = ({
         description="Store how this transaction will be settled. Payment amounts cannot exceed the total payable amount."
       />
 
+      <CardSection
+        heading="Transaction Documents"
+        className="space-y-4"
+      >
+        <p className="text-sm text-text-secondary">
+          Attach any transaction documents now. They will be saved together with the draft.
+        </p>
+
+        {transactionDocumentProfiles.length > 0 ? (
+          <div className="grid gap-4">
+            {transactionDocumentProfiles.map(profile => (
+              <DocumentRequirementCard
+                key={profile.id}
+                profile={profile}
+                disabled={isSubmitting}
+                selectedFile={draftDocuments[profile.id] ?? null}
+                onSelectFile={onSelectDraftDocument}
+                onClearFile={onClearDraftDocument}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-xl border border-border-primary bg-surface-primary px-4 py-4 shadow-sm">
+            <p className="text-sm text-text-secondary">
+              No active transaction document profiles were found.
+            </p>
+          </div>
+        )}
+      </CardSection>
+
       <SelectCurrencyProfiles
         open={currencyPickerRowIndex !== null}
         selectable
@@ -213,10 +269,39 @@ export const BuyFromForm = ({
   onCancel,
   submitLabel = 'Save Draft',
 }: BuyFromFormProps) => {
+  const [draftDocuments, setDraftDocuments] = useState<Record<string, File | null>>({});
+
+  const handleSelectDraftDocument = async (documentProfileId: string, file: File) => {
+    setDraftDocuments(prev => ({
+      ...prev,
+      [documentProfileId]: file,
+    }));
+  };
+
+  const handleClearDraftDocument = async (documentProfileId: string) => {
+    setDraftDocuments(prev => {
+      const next = { ...prev };
+      delete next[documentProfileId];
+      return next;
+    });
+  };
+
+  const draftDocumentAttachments = useMemo<IBuyFromDraftDocumentAttachment[]>(
+    () =>
+      Object.entries(draftDocuments).flatMap(([documentProfileId, file]) => {
+        if (!file) {
+          return [];
+        }
+
+        return [{ documentProfileId, file }];
+      }),
+    [draftDocuments]
+  );
+
   return (
     <Form<IBuyFromFormValues>
       id="buy-from-form"
-      onSubmit={onSubmit}
+      onSubmit={values => onSubmit(values, draftDocumentAttachments)}
       resolver={yupResolver(buyFromFormSchema) as Resolver<IBuyFromFormValues>}
       defaultValues={defaultValues}
       className="space-y-6"
@@ -234,6 +319,9 @@ export const BuyFromForm = ({
         branchId={branchId}
         branchCode={branchCode}
         isSubmitting={isSubmitting}
+        draftDocuments={draftDocuments}
+        onSelectDraftDocument={handleSelectDraftDocument}
+        onClearDraftDocument={handleClearDraftDocument}
       />
     </Form>
   );

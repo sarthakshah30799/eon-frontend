@@ -8,3 +8,4 @@ export * from './forms/BuyFromForm';
 export * from './types/buyFromTypes';
 export * from './utils/buyFromUtils';
 export * from './views/BuyFromCreateView';
+export * from './views/BuyFromDocumentsView';

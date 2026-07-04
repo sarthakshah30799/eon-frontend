@@ -189,8 +189,52 @@ export const manualBillBookApi = {
       `/manual-bill-books/pages/search?pageNo=${pageNo}`
     );
     if (res.error) throw new Error(res.error);
-    if (!res.data) throw new Error(`Page number ${pageNo} not found`);
     return res.data;
+  },
+
+  searchDPMapping: async (params: {
+    transactionType: string;
+    bookNo: number;
+    mvNoFrom: number;
+    mvNoTo: number;
+    actionType: 'MAP' | 'UNMAP';
+  }): Promise<any[]> => {
+    const res = await apiClient.get<any[]>(
+      `/manual-bill-books/dp-mapping/search?transactionType=${encodeURIComponent(
+        params.transactionType
+      )}&bookNo=${params.bookNo}&mvNoFrom=${params.mvNoFrom}&mvNoTo=${
+        params.mvNoTo
+      }&actionType=${params.actionType}`
+    );
+    if (res.error) throw new Error(res.error);
+    return res.data || [];
+  },
+
+  allocateToDP: async (data: {
+    pageIds: string[];
+    deliveryPersonId: string;
+    remarks?: string;
+  }): Promise<any> => {
+    const res = await apiClient.post<any>('/manual-bill-books/dp-mapping/allocate', data);
+    if (res.error) throw new Error(res.error);
+    return res.data;
+  },
+
+  deallocateFromDP: async (data: {
+    pageIds: string[];
+    remarks?: string;
+  }): Promise<any> => {
+    const res = await apiClient.post<any>('/manual-bill-books/dp-mapping/deallocate', data);
+    if (res.error) throw new Error(res.error);
+    return res.data;
+  },
+
+  getDeliveryPersons: async (): Promise<Array<{ id: string; name: string }>> => {
+    const res = await apiClient.get<Array<{ id: string; name: string }>>(
+      '/manual-bill-books/dp-mapping/delivery-persons'
+    );
+    if (res.error) throw new Error(res.error);
+    return res.data || [];
   },
 };
 

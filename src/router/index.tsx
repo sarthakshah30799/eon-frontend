@@ -134,6 +134,9 @@ const ManualBillBookAcknowledgementPage = lazy(
 const ManagerToCashierAllocationPage = lazy(
   () => import('../pages/manual-bill-books/ManagerToCashierAllocationPage')
 );
+const ManualBillDPMappingPage = lazy(
+  () => import('../pages/manual-bill-books/ManualBillDPMappingPage')
+);
 const   ChequeBookPage = lazy(
   () => import('../pages/chequebooks/ChequeBookPage')
 );
@@ -145,6 +148,9 @@ const ChequeBookAcknowledgementPage = lazy(
 );
 const ChequeBookAllocationPage = lazy(
   () => import('../pages/chequebooks/ChequeBookAllocationPage')
+);
+const ChequeBookReturnPage = lazy(
+  () => import('../pages/chequebooks/ChequeBookReturnPage')
 );
 const AdditionalSettingsPage = lazy(
   () => import('../pages/admin/additional-settings')
@@ -528,6 +534,22 @@ const router = createBrowserRouter([
     ),
   },
   {
+    path: '/manual-bill-books/dp-mapping',
+    element: (
+      <ProtectedLayout>
+        <ManualBillDPMappingPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/manual-bill-books/dp-unmapping',
+    element: (
+      <ProtectedLayout>
+        <ManualBillDPMappingPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
     path: '/cheque-books/create',
     element: (
       <ProtectedLayout>
@@ -556,6 +578,14 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <ChequeBookAllocationPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/cheque-books/return',
+    element: (
+      <ProtectedLayout>
+        <ChequeBookReturnPage />
       </ProtectedLayout>
     ),
   },

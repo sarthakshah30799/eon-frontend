@@ -182,6 +182,23 @@ export const chequebookApi = {
     if (!res.data) throw new Error(`Page number ${pageNo} not found`);
     return res.data;
   },
+
+  searchCashierReturn: async (params: {
+    bankAccountCode: string;
+    bookNo: number;
+    chequeNoFrom: number;
+    chequeNoTo: number;
+  }): Promise<any[]> => {
+    const res = await apiClient.get<any[]>(
+      `/chequebooks/cashier-return/search?bankAccountCode=${encodeURIComponent(
+        params.bankAccountCode
+      )}&bookNo=${params.bookNo}&chequeNoFrom=${params.chequeNoFrom}&chequeNoTo=${
+        params.chequeNoTo
+      }`
+    );
+    if (res.error) throw new Error(res.error);
+    return res.data || [];
+  },
 };
 
 export interface IChequeBookPageTracking {

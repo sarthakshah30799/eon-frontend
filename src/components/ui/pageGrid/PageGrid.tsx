@@ -3,7 +3,7 @@ import { Button, Modal } from '@/components/ui';
 
 export interface IPageItem {
   pageNo: number;
-  status: 'Allocated' | 'Used' | 'Void' | 'Lost';
+  status: 'ALLOCATED' | 'USED' | 'VOID';
   remarks?: string;
 }
 
@@ -11,7 +11,7 @@ interface PageGridProps {
   title?: string;
   pages: IPageItem[];
   isLoading?: boolean;
-  onUpdateStatus: (pageNos: number[], status: 'Void' | 'Lost', remarks?: string) => Promise<void>;
+  onUpdateStatus: (pageNos: number[], status: 'VOID', remarks?: string) => Promise<void>;
   onReturnPages: (pageNos: number[]) => Promise<void>;
 }
 
@@ -27,7 +27,7 @@ export const PageGrid = ({
   const [modalState, setModalState] = useState<{
     open: boolean;
     type: 'status' | 'return' | 'detail';
-    targetStatus?: 'Void' | 'Lost';
+    targetStatus?: 'VOID';
     pages: number[];
   }>({
     open: false,
@@ -40,14 +40,13 @@ export const PageGrid = ({
 
   // Statistics
   const totalCount = pages.length;
-  const usedCount = pages.filter(p => p.status === 'Used').length;
-  const voidCount = pages.filter(p => p.status === 'Void').length;
-  const lostCount = pages.filter(p => p.status === 'Lost').length;
-  const allocatedCount = pages.filter(p => p.status === 'Allocated').length;
+  const usedCount = pages.filter(p => p.status === 'USED').length;
+  const voidCount = pages.filter(p => p.status === 'VOID').length;
+  const allocatedCount = pages.filter(p => p.status === 'ALLOCATED').length;
 
   const handlePageClick = (page: IPageItem) => {
     if (isMultiSelect) {
-      if (page.status !== 'Allocated') return; // Only allow multi-selecting Allocated pages for actions
+      if (page.status !== 'ALLOCATED') return; // Only allow multi-selecting ALLOCATED pages for actions
       setSelectedPages(prev =>
         prev.includes(page.pageNo)
           ? prev.filter(no => no !== page.pageNo)
@@ -55,10 +54,11 @@ export const PageGrid = ({
       );
     } else {
       // Single click opens details / single action modal
-      if (page.status === 'Allocated') {
+      if (page.status === 'ALLOCATED') {
         setModalState({
           open: true,
           type: 'status',
+          targetStatus: 'VOID',
           pages: [page.pageNo],
         });
       } else {
@@ -73,12 +73,10 @@ export const PageGrid = ({
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Used':
+      case 'USED':
         return 'bg-emerald-500 text-white border-emerald-600 shadow-sm shadow-emerald-200';
-      case 'Void':
+      case 'VOID':
         return 'bg-rose-500 text-white border-rose-600 shadow-sm shadow-rose-200';
-      case 'Lost':
-        return 'bg-amber-500 text-white border-amber-600 shadow-sm shadow-amber-200';
       default:
         return 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200';
     }
@@ -89,7 +87,7 @@ export const PageGrid = ({
     setSelectedPages([]);
   };
 
-  const handleBatchStatusChange = (status: 'Void' | 'Lost') => {
+  const handleBatchStatusChange = (status: 'VOID') => {
     if (selectedPages.length === 0) return;
     setModalState({
       open: true,
@@ -112,7 +110,7 @@ export const PageGrid = ({
     setIsSubmitting(true);
     try {
       if (modalState.type === 'status') {
-        const target = modalState.targetStatus || 'Void';
+        const target = modalState.targetStatus || 'VOID';
         await onUpdateStatus(modalState.pages, target, remarks);
       } else if (modalState.type === 'return') {
         await onReturnPages(modalState.pages);
@@ -137,7 +135,7 @@ export const PageGrid = ({
         <div>
           <h3 className="text-lg font-bold text-slate-800">{title}</h3>
           <p className="text-xs text-slate-500">
-            Click leaves to void, lost, or return them.
+            Click leaves to void or return them.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -153,17 +151,10 @@ export const PageGrid = ({
             <>
               <Button
                 variant="destructive"
-                onClick={() => handleBatchStatusChange('Void')}
+                onClick={() => handleBatchStatusChange('VOID')}
                 size="sm"
               >
                 Void Selected ({selectedPages.length})
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => handleBatchStatusChange('Lost')}
-                size="sm"
-              >
-                Mark Lost ({selectedPages.length})
               </Button>
               <Button
                 variant="secondary"
@@ -178,7 +169,7 @@ export const PageGrid = ({
       </div>
 
       {/* Stats Board */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
         <div className="p-3 bg-slate-50 border border-slate-100 rounded-md text-center">
           <span className="block text-xs font-semibold text-slate-500">Total</span>
           <span className="text-xl font-bold text-slate-800">{totalCount}</span>
@@ -190,10 +181,6 @@ export const PageGrid = ({
         <div className="p-3 bg-rose-50 border border-rose-100 rounded-md text-center">
           <span className="block text-xs font-semibold text-rose-600">Void</span>
           <span className="text-xl font-bold text-rose-800">{voidCount}</span>
-        </div>
-        <div className="p-3 bg-amber-50 border border-amber-100 rounded-md text-center">
-          <span className="block text-xs font-semibold text-amber-600">Lost</span>
-          <span className="text-xl font-bold text-amber-800">{lostCount}</span>
         </div>
         <div className="p-3 bg-slate-50 border border-slate-100 rounded-md text-center">
           <span className="block text-xs font-semibold text-slate-500">Allocated</span>
@@ -208,13 +195,13 @@ export const PageGrid = ({
         </div>
       ) : pages.length === 0 ? (
         <div className="py-12 text-center text-slate-400 text-sm">
-          No leaves found for this allocation.
+          No leaves found for this assignment.
         </div>
       ) : (
         <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2 max-h-96 overflow-y-auto pr-1">
           {pages.map(page => {
             const isSelected = selectedPages.includes(page.pageNo);
-            const isSelectable = page.status === 'Allocated';
+            const isSelectable = page.status === 'ALLOCATED';
             return (
               <button
                 key={page.pageNo}
@@ -290,14 +277,9 @@ export const PageGrid = ({
                 <label className="block text-xs font-semibold text-slate-500 mb-1.5">
                   NEW STATUS
                 </label>
-                <select
-                  value={modalState.targetStatus || 'Void'}
-                  onChange={(e) => setModalState(prev => ({ ...prev, targetStatus: e.target.value as any }))}
-                  className="w-full p-2 border border-slate-200 rounded focus:ring-1 focus:ring-blue-500 outline-none"
-                >
-                  <option value="Void">Void (Cancelled / Spoiled)</option>
-                  <option value="Lost">Lost</option>
-                </select>
+                <div className="p-2 border border-slate-200 bg-slate-50 rounded text-slate-800 font-semibold">
+                  VOID (Cancelled / Spoiled)
+                </div>
               </div>
 
               <div>
@@ -337,7 +319,7 @@ export const PageGrid = ({
                 </span>
               </p>
               <p className="text-xs text-rose-600 font-semibold">
-                Warning: This will delete these page records from this cashier's allocation so they can be re-allocated in the future.
+                Warning: This will delete these page records from the user's assignment so they can be re-allocated in the future.
               </p>
 
               <div className="pt-4 flex justify-end gap-3">

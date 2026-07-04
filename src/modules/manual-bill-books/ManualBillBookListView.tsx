@@ -175,7 +175,7 @@ export const ManualBillBookListView = () => {
     const fetchCashiers = async () => {
       if (!selectedBook) return;
       try {
-        const data = await manualBillBookApi.getCashiers(selectedBook.branchId);
+        const data = await manualBillBookApi.getAuthorizedUsers(selectedBook.branchId);
         setCashiers(data);
       } catch (err) {
         console.error(err);
@@ -189,7 +189,7 @@ export const ManualBillBookListView = () => {
     setIsPagesModalOpen(true);
     try {
       setIsLoadingPages(true);
-      const data = await manualBillBookApi.getPagesByAllocationId(alloc.id);
+      const data = await manualBillBookApi.getPagesByBookNo(alloc.manualBookId, alloc.bookNo);
       setPages(data);
     } catch (err: any) {
       toast.error(err.message || 'Failed to load page tracking records.');
@@ -198,12 +198,12 @@ export const ManualBillBookListView = () => {
     }
   };
 
-  const handleUpdatePageStatus = async (pageNos: number[], status: 'Void' | 'Lost', remarks?: string) => {
+  const handleUpdatePageStatus = async (pageNos: number[], status: 'VOID', remarks?: string) => {
     if (!selectedAllocation) return;
     try {
       await manualBillBookApi.updatePagesStatus(pageNos, status, remarks);
       toast.success('Page status updated successfully');
-      const data = await manualBillBookApi.getPagesByAllocationId(selectedAllocation.id);
+      const data = await manualBillBookApi.getPagesByBookNo(selectedAllocation.manualBookId, selectedAllocation.bookNo);
       setPages(data);
     } catch (err: any) {
       toast.error(err.message || 'Failed to update page status.');
@@ -216,7 +216,7 @@ export const ManualBillBookListView = () => {
     try {
       await manualBillBookApi.returnPages(pageNos);
       toast.success('Pages returned successfully');
-      const data = await manualBillBookApi.getPagesByAllocationId(selectedAllocation.id);
+      const data = await manualBillBookApi.getPagesByBookNo(selectedAllocation.manualBookId, selectedAllocation.bookNo);
       setPages(data);
     } catch (err: any) {
       toast.error(err.message || 'Failed to return pages.');
@@ -541,23 +541,23 @@ export const ManualBillBookListView = () => {
                 {selectedBook.status === 'Approved' && (
                   <div className="mt-4 border-t border-slate-200 pt-4 space-y-3">
                     <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
-                      Cashier Allocations
+                      User Allocations
                     </h4>
                     {isLoadingAllocations ? (
                       <div className="text-xs text-slate-400 py-2">Loading allocations...</div>
                     ) : allocations.length === 0 ? (
                       <div className="text-xs text-slate-500 italic py-2 bg-slate-50 border border-slate-100 rounded text-center">
-                        No cashiers allocated to this book yet.
+                        No users assigned to this book yet.
                       </div>
                     ) : (
                       <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1">
                         {allocations.map(alloc => {
                           const cashier = cashiers.find(c => c.id === alloc.cashierId);
                           return (
-                            <div key={alloc.id} className="flex justify-between items-center p-3 bg-white border border-slate-200 rounded-md shadow-sm">
+                            <div key={`${alloc.manualBookId}-${alloc.bookNo}`} className="flex justify-between items-center p-3 bg-white border border-slate-200 rounded-md shadow-sm">
                               <div>
                                 <span className="block text-xs font-bold text-slate-700">Book #{alloc.bookNo}</span>
-                                <span className="text-[10px] text-slate-500">Allocated to: <b className="text-slate-700">{cashier ? cashier.name : 'Unknown User'}</b></span>
+                                <span className="text-[10px] text-slate-500">Assigned to: <b className="text-slate-700">{cashier ? cashier.name : 'Unknown User'}</b></span>
                               </div>
                               <button
                                 type="button"

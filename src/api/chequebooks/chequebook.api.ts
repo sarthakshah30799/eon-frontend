@@ -46,12 +46,12 @@ export interface IApproveRejectChequeBook {
 export interface IChequeBookAllocationPayload {
   checkBookId: string;
   bookNo: number;
-  cashierId: string;
+  assignedToUserId: string;
   remarks?: string;
 }
 
 export interface IChequeBookAllocation {
-  id: string;
+  id?: string;
   checkBookId: string;
   bookNo: number;
   cashierId: string;
@@ -110,20 +110,20 @@ export const chequebookApi = {
     return res.data;
   },
 
-  getCashiers: async (branchId: string): Promise<Array<{ id: string; name: string }>> => {
+  getAuthorizedUsers: async (branchId: string): Promise<Array<{ id: string; name: string }>> => {
     const res = await apiClient.get<Array<{ id: string; name: string }>>(
-      `/chequebooks/cashiers?branchId=${encodeURIComponent(branchId)}`
+      `/chequebooks/users?branchId=${encodeURIComponent(branchId)}`
     );
     if (res.error) throw new Error(res.error);
     return res.data || [];
   },
 
   saveAllocations: async (
-    allocations: IChequeBookAllocationPayload[]
+    assignments: IChequeBookAllocationPayload[]
   ): Promise<IChequeBookAllocation[]> => {
     const res = await apiClient.post<IChequeBookAllocation[]>(
-      '/chequebooks/allocations',
-      { allocations }
+      '/chequebooks/assignments',
+      { assignments }
     );
     if (res.error) throw new Error(res.error);
     return res.data || [];
@@ -133,7 +133,7 @@ export const chequebookApi = {
     checkBookIds: string[]
   ): Promise<IChequeBookAllocation[]> => {
     const res = await apiClient.get<IChequeBookAllocation[]>(
-      `/chequebooks/allocations?checkBookIds=${encodeURIComponent(
+      `/chequebooks/assignments?checkBookIds=${encodeURIComponent(
         checkBookIds.join(',')
       )}`
     );
@@ -141,11 +141,12 @@ export const chequebookApi = {
     return res.data || [];
   },
 
-  getPagesByAllocationId: async (
-    allocationId: string
+  getPagesByBookNo: async (
+    checkBookId: string,
+    bookNo: number
   ): Promise<IChequeBookPageTracking[]> => {
     const res = await apiClient.get<IChequeBookPageTracking[]>(
-      `/chequebooks/allocations/${allocationId}/pages`
+      `/chequebooks/${checkBookId}/books/${bookNo}/pages`
     );
     if (res.error) throw new Error(res.error);
     return res.data || [];
@@ -153,7 +154,7 @@ export const chequebookApi = {
 
   updatePagesStatus: async (
     pageNos: number[],
-    status: 'Void' | 'Lost',
+    status: 'VOID',
     remarks?: string
   ): Promise<{ success: boolean }> => {
     const res = await apiClient.put<{ success: boolean }>(
@@ -186,9 +187,9 @@ export const chequebookApi = {
 export interface IChequeBookPageTracking {
   id: string;
   checkBookId: string;
-  allocationId: string;
+  assignedToUserId: string;
   pageNo: number;
-  status: 'Allocated' | 'Used' | 'Void' | 'Lost';
+  status: 'ALLOCATED' | 'USED' | 'VOID';
   remarks?: string;
   updatedBy?: string;
   createdAt: string;

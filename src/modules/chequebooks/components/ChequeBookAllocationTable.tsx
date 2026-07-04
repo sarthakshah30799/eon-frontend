@@ -68,7 +68,7 @@ export const ChequeBookAllocationTable = ({
       },
       {
         accessorKey: 'allocatedCashierId',
-        header: 'Allocate Cashier',
+        header: 'Allocate User',
         cell: ({ row }) => (
           <select
             value={row.original.allocatedCashierId}

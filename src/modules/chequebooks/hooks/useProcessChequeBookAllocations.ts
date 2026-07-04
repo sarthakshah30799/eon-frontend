@@ -29,7 +29,7 @@ interface IProcessChequeBookAllocationsInput {
 const buildAllocationRows = (
   books: IChequeBook[],
   allocations: Array<{
-    id: string;
+    id?: string;
     checkBookId: string;
     bookNo: number;
     cashierId: string;

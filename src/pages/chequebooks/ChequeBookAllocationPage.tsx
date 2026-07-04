@@ -120,7 +120,7 @@ export const ChequeBookAllocationPage = () => {
 
   const handleApplyBulkCashier = () => {
     if (!bulkCashierId) {
-      toast.error('Please select a cashier first.');
+      toast.error('Please select a user first.');
       return;
     }
     const checkedCount = rows.filter(r => r.isCheck).length;
@@ -133,7 +133,7 @@ export const ChequeBookAllocationPage = () => {
         r.isCheck ? { ...r, allocatedCashierId: bulkCashierId } : r
       )
     );
-    toast.success(`Set cashier for ${checkedCount} selected rows.`);
+    toast.success(`Set user for ${checkedCount} selected rows.`);
   };
 
   const handleSaveAllocation = async () => {
@@ -144,7 +144,7 @@ export const ChequeBookAllocationPage = () => {
     }
     const invalidRows = checkedRows.filter(r => !r.allocatedCashierId);
     if (invalidRows.length > 0) {
-      toast.error('Please select a cashier for all checked allocations.');
+      toast.error('Please select a user for all checked allocations.');
       return;
     }
 
@@ -182,10 +182,10 @@ export const ChequeBookAllocationPage = () => {
       {/* Header */}
       <div className="flex flex-col gap-1.5 border-b border-slate-200 pb-5">
         <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-          ChequeBook Cashier Allocation
+          ChequeBook Allocation
         </h1>
         <p className="text-sm text-slate-500">
-          Allocate individual chequebooks to cashiers at your branch.
+          Allocate individual chequebook pages to users at your branch.
         </p>
       </div>
 
@@ -280,7 +280,7 @@ export const ChequeBookAllocationPage = () => {
             {rows.length > 0 && (
               <div className="flex items-center gap-3">
                 <span className="text-xs font-semibold text-slate-600">
-                  Allocate Cashier:
+                  Allocate User:
                 </span>
                 {isLoadingOptions ? (
                   <span className="text-xs text-slate-500">Loading...</span>

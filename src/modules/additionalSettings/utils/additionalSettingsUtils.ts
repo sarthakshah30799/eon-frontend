@@ -107,3 +107,55 @@ export const mapSubcategoryUpdate = (
   ),
   updatedAt: new Date().toISOString(),
 });
+
+export const getAdditionalSettingBooleanValue = (
+  categories: IAdditionalSettingCategory[] | undefined,
+  categoryCode: string,
+  subcategoryCode: string,
+  fallback = false
+): boolean => {
+  const normalizedCategoryCode = categoryCode.trim().toUpperCase();
+  const normalizedSubcategoryCode = subcategoryCode.trim().toUpperCase();
+
+  const category = categories?.find(
+    item => item.code.trim().toUpperCase() === normalizedCategoryCode
+  );
+  const subcategory = category?.subcategories.find(
+    item => item.code.trim().toUpperCase() === normalizedSubcategoryCode
+  );
+
+  if (!subcategory) {
+    return fallback;
+  }
+
+  const value = subcategory.value.trim().toUpperCase();
+  if (!value) {
+    return fallback;
+  }
+
+  return value === 'YES' || value === 'TRUE' || value === '1';
+};
+
+export const getAdditionalSettingTextValue = (
+  categories: IAdditionalSettingCategory[] | undefined,
+  categoryCode: string,
+  subcategoryCode: string,
+  fallback = ''
+): string => {
+  const normalizedCategoryCode = categoryCode.trim().toUpperCase();
+  const normalizedSubcategoryCode = subcategoryCode.trim().toUpperCase();
+
+  const category = categories?.find(
+    item => item.code.trim().toUpperCase() === normalizedCategoryCode
+  );
+  const subcategory = category?.subcategories.find(
+    item => item.code.trim().toUpperCase() === normalizedSubcategoryCode
+  );
+
+  if (!subcategory) {
+    return fallback;
+  }
+
+  const value = subcategory.value.trim();
+  return value || fallback;
+};

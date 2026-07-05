@@ -24,6 +24,7 @@ interface FormProps<TFieldValues extends FieldValues = FieldValues> {
     onBackClick?: () => void;
     onCancel?: () => void | Promise<void>;
     accentColor?: string;
+    actions?: React.ReactNode;
   };
 }
 
@@ -63,6 +64,7 @@ export const Form = <TFieldValues extends FieldValues = FieldValues>({
           onBackClick={footer.onBackClick}
           onCancel={footer.onCancel}
           isSubmitting={form.formState.isSubmitting}
+          actions={footer.actions}
         />
       ) : null}
     </RHFFormProvider>

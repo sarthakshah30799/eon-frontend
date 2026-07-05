@@ -1,4 +1,4 @@
-import { useFieldArray, useFormContext } from 'react-hook-form';
+import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import type { Resolver, SubmitErrorHandler } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Button } from '@/components/ui/button1';
@@ -21,6 +21,7 @@ import type {
 import { createEmptyCategoryOptionsFormValues } from '../utils';
 import type { CategoryOptionCode } from '@/types/categoryOptionTypes';
 import { useNavigate } from 'react-router-dom';
+import { useStaticMiscellaneousProfileOptions } from '../hooks';
 
 const loadCodes = async (): Promise<AsyncSelectResponse> => {
   return loadCategoryOptionCodeOptions();
@@ -45,10 +46,19 @@ const CategoryOptionRows = ({
   isSubmitting: boolean;
 }) => {
   const form = useFormContext<ICategoryOptionsFormValues>();
+  const code = useWatch({
+    control: form.control,
+    name: 'code',
+  });
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: 'items',
   });
+  const {
+    defaultOptions: staticValueOptions,
+    loadOptions: loadStaticValueOptions,
+    isStaticCategoryCode,
+  } = useStaticMiscellaneousProfileOptions(code);
 
   return (
     <div className="space-y-4">
@@ -111,13 +121,26 @@ const CategoryOptionRows = ({
             ) : null}
 
             <div className="grid gap-4 md:grid-cols-2">
-              <FormFieldInput
-                name={`items.${index}.value`}
-                label={`VALUE ${index + 1}`}
-                placeholder="E.G. BRANCH"
-                valueTransform="uppercase"
-                disabled={isSubmitting}
-              />
+              {isStaticCategoryCode ? (
+                <FormFieldSelect
+                  name={`items.${index}.value`}
+                  label={`VALUE ${index + 1}`}
+                  placeholder="SELECT VALUE"
+                  loadOptions={loadStaticValueOptions}
+                  defaultOptions={staticValueOptions}
+                  disabled={isSubmitting}
+                  isSearchable={false}
+                  isCreatable={false}
+                />
+              ) : (
+                <FormFieldInput
+                  name={`items.${index}.value`}
+                  label={`VALUE ${index + 1}`}
+                  placeholder="E.G. BRANCH"
+                  valueTransform="uppercase"
+                  disabled={isSubmitting}
+                />
+              )}
               <FormFieldInput
                 name={`items.${index}.label`}
                 label="LABEL"

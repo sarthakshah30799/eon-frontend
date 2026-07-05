@@ -8,6 +8,11 @@ import type {
 const normalizeCode = (code: CategoryOptionCode): CategoryOptionCode =>
   code.trim() as CategoryOptionCode;
 
+export interface IStaticCategoryOption {
+  value: string;
+  label: string;
+}
+
 export const categoryOptionsApi = {
   getCategoryOptions: async (search?: string): Promise<ICategoryOption[]> => {
     const query = search?.trim() ? `?search=${encodeURIComponent(search.trim())}` : '';
@@ -29,6 +34,22 @@ export const categoryOptionsApi = {
 
     const res = await apiClient.get<ICategoryOption[]>(
       `/select-options/${encodeURIComponent(normalizedCode)}`
+    );
+
+    if (res.error) throw new Error(res.error);
+    return res.data ?? [];
+  },
+
+  getStaticCategoryOptions: async (
+    code: CategoryOptionCode
+  ): Promise<IStaticCategoryOption[]> => {
+    const normalizedCode = normalizeCode(code);
+    if (!normalizedCode) {
+      return [];
+    }
+
+    const res = await apiClient.get<IStaticCategoryOption[]>(
+      `/select-options/static/${encodeURIComponent(normalizedCode)}`
     );
 
     if (res.error) throw new Error(res.error);

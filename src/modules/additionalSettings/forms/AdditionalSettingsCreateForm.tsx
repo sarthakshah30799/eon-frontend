@@ -3,7 +3,7 @@ import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import type { Resolver } from 'react-hook-form';
 import { Button } from '@/components/ui/button1';
-import { CardSection } from '@/components/ui';
+import { CardSection, Checkbox } from '@/components/ui';
 import { Form, FormFieldInput, FormFieldSelect, FormFieldDatePicker, FormFieldTextarea } from '@/components/forms';
 import { additionalSettingsSchema } from '../schema';
 import {
@@ -13,6 +13,7 @@ import {
 import type { IAdditionalSettingCategoryFormValues } from '../types';
 import {
   ADDITIONAL_SETTINGS_TEXTS,
+  AdditionalSettingsCodeEnum,
 } from '../constants';
 import { useListValueTypes } from '../hooks';
 import {
@@ -40,6 +41,7 @@ const SubcategoryRowFields = ({
   loadTypeOptions,
   remove,
   fieldsLength,
+  isFixed = false,
 }: {
   index: number;
   categoryCode?: string;
@@ -47,6 +49,7 @@ const SubcategoryRowFields = ({
   loadTypeOptions: () => Promise<{ options: { value: string; label: string }[]; hasMore: boolean }>;
   remove: (index: number) => void;
   fieldsLength: number;
+  isFixed?: boolean;
 }) => {
   const { control, setValue } = useFormContext<IAdditionalSettingCategoryFormValues>();
 
@@ -57,6 +60,10 @@ const SubcategoryRowFields = ({
   const categoryType = useWatch({
     control,
     name: `subcategories.${index}.categoryType`,
+  });
+  const subcategoryValue = useWatch({
+    control,
+    name: `subcategories.${index}.value`,
   });
 
   const subcategoryDefinition = getAdditionalSettingSubcategoryDefinition(
@@ -79,7 +86,7 @@ const SubcategoryRowFields = ({
     if (categoryType !== prevTypeRef.current) {
       prevTypeRef.current = categoryType;
       if (categoryType?.toLowerCase() === 'boolean') {
-        setValue(`subcategories.${index}.value`, 'YES');
+        setValue(`subcategories.${index}.value`, 'NO');
       } else {
         setValue(`subcategories.${index}.value`, '');
       }
@@ -94,16 +101,6 @@ const SubcategoryRowFields = ({
       );
     }
   }, [index, subcategoryDefinition, setValue]);
-
-  const loadBooleanOptions = async () => {
-    return {
-      options: [
-        { value: 'YES', label: 'YES' },
-        { value: 'NO', label: 'NO' },
-      ],
-      hasMore: false,
-    };
-  };
 
   const loadSelectValueOptions = async () => ({
     options: (subcategoryDefinition?.options ?? []).map(option => ({
@@ -123,7 +120,7 @@ const SubcategoryRowFields = ({
 
   return (
     <div className="relative rounded-sm border border-border-primary bg-surface-primary p-4">
-      {fieldsLength > 0 && (
+      {fieldsLength > 0 && !isFixed && (
         <button
           type="button"
           aria-label={`Remove subcategory ${index + 1}`}
@@ -173,13 +170,24 @@ const SubcategoryRowFields = ({
         />
 
         {isBooleanType ? (
-          <FormFieldSelect
-            name={`subcategories.${index}.value`}
-            label="Value"
-            placeholder="Select YES or NO"
-            disabled={isSubmitting}
-            loadOptions={loadBooleanOptions}
-          />
+          <div className="flex items-center gap-3 rounded-sm border border-border-primary bg-surface-primary px-3 py-2">
+            <Checkbox
+              checked={String(subcategoryValue ?? '').trim().toUpperCase() === 'YES'}
+              onChange={checked =>
+                setValue(`subcategories.${index}.value`, checked ? 'YES' : 'NO')
+              }
+              disabled={isSubmitting}
+              aria-label={`Toggle ${subcategoryDefinition?.label ?? 'value'}`}
+            />
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-text-primary">
+                {subcategoryDefinition?.label ?? 'Enabled'}
+              </p>
+              <p className="text-xs text-text-tertiary">
+                Check this box to enable the setting.
+              </p>
+            </div>
+          </div>
         ) : isDateType ? (
           <FormFieldDatePicker
             name={`subcategories.${index}.value`}
@@ -235,7 +243,7 @@ const SubcategoryFields = ({
   isSubmitting: boolean;
 }) => {
   const { control, setValue } = useFormContext<IAdditionalSettingCategoryFormValues>();
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, replace } = useFieldArray({
     control,
     name: 'subcategories',
   });
@@ -248,6 +256,34 @@ const SubcategoryFields = ({
     control,
     name: 'subcategories',
   }) as IAdditionalSettingCategoryFormValues['subcategories'];
+  const isTransactionApprovalCategory =
+    categoryCode?.trim().toUpperCase() ===
+    AdditionalSettingsCodeEnum.TransactionApprovalPolicy;
+
+  useEffect(() => {
+    if (!isTransactionApprovalCategory) {
+      return;
+    }
+
+    const predefinedRows = getAdditionalSettingSubcategoryCodeOptions(categoryCode).map(option => ({
+      title: option.label,
+      code: option.value,
+      value: 'NO',
+      categoryType: 'boolean',
+    }));
+
+    const currentCodes = (subcategories ?? [])
+      .map(subcategory => String(subcategory?.code ?? '').trim().toUpperCase())
+      .filter(Boolean);
+    const requiredCodes = predefinedRows.map(row => row.code.trim().toUpperCase());
+    const hasAllPredefinedRows =
+      currentCodes.length === requiredCodes.length &&
+      requiredCodes.every(code => currentCodes.includes(code));
+
+    if (!hasAllPredefinedRows) {
+      replace(predefinedRows);
+    }
+  }, [categoryCode, isTransactionApprovalCategory, replace, subcategories]);
 
   useEffect(() => {
     const allowedCodes = new Set(
@@ -285,17 +321,19 @@ const SubcategoryFields = ({
           </p>
         </div>
 
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={isSubmitting}
-          onClick={() => append(createEmptyAdditionalSettingSubcategoryFormValues())}
-        >
-          {fields.length === 0
-            ? ADDITIONAL_SETTINGS_TEXTS.ADD_SUBCATEGORY
-            : ADDITIONAL_SETTINGS_TEXTS.ADD_MORE}
-        </Button>
+        {!isTransactionApprovalCategory ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={isSubmitting}
+            onClick={() => append(createEmptyAdditionalSettingSubcategoryFormValues())}
+          >
+            {fields.length === 0
+              ? ADDITIONAL_SETTINGS_TEXTS.ADD_SUBCATEGORY
+              : ADDITIONAL_SETTINGS_TEXTS.ADD_MORE}
+          </Button>
+        ) : null}
       </div>
 
       {fields.length === 0 ? (
@@ -313,6 +351,7 @@ const SubcategoryFields = ({
               loadTypeOptions={loadTypeOptions}
               remove={remove}
               fieldsLength={fields.length}
+              isFixed={isTransactionApprovalCategory}
             />
           ))}
         </div>

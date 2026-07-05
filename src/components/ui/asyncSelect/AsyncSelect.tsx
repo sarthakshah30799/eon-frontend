@@ -213,15 +213,12 @@ const AsyncSelectComponent = React.forwardRef<
               ? '#64748b'
               : '#94a3b8',
         },
-        borderRadius: '6px',
         boxShadow: error
           ? '0 0 0 1px var(--color-error-500)'
           : state.isFocused
             ? '0 0 0 1px #64748b'
             : 'none',
-        minHeight: '34px',
-        height: '34px',
-        backgroundColor: 'var(--color-surface-primary)',
+        minHeight: '1.875rem',
         cursor: state.isDisabled ? 'not-allowed' : 'default',
       }),
       loadingIndicator: base => ({
@@ -241,6 +238,7 @@ const AsyncSelectComponent = React.forwardRef<
           {isCreatable ? (
             <AsyncCreatableSelect
               ref={ref}
+              classNamePrefix="react-select"
               isSearchable={isSearchable}
               inputValue={inputValue}
               cacheOptions={!pagination}
@@ -259,6 +257,7 @@ const AsyncSelectComponent = React.forwardRef<
           ) : (
             <AsyncSelectBase
               ref={ref}
+              classNamePrefix="react-select"
               isSearchable={isSearchable}
               inputValue={inputValue}
               cacheOptions={!pagination}

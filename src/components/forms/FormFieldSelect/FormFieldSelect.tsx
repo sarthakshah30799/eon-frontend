@@ -43,7 +43,21 @@ const flattenOptions = (
 const normalizeComparableValue = (value: unknown) =>
   String(value ?? '')
     .trim()
-    .toLowerCase();
+    .toLowerCase()
+    .replace(/[_\s-]/g, '');
+
+const getComparableOptionValues = (option: AsyncSelectOption) => [
+  normalizeComparableValue(option.value),
+  normalizeComparableValue(option.label),
+];
+
+const getComparableFieldValue = (value: unknown) => {
+  if (value && typeof value === 'object' && 'value' in value) {
+    return normalizeComparableValue((value as { value?: unknown }).value);
+  }
+
+  return normalizeComparableValue(value);
+};
 
 export const FormFieldSelect = ({
   name,
@@ -98,8 +112,9 @@ export const FormFieldSelect = ({
             .map(selectedValue =>
               options.find(
                 option =>
-                  normalizeComparableValue(option.value) ===
-                  normalizeComparableValue(selectedValue)
+                  getComparableOptionValues(option).includes(
+                    getComparableFieldValue(selectedValue)
+                  )
               )
             )
             .filter((option): option is AsyncSelectOption => Boolean(option));
@@ -127,15 +142,16 @@ export const FormFieldSelect = ({
         return;
       }
 
-      try {
-        const response = await loadOptions('');
-        const options = flattenOptions(response);
-        const nextOption =
-          options.find(
-            option =>
-              normalizeComparableValue(option.value) ===
-              normalizeComparableValue(field.value)
-          ) ?? null;
+        try {
+          const response = await loadOptions('');
+          const options = flattenOptions(response);
+          const nextOption =
+            options.find(
+              option =>
+                getComparableOptionValues(option).includes(
+                  getComparableFieldValue(field.value)
+                )
+            ) ?? null;
 
         if (isActive) {
           setSelectedOption(nextOption);

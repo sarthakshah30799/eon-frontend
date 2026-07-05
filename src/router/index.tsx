@@ -179,14 +179,14 @@ const PartyProfileEditPage = lazy(() => import('../pages/party-profiles/edit/[id
 const PartyProfileDocumentsPage = lazy(
   () => import('../pages/party-profiles/documents/[id]')
 );
-const BuyFromPage = lazy(
-  () => import('../pages/buy-from/[slug]')
+const PurchasePage = lazy(
+  () => import('../pages/purchase/[slug]')
 );
-const BuyFromCreatePage = lazy(
-  () => import('../pages/buy-from/[slug]/create')
+const PurchaseCreatePage = lazy(
+  () => import('../pages/purchase/[slug]/create')
 );
-const BuyFromDocumentsPage = lazy(
-  () => import('../pages/buy-from/[slug]/documents')
+const PurchaseDocumentsPage = lazy(
+  () => import('../pages/purchase/[slug]/documents')
 );
 
 const MasterPagesPage = lazy(
@@ -665,26 +665,26 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/buy-from/:slug',
+    path: '/purchase/:slug',
     element: (
       <ProtectedLayout>
-        <BuyFromPage />
+        <PurchasePage />
       </ProtectedLayout>
     ),
   },
   {
-    path: '/buy-from/:slug/create',
+    path: '/purchase/:slug/create',
     element: (
       <ProtectedLayout>
-        <BuyFromCreatePage />
+        <PurchaseCreatePage />
       </ProtectedLayout>
     ),
   },
   {
-    path: '/buy-from/:slug/documents',
+    path: '/purchase/:slug/documents',
     element: (
       <ProtectedLayout>
-        <BuyFromDocumentsPage />
+        <PurchaseDocumentsPage />
       </ProtectedLayout>
     ),
   },

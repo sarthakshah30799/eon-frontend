@@ -15,7 +15,7 @@ export const useSaveChequeBookAllocations = () => {
       const mapped = allocations.map(a => ({
         checkBookId: a.checkBookId,
         bookNo: a.bookNo,
-        assignedToUserId: a.cashierId,
+        userId: a.cashierId,
         remarks: a.remarks,
       }));
       return chequebookApi.saveAllocations(mapped);

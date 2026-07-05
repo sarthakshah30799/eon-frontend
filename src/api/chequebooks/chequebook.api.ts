@@ -46,7 +46,7 @@ export interface IApproveRejectChequeBook {
 export interface IChequeBookAllocationPayload {
   checkBookId: string;
   bookNo: number;
-  assignedToUserId: string;
+  userId: string;
   remarks?: string;
 }
 
@@ -204,9 +204,9 @@ export const chequebookApi = {
 export interface IChequeBookPageTracking {
   id: string;
   checkBookId: string;
-  assignedToUserId: string;
+  userId: string;
   pageNo: number;
-  status: 'ALLOCATED' | 'USED' | 'VOID';
+  isVoided: boolean;
   remarks?: string;
   updatedBy?: string;
   createdAt: string;

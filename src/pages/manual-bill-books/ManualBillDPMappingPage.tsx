@@ -11,7 +11,7 @@ interface IDPMappingRow {
   mvNoFrom: number;
   mvNoTo: number;
   qty: number;
-  assignedToUserId: string;
+  userId: string;
   assignedToUserName: string;
   pageIds: string[];
   remarks: string;
@@ -90,14 +90,14 @@ export const ManualBillDPMappingPage = () => {
         actionType: activeTab === 'map' ? 'MAP' : 'UNMAP',
       });
 
-      const mappedRows: IDPMappingRow[] = data.map((item: any, idx: number) => ({
+      const mappedRows: IDPMappingRow[] = data.map((item: any) => ({
         manualBookId: item.manualBookId,
         bookNo: item.bookNo,
         transactionType: item.transactionType,
         mvNoFrom: item.mvNoFrom,
         mvNoTo: item.mvNoTo,
         qty: item.qty,
-        assignedToUserId: item.assignedToUserId,
+        userId: item.userId,
         assignedToUserName: item.assignedToUserName,
         pageIds: item.pageIds,
         remarks: item.remarks || '',
@@ -148,7 +148,6 @@ export const ManualBillDPMappingPage = () => {
 
     try {
       setIsSaving(true);
-      const allPageIds = checkedRows.flatMap(r => r.pageIds);
 
       if (activeTab === 'map') {
         // Map to DP

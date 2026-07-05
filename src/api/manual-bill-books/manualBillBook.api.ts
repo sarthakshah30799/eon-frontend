@@ -44,7 +44,7 @@ export interface IApproveRejectManualBook {
 export interface IManualBookAssignmentPayload {
   manualBookId: string;
   bookNo: number;
-  assignedToUserId: string;
+  userId: string;
   remarks?: string;
 }
 
@@ -189,6 +189,7 @@ export const manualBillBookApi = {
       `/manual-bill-books/pages/search?pageNo=${pageNo}`
     );
     if (res.error) throw new Error(res.error);
+    if (!res.data) throw new Error('Page not found');
     return res.data;
   },
 
@@ -241,9 +242,9 @@ export const manualBillBookApi = {
 export interface IManualBookPageTracking {
   id: string;
   manualBookId: string;
-  assignedToUserId: string;
+  userId: string;
   pageNo: number;
-  status: 'ALLOCATED' | 'USED' | 'VOID';
+  isVoided: boolean;
   remarks?: string;
   updatedBy?: string;
   createdAt: string;

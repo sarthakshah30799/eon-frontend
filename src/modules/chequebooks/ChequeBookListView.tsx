@@ -601,7 +601,7 @@ export const ChequeBookListView = () => {
             title={`Leaf range of Book #${selectedAllocation.bookNo}`}
             pages={pages.map(p => ({
               pageNo: p.pageNo,
-              status: p.status,
+              isVoided: p.isVoided,
               remarks: p.remarks,
             }))}
             isLoading={isLoadingPages}

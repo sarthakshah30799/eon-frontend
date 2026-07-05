@@ -180,7 +180,7 @@ export const ManagerToCashierAllocationPage = () => {
       const payload = checkedRows.map(r => ({
         manualBookId: r.bookId,
         bookNo: r.bookNo,
-        assignedToUserId: r.allocatedCashierId,
+        userId: r.allocatedCashierId,
         remarks: r.remarks || undefined,
       }));
 

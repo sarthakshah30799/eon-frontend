@@ -15,7 +15,7 @@ interface IAllocationRow {
   qty: number;
   hoRemarks: string;
   // Allocation state
-  allocatedCashierId: string;
+  allocatedCashierId: string; // holds the user id
   remarks: string;
   isCheck: boolean;
 }
@@ -38,7 +38,7 @@ export const ManagerToCashierAllocationPage = () => {
   const [rows, setRows] = useState<IAllocationRow[]>([]);
   const [hasProcessed, setHasProcessed] = useState(false);
 
-  // Bulk allocate cashier
+  // Bulk allocate user
   const [bulkCashierId, setBulkCashierId] = useState('');
 
   useEffect(() => {
@@ -46,10 +46,10 @@ export const ManagerToCashierAllocationPage = () => {
       if (!activeBranchId) return;
       try {
         setIsLoadingOptions(true);
-        const data = await manualBillBookApi.getCashiers(activeBranchId);
+        const data = await manualBillBookApi.getAuthorizedUsers(activeBranchId);
         setCashiers(data);
       } catch (err: any) {
-        toast.error(err.message || 'Failed to load cashier list.');
+        toast.error(err.message || 'Failed to load user list.');
       } finally {
         setIsLoadingOptions(false);
       }
@@ -151,7 +151,7 @@ export const ManagerToCashierAllocationPage = () => {
 
   const handleApplyBulkCashier = () => {
     if (!bulkCashierId) {
-      toast.error('Please select a cashier first.');
+      toast.error('Please select a user first.');
       return;
     }
     const checkedCount = rows.filter(r => r.isCheck).length;
@@ -160,7 +160,7 @@ export const ManagerToCashierAllocationPage = () => {
       return;
     }
     setRows(prev => prev.map(r => r.isCheck ? { ...r, allocatedCashierId: bulkCashierId } : r));
-    toast.success(`Set cashier for ${checkedCount} selected rows.`);
+    toast.success(`Set user for ${checkedCount} selected rows.`);
   };
 
   const handleSaveAllocation = async () => {
@@ -171,7 +171,7 @@ export const ManagerToCashierAllocationPage = () => {
     }
     const invalidRows = checkedRows.filter(r => !r.allocatedCashierId);
     if (invalidRows.length > 0) {
-      toast.error('Please select a cashier for all checked allocations.');
+      toast.error('Please select a user for all checked allocations.');
       return;
     }
 
@@ -180,12 +180,12 @@ export const ManagerToCashierAllocationPage = () => {
       const payload = checkedRows.map(r => ({
         manualBookId: r.bookId,
         bookNo: r.bookNo,
-        cashierId: r.allocatedCashierId,
+        assignedToUserId: r.allocatedCashierId,
         remarks: r.remarks || undefined,
       }));
 
       await manualBillBookApi.saveAllocations(payload);
-      toast.success('Manager to Cashier allocations saved successfully.');
+      toast.success('Manager to User page allocations saved successfully.');
       
       // Reload values
       await handleProcess();
@@ -210,9 +210,9 @@ export const ManagerToCashierAllocationPage = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-1.5 border-b border-slate-200 pb-5">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Manual Bill Cashier Allocation</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Manual Bill Book Allocation</h1>
         <p className="text-sm text-slate-500">
-          Allocate individual manual bill books to cashiers at your branch.
+          Allocate individual manual bill book pages to users at your branch.
         </p>
       </div>
 
@@ -282,7 +282,7 @@ export const ManagerToCashierAllocationPage = () => {
             {/* Bulk Assign Cashier Control */}
             {rows.length > 0 && (
               <div className="flex items-center gap-3">
-                <span className="text-xs font-semibold text-slate-600">Allocate Cashier:</span>
+                <span className="text-xs font-semibold text-slate-600">Allocate User:</span>
                 {isLoadingOptions ? (
                   <span className="text-xs text-slate-500">Loading...</span>
                 ) : (
@@ -324,7 +324,7 @@ export const ManagerToCashierAllocationPage = () => {
                         className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 cursor-pointer"
                       />
                     </th>
-                    <th className="px-4 py-3">Allocate Cashier</th>
+                    <th className="px-4 py-3">Allocate User</th>
                     <th className="px-4 py-3">Remarks</th>
                     <th className="px-4 py-3">Request No</th>
                     <th className="px-4 py-3">Request Date</th>

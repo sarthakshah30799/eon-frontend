@@ -12,6 +12,7 @@ import {
 } from '@/components/forms';
 import { branchProfileApi } from '@/api/branchProfile/branchProfile.api';
 import { manualBillBookApi } from '@/api';
+import { useAuth } from '@/lib/AuthContext';
 import toast from 'react-hot-toast';
 
 export const bulkDispatchSchema = yup.object().shape({
@@ -108,6 +109,9 @@ const BulkDispatchFormFields = () => {
     }
   }, [bookNoFrom, bookNoTo, vouchersPerBook, mvNoFrom, form]);
 
+  const { user } = useAuth();
+  const isAdmin = user?.isAdmin === true;
+
   const loadBranches = async () => {
     try {
       const branches = await branchProfileApi.getBranchProfiles({
@@ -153,6 +157,7 @@ const BulkDispatchFormFields = () => {
         name="branchId"
         label="Branch"
         loadOptions={loadBranches}
+        disabled={!isAdmin}
       />
       <FormFieldSelect
         name="transactionType"
@@ -182,6 +187,8 @@ const BulkDispatchFormFields = () => {
 
 export const BulkDispatchForm = ({ onSuccess }: BulkDispatchFormProps) => {
   const navigate = useNavigate();
+  const { user, activeBranchId } = useAuth();
+  const isAdmin = user?.isAdmin === true;
 
   const onCancel = () => {
     navigate('/admin/manual-bill-books');
@@ -207,7 +214,7 @@ export const BulkDispatchForm = ({ onSuccess }: BulkDispatchFormProps) => {
   const defaultValues = {
     dispatchDate: new Date().toISOString().slice(0, 10),
     no: '',
-    branchId: '',
+    branchId: isAdmin ? '' : (activeBranchId || ''),
     transactionType: '',
     bookNoFrom: '',
     bookNoTo: '',

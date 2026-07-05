@@ -4,9 +4,10 @@ import { useAuth } from '@/lib/AuthContext';
 import { chequebookApi, type IChequeBook } from '@/api';
 import toast from 'react-hot-toast';
 import {
-  FormFieldCategoryOption,
+  FormFieldSelect,
   FormFieldDatePicker,
 } from '@/components/forms';
+import { accountProfileApi } from '@/api/accountProfile/accountProfile.api';
 import {
   AsyncSelect,
   Button,
@@ -23,7 +24,6 @@ import {
   ChequeBookStatusEnum,
   type ChequeBookStatus,
 } from '@/modules/chequebooks/types';
-import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 
 export const ChequeBookAcknowledgementPage = () => {
   const { activeBranchId } = useAuth();
@@ -33,19 +33,19 @@ export const ChequeBookAcknowledgementPage = () => {
     return d.toISOString().slice(0, 10);
   };
   const txnTypeForm = useForm<{
-    transactionType: string;
+    bankAccountCode: string;
     fromDate: string;
     toDate: string;
   }>({
     defaultValues: {
-      transactionType: '',
+      bankAccountCode: '',
       fromDate: getPastDateStr(30),
       toDate: getPastDateStr(0),
     },
   });
-  const watchedTransactionType = useWatch({
+  const watchedBankAccountCode = useWatch({
     control: txnTypeForm.control,
-    name: 'transactionType',
+    name: 'bankAccountCode',
   });
   const watchedFromDate = useWatch({
     control: txnTypeForm.control,
@@ -56,7 +56,7 @@ export const ChequeBookAcknowledgementPage = () => {
     name: 'toDate',
   });
 
-  const currentTransactionType = watchedTransactionType || 'ALL';
+  const currentBankAccountCode = watchedBankAccountCode || 'ALL';
   const currentFromDate = watchedFromDate || '';
   const currentToDate = watchedToDate || '';
 
@@ -77,6 +77,12 @@ export const ChequeBookAcknowledgementPage = () => {
   const [rowEdits, setRowEdits] = useState<
     Record<string, ChequeBookAcknowledgementRowEdit>
   >({});
+
+  const [prevBankAccountCode, setPrevBankAccountCode] = useState(watchedBankAccountCode);
+  if (watchedBankAccountCode !== prevBankAccountCode) {
+    setPrevBankAccountCode(watchedBankAccountCode);
+    setSelectedBookId(null);
+  }
 
   const statusOptions = [
     {
@@ -134,7 +140,7 @@ export const ChequeBookAcknowledgementPage = () => {
       const data = await chequebookApi.findAll(
         activeBranchId,
         searchStatus || undefined,
-        currentTransactionType === 'ALL' ? undefined : currentTransactionType,
+        currentBankAccountCode === 'ALL' ? undefined : currentBankAccountCode,
         currentFromDate || undefined,
         currentToDate || undefined
       );
@@ -218,7 +224,7 @@ export const ChequeBookAcknowledgementPage = () => {
   const handleRowClick = (book: IChequeBook) => {
     // Pre-populate filter parameters
     setSearchStatus(book.status as ChequeBookStatus);
-    txnTypeForm.setValue('transactionType', book.transactionType);
+    txnTypeForm.setValue('bankAccountCode', book.bankAccountCode);
 
     const dispatchDate = new Date(book.dispatchDate);
     const fromD = new Date(dispatchDate);
@@ -334,14 +340,39 @@ export const ChequeBookAcknowledgementPage = () => {
 
               <FormProvider {...txnTypeForm}>
                 <div>
-                <FormFieldCategoryOption
-                  name="transactionType"
-                  label="Transaction Type"
-                  code={CategoryOptionCodeEnum.ChequeBookTransactionType}
+                <FormFieldSelect
+                  name="bankAccountCode"
+                  label="Bank Account Code"
                   placeholder="All"
-                  isSearchable
-                  isClearable
-                  onChange={() => setSelectedBookId(null)}
+                  loadOptions={async (inputValue) => {
+                    try {
+                      const response = await accountProfileApi.getAccountProfiles({
+                        page: 1,
+                        limit: 100,
+                        search: inputValue,
+                        active: true,
+                      });
+                      const bankAccounts = (response.data || []).filter(acc => {
+                        return (
+                          (acc.bankNature && acc.bankNature.value !== 'NONE') ||
+                          (acc.accountType && acc.accountType.value === 'BANK LEDGER') ||
+                          (acc.financialCode && acc.financialCode === 'BANKBL')
+                        );
+                      });
+                      return {
+                        options: bankAccounts.map(acc => ({
+                          value: acc.id,
+                          label: `${acc.accountCode} - ${acc.accountName}`,
+                        })),
+                        hasMore: false,
+                      };
+                    } catch {
+                      return {
+                        options: [],
+                        hasMore: false,
+                      };
+                    }
+                  }}
                 />
               </div>
 

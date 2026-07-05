@@ -3,7 +3,7 @@ import * as yup from 'yup';
 export const bulkDispatchSchema = yup.object().shape({
   dispatchDate: yup.string().required('Date is required'),
   branchId: yup.string().required('Branch is required'),
-  transactionType: yup.string().required('Transaction Type is required'),
+  bankAccountCode: yup.string().required('Bank Account Code is required'),
   bookNoFrom: yup
     .number()
     .typeError('Must be a number')

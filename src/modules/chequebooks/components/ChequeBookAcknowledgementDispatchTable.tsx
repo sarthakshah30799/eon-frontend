@@ -72,6 +72,11 @@ export const ChequeBookAcknowledgementDispatchTable = ({
       {
         accessorKey: 'assignedTo',
         header: 'Assigned To',
+        cell: ({ row }) => (
+          <span className="whitespace-nowrap text-text-secondary">
+            {row.original.assignedToName || row.original.assignedTo}
+          </span>
+        ),
       },
       {
         accessorKey: 'status',

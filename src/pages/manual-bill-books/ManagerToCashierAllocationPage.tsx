@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import { manualBillBookApi } from '@/api';
+import { categoryOptionsApi } from '@/api/categoryOptions/categoryOptions.api';
+import { Button, Input, AsyncSelect } from '@/components/ui';
 import toast from 'react-hot-toast';
 
 interface IAllocationRow {
@@ -30,6 +32,7 @@ export const ManagerToCashierAllocationPage = () => {
   
   // Options
   const [cashiers, setCashiers] = useState<Array<{ id: string; name: string }>>([]);
+  const [txnTypes, setTxnTypes] = useState<Array<{ id: string; label: string }>>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingOptions, setIsLoadingOptions] = useState(true);
@@ -40,6 +43,18 @@ export const ManagerToCashierAllocationPage = () => {
 
   // Bulk allocate user
   const [bulkCashierId, setBulkCashierId] = useState('');
+
+  useEffect(() => {
+    const fetchTxnTypes = async () => {
+      try {
+        const options = await categoryOptionsApi.getCategoryOptionsByCode('TRANSACTION');
+        setTxnTypes(options.map(o => ({ id: o.id, label: o.label })));
+      } catch (err) {
+        console.error('Failed to load transaction types', err);
+      }
+    };
+    fetchTxnTypes();
+  }, []);
 
   useEffect(() => {
     const fetchOptions = async () => {
@@ -63,7 +78,7 @@ export const ManagerToCashierAllocationPage = () => {
     const toVal = parseInt(bookNoToStr, 10);
 
     if (isNaN(fromVal) || isNaN(toVal) || fromVal < 1 || toVal < fromVal) {
-      toast.error('Please enter a valid Book range (From <= To).');
+      toast.error("Please enter a valid book range (Book No From must be less than or equal to Book No To).");
       return;
     }
 
@@ -106,7 +121,7 @@ export const ManagerToCashierAllocationPage = () => {
             bookId: book.id,
             requestNo: book.no,
             requestDate: new Date(book.dispatchDate).toLocaleDateString() + ' 00:00:00',
-            transactionType: book.transactionType,
+            transactionType: book.transactionTypeLabel || book.transactionType,
             bookNo: i,
             mvNoFrom: bookMvNoFrom,
             mvNoTo: bookMvNoTo,
@@ -221,55 +236,61 @@ export const ManagerToCashierAllocationPage = () => {
         <h4 className="text-xs font-bold text-sky-800 uppercase tracking-wider mb-4 border-b border-slate-100 pb-2">
           Manual Bill
         </h4>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 align-end">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
           <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1.5">Transaction Type</label>
-            <select
-              value={txnType}
-              onChange={e => setTxnType(e.target.value)}
-              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500"
-            >
-              <option value="ALL">ALL</option>
-              <option value="PB-RETAIL PURCHASE">PB-RETAIL PURCHASE</option>
-              <option value="PS-RETAIL SALE">PS-RETAIL SALE</option>
-              <option value="FB-BULK BUY">FB-BULK BUY</option>
-              <option value="FS-BULK SALE">FS-BULK SALE</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1.5">Book No From</label>
-            <input
-              type="number"
-              min="1"
-              value={bookNoFromStr}
-              onChange={e => setBookNoFromStr(e.target.value)}
-              placeholder="e.g. 11"
-              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500"
+            <AsyncSelect
+              label="Transaction Type"
+              placeholder="Select Type"
+              value={
+                txnType === 'ALL'
+                  ? { value: 'ALL', label: 'ALL' }
+                  : txnTypes.find(t => t.id === txnType)
+                    ? { value: txnType, label: txnTypes.find(t => t.id === txnType)!.label }
+                    : null
+              }
+              onChange={(option: any) => setTxnType(option?.value || 'ALL')}
+              loadOptions={async () => ({
+                options: [
+                  { value: 'ALL', label: 'ALL' },
+                  ...txnTypes.map(t => ({ value: t.id, label: t.label }))
+                ],
+                hasMore: false
+              })}
+              isClearable={false}
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1.5">Book No To</label>
-            <input
+            <Input
               type="number"
+              label="Book No From"
+              min="1"
+              value={bookNoFromStr}
+              onChange={e => setBookNoFromStr(e.target.value)}
+              placeholder="e.g. 11"
+              valueTransform="none"
+              classes={{ container: 'max-w-none' }}
+            />
+          </div>
+
+          <div>
+            <Input
+              type="number"
+              label="Book No To"
               min="1"
               value={bookNoToStr}
               onChange={e => setBookNoToStr(e.target.value)}
               placeholder="e.g. 20"
-              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500"
+              valueTransform="none"
+              classes={{ container: 'max-w-none' }}
             />
           </div>
         </div>
 
         <div className="flex gap-3 mt-6">
-          <button
-            onClick={handleProcess}
-            disabled={isProcessing}
-            className="cursor-pointer inline-flex items-center justify-center rounded-md bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-500 transition disabled:opacity-50"
-          >
+          <Button onClick={handleProcess} disabled={isProcessing}>
             {isProcessing ? 'Processing...' : 'Process'}
-          </button>
+          </Button>
         </div>
       </div>
 

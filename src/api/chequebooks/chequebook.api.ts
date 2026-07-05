@@ -16,6 +16,7 @@ export interface IChequeBook {
   mvNoFrom: number;
   mvNoTo: number;
   assignedTo: string;
+  assignedToName?: string;
   remarks?: string;
   status: string; // 'Pending' | 'Approved' | 'Rejected'
   fromDate?: string;
@@ -113,6 +114,14 @@ export const chequebookApi = {
   getAuthorizedUsers: async (branchId: string): Promise<Array<{ id: string; name: string }>> => {
     const res = await apiClient.get<Array<{ id: string; name: string }>>(
       `/chequebooks/users?branchId=${encodeURIComponent(branchId)}`
+    );
+    if (res.error) throw new Error(res.error);
+    return res.data || [];
+  },
+
+  getBranchManagers: async (branchId: string): Promise<Array<{ id: string; name: string }>> => {
+    const res = await apiClient.get<Array<{ id: string; name: string }>>(
+      `/chequebooks/branch-managers?branchId=${encodeURIComponent(branchId)}`
     );
     if (res.error) throw new Error(res.error);
     return res.data || [];

@@ -405,7 +405,7 @@ export const ChequeBookListView = () => {
                   Assigned To
                 </span>
                 <span className="text-slate-800">
-                  {selectedBook.assignedTo}
+                  {selectedBook.assignedToName || selectedBook.assignedTo}
                 </span>
               </div>
               <div className="col-span-2">

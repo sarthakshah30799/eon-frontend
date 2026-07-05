@@ -8,12 +8,14 @@ export interface IManualBook {
   branchCode?: string;
   branchName?: string;
   transactionType: string;
+  transactionTypeLabel?: string;
   bookNoFrom: number;
   bookNoTo: number;
   vouchersPerBook: number;
   mvNoFrom: number;
   mvNoTo: number;
   assignedTo: string;
+  assignedToName?: string;
   remarks?: string;
   status: string; // 'Pending' | 'Approved' | 'Rejected'
   fromDate?: string;
@@ -111,6 +113,14 @@ export const manualBillBookApi = {
   getAuthorizedUsers: async (branchId: string): Promise<Array<{ id: string; name: string }>> => {
     const res = await apiClient.get<Array<{ id: string; name: string }>>(
       `/manual-bill-books/users?branchId=${encodeURIComponent(branchId)}`
+    );
+    if (res.error) throw new Error(res.error);
+    return res.data || [];
+  },
+
+  getBranchManagers: async (branchId: string): Promise<Array<{ id: string; name: string }>> => {
+    const res = await apiClient.get<Array<{ id: string; name: string }>>(
+      `/manual-bill-books/branch-managers?branchId=${encodeURIComponent(branchId)}`
     );
     if (res.error) throw new Error(res.error);
     return res.data || [];

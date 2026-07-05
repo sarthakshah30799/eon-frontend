@@ -11,6 +11,7 @@ import {
   FormFieldInput,
   FormFieldSelect,
   FormFieldStateDropdown,
+  FormFieldDatePicker,
 } from '@/components/forms';
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import { branchProfileSchema } from '../schema';
@@ -284,19 +285,19 @@ const BranchProfileFormFields = ({
       </CardSection>
 
       <CardSection heading="Relations & Status">
-          <FormFieldSelect
-            name="connectCounterIds"
-            label="Connect Counters"
-            placeholder="Select counters to link"
-            loadOptions={connectedCounterLoadOptions}
-            pagination={false}
-            isLoading={isCountersLoading || isCountersFetching}
-            defaultOptions={connectedCounterOptions}
-            disabled={isSubmitting}
-            isMulti
-            closeMenuOnSelect={false}
-            className={['md:col-span-2 lg:col-span-4'].join(' ')}
-          />
+        <FormFieldSelect
+          name="connectCounterIds"
+          label="Connect Counters"
+          placeholder="Select counters to link"
+          loadOptions={connectedCounterLoadOptions}
+          pagination={false}
+          isLoading={isCountersLoading || isCountersFetching}
+          defaultOptions={connectedCounterOptions}
+          disabled={isSubmitting}
+          isMulti
+          closeMenuOnSelect={false}
+          className={['md:col-span-2 lg:col-span-4'].join(' ')}
+        />
         <div className="mt-2 grid gap-2 md:col-span-2 md:grid-cols-2 lg:col-span-4">
           <FormFieldCheckbox
             name="isHeadOffice"

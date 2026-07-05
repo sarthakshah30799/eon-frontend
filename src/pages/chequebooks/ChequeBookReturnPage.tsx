@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 import { Button, Input } from '@/components/ui';
 import { FormFieldSelect } from '@/components/forms';
 import { accountProfileApi } from '@/api/accountProfile/accountProfile.api';
-import { chequebookApi } from '@/api';
+import { chequebookApi, type IChequeBookCashierReturnGroup } from '@/api';
 
 interface IReturnRow {
   checkBookId: string;
@@ -47,6 +47,9 @@ export const ChequeBookReturnPage = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
+  const getErrorMessage = (error: unknown, fallback: string) =>
+    error instanceof Error ? error.message : fallback;
+
   const handleProcess = async () => {
     if (!activeBranchId) return;
     const bookNo = parseInt(bookNoStr, 10);
@@ -71,7 +74,7 @@ export const ChequeBookReturnPage = () => {
         chequeNoTo: toVal,
       });
 
-      const matchedRows: IReturnRow[] = data.map((item: any) => ({
+      const matchedRows: IReturnRow[] = data.map((item: IChequeBookCashierReturnGroup) => ({
         checkBookId: item.checkBookId,
         bookNo: item.bookNo,
         bankAccountCode: item.bankAccountCode,
@@ -91,8 +94,8 @@ export const ChequeBookReturnPage = () => {
       } else {
         toast.success(`Found ${matchedRows.length} page groups.`);
       }
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to search allocated leaves.');
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, 'Failed to search allocated leaves.'));
     } finally {
       setIsProcessing(false);
     }
@@ -123,8 +126,8 @@ export const ChequeBookReturnPage = () => {
       toast.success('Cashier leaves returned to Manager successfully.');
       
       await handleProcess();
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to return pages.');
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, 'Failed to return pages.'));
     } finally {
       setIsSaving(false);
     }

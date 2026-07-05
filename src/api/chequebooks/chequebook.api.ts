@@ -46,7 +46,7 @@ export interface IApproveRejectChequeBook {
 export interface IChequeBookAllocationPayload {
   checkBookId: string;
   bookNo: number;
-  assignedToUserId: string;
+  userId: string;
   remarks?: string;
 }
 
@@ -56,6 +56,18 @@ export interface IChequeBookAllocation {
   bookNo: number;
   cashierId: string;
   remarks?: string;
+}
+
+export interface IChequeBookCashierReturnGroup {
+  checkBookId: string;
+  bookNo: number;
+  bankAccountCode: string;
+  mvNoFrom: number;
+  mvNoTo: number;
+  qty: number;
+  pageIds: string[];
+  pageNos: number[];
+  remarks: string;
 }
 
 export const chequebookApi = {
@@ -152,6 +164,24 @@ export const chequebookApi = {
     return res.data || [];
   },
 
+  getSelectablePages: async (params: {
+    branchId?: string;
+    accountId?: string;
+    userId?: string;
+  }): Promise<IChequeBookPageTracking[]> => {
+    const query = new URLSearchParams();
+    if (params.branchId) query.set('branchId', params.branchId);
+    if (params.accountId) query.set('accountId', params.accountId);
+    if (params.userId) query.set('userId', params.userId);
+
+    const suffix = query.toString() ? `?${query.toString()}` : '';
+    const res = await apiClient.get<IChequeBookPageTracking[]>(
+      `/chequebooks/pages/selectable${suffix}`
+    );
+    if (res.error) throw new Error(res.error);
+    return res.data || [];
+  },
+
   updatePagesStatus: async (
     pageNos: number[],
     status: 'VOID',
@@ -188,8 +218,8 @@ export const chequebookApi = {
     bookNo: number;
     chequeNoFrom: number;
     chequeNoTo: number;
-  }): Promise<any[]> => {
-    const res = await apiClient.get<any[]>(
+  }): Promise<IChequeBookCashierReturnGroup[]> => {
+    const res = await apiClient.get<IChequeBookCashierReturnGroup[]>(
       `/chequebooks/cashier-return/search?bankAccountCode=${encodeURIComponent(
         params.bankAccountCode
       )}&bookNo=${params.bookNo}&chequeNoFrom=${params.chequeNoFrom}&chequeNoTo=${
@@ -204,11 +234,22 @@ export const chequebookApi = {
 export interface IChequeBookPageTracking {
   id: string;
   checkBookId: string;
-  assignedToUserId: string;
+  userId: string;
   pageNo: number;
   status: 'ALLOCATED' | 'USED' | 'VOID';
   remarks?: string;
   updatedBy?: string;
   createdAt: string;
   updatedAt: string;
+  checkBook?: {
+    id: string;
+    no: string;
+    bookNoFrom: number;
+    bookNoTo: number;
+    vouchersPerBook: number;
+    mvNoFrom: number;
+    mvNoTo: number;
+    branchId: string;
+    bankAccountCode: string | null;
+  } | null;
 }

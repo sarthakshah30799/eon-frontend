@@ -6,6 +6,9 @@ import type {
   IAccountProfileListQuery,
 } from '../types/accountProfileTypes';
 
+const getErrorMessage = (error: unknown, fallback: string) =>
+  error instanceof Error ? error.message : fallback;
+
 export const useListAccountProfiles = (params?: IAccountProfileListQuery) => {
   return useQuery({
     queryKey: ['account-profiles', params],
@@ -31,8 +34,8 @@ export const useCreateAccountProfile = () => {
       queryClient.invalidateQueries({ queryKey: ['account-profiles'] });
       toast.success('Account Profile created successfully!');
     },
-    onError: (error: any) => {
-      toast.error(error.message || 'Failed to create account profile');
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, 'Failed to create account profile'));
     },
   });
 
@@ -53,8 +56,8 @@ export const useUpdateAccountProfile = () => {
       queryClient.invalidateQueries({ queryKey: ['account-profile', variables.id] });
       toast.success('Account Profile updated successfully!');
     },
-    onError: (error: any) => {
-      toast.error(error.message || 'Failed to update account profile');
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, 'Failed to update account profile'));
     },
   });
 
@@ -73,8 +76,8 @@ export const useDeleteAccountProfile = () => {
       queryClient.invalidateQueries({ queryKey: ['account-profiles'] });
       toast.success('Account Profile deleted successfully!');
     },
-    onError: (error: any) => {
-      toast.error(error.message || 'Failed to delete account profile');
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, 'Failed to delete account profile'));
     },
   });
 

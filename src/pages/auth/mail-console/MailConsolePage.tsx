@@ -7,6 +7,7 @@ import { Loader } from '../../../components/ui/loader';
 
 const MailConsolePage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
+  const [reloadToken, setReloadToken] = useState(0);
 
   // SMTP Settings State
   const [host, setHost] = useState('');
@@ -21,25 +22,32 @@ const MailConsolePage: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
 
   // Fetch current config
-  const fetchConfig = async () => {
-    try {
-      const config = await mailApi.getConfig();
-      setHost(config.host || '');
-      setPort(config.port || 587);
-      setUsername(config.username || '');
-      setHasPassword(!!config.hasPassword);
-      setSenderEmail(config.senderEmail || '');
-    } catch (error) {
-      console.error('Failed to load SMTP settings:', error);
-      toast.error('Failed to load SMTP settings from backend.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchConfig();
-  }, []);
+    let cancelled = false;
+
+    void (async () => {
+      try {
+        const config = await mailApi.getConfig();
+        if (cancelled) return;
+        setHost(config.host || '');
+        setPort(config.port || 587);
+        setUsername(config.username || '');
+        setHasPassword(!!config.hasPassword);
+        setSenderEmail(config.senderEmail || '');
+      } catch (error) {
+        console.error('Failed to load SMTP settings:', error);
+        toast.error('Failed to load SMTP settings from backend.');
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [reloadToken]);
 
   const handleTestConnection = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,7 +95,8 @@ const MailConsolePage: React.FC = () => {
       });
       toast.success('SMTP configuration saved successfully!');
       setPassword(''); // Clear local password field after save
-      fetchConfig();
+      setIsLoading(true);
+      setReloadToken(token => token + 1);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to save configuration.');
     } finally {

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
-import { manualBillBookApi } from '@/api';
+import { manualBillBookApi, type IManualBookDPMappingGroup } from '@/api';
 import toast from 'react-hot-toast';
 
 interface IDPMappingRow {
@@ -11,7 +11,7 @@ interface IDPMappingRow {
   mvNoFrom: number;
   mvNoTo: number;
   qty: number;
-  assignedToUserId: string;
+  userId: string;
   assignedToUserName: string;
   pageIds: string[];
   remarks: string;
@@ -19,16 +19,15 @@ interface IDPMappingRow {
 }
 
 export const ManualBillDPMappingPage = () => {
+  const location = useLocation();
+  return <ManualBillDPMappingPageContent key={location.pathname} />;
+};
+
+const ManualBillDPMappingPageContent = () => {
   const { activeBranchId } = useAuth();
   const location = useLocation();
-  
-  const activeTab = location.pathname.includes('dp-unmapping') ? 'unmap' : 'map';
 
-  // Reset page when path changes
-  useEffect(() => {
-    setHasProcessed(false);
-    setRows([]);
-  }, [location.pathname]);
+  const activeTab = location.pathname.includes('dp-unmapping') ? 'unmap' : 'map';
 
   // Filters
   const [txnType, setTxnType] = useState('ALL');
@@ -48,6 +47,9 @@ export const ManualBillDPMappingPage = () => {
   // Bulk allocate state
   const [bulkDPId, setBulkDPId] = useState('');
 
+  const getErrorMessage = (error: unknown, fallback: string) =>
+    error instanceof Error ? error.message : fallback;
+
   // Fetch Delivery Persons for mapping
   useEffect(() => {
     const fetchDPList = async () => {
@@ -56,8 +58,8 @@ export const ManualBillDPMappingPage = () => {
         setIsLoadingDP(true);
         const data = await manualBillBookApi.getDeliveryPersons();
         setDeliveryPersons(data);
-      } catch (err: any) {
-        toast.error(err.message || 'Failed to load delivery person list.');
+      } catch (err: unknown) {
+        toast.error(getErrorMessage(err, 'Failed to load delivery person list.'));
       } finally {
         setIsLoadingDP(false);
       }
@@ -90,14 +92,14 @@ export const ManualBillDPMappingPage = () => {
         actionType: activeTab === 'map' ? 'MAP' : 'UNMAP',
       });
 
-      const mappedRows: IDPMappingRow[] = data.map((item: any, idx: number) => ({
+      const mappedRows: IDPMappingRow[] = data.map((item: IManualBookDPMappingGroup) => ({
         manualBookId: item.manualBookId,
         bookNo: item.bookNo,
         transactionType: item.transactionType,
         mvNoFrom: item.mvNoFrom,
         mvNoTo: item.mvNoTo,
         qty: item.qty,
-        assignedToUserId: item.assignedToUserId,
+        userId: item.userId,
         assignedToUserName: item.assignedToUserName,
         pageIds: item.pageIds,
         remarks: item.remarks || '',
@@ -111,8 +113,8 @@ export const ManualBillDPMappingPage = () => {
       } else {
         toast.success(`Found ${mappedRows.length} page groups.`);
       }
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to query page allocations.');
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, 'Failed to query page allocations.'));
     } finally {
       setIsProcessing(false);
     }
@@ -148,7 +150,6 @@ export const ManualBillDPMappingPage = () => {
 
     try {
       setIsSaving(true);
-      const allPageIds = checkedRows.flatMap(r => r.pageIds);
 
       if (activeTab === 'map') {
         // Map to DP
@@ -174,8 +175,8 @@ export const ManualBillDPMappingPage = () => {
       }
 
       await handleProcess();
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to save mapping.');
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, 'Failed to save mapping.'));
     } finally {
       setIsSaving(false);
     }

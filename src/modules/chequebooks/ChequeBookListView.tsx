@@ -157,7 +157,7 @@ export const ChequeBookListView = () => {
         setIsLoadingAllocations(true);
         const data = await chequebookApi.getAllocations([selectedBook.id]);
         setAllocations(data);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Failed to load allocations:', err);
       } finally {
         setIsLoadingAllocations(false);
@@ -186,8 +186,8 @@ export const ChequeBookListView = () => {
       setIsLoadingPages(true);
       const data = await chequebookApi.getPagesByBookNo(alloc.checkBookId, alloc.bookNo);
       setPages(data);
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to load page tracking records.');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to load page tracking records.');
     } finally {
       setIsLoadingPages(false);
     }
@@ -200,8 +200,8 @@ export const ChequeBookListView = () => {
       toast.success('Page status updated successfully');
       const data = await chequebookApi.getPagesByBookNo(selectedAllocation.checkBookId, selectedAllocation.bookNo);
       setPages(data);
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to update page status.');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to update page status.');
       throw err;
     }
   };
@@ -213,8 +213,8 @@ export const ChequeBookListView = () => {
       toast.success('Pages returned successfully');
       const data = await chequebookApi.getPagesByBookNo(selectedAllocation.checkBookId, selectedAllocation.bookNo);
       setPages(data);
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to return pages.');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to return pages.');
       throw err;
     }
   };

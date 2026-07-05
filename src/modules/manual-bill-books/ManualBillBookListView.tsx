@@ -162,7 +162,7 @@ export const ManualBillBookListView = () => {
         setIsLoadingAllocations(true);
         const data = await manualBillBookApi.getAllocations([selectedBook.id]);
         setAllocations(data);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Failed to load allocations:', err);
       } finally {
         setIsLoadingAllocations(false);
@@ -191,8 +191,8 @@ export const ManualBillBookListView = () => {
       setIsLoadingPages(true);
       const data = await manualBillBookApi.getPagesByBookNo(alloc.manualBookId, alloc.bookNo);
       setPages(data);
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to load page tracking records.');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to load page tracking records.');
     } finally {
       setIsLoadingPages(false);
     }
@@ -205,8 +205,8 @@ export const ManualBillBookListView = () => {
       toast.success('Page status updated successfully');
       const data = await manualBillBookApi.getPagesByBookNo(selectedAllocation.manualBookId, selectedAllocation.bookNo);
       setPages(data);
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to update page status.');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to update page status.');
       throw err;
     }
   };
@@ -218,8 +218,8 @@ export const ManualBillBookListView = () => {
       toast.success('Pages returned successfully');
       const data = await manualBillBookApi.getPagesByBookNo(selectedAllocation.manualBookId, selectedAllocation.bookNo);
       setPages(data);
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to return pages.');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to return pages.');
       throw err;
     }
   };

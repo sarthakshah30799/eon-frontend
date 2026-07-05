@@ -48,8 +48,8 @@ export const ManagerToCashierAllocationPage = () => {
         setIsLoadingOptions(true);
         const data = await manualBillBookApi.getAuthorizedUsers(activeBranchId);
         setCashiers(data);
-      } catch (err: any) {
-        toast.error(err.message || 'Failed to load user list.');
+      } catch (err: unknown) {
+        toast.error(err instanceof Error ? err.message : 'Failed to load user list.');
       } finally {
         setIsLoadingOptions(false);
       }
@@ -126,8 +126,8 @@ export const ManagerToCashierAllocationPage = () => {
       } else {
         toast.success(`Found ${generatedRows.length} books.`);
       }
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to search allocations.');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to search allocations.');
     } finally {
       setIsProcessing(false);
     }
@@ -180,7 +180,7 @@ export const ManagerToCashierAllocationPage = () => {
       const payload = checkedRows.map(r => ({
         manualBookId: r.bookId,
         bookNo: r.bookNo,
-        assignedToUserId: r.allocatedCashierId,
+        userId: r.allocatedCashierId,
         remarks: r.remarks || undefined,
       }));
 
@@ -189,8 +189,8 @@ export const ManagerToCashierAllocationPage = () => {
       
       // Reload values
       await handleProcess();
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to save allocations.');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to save allocations.');
     } finally {
       setIsSaving(false);
     }

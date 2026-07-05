@@ -30,29 +30,40 @@ export const ManualBillBookAcknowledgementPage = () => {
   const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [reloadToken, setReloadToken] = useState(0);
 
   // Record of updates: id -> { status: 'Approved' | 'Rejected', remarks: string }
   const [rowEdits, setRowEdits] = useState<Record<string, { status?: 'Approved' | 'Rejected'; remarks: string }>>({});
 
-  const fetchDispatches = async () => {
-    if (!activeBranchId) {
-      setIsLoadingList(false);
-      return;
-    }
-    try {
-      setIsLoadingList(true);
-      const data = await manualBillBookApi.findAll(activeBranchId);
-      setDispatches(data);
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to fetch dispatches list.');
-    } finally {
-      setIsLoadingList(false);
-    }
-  };
-
   useEffect(() => {
-    fetchDispatches();
-  }, [activeBranchId]);
+    let cancelled = false;
+
+    void (async () => {
+      if (!activeBranchId) {
+        if (!cancelled) {
+          setIsLoadingList(false);
+        }
+        return;
+      }
+
+      try {
+        setIsLoadingList(true);
+        const data = await manualBillBookApi.findAll(activeBranchId);
+        if (cancelled) return;
+        setDispatches(data);
+      } catch (err: unknown) {
+        toast.error(err instanceof Error ? err.message : 'Failed to fetch dispatches list.');
+      } finally {
+        if (!cancelled) {
+          setIsLoadingList(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeBranchId, reloadToken]);
 
   const handleProcessQuery = async () => {
     if (!activeBranchId) return;
@@ -71,8 +82,8 @@ export const ManualBillBookAcknowledgementPage = () => {
         setQueryResults(data);
       }
       setRowEdits({});
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to query records.');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to query records.');
     } finally {
       setIsProcessing(false);
     }
@@ -107,7 +118,7 @@ export const ManualBillBookAcknowledgementPage = () => {
 
   const handleSaveReviews = async () => {
     const reviewsToSubmit = Object.entries(rowEdits)
-      .filter(([_, edit]) => edit.status !== undefined)
+      .filter(([, edit]) => edit.status !== undefined)
       .map(([id, edit]) => ({
         id,
         status: edit.status!,
@@ -127,9 +138,9 @@ export const ManualBillBookAcknowledgementPage = () => {
       // Refresh current query to hide processed items (if filtered by Pending)
       await handleProcessQuery();
       // Also refresh master list
-      fetchDispatches();
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to save acknowledgements.');
+      setReloadToken(token => token + 1);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to save acknowledgements.');
     } finally {
       setIsSaving(false);
     }

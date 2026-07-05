@@ -101,6 +101,8 @@ export interface ITransactionEntity {
   partyProfileSnapshot?: ITransactionReferenceSnapshot | null;
   agentProfileId: string | null;
   agentProfileSnapshot?: ITransactionReferenceSnapshot | null;
+  manualBookPageId: string | null;
+  manualBookPageSnapshot?: Record<string, unknown> | null;
   transactionType: TransactionType;
   tradeMode: TradeMode;
   status: TransactionStatus;
@@ -177,6 +179,8 @@ export interface ITransactionPaymentEntity {
   lineNo: number;
   accountId: string;
   accountSnapshot: ITransactionReferenceSnapshot | null;
+  chequePageId: string | null;
+  chequePageSnapshot?: Record<string, unknown> | null;
   paymentMethod: TransactionPaymentMethod;
   referenceNumber: string | null;
   referenceDate: string | null;
@@ -246,6 +250,8 @@ export interface ICreateTransactionPaymentPayload {
   referenceNumber?: string | null;
   referenceDate?: string | null;
   branchName?: string | null;
+  chequePageId?: string | null;
+  chequePageSnapshot?: Record<string, unknown> | null;
   amount: string;
   remarks?: string | null;
 }
@@ -260,6 +266,8 @@ export interface ICreateTransactionPayload {
   requiresApproval?: boolean;
   partyProfileId: string;
   agentProfileId?: string | null;
+  manualBookPageId?: string | null;
+  manualBookPageSnapshot?: Record<string, unknown> | null;
   transactionType: TransactionType;
   tradeMode: TradeMode;
   remarks?: string | null;

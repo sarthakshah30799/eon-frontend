@@ -53,6 +53,8 @@ export interface IPurchaseFormValues {
   manualBookReferenceType: 'CASHIER' | 'DELIVERY_BOY';
   manualBookId: string;
   manualBookNo: string;
+  manualBookPageId: string;
+  manualBookPageSnapshot: Record<string, unknown> | null;
   deliveryBoyUserId: string;
   deliveryBoyUserCode: string;
   deliveryBoyUserName: string;
@@ -115,6 +117,8 @@ export interface IPurchaseSubmitPayload {
     requiresApproval: boolean;
     partyProfileId: string;
     agentProfileId?: string | null;
+    manualBookPageId?: string | null;
+    manualBookPageSnapshot?: Record<string, unknown> | null;
     transactionType: TransactionType;
     tradeMode: TradeMode;
     remarks?: string | null;
@@ -128,4 +132,14 @@ export interface IPurchaseSubmitPayload {
 
 export interface IPurchasePartyProfileResult extends IPartyProfile {
   rowKey?: string;
+}
+
+export interface IPurchaseBookPageOption {
+  id: string;
+  pageNo: number;
+  bookNo: number;
+  bookLabel: string;
+  userId: string;
+  status: string;
+  snapshot: Record<string, unknown>;
 }

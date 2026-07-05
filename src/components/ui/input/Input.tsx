@@ -76,7 +76,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         event.currentTarget.value = cleanedValue;
       }
 
-      onInput?.(event as any);
+      onInput?.(event as unknown as React.InputEvent<HTMLInputElement>);
     };
 
     return (

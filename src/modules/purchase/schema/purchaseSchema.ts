@@ -42,6 +42,8 @@ const additionalChargeSchema = yup.object({
 const paymentDetailSchema = yup.object({
   accountId: yup.string().trim().required('Account is required'),
   accountName: yup.string().trim().default(''),
+  chequePageId: yup.string().trim().required('Cheque page is required'),
+  chequePageSnapshot: yup.mixed().nullable().default(null),
   chequeNumber: yup.string().trim().required('Cheque / book reference is required'),
   chequeDate: yup.string().trim().required('Cheque date is required'),
   branchName: yup.string().trim().required('Branch name is required'),
@@ -89,6 +91,8 @@ export const purchaseFormSchema = yup.object({
   manualBookReferenceType: manualBookReferenceTypeSchema,
   manualBookId: yup.string().trim().required('Manual book reference is required'),
   manualBookNo: yup.string().trim().default(''),
+  manualBookPageId: yup.string().trim().required('Manual book page is required'),
+  manualBookPageSnapshot: yup.mixed().nullable().default(null),
   deliveryBoyUserId: yup.string().trim().when('manualBookReferenceType', {
     is: 'DELIVERY_BOY',
     then: schema => schema.required('Delivery boy is required'),

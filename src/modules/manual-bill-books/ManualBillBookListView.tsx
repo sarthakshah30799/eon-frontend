@@ -372,7 +372,7 @@ export const ManualBillBookListView = () => {
                   Txn Type
                 </span>
                 <span className="text-slate-800">
-                  {selectedBook.transactionType}
+                  {selectedBook.transactionTypeLabel || selectedBook.transactionType}
                 </span>
               </div>
               <div>
@@ -404,7 +404,7 @@ export const ManualBillBookListView = () => {
                   Assigned To
                 </span>
                 <span className="text-slate-800">
-                  {selectedBook.assignedTo}
+                  {selectedBook.assignedToName || selectedBook.assignedTo}
                 </span>
               </div>
               <div className="col-span-2">
@@ -600,7 +600,7 @@ export const ManualBillBookListView = () => {
             title={`Leaf range of Book #${selectedAllocation.bookNo}`}
             pages={pages.map(p => ({
               pageNo: p.pageNo,
-              status: p.status,
+              isVoided: p.isVoided,
               remarks: p.remarks,
             }))}
             isLoading={isLoadingPages}

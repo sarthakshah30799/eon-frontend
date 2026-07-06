@@ -3,7 +3,7 @@ import { Button, Modal } from '@/components/ui';
 
 export interface IPageItem {
   pageNo: number;
-  status: 'ALLOCATED' | 'USED' | 'VOID';
+  isVoided: boolean;
   remarks?: string;
 }
 
@@ -40,13 +40,13 @@ export const PageGrid = ({
 
   // Statistics
   const totalCount = pages.length;
-  const usedCount = pages.filter(p => p.status === 'USED').length;
-  const voidCount = pages.filter(p => p.status === 'VOID').length;
-  const allocatedCount = pages.filter(p => p.status === 'ALLOCATED').length;
+  const usedCount = 0;
+  const voidCount = pages.filter(p => p.isVoided).length;
+  const allocatedCount = pages.filter(p => !p.isVoided).length;
 
   const handlePageClick = (page: IPageItem) => {
     if (isMultiSelect) {
-      if (page.status !== 'ALLOCATED') return; // Only allow multi-selecting ALLOCATED pages for actions
+      if (page.isVoided) return; // Only allow multi-selecting non-voided pages for actions
       setSelectedPages(prev =>
         prev.includes(page.pageNo)
           ? prev.filter(no => no !== page.pageNo)
@@ -54,7 +54,7 @@ export const PageGrid = ({
       );
     } else {
       // Single click opens details / single action modal
-      if (page.status === 'ALLOCATED') {
+      if (!page.isVoided) {
         setModalState({
           open: true,
           type: 'status',
@@ -71,15 +71,11 @@ export const PageGrid = ({
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'USED':
-        return 'bg-emerald-500 text-white border-emerald-600 shadow-sm shadow-emerald-200';
-      case 'VOID':
-        return 'bg-rose-500 text-white border-rose-600 shadow-sm shadow-rose-200';
-      default:
-        return 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200';
+  const getStatusColor = (isVoided: boolean) => {
+    if (isVoided) {
+      return 'bg-rose-500 text-white border-rose-600 shadow-sm shadow-rose-200';
     }
+    return 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200';
   };
 
   const handleToggleMultiSelect = () => {
@@ -201,14 +197,14 @@ export const PageGrid = ({
         <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2 max-h-96 overflow-y-auto pr-1">
           {pages.map(page => {
             const isSelected = selectedPages.includes(page.pageNo);
-            const isSelectable = page.status === 'ALLOCATED';
+            const isSelectable = !page.isVoided;
             return (
               <button
                 key={page.pageNo}
                 onClick={() => handlePageClick(page)}
                 disabled={isMultiSelect && !isSelectable}
                 className={`py-2 px-1 text-xs font-semibold text-center border rounded-md transition-all cursor-pointer select-none ${getStatusColor(
-                  page.status
+                  page.isVoided
                 )} ${
                   isSelected ? 'ring-2 ring-blue-500 scale-95 border-blue-600' : ''
                 } ${
@@ -245,7 +241,7 @@ export const PageGrid = ({
               <div>
                 <span className="block font-semibold text-slate-500 text-xs">STATUS</span>
                 <span className="inline-block px-2.5 py-0.5 mt-1 rounded text-xs font-semibold bg-slate-100 text-slate-800">
-                  {detailPage.status}
+                  {detailPage.isVoided ? 'VOIDED' : 'ALLOCATED'}
                 </span>
               </div>
               {detailPage.remarks && (

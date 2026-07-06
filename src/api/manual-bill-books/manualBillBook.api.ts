@@ -8,12 +8,14 @@ export interface IManualBook {
   branchCode?: string;
   branchName?: string;
   transactionType: string;
+  transactionTypeLabel?: string;
   bookNoFrom: number;
   bookNoTo: number;
   vouchersPerBook: number;
   mvNoFrom: number;
   mvNoTo: number;
   assignedTo: string;
+  assignedToName?: string;
   remarks?: string;
   status: string; // 'Pending' | 'Approved' | 'Rejected'
   fromDate?: string;
@@ -139,6 +141,14 @@ export const manualBillBookApi = {
     return res.data || [];
   },
 
+  getBranchManagers: async (branchId: string): Promise<Array<{ id: string; name: string }>> => {
+    const res = await apiClient.get<Array<{ id: string; name: string }>>(
+      `/manual-bill-books/branch-managers?branchId=${encodeURIComponent(branchId)}`
+    );
+    if (res.error) throw new Error(res.error);
+    return res.data || [];
+  },
+
   saveAllocations: async (
     assignments: IManualBookAssignmentPayload[]
   ): Promise<IManualBookAssignmentResult[]> => {
@@ -228,7 +238,7 @@ export const manualBillBookApi = {
       `/manual-bill-books/pages/search?pageNo=${pageNo}`
     );
     if (res.error) throw new Error(res.error);
-    if (!res.data) throw new Error(`Page number ${pageNo} not found`);
+    if (!res.data) throw new Error('Page not found');
     return res.data;
   },
 
@@ -291,7 +301,7 @@ export interface IManualBookPageTracking {
   manualBookId: string;
   userId: string;
   pageNo: number;
-  status: 'ALLOCATED' | 'USED' | 'VOID';
+  isVoided: boolean;
   remarks?: string;
   updatedBy?: string;
   createdAt: string;

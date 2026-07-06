@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -7,9 +7,10 @@ import {
   Form,
   FormFieldInput,
   FormFieldSelect,
-  FormFieldDatePicker,
   FormFieldTextarea,
+  FormFieldCategoryOption,
 } from '@/components/forms';
+import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import { branchProfileApi } from '@/api/branchProfile/branchProfile.api';
 import { manualBillBookApi } from '@/api';
 import { useAuth } from '@/lib/AuthContext';
@@ -69,13 +70,6 @@ interface BulkDispatchFormProps {
   onSuccess: () => void;
 }
 
-const createStaticLoadOptions = (options: { value: string; label: string }[]) => {
-  return async () => ({
-    options,
-    hasMore: false,
-  });
-};
-
 const BulkDispatchFormFields = () => {
   const form = useFormContext<IBulkDispatchFormValues>();
   const branchId = useWatch({ name: 'branchId', control: form.control });
@@ -124,6 +118,11 @@ const BulkDispatchFormFields = () => {
     }
   }, [bookNoFrom, bookNoTo, vouchersPerBook, mvNoFrom, form]);
 
+  // Reset Assigned To when Branch changes
+  useEffect(() => {
+    form.setValue('assignedTo', '');
+  }, [branchId, form]);
+
   const { user } = useAuth();
   const isAdmin = user?.isAdmin === true;
 
@@ -147,21 +146,34 @@ const BulkDispatchFormFields = () => {
     }
   };
 
-  const loadTxnTypes = createStaticLoadOptions([
-    { value: 'PB-RETAIL PURCHASE', label: 'PB-RETAIL PURCHASE' },
-    { value: 'PS-RETAIL SALE', label: 'PS-RETAIL SALE' },
-    { value: 'FB-BULK BUY', label: 'FB-BULK BUY' },
-    { value: 'FS-BULK SALE', label: 'FS-BULK SALE' },
-  ]);
 
-  const loadAssignedTo = createStaticLoadOptions([
-    { value: 'BRANCH MANAGER', label: 'BRANCH MANAGER' },
-    { value: 'CASHIER', label: 'CASHIER' },
-  ]);
+  const loadAssignedTo = useCallback(async () => {
+    if (!branchId) {
+      return {
+        options: [],
+        hasMore: false,
+      };
+    }
+    try {
+      const managers = await manualBillBookApi.getBranchManagers(branchId);
+      return {
+        options: managers.map(m => ({
+          value: m.id,
+          label: m.name,
+        })),
+        hasMore: false,
+      };
+    } catch {
+      return {
+        options: [],
+        hasMore: false,
+      };
+    }
+  }, [branchId]);
 
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-      <FormFieldDatePicker name="dispatchDate" label="Date" />
+      <FormFieldInput name="dispatchDate" label="Date" type="date" />
       <FormFieldInput
         name="no"
         label="NO"
@@ -174,10 +186,12 @@ const BulkDispatchFormFields = () => {
         loadOptions={loadBranches}
         disabled={!isAdmin}
       />
-      <FormFieldSelect
+      <FormFieldCategoryOption
         name="transactionType"
         label="Txn Type"
-        loadOptions={loadTxnTypes}
+        code={CategoryOptionCodeEnum.Transaction}
+        useValueAsId={true}
+        isCreatable={false}
       />
       <FormFieldInput name="bookNoFrom" label="Book No. From" type="number" />
       <FormFieldInput name="bookNoTo" label="Book No. To" type="number" />
@@ -190,11 +204,14 @@ const BulkDispatchFormFields = () => {
       </div>
       <FormFieldInput name="mvNoFrom" label="MV No. From" type="number" />
       <FormFieldInput name="mvNoTo" label="MV No. To" disabled />
-      <FormFieldSelect
-        name="assignedTo"
-        label="Assigned To"
-        loadOptions={loadAssignedTo}
-      />
+      {branchId && (
+        <FormFieldSelect
+          key={branchId}
+          name="assignedTo"
+          label="Assigned To"
+          loadOptions={loadAssignedTo}
+        />
+      )}
       <FormFieldTextarea name="remarks" label="Remarks" rows={3} />
     </div>
   );
@@ -239,7 +256,7 @@ export const BulkDispatchForm = ({ onSuccess }: BulkDispatchFormProps) => {
     vouchersPerBook: 50,
     mvNoFrom: '',
     mvNoTo: '',
-    assignedTo: 'BRANCH MANAGER',
+    assignedTo: '',
     remarks: '',
   };
 

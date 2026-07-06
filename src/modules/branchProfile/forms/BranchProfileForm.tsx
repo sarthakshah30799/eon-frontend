@@ -35,15 +35,6 @@ interface BranchProfileFormProps {
   currentId?: string;
 }
 
-const createStaticLoadOptions = (
-  options: { value: string; label: string }[]
-) => {
-  return async () => ({
-    options,
-    hasMore: false,
-  });
-};
-
 const BRANCH_FORM_ID = 'branch-profile-form';
 
 const BranchProfileFormFields = ({
@@ -107,10 +98,6 @@ const BranchProfileFormFields = ({
         label: `${counter.counterNo} - ${counter.name}`,
       })),
     [counterProfiles]
-  );
-  const connectedCounterLoadOptions = useMemo(
-    () => createStaticLoadOptions(connectedCounterOptions),
-    [connectedCounterOptions]
   );
   const validateBranchCode = useCallback(
     async (value: string) => {
@@ -284,19 +271,22 @@ const BranchProfileFormFields = ({
       </CardSection>
 
       <CardSection heading="Relations & Status">
-          <FormFieldSelect
-            name="connectCounterIds"
-            label="Connect Counters"
-            placeholder="Select counters to link"
-            loadOptions={connectedCounterLoadOptions}
-            pagination={false}
-            isLoading={isCountersLoading || isCountersFetching}
-            defaultOptions={connectedCounterOptions}
-            disabled={isSubmitting}
-            isMulti
-            closeMenuOnSelect={false}
-            className={['md:col-span-2 lg:col-span-4'].join(' ')}
-          />
+        <FormFieldSelect
+          name="connectCounterIds"
+          label="Connect Counters"
+          placeholder="Select counters to link"
+          loadOptions={async () => ({
+            options: connectedCounterOptions,
+            hasMore: false,
+          })}
+          pagination={false}
+          isLoading={isCountersLoading || isCountersFetching}
+          defaultOptions={connectedCounterOptions}
+          disabled={isSubmitting}
+          isMulti
+          closeMenuOnSelect={false}
+          className={['md:col-span-2 lg:col-span-4'].join(' ')}
+        />
         <div className="mt-2 grid gap-2 md:col-span-2 md:grid-cols-2 lg:col-span-4">
           <FormFieldCheckbox
             name="isHeadOffice"

@@ -16,6 +16,7 @@ export interface IChequeBook {
   mvNoFrom: number;
   mvNoTo: number;
   assignedTo: string;
+  assignedToName?: string;
   remarks?: string;
   status: string; // 'Pending' | 'Approved' | 'Rejected'
   fromDate?: string;
@@ -130,6 +131,14 @@ export const chequebookApi = {
     return res.data || [];
   },
 
+  getBranchManagers: async (branchId: string): Promise<Array<{ id: string; name: string }>> => {
+    const res = await apiClient.get<Array<{ id: string; name: string }>>(
+      `/chequebooks/branch-managers?branchId=${encodeURIComponent(branchId)}`
+    );
+    if (res.error) throw new Error(res.error);
+    return res.data || [];
+  },
+
   saveAllocations: async (
     assignments: IChequeBookAllocationPayload[]
   ): Promise<IChequeBookAllocation[]> => {
@@ -236,7 +245,7 @@ export interface IChequeBookPageTracking {
   checkBookId: string;
   userId: string;
   pageNo: number;
-  status: 'ALLOCATED' | 'USED' | 'VOID';
+  isVoided: boolean;
   remarks?: string;
   updatedBy?: string;
   createdAt: string;

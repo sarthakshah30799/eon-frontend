@@ -79,7 +79,7 @@ export const ChequeBookTable = ({
         header: 'Assigned To',
         cell: ({ row }) => (
           <span className="whitespace-nowrap text-text-secondary">
-            {row.original.assignedTo}
+            {row.original.assignedToName || row.original.assignedTo}
           </span>
         ),
       },

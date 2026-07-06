@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import { manualBillBookApi, type IManualBook } from '@/api';
+import { categoryOptionsApi } from '@/api/categoryOptions/categoryOptions.api';
 import { Loader } from '@/components/ui/loader';
+import { Button, AsyncSelect, DatePicker, type AsyncSelectOption } from '@/components/ui';
+import type { SingleValue } from 'react-select';
 import toast from 'react-hot-toast';
 
 export const ManualBillBookAcknowledgementPage = () => {
@@ -15,6 +18,19 @@ export const ManualBillBookAcknowledgementPage = () => {
   // Filter states for Detail View
   const [searchStatus, setSearchStatus] = useState('Pending');
   const [searchTxnType, setSearchTxnType] = useState('ALL');
+  const [txnTypes, setTxnTypes] = useState<Array<{ id: string; label: string }>>([]);
+
+  useEffect(() => {
+    const fetchTxnTypes = async () => {
+      try {
+        const options = await categoryOptionsApi.getCategoryOptionsByCode('TRANSACTION');
+        setTxnTypes(options.map(o => ({ id: o.id, label: o.label })));
+      } catch (err) {
+        console.error('Failed to load transaction types', err);
+      }
+    };
+    fetchTxnTypes();
+  }, []);
   
   // Default dates: From 30 days ago to Today
   const getPastDateStr = (daysAgo: number) => {
@@ -34,6 +50,7 @@ export const ManualBillBookAcknowledgementPage = () => {
 
   // Record of updates: id -> { status: 'Approved' | 'Rejected', remarks: string }
   const [rowEdits, setRowEdits] = useState<Record<string, { status?: 'Approved' | 'Rejected'; remarks: string }>>({});
+  const selectedTxnType = txnTypes.find(t => t.id === searchTxnType);
 
   useEffect(() => {
     let cancelled = false;
@@ -275,77 +292,104 @@ export const ManualBillBookAcknowledgementPage = () => {
             <h4 className="text-xs font-bold text-sky-800 uppercase tracking-wider mb-4 border-b border-slate-100 pb-2">
               Manual Bill
             </h4>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1.5">Status *</label>
-                <select
-                  value={searchStatus}
-                  onChange={e => {
-                    setSearchStatus(e.target.value);
+                <AsyncSelect
+                  label="Status *"
+                  placeholder="Select Status"
+                  value={
+                    searchStatus === ''
+                      ? { value: '', label: 'All' }
+                      : [
+                          { value: 'Pending', label: 'Pending' },
+                          { value: 'Approved', label: 'Approved' },
+                          { value: 'Rejected', label: 'Rejected' }
+                        ].find(o => o.value === searchStatus)
+                  }
+                  onChange={(option: SingleValue<AsyncSelectOption>) => {
+                    setSearchStatus(option?.value ? String(option.value) : '');
                     setSelectedBookId(null);
                   }}
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500"
-                >
-                  <option value="Pending">Pending</option>
-                  <option value="Approved">Approved</option>
-                  <option value="Rejected">Rejected</option>
-                  <option value="">All</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1.5">Transaction Type</label>
-                <select
-                  value={searchTxnType}
-                  onChange={e => {
-                    setSearchTxnType(e.target.value);
-                    setSelectedBookId(null);
-                  }}
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500"
-                >
-                  <option value="ALL">ALL</option>
-                  <option value="PB-RETAIL PURCHASE">PB-RETAIL PURCHASE</option>
-                  <option value="PS-RETAIL SALE">PS-RETAIL SALE</option>
-                  <option value="FB-BULK BUY">FB-BULK BUY</option>
-                  <option value="FS-BULK SALE">FS-BULK SALE</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1.5">From Date *</label>
-                <input
-                  type="date"
-                  value={fromDate}
-                  onChange={e => {
-                    setFromDate(e.target.value);
-                    setSelectedBookId(null);
-                  }}
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500"
+                  loadOptions={async () => ({
+                    options: [
+                      { value: 'Pending', label: 'Pending' },
+                      { value: 'Approved', label: 'Approved' },
+                      { value: 'Rejected', label: 'Rejected' },
+                      { value: '', label: 'All' }
+                    ],
+                    hasMore: false
+                  })}
+                  isClearable={false}
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1.5">To Date *</label>
-                <input
-                  type="date"
-                  value={toDate}
-                  onChange={e => {
-                    setToDate(e.target.value);
+                <AsyncSelect
+                  label="Transaction Type"
+                  placeholder="Select Type"
+                  value={
+                    searchTxnType === 'ALL'
+                      ? { value: 'ALL', label: 'ALL' }
+                      : selectedTxnType
+                        ? { value: searchTxnType, label: selectedTxnType.label }
+                        : null
+                  }
+                  onChange={(option: SingleValue<AsyncSelectOption>) => {
+                    setSearchTxnType(option?.value ? String(option.value) : 'ALL');
                     setSelectedBookId(null);
                   }}
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500"
+                  loadOptions={async () => ({
+                    options: [
+                      { value: 'ALL', label: 'ALL' },
+                      ...txnTypes.map(t => ({ value: t.id, label: t.label }))
+                    ],
+                    hasMore: false
+                  })}
+                  isClearable={false}
+                />
+              </div>
+
+              <div>
+                <DatePicker
+                  label="From Date *"
+                  selected={fromDate ? new Date(fromDate + 'T00:00:00') : null}
+                  onChange={date => {
+                    if (date) {
+                      const y = date.getFullYear();
+                      const m = String(date.getMonth() + 1).padStart(2, '0');
+                      const d = String(date.getDate()).padStart(2, '0');
+                      setFromDate(`${y}-${m}-${d}`);
+                    } else {
+                      setFromDate('');
+                    }
+                    setSelectedBookId(null);
+                  }}
+                />
+              </div>
+
+              <div>
+                <DatePicker
+                  label="To Date *"
+                  selected={toDate ? new Date(toDate + 'T00:00:00') : null}
+                  onChange={date => {
+                    if (date) {
+                      const y = date.getFullYear();
+                      const m = String(date.getMonth() + 1).padStart(2, '0');
+                      const d = String(date.getDate()).padStart(2, '0');
+                      setToDate(`${y}-${m}-${d}`);
+                    } else {
+                      setToDate('');
+                    }
+                    setSelectedBookId(null);
+                  }}
                 />
               </div>
             </div>
 
             <div className="flex gap-3 mt-6">
-              <button
-                onClick={handleProcessQuery}
-                disabled={isProcessing}
-                className="cursor-pointer inline-flex items-center justify-center rounded-md bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-500 transition disabled:opacity-50"
-              >
+              <Button onClick={handleProcessQuery} disabled={isProcessing}>
                 {isProcessing ? 'Processing...' : 'Process'}
-              </button>
+              </Button>
             </div>
           </div>
 

@@ -4,6 +4,7 @@ import { manualBillBookApi, type IManualBook } from '@/api';
 import { categoryOptionsApi } from '@/api/categoryOptions/categoryOptions.api';
 import { Loader } from '@/components/ui/loader';
 import { Button, AsyncSelect, DatePicker, type AsyncSelectOption } from '@/components/ui';
+import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import type { SingleValue } from 'react-select';
 import toast from 'react-hot-toast';
 
@@ -23,7 +24,7 @@ export const ManualBillBookAcknowledgementPage = () => {
   useEffect(() => {
     const fetchTxnTypes = async () => {
       try {
-        const options = await categoryOptionsApi.getCategoryOptionsByCode('TRANSACTION');
+        const options = await categoryOptionsApi.getCategoryOptionsByCode(CategoryOptionCodeEnum.Transaction);
         setTxnTypes(options.map(o => ({ id: o.id, label: o.label })));
       } catch (err) {
         console.error('Failed to load transaction types', err);

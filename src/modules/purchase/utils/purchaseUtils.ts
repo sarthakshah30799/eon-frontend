@@ -17,6 +17,7 @@ import {
 } from '@/modules/currencyRates/utils/currencyRatesUtils';
 import type { ITransactionReferenceSnapshot } from '@/modules/transactions';
 import type { PurchasePageType } from '@/pages/purchase/[slug]/purchasePage.enum';
+import type { IPartyProfileCommissionRule } from '@/modules/partyProfiles/types';
 import type {
   IPurchaseDocumentAttachment,
   IPurchaseFormValues,
@@ -41,6 +42,8 @@ export const createEmptyPurchaseTransactionRow = (): IPurchaseTransactionFormRow
   productDescription: '',
   quantity: '',
   rate: '',
+  commission: '',
+  commissionSnapshot: null,
   total: '',
   roundOff: '',
   finalAmount: '',
@@ -118,6 +121,8 @@ export const mapPurchaseFormValuesToSubmitPayload = (
         productId: row.productId,
         quantity: row.quantity,
         rate: row.rate,
+        commission: row.commission || null,
+        commissionSnapshot: row.commissionSnapshot ?? null,
         remarks: null,
       })),
       documents: attachments.map(attachment => ({
@@ -158,6 +163,45 @@ export const formatPurchaseEntityLabel = (code?: string | null, name?: string | 
   }
 
   return normalizedCode || normalizedName || '';
+};
+
+export const resolveAgentCommissionRule = (
+  rules: IPartyProfileCommissionRule[] = [],
+  currencyCode: string,
+  productCode: string
+) =>
+  rules.find(
+    rule =>
+      rule.currencyCode === currencyCode && rule.productCode === productCode
+  ) ?? null;
+
+export const calculatePurchaseTransactionCommission = (
+  amount?: string | null,
+  currencyRatePer?: string | number | null,
+  rule?: IPartyProfileCommissionRule | null
+) => {
+  if (!amount || !rule) {
+    return '';
+  }
+
+  const parsedAmount = Number(amount);
+  const parsedValue = Number(rule.commissionValue);
+  const parsedPer = Number(currencyRatePer ?? 1) || 1;
+
+  if (
+    !Number.isFinite(parsedAmount) ||
+    !Number.isFinite(parsedValue) ||
+    !Number.isFinite(parsedPer)
+  ) {
+    return '';
+  }
+
+  const commission =
+    rule.commissionType === 'PERCENTAGE'
+      ? (parsedAmount * parsedValue * parsedPer) / 100
+      : parsedValue * parsedPer;
+
+  return commission.toFixed(4);
 };
 
 const toMarginValue = (

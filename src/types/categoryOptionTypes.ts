@@ -19,7 +19,6 @@ export const CategoryOptionCodeEnum = {
   FfmcGroup: 'FFMCGROUP',
   Master: 'MASTER',
   Transaction: 'TRANSACTION',
-  ChequeBookTransactionType: 'CHEQUEBOOKTRANSACTIONTYPE',
 } as const;
 
 export type CategoryOptionCode =

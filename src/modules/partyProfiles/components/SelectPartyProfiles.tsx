@@ -12,6 +12,7 @@ interface SelectPartyProfilesProps {
   multiple?: boolean;
   title?: string;
   description?: string;
+  filterProfiles?: (profile: IPartyProfile) => boolean;
   onContinue: (profiles: IPartyProfile[]) => void;
   onClose: () => void;
 }
@@ -107,6 +108,7 @@ export const SelectPartyProfiles = ({
   multiple = false,
   title = 'Select Party Profiles',
   description = 'Search and choose party profiles from the list.',
+  filterProfiles,
   onContinue,
   onClose,
 }: SelectPartyProfilesProps) => {
@@ -127,7 +129,9 @@ export const SelectPartyProfiles = ({
     open
   );
 
-  const profiles = response?.data ?? EMPTY_PARTY_PROFILE_ROWS;
+  const profiles = (response?.data ?? EMPTY_PARTY_PROFILE_ROWS).filter(profile =>
+    filterProfiles ? filterProfiles(profile) : true
+  );
   const rows = useMemo<SelectablePartyProfileRow[]>(
     () =>
       profiles.map(profile => ({

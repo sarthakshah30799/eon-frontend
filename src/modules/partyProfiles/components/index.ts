@@ -5,3 +5,4 @@ export * from './PartyProfileReviewActionPanel';
 export * from './PartyProfileReviewQueueItem';
 export * from './PartyProfileDocumentsActionButton';
 export * from './SelectPartyProfiles';
+export * from './AgentCommissionSection';

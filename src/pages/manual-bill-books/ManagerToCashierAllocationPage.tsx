@@ -3,6 +3,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { manualBillBookApi } from '@/api';
 import { categoryOptionsApi } from '@/api/categoryOptions/categoryOptions.api';
 import { Button, Input, AsyncSelect, type AsyncSelectOption } from '@/components/ui';
+import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import type { SingleValue } from 'react-select';
 import toast from 'react-hot-toast';
 
@@ -48,7 +49,7 @@ export const ManagerToCashierAllocationPage = () => {
   useEffect(() => {
     const fetchTxnTypes = async () => {
       try {
-        const options = await categoryOptionsApi.getCategoryOptionsByCode('TRANSACTION');
+        const options = await categoryOptionsApi.getCategoryOptionsByCode(CategoryOptionCodeEnum.Transaction);
         setTxnTypes(options.map(o => ({ id: o.id, label: o.label })));
       } catch (err) {
         console.error('Failed to load transaction types', err);

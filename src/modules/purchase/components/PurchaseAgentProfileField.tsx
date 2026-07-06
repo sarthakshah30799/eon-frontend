@@ -15,6 +15,7 @@ export const PurchaseAgentProfileField = ({
 
   const agentProfileCode = form.watch('agentProfileCode');
   const agentProfileName = form.watch('agentProfileName');
+  const transactionType = form.watch('transactionType');
 
   return (
     <>
@@ -34,6 +35,12 @@ export const PurchaseAgentProfileField = ({
         multiple={false}
         title="Select Agent Profile"
         description="Choose a single agent profile for the purchase transaction."
+        filterProfiles={profile =>
+          Boolean(
+            profile.active &&
+              (transactionType === 'SALE' ? profile.sale : profile.purchase)
+          )
+        }
         onContinue={profiles => {
           const selectedProfile = profiles[0];
           if (!selectedProfile) {

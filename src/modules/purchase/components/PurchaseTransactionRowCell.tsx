@@ -9,16 +9,20 @@ import type {
 } from '../types/purchaseTypes';
 import {
   calculateRoundedTransactionAmount,
+  calculatePurchaseTransactionCommission,
   calculateTransactionRoundOff,
   calculateTransactionTotal,
+  resolveAgentCommissionRule,
   resolvePurchaseTransactionPreview,
 } from '../utils/purchaseUtils';
 import { EntityPickerField } from './EntityPickerField';
 import type { AsyncSelectResponse } from '@/components/ui';
+import type { IPartyProfileCommissionRule } from '@/modules/partyProfiles/types';
 
 interface PurchaseTransactionRowCellProps {
   rowIndex: number;
   pricingData: IPurchasePricingData;
+  agentCommissionRules?: IPartyProfileCommissionRule[];
   onOpenCurrencyPicker: (rowIndex: number) => void;
   onRemove: (rowIndex: number) => void;
   canRemove: boolean;
@@ -64,6 +68,7 @@ const formatRangeValue = (value?: string | null) => {
 export const PurchaseTransactionRowCell = ({
   rowIndex,
   pricingData,
+  agentCommissionRules = [],
   onOpenCurrencyPicker,
   onRemove,
   canRemove,
@@ -93,6 +98,10 @@ export const PurchaseTransactionRowCell = ({
   const rateValue = useWatch({
     control: form.control,
     name: `transactions.${rowIndex}.rate`,
+  });
+  const finalAmountValue = useWatch({
+    control: form.control,
+    name: `transactions.${rowIndex}.finalAmount`,
   });
 
   const selectedProduct = useMemo(
@@ -125,6 +134,22 @@ export const PurchaseTransactionRowCell = ({
 
   const effectiveGroupCode = preview?.effectiveGroupCode ?? '';
   const calculatedRate = preview?.buy.appliedFinalRate ?? '';
+  const selectedCurrencyProfile = useMemo(
+    () =>
+      (pricingData.currencies ?? []).find(
+        currency => currency.id === String(currencyId || '')
+      ) ?? null,
+    [currencyId, pricingData.currencies]
+  );
+  const agentCommissionRule = useMemo(
+    () =>
+      resolveAgentCommissionRule(
+        agentCommissionRules,
+        String(selectedCurrencyProfile?.currencyCode || ''),
+        String(selectedProduct?.productCode || '')
+      ),
+    [agentCommissionRules, selectedProduct?.productCode, selectedCurrencyProfile?.currencyCode]
+  );
   const total = useMemo(
     () => calculateTransactionTotal(String(quantity || ''), String(rateValue || '')),
     [quantity, rateValue]
@@ -136,6 +161,39 @@ export const PurchaseTransactionRowCell = ({
   const roundOffAmount = useMemo(
     () => calculateTransactionRoundOff(total),
     [total]
+  );
+  const commissionAmount = useMemo(
+    () =>
+      calculatePurchaseTransactionCommission(
+        String(finalAmountValue || roundedTotal || total || ''),
+        selectedCurrencyProfile?.ratePer || 1,
+        agentCommissionRule
+      ),
+    [
+      agentCommissionRule,
+      finalAmountValue,
+      roundedTotal,
+      selectedCurrencyProfile?.ratePer,
+      total,
+    ]
+  );
+  const commissionSnapshot = useMemo(
+    () =>
+      agentCommissionRule
+        ? {
+            currencyCode: selectedCurrencyProfile?.currencyCode || '',
+            productCode: selectedProduct?.productCode || '',
+            commissionType: agentCommissionRule.commissionType,
+            commissionValue: agentCommissionRule.commissionValue,
+            ratePer: selectedCurrencyProfile?.ratePer || '1',
+          }
+        : null,
+    [
+      agentCommissionRule,
+      selectedCurrencyProfile?.currencyCode,
+      selectedCurrencyProfile?.ratePer,
+      selectedProduct?.productCode,
+    ]
   );
   const hasCurrencyProductSelection = Boolean(currencyId && productId);
   const rateHelperText = !hasCurrencyProductSelection
@@ -290,11 +348,31 @@ export const PurchaseTransactionRowCell = ({
     });
   }, [form, rowIndex, roundedTotal, roundOffAmount]);
 
+  useEffect(() => {
+    form.setValue(`transactions.${rowIndex}.commission`, commissionAmount, {
+      shouldDirty: false,
+      shouldTouch: false,
+      shouldValidate: false,
+    });
+  }, [commissionAmount, form, rowIndex]);
+
+  useEffect(() => {
+    form.setValue(
+      `transactions.${rowIndex}.commissionSnapshot`,
+      commissionSnapshot,
+      {
+        shouldDirty: false,
+        shouldTouch: false,
+        shouldValidate: false,
+      }
+    );
+  }, [commissionSnapshot, form, rowIndex]);
+
   const productLoadOptions = async (inputValue: string) =>
     loadProductOptions(inputValue, pricingData.products ?? []);
 
   return (
-    <div className="grid gap-2 px-1 py-1 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1.4fr)_minmax(0,0.55fr)_minmax(0,0.75fr)_minmax(0,0.55fr)_minmax(0,0.55fr)_minmax(0,0.55fr)_44px]">
+    <div className="grid gap-2 px-1 py-1 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1.4fr)_minmax(0,0.55fr)_minmax(0,0.75fr)_minmax(0,0.55fr)_minmax(0,0.55fr)_minmax(0,0.55fr)_minmax(0,0.55fr)_44px]">
       <div className="min-w-0">
         <EntityPickerField
           label="Currency"
@@ -368,6 +446,14 @@ export const PurchaseTransactionRowCell = ({
         <FormFieldInput
           name={`transactions.${rowIndex}.finalAmount`}
           label="Final Amount"
+          readOnly
+          classes={{ container: 'max-w-[95px]' }}
+        />
+      </div>
+      <div className="min-w-0">
+        <FormFieldInput
+          name={`transactions.${rowIndex}.commission`}
+          label="Commission"
           readOnly
           classes={{ container: 'max-w-[95px]' }}
         />

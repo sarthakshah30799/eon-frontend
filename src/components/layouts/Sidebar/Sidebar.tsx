@@ -1,5 +1,5 @@
 import { useMemo, useState, type Dispatch, type SetStateAction } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { matchPath, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useMasterPages } from '../../../lib';
 import { companyProfileApi, menuApi } from '../../../api';
@@ -61,8 +61,8 @@ const isPathActive = (currentPath: string, targetPath?: string) => {
   const normalizedTargetPath = normalizePath(targetPath);
 
   return (
-    normalizedCurrentPath === normalizedTargetPath ||
-    normalizedCurrentPath.startsWith(`${normalizedTargetPath}/`)
+    matchPath({ path: normalizedTargetPath, end: true }, normalizedCurrentPath) !==
+    null
   );
 };
 

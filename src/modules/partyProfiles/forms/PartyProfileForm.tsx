@@ -25,6 +25,7 @@ import {
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import type { IReviewPartyProfilePayload } from '../types';
 import { PartyProfileReviewActionPanel } from '../components';
+import { PartyProfileCommissionRulesFieldArray } from '../components/PartyProfileCommissionRulesFieldArray';
 import { normalizeCodeValue } from '@/utils';
 
 type PartyProfileFormValues = Omit<ICreatePartyProfile, 'type'>;
@@ -73,6 +74,8 @@ const PartyProfileFormFields = ({
   const showCorporateClientTaxFields =
     toPartyProfileApiType(effectiveProfileType) === 'CORPORATE_CLIENT';
   const showRfFields = toPartyProfileApiType(effectiveProfileType) === 'RF';
+  const showCommissionRules =
+    toPartyProfileApiType(effectiveProfileType) === 'AGENT';
   const shouldHideCreditLimitFields = [
     'MISC_PROFILE',
     'AGENT',
@@ -552,6 +555,16 @@ const PartyProfileFormFields = ({
           />
         </div>
       </CardSection>
+
+      {showCommissionRules ? (
+        <PartyProfileCommissionRulesFieldArray
+          name="commissionRules"
+          disabled={isSubmitting}
+          partyProfileId={currentId}
+          canModify={!disabled && !reviewMode}
+          isBusy={isSubmittingProp}
+        />
+      ) : null}
 
       <PartyProfileReviewActionPanel
         reviewMode={reviewMode}

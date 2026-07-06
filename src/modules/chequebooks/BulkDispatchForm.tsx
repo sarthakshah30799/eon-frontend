@@ -87,6 +87,7 @@ const BulkDispatchFormFields = () => {
 
   const { user } = useAuth();
   const isAdmin = user?.isAdmin === true;
+  const isHoStaff = user?.isHoStaff === true;
 
   const loadBranches = async () => {
     try {
@@ -175,7 +176,7 @@ const BulkDispatchFormFields = () => {
         name="branchId"
         label="Branch"
         loadOptions={loadBranches}
-        disabled={!isAdmin}
+        disabled={!isAdmin && !isHoStaff}
       />
       <FormFieldSelect
         name="bankAccountCode"
@@ -216,7 +217,7 @@ export const BulkDispatchForm = ({ onSuccess }: BulkDispatchFormProps) => {
   const isAdmin = user?.isAdmin === true;
 
   const onCancel = () => {
-    navigate('/admin/chequebooks');
+    navigate('/cheque-books');
   };
 
   const handleSubmit = async (values: IBulkDispatchFormValues) => {

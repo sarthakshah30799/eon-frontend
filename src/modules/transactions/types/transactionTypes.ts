@@ -117,6 +117,10 @@ export interface ITransactionEntity {
   isLatest: boolean;
   createdAt: string;
   updatedAt: string;
+  items?: ITransactionItemEntity[];
+  documents?: ITransactionDocumentEntity[];
+  additionalCharges?: ITransactionAdditionalChargeEntity[];
+  payments?: ITransactionPaymentEntity[];
 }
 
 export interface ITransactionItemEntity {
@@ -298,7 +302,7 @@ export type TransactionPrintCopyType =
   (typeof TransactionPrintCopyTypeEnum)[keyof typeof TransactionPrintCopyTypeEnum];
 
 export interface IRecordTransactionPrintPayload {
-  copyType: TransactionPrintCopyType;
+  copyType?: TransactionPrintCopyType;
   recipientEmail?: string;
   subject?: string;
   text?: string;

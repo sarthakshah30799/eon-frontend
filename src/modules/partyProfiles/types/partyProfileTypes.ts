@@ -118,7 +118,6 @@ export type ICreatePartyProfile = Omit<
   | 'businessNature'
   | 'tdsGroup'
   | 'location'
-  | 'commissionRules'
   | 'status'
   | 'statusUpdatedById'
   | 'statusUpdatedByName'

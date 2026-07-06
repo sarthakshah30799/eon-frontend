@@ -1,4 +1,5 @@
 import * as yup from 'yup';
+import { PartyProfileCommissionTypeEnum } from '../types';
 
 export const partyProfileSchema = yup.object({
   dateOfIntro: yup.string().trim().optional(),
@@ -84,6 +85,31 @@ export const partyProfileSchema = yup.object({
   ffmcRegNo: yup.string().trim().optional().nullable(),
   ffmcRegDate: yup.string().trim().optional().nullable(),
   divisionFactor: yup.number().typeError('Division Factor must be a number').optional().nullable(),
+  commissionRules: yup
+    .array()
+    .of(
+      yup.object({
+        currencyCode: yup.string().trim().required('Currency is required'),
+        currencyName: yup.string().trim().optional().nullable(),
+        productCode: yup.string().trim().required('Product is required'),
+        productDescription: yup.string().trim().optional().nullable(),
+        commissionType: yup
+          .mixed<(typeof PartyProfileCommissionTypeEnum)[keyof typeof PartyProfileCommissionTypeEnum]>()
+          .oneOf(Object.values(PartyProfileCommissionTypeEnum))
+          .required('Commission type is required'),
+        commissionValue: yup
+          .string()
+          .trim()
+          .required('Commission value is required')
+          .test('commission-value-number', 'Commission value must be a number', value => {
+            if (!value) {
+              return false;
+            }
+            return Number.isFinite(Number(value));
+          }),
+      })
+    )
+    .default([]),
 });
 
 export default partyProfileSchema;

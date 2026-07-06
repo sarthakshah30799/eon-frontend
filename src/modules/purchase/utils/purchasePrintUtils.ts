@@ -135,7 +135,7 @@ const joinAddress = (...parts: Array<string | null | undefined>) =>
 const formatReferenceValue = (value?: string | null) => value?.trim() || '-';
 
 const getCustomerCopyLabel = (copyType: PurchasePrintCopyType) =>
-  copyType === 'DUPLICATE_COPY' ? 'Duplicate Copy' : 'Customer Copy';
+  copyType === 'DUPLICATE_COPY' ? 'Duplicate Copy' : 'Original Copy';
 
 export const buildPurchasePrintHtml = ({
   copyType,
@@ -469,6 +469,7 @@ export const buildPurchasePrintHtml = ({
             <table>
               <thead>
                 <tr>
+                  <th>Sr. No.</th>
                   <th>R/P</th>
                   <th>Bank</th>
                   <th class="right">Amount</th>
@@ -477,7 +478,7 @@ export const buildPurchasePrintHtml = ({
                 </tr>
               </thead>
               <tbody>
-                ${paymentRows || '<tr><td colspan="5">No payment details</td></tr>'}
+                ${paymentRows || '<tr><td colspan="6">No payment details</td></tr>'}
               </tbody>
             </table>
           </div>

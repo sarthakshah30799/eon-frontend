@@ -11,6 +11,7 @@ interface FormFooterProps {
   onCancel?: () => void | Promise<void>;
   isSubmitting: boolean;
   isSubmitDisabled?: boolean;
+  showSubmit?: boolean;
   actions?: ReactNode;
 }
 
@@ -22,6 +23,7 @@ export const FormFooter = ({
   onCancel,
   isSubmitting,
   isSubmitDisabled = false,
+  showSubmit = true,
   actions,
 }: FormFooterProps) => {
   if (typeof document === 'undefined') {
@@ -49,14 +51,16 @@ export const FormFooter = ({
             Cancel
           </Button>
         )}
-        <Button
-          type="submit"
-          form={formId}
-          disabled={isSubmitting || isSubmitDisabled}
-          className=" px-4 py-2"
-        >
-          {isSubmitting ? 'Saving...' : submitLabel}
-        </Button>
+        {showSubmit ? (
+          <Button
+            type="submit"
+            form={formId}
+            disabled={isSubmitting || isSubmitDisabled}
+            className=" px-4 py-2"
+          >
+            {isSubmitting ? 'Saving...' : submitLabel}
+          </Button>
+        ) : null}
       </div>
     </div>,
     document.body

@@ -222,10 +222,6 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
     meta: { title: 'Purchase' },
   },
   {
-    path: '/purchase/:slug/documents',
-    meta: { title: 'Purchase Documents' },
-  },
-  {
     path: '/party-profiles/:type/documents/:id',
     meta: {
       title: 'Party Profile Documents',

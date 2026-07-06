@@ -5,7 +5,7 @@ const ChequeBookCreatePage = () => {
   const navigate = useNavigate();
 
   const handleSuccess = () => {
-    navigate('/admin/chequebooks');
+    navigate('/cheque-books');
   };
 
   return (

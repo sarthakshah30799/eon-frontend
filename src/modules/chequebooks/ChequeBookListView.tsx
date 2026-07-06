@@ -304,7 +304,7 @@ export const ChequeBookListView = () => {
         <Button
           type="button"
           className="rounded-sm"
-          onClick={() => navigate('/admin/chequebooks/create')}
+          onClick={() => navigate('/cheque-books/create')}
         >
           Create
         </Button>

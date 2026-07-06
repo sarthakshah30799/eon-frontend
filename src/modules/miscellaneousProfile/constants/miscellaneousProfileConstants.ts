@@ -108,10 +108,6 @@ export const CATEGORY_OPTION_CODE_OPTIONS: CategoryOptionCodeOption[] = [
     label: 'TRANSACTION',
     type: 'DOCUMENT',
   },
-  {
-    value: CategoryOptionCodeEnum.ChequeBookTransactionType,
-    label: 'CHEQUE BOOK TRANSACTION TYPE',
-  },
 ];
 
 export const STATIC_CATEGORY_OPTION_CODES = [
@@ -140,8 +136,6 @@ export const CATEGORY_OPTION_CODE_LABELS = {
   [CategoryOptionCodeEnum.FfmcGroup]: 'FFMC GROUP',
   [CategoryOptionCodeEnum.Master]: 'MASTER',
   [CategoryOptionCodeEnum.Transaction]: 'TRANSACTION',
-  [CategoryOptionCodeEnum.ChequeBookTransactionType]:
-    'CHEQUE BOOK TRANSACTION TYPE',
 } as const;
 
 export const loadCategoryOptionCodeOptions =

@@ -25,6 +25,8 @@ const purchaseTransactionSchema = yup.object({
   productDescription: yup.string().trim().default(''),
   quantity: decimalStringSchema.required('Quantity is required'),
   rate: decimalStringSchema.default(''),
+  commission: decimalStringSchema.default(''),
+  commissionSnapshot: yup.mixed().nullable().default(null),
   total: decimalStringSchema.default(''),
   roundOff: decimalStringSchema.default(''),
   finalAmount: decimalStringSchema.default(''),

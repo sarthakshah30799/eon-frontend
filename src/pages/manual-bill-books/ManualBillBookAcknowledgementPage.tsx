@@ -4,8 +4,17 @@ import { manualBillBookApi, type IManualBook } from '@/api';
 import { categoryOptionsApi } from '@/api/categoryOptions/categoryOptions.api';
 import { Loader } from '@/components/ui/loader';
 import { Button, AsyncSelect, DatePicker, type AsyncSelectOption } from '@/components/ui';
+import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import type { MultiValue, SingleValue } from 'react-select';
 import toast from 'react-hot-toast';
+
+const resolveAssignedToLabel = (assignedTo: IManualBook['assignedTo']) => {
+  if (assignedTo && typeof assignedTo === 'object') {
+    return assignedTo.name || assignedTo.id;
+  }
+
+  return assignedTo || 'N/A';
+};
 
 export const ManualBillBookAcknowledgementPage = () => {
   const { activeBranchId } = useAuth();
@@ -23,7 +32,7 @@ export const ManualBillBookAcknowledgementPage = () => {
   useEffect(() => {
     const fetchTxnTypes = async () => {
       try {
-        const options = await categoryOptionsApi.getCategoryOptionsByCode('TRANSACTION');
+        const options = await categoryOptionsApi.getCategoryOptionsByCode(CategoryOptionCodeEnum.Transaction);
         setTxnTypes(options.map(o => ({ id: o.id, label: o.label })));
       } catch (err) {
         console.error('Failed to load transaction types', err);
@@ -265,7 +274,7 @@ export const ManualBillBookAcknowledgementPage = () => {
                       <td className="px-6 py-4">{book.bookNoFrom} - {book.bookNoTo}</td>
                       <td className="px-6 py-4">{book.vouchersPerBook}</td>
                       <td className="px-6 py-4 font-semibold text-sky-800">{book.mvNoFrom} - {book.mvNoTo}</td>
-                      <td className="px-6 py-4">{book.assignedTo}</td>
+                      <td className="px-6 py-4">{resolveAssignedToLabel(book.assignedTo)}</td>
                       <td className="px-6 py-4">
                         <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold border ${
                           book.status === 'Approved'

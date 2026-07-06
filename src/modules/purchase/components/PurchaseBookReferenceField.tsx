@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { FormFieldSelect } from '@/components/forms';
 import { manualBillBookApi, type IManualBookPageTracking } from '@/api';
@@ -24,7 +24,7 @@ export const PurchaseBookReferenceField = ({
   disabled = false,
 }: PurchaseBookReferenceFieldProps) => {
   const form = useFormContext<IPurchaseFormValues>();
-  const { activeBranchId, user } = useAuth();
+  const { activeBranchId } = useAuth();
   const [deliveryBoyPickerOpen, setDeliveryBoyPickerOpen] = useState(false);
   const [pageOptions, setPageOptions] = useState<IManualBookPageTracking[]>([]);
   const [isLoadingPages, setIsLoadingPages] = useState(false);
@@ -105,20 +105,31 @@ export const PurchaseBookReferenceField = ({
     const assigneeId =
       manualBookReferenceType === 'DELIVERY_BOY'
         ? deliveryBoyUserId || ''
-        : user?.id || '';
+        : '';
 
     const loadPages = async () => {
-      if (!activeBranchId || !assigneeId) {
+      if (!activeBranchId) {
+        setPageOptions([]);
+        return;
+      }
+
+      if (isDeliveryBoyMode && !assigneeId) {
         setPageOptions([]);
         return;
       }
 
       try {
         setIsLoadingPages(true);
-        const pages = await manualBillBookApi.getSelectablePages({
-          branchId: activeBranchId,
-          userId: assigneeId,
-        });
+        const pages = await manualBillBookApi.getSelectablePages(
+          isDeliveryBoyMode
+            ? {
+                branchId: activeBranchId,
+                userId: assigneeId,
+              }
+            : {
+                branchId: activeBranchId,
+              }
+        );
 
         if (isActive) {
           setPageOptions(pages);
@@ -140,7 +151,7 @@ export const PurchaseBookReferenceField = ({
     return () => {
       isActive = false;
     };
-  }, [activeBranchId, deliveryBoyUserId, manualBookReferenceType, user?.id]);
+  }, [activeBranchId, deliveryBoyUserId, isDeliveryBoyMode, manualBookReferenceType]);
 
   useEffect(() => {
     const selectedPage = pageOptions.find(page => page.id === String(manualBookPageId || ''));
@@ -149,29 +160,75 @@ export const PurchaseBookReferenceField = ({
     }
 
     const selectedBook = selectedPage.manualBook;
-    form.setValue('manualBookId', selectedPage.manualBookId, {
-      shouldDirty: true,
-      shouldTouch: true,
-      shouldValidate: true,
-    });
-    form.setValue('manualBookNo', selectedBook?.no ?? '', {
-      shouldDirty: true,
-      shouldTouch: true,
-      shouldValidate: false,
-    });
-    form.setValue('manualBookPageSnapshot', {
+    const nextManualBookId = selectedPage.manualBookId;
+    const nextManualBookNo = selectedBook?.no ?? '';
+    const nextSnapshot = {
       ...selectedPage,
-    }, {
-      shouldDirty: true,
-      shouldTouch: true,
-      shouldValidate: false,
-    });
+    };
+
+    if (form.getValues('manualBookId') !== nextManualBookId) {
+      form.setValue('manualBookId', nextManualBookId, {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: true,
+      });
+    }
+
+    if (form.getValues('manualBookNo') !== nextManualBookNo) {
+      form.setValue('manualBookNo', nextManualBookNo, {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: false,
+      });
+    }
+
+    if (
+      JSON.stringify(form.getValues('manualBookPageSnapshot')) !==
+      JSON.stringify(nextSnapshot)
+    ) {
+      form.setValue('manualBookPageSnapshot', nextSnapshot, {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: false,
+      });
+    }
   }, [form, manualBookPageId, pageOptions]);
 
-  const loadReferenceTypeOptions = createStaticLoadOptions([
-    { value: 'CASHIER', label: 'Cashier' },
-    { value: 'DELIVERY_BOY', label: 'Delivery Boy' },
-  ]);
+  const loadReferenceTypeOptions = useMemo(
+    () =>
+      createStaticLoadOptions([
+        { value: 'CASHIER', label: 'Cashier' },
+        { value: 'DELIVERY_BOY', label: 'Delivery Boy' },
+      ]),
+    []
+  );
+
+  const loadManualBookPageOptions = useCallback(
+    async (inputValue: string) => {
+      const normalized = inputValue.trim().toLowerCase();
+      const options = pageOptions
+        .filter(page => {
+          if (!normalized) {
+            return true;
+          }
+
+          return [
+            String(page.pageNo),
+            page.manualBook?.no,
+            page.manualBook?.transactionType,
+          ]
+            .filter(Boolean)
+            .some(value => String(value).toLowerCase().includes(normalized));
+        })
+        .map(page => ({
+          value: page.id,
+          label: `${page.manualBook?.no || 'Book'} | Page ${page.pageNo}`,
+        }));
+
+      return { options, hasMore: false };
+    },
+    [pageOptions]
+  );
 
   const handleDeliveryBoyContinue = (users: Array<{ id: string; code: string; name: string }>) => {
     const selectedUser = users[0];
@@ -233,30 +290,8 @@ export const PurchaseBookReferenceField = ({
                 ? 'Delivery Boy Page'
                 : 'Cashier Page'
             }
-            placeholder="Select bill book page"
-            loadOptions={async (inputValue: string) => {
-              const normalized = inputValue.trim().toLowerCase();
-              const options = pageOptions
-                .filter(page => {
-                  if (!normalized) {
-                    return true;
-                  }
-
-                  return [
-                    String(page.pageNo),
-                    page.manualBook?.no,
-                    page.manualBook?.transactionType,
-                  ]
-                    .filter(Boolean)
-                    .some(value => String(value).toLowerCase().includes(normalized));
-                })
-                .map(page => ({
-                  value: page.id,
-                  label: `${page.manualBook?.no || 'Book'} | Page ${page.pageNo}`,
-                }));
-
-              return { options, hasMore: false };
-            }}
+          placeholder="Select bill book page"
+            loadOptions={loadManualBookPageOptions}
             disabled={disabled || !activeBranchId || (isDeliveryBoyMode && !deliveryBoyUserId) || isLoadingPages}
             isSearchable
           />

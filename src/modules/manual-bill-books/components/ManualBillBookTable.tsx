@@ -2,6 +2,14 @@ import { useMemo } from 'react';
 import { Table, type TableColumnDef } from '@/components/ui';
 import type { IManualBook } from '@/api';
 
+const resolveAssignedToLabel = (assignedTo: IManualBook['assignedTo']) => {
+  if (assignedTo && typeof assignedTo === 'object') {
+    return assignedTo.name || assignedTo.id;
+  }
+
+  return assignedTo || 'N/A';
+};
+
 interface ManualBillBookTableProps {
   books: IManualBook[];
   loading?: boolean;
@@ -79,7 +87,7 @@ export const ManualBillBookTable = ({
         header: 'Assigned To',
         cell: ({ row }) => (
           <span className="whitespace-nowrap text-text-secondary">
-            {row.original.assignedToName || row.original.assignedTo}
+            {resolveAssignedToLabel(row.original.assignedTo)}
           </span>
         ),
       },

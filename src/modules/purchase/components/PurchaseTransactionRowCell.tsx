@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { TrashIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui';
@@ -9,16 +9,20 @@ import type {
 } from '../types/purchaseTypes';
 import {
   calculateRoundedTransactionAmount,
+  calculatePurchaseTransactionCommission,
   calculateTransactionRoundOff,
   calculateTransactionTotal,
+  resolveAgentCommissionRule,
   resolvePurchaseTransactionPreview,
 } from '../utils/purchaseUtils';
 import { EntityPickerField } from './EntityPickerField';
 import type { AsyncSelectResponse } from '@/components/ui';
+import type { IPartyProfileCommissionRule } from '@/modules/partyProfiles/types';
 
 interface PurchaseTransactionRowCellProps {
   rowIndex: number;
   pricingData: IPurchasePricingData;
+  agentCommissionRules?: IPartyProfileCommissionRule[];
   onOpenCurrencyPicker: (rowIndex: number) => void;
   onRemove: (rowIndex: number) => void;
   canRemove: boolean;
@@ -61,9 +65,12 @@ const formatRangeValue = (value?: string | null) => {
   return Number.isFinite(numericValue) ? numericValue.toFixed(4) : value;
 };
 
+const normalizeValue = (value: unknown) => String(value ?? '').trim();
+
 export const PurchaseTransactionRowCell = ({
   rowIndex,
   pricingData,
+  agentCommissionRules = [],
   onOpenCurrencyPicker,
   onRemove,
   canRemove,
@@ -93,6 +100,10 @@ export const PurchaseTransactionRowCell = ({
   const rateValue = useWatch({
     control: form.control,
     name: `transactions.${rowIndex}.rate`,
+  });
+  const finalAmountValue = useWatch({
+    control: form.control,
+    name: `transactions.${rowIndex}.finalAmount`,
   });
 
   const selectedProduct = useMemo(
@@ -125,6 +136,26 @@ export const PurchaseTransactionRowCell = ({
 
   const effectiveGroupCode = preview?.effectiveGroupCode ?? '';
   const calculatedRate = preview?.buy.appliedFinalRate ?? '';
+  const selectedCurrencyProfile = useMemo(
+    () =>
+      (pricingData.currencies ?? []).find(
+        currency => currency.id === String(currencyId || '')
+      ) ?? null,
+    [currencyId, pricingData.currencies]
+  );
+  const agentCommissionRule = useMemo(
+    () =>
+      resolveAgentCommissionRule(
+        agentCommissionRules,
+        String(selectedCurrencyProfile?.currencyCode || ''),
+        String(selectedProduct?.productCode || '')
+      ),
+    [
+      agentCommissionRules,
+      selectedProduct?.productCode,
+      selectedCurrencyProfile?.currencyCode,
+    ]
+  );
   const total = useMemo(
     () => calculateTransactionTotal(String(quantity || ''), String(rateValue || '')),
     [quantity, rateValue]
@@ -136,6 +167,39 @@ export const PurchaseTransactionRowCell = ({
   const roundOffAmount = useMemo(
     () => calculateTransactionRoundOff(total),
     [total]
+  );
+  const commissionAmount = useMemo(
+    () =>
+      calculatePurchaseTransactionCommission(
+        String(finalAmountValue || roundedTotal || total || ''),
+        selectedCurrencyProfile?.ratePer || 1,
+        agentCommissionRule
+      ),
+    [
+      agentCommissionRule,
+      finalAmountValue,
+      roundedTotal,
+      selectedCurrencyProfile?.ratePer,
+      total,
+    ]
+  );
+  const commissionSnapshot = useMemo(
+    () =>
+      agentCommissionRule
+        ? {
+            currencyCode: selectedCurrencyProfile?.currencyCode || '',
+            productCode: selectedProduct?.productCode || '',
+            commissionType: agentCommissionRule.commissionType,
+            commissionValue: agentCommissionRule.commissionValue,
+            ratePer: selectedCurrencyProfile?.ratePer || '1',
+          }
+        : null,
+    [
+      agentCommissionRule,
+      selectedCurrencyProfile?.currencyCode,
+      selectedCurrencyProfile?.ratePer,
+      selectedProduct?.productCode,
+    ]
   );
   const hasCurrencyProductSelection = Boolean(currencyId && productId);
   const rateHelperText = !hasCurrencyProductSelection
@@ -167,7 +231,7 @@ export const PurchaseTransactionRowCell = ({
       !currentRate ||
       currentRate === lastAutoFilledRateRef.current.value;
 
-    if (!shouldResetToCalculatedRate) {
+    if (!shouldResetToCalculatedRate || currentRate === calculatedRate) {
       return;
     }
 
@@ -190,24 +254,34 @@ export const PurchaseTransactionRowCell = ({
   ]);
 
   useEffect(() => {
-    form.setValue(
-      `transactions.${rowIndex}.productCode`,
-      selectedProduct?.productCode ?? '',
-      {
+    const nextProductCode = selectedProduct?.productCode ?? '';
+    const nextProductDescription = selectedProduct?.productDescription ?? '';
+    const currentProductCode = normalizeValue(
+      form.getValues(`transactions.${rowIndex}.productCode`)
+    );
+    const currentProductDescription = normalizeValue(
+      form.getValues(`transactions.${rowIndex}.productDescription`)
+    );
+
+    if (currentProductCode !== nextProductCode) {
+      form.setValue(`transactions.${rowIndex}.productCode`, nextProductCode, {
         shouldDirty: false,
         shouldTouch: false,
         shouldValidate: false,
-      }
-    );
-    form.setValue(
-      `transactions.${rowIndex}.productDescription`,
-      selectedProduct?.productDescription ?? '',
-      {
-        shouldDirty: false,
-        shouldTouch: false,
-        shouldValidate: false,
-      }
-    );
+      });
+    }
+
+    if (currentProductDescription !== nextProductDescription) {
+      form.setValue(
+        `transactions.${rowIndex}.productDescription`,
+        nextProductDescription,
+        {
+          shouldDirty: false,
+          shouldTouch: false,
+          shouldValidate: false,
+        }
+      );
+    }
   }, [form, rowIndex, selectedProduct]);
 
   useEffect(() => {
@@ -270,31 +344,76 @@ export const PurchaseTransactionRowCell = ({
   }, [buyMaxRate, buyMinRate, form, hasCurrencyProductSelection, rowIndex, rateValue]);
 
   useEffect(() => {
-    form.setValue(`transactions.${rowIndex}.total`, total, {
-      shouldDirty: false,
-      shouldTouch: false,
-      shouldValidate: false,
-    });
+    const fieldName = `transactions.${rowIndex}.total` as const;
+    const currentTotal = normalizeValue(form.getValues(fieldName));
+
+    if (currentTotal !== total) {
+      form.setValue(fieldName, total, {
+        shouldDirty: false,
+        shouldTouch: false,
+        shouldValidate: false,
+      });
+    }
   }, [form, rowIndex, total]);
 
   useEffect(() => {
-    form.setValue(`transactions.${rowIndex}.roundOff`, roundOffAmount, {
-      shouldDirty: false,
-      shouldTouch: false,
-      shouldValidate: false,
-    });
-    form.setValue(`transactions.${rowIndex}.finalAmount`, roundedTotal, {
-      shouldDirty: false,
-      shouldTouch: false,
-      shouldValidate: false,
-    });
+    const roundOffField = `transactions.${rowIndex}.roundOff` as const;
+    const finalAmountField = `transactions.${rowIndex}.finalAmount` as const;
+    const currentRoundOff = normalizeValue(form.getValues(roundOffField));
+    const currentFinalAmount = normalizeValue(form.getValues(finalAmountField));
+
+    if (currentRoundOff !== roundOffAmount) {
+      form.setValue(roundOffField, roundOffAmount, {
+        shouldDirty: false,
+        shouldTouch: false,
+        shouldValidate: false,
+      });
+    }
+
+    if (currentFinalAmount !== roundedTotal) {
+      form.setValue(finalAmountField, roundedTotal, {
+        shouldDirty: false,
+        shouldTouch: false,
+        shouldValidate: false,
+      });
+    }
   }, [form, rowIndex, roundedTotal, roundOffAmount]);
 
-  const productLoadOptions = async (inputValue: string) =>
-    loadProductOptions(inputValue, pricingData.products ?? []);
+  useEffect(() => {
+    const fieldName = `transactions.${rowIndex}.commission` as const;
+    const currentCommission = normalizeValue(form.getValues(fieldName));
+    const nextCommission = commissionAmount || '';
+
+    if (currentCommission !== nextCommission) {
+      form.setValue(fieldName, nextCommission, {
+        shouldDirty: false,
+        shouldTouch: false,
+        shouldValidate: false,
+      });
+    }
+  }, [commissionAmount, form, rowIndex]);
+
+  useEffect(() => {
+    const fieldName = `transactions.${rowIndex}.commissionSnapshot` as const;
+    const currentSnapshot = form.getValues(fieldName);
+    const nextSnapshot = commissionSnapshot;
+    if (JSON.stringify(currentSnapshot) !== JSON.stringify(nextSnapshot)) {
+      form.setValue(fieldName, nextSnapshot, {
+        shouldDirty: false,
+        shouldTouch: false,
+        shouldValidate: false,
+      });
+    }
+  }, [commissionSnapshot, form, rowIndex]);
+
+  const productLoadOptions = useCallback(
+    (inputValue: string) =>
+      loadProductOptions(inputValue, pricingData.products ?? []),
+    [pricingData.products]
+  );
 
   return (
-    <div className="grid gap-2 px-1 py-1 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1.4fr)_minmax(0,0.55fr)_minmax(0,0.75fr)_minmax(0,0.55fr)_minmax(0,0.55fr)_minmax(0,0.55fr)_44px]">
+    <div className="grid gap-2 px-1 py-1 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1.4fr)_minmax(0,0.55fr)_minmax(0,0.75fr)_minmax(0,0.55fr)_minmax(0,0.55fr)_minmax(0,0.55fr)_minmax(0,0.55fr)_44px]">
       <div className="min-w-0">
         <EntityPickerField
           label="Currency"
@@ -368,6 +487,14 @@ export const PurchaseTransactionRowCell = ({
         <FormFieldInput
           name={`transactions.${rowIndex}.finalAmount`}
           label="Final Amount"
+          readOnly
+          classes={{ container: 'max-w-[95px]' }}
+        />
+      </div>
+      <div className="min-w-0">
+        <FormFieldInput
+          name={`transactions.${rowIndex}.commission`}
+          label="Commission"
           readOnly
           classes={{ container: 'max-w-[95px]' }}
         />

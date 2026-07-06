@@ -129,11 +129,13 @@ export interface ITransactionItemEntity {
   productCurrencyRateId: string | null;
   quantity: string;
   rate: string;
+  commission: string | null;
   currencySnapshot: ITransactionReferenceSnapshot | null;
   productSnapshot: ITransactionReferenceSnapshot | null;
   currencyRateSnapshot: ITransactionReferenceSnapshot | null;
   productCurrencyRateSnapshot: ITransactionPricingRuleSnapshot | null;
   pricingRuleSnapshot: ITransactionPricingRuleSnapshot | null;
+  commissionSnapshot: ITransactionPricingRuleSnapshot | null;
   remarks: string | null;
   createdAt: string;
   updatedAt: string;
@@ -226,6 +228,8 @@ export interface ICreateTransactionItemPayload {
   productCurrencyRateId?: string | null;
   quantity: string;
   rate: string;
+  commission?: string | null;
+  commissionSnapshot?: ITransactionPricingRuleSnapshot | null;
   remarks?: string | null;
 }
 

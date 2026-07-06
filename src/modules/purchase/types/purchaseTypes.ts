@@ -11,6 +11,7 @@ import type {
   TradeMode,
   TransactionType,
 } from '@/modules/transactions';
+import type { IPartyProfileCommissionRule } from '@/modules/partyProfiles/types';
 import type { PurchasePageType } from '@/pages/purchase/[slug]/purchasePage.enum';
 
 export interface IPurchaseTransactionFormRow {
@@ -22,6 +23,8 @@ export interface IPurchaseTransactionFormRow {
   productDescription: string;
   quantity: string;
   rate: string;
+  commission: string;
+  commissionSnapshot: Record<string, unknown> | null;
   total: string;
   roundOff: string;
   finalAmount: string;
@@ -106,6 +109,7 @@ export interface IPurchasePricingData {
   products: IPurchaseProductOption[];
   latestRates: import('@/modules/currencyRates/types/currencyRatesTypes').ICurrencyRate[];
   productCurrencyRates: import('@/modules/currencyRates/types/currencyRatesTypes').IProductCurrencyRate[];
+  agentCommissionRules?: IPartyProfileCommissionRule[];
 }
 
 export interface IPurchaseSubmitPayload {

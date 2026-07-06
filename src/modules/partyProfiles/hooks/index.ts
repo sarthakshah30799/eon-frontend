@@ -162,3 +162,29 @@ export const usePartyProfileTypes = () => {
     queryFn: () => partyProfileApi.getPartyProfileTypes(),
   });
 };
+
+export const useUploadAgentCommissionTemplate = (partyProfileId: string) => {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: (file: File) =>
+      partyProfileApi.uploadAgentCommissionTemplate(partyProfileId, file),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: ['party-profile', 'AGENT', partyProfileId],
+      });
+      void queryClient.invalidateQueries({ queryKey: ['party-profiles'] });
+      toast.success('Commission template uploaded successfully!');
+    },
+    onError: (error: unknown) => {
+      toast.error(
+        getErrorMessage(error, 'Failed to upload commission template')
+      );
+    },
+  });
+
+  return {
+    ...mutation,
+    uploadAgentCommissionTemplate: mutation.mutateAsync,
+  };
+};

@@ -5,7 +5,7 @@ const ManualBillBookCreatePage = () => {
   const navigate = useNavigate();
 
   const handleSuccess = () => {
-    navigate('/admin/manual-bill-books');
+    navigate('/manual-bill-books');
   };
 
   return (

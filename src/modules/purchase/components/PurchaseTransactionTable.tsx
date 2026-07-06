@@ -8,15 +8,18 @@ import type {
 } from '../types/purchaseTypes';
 import { createEmptyPurchaseTransactionRow } from '../utils/purchaseUtils';
 import { PurchaseTransactionRowCell } from './PurchaseTransactionRowCell';
+import type { IPartyProfileCommissionRule } from '@/modules/partyProfiles/types';
 
 interface PurchaseTransactionTableProps {
   pricingData: IPurchasePricingData;
+  agentCommissionRules?: IPartyProfileCommissionRule[];
   onOpenCurrencyPicker: (rowIndex: number) => void;
   disabled?: boolean;
 }
 
 export const PurchaseTransactionTable = ({
   pricingData,
+  agentCommissionRules = [],
   onOpenCurrencyPicker,
   disabled = false,
 }: PurchaseTransactionTableProps) => {
@@ -35,6 +38,7 @@ export const PurchaseTransactionTable = ({
           <PurchaseTransactionRowCell
             rowIndex={row.index}
             pricingData={pricingData}
+            agentCommissionRules={agentCommissionRules}
             onOpenCurrencyPicker={onOpenCurrencyPicker}
             onRemove={remove}
             canRemove={fields.length > 1}
@@ -47,7 +51,14 @@ export const PurchaseTransactionTable = ({
         },
       },
     ];
-  }, [disabled, fields.length, onOpenCurrencyPicker, pricingData, remove]);
+  }, [
+    agentCommissionRules,
+    disabled,
+    fields.length,
+    onOpenCurrencyPicker,
+    pricingData,
+    remove,
+  ]);
 
   return (
     <CardSection heading="Transaction Details">

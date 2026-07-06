@@ -2,6 +2,14 @@ import { useMemo } from 'react';
 import { Table, type TableColumnDef } from '@/components/ui';
 import type { IChequeBook } from '@/api';
 
+const resolveAssignedToLabel = (assignedTo: IChequeBook['assignedTo']) => {
+  if (assignedTo && typeof assignedTo === 'object') {
+    return assignedTo.name || assignedTo.id;
+  }
+
+  return assignedTo || 'N/A';
+};
+
 interface ChequeBookTableProps {
   books: IChequeBook[];
   loading?: boolean;
@@ -79,7 +87,7 @@ export const ChequeBookTable = ({
         header: 'Assigned To',
         cell: ({ row }) => (
           <span className="whitespace-nowrap text-text-secondary">
-            {row.original.assignedToName || row.original.assignedTo}
+            {resolveAssignedToLabel(row.original.assignedTo)}
           </span>
         ),
       },

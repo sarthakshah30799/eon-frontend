@@ -28,6 +28,14 @@ import {
   type ManualBillBookStatus,
 } from './types';
 
+const resolveAssignedToLabel = (assignedTo: IManualBook['assignedTo']) => {
+  if (assignedTo && typeof assignedTo === 'object') {
+    return assignedTo.name || assignedTo.id;
+  }
+
+  return assignedTo || 'N/A';
+};
+
 export const ManualBillBookListView = () => {
   // Filter states
   const [branchFilter, setBranchFilter] = useState('');
@@ -175,7 +183,7 @@ export const ManualBillBookListView = () => {
     const fetchCashiers = async () => {
       if (!selectedBook) return;
       try {
-        const data = await manualBillBookApi.getAuthorizedUsers(selectedBook.branchId);
+        const data = await manualBillBookApi.getAuthorizedUsers();
         setCashiers(data);
       } catch (err) {
         console.error(err);
@@ -255,7 +263,7 @@ export const ManualBillBookListView = () => {
       <div className="flex justify-end">
         <Button
           type="button"
-          onClick={() => navigate('/admin/manual-bill-books/create')}
+          onClick={() => navigate('/manual-bill-books/create')}
         >
           Create
         </Button>
@@ -404,7 +412,7 @@ export const ManualBillBookListView = () => {
                   Assigned To
                 </span>
                 <span className="text-slate-800">
-                  {selectedBook.assignedToName || selectedBook.assignedTo}
+                  {resolveAssignedToLabel(selectedBook.assignedTo)}
                 </span>
               </div>
               <div className="col-span-2">

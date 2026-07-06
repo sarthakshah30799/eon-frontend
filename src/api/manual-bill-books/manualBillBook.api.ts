@@ -1,4 +1,5 @@
 import { apiClient } from '../api';
+import type { IUserReference } from '../sharedTypes';
 
 export interface IManualBook {
   id: string;
@@ -14,8 +15,7 @@ export interface IManualBook {
   vouchersPerBook: number;
   mvNoFrom: number;
   mvNoTo: number;
-  assignedTo: string;
-  assignedToName?: string;
+  assignedTo: string | IUserReference;
   remarks?: string;
   status: string; // 'Pending' | 'Approved' | 'Rejected'
   fromDate?: string;
@@ -133,9 +133,9 @@ export const manualBillBookApi = {
     return res.data;
   },
 
-  getAuthorizedUsers: async (branchId: string): Promise<Array<{ id: string; name: string }>> => {
+  getAuthorizedUsers: async (): Promise<Array<{ id: string; name: string }>> => {
     const res = await apiClient.get<Array<{ id: string; name: string }>>(
-      `/manual-bill-books/users?branchId=${encodeURIComponent(branchId)}`
+      '/manual-bill-books/users'
     );
     if (res.error) throw new Error(res.error);
     return res.data || [];

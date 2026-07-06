@@ -24,6 +24,14 @@ import {
   type ChequeBookStatus,
 } from './types';
 
+const resolveAssignedToLabel = (assignedTo: IChequeBook['assignedTo']) => {
+  if (assignedTo && typeof assignedTo === 'object') {
+    return assignedTo.name || assignedTo.id;
+  }
+
+  return assignedTo || 'N/A';
+};
+
 export const ChequeBookListView = () => {
   const navigate = useNavigate();
   // Filter states
@@ -405,7 +413,7 @@ export const ChequeBookListView = () => {
                   Assigned To
                 </span>
                 <span className="text-slate-800">
-                  {selectedBook.assignedToName || selectedBook.assignedTo}
+                  {resolveAssignedToLabel(selectedBook.assignedTo)}
                 </span>
               </div>
               <div className="col-span-2">

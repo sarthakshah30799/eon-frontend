@@ -218,6 +218,10 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
     meta: { title: 'Purchase' },
   },
   {
+    path: '/purchase/:slug/edit/:id',
+    meta: { title: 'Purchase' },
+  },
+  {
     path: '/purchase/:slug/documents',
     meta: { title: 'Purchase Documents' },
   },

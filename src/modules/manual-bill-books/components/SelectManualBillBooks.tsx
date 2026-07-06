@@ -19,6 +19,14 @@ type SelectableManualBillBookRow = IManualBook & {
   rowKey: string;
 };
 
+const resolveAssignedToLabel = (assignedTo: IManualBook['assignedTo']) => {
+  if (assignedTo && typeof assignedTo === 'object') {
+    return assignedTo.name || assignedTo.id;
+  }
+
+  return assignedTo || '-';
+};
+
 const buildColumns = (
   selectable: boolean,
   multiple: boolean
@@ -49,11 +57,12 @@ const buildColumns = (
       header: 'Branch',
       cell: ({ row }) => row.original.branchCode || '-',
     },
-    {
-      id: 'assignedTo',
-      accessorKey: 'assignedTo',
-      header: 'Assigned To',
-    },
+      {
+        id: 'assignedTo',
+        accessorKey: 'assignedTo',
+        header: 'Assigned To',
+        cell: ({ row }) => resolveAssignedToLabel(row.original.assignedTo),
+      },
     {
       id: 'status',
       header: 'Status',
@@ -131,7 +140,7 @@ export const SelectManualBillBooks = ({
             book.transactionType,
             book.branchCode,
             book.branchName,
-            book.assignedTo,
+            resolveAssignedToLabel(book.assignedTo),
             book.status,
             String(book.bookNoFrom),
             String(book.bookNoTo),

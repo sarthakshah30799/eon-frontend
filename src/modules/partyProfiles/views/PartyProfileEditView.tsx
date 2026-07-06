@@ -14,7 +14,7 @@ import {
   toPartyProfileApiType,
   toPartyProfileRouteType,
 } from '../constants';
-import { PartyProfileDocumentsActionButton } from '../components';
+import { AgentCommissionSection, PartyProfileDocumentsActionButton } from '../components';
 import { NotFoundState } from '@/components/ui/not-found-state';
 
 const formatDateForInput = (dateString?: string | Date) => {
@@ -226,6 +226,13 @@ export const PartyProfileEditView = () => {
           currentId={id}
         />
       </section>
+      {selectedApiType === 'AGENT' ? (
+        <AgentCommissionSection
+          partyProfileId={id || ''}
+          commissionRules={client?.commissionRules ?? []}
+          disabled={isPending || isReviewing || !canModify}
+        />
+      ) : null}
     </div>
   );
 };

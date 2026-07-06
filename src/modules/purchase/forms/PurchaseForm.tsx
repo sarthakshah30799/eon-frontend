@@ -10,6 +10,7 @@ import { TransactionPaymentDetailsFieldArray } from '@/components/forms';
 import { documentProfileApi } from '@/api/documentProfile';
 import { DocumentRequirementCard } from '@/modules/documentProfiles/components/DocumentRequirementCard';
 import { SelectCurrencyProfiles } from '@/modules/currencyProfile/components';
+import { useGetPartyProfile } from '@/modules/partyProfiles/hooks';
 import type { PartyProfileType } from '@/modules/partyProfiles/constants';
 import type { PurchasePageType } from '@/pages/purchase/[slug]/purchasePage.enum';
 import { getPurchasePageTitle } from '@/pages/purchase/[slug]/purchasePage.enum';
@@ -75,6 +76,10 @@ const PurchaseFormBody = ({
     control: form.control,
     name: 'partyProfileApplyTax',
   });
+  const agentProfileId = useWatch({
+    control: form.control,
+    name: 'agentProfileId',
+  });
   const additionalChargeAccountQuery = useMemo(
     () => ({
       page: 1,
@@ -101,6 +106,11 @@ const PurchaseFormBody = ({
       }),
     enabled: Boolean(purchasePageType),
   });
+  const { data: agentProfile } = useGetPartyProfile(
+    String(agentProfileId || ''),
+    'AGENT',
+    Boolean(agentProfileId)
+  );
   const transactionDocumentProfiles = documentProfiles;
   const transactions = useWatch({
     control: form.control,
@@ -194,6 +204,9 @@ const PurchaseFormBody = ({
         pricingData={pricingData}
         onOpenCurrencyPicker={setCurrencyPickerRowIndex}
         disabled={isSubmitting}
+        agentCommissionRules={
+          agentProfileId ? agentProfile?.commissionRules ?? [] : []
+        }
       />
 
       <TransactionAdditionalChargesFieldArray

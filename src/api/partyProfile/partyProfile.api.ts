@@ -125,6 +125,31 @@ export const partyProfileApi = {
     if (!res.data) throw new Error('Failed to review party profile');
     return res.data;
   },
+
+  getAgentCommissionTemplate: async (id: string): Promise<string> => {
+    const res = await apiClient.get<string>(
+      `/party-profiles/${id}/commission/template`
+    );
+    if (res.error) throw new Error(res.error);
+    return typeof res.data === 'string' ? res.data : '';
+  },
+
+  uploadAgentCommissionTemplate: async (
+    id: string,
+    file: File
+  ): Promise<IPartyProfile> => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const res = await apiClient.postFormData<IPartyProfile>(
+      `/party-profiles/${id}/commission/upload`,
+      formData
+    );
+
+    if (res.error) throw new Error(res.error);
+    if (!res.data) throw new Error('Failed to upload commission template');
+    return res.data;
+  },
 };
 
 export default partyProfileApi;

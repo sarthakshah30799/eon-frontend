@@ -1,4 +1,5 @@
 import { apiClient } from '../api';
+import type { IUserReference } from '../sharedTypes';
 
 export interface IChequeBook {
   id: string;
@@ -15,8 +16,7 @@ export interface IChequeBook {
   vouchersPerBook: number;
   mvNoFrom: number;
   mvNoTo: number;
-  assignedTo: string;
-  assignedToName?: string;
+  assignedTo: string | IUserReference;
   remarks?: string;
   status: string; // 'Pending' | 'Approved' | 'Rejected'
   fromDate?: string;

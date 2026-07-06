@@ -1,14 +1,51 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { usePendingPartyProfileReviews } from '@/modules/partyProfiles/hooks';
 import { PartyProfileReviewQueue } from '@/modules/partyProfiles/components';
+import { useListChequeBooks } from '@/modules/chequebooks/hooks';
+import { useListManualBillBooks } from '@/modules/manual-bill-books/hooks';
+import { Button } from '@/components/ui';
+
+const formatDateTime = (value?: string) => {
+  if (!value) return '-';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '-';
+  return date.toLocaleDateString();
+};
 
 const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const isReviewer = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
+
   const { data: pendingReviews = [], isLoading } = usePendingPartyProfileReviews();
+
+  const { data: pendingChequeBooks = [], isLoading: isLoadingChequebooks } = useListChequeBooks({
+    status: 'Pending',
+  });
+
+  const { data: pendingManualBillBooks = [], isLoading: isLoadingManualBillBooks } = useListManualBillBooks({
+    status: 'Pending',
+  });
+
+  const myPendingChequeBooks = useMemo(() => {
+    return pendingChequeBooks.filter(book => {
+      const assignedId = typeof book.assignedTo === 'object' && book.assignedTo !== null
+        ? book.assignedTo.id
+        : book.assignedTo;
+      return assignedId === user?.id;
+    });
+  }, [pendingChequeBooks, user?.id]);
+
+  const myPendingManualBillBooks = useMemo(() => {
+    return pendingManualBillBooks.filter(book => {
+      const assignedId = typeof book.assignedTo === 'object' && book.assignedTo !== null
+        ? book.assignedTo.id
+        : book.assignedTo;
+      return assignedId === user?.id;
+    });
+  }, [pendingManualBillBooks, user?.id]);
 
   return (
     <div className="space-y-6">
@@ -54,6 +91,110 @@ const DashboardPage: React.FC = () => {
             );
           }}
         />
+      )}
+
+      {/* Pending Chequebook dispatches */}
+      {myPendingChequeBooks.length > 0 && (
+        <section className="rounded-sm border border-border-primary bg-surface-primary p-5 shadow-sm">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-wide text-text-tertiary">
+                Chequebooks
+              </p>
+              <h3 className="text-lg font-semibold text-text-primary">
+                Pending Chequebook Dispatches
+              </h3>
+            </div>
+            <p className="text-sm text-text-secondary">
+              {isLoadingChequebooks ? 'Loading...' : `${myPendingChequeBooks.length} item(s) pending`}
+            </p>
+          </div>
+
+          <div className="mt-4 space-y-3">
+            {myPendingChequeBooks.map(book => (
+              <article
+                key={book.id}
+                className="flex flex-col gap-3 rounded-sm border border-border-primary bg-surface-secondary px-4 py-4 md:flex-row md:items-center md:justify-between"
+              >
+                <div className="space-y-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-sm font-semibold text-text-primary">{book.no || 'Chequebook'}</p>
+                    <span className="rounded-full bg-warning-100 px-2 py-0.5 text-xs font-medium text-warning-700">
+                      Pending Approval
+                    </span>
+                  </div>
+                  <p className="text-sm text-text-secondary">
+                    Branch: {book.branchName || book.branchCode || 'N/A'} · Range: {book.bookNoFrom} - {book.bookNoTo}
+                  </p>
+                  <p className="text-xs text-text-tertiary">
+                    Dispatch Date: {formatDateTime(book.dispatchDate)}
+                  </p>
+                </div>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="rounded-sm"
+                  onClick={() => navigate(`/checkbooks?reviewId=${book.id}`)}
+                >
+                  Review
+                </Button>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Pending Manual Bill Book dispatches */}
+      {myPendingManualBillBooks.length > 0 && (
+        <section className="rounded-sm border border-border-primary bg-surface-primary p-5 shadow-sm">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-wide text-text-tertiary">
+                Manual Bill Books
+              </p>
+              <h3 className="text-lg font-semibold text-text-primary">
+                Pending Manual Bill Book Dispatches
+              </h3>
+            </div>
+            <p className="text-sm text-text-secondary">
+              {isLoadingManualBillBooks ? 'Loading...' : `${myPendingManualBillBooks.length} item(s) pending`}
+            </p>
+          </div>
+
+          <div className="mt-4 space-y-3">
+            {myPendingManualBillBooks.map(book => (
+              <article
+                key={book.id}
+                className="flex flex-col gap-3 rounded-sm border border-border-primary bg-surface-secondary px-4 py-4 md:flex-row md:items-center md:justify-between"
+              >
+                <div className="space-y-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-sm font-semibold text-text-primary">{book.no || 'Manual Bill Book'}</p>
+                    <span className="rounded-full bg-warning-100 px-2 py-0.5 text-xs font-medium text-warning-700">
+                      Pending Approval
+                    </span>
+                  </div>
+                  <p className="text-sm text-text-secondary">
+                    Branch: {book.branchName || book.branchCode || 'N/A'} · Range: {book.bookNoFrom} - {book.bookNoTo}
+                  </p>
+                  <p className="text-xs text-text-tertiary">
+                    Dispatch Date: {formatDateTime(book.dispatchDate)}
+                  </p>
+                </div>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="rounded-sm"
+                  onClick={() => navigate(`/manual-bill-books?reviewId=${book.id}`)}
+                >
+                  Review
+                </Button>
+              </article>
+            ))}
+          </div>
+        </section>
       )}
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">

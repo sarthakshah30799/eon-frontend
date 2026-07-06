@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { usePermission } from '@/hooks/usePermission';
 import {
   AsyncSelect,
   Button,
+  Input,
   PageGrid,
   type AsyncSelectOption,
   type AsyncSelectResponse,
@@ -44,6 +46,7 @@ export const ManualBillBookListView = () => {
   );
 
   const navigate = useNavigate();
+  const { canAdd } = usePermission('/manual-bill-books');
 
   const statusOptions = useMemo<AsyncSelectOption[]>(
     () => [
@@ -91,8 +94,8 @@ export const ManualBillBookListView = () => {
       const normalizedInput = inputValue.trim().toLowerCase();
       const filteredOptions = normalizedInput
         ? branchOptions.filter(option =>
-            option.label.toLowerCase().includes(normalizedInput)
-          )
+          option.label.toLowerCase().includes(normalizedInput)
+        )
         : branchOptions;
 
       return {
@@ -107,8 +110,8 @@ export const ManualBillBookListView = () => {
       const normalizedInput = inputValue.trim().toLowerCase();
       const filteredOptions = normalizedInput
         ? statusOptions.filter(option =>
-            option.label.toLowerCase().includes(normalizedInput)
-          )
+          option.label.toLowerCase().includes(normalizedInput)
+        )
         : statusOptions;
 
       return {
@@ -120,14 +123,45 @@ export const ManualBillBookListView = () => {
 
   // Review modal states
   const [isReviewOpen, setIsReviewOpen] = useState(false);
-  const [selectedBook] = useState<IManualBook | null>(null);
+  const [selectedBook, setSelectedBook] = useState<IManualBook | null>(null);
   const [approvalStatus, setApprovalStatus] =
     useState<ManualBillBookReviewStatus>(ManualBillBookStatusEnum.APPROVED);
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [approvalRemarks, setApprovalRemarks] = useState('');
 
+  const reviewStatusOptions = useMemo<AsyncSelectOption[]>(
+    () => [
+      { value: 'Approved', label: 'APPROVE' },
+      { value: 'Rejected', label: 'REJECT' },
+    ],
+    []
+  );
+
+  const selectedReviewStatusOption = useMemo<AsyncSelectOption | null>(
+    () => reviewStatusOptions.find(option => option.value === approvalStatus) ?? null,
+    [approvalStatus, reviewStatusOptions]
+  );
+
+  const loadReviewStatusOptions = useCallback(
+    async (inputValue: string): Promise<AsyncSelectResponse> => {
+      const normalizedInput = inputValue.trim().toLowerCase();
+      const filteredOptions = normalizedInput
+        ? reviewStatusOptions.filter(option =>
+          option.label.toLowerCase().includes(normalizedInput)
+        )
+        : reviewStatusOptions;
+
+      return {
+        options: filteredOptions,
+      };
+    },
+    [reviewStatusOptions]
+  );
+
   const { approveOrReject, isSubmitting } = useApproveRejectManualBillBook();
+  const [searchParams] = useSearchParams();
+  const reviewId = searchParams.get('reviewId');
 
   const {
     data: books = [],
@@ -149,6 +183,16 @@ export const ManualBillBookListView = () => {
       toast.error(message);
     }
   }, [error]);
+
+  useEffect(() => {
+    if (reviewId && books.length > 0) {
+      const book = books.find(b => b.id === reviewId);
+      if (book) {
+        setSelectedBook(book);
+        setIsReviewOpen(true);
+      }
+    }
+  }, [reviewId, books]);
 
   // Page Tracking allocation list & cashier list states
   const [allocations, setAllocations] = useState<IManualBookAllocation[]>([]);
@@ -350,6 +394,10 @@ export const ManualBillBookListView = () => {
           <ManualBillBookTable
             books={books}
             loading={isLoading || isFetching}
+            onRowClick={book => {
+              setSelectedBook(book);
+              setIsReviewOpen(true);
+            }}
           />
         </div>
       </section>
@@ -447,43 +495,40 @@ export const ManualBillBookListView = () => {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-600 mb-1">
-                      Status Action
-                    </label>
-                    <select
-                      className="w-full bg-white border border-slate-200 rounded px-3 py-1.5 text-xs font-medium"
-                      value={approvalStatus}
-                      onChange={e =>
-                        setApprovalStatus(
-                          e.target.value as ManualBillBookReviewStatus
-                        )
-                      }
-                    >
-                      <option value="Approved">Approve</option>
-                      <option value="Rejected">Reject</option>
-                    </select>
+                    <AsyncSelect
+                      label="Status Action"
+                      placeholder="Select Action"
+                      value={selectedReviewStatusOption}
+                      loadOptions={loadReviewStatusOptions}
+                      defaultOptions={reviewStatusOptions}
+                      isSearchable={false}
+                      onChange={option => {
+                        const selectedOption = Array.isArray(option)
+                          ? option[0] ?? null
+                          : option;
+                        if (selectedOption) {
+                          setApprovalStatus(
+                            selectedOption.value as ManualBillBookReviewStatus
+                          );
+                        }
+                      }}
+                    />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-600 mb-1">
-                      From Date
-                    </label>
-                    <input
+                    <Input
                       type="date"
-                      className="w-full bg-white border border-slate-200 rounded px-3 py-1.5 text-xs"
+                      label="From Date"
                       value={fromDate}
                       onChange={e => setFromDate(e.target.value)}
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-600 mb-1">
-                      To Date
-                    </label>
-                    <input
+                    <Input
                       type="date"
-                      className="w-full bg-white border border-slate-200 rounded px-3 py-1.5 text-xs"
+                      label="To Date"
                       value={toDate}
                       onChange={e => setToDate(e.target.value)}
                     />

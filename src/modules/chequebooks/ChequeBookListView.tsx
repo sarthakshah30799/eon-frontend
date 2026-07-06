@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { usePermission } from '@/hooks/usePermission';
 import {
   chequebookApi,
   type IChequeBook,
@@ -12,6 +13,7 @@ import { Loader } from '@/components/ui/loader';
 import {
   AsyncSelect,
   Button,
+  Input,
   PageGrid,
   type AsyncSelectOption,
   type AsyncSelectResponse,
@@ -34,6 +36,7 @@ const resolveAssignedToLabel = (assignedTo: IChequeBook['assignedTo']) => {
 
 export const ChequeBookListView = () => {
   const navigate = useNavigate();
+  const { canAdd } = usePermission('/checkbooks');
   // Filter states
   const [branchFilter, setBranchFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState<ChequeBookStatus | ''>('');
@@ -48,6 +51,35 @@ export const ChequeBookListView = () => {
   const [approvalRemarks, setApprovalRemarks] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedBook, setSelectedBook] = useState<IChequeBook | null>(null);
+
+  const reviewStatusOptions = useMemo<AsyncSelectOption[]>(
+    () => [
+      { value: 'Approved', label: 'APPROVE' },
+      { value: 'Rejected', label: 'REJECT' },
+    ],
+    []
+  );
+
+  const selectedReviewStatusOption = useMemo<AsyncSelectOption | null>(
+    () => reviewStatusOptions.find(option => option.value === approvalStatus) ?? null,
+    [approvalStatus, reviewStatusOptions]
+  );
+
+  const loadReviewStatusOptions = useCallback(
+    async (inputValue: string): Promise<AsyncSelectResponse> => {
+      const normalizedInput = inputValue.trim().toLowerCase();
+      const filteredOptions = normalizedInput
+        ? reviewStatusOptions.filter(option =>
+          option.label.toLowerCase().includes(normalizedInput)
+        )
+        : reviewStatusOptions;
+
+      return {
+        options: filteredOptions,
+      };
+    },
+    [reviewStatusOptions]
+  );
 
   const { data: branches = [] } = useListBranchProfiles({
     activeOnly: true,
@@ -72,8 +104,8 @@ export const ChequeBookListView = () => {
       const normalizedInput = inputValue.trim().toLowerCase();
       const filteredOptions = normalizedInput
         ? branchOptions.filter(option =>
-            option.label.toLowerCase().includes(normalizedInput)
-          )
+          option.label.toLowerCase().includes(normalizedInput)
+        )
         : branchOptions;
 
       return {
@@ -111,8 +143,8 @@ export const ChequeBookListView = () => {
       const normalizedInput = inputValue.trim().toLowerCase();
       const filteredOptions = normalizedInput
         ? statusOptions.filter(option =>
-            option.label.toLowerCase().includes(normalizedInput)
-          )
+          option.label.toLowerCase().includes(normalizedInput)
+        )
         : statusOptions;
 
       return {
@@ -133,6 +165,9 @@ export const ChequeBookListView = () => {
     status: statusFilter || undefined,
   });
 
+  const [searchParams] = useSearchParams();
+  const reviewId = searchParams.get('reviewId');
+
   useEffect(() => {
     if (error) {
       const message =
@@ -142,6 +177,16 @@ export const ChequeBookListView = () => {
       toast.error(message);
     }
   }, [error]);
+
+  useEffect(() => {
+    if (reviewId && books.length > 0) {
+      const book = books.find(b => b.id === reviewId);
+      if (book) {
+        setSelectedBook(book);
+        setIsReviewOpen(true);
+      }
+    }
+  }, [reviewId, books]);
 
 
   // Page Tracking allocation list & cashier list states
@@ -430,43 +475,40 @@ export const ChequeBookListView = () => {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-600 mb-1">
-                      Status Action
-                    </label>
-                    <select
-                      className="w-full bg-white border border-slate-200 rounded px-3 py-1.5 text-xs font-medium"
-                      value={approvalStatus}
-                      onChange={e =>
-                        setApprovalStatus(
-                          e.target.value as 'Approved' | 'Rejected'
-                        )
-                      }
-                    >
-                      <option value="Approved">Approve</option>
-                      <option value="Rejected">Reject</option>
-                    </select>
+                    <AsyncSelect
+                      label="Status Action"
+                      placeholder="Select Action"
+                      value={selectedReviewStatusOption}
+                      loadOptions={loadReviewStatusOptions}
+                      defaultOptions={reviewStatusOptions}
+                      isSearchable={false}
+                      onChange={option => {
+                        const selectedOption = Array.isArray(option)
+                          ? option[0] ?? null
+                          : option;
+                        if (selectedOption) {
+                          setApprovalStatus(
+                            selectedOption.value as 'Approved' | 'Rejected'
+                          );
+                        }
+                      }}
+                    />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-600 mb-1">
-                      From Date
-                    </label>
-                    <input
+                    <Input
                       type="date"
-                      className="w-full bg-white border border-slate-200 rounded px-3 py-1.5 text-xs"
+                      label="From Date"
                       value={fromDate}
                       onChange={e => setFromDate(e.target.value)}
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-600 mb-1">
-                      To Date
-                    </label>
-                    <input
+                    <Input
                       type="date"
-                      className="w-full bg-white border border-slate-200 rounded px-3 py-1.5 text-xs"
+                      label="To Date"
                       value={toDate}
                       onChange={e => setToDate(e.target.value)}
                     />

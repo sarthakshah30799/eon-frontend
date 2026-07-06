@@ -10,7 +10,8 @@ import type { IPartyProfileCommissionRule } from '../types/partyProfileTypes';
 interface AgentCommissionSectionProps {
   partyProfileId: string;
   commissionRules: IPartyProfileCommissionRule[];
-  disabled?: boolean;
+  canModify?: boolean;
+  isBusy?: boolean;
 }
 
 const formatCommissionType = (value: string) =>
@@ -19,7 +20,8 @@ const formatCommissionType = (value: string) =>
 export const AgentCommissionSection = ({
   partyProfileId,
   commissionRules,
-  disabled = false,
+  canModify = false,
+  isBusy = false,
 }: AgentCommissionSectionProps) => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const { uploadAgentCommissionTemplate, isPending } =
@@ -106,17 +108,16 @@ export const AgentCommissionSection = ({
           <Button
             type="button"
             variant="outline"
-            disabled={disabled || isPending}
             onClick={() => void handleDownloadTemplate()}
           >
-            Download Template
+            Download Current Template
           </Button>
           <Button
             type="button"
-            disabled={disabled || isPending}
+            disabled={!canModify || isPending || isBusy}
             onClick={() => fileInputRef.current?.click()}
           >
-            Upload Template
+            Upload Commission CSV
           </Button>
         </div>
       </div>
@@ -126,7 +127,7 @@ export const AgentCommissionSection = ({
         type="file"
         accept=".csv,text/csv"
         className="hidden"
-        disabled={disabled || isPending}
+        disabled={!canModify || isPending || isBusy}
         onChange={event => {
           void handleFileChange(event);
         }}

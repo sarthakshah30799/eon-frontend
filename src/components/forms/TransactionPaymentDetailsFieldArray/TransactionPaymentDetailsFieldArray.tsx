@@ -341,7 +341,7 @@ export const TransactionPaymentDetailsFieldArray = ({
     return Math.max(total - totalApplied, 0);
   }, [maxAmount, totalApplied]);
 
-  const canRemove = fields.length > 1;
+  const canRemove = fields.length > 0;
 
   return (
     <CardSection heading={title}>

@@ -72,6 +72,7 @@ const createEmptyPartyProfileValues = (): Omit<ICreatePartyProfile, 'type'> => {
     ffmcRegNo: '',
     ffmcRegDate: '',
     divisionFactor: undefined,
+    commissionRules: [],
   };
 };
 

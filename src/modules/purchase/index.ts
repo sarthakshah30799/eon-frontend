@@ -8,4 +8,3 @@ export * from './forms/PurchaseForm';
 export * from './types/purchaseTypes';
 export * from './utils/purchaseUtils';
 export * from './views/PurchaseCreateView';
-export * from './views/PurchaseDocumentsView';

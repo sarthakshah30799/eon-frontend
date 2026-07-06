@@ -25,6 +25,7 @@ import type {
   IPurchaseTransactionFormRow,
   IPurchaseSubmitPayload,
 } from '../types/purchaseTypes';
+import type { ITransactionEntity } from '@/modules/transactions';
 
 const EMPTY_MARGIN: ICurrencyRateMargin = {
   marginType: '',
@@ -153,6 +154,108 @@ export const mapPurchaseFormValuesToSubmitPayload = (
     attachments,
   };
 };
+
+export const mapPurchaseTransactionToFormValues = (
+  transaction: ITransactionEntity,
+  purchasePageType: PurchasePageType | null
+): IPurchaseFormValues => ({
+  purchasePageType,
+  branchSnapshot: transaction.branchSnapshot ?? null,
+  transactionType: transaction.transactionType,
+  tradeMode: transaction.tradeMode,
+  partyProfileId: transaction.partyProfileId,
+  partyProfileCode: transaction.partyProfileSnapshot?.code ?? '',
+  partyProfileName: transaction.partyProfileSnapshot?.name ?? '',
+  partyProfileEmail:
+    (transaction.partyProfileSnapshot?.email as string | undefined) ?? '',
+  partyProfilePhoneNo:
+    (transaction.partyProfileSnapshot?.phoneNo as string | undefined) ?? '',
+  partyProfileAddress1:
+    (transaction.partyProfileSnapshot?.address1 as string | undefined) ?? '',
+  partyProfileAddress2:
+    (transaction.partyProfileSnapshot?.address2 as string | undefined) ?? '',
+  partyProfileAddress3:
+    (transaction.partyProfileSnapshot?.address3 as string | undefined) ?? '',
+  partyProfileCity:
+    (transaction.partyProfileSnapshot?.city as string | undefined) ?? '',
+  partyProfilePinCode:
+    (transaction.partyProfileSnapshot?.pinCode as string | undefined) ?? '',
+  partyProfilePanNo:
+    (transaction.partyProfileSnapshot?.panNo as string | undefined) ?? '',
+  partyProfileGstNo:
+    (transaction.partyProfileSnapshot?.gstNo as string | undefined) ?? '',
+  partyProfileGstStateName:
+    (transaction.partyProfileSnapshot?.gstStateName as string | undefined) ?? '',
+  partyProfileContactName:
+    (transaction.partyProfileSnapshot?.contactName as string | undefined) ?? '',
+  partyProfileApplyTax: Boolean(transaction.partyProfileSnapshot?.applyTax),
+  agentProfileId: transaction.agentProfileId ?? '',
+  agentProfileCode: transaction.agentProfileSnapshot?.code ?? '',
+  agentProfileName: transaction.agentProfileSnapshot?.name ?? '',
+  manualBookReferenceType: 'CASHIER',
+  manualBookId: (transaction.manualBookPageSnapshot as Record<string, unknown> | null | undefined)?.manualBookId
+    ? String((transaction.manualBookPageSnapshot as Record<string, unknown>).manualBookId)
+    : '',
+  manualBookNo: (() => {
+    const snapshot = transaction.manualBookPageSnapshot as
+      | { manualBook?: { no?: string } }
+      | null
+      | undefined;
+    return snapshot?.manualBook?.no ?? '';
+  })(),
+  manualBookPageId: transaction.manualBookPageId ?? '',
+  manualBookPageSnapshot: transaction.manualBookPageSnapshot ?? null,
+  deliveryBoyUserId: '',
+  deliveryBoyUserCode: '',
+  deliveryBoyUserName: '',
+  number: transaction.number,
+  transactions: (transaction.items ?? []).map(item => ({
+    currencyId: item.currencyId,
+    currencyCode: item.currencySnapshot?.label ?? item.currencySnapshot?.code ?? '',
+    currencyName: item.currencySnapshot?.name ?? '',
+    productId: item.productId,
+    productCode: item.productSnapshot?.label ?? item.productSnapshot?.code ?? '',
+    productDescription: item.productSnapshot?.name ?? '',
+    quantity: item.quantity ?? '',
+    rate: item.rate ?? '',
+    commission: item.commission ?? '',
+    commissionSnapshot: item.commissionSnapshot ?? null,
+    total: '',
+    roundOff: '',
+    finalAmount: '',
+  })),
+  additionalCharges: (transaction.additionalCharges ?? []).map(charge => ({
+    accountId: charge.accountId,
+    accountName: charge.accountSnapshot?.label ?? charge.accountSnapshot?.name ?? charge.accountSnapshot?.code ?? '',
+    amount: charge.amount ?? '',
+    gstRate: charge.gstRate ?? '',
+    gstAmount: charge.gstAmount ?? '',
+    totalAmount: (() => {
+      const amountValue = Number(charge.amount ?? 0);
+      const gstValue = Number(charge.gstAmount ?? 0);
+      if (!Number.isFinite(amountValue)) {
+        return '';
+      }
+      if (!Number.isFinite(gstValue)) {
+        return amountValue.toFixed(4);
+      }
+      return (amountValue + gstValue).toFixed(4);
+    })(),
+    applyTax: Boolean(charge.applyTax),
+    remarks: charge.remarks ?? '',
+  })),
+  paymentDetails: (transaction.payments ?? []).map(payment => ({
+    accountId: payment.accountId,
+    accountName: payment.accountSnapshot?.label ?? payment.accountSnapshot?.name ?? payment.accountSnapshot?.code ?? '',
+    amount: payment.amount ?? '',
+    chequeNumber: payment.referenceNumber ?? '',
+    chequeDate: payment.referenceDate ?? '',
+    branchName: payment.branchName ?? '',
+    chequePageId: payment.chequePageId ?? '',
+    chequePageSnapshot: payment.chequePageSnapshot ?? null,
+    remarks: payment.remarks ?? '',
+  })),
+});
 
 export const formatPurchaseEntityLabel = (code?: string | null, name?: string | null) => {
   const normalizedCode = code?.trim();

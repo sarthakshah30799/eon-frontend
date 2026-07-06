@@ -16,6 +16,17 @@ const decimalStringSchema = yup
     return /^\d+(\.\d+)?$/.test(value);
   });
 
+const signedDecimalStringSchema = yup
+  .string()
+  .trim()
+  .test('decimal', 'Must be a valid decimal number', value => {
+    if (!value) {
+      return true;
+    }
+
+    return /^-?\d+(\.\d+)?$/.test(value);
+  });
+
 const purchaseTransactionSchema = yup.object({
   currencyId: yup.string().trim().required('Currency is required'),
   currencyCode: yup.string().trim().default(''),
@@ -28,7 +39,7 @@ const purchaseTransactionSchema = yup.object({
   commission: decimalStringSchema.default(''),
   commissionSnapshot: yup.mixed().nullable().default(null),
   total: decimalStringSchema.default(''),
-  roundOff: decimalStringSchema.default(''),
+  roundOff: signedDecimalStringSchema.default(''),
   finalAmount: decimalStringSchema.default(''),
 });
 

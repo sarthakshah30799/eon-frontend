@@ -1,5 +1,6 @@
 import type { ICurrencyProfile } from '@/modules/currencyProfile/types';
 import type { ITransactionReferenceSnapshot } from '@/modules/transactions';
+import type { ITransactionDocumentEntity } from '@/modules/transactions';
 import type { IPartyProfile } from '@/modules/partyProfiles/types';
 import type { ITransactionAdditionalChargeFormRow } from '@/components/forms';
 import type { ITransactionPaymentDetailFormRow } from '@/components/forms';
@@ -66,6 +67,8 @@ export interface IPurchaseFormValues {
   additionalCharges: ITransactionAdditionalChargeFormRow[];
   paymentDetails: ITransactionPaymentDetailFormRow[];
 }
+
+export type IPurchaseTransactionDocument = ITransactionDocumentEntity;
 
 export interface IPurchaseDocumentAttachment {
   documentProfileId: string;

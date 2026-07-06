@@ -14,6 +14,11 @@ const appendJsonPart = (
 };
 
 export const transactionsApi = {
+  getTransactionDocumentDownloadUrl: (
+    transactionId: string,
+    documentId: string
+  ) => `${import.meta.env.VITE_API_BASE_URL || ''}/transactions/${transactionId}/documents/${documentId}/download`,
+
   getTransactions: async (
     params?: {
       slug?: string;

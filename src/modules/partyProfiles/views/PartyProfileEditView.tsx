@@ -14,7 +14,7 @@ import {
   toPartyProfileApiType,
   toPartyProfileRouteType,
 } from '../constants';
-import { AgentCommissionSection, PartyProfileDocumentsActionButton } from '../components';
+import { PartyProfileDocumentsActionButton } from '../components';
 import { NotFoundState } from '@/components/ui/not-found-state';
 
 const formatDateForInput = (dateString?: string | Date) => {
@@ -134,6 +134,7 @@ export const PartyProfileEditView = () => {
       ffmcRegNo: client?.ffmcRegNo || '',
       ffmcRegDate: formatDateForInput(client?.ffmcRegDate),
       divisionFactor: client?.divisionFactor,
+      commissionRules: client?.commissionRules ?? [],
     }),
     [client]
   );
@@ -226,13 +227,6 @@ export const PartyProfileEditView = () => {
           currentId={id}
         />
       </section>
-      {selectedApiType === 'AGENT' ? (
-        <AgentCommissionSection
-          partyProfileId={id || ''}
-          commissionRules={client?.commissionRules ?? []}
-          disabled={isPending || isReviewing || !canModify}
-        />
-      ) : null}
     </div>
   );
 };

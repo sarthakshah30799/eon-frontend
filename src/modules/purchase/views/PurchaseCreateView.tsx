@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Loader } from '@/components/ui/loader';
 import { useAuth } from '@/lib/AuthContext';
@@ -20,7 +20,6 @@ import {
   getPurchasePageTitle,
   getPurchasePartyProfileTypes,
   getPurchaseTradeMode,
-  getPurchasePageSlugFromType,
   getPurchaseTransactionType,
 } from '@/pages/purchase/[slug]/purchasePage.enum';
 import type { ITransactionReferenceSnapshot } from '@/modules/transactions';
@@ -35,6 +34,10 @@ export const PurchaseCreateView = ({
 }: PurchaseCreateViewProps) => {
   const navigate = useNavigate();
   const { activeBranchId } = useAuth();
+  const [savedTransaction, setSavedTransaction] = useState<{
+    id: string;
+    number: string;
+  } | null>(null);
   const {
     data: branchProfile,
     isLoading: isBranchLoading,
@@ -55,10 +58,6 @@ export const PurchaseCreateView = ({
 
   const partyProfileTypes = useMemo(
     () => getPurchasePartyProfileTypes(purchasePageType),
-    [purchasePageType]
-  );
-  const pageSlug = useMemo(
-    () => getPurchasePageSlugFromType(purchasePageType) ?? '',
     [purchasePageType]
   );
   const requiresApproval = useMemo(
@@ -163,21 +162,12 @@ export const PurchaseCreateView = ({
             requiresApproval
           );
           const created = await createPurchaseTransaction(payload);
-
-          if (pageSlug) {
-            navigate(`/purchase/${pageSlug}/documents`, {
-              state: {
-                transactionId: created.id,
-                transactionNumber: created.number,
-                transactionValues: values,
-              },
-            });
-            return;
-          }
-
-          navigate(-1);
+          setSavedTransaction({ id: created.id, number: created.number });
         }}
         onCancel={() => navigate(-1)}
+        savedTransactionId={savedTransaction?.id ?? null}
+        savedTransactionNumber={savedTransaction?.number ?? null}
+        isFreshlyCreated={Boolean(savedTransaction)}
       />
     </div>
   );

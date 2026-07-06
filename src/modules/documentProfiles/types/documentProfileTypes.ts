@@ -51,6 +51,8 @@ export interface IDocumentProfileListQuery {
 }
 
 export interface IResolveDocumentProfileQuery {
+  specificationType?: string;
+  type?: string;
   groupSelection?: string;
   entitySelection?: string;
 }

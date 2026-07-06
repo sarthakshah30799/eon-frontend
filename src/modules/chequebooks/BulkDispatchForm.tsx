@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFormContext, useWatch, type Resolver } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -6,12 +6,12 @@ import {
   Form,
   FormFieldInput,
   FormFieldSelect,
-  FormFieldDatePicker,
   FormFieldTextarea,
 } from '@/components/forms';
-import { type AsyncSelectOption } from '@/components/ui';
 import { branchProfileApi } from '@/api/branchProfile/branchProfile.api';
 import { chequebookApi } from '@/api';
+import { accountProfileApi } from '@/api/accountProfile/accountProfile.api';
+import { useAuth } from '@/lib/AuthContext';
 import toast from 'react-hot-toast';
 import {
   bulkDispatchSchema,
@@ -21,7 +21,7 @@ interface IBulkDispatchFormValues {
   dispatchDate: string;
   no: string;
   branchId: string;
-  transactionType: string;
+  bankAccountCode: string;
   bookNoFrom: string | number;
   bookNoTo: string | number;
   vouchersPerBook: string | number;
@@ -35,15 +35,6 @@ interface BulkDispatchFormProps {
   onSuccess: () => void;
 }
 
-const createStaticLoadOptions = (
-  options: AsyncSelectOption[]
-): (() => Promise<{ options: AsyncSelectOption[]; hasMore: false }>) => {
-  return async () => ({
-    options,
-    hasMore: false,
-  });
-};
-
 const BulkDispatchFormFields = () => {
   const form = useFormContext();
   const branchId = useWatch({ name: 'branchId' });
@@ -52,6 +43,11 @@ const BulkDispatchFormFields = () => {
   const bookNoTo = useWatch({ name: 'bookNoTo' });
   const vouchersPerBook = useWatch({ name: 'vouchersPerBook' });
   const mvNoFrom = useWatch({ name: 'mvNoFrom' });
+
+  // Reset assignedTo when branchId changes to avoid invalid branch manager assignment
+  useEffect(() => {
+    form.setValue('assignedTo', '');
+  }, [branchId, form]);
 
   useEffect(() => {
     const fetchNextNumber = async () => {
@@ -89,6 +85,9 @@ const BulkDispatchFormFields = () => {
     }
   }, [bookNoFrom, bookNoTo, vouchersPerBook, mvNoFrom, form]);
 
+  const { user } = useAuth();
+  const isAdmin = user?.isAdmin === true;
+
   const loadBranches = async () => {
     try {
       const branches = await branchProfileApi.getBranchProfiles({
@@ -109,21 +108,63 @@ const BulkDispatchFormFields = () => {
     }
   };
 
-  const loadTxnTypes = createStaticLoadOptions([
-    { value: 'PB-RETAIL PURCHASE', label: 'PB-RETAIL PURCHASE' },
-    { value: 'PS-RETAIL SALE', label: 'PS-RETAIL SALE' },
-    { value: 'FB-BULK BUY', label: 'FB-BULK BUY' },
-    { value: 'FS-BULK SALE', label: 'FS-BULK SALE' },
-  ]);
+  const loadBankAccounts = async (inputValue: string) => {
+    try {
+      const response = await accountProfileApi.getAccountProfiles({
+        page: 1,
+        limit: 100,
+        search: inputValue,
+        active: true,
+      });
+      const bankAccounts = (response.data || []).filter(acc => {
+        return (
+          (acc.bankNature && acc.bankNature.value !== 'NONE') ||
+          (acc.accountType && acc.accountType.value === 'BANK LEDGER') ||
+          (acc.financialCode && acc.financialCode === 'BANKBL')
+        );
+      });
+      return {
+        options: bankAccounts.map(acc => ({
+          value: acc.id,
+          label: `${acc.accountCode} - ${acc.accountName}`,
+        })),
+        hasMore: false,
+      };
+    } catch {
+      return {
+        options: [],
+        hasMore: false,
+      };
+    }
+  };
 
-  const loadAssignedTo = createStaticLoadOptions([
-    { value: 'BRANCH MANAGER', label: 'BRANCH MANAGER' },
-    { value: 'CASHIER', label: 'CASHIER' },
-  ]);
+  const loadAssignedTo = useCallback(async () => {
+    if (!branchId) {
+      return {
+        options: [],
+        hasMore: false,
+      };
+    }
+    try {
+      const managers = await chequebookApi.getBranchManagers(branchId);
+      return {
+        options: managers.map(m => ({
+          value: m.id,
+          label: m.name,
+        })),
+        hasMore: false,
+      };
+    } catch {
+      return {
+        options: [],
+        hasMore: false,
+      };
+    }
+  }, [branchId]);
 
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-      <FormFieldDatePicker name="dispatchDate" label="Date" />
+      <FormFieldInput name="dispatchDate" label="Date" type="date" />
       <FormFieldInput
         name="no"
         label="NO"
@@ -134,11 +175,12 @@ const BulkDispatchFormFields = () => {
         name="branchId"
         label="Branch"
         loadOptions={loadBranches}
+        disabled={!isAdmin}
       />
       <FormFieldSelect
-        name="transactionType"
-        label="Txn Type"
-        loadOptions={loadTxnTypes}
+        name="bankAccountCode"
+        label="Bank Account Code"
+        loadOptions={loadBankAccounts}
       />
       <FormFieldInput
         name="bookNoFrom"
@@ -155,11 +197,14 @@ const BulkDispatchFormFields = () => {
       </div>
       <FormFieldInput name="mvNoFrom" label="Cheque No. From" type="number" />
       <FormFieldInput name="mvNoTo" label="Cheque No. To" disabled />
-      <FormFieldSelect
-        name="assignedTo"
-        label="Assigned To"
-        loadOptions={loadAssignedTo}
-      />
+      {branchId && (
+        <FormFieldSelect
+          key={branchId}
+          name="assignedTo"
+          label="Assigned To"
+          loadOptions={loadAssignedTo}
+        />
+      )}
       <FormFieldTextarea name="remarks" label="Remarks" rows={3} />
     </div>
   );
@@ -167,6 +212,8 @@ const BulkDispatchFormFields = () => {
 
 export const BulkDispatchForm = ({ onSuccess }: BulkDispatchFormProps) => {
   const navigate = useNavigate();
+  const { user, activeBranchId } = useAuth();
+  const isAdmin = user?.isAdmin === true;
 
   const onCancel = () => {
     navigate('/admin/chequebooks');
@@ -194,14 +241,14 @@ export const BulkDispatchForm = ({ onSuccess }: BulkDispatchFormProps) => {
   const defaultValues: IBulkDispatchFormValues = {
     dispatchDate: new Date().toISOString().slice(0, 10),
     no: '',
-    branchId: '',
-    transactionType: '',
+    branchId: isAdmin ? '' : (activeBranchId || ''),
+    bankAccountCode: '',
     bookNoFrom: '',
     bookNoTo: '',
     vouchersPerBook: 50,
     mvNoFrom: '',
     mvNoTo: '',
-    assignedTo: 'BRANCH MANAGER',
+    assignedTo: '',
     remarks: '',
   };
 

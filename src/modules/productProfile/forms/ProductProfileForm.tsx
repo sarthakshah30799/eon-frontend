@@ -386,14 +386,17 @@ export const ProductProfileForm = ({
   const loadAccountProfileOptions = useCallback(
     async (inputValue: string) => {
       const search = inputValue.trim().toLowerCase();
+      const options =
+        search.length > 0
+          ? accountProfileOptions.filter(option =>
+              option.label.toLowerCase().includes(search)
+            )
+          : accountProfileOptions;
 
-      if (!search) {
-        return accountProfileOptions;
-      }
-
-      return accountProfileOptions.filter(option =>
-        option.label.toLowerCase().includes(search)
-      );
+      return {
+        options,
+        hasMore: false,
+      };
     },
     [accountProfileOptions]
   );

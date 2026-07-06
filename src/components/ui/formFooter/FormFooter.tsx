@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { Button } from '../button1';
 import { BackButton } from '../backButton';
@@ -10,6 +11,7 @@ interface FormFooterProps {
   onCancel?: () => void | Promise<void>;
   isSubmitting: boolean;
   isSubmitDisabled?: boolean;
+  actions?: ReactNode;
 }
 
 export const FormFooter = ({
@@ -20,6 +22,7 @@ export const FormFooter = ({
   onCancel,
   isSubmitting,
   isSubmitDisabled = false,
+  actions,
 }: FormFooterProps) => {
   if (typeof document === 'undefined') {
     return null;
@@ -28,11 +31,14 @@ export const FormFooter = ({
   return createPortal(
     <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border-primary bg-white/95 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur-sm lg:left-[var(--app-sidebar-offset)]">
       <div className="mx-auto flex w-full max-w-7xl items-center justify-end gap-3 px-4 py-3">
-        {backLabel && onBackClick && (
-          <div className="mr-auto">
-            <BackButton onClick={onBackClick} label={backLabel} />
+        {(backLabel && onBackClick) || actions ? (
+          <div className="mr-auto flex items-center gap-2">
+            {backLabel && onBackClick ? (
+              <BackButton onClick={onBackClick} label={backLabel} />
+            ) : null}
+            {actions}
           </div>
-        )}
+        ) : null}
         {onCancel && (
           <Button
             type="button"

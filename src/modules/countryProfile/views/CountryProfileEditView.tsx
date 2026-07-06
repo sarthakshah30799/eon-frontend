@@ -28,16 +28,8 @@ export const CountryProfileEditView = () => {
 
   const handleSubmit = async (values: ICreateCountryProfile) => {
     const {
-      id,
-      countryCode,
-      countryName,
-      createdAt,
-      updatedAt,
-      createdBy,
-      updatedBy,
-      country,
       ...payload
-    } = values as any;
+    } = values;
     await submitCountryProfile(payload);
     navigate('/admin/country-profile');
   };

@@ -52,8 +52,9 @@ export const ChequeBookAcknowledgementChecklistTable = ({
         ),
       },
       {
-        accessorKey: 'transactionType',
-        header: 'Transaction Type',
+        accessorKey: 'bankAccountCode',
+        header: 'Bank Account Code',
+        cell: ({ row }) => row.original.bankAccountCodeName || row.original.bankAccountCode,
       },
       {
         accessorKey: 'bookNoFrom',

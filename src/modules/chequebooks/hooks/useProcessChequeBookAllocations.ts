@@ -6,7 +6,9 @@ export interface IAllocationRow {
   bookId: string;
   requestNo: string;
   requestDate: string;
-  transactionType: string;
+  bankAccountCode: string;
+  bankAccountCodeName?: string;
+  bankAccountCodeLabel?: string;
   bookNo: number;
   mvNoFrom: number;
   mvNoTo: number;
@@ -19,7 +21,7 @@ export interface IAllocationRow {
 
 interface IProcessChequeBookAllocationsInput {
   branchId: string;
-  txnType: string;
+  bankAccountCode: string;
   fromVal: number;
   toVal: number;
 }
@@ -27,7 +29,7 @@ interface IProcessChequeBookAllocationsInput {
 const buildAllocationRows = (
   books: IChequeBook[],
   allocations: Array<{
-    id: string;
+    id?: string;
     checkBookId: string;
     bookNo: number;
     cashierId: string;
@@ -56,7 +58,9 @@ const buildAllocationRows = (
         bookId: book.id,
         requestNo: book.no,
         requestDate: new Date(book.dispatchDate).toLocaleDateString() + ' 00:00:00',
-        transactionType: book.transactionType,
+        bankAccountCode: book.bankAccountCode,
+        bankAccountCodeName: book.bankAccountCodeName,
+        bankAccountCodeLabel: book.bankAccountCodeLabel,
         bookNo: i,
         mvNoFrom: bookMvNoFrom,
         mvNoTo: bookMvNoTo,
@@ -76,14 +80,14 @@ export const useProcessChequeBookAllocations = () => {
   const mutation = useMutation({
     mutationFn: async ({
       branchId,
-      txnType,
+      bankAccountCode,
       fromVal,
       toVal,
     }: IProcessChequeBookAllocationsInput) => {
       const data = await chequebookApi.findAll(branchId, 'Approved');
 
       const matched = data.filter(book => {
-        if (txnType !== 'ALL' && book.transactionType !== txnType) {
+        if (bankAccountCode !== 'ALL' && book.bankAccountCode !== bankAccountCode) {
           return false;
         }
 

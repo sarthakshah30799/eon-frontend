@@ -3,7 +3,8 @@ import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { useAuth } from '@/lib/AuthContext';
 import toast from 'react-hot-toast';
 import { Button, Input } from '@/components/ui';
-import { FormFieldCategoryOption } from '@/components/forms';
+import { FormFieldSelect } from '@/components/forms';
+import { accountProfileApi } from '@/api/accountProfile/accountProfile.api';
 import {
   ChequeBookAllocationTable,
   type IAllocationRow,
@@ -13,7 +14,6 @@ import {
   useProcessChequeBookAllocations,
   useSaveChequeBookAllocations,
 } from '@/modules/chequebooks/hooks';
-import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 
 const getErrorMessage = (error: unknown, fallback: string) =>
   error instanceof Error ? error.message : fallback;
@@ -22,16 +22,16 @@ export const ChequeBookAllocationPage = () => {
   const { activeBranchId } = useAuth();
 
   const txnTypeForm = useForm<{
-    transactionType: string;
+    bankAccountCode: string;
   }>({
     defaultValues: {
-      transactionType: 'ALL',
+      bankAccountCode: 'ALL',
     },
   });
 
-  const watchedTransactionType = useWatch({
+  const watchedBankAccountCode = useWatch({
     control: txnTypeForm.control,
-    name: 'transactionType',
+    name: 'bankAccountCode',
   });
 
   // Filters
@@ -75,7 +75,7 @@ export const ChequeBookAllocationPage = () => {
     try {
       const generatedRows = await processAllocations({
         branchId: activeBranchId,
-        txnType: watchedTransactionType || 'ALL',
+        bankAccountCode: watchedBankAccountCode || 'ALL',
         fromVal,
         toVal,
       });
@@ -120,7 +120,7 @@ export const ChequeBookAllocationPage = () => {
 
   const handleApplyBulkCashier = () => {
     if (!bulkCashierId) {
-      toast.error('Please select a cashier first.');
+      toast.error('Please select a user first.');
       return;
     }
     const checkedCount = rows.filter(r => r.isCheck).length;
@@ -133,7 +133,7 @@ export const ChequeBookAllocationPage = () => {
         r.isCheck ? { ...r, allocatedCashierId: bulkCashierId } : r
       )
     );
-    toast.success(`Set cashier for ${checkedCount} selected rows.`);
+    toast.success(`Set user for ${checkedCount} selected rows.`);
   };
 
   const handleSaveAllocation = async () => {
@@ -144,7 +144,7 @@ export const ChequeBookAllocationPage = () => {
     }
     const invalidRows = checkedRows.filter(r => !r.allocatedCashierId);
     if (invalidRows.length > 0) {
-      toast.error('Please select a cashier for all checked allocations.');
+      toast.error('Please select a user for all checked allocations.');
       return;
     }
 
@@ -182,10 +182,10 @@ export const ChequeBookAllocationPage = () => {
       {/* Header */}
       <div className="flex flex-col gap-1.5 border-b border-slate-200 pb-5">
         <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-          ChequeBook Cashier Allocation
+          ChequeBook Allocation
         </h1>
         <p className="text-sm text-slate-500">
-          Allocate individual chequebooks to cashiers at your branch.
+          Allocate individual chequebook pages to users at your branch.
         </p>
       </div>
 
@@ -197,13 +197,39 @@ export const ChequeBookAllocationPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 align-end">
           <FormProvider {...txnTypeForm}>
             <div>
-              <FormFieldCategoryOption
-                name="transactionType"
-                label="Transaction Type"
-                code={CategoryOptionCodeEnum.ChequeBookTransactionType}
+              <FormFieldSelect
+                name="bankAccountCode"
+                label="Bank Account Code"
                 placeholder="ALL"
-                isSearchable
-                isClearable
+                loadOptions={async (inputValue) => {
+                  try {
+                    const response = await accountProfileApi.getAccountProfiles({
+                      page: 1,
+                      limit: 100,
+                      search: inputValue,
+                      active: true,
+                    });
+                    const bankAccounts = (response.data || []).filter(acc => {
+                      return (
+                        (acc.bankNature && acc.bankNature.value !== 'NONE') ||
+                        (acc.accountType && acc.accountType.value === 'BANK LEDGER') ||
+                        (acc.financialCode && acc.financialCode === 'BANKBL')
+                      );
+                    });
+                    return {
+                      options: bankAccounts.map(acc => ({
+                        value: acc.id,
+                        label: `${acc.accountCode} - ${acc.accountName}`,
+                      })),
+                      hasMore: false,
+                    };
+                  } catch {
+                    return {
+                      options: [],
+                      hasMore: false,
+                    };
+                  }
+                }}
               />
             </div>
           </FormProvider>
@@ -254,7 +280,7 @@ export const ChequeBookAllocationPage = () => {
             {rows.length > 0 && (
               <div className="flex items-center gap-3">
                 <span className="text-xs font-semibold text-slate-600">
-                  Allocate Cashier:
+                  Allocate User:
                 </span>
                 {isLoadingOptions ? (
                   <span className="text-xs text-slate-500">Loading...</span>

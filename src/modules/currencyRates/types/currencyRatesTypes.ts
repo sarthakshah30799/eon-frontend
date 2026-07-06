@@ -161,6 +161,8 @@ export interface ICurrencyRateComparisonPreview {
   baseSaleRate: string | null;
   buy: ICurrencyRateComparisonSide;
   sale: ICurrencyRateComparisonSide;
+  effectiveSource: 'product-override' | 'group-default' | 'none';
+  effectiveGroupCode: string | null;
 }
 
 export interface ICurrencyRateGroupUpsertPayload {

@@ -228,6 +228,12 @@ export const buildCurrencyRateComparisonPreview = ({
     overrideSale.marginType,
     overrideSale.marginValue,
   );
+  const hasOverride = Boolean(
+    overrideBuy.marginType ||
+      isPresent(overrideBuy.marginValue) ||
+      overrideSale.marginType ||
+      isPresent(overrideSale.marginValue),
+  );
 
   return {
     currencyCode: latestRate.currency?.currencyCode || latestRate.currencyId,
@@ -236,6 +242,12 @@ export const buildCurrencyRateComparisonPreview = ({
     pricingGroup,
     baseBuyRate,
     baseSaleRate,
+    effectiveSource: hasOverride
+      ? 'product-override'
+      : pricingGroup
+        ? 'group-default'
+        : 'none',
+    effectiveGroupCode: pricingGroup?.code ?? null,
     buy: {
       baseRate: baseBuyRate,
       groupMarginType: pricingGroup?.buyMarginType ?? null,

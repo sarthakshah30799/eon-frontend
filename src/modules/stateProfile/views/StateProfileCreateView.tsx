@@ -11,16 +11,8 @@ export const StateProfileCreateView = () => {
 
   const handleSubmit = async (values: ICreateStateProfile) => {
     const {
-      id,
-      countryCode,
-      countryName,
-      createdAt,
-      updatedAt,
-      createdBy,
-      updatedBy,
-      country,
       ...payload
-    } = values as any;
+    } = values;
     await submitStateProfile(payload);
     navigate('/admin/state-profile');
   };

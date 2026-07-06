@@ -8,12 +8,14 @@ export interface IManualBook {
   branchCode?: string;
   branchName?: string;
   transactionType: string;
+  transactionTypeLabel?: string;
   bookNoFrom: number;
   bookNoTo: number;
   vouchersPerBook: number;
   mvNoFrom: number;
   mvNoTo: number;
   assignedTo: string;
+  assignedToName?: string;
   remarks?: string;
   status: string; // 'Pending' | 'Approved' | 'Rejected'
   fromDate?: string;
@@ -41,19 +43,42 @@ export interface IApproveRejectManualBook {
   toDate?: string;
 }
 
-export interface IManualBookAllocationPayload {
+export interface IManualBookAssignmentPayload {
+  manualBookId: string;
+  bookNo: number;
+  userId: string;
+  remarks?: string;
+}
+
+export interface IManualBookAllocation {
+  id?: string;
   manualBookId: string;
   bookNo: number;
   cashierId: string;
   remarks?: string;
 }
 
-export interface IManualBookAllocation {
-  id: string;
+export interface IManualBookAssignmentResult {
   manualBookId: string;
   bookNo: number;
-  cashierId: string;
-  remarks?: string;
+  userId: string;
+}
+
+export interface IManualBookDPMappingGroup {
+  manualBookId: string;
+  bookNo: number;
+  transactionType: string;
+  mvNoFrom: number;
+  mvNoTo: number;
+  qty: number;
+  userId: string;
+  assignedToUserName: string;
+  pageIds: string[];
+  remarks: string;
+}
+
+export interface IManualBookDPMappingActionResponse {
+  success: boolean;
 }
 
 export const manualBillBookApi = {
@@ -108,20 +133,28 @@ export const manualBillBookApi = {
     return res.data;
   },
 
-  getCashiers: async (branchId: string): Promise<Array<{ id: string; name: string }>> => {
+  getAuthorizedUsers: async (branchId: string): Promise<Array<{ id: string; name: string }>> => {
     const res = await apiClient.get<Array<{ id: string; name: string }>>(
-      `/manual-bill-books/cashiers?branchId=${encodeURIComponent(branchId)}`
+      `/manual-bill-books/users?branchId=${encodeURIComponent(branchId)}`
+    );
+    if (res.error) throw new Error(res.error);
+    return res.data || [];
+  },
+
+  getBranchManagers: async (branchId: string): Promise<Array<{ id: string; name: string }>> => {
+    const res = await apiClient.get<Array<{ id: string; name: string }>>(
+      `/manual-bill-books/branch-managers?branchId=${encodeURIComponent(branchId)}`
     );
     if (res.error) throw new Error(res.error);
     return res.data || [];
   },
 
   saveAllocations: async (
-    allocations: IManualBookAllocationPayload[]
-  ): Promise<IManualBookAllocation[]> => {
-    const res = await apiClient.post<IManualBookAllocation[]>(
-      '/manual-bill-books/allocations',
-      { allocations }
+    assignments: IManualBookAssignmentPayload[]
+  ): Promise<IManualBookAssignmentResult[]> => {
+    const res = await apiClient.post<IManualBookAssignmentResult[]>(
+      '/manual-bill-books/assignments',
+      { assignments }
     );
     if (res.error) throw new Error(res.error);
     return res.data || [];
@@ -131,11 +164,157 @@ export const manualBillBookApi = {
     manualBookIds: string[]
   ): Promise<IManualBookAllocation[]> => {
     const res = await apiClient.get<IManualBookAllocation[]>(
-      `/manual-bill-books/allocations?manualBookIds=${encodeURIComponent(
+      `/manual-bill-books/assignments?manualBookIds=${encodeURIComponent(
         manualBookIds.join(',')
       )}`
     );
     if (res.error) throw new Error(res.error);
     return res.data || [];
   },
+
+  getPagesByBookNo: async (
+    manualBookId: string,
+    bookNo: number
+  ): Promise<IManualBookPageTracking[]> => {
+    const res = await apiClient.get<IManualBookPageTracking[]>(
+      `/manual-bill-books/${manualBookId}/books/${bookNo}/pages`
+    );
+    if (res.error) throw new Error(res.error);
+    return res.data || [];
+  },
+
+  getSelectablePages: async (params: {
+    branchId?: string;
+    userId?: string;
+  }): Promise<IManualBookPageTracking[]> => {
+    const query = new URLSearchParams();
+    if (params.branchId) query.set('branchId', params.branchId);
+    if (params.userId) query.set('userId', params.userId);
+
+    const suffix = query.toString() ? `?${query.toString()}` : '';
+    const res = await apiClient.get<IManualBookPageTracking[]>(
+      `/manual-bill-books/pages/selectable${suffix}`
+    );
+    if (res.error) throw new Error(res.error);
+    return res.data || [];
+  },
+
+  updatePagesStatus: async (
+    pageNos: number[],
+    status: 'VOID',
+    remarks?: string
+  ): Promise<{ success: boolean }> => {
+    const res = await apiClient.put<{ success: boolean }>(
+      '/manual-bill-books/pages/status',
+      { pageNos, status, remarks }
+    );
+    if (res.error) throw new Error(res.error);
+    return res.data || { success: false };
+  },
+
+  transferPages: async (
+    pageNos: number[],
+    targetUserId: string
+  ): Promise<{ success: boolean }> => {
+    const res = await apiClient.post<{ success: boolean }>(
+      '/manual-bill-books/pages/transfer',
+      { pageNos, targetUserId }
+    );
+    if (res.error) throw new Error(res.error);
+    return res.data || { success: false };
+  },
+
+  returnPages: async (pageNos: number[]): Promise<{ success: boolean }> => {
+    const res = await apiClient.post<{ success: boolean }>(
+      '/manual-bill-books/pages/return',
+      { pageNos }
+    );
+    if (res.error) throw new Error(res.error);
+    return res.data || { success: false };
+  },
+
+  searchPage: async (pageNo: number): Promise<IManualBookPageTracking> => {
+    const res = await apiClient.get<IManualBookPageTracking>(
+      `/manual-bill-books/pages/search?pageNo=${pageNo}`
+    );
+    if (res.error) throw new Error(res.error);
+    if (!res.data) throw new Error('Page not found');
+    return res.data;
+  },
+
+  searchDPMapping: async (params: {
+    transactionType: string;
+    bookNo: number;
+    mvNoFrom: number;
+    mvNoTo: number;
+    actionType: 'MAP' | 'UNMAP';
+  }): Promise<IManualBookDPMappingGroup[]> => {
+    const res = await apiClient.get<IManualBookDPMappingGroup[]>(
+      `/manual-bill-books/dp-mapping/search?transactionType=${encodeURIComponent(
+        params.transactionType
+      )}&bookNo=${params.bookNo}&mvNoFrom=${params.mvNoFrom}&mvNoTo=${
+        params.mvNoTo
+      }&actionType=${params.actionType}`
+    );
+    if (res.error) throw new Error(res.error);
+    return res.data || [];
+  },
+
+  allocateToDP: async (data: {
+    pageIds: string[];
+    deliveryPersonId: string;
+    remarks?: string;
+  }): Promise<IManualBookDPMappingActionResponse> => {
+    const res = await apiClient.post<IManualBookDPMappingActionResponse>(
+      '/manual-bill-books/dp-mapping/allocate',
+      data
+    );
+    if (res.error) throw new Error(res.error);
+    if (!res.data) throw new Error('Failed to allocate pages to delivery person');
+    return res.data;
+  },
+
+  deallocateFromDP: async (data: {
+    pageIds: string[];
+    remarks?: string;
+  }): Promise<IManualBookDPMappingActionResponse> => {
+    const res = await apiClient.post<IManualBookDPMappingActionResponse>(
+      '/manual-bill-books/dp-mapping/deallocate',
+      data
+    );
+    if (res.error) throw new Error(res.error);
+    if (!res.data) throw new Error('Failed to deallocate pages from delivery person');
+    return res.data;
+  },
+
+  getDeliveryPersons: async (): Promise<Array<{ id: string; name: string }>> => {
+    const res = await apiClient.get<Array<{ id: string; name: string }>>(
+      '/manual-bill-books/dp-mapping/delivery-persons'
+    );
+    if (res.error) throw new Error(res.error);
+    return res.data || [];
+  },
 };
+
+export interface IManualBookPageTracking {
+  id: string;
+  manualBookId: string;
+  userId: string;
+  pageNo: number;
+  isVoided: boolean;
+  remarks?: string;
+  updatedBy?: string;
+  createdAt: string;
+  updatedAt: string;
+  manualBook?: {
+    id: string;
+    no: string;
+    bookNoFrom: number;
+    bookNoTo: number;
+    vouchersPerBook: number;
+    mvNoFrom: number;
+    mvNoTo: number;
+    branchId: string;
+    transactionType: string;
+  } | null;
+}

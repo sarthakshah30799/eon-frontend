@@ -4,7 +4,7 @@ import { chequebookApi, type IChequeBook } from '@/api';
 export interface IChequeBookListQuery {
   branchId?: string;
   status?: string;
-  transactionType?: string;
+  bankAccountCode?: string;
   fromDate?: string;
   toDate?: string;
 }
@@ -16,7 +16,7 @@ export const useListChequeBooks = (params?: IChequeBookListQuery) => {
       const data = await chequebookApi.findAll(
         params?.branchId,
         params?.status,
-        params?.transactionType,
+        params?.bankAccountCode,
         params?.fromDate,
         params?.toDate
       );

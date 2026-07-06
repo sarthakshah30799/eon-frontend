@@ -1,6 +1,7 @@
 import React, { forwardRef, useId, useState } from 'react';
 import ReactDatePicker from 'react-datepicker';
 import { Label } from '../label';
+import { CalendarIcon } from '@/assets/icons';
 import 'react-datepicker/dist/react-datepicker.css';
 import './datepicker.css';
 import {
@@ -31,7 +32,7 @@ const DatePickerInput = forwardRef<
     onInputValueChange?: (value: string) => void;
     onParsedDateChange?: (date: Date | null) => void;
   }
->(({ className = '', value, placeholder, inputValue, onInputValueChange, onParsedDateChange, ...props }, ref) => {
+>((({ className = '', value, placeholder, inputValue, onInputValueChange, onParsedDateChange, ...props }, ref) => {
   const displayValue = inputValue ?? String(value ?? '');
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -50,18 +51,23 @@ const DatePickerInput = forwardRef<
   };
 
   return (
-    <input
-      ref={ref}
-      type="text"
-      inputMode="numeric"
-      className={`flex min-h-7.5 w-full items-center justify-between gap-3 rounded-md border border-border-secondary bg-surface-primary px-3 py-1 text-left text-sm text-text-primary shadow-none transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
-      value={displayValue}
-      placeholder={placeholder}
-      {...props}
-      onChange={handleChange}
-    />
+    <div className="relative flex items-center w-full">
+      <input
+        ref={ref}
+        type="text"
+        inputMode="numeric"
+        className={`min-h-7.5 w-full rounded-md border border-border-secondary bg-surface-primary pl-3 pr-10 py-1 text-left text-sm text-text-primary shadow-none transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+        value={displayValue}
+        placeholder={placeholder}
+        {...props}
+        onChange={handleChange}
+      />
+      <span className="absolute right-3 flex items-center pointer-events-none text-slate-400">
+        <CalendarIcon className="h-4 w-4" />
+      </span>
+    </div>
   );
-});
+}));
 
 DatePickerInput.displayName = 'DatePickerInput';
 

@@ -12,10 +12,16 @@ export interface IChequeBookAllocationPayload {
 export const useSaveChequeBookAllocations = () => {
   const mutation = useMutation({
     mutationFn: async (allocations: IChequeBookAllocationPayload[]) => {
-      return chequebookApi.saveAllocations(allocations);
+      const mapped = allocations.map(a => ({
+        checkBookId: a.checkBookId,
+        bookNo: a.bookNo,
+        userId: a.cashierId,
+        remarks: a.remarks,
+      }));
+      return chequebookApi.saveAllocations(mapped);
     },
     onSuccess: () => {
-      toast.success('Manager to Cashier allocations saved successfully.');
+      toast.success('Chequebook page allocations saved successfully.');
     },
   });
 

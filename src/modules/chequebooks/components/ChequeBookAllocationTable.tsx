@@ -7,7 +7,9 @@ export interface IAllocationRow {
   bookId: string;
   requestNo: string;
   requestDate: string;
-  transactionType: string;
+  bankAccountCode: string;
+  bankAccountCodeName?: string;
+  bankAccountCodeLabel?: string;
   bookNo: number;
   mvNoFrom: number;
   mvNoTo: number;
@@ -66,7 +68,7 @@ export const ChequeBookAllocationTable = ({
       },
       {
         accessorKey: 'allocatedCashierId',
-        header: 'Allocate Cashier',
+        header: 'Allocate User',
         cell: ({ row }) => (
           <select
             value={row.original.allocatedCashierId}
@@ -109,8 +111,9 @@ export const ChequeBookAllocationTable = ({
         header: 'Request Date',
       },
       {
-        accessorKey: 'transactionType',
-        header: 'Transaction Type',
+        accessorKey: 'bankAccountCode',
+        header: 'Bank Account Code',
+        cell: ({ row }) => row.original.bankAccountCodeName || row.original.bankAccountCode,
       },
       {
         accessorKey: 'bookNo',

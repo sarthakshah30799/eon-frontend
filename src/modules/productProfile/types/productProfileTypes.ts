@@ -1,10 +1,10 @@
 export interface IProductProfileCheckboxFieldConfig {
-  name: keyof IProductProfile;
+  name: keyof ICreateProductProfile;
   label: string;
 }
 
 export interface IProductProfileFieldConfig {
-  name: keyof IProductProfile;
+  name: keyof ICreateProductProfile;
   label: string;
   inputType?: 'text' | 'number';
 }

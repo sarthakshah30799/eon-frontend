@@ -1,13 +1,19 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { type IManualBook } from '@/api';
-import { Modal } from '@/components/ui/modal/Modal';
 import {
   AsyncSelect,
   Button,
+  PageGrid,
   type AsyncSelectOption,
   type AsyncSelectResponse,
 } from '@/components/ui';
+import {
+  manualBillBookApi,
+  type IManualBook,
+  type IManualBookAllocation,
+  type IManualBookPageTracking,
+} from '@/api';
+import { Modal } from '@/components/ui/modal/Modal';
 import toast from 'react-hot-toast';
 import { Loader } from '@/components/ui/loader';
 import { ManualBillBookTable } from './components';
@@ -134,6 +140,89 @@ export const ManualBillBookListView = () => {
       toast.error(message);
     }
   }, [error]);
+
+  // Page Tracking allocation list & cashier list states
+  const [allocations, setAllocations] = useState<IManualBookAllocation[]>([]);
+  const [isLoadingAllocations, setIsLoadingAllocations] = useState(false);
+  const [cashiers, setCashiers] = useState<Array<{ id: string; name: string }>>([]);
+
+  // Sub-modal for PageGrid states
+  const [selectedAllocation, setSelectedAllocation] = useState<IManualBookAllocation | null>(null);
+  const [isPagesModalOpen, setIsPagesModalOpen] = useState(false);
+  const [pages, setPages] = useState<IManualBookPageTracking[]>([]);
+  const [isLoadingPages, setIsLoadingPages] = useState(false);
+
+  useEffect(() => {
+    const fetchAllocations = async () => {
+      if (!selectedBook || selectedBook.status === 'Pending') {
+        setAllocations([]);
+        return;
+      }
+      try {
+        setIsLoadingAllocations(true);
+        const data = await manualBillBookApi.getAllocations([selectedBook.id]);
+        setAllocations(data);
+      } catch (err: unknown) {
+        console.error('Failed to load allocations:', err);
+      } finally {
+        setIsLoadingAllocations(false);
+      }
+    };
+    fetchAllocations();
+  }, [selectedBook]);
+
+  useEffect(() => {
+    const fetchCashiers = async () => {
+      if (!selectedBook) return;
+      try {
+        const data = await manualBillBookApi.getAuthorizedUsers(selectedBook.branchId);
+        setCashiers(data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchCashiers();
+  }, [selectedBook]);
+
+  const handleViewPages = async (alloc: IManualBookAllocation) => {
+    setSelectedAllocation(alloc);
+    setIsPagesModalOpen(true);
+    try {
+      setIsLoadingPages(true);
+      const data = await manualBillBookApi.getPagesByBookNo(alloc.manualBookId, alloc.bookNo);
+      setPages(data);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to load page tracking records.');
+    } finally {
+      setIsLoadingPages(false);
+    }
+  };
+
+  const handleUpdatePageStatus = async (pageNos: number[], status: 'VOID', remarks?: string) => {
+    if (!selectedAllocation) return;
+    try {
+      await manualBillBookApi.updatePagesStatus(pageNos, status, remarks);
+      toast.success('Page status updated successfully');
+      const data = await manualBillBookApi.getPagesByBookNo(selectedAllocation.manualBookId, selectedAllocation.bookNo);
+      setPages(data);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to update page status.');
+      throw err;
+    }
+  };
+
+  const handleReturnPages = async (pageNos: number[]) => {
+    if (!selectedAllocation) return;
+    try {
+      await manualBillBookApi.returnPages(pageNos);
+      toast.success('Pages returned successfully');
+      const data = await manualBillBookApi.getPagesByBookNo(selectedAllocation.manualBookId, selectedAllocation.bookNo);
+      setPages(data);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to return pages.');
+      throw err;
+    }
+  };
 
   const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -283,7 +372,7 @@ export const ManualBillBookListView = () => {
                   Txn Type
                 </span>
                 <span className="text-slate-800">
-                  {selectedBook.transactionType}
+                  {selectedBook.transactionTypeLabel || selectedBook.transactionType}
                 </span>
               </div>
               <div>
@@ -315,7 +404,7 @@ export const ManualBillBookListView = () => {
                   Assigned To
                 </span>
                 <span className="text-slate-800">
-                  {selectedBook.assignedTo}
+                  {selectedBook.assignedToName || selectedBook.assignedTo}
                 </span>
               </div>
               <div className="col-span-2">
@@ -448,7 +537,44 @@ export const ManualBillBookListView = () => {
                     </span>
                   </div>
                 </div>
-                <div className="flex justify-end">
+                {/* Allocations & Page Tracking */}
+                {selectedBook.status === 'Approved' && (
+                  <div className="mt-4 border-t border-slate-200 pt-4 space-y-3">
+                    <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                      User Allocations
+                    </h4>
+                    {isLoadingAllocations ? (
+                      <div className="text-xs text-slate-400 py-2">Loading allocations...</div>
+                    ) : allocations.length === 0 ? (
+                      <div className="text-xs text-slate-500 italic py-2 bg-slate-50 border border-slate-100 rounded text-center">
+                        No users assigned to this book yet.
+                      </div>
+                    ) : (
+                      <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1">
+                        {allocations.map(alloc => {
+                          const cashier = cashiers.find(c => c.id === alloc.cashierId);
+                          return (
+                            <div key={`${alloc.manualBookId}-${alloc.bookNo}`} className="flex justify-between items-center p-3 bg-white border border-slate-200 rounded-md shadow-sm">
+                              <div>
+                                <span className="block text-xs font-bold text-slate-700">Book #{alloc.bookNo}</span>
+                                <span className="text-[10px] text-slate-500">Assigned to: <b className="text-slate-700">{cashier ? cashier.name : 'Unknown User'}</b></span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleViewPages(alloc)}
+                                className="cursor-pointer text-[10px] font-bold text-sky-600 hover:text-sky-700 bg-sky-50 border border-sky-100 rounded px-2.5 py-1 transition"
+                              >
+                                Track Pages
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex justify-end pt-2 border-t border-slate-100">
                   <button
                     type="button"
                     className="cursor-pointer border border-slate-200 text-slate-600 hover:bg-slate-50 rounded px-4 py-2 text-xs font-semibold transition"
@@ -460,6 +586,27 @@ export const ManualBillBookListView = () => {
               </div>
             )}
           </form>
+        </Modal>
+      )}
+
+      {selectedAllocation && (
+        <Modal
+          open={isPagesModalOpen}
+          onOpenChange={setIsPagesModalOpen}
+          title={`Book #${selectedAllocation.bookNo} Page Tracking`}
+          size="lg"
+        >
+          <PageGrid
+            title={`Leaf range of Book #${selectedAllocation.bookNo}`}
+            pages={pages.map(p => ({
+              pageNo: p.pageNo,
+              isVoided: p.isVoided,
+              remarks: p.remarks,
+            }))}
+            isLoading={isLoadingPages}
+            onUpdateStatus={handleUpdatePageStatus}
+            onReturnPages={handleReturnPages}
+          />
         </Modal>
       )}
     </div>

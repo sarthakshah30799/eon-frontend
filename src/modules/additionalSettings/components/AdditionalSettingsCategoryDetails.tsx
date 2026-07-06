@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Modal } from '@/components/ui';
+import { Checkbox } from '@/components/ui';
 import type {
   IAdditionalSettingCategory,
   IAdditionalSettingSubcategory,
@@ -106,13 +107,12 @@ const EditSubcategoryForm = ({
   const [categoryType] = useState(subcategory.categoryType || 'text');
   const [value, setValue] = useState(subcategory.value);
   const [isSaving, setIsSaving] = useState(false);
+  const isBooleanType = categoryType.toLowerCase() === 'boolean';
   const subcategoryDefinition = getAdditionalSettingSubcategoryDefinition(
     categoryCode,
     subcategory.code
   );
   const isRequiredPolicyValue = subcategoryDefinition?.required ?? true;
-
-  const isBooleanType = categoryType.toLowerCase() === 'boolean';
   const isNumberType = categoryType.toLowerCase() === 'number' || categoryType.toLowerCase() === 'decimal';
   const isDateType = categoryType.toLowerCase() === 'date';
   const isSelectType = categoryType.toLowerCase() === 'select';
@@ -189,14 +189,21 @@ const EditSubcategoryForm = ({
           Value
         </label>
         {isBooleanType ? (
-          <select
-            value={value.toUpperCase() === 'YES' ? 'YES' : 'NO'}
-            onChange={(e) => setValue(e.target.value)}
-            className="w-full rounded-sm border border-border-primary bg-surface-primary px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
-          >
-            <option value="YES">YES</option>
-            <option value="NO">NO</option>
-          </select>
+          <div className="flex items-center gap-3 rounded-sm border border-border-primary bg-surface-primary px-3 py-2">
+            <Checkbox
+              checked={value.toUpperCase() === 'YES'}
+              onChange={checked => setValue(checked ? 'YES' : 'NO')}
+              aria-label={`Toggle ${subcategoryDefinition?.label ?? 'value'}`}
+            />
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-text-primary">
+                {subcategoryDefinition?.label ?? 'Enabled'}
+              </p>
+              <p className="text-xs text-text-tertiary">
+                Check this box to enable the setting.
+              </p>
+            </div>
+          </div>
         ) : isDateType ? (
           <input
             type="date"

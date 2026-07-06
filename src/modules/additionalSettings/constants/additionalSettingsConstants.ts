@@ -11,6 +11,10 @@ export const AdditionalSettingsCodeEnum = {
   SessionPolicy: 'SESSION_POLICY',
   SessionAllowMultipleLogin: 'ALLOW_MULTIPLE_LOGIN',
   SessionIdleTimeoutSeconds: 'IDLE_TIMEOUT_SECONDS',
+  TransactionApprovalPolicy: 'TRANSACTION_APPROVAL_POLICY',
+  PurchaseFfmcAds: 'PURCHASE_FFMC_ADS',
+  TransactionPrintSettings: 'TRANSACTION_PRINT_SETTINGS',
+  TransactionPrintSacCode: 'TRANSACTION_PRINT_SAC_CODE',
 } as const;
 
 export const ADDITIONAL_SETTINGS_TEXTS = {

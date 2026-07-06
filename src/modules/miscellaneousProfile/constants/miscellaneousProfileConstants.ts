@@ -114,6 +114,11 @@ export const CATEGORY_OPTION_CODE_OPTIONS: CategoryOptionCodeOption[] = [
   },
 ];
 
+export const STATIC_CATEGORY_OPTION_CODES = [
+  CategoryOptionCodeEnum.Master,
+  CategoryOptionCodeEnum.Transaction,
+] as const;
+
 export const CATEGORY_OPTION_CODE_LABELS = {
   [CategoryOptionCodeEnum.LocationType]: 'LOCATION TYPE',
   [CategoryOptionCodeEnum.RiskCategory]: 'RISK CATEGORY',

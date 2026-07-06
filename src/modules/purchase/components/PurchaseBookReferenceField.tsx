@@ -1,0 +1,287 @@
+import { useEffect, useRef, useState } from 'react';
+import { useFormContext, useWatch } from 'react-hook-form';
+import { FormFieldSelect } from '@/components/forms';
+import { manualBillBookApi, type IManualBookPageTracking } from '@/api';
+import { SelectUserProfiles } from '@/modules/userProfile/components';
+import { useAuth } from '@/lib/AuthContext';
+import type { IPurchaseFormValues } from '../types/purchaseTypes';
+import { formatPurchaseEntityLabel } from '../utils/purchaseUtils';
+import { EntityPickerField } from './EntityPickerField';
+
+interface PurchaseBookReferenceFieldProps {
+  branchId?: string;
+  disabled?: boolean;
+}
+
+const createStaticLoadOptions = (options: { value: string; label: string }[]) =>
+  async () => ({
+    options,
+    hasMore: false,
+  });
+
+export const PurchaseBookReferenceField = ({
+  branchId,
+  disabled = false,
+}: PurchaseBookReferenceFieldProps) => {
+  const form = useFormContext<IPurchaseFormValues>();
+  const { activeBranchId, user } = useAuth();
+  const [deliveryBoyPickerOpen, setDeliveryBoyPickerOpen] = useState(false);
+  const [pageOptions, setPageOptions] = useState<IManualBookPageTracking[]>([]);
+  const [isLoadingPages, setIsLoadingPages] = useState(false);
+
+  const manualBookReferenceType = useWatch({
+    control: form.control,
+    name: 'manualBookReferenceType',
+  });
+  const deliveryBoyUserId = useWatch({
+    control: form.control,
+    name: 'deliveryBoyUserId',
+  });
+  const deliveryBoyUserCode = useWatch({
+    control: form.control,
+    name: 'deliveryBoyUserCode',
+  });
+  const deliveryBoyUserName = useWatch({
+    control: form.control,
+    name: 'deliveryBoyUserName',
+  });
+  const manualBookPageId = useWatch({
+    control: form.control,
+    name: 'manualBookPageId',
+  });
+  const manualBookNo = useWatch({
+    control: form.control,
+    name: 'manualBookNo',
+  });
+  const previousReferenceTypeRef = useRef<string>(manualBookReferenceType);
+
+  const isDeliveryBoyMode = manualBookReferenceType === 'DELIVERY_BOY';
+
+  useEffect(() => {
+    if (previousReferenceTypeRef.current === manualBookReferenceType) {
+      return;
+    }
+
+    previousReferenceTypeRef.current = manualBookReferenceType;
+    form.setValue('manualBookId', '', {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
+    form.setValue('manualBookNo', '', {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: false,
+    });
+    form.setValue('manualBookPageId', '', {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
+    form.setValue('manualBookPageSnapshot', null, {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: false,
+    });
+    form.setValue('deliveryBoyUserId', '', {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
+    form.setValue('deliveryBoyUserCode', '', {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: false,
+    });
+    form.setValue('deliveryBoyUserName', '', {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: false,
+    });
+  }, [form, manualBookReferenceType]);
+
+  useEffect(() => {
+    let isActive = true;
+    const assigneeId =
+      manualBookReferenceType === 'DELIVERY_BOY'
+        ? deliveryBoyUserId || ''
+        : user?.id || '';
+
+    const loadPages = async () => {
+      if (!activeBranchId || !assigneeId) {
+        setPageOptions([]);
+        return;
+      }
+
+      try {
+        setIsLoadingPages(true);
+        const pages = await manualBillBookApi.getSelectablePages({
+          branchId: activeBranchId,
+          userId: assigneeId,
+        });
+
+        if (isActive) {
+          setPageOptions(pages);
+        }
+      } catch (error) {
+        if (isActive) {
+          setPageOptions([]);
+        }
+        console.error('Failed to load selectable manual book pages:', error);
+      } finally {
+        if (isActive) {
+          setIsLoadingPages(false);
+        }
+      }
+    };
+
+    void loadPages();
+
+    return () => {
+      isActive = false;
+    };
+  }, [activeBranchId, deliveryBoyUserId, manualBookReferenceType, user?.id]);
+
+  useEffect(() => {
+    const selectedPage = pageOptions.find(page => page.id === String(manualBookPageId || ''));
+    if (!selectedPage) {
+      return;
+    }
+
+    const selectedBook = selectedPage.manualBook;
+    form.setValue('manualBookId', selectedPage.manualBookId, {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
+    form.setValue('manualBookNo', selectedBook?.no ?? '', {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: false,
+    });
+    form.setValue('manualBookPageSnapshot', {
+      ...selectedPage,
+    }, {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: false,
+    });
+  }, [form, manualBookPageId, pageOptions]);
+
+  const loadReferenceTypeOptions = createStaticLoadOptions([
+    { value: 'CASHIER', label: 'Cashier' },
+    { value: 'DELIVERY_BOY', label: 'Delivery Boy' },
+  ]);
+
+  const handleDeliveryBoyContinue = (users: Array<{ id: string; code: string; name: string }>) => {
+    const selectedUser = users[0];
+    if (!selectedUser) {
+      return;
+    }
+
+    form.setValue('deliveryBoyUserId', selectedUser.id, {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
+    form.setValue('deliveryBoyUserCode', selectedUser.code, {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: false,
+    });
+    form.setValue('deliveryBoyUserName', selectedUser.name, {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: false,
+    });
+    setDeliveryBoyPickerOpen(false);
+  };
+
+  return (
+    <>
+      <div className="flex flex-col gap-4 lg:flex-row lg:flex-wrap lg:items-start">
+        <div className="lg:w-[260px]">
+          <FormFieldSelect
+            name="manualBookReferenceType"
+            label="Manual Book Reference Type"
+            loadOptions={loadReferenceTypeOptions}
+            disabled={disabled}
+          />
+        </div>
+
+        {isDeliveryBoyMode ? (
+          <div className="min-w-0 lg:w-[280px]">
+            <EntityPickerField
+              label="Delivery Boy"
+              value={formatPurchaseEntityLabel(
+                deliveryBoyUserCode,
+                deliveryBoyUserName
+              )}
+              placeholder="Select delivery boy"
+              onClick={() => setDeliveryBoyPickerOpen(true)}
+              disabled={disabled}
+              helperText="Select a delivery boy from the current branch before choosing the book reference."
+            />
+          </div>
+        ) : null}
+
+        <div className="min-w-0 flex-1 lg:max-w-[360px]">
+          <FormFieldSelect
+            name="manualBookPageId"
+            label={
+              isDeliveryBoyMode
+                ? 'Delivery Boy Page'
+                : 'Cashier Page'
+            }
+            placeholder="Select bill book page"
+            loadOptions={async (inputValue: string) => {
+              const normalized = inputValue.trim().toLowerCase();
+              const options = pageOptions
+                .filter(page => {
+                  if (!normalized) {
+                    return true;
+                  }
+
+                  return [
+                    String(page.pageNo),
+                    page.manualBook?.no,
+                    page.manualBook?.transactionType,
+                  ]
+                    .filter(Boolean)
+                    .some(value => String(value).toLowerCase().includes(normalized));
+                })
+                .map(page => ({
+                  value: page.id,
+                  label: `${page.manualBook?.no || 'Book'} | Page ${page.pageNo}`,
+                }));
+
+              return { options, hasMore: false };
+            }}
+            disabled={disabled || !activeBranchId || (isDeliveryBoyMode && !deliveryBoyUserId) || isLoadingPages}
+            isSearchable
+          />
+          <p className="mt-1 text-xs text-text-tertiary">
+            {manualBookNo
+              ? `Selected book: ${manualBookNo}`
+              : 'Choose a page from the filtered list.'}
+          </p>
+        </div>
+      </div>
+
+      <SelectUserProfiles
+        open={deliveryBoyPickerOpen}
+        branchId={branchId}
+        roleCode="DELIVERY_BOY"
+        selectable
+        multiple={false}
+        title="Select Delivery Boy"
+        description="Choose a delivery boy from the current branch."
+        onContinue={handleDeliveryBoyContinue}
+        onClose={() => setDeliveryBoyPickerOpen(false)}
+      />
+
+    </>
+  );
+};
+
+export default PurchaseBookReferenceField;

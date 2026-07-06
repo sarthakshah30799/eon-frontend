@@ -16,6 +16,7 @@ export interface ISendMailInput {
   bcc?: string;
   subject: string;
   text: string;
+  html?: string;
 }
 
 export const mailApi = {

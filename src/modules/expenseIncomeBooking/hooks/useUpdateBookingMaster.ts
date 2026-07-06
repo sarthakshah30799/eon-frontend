@@ -3,6 +3,9 @@ import { toast } from 'react-hot-toast';
 import { expenseIncomeBookingApi } from '@/api/expenseIncomeBooking/expenseIncomeBooking.api';
 import type { ICreateExpenseIncomeBookingMaster } from '../types/expenseIncomeBookingTypes';
 
+const getErrorMessage = (error: unknown, fallback: string) =>
+  error instanceof Error ? error.message : fallback;
+
 interface UpdateParams {
   id: string;
   data: Partial<ICreateExpenseIncomeBookingMaster>;
@@ -19,8 +22,8 @@ export const useUpdateBookingMaster = () => {
       queryClient.invalidateQueries({ queryKey: ['booking-master', variables.id] });
       toast.success('Booking Master updated successfully');
     },
-    onError: (err: any) => {
-      toast.error(err.message || 'Error updating booking master');
+    onError: (err: unknown) => {
+      toast.error(getErrorMessage(err, 'Error updating booking master'));
     },
   });
 

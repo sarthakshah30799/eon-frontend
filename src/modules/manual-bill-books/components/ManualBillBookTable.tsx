@@ -45,7 +45,7 @@ export const ManualBillBookTable = ({
         header: 'Txn Type',
         cell: ({ row }) => (
           <span className="whitespace-nowrap text-text-secondary">
-            {row.original.transactionType}
+            {row.original.transactionTypeLabel || row.original.transactionType}
           </span>
         ),
       },
@@ -79,7 +79,7 @@ export const ManualBillBookTable = ({
         header: 'Assigned To',
         cell: ({ row }) => (
           <span className="whitespace-nowrap text-text-secondary">
-            {row.original.assignedTo}
+            {row.original.assignedToName || row.original.assignedTo}
           </span>
         ),
       },

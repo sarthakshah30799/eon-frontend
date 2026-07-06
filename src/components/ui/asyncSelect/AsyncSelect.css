@@ -8,6 +8,8 @@
   border-radius: 6px;
   background-color: var(--color-surface-primary);
   transition: all 0.2s ease;
+  min-height: 1.875rem;
+  box-shadow: none;
 }
 
 .react-select-container .react-select__control:hover {
@@ -26,7 +28,8 @@
 
 .react-select-container .react-select__value-container {
   padding: 0 12px;
-  height: 100%;
+  min-height: 1.875rem;
+  align-items: center;
 }
 
 .react-select-container .react-select__placeholder {
@@ -84,7 +87,7 @@
 .react-select-container .react-select__indicators {
   display: flex;
   align-items: center;
-  height: 100%;
+  min-height: 1.875rem;
 }
 
 .react-select-container .react-select__indicator {

@@ -2,14 +2,12 @@ import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Header } from '../Header';
 import { Sidebar } from '../Sidebar/Sidebar';
-import { useAuth } from '../../../lib/AuthContext';
 
 interface DashboardLayoutProps {
   children: ReactNode;
 }
 
 export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
-  const { logout } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
@@ -35,10 +33,6 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       document.body.style.removeProperty('--app-sidebar-offset');
     };
   }, [isSidebarCollapsed]);
-
-  const handleLogout = async () => {
-    await logout();
-  };
 
   return (
     <div
@@ -67,7 +61,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           isSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-64',
         ].join(' ')}
       >
-        <Header onMenuClick={() => setIsSidebarOpen(true)} onLogout={handleLogout} />
+        <Header onMenuClick={() => setIsSidebarOpen(true)} />
 
         <main className="h-[calc(100vh-121px)] flex-1 overflow-y-auto p-5 pb-0! mb-16">
           <div className="mx-auto max-w-7xl h-full!">{children}</div>

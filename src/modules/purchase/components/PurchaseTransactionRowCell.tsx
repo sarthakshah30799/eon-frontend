@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { TrashIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui';
@@ -64,6 +64,8 @@ const formatRangeValue = (value?: string | null) => {
   const numericValue = Number(value);
   return Number.isFinite(numericValue) ? numericValue.toFixed(4) : value;
 };
+
+const normalizeValue = (value: unknown) => String(value ?? '').trim();
 
 export const PurchaseTransactionRowCell = ({
   rowIndex,
@@ -148,7 +150,11 @@ export const PurchaseTransactionRowCell = ({
         String(selectedCurrencyProfile?.currencyCode || ''),
         String(selectedProduct?.productCode || '')
       ),
-    [agentCommissionRules, selectedProduct?.productCode, selectedCurrencyProfile?.currencyCode]
+    [
+      agentCommissionRules,
+      selectedProduct?.productCode,
+      selectedCurrencyProfile?.currencyCode,
+    ]
   );
   const total = useMemo(
     () => calculateTransactionTotal(String(quantity || ''), String(rateValue || '')),
@@ -225,7 +231,7 @@ export const PurchaseTransactionRowCell = ({
       !currentRate ||
       currentRate === lastAutoFilledRateRef.current.value;
 
-    if (!shouldResetToCalculatedRate) {
+    if (!shouldResetToCalculatedRate || currentRate === calculatedRate) {
       return;
     }
 
@@ -248,24 +254,34 @@ export const PurchaseTransactionRowCell = ({
   ]);
 
   useEffect(() => {
-    form.setValue(
-      `transactions.${rowIndex}.productCode`,
-      selectedProduct?.productCode ?? '',
-      {
+    const nextProductCode = selectedProduct?.productCode ?? '';
+    const nextProductDescription = selectedProduct?.productDescription ?? '';
+    const currentProductCode = normalizeValue(
+      form.getValues(`transactions.${rowIndex}.productCode`)
+    );
+    const currentProductDescription = normalizeValue(
+      form.getValues(`transactions.${rowIndex}.productDescription`)
+    );
+
+    if (currentProductCode !== nextProductCode) {
+      form.setValue(`transactions.${rowIndex}.productCode`, nextProductCode, {
         shouldDirty: false,
         shouldTouch: false,
         shouldValidate: false,
-      }
-    );
-    form.setValue(
-      `transactions.${rowIndex}.productDescription`,
-      selectedProduct?.productDescription ?? '',
-      {
-        shouldDirty: false,
-        shouldTouch: false,
-        shouldValidate: false,
-      }
-    );
+      });
+    }
+
+    if (currentProductDescription !== nextProductDescription) {
+      form.setValue(
+        `transactions.${rowIndex}.productDescription`,
+        nextProductDescription,
+        {
+          shouldDirty: false,
+          shouldTouch: false,
+          shouldValidate: false,
+        }
+      );
+    }
   }, [form, rowIndex, selectedProduct]);
 
   useEffect(() => {
@@ -328,48 +344,73 @@ export const PurchaseTransactionRowCell = ({
   }, [buyMaxRate, buyMinRate, form, hasCurrencyProductSelection, rowIndex, rateValue]);
 
   useEffect(() => {
-    form.setValue(`transactions.${rowIndex}.total`, total, {
-      shouldDirty: false,
-      shouldTouch: false,
-      shouldValidate: false,
-    });
-  }, [form, rowIndex, total]);
+    const fieldName = `transactions.${rowIndex}.total` as const;
+    const currentTotal = normalizeValue(form.getValues(fieldName));
 
-  useEffect(() => {
-    form.setValue(`transactions.${rowIndex}.roundOff`, roundOffAmount, {
-      shouldDirty: false,
-      shouldTouch: false,
-      shouldValidate: false,
-    });
-    form.setValue(`transactions.${rowIndex}.finalAmount`, roundedTotal, {
-      shouldDirty: false,
-      shouldTouch: false,
-      shouldValidate: false,
-    });
-  }, [form, rowIndex, roundedTotal, roundOffAmount]);
-
-  useEffect(() => {
-    form.setValue(`transactions.${rowIndex}.commission`, commissionAmount, {
-      shouldDirty: false,
-      shouldTouch: false,
-      shouldValidate: false,
-    });
-  }, [commissionAmount, form, rowIndex]);
-
-  useEffect(() => {
-    form.setValue(
-      `transactions.${rowIndex}.commissionSnapshot`,
-      commissionSnapshot,
-      {
+    if (currentTotal !== total) {
+      form.setValue(fieldName, total, {
         shouldDirty: false,
         shouldTouch: false,
         shouldValidate: false,
-      }
-    );
+      });
+    }
+  }, [form, rowIndex, total]);
+
+  useEffect(() => {
+    const roundOffField = `transactions.${rowIndex}.roundOff` as const;
+    const finalAmountField = `transactions.${rowIndex}.finalAmount` as const;
+    const currentRoundOff = normalizeValue(form.getValues(roundOffField));
+    const currentFinalAmount = normalizeValue(form.getValues(finalAmountField));
+
+    if (currentRoundOff !== roundOffAmount) {
+      form.setValue(roundOffField, roundOffAmount, {
+        shouldDirty: false,
+        shouldTouch: false,
+        shouldValidate: false,
+      });
+    }
+
+    if (currentFinalAmount !== roundedTotal) {
+      form.setValue(finalAmountField, roundedTotal, {
+        shouldDirty: false,
+        shouldTouch: false,
+        shouldValidate: false,
+      });
+    }
+  }, [form, rowIndex, roundedTotal, roundOffAmount]);
+
+  useEffect(() => {
+    const fieldName = `transactions.${rowIndex}.commission` as const;
+    const currentCommission = normalizeValue(form.getValues(fieldName));
+    const nextCommission = commissionAmount || '';
+
+    if (currentCommission !== nextCommission) {
+      form.setValue(fieldName, nextCommission, {
+        shouldDirty: false,
+        shouldTouch: false,
+        shouldValidate: false,
+      });
+    }
+  }, [commissionAmount, form, rowIndex]);
+
+  useEffect(() => {
+    const fieldName = `transactions.${rowIndex}.commissionSnapshot` as const;
+    const currentSnapshot = form.getValues(fieldName);
+    const nextSnapshot = commissionSnapshot;
+    if (JSON.stringify(currentSnapshot) !== JSON.stringify(nextSnapshot)) {
+      form.setValue(fieldName, nextSnapshot, {
+        shouldDirty: false,
+        shouldTouch: false,
+        shouldValidate: false,
+      });
+    }
   }, [commissionSnapshot, form, rowIndex]);
 
-  const productLoadOptions = async (inputValue: string) =>
-    loadProductOptions(inputValue, pricingData.products ?? []);
+  const productLoadOptions = useCallback(
+    (inputValue: string) =>
+      loadProductOptions(inputValue, pricingData.products ?? []),
+    [pricingData.products]
+  );
 
   return (
     <div className="grid gap-2 px-1 py-1 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1.4fr)_minmax(0,0.55fr)_minmax(0,0.75fr)_minmax(0,0.55fr)_minmax(0,0.55fr)_minmax(0,0.55fr)_minmax(0,0.55fr)_44px]">

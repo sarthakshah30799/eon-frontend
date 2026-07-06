@@ -73,10 +73,16 @@ interface BulkDispatchFormProps {
 const BulkDispatchFormFields = () => {
   const form = useFormContext<IBulkDispatchFormValues>();
   const branchId = useWatch({ name: 'branchId', control: form.control });
-  const dispatchDate = useWatch({ name: 'dispatchDate', control: form.control });
+  const dispatchDate = useWatch({
+    name: 'dispatchDate',
+    control: form.control,
+  });
   const bookNoFrom = useWatch({ name: 'bookNoFrom', control: form.control });
   const bookNoTo = useWatch({ name: 'bookNoTo', control: form.control });
-  const vouchersPerBook = useWatch({ name: 'vouchersPerBook', control: form.control });
+  const vouchersPerBook = useWatch({
+    name: 'vouchersPerBook',
+    control: form.control,
+  });
   const mvNoFrom = useWatch({ name: 'mvNoFrom', control: form.control });
 
   useEffect(() => {
@@ -124,7 +130,8 @@ const BulkDispatchFormFields = () => {
   }, [branchId, form]);
 
   const { user } = useAuth();
-  const isAdmin = user?.isAdmin === true;
+  const isAdmin = !!user?.isAdmin;
+  const isHoStaff = !!user?.isHoStaff;
 
   const loadBranches = async () => {
     try {
@@ -145,7 +152,6 @@ const BulkDispatchFormFields = () => {
       };
     }
   };
-
 
   const loadAssignedTo = useCallback(async () => {
     if (!branchId) {
@@ -184,7 +190,7 @@ const BulkDispatchFormFields = () => {
         name="branchId"
         label="Branch"
         loadOptions={loadBranches}
-        disabled={!isAdmin}
+        disabled={!isAdmin && !isHoStaff}
       />
       <FormFieldCategoryOption
         name="transactionType"
@@ -223,7 +229,7 @@ export const BulkDispatchForm = ({ onSuccess }: BulkDispatchFormProps) => {
   const isAdmin = user?.isAdmin === true;
 
   const onCancel = () => {
-    navigate('/admin/manual-bill-books');
+    navigate('/manual-bill-books');
   };
 
   const handleSubmit = async (values: IBulkDispatchFormValues) => {
@@ -242,14 +248,16 @@ export const BulkDispatchForm = ({ onSuccess }: BulkDispatchFormProps) => {
       toast.success('Manual bill book record saved successfully.');
       onSuccess();
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Failed to save manual bill book.');
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to save manual bill book.'
+      );
     }
   };
 
   const defaultValues = {
     dispatchDate: new Date().toISOString().slice(0, 10),
     no: '',
-    branchId: isAdmin ? '' : (activeBranchId || ''),
+    branchId: isAdmin ? '' : activeBranchId || '',
     transactionType: '',
     bookNoFrom: '',
     bookNoTo: '',
@@ -264,7 +272,9 @@ export const BulkDispatchForm = ({ onSuccess }: BulkDispatchFormProps) => {
     <Form
       id="bulk-dispatch-form"
       onSubmit={handleSubmit}
-      resolver={yupResolver(bulkDispatchSchema) as Resolver<IBulkDispatchFormValues>}
+      resolver={
+        yupResolver(bulkDispatchSchema) as Resolver<IBulkDispatchFormValues>
+      }
       defaultValues={defaultValues}
       mode="all"
       footer={{

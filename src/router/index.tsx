@@ -191,6 +191,9 @@ const PurchasePage = lazy(
 const PurchaseCreatePage = lazy(
   () => import('../pages/purchase/[slug]/create')
 );
+const PurchaseEditPage = lazy(
+  () => import('../pages/purchase/[slug]/edit/[id]')
+);
 const PurchaseDocumentsPage = lazy(
   () => import('../pages/purchase/[slug]/documents')
 );
@@ -707,6 +710,14 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <PurchaseCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/purchase/:slug/edit/:id',
+    element: (
+      <ProtectedLayout>
+        <PurchaseEditPage />
       </ProtectedLayout>
     ),
   },

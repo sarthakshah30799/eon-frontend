@@ -63,7 +63,11 @@ export const ManagerToCashierAllocationPage = () => {
       if (!activeBranchId) return;
       try {
         setIsLoadingOptions(true);
-        const data = await manualBillBookApi.getAuthorizedUsers(activeBranchId);
+        console.log('[DEBUG] manual allocation fetch users', {
+          activeBranchId,
+        });
+        const data = await manualBillBookApi.getAuthorizedUsers();
+        console.log('[DEBUG] manual allocation users response', data);
         setCashiers(data);
       } catch (err: unknown) {
         toast.error(err instanceof Error ? err.message : 'Failed to load user list.');

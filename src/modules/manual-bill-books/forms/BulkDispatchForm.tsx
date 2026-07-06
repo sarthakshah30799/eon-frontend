@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -11,25 +11,15 @@ import {
   FormFieldCategoryOption,
 } from '@/components/forms';
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
-import { branchProfileApi } from '@/api/branchProfile/branchProfile.api';
 import { manualBillBookApi } from '@/api';
 import { useAuth } from '@/lib/AuthContext';
-import toast from 'react-hot-toast';
 import type { Resolver } from 'react-hook-form';
-
-interface IBulkDispatchFormValues {
-  dispatchDate: string;
-  no?: string;
-  branchId: string;
-  transactionType: string;
-  bookNoFrom: string | number;
-  bookNoTo: string | number;
-  vouchersPerBook: string | number;
-  mvNoFrom: string | number;
-  mvNoTo: string;
-  assignedTo: string;
-  remarks: string;
-}
+import {
+  useCreateManualBillBook,
+  useListManualBillBookManagers,
+} from '../hooks';
+import { useListBranchProfiles } from '@/modules/branchProfile/hooks';
+import type { IBulkDispatchFormValues } from '../types';
 
 const bulkDispatchSchema = yup.object().shape({
   dispatchDate: yup.string().required('Date is required'),
@@ -70,7 +60,11 @@ interface BulkDispatchFormProps {
   onSuccess: () => void;
 }
 
-const BulkDispatchFormFields = () => {
+export const BulkDispatchForm = ({ onSuccess }: BulkDispatchFormProps) => {
+  const navigate = useNavigate();
+  const { user, activeBranchId } = useAuth();
+  const isAdmin = user?.isAdmin === true;
+  const { submitManualBillBook } = useCreateManualBillBook();
   const form = useFormContext<IBulkDispatchFormValues>();
   const branchId = useWatch({ name: 'branchId', control: form.control });
   const dispatchDate = useWatch({
@@ -129,129 +123,32 @@ const BulkDispatchFormFields = () => {
     form.setValue('assignedTo', '');
   }, [branchId, form]);
 
-  const { user } = useAuth();
-  const isAdmin = !!user?.isAdmin;
   const isHoStaff = !!user?.isHoStaff;
-
-  const loadBranches = async () => {
-    try {
-      const branches = await branchProfileApi.getBranchProfiles({
-        activeOnly: true,
-      });
-      return {
-        options: branches.map(b => ({
-          value: b.id,
-          label: `${b.code} - ${b.name}`,
-        })),
-        hasMore: false,
-      };
-    } catch {
-      return {
-        options: [],
-        hasMore: false,
-      };
-    }
-  };
-
-  const loadAssignedTo = useCallback(async () => {
-    if (!branchId) {
-      return {
-        options: [],
-        hasMore: false,
-      };
-    }
-    try {
-      const managers = await manualBillBookApi.getBranchManagers(branchId);
-      return {
-        options: managers.map(m => ({
-          value: m.id,
-          label: m.name,
-        })),
-        hasMore: false,
-      };
-    } catch {
-      return {
-        options: [],
-        hasMore: false,
-      };
-    }
-  }, [branchId]);
-
-  return (
-    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-      <FormFieldInput name="dispatchDate" label="Date" type="date" />
-      <FormFieldInput
-        name="no"
-        label="NO"
-        disabled
-        placeholder="Auto-Generated"
-      />
-      <FormFieldSelect
-        name="branchId"
-        label="Branch"
-        loadOptions={loadBranches}
-        disabled={!isAdmin && !isHoStaff}
-      />
-      <FormFieldCategoryOption
-        name="transactionType"
-        label="Txn Type"
-        code={CategoryOptionCodeEnum.Transaction}
-        useValueAsId={true}
-        isCreatable={false}
-      />
-      <FormFieldInput name="bookNoFrom" label="Book No. From" type="number" />
-      <FormFieldInput name="bookNoTo" label="Book No. To" type="number" />
-      <div className="md:col-span-2">
-        <FormFieldInput
-          name="vouchersPerBook"
-          label="No Of Voucher Per Book"
-          type="number"
-        />
-      </div>
-      <FormFieldInput name="mvNoFrom" label="MV No. From" type="number" />
-      <FormFieldInput name="mvNoTo" label="MV No. To" disabled />
-      {branchId && (
-        <FormFieldSelect
-          key={branchId}
-          name="assignedTo"
-          label="Assigned To"
-          loadOptions={loadAssignedTo}
-        />
-      )}
-      <FormFieldTextarea name="remarks" label="Remarks" rows={3} />
-    </div>
-  );
-};
-
-export const BulkDispatchForm = ({ onSuccess }: BulkDispatchFormProps) => {
-  const navigate = useNavigate();
-  const { user, activeBranchId } = useAuth();
-  const isAdmin = user?.isAdmin === true;
-
+  const { data: branches = [] } = useListBranchProfiles({
+    activeOnly: true,
+  });
+  const { data: branchManagers = [] } = useListManualBillBookManagers(branchId);
+  const loadBranches = async () => ({
+    options: branches.map(branch => ({
+      value: branch.id,
+      label: `${branch.code} - ${branch.name}`,
+    })),
+    hasMore: false,
+  });
+  const loadAssignedTo = async () => ({
+    options: branchManagers.map(manager => ({
+      value: manager.id,
+      label: manager.name,
+    })),
+    hasMore: false,
+  });
   const onCancel = () => {
     navigate('/manual-bill-books');
   };
 
   const handleSubmit = async (values: IBulkDispatchFormValues) => {
-    try {
-      await manualBillBookApi.create({
-        dispatchDate: values.dispatchDate,
-        branchId: values.branchId,
-        transactionType: values.transactionType,
-        bookNoFrom: Number(values.bookNoFrom),
-        bookNoTo: Number(values.bookNoTo),
-        vouchersPerBook: Number(values.vouchersPerBook),
-        mvNoFrom: Number(values.mvNoFrom),
-        assignedTo: values.assignedTo,
-        remarks: values.remarks,
-      });
-      toast.success('Manual bill book record saved successfully.');
-      onSuccess();
-    } catch (err: unknown) {
-      toast.error(
-        err instanceof Error ? err.message : 'Failed to save manual bill book.'
-      );
-    }
+    await submitManualBillBook(values);
+    onSuccess();
   };
 
   const defaultValues = {
@@ -285,7 +182,48 @@ export const BulkDispatchForm = ({ onSuccess }: BulkDispatchFormProps) => {
         onCancel,
       }}
     >
-      <BulkDispatchFormFields />
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <FormFieldInput name="dispatchDate" label="Date" type="date" />
+        <FormFieldInput
+          name="no"
+          label="NO"
+          disabled
+          placeholder="Auto-Generated"
+        />
+        <FormFieldSelect
+          name="branchId"
+          label="Branch"
+          loadOptions={loadBranches}
+          disabled={!isAdmin && !isHoStaff}
+        />
+        <FormFieldCategoryOption
+          name="transactionType"
+          label="Txn Type"
+          code={CategoryOptionCodeEnum.Transaction}
+          useValueAsId={true}
+          isCreatable={false}
+        />
+        <FormFieldInput name="bookNoFrom" label="Book No. From" type="number" />
+        <FormFieldInput name="bookNoTo" label="Book No. To" type="number" />
+        <div className="md:col-span-2">
+          <FormFieldInput
+            name="vouchersPerBook"
+            label="No Of Voucher Per Book"
+            type="number"
+          />
+        </div>
+        <FormFieldInput name="mvNoFrom" label="MV No. From" type="number" />
+        <FormFieldInput name="mvNoTo" label="MV No. To" disabled />
+        {branchId && (
+          <FormFieldSelect
+            key={branchId}
+            name="assignedTo"
+            label="Assigned To"
+            loadOptions={loadAssignedTo}
+          />
+        )}
+        <FormFieldTextarea name="remarks" label="Remarks" rows={3} />
+      </div>
     </Form>
   );
 };

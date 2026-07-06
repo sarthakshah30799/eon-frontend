@@ -125,6 +125,7 @@ export const ManualBillBookTable = ({
       loading={loading}
       className="min-w-full text-xs"
       onRowClick={onRowClick}
+      emptyMessage="No Records found. Create your first Manual Bill Book."
     />
   );
 };

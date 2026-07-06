@@ -3,22 +3,20 @@ import { useAuth } from '@/lib/AuthContext';
 import { manualBillBookApi, type IManualBook } from '@/api';
 import { categoryOptionsApi } from '@/api/categoryOptions/categoryOptions.api';
 import { Loader } from '@/components/ui/loader';
-import { Button, AsyncSelect, DatePicker, type AsyncSelectOption } from '@/components/ui';
+import {
+  Button,
+  AsyncSelect,
+  DatePicker,
+  type AsyncSelectOption,
+} from '@/components/ui';
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import type { MultiValue, SingleValue } from 'react-select';
 import toast from 'react-hot-toast';
-
-const resolveAssignedToLabel = (assignedTo: IManualBook['assignedTo']) => {
-  if (assignedTo && typeof assignedTo === 'object') {
-    return assignedTo.name || assignedTo.id;
-  }
-
-  return assignedTo || 'N/A';
-};
+import { ManualBillBookAcknowledgementChecklistTable } from '@/modules/manual-bill-books/components';
 
 export const ManualBillBookAcknowledgementPage = () => {
   const { activeBranchId } = useAuth();
-  
+
   // Navigation: 'list' | 'detail'
   const [view, setView] = useState<'list' | 'detail'>('list');
   const [isLoadingList, setIsLoadingList] = useState(true);
@@ -27,12 +25,16 @@ export const ManualBillBookAcknowledgementPage = () => {
   // Filter states for Detail View
   const [searchStatus, setSearchStatus] = useState('Pending');
   const [searchTxnType, setSearchTxnType] = useState('ALL');
-  const [txnTypes, setTxnTypes] = useState<Array<{ id: string; label: string }>>([]);
+  const [txnTypes, setTxnTypes] = useState<
+    Array<{ id: string; label: string }>
+  >([]);
 
   useEffect(() => {
     const fetchTxnTypes = async () => {
       try {
-        const options = await categoryOptionsApi.getCategoryOptionsByCode(CategoryOptionCodeEnum.Transaction);
+        const options = await categoryOptionsApi.getCategoryOptionsByCode(
+          CategoryOptionCodeEnum.Transaction
+        );
         setTxnTypes(options.map(o => ({ id: o.id, label: o.label })));
       } catch (err) {
         console.error('Failed to load transaction types', err);
@@ -40,7 +42,7 @@ export const ManualBillBookAcknowledgementPage = () => {
     };
     fetchTxnTypes();
   }, []);
-  
+
   // Default dates: From 30 days ago to Today
   const getPastDateStr = (daysAgo: number) => {
     const d = new Date();
@@ -58,7 +60,9 @@ export const ManualBillBookAcknowledgementPage = () => {
   const [reloadToken, setReloadToken] = useState(0);
 
   // Record of updates: id -> { status: 'Approved' | 'Rejected', remarks: string }
-  const [rowEdits, setRowEdits] = useState<Record<string, { status?: 'Approved' | 'Rejected'; remarks: string }>>({});
+  const [rowEdits, setRowEdits] = useState<
+    Record<string, { status?: 'Approved' | 'Rejected'; remarks: string }>
+  >({});
   const selectedTxnType = txnTypes.find(t => t.id === searchTxnType);
 
   useEffect(() => {
@@ -78,7 +82,11 @@ export const ManualBillBookAcknowledgementPage = () => {
         if (cancelled) return;
         setDispatches(data);
       } catch (err: unknown) {
-        toast.error(err instanceof Error ? err.message : 'Failed to fetch dispatches list.');
+        toast.error(
+          err instanceof Error
+            ? err.message
+            : 'Failed to fetch dispatches list.'
+        );
       } finally {
         if (!cancelled) {
           setIsLoadingList(false);
@@ -109,13 +117,18 @@ export const ManualBillBookAcknowledgementPage = () => {
       }
       setRowEdits({});
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Failed to query records.');
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to query records.'
+      );
     } finally {
       setIsProcessing(false);
     }
   };
 
-  const handleCheckboxChange = (id: string, status: 'Approved' | 'Rejected') => {
+  const handleCheckboxChange = (
+    id: string,
+    status: 'Approved' | 'Rejected'
+  ) => {
     setRowEdits(prev => {
       const current = prev[id] || { remarks: '' };
       const nextStatus = current.status === status ? undefined : status;
@@ -124,7 +137,7 @@ export const ManualBillBookAcknowledgementPage = () => {
         [id]: {
           ...current,
           status: nextStatus,
-        }
+        },
       };
     });
   };
@@ -137,7 +150,7 @@ export const ManualBillBookAcknowledgementPage = () => {
         [id]: {
           ...current,
           remarks: text,
-        }
+        },
       };
     });
   };
@@ -160,13 +173,15 @@ export const ManualBillBookAcknowledgementPage = () => {
       setIsSaving(true);
       await manualBillBookApi.bulkReview(reviewsToSubmit);
       toast.success('Acknowledgements saved successfully.');
-      
+
       // Refresh current query to hide processed items (if filtered by Pending)
       await handleProcessQuery();
       // Also refresh master list
       setReloadToken(token => token + 1);
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Failed to save acknowledgements.');
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to save acknowledgements.'
+      );
     } finally {
       setIsSaving(false);
     }
@@ -176,7 +191,7 @@ export const ManualBillBookAcknowledgementPage = () => {
     // Pre-populate filter parameters
     setSearchStatus(book.status);
     setSearchTxnType(book.transactionType);
-    
+
     const dispatchDate = new Date(book.dispatchDate);
     const fromD = new Date(dispatchDate);
     fromD.setDate(fromD.getDate() - 15);
@@ -197,7 +212,9 @@ export const ManualBillBookAcknowledgementPage = () => {
   if (!activeBranchId) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
-        <p className="text-slate-500 font-medium">Please select your active branch workplace to proceed.</p>
+        <p className="text-slate-500 font-medium">
+          Please select your active branch workplace to proceed.
+        </p>
       </div>
     );
   }
@@ -207,14 +224,11 @@ export const ManualBillBookAcknowledgementPage = () => {
       {/* Header */}
       <div className="flex flex-col gap-1.5 border-b border-slate-200 pb-5">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Manual Bill Status</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+            Manual Bill Status
+          </h1>
           {view === 'detail' && (
-            <button
-              onClick={() => setView('list')}
-              className="cursor-pointer rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 transition"
-            >
-              Back to List
-            </button>
+            <Button onClick={() => setView('list')}>Back to List</Button>
           )}
         </div>
         <p className="text-sm text-slate-500">
@@ -230,10 +244,14 @@ export const ManualBillBookAcknowledgementPage = () => {
           </div>
 
           {isLoadingList ? (
-            <div className="py-20 flex justify-center"><Loader /></div>
+            <div className="py-20 flex justify-center">
+              <Loader />
+            </div>
           ) : dispatches.length === 0 ? (
             <div className="py-16 text-center">
-              <p className="text-sm text-slate-500">No dispatches found for this branch.</p>
+              <p className="text-sm text-slate-500">
+                No dispatches found for this branch.
+              </p>
               <button
                 onClick={() => {
                   setView('detail');
@@ -267,22 +285,38 @@ export const ManualBillBookAcknowledgementPage = () => {
                       onClick={() => handleRowClick(book)}
                       className="hover:bg-slate-50/80 cursor-pointer transition"
                     >
-                      <td className="px-6 py-4">{new Date(book.dispatchDate).toISOString().slice(0, 10)}</td>
-                      <td className="px-6 py-4 font-mono font-semibold text-slate-900">{book.no}</td>
-                      <td className="px-6 py-4 font-semibold text-xs text-slate-600">{book.branchCode || 'Unknown'}</td>
-                      <td className="px-6 py-4">{book.transactionType}</td>
-                      <td className="px-6 py-4">{book.bookNoFrom} - {book.bookNoTo}</td>
-                      <td className="px-6 py-4">{book.vouchersPerBook}</td>
-                      <td className="px-6 py-4 font-semibold text-sky-800">{book.mvNoFrom} - {book.mvNoTo}</td>
-                      <td className="px-6 py-4">{resolveAssignedToLabel(book.assignedTo)}</td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold border ${
-                          book.status === 'Approved'
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                            : book.status === 'Rejected'
-                              ? 'bg-rose-50 text-rose-700 border-rose-200'
-                              : 'bg-amber-50 text-amber-700 border-amber-200'
-                        }`}>
+                        {new Date(book.dispatchDate).toISOString().slice(0, 10)}
+                      </td>
+                      <td className="px-6 py-4 font-mono font-semibold text-slate-900">
+                        {book.no}
+                      </td>
+                      <td className="px-6 py-4 font-semibold text-xs text-slate-600">
+                        {book.branchCode || 'Unknown'}
+                      </td>
+                      <td className="px-6 py-4">{book.transactionType}</td>
+                      <td className="px-6 py-4">
+                        {book.bookNoFrom} - {book.bookNoTo}
+                      </td>
+                      <td className="px-6 py-4">{book.vouchersPerBook}</td>
+                      <td className="px-6 py-4 font-semibold text-sky-800">
+                        {book.mvNoFrom} - {book.mvNoTo}
+                      </td>
+                      <td className="px-6 py-4">
+                        {book.assignedTo && typeof book.assignedTo === 'object'
+                          ? book.assignedTo.name || book.assignedTo.id
+                          : book.assignedTo || 'N/A'}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span
+                          className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold border ${
+                            book.status === 'Approved'
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                              : book.status === 'Rejected'
+                                ? 'bg-rose-50 text-rose-700 border-rose-200'
+                                : 'bg-amber-50 text-amber-700 border-amber-200'
+                          }`}
+                        >
                           {book.status}
                         </span>
                       </td>
@@ -312,17 +346,21 @@ export const ManualBillBookAcknowledgementPage = () => {
                       : [
                           { value: 'Pending', label: 'Pending' },
                           { value: 'Approved', label: 'Approved' },
-                          { value: 'Rejected', label: 'Rejected' }
+                          { value: 'Rejected', label: 'Rejected' },
                         ].find(o => o.value === searchStatus)
                   }
                   onChange={(
-                    option: MultiValue<AsyncSelectOption> | SingleValue<AsyncSelectOption>
+                    option:
+                      | MultiValue<AsyncSelectOption>
+                      | SingleValue<AsyncSelectOption>
                   ) => {
                     const selectedOption = Array.isArray(option)
-                      ? option[0] ?? null
+                      ? (option[0] ?? null)
                       : option;
 
-                    setSearchStatus(selectedOption?.value ? String(selectedOption.value) : '');
+                    setSearchStatus(
+                      selectedOption?.value ? String(selectedOption.value) : ''
+                    );
                     setSelectedBookId(null);
                   }}
                   loadOptions={async () => ({
@@ -330,9 +368,9 @@ export const ManualBillBookAcknowledgementPage = () => {
                       { value: 'Pending', label: 'Pending' },
                       { value: 'Approved', label: 'Approved' },
                       { value: 'Rejected', label: 'Rejected' },
-                      { value: '', label: 'All' }
+                      { value: '', label: 'All' },
                     ],
-                    hasMore: false
+                    hasMore: false,
                   })}
                   isClearable={false}
                 />
@@ -350,21 +388,27 @@ export const ManualBillBookAcknowledgementPage = () => {
                         : null
                   }
                   onChange={(
-                    option: MultiValue<AsyncSelectOption> | SingleValue<AsyncSelectOption>
+                    option:
+                      | MultiValue<AsyncSelectOption>
+                      | SingleValue<AsyncSelectOption>
                   ) => {
                     const selectedOption = Array.isArray(option)
-                      ? option[0] ?? null
+                      ? (option[0] ?? null)
                       : option;
 
-                    setSearchTxnType(selectedOption?.value ? String(selectedOption.value) : 'ALL');
+                    setSearchTxnType(
+                      selectedOption?.value
+                        ? String(selectedOption.value)
+                        : 'ALL'
+                    );
                     setSelectedBookId(null);
                   }}
                   loadOptions={async () => ({
                     options: [
                       { value: 'ALL', label: 'ALL' },
-                      ...txnTypes.map(t => ({ value: t.id, label: t.label }))
+                      ...txnTypes.map(t => ({ value: t.id, label: t.label })),
                     ],
-                    hasMore: false
+                    hasMore: false,
                   })}
                   isClearable={false}
                 />
@@ -417,92 +461,25 @@ export const ManualBillBookAcknowledgementPage = () => {
           {/* Results Checklist table */}
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="px-5 py-4 border-b border-slate-200 bg-slate-50">
-              <h3 className="font-semibold text-slate-800 text-sm">Dispatches Checklist</h3>
+              <h3 className="font-semibold text-slate-800 text-sm">
+                Dispatches Checklist
+              </h3>
             </div>
 
             {queryResults.length === 0 ? (
               <div className="py-12 text-center">
-                <p className="text-sm text-slate-500">No records found matching query criteria.</p>
+                <p className="text-sm text-slate-500">
+                  No records found matching query criteria.
+                </p>
               </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm border-collapse">
-                  <thead>
-                    <tr className="border-b border-slate-200 bg-slate-50/50 text-slate-600 font-medium select-none">
-                      <th className="px-4 py-3">Request No</th>
-                      <th className="px-4 py-3">Request Date</th>
-                      <th className="px-4 py-3">Branch</th>
-                      <th className="px-4 py-3">Transaction Type</th>
-                      <th className="px-4 py-3">Book No From</th>
-                      <th className="px-4 py-3">Book No To</th>
-                      <th className="px-4 py-3">No Of Voucher</th>
-                      <th className="px-4 py-3">MV No.From</th>
-                      <th className="px-4 py-3">MV No.To</th>
-                      <th className="px-4 py-3">Remarks</th>
-                      <th className="px-4 py-3 text-center">APPROVE</th>
-                      <th className="px-4 py-3 text-center">REJECT</th>
-                      <th className="px-4 py-3">REMARKS</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 text-slate-700">
-                    {queryResults.map(book => {
-                      const edit = rowEdits[book.id] || { remarks: '' };
-                      const isApproved = edit.status === 'Approved' || (book.status === 'Approved' && edit.status === undefined);
-                      const isRejected = edit.status === 'Rejected' || (book.status === 'Rejected' && edit.status === undefined);
-                      const displayRemarks = edit.remarks !== undefined && edit.status !== undefined ? edit.remarks : (book.approvalRemarks || '');
-                      const isReadOnly = book.status !== 'Pending';
-
-                      return (
-                        <tr key={book.id} className="hover:bg-slate-50/70 transition align-middle">
-                          <td className="px-4 py-4 font-mono font-semibold text-slate-900">{book.no}</td>
-                          <td className="px-4 py-4 text-xs whitespace-nowrap">
-                            {new Date(book.dispatchDate).toLocaleDateString()} 00:00:00
-                          </td>
-                          <td className="px-4 py-4 font-semibold text-xs">{book.branchCode || 'Unknown'}</td>
-                          <td className="px-4 py-4 text-xs">{book.transactionType}</td>
-                          <td className="px-4 py-4">{book.bookNoFrom}</td>
-                          <td className="px-4 py-4">{book.bookNoTo}</td>
-                          <td className="px-4 py-4">{book.vouchersPerBook}</td>
-                          <td className="px-4 py-4 font-mono text-xs">{book.mvNoFrom}</td>
-                          <td className="px-4 py-4 font-mono text-xs">{book.mvNoTo}</td>
-                          <td className="px-4 py-4 text-xs max-w-[120px] truncate" title={book.remarks}>
-                            {book.remarks || '-'}
-                          </td>
-                          <td className="px-4 py-4 text-center">
-                            <input
-                              type="checkbox"
-                              checked={isApproved}
-                              disabled={isReadOnly}
-                              onChange={() => handleCheckboxChange(book.id, 'Approved')}
-                              className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                            />
-                          </td>
-                          <td className="px-4 py-4 text-center">
-                            <input
-                              type="checkbox"
-                              checked={isRejected}
-                              disabled={isReadOnly}
-                              onChange={() => handleCheckboxChange(book.id, 'Rejected')}
-                              className="h-4 w-4 rounded border-slate-300 text-red-600 focus:ring-red-500 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                            />
-                          </td>
-                          <td className="px-4 py-4">
-                            <input
-                              type="text"
-                              value={displayRemarks}
-                              disabled={isReadOnly}
-                              onChange={e => handleRemarksChange(book.id, e.target.value)}
-                              placeholder="Approval details..."
-                              className="w-full rounded border border-slate-300 px-2 py-1 text-xs focus:ring-1 focus:ring-sky-500 focus:border-sky-500 disabled:bg-slate-100 disabled:text-slate-500"
-                            />
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
+          ) : (
+            <ManualBillBookAcknowledgementChecklistTable
+              books={queryResults}
+              rowEdits={rowEdits}
+              onCheckboxChange={handleCheckboxChange}
+              onRemarksChange={handleRemarksChange}
+            />
+          )}
 
             {queryResults.length > 0 && (
               <div className="px-5 py-4 border-t border-slate-200 bg-slate-50 flex justify-end">

@@ -4,7 +4,7 @@ import { manualBillBookApi } from '@/api';
 import { categoryOptionsApi } from '@/api/categoryOptions/categoryOptions.api';
 import { Button, Input, AsyncSelect, type AsyncSelectOption } from '@/components/ui';
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
-import type { SingleValue } from 'react-select';
+import type { MultiValue, SingleValue } from 'react-select';
 import toast from 'react-hot-toast';
 
 interface IAllocationRow {
@@ -251,9 +251,19 @@ export const ManagerToCashierAllocationPage = () => {
                     ? { value: txnType, label: selectedTxnType.label }
                     : null
               }
-              onChange={(option: SingleValue<AsyncSelectOption>) =>
-                setTxnType(option?.value ? String(option.value) : 'ALL')
-              }
+              onChange={(
+                option: MultiValue<AsyncSelectOption> | SingleValue<AsyncSelectOption>
+              ) => {
+                const selectedOption = Array.isArray(option)
+                  ? option[0] ?? null
+                  : option;
+
+                setTxnType(
+                  selectedOption?.value
+                    ? String(selectedOption.value)
+                    : 'ALL'
+                );
+              }}
               loadOptions={async () => ({
                 options: [
                   { value: 'ALL', label: 'ALL' },

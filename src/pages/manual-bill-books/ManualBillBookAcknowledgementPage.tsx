@@ -5,7 +5,7 @@ import { categoryOptionsApi } from '@/api/categoryOptions/categoryOptions.api';
 import { Loader } from '@/components/ui/loader';
 import { Button, AsyncSelect, DatePicker, type AsyncSelectOption } from '@/components/ui';
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
-import type { SingleValue } from 'react-select';
+import type { MultiValue, SingleValue } from 'react-select';
 import toast from 'react-hot-toast';
 
 export const ManualBillBookAcknowledgementPage = () => {
@@ -307,8 +307,14 @@ export const ManualBillBookAcknowledgementPage = () => {
                           { value: 'Rejected', label: 'Rejected' }
                         ].find(o => o.value === searchStatus)
                   }
-                  onChange={(option: SingleValue<AsyncSelectOption>) => {
-                    setSearchStatus(option?.value ? String(option.value) : '');
+                  onChange={(
+                    option: MultiValue<AsyncSelectOption> | SingleValue<AsyncSelectOption>
+                  ) => {
+                    const selectedOption = Array.isArray(option)
+                      ? option[0] ?? null
+                      : option;
+
+                    setSearchStatus(selectedOption?.value ? String(selectedOption.value) : '');
                     setSelectedBookId(null);
                   }}
                   loadOptions={async () => ({
@@ -335,8 +341,14 @@ export const ManualBillBookAcknowledgementPage = () => {
                         ? { value: searchTxnType, label: selectedTxnType.label }
                         : null
                   }
-                  onChange={(option: SingleValue<AsyncSelectOption>) => {
-                    setSearchTxnType(option?.value ? String(option.value) : 'ALL');
+                  onChange={(
+                    option: MultiValue<AsyncSelectOption> | SingleValue<AsyncSelectOption>
+                  ) => {
+                    const selectedOption = Array.isArray(option)
+                      ? option[0] ?? null
+                      : option;
+
+                    setSearchTxnType(selectedOption?.value ? String(selectedOption.value) : 'ALL');
                     setSelectedBookId(null);
                   }}
                   loadOptions={async () => ({

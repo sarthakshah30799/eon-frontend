@@ -30,6 +30,7 @@ export const PartyProfileEditView = () => {
   const [searchParams] = useSearchParams();
   const isReviewMode = searchParams.get('review') === '1';
   const { user } = useAuth();
+  const isAdminUser = user?.isAdmin === true;
   const isReviewer = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
   const showReviewControls = Boolean(isReviewer && (isReviewMode || user?.isAdmin));
 
@@ -108,7 +109,6 @@ export const PartyProfileEditView = () => {
       marketingExecutive: client?.marketingExecutive?.id || '',
       businessNature: client?.businessNature?.id || '',
       isTdsDeducted: client?.isTdsDeducted ?? false,
-      tds: client?.tds || '',
       tdsGroup: client?.tdsGroup?.id || '',
       printAddress: client?.printAddress ?? false,
       eefcClient: client?.eefcClient ?? false,
@@ -121,7 +121,7 @@ export const PartyProfileEditView = () => {
       igstNo: client?.igstNo || '',
       gstStateId: client?.gstStateId || '',
       stateId: client?.stateId || '',
-      originBranchId: client?.originBranchId || '',
+      branchId: client?.branchId || '',
       location: client?.location?.id || '',
       webSite: client?.webSite || '',
       accountHolderName: client?.accountHolderName || '',
@@ -147,7 +147,7 @@ export const PartyProfileEditView = () => {
       rejectReason: undefined,
       gstStateId: values.gstStateId || undefined,
       stateId: values.stateId || undefined,
-      originBranchId: values.originBranchId || undefined,
+      branchId: values.branchId || undefined,
       blockDateFrom: values.blockDateFrom || undefined,
       establishmentDate: values.establishmentDate || undefined,
       panDob: values.panDob || undefined,
@@ -224,6 +224,7 @@ export const PartyProfileEditView = () => {
           disabled={showReviewControls ? true : !canModify}
           reviewMode={showReviewControls}
           submitLabel="Save Changes"
+          branchDisabled={!isAdminUser}
           currentId={id}
         />
       </section>

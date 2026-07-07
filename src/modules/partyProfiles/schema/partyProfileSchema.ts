@@ -45,7 +45,27 @@ export const partyProfileSchema = yup.object({
   group: yup.string().trim().optional().nullable(),
   entityType: yup.string().trim().optional().nullable(),
   panName: yup.string().trim().optional().nullable(),
-  panDob: yup.string().trim().optional().nullable(),
+  panDob: yup
+    .string()
+    .trim()
+    .optional()
+    .nullable()
+    .test('pan-dob-18-plus', 'DOB must be at least 18 years old', value => {
+      if (!value) {
+        return true;
+      }
+
+      const dob = new Date(value);
+      if (Number.isNaN(dob.getTime())) {
+        return false;
+      }
+
+      const minDob = new Date();
+      minDob.setFullYear(minDob.getFullYear() - 18);
+      minDob.setHours(0, 0, 0, 0);
+
+      return dob <= minDob;
+    }),
   panNo: yup
     .string()
     .trim()
@@ -58,8 +78,11 @@ export const partyProfileSchema = yup.object({
   marketingExecutive: yup.string().trim().optional().nullable(),
   businessNature: yup.string().trim().optional().nullable(),
   isTdsDeducted: yup.boolean().default(false),
-  tds: yup.string().trim().optional().nullable(),
-  tdsGroup: yup.string().trim().optional().nullable(),
+  tdsGroup: yup.string().trim().when('isTdsDeducted', {
+    is: true,
+    then: schema => schema.required('TDS Group is required'),
+    otherwise: schema => schema.optional().nullable().default(''),
+  }),
   printAddress: yup.boolean().default(false),
   eefcClient: yup.boolean().default(false),
   sale: yup.boolean().default(false),
@@ -72,7 +95,7 @@ export const partyProfileSchema = yup.object({
   gstStateId: yup.string().trim().optional().nullable(),
   stateId: yup.string().trim().optional().nullable(),
 
-  originBranchId: yup.string().trim().optional().nullable(),
+  branchId: yup.string().trim().optional().nullable(),
   location: yup.string().trim().optional().nullable(),
   webSite: yup.string().trim().optional().nullable(),
   accountHolderName: yup.string().trim().optional().nullable(),

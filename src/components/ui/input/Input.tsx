@@ -10,6 +10,7 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
     label?: string;
   };
   valueTransform?: 'uppercase' | 'none';
+  maxDecimalPlaces?: number;
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
@@ -23,6 +24,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
       valueTransform = 'uppercase',
       onChange,
       onInput,
+      maxDecimalPlaces,
       ...props
     },
     ref
@@ -69,9 +71,17 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
 
       if (isDecimalNumberInput) {
         const nextValue = event.currentTarget.value;
-        const cleanedValue = nextValue
+        let cleanedValue = nextValue
           .replace(/[^0-9.]/g, '')
           .replace(/(\..*)\./g, '$1');
+
+        if (typeof maxDecimalPlaces === 'number' && maxDecimalPlaces >= 0) {
+          const [integerPart = '', fractionPart = ''] = cleanedValue.split('.');
+          cleanedValue =
+            cleanedValue.includes('.')
+              ? `${integerPart}.${fractionPart.slice(0, maxDecimalPlaces)}`
+              : integerPart;
+        }
 
         event.currentTarget.value = cleanedValue;
       }

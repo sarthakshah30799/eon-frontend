@@ -1,4 +1,5 @@
 import type { ICategoryOption } from '@/types/categoryOptionTypes';
+import type { IBranchProfile } from '@/modules/branchProfile/types/branchProfileTypes';
 
 export const PartyProfileCommissionTypeEnum = {
   PERCENTAGE: 'PERCENTAGE',
@@ -63,7 +64,6 @@ export interface IPartyProfile {
   marketingExecutive?: ICategoryOption | null;
   businessNature?: ICategoryOption | null;
   isTdsDeducted: boolean;
-  tds?: string;
   tdsGroup?: ICategoryOption | null;
   active: boolean;
   isActive: boolean;
@@ -82,8 +82,8 @@ export interface IPartyProfile {
   stateId?: string;
   stateName?: string;
 
-  originBranchId?: string;
-  originBranchName?: string;
+  branchId?: string;
+  branch?: IBranchProfile | null;
   location?: ICategoryOption | null;
   webSite?: string;
   accountHolderName?: string;
@@ -111,7 +111,7 @@ export type ICreatePartyProfile = Omit<
   | 'defaultAgent'
   | 'gstStateName'
   | 'stateName'
-  | 'originBranchName'
+  | 'branch'
   | 'group'
   | 'entityType'
   | 'marketingExecutive'
@@ -151,6 +151,7 @@ export interface IPartyProfileListQuery {
   code?: string;
   name?: string;
   active?: boolean;
+  activeOnly?: boolean;
   type?: string | string[];
   page?: number;
   limit?: number;

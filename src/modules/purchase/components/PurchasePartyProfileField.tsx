@@ -114,6 +114,11 @@ export const PurchasePartyProfileField = ({
               shouldValidate: false,
             }
           );
+          form.setValue('partyProfileStateName', selectedProfile.stateName || '', {
+            shouldDirty: true,
+            shouldTouch: true,
+            shouldValidate: false,
+          });
           form.setValue('partyProfileContactName', selectedProfile.contactName || '', {
             shouldDirty: true,
             shouldTouch: true,

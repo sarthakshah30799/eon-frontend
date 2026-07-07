@@ -79,7 +79,9 @@ export const CurrencyProfileForm = ({
         return false;
       }
 
-      const currencies = await currencyProfileApi.getCurrencyProfiles();
+      const currencies = (await currencyProfileApi.getCurrencyProfiles()).filter(
+        currency => currency.active !== false
+      );
       return currencies.some(
         currency =>
           normalizeCodeValue(currency.currencyCode) === normalizedCode &&

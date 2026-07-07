@@ -16,7 +16,7 @@ export const CurrencyProfileListView = () => {
     [debouncedSearch]
   );
   const { data: currencies = [], isLoading, isFetching, error } =
-    useListCurrencyProfiles(query);
+    useListCurrencyProfiles(query, false);
 
   if (error) {
     return (

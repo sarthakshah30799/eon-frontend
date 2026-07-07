@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Checkbox, SelectEntity, type TableColumnDef } from '@/components/ui';
+import { PaginationControls } from '@/components/ui/pagination';
 import { useDebounce } from '@/hooks';
 import { useListPartyProfiles } from '../hooks';
 import type { PartyProfileType } from '../constants';
@@ -113,6 +114,8 @@ export const SelectPartyProfiles = ({
   onClose,
 }: SelectPartyProfilesProps) => {
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const debouncedSearch = useDebounce(search, 350);
 
   const normalizedTypes = useMemo(
@@ -123,10 +126,12 @@ export const SelectPartyProfiles = ({
   const { data: response, isLoading, isFetching } = useListPartyProfiles(
     {
       search: debouncedSearch.trim() || undefined,
-      limit: 100,
+      page,
+      limit: pageSize,
     },
     normalizedTypes,
-    open
+    open,
+    true
   );
 
   const profiles = (response?.data ?? EMPTY_PARTY_PROFILE_ROWS).filter(profile =>
@@ -146,32 +151,60 @@ export const SelectPartyProfiles = ({
     [multiple, selectable]
   );
 
+  const totalItems = response?.totalItems ?? profiles.length;
+  const totalPages = response?.totalPages ?? 0;
+
   return (
-    <SelectEntity<SelectablePartyProfileRow>
-      open={open}
-      title={title}
-      description={description}
-      columns={selectionColumns}
-      data={rows}
-      loading={isLoading || isFetching}
-      selectable={selectable}
-      multiple={multiple}
-      searchValue={search}
-      onSearch={value => setSearch(value)}
-      searchPlaceholder="Search code, name, city, phone"
-      emptyMessage="No party profiles found."
-      onContinue={selectedRows =>
-        onContinue(
-          selectedRows.map(row => {
-            const { rowKey, ...profile } = row;
-            void rowKey;
-            return profile;
-          })
-        )
-      }
-      onClose={onClose}
-      getRowId={row => row.rowKey}
-    />
+    <div>
+      <SelectEntity<SelectablePartyProfileRow>
+        open={open}
+        title={title}
+        description={description}
+        columns={selectionColumns}
+        data={rows}
+        loading={isLoading || isFetching}
+        selectable={selectable}
+        multiple={multiple}
+        searchValue={search}
+        onSearch={value => {
+          setPage(1);
+          setSearch(value);
+        }}
+        searchPlaceholder="Search code, name, city, phone"
+        emptyMessage="No party profiles found."
+        onContinue={selectedRows =>
+          onContinue(
+            selectedRows.map(row => {
+              const { rowKey, ...profile } = row;
+              void rowKey;
+              return profile;
+            })
+          )
+        }
+        onClose={() => {
+          setPage(1);
+          setPageSize(10);
+          onClose();
+        }}
+        getRowId={row => row.rowKey}
+        enablePagination={false}
+      />
+
+      <div className="mt-5">
+        <PaginationControls
+          page={page}
+          pageSize={pageSize}
+          totalItems={totalItems}
+          totalPages={totalPages}
+          onPageChange={nextPage => setPage(nextPage)}
+          onPageSizeChange={nextPageSize => {
+            setPage(1);
+            setPageSize(nextPageSize);
+          }}
+          itemLabel="party profiles"
+        />
+      </div>
+    </div>
   );
 };
 

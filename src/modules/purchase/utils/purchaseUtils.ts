@@ -34,6 +34,21 @@ const EMPTY_MARGIN: ICurrencyRateMargin = {
   maxRate: '',
 };
 
+export const PURCHASE_RATE_DECIMALS = 7;
+export const PURCHASE_MONEY_DECIMALS = 2;
+
+export const formatPurchaseDecimal = (
+  value?: string | number | null,
+  decimals = PURCHASE_MONEY_DECIMALS
+) => {
+  if (value === undefined || value === null || value === '') {
+    return '';
+  }
+
+  const parsedValue = Number(value);
+  return Number.isFinite(parsedValue) ? parsedValue.toFixed(decimals) : String(value);
+};
+
 export const createEmptyPurchaseTransactionRow = (): IPurchaseTransactionFormRow => ({
   currencyId: '',
   currencyCode: '',
@@ -42,6 +57,7 @@ export const createEmptyPurchaseTransactionRow = (): IPurchaseTransactionFormRow
   productCode: '',
   productDescription: '',
   quantity: '',
+  per: '',
   rate: '',
   commission: '',
   commissionSnapshot: null,
@@ -74,6 +90,7 @@ export const createEmptyPurchaseFormValues = (
   partyProfilePanNo: '',
   partyProfileGstNo: '',
   partyProfileGstStateName: '',
+  partyProfileStateName: '',
   partyProfileContactName: '',
   partyProfileApplyTax: false,
   agentProfileId: '',
@@ -121,6 +138,7 @@ export const mapPurchaseFormValuesToSubmitPayload = (
         currencyId: row.currencyId,
         productId: row.productId,
         quantity: row.quantity,
+        per: row.per,
         rate: row.rate,
         commission: row.commission || null,
         commissionSnapshot: row.commissionSnapshot ?? null,
@@ -145,6 +163,7 @@ export const mapPurchaseFormValuesToSubmitPayload = (
         referenceNumber: row.chequeNumber,
         referenceDate: row.chequeDate,
         branchName: row.branchName,
+        drawnOn: row.drawnOn || null,
         chequePageId: row.chequePageId ?? null,
         chequePageSnapshot: row.chequePageSnapshot ?? null,
         amount: row.amount,
@@ -186,6 +205,8 @@ export const mapPurchaseTransactionToFormValues = (
     (transaction.partyProfileSnapshot?.gstNo as string | undefined) ?? '',
   partyProfileGstStateName:
     (transaction.partyProfileSnapshot?.gstStateName as string | undefined) ?? '',
+  partyProfileStateName:
+    (transaction.partyProfileSnapshot?.stateName as string | undefined) ?? '',
   partyProfileContactName:
     (transaction.partyProfileSnapshot?.contactName as string | undefined) ?? '',
   partyProfileApplyTax: Boolean(transaction.partyProfileSnapshot?.applyTax),
@@ -217,6 +238,7 @@ export const mapPurchaseTransactionToFormValues = (
     productCode: item.productSnapshot?.label ?? item.productSnapshot?.code ?? '',
     productDescription: item.productSnapshot?.name ?? '',
     quantity: item.quantity ?? '',
+    per: item.per ?? '',
     rate: item.rate ?? '',
     commission: item.commission ?? '',
     commissionSnapshot: item.commissionSnapshot ?? null,
@@ -237,9 +259,9 @@ export const mapPurchaseTransactionToFormValues = (
         return '';
       }
       if (!Number.isFinite(gstValue)) {
-        return amountValue.toFixed(4);
+        return amountValue.toFixed(PURCHASE_MONEY_DECIMALS);
       }
-      return (amountValue + gstValue).toFixed(4);
+      return (amountValue + gstValue).toFixed(PURCHASE_MONEY_DECIMALS);
     })(),
     applyTax: Boolean(charge.applyTax),
     remarks: charge.remarks ?? '',
@@ -251,6 +273,7 @@ export const mapPurchaseTransactionToFormValues = (
     chequeNumber: payment.referenceNumber ?? '',
     chequeDate: payment.referenceDate ?? '',
     branchName: payment.branchName ?? '',
+    drawnOn: payment.drawnOn ?? '',
     chequePageId: payment.chequePageId ?? '',
     chequePageSnapshot: payment.chequePageSnapshot ?? null,
     remarks: payment.remarks ?? '',
@@ -280,6 +303,7 @@ export const resolveAgentCommissionRule = (
 
 export const calculatePurchaseTransactionCommission = (
   amount?: string | null,
+  quantity?: string | null,
   currencyRatePer?: string | number | null,
   rule?: IPartyProfileCommissionRule | null
 ) => {
@@ -299,12 +323,16 @@ export const calculatePurchaseTransactionCommission = (
     return '';
   }
 
+  if (rule.commissionType === 'PAISA' && !quantity) {
+    return '';
+  }
+
   const commission =
     rule.commissionType === 'PERCENTAGE'
       ? (parsedAmount * parsedValue * parsedPer) / 100
-      : parsedValue * parsedPer;
+      : parsedValue * (Number(quantity ?? 0) || 0);
 
-  return commission.toFixed(4);
+  return commission.toFixed(PURCHASE_MONEY_DECIMALS);
 };
 
 const toMarginValue = (
@@ -357,7 +385,8 @@ export const resolvePurchaseTransactionPreview = (
 
 export const calculateTransactionTotal = (
   quantity?: string,
-  rate?: string | null
+  rate?: string | null,
+  per?: string | number | null
 ) => {
   if (!quantity || !rate) {
     return '';
@@ -365,12 +394,18 @@ export const calculateTransactionTotal = (
 
   const qty = Number(quantity);
   const parsedRate = Number(rate);
+  const parsedPer = Number(per ?? 1) || 1;
 
-  if (!Number.isFinite(qty) || !Number.isFinite(parsedRate)) {
+  if (
+    !Number.isFinite(qty) ||
+    !Number.isFinite(parsedRate) ||
+    !Number.isFinite(parsedPer) ||
+    parsedPer === 0
+  ) {
     return '';
   }
 
-  return (qty * parsedRate).toFixed(4);
+  return (qty * (parsedRate / parsedPer)).toFixed(PURCHASE_MONEY_DECIMALS);
 };
 
 export const calculateRoundedTransactionAmount = (value?: string | null) => {
@@ -383,7 +418,7 @@ export const calculateRoundedTransactionAmount = (value?: string | null) => {
     return '';
   }
 
-  return Math.round(parsedValue).toFixed(4);
+  return Math.round(parsedValue).toFixed(PURCHASE_MONEY_DECIMALS);
 };
 
 export const calculateTransactionRoundOff = (value?: string | null) => {
@@ -397,7 +432,7 @@ export const calculateTransactionRoundOff = (value?: string | null) => {
   }
 
   const roundedValue = Math.round(parsedValue);
-  return (roundedValue - parsedValue).toFixed(4);
+  return (roundedValue - parsedValue).toFixed(PURCHASE_MONEY_DECIMALS);
 };
 
 const toNumericTotal = (value?: string | number | null) => {
@@ -422,5 +457,5 @@ export const calculatePurchasePayableTotal = (
     0
   );
 
-  return (transactionTotal + additionalChargeTotal).toFixed(4);
+  return (transactionTotal + additionalChargeTotal).toFixed(PURCHASE_MONEY_DECIMALS);
 };

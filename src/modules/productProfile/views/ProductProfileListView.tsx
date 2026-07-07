@@ -18,7 +18,7 @@ export const ProductProfileListView = () => {
     () => debouncedSearch.trim().toLowerCase(),
     [debouncedSearch]
   );
-  const { data: products = [], isLoading, error } = useListProductProfiles();
+  const { data: products = [], isLoading, error } = useListProductProfiles(false);
   const filteredProducts = useMemo(
     () =>
       query

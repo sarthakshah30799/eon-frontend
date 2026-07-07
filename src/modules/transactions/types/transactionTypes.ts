@@ -132,6 +132,7 @@ export interface ITransactionItemEntity {
   currencyRateId: string | null;
   productCurrencyRateId: string | null;
   quantity: string;
+  per: string | null;
   rate: string;
   commission: string | null;
   currencySnapshot: ITransactionReferenceSnapshot | null;
@@ -191,6 +192,7 @@ export interface ITransactionPaymentEntity {
   referenceNumber: string | null;
   referenceDate: string | null;
   branchName: string | null;
+  drawnOn: string | null;
   amount: string;
   remarks: string | null;
   createdAt: string;
@@ -231,6 +233,7 @@ export interface ICreateTransactionItemPayload {
   currencyRateId?: string | null;
   productCurrencyRateId?: string | null;
   quantity: string;
+  per: string;
   rate: string;
   commission?: string | null;
   commissionSnapshot?: ITransactionPricingRuleSnapshot | null;
@@ -258,6 +261,7 @@ export interface ICreateTransactionPaymentPayload {
   referenceNumber?: string | null;
   referenceDate?: string | null;
   branchName?: string | null;
+  drawnOn?: string | null;
   chequePageId?: string | null;
   chequePageSnapshot?: Record<string, unknown> | null;
   amount: string;
@@ -291,6 +295,10 @@ export interface ICreateTransactionDraftPayload {
     documentProfileId: string;
     file: File;
   }>;
+}
+
+export interface IApproveTransactionPayload {
+  approvalRemarks?: string | null;
 }
 
 export const TransactionPrintCopyTypeEnum = {

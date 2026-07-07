@@ -16,6 +16,17 @@ const decimalStringSchema = yup
     return /^\d+(\.\d+)?$/.test(value);
   });
 
+const integerStringSchema = yup
+  .string()
+  .trim()
+  .test('integer', 'Must be a valid whole number', value => {
+    if (!value) {
+      return true;
+    }
+
+    return /^\d+$/.test(value);
+  });
+
 const signedDecimalStringSchema = yup
   .string()
   .trim()
@@ -34,7 +45,8 @@ const purchaseTransactionSchema = yup.object({
   productId: yup.string().trim().required('Product is required'),
   productCode: yup.string().trim().default(''),
   productDescription: yup.string().trim().default(''),
-  quantity: decimalStringSchema.required('Quantity is required'),
+  quantity: integerStringSchema.required('Quantity is required'),
+  per: decimalStringSchema.default(''),
   rate: decimalStringSchema.default(''),
   commission: decimalStringSchema.default(''),
   commissionSnapshot: yup.mixed().nullable().default(null),
@@ -60,6 +72,7 @@ const paymentDetailSchema = yup.object({
   chequeNumber: yup.string().trim().required('Cheque / book reference is required'),
   chequeDate: yup.string().trim().required('Cheque date is required'),
   branchName: yup.string().trim().required('Branch name is required'),
+  drawnOn: yup.string().trim().default(''),
   amount: decimalStringSchema.required('Amount is required'),
 });
 
@@ -96,6 +109,7 @@ export const purchaseFormSchema = yup.object({
   partyProfilePanNo: yup.string().trim().default(''),
   partyProfileGstNo: yup.string().trim().default(''),
   partyProfileGstStateName: yup.string().trim().default(''),
+  partyProfileStateName: yup.string().trim().default(''),
   partyProfileContactName: yup.string().trim().default(''),
   partyProfileApplyTax: yup.boolean().default(false),
   agentProfileId: yup.string().trim().default(''),

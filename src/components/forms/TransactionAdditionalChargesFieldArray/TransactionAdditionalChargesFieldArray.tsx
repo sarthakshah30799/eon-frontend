@@ -119,6 +119,7 @@ const AdditionalChargeRow = ({
         limit: 100,
         search: inputValue,
         ...accountQuery,
+        active: true,
       });
 
       const accounts = response.data || [];

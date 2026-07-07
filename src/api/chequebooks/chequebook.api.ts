@@ -174,12 +174,10 @@ export const chequebookApi = {
   },
 
   getSelectablePages: async (params: {
-    branchId?: string;
     accountId?: string;
     userId?: string;
   }): Promise<IChequeBookPageTracking[]> => {
     const query = new URLSearchParams();
-    if (params.branchId) query.set('branchId', params.branchId);
     if (params.accountId) query.set('accountId', params.accountId);
     if (params.userId) query.set('userId', params.userId);
 

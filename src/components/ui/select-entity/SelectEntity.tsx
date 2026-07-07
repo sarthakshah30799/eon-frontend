@@ -13,6 +13,7 @@ interface SelectEntityProps<T extends { id: string }> {
   loading?: boolean;
   selectable?: boolean;
   multiple?: boolean;
+  enablePagination?: boolean;
   searchValue?: string;
   onSearch?: (value: string) => void;
   searchPlaceholder?: string;
@@ -35,6 +36,7 @@ export const SelectEntity = <T extends { id: string }>({
   loading = false,
   selectable = true,
   multiple = false,
+  enablePagination = true,
   searchValue = '',
   onSearch,
   searchPlaceholder = 'Search',
@@ -96,16 +98,16 @@ export const SelectEntity = <T extends { id: string }>({
     >
       <div className="space-y-5">
         <Table
-          columns={columns}
-          data={data}
-          getRowId={getRowId}
-          loading={loading}
-          enableSorting={false}
-          enableFiltering={false}
-          enablePagination
-          pageSize={10}
-          enableRowSelection={selectable}
-          rowSelection={rowSelection}
+        columns={columns}
+        data={data}
+        getRowId={getRowId}
+        loading={loading}
+        enableSorting={false}
+        enableFiltering={false}
+        enablePagination={enablePagination}
+        pageSize={10}
+        enableRowSelection={selectable}
+        rowSelection={rowSelection}
           onRowSelectionChange={handleRowSelectionChange}
           onSearch={onSearch}
           searchValue={searchValue}

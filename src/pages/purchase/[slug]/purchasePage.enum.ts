@@ -3,6 +3,11 @@ import type { TradeMode, TransactionType } from '@/modules/transactions';
 
 export const PurchasePageTypeEnum = {
   PURCHASE_FFMC: 'PURCHASE_FFMC',
+  PURCHASE_RMC: 'PURCHASE_RMC',
+  PURCHASE_FOREX: 'PURCHASE_FOREX',
+  PURCHASE_FOREIGN: 'PURCHASE_FOREIGN',
+  PURCHASE_MISC: 'PURCHASE_MISC',
+  PURCHASE_FRANCHISE: 'PURCHASE_FRANCHISE',
 } as const;
 
 export type PurchasePageType =
@@ -10,10 +15,53 @@ export type PurchasePageType =
 
 const PURCHASE_PAGE_TYPE_BY_SLUG: Record<string, PurchasePageType> = {
   'ffmc-ads': PurchasePageTypeEnum.PURCHASE_FFMC,
+  rmc: PurchasePageTypeEnum.PURCHASE_RMC,
+  forex: PurchasePageTypeEnum.PURCHASE_FOREX,
+  foreign: PurchasePageTypeEnum.PURCHASE_FOREIGN,
+  misc: PurchasePageTypeEnum.PURCHASE_MISC,
+  franchise: PurchasePageTypeEnum.PURCHASE_FRANCHISE,
 };
 
 const PURCHASE_PAGE_SLUG_BY_TYPE: Record<PurchasePageType, string> = {
   [PurchasePageTypeEnum.PURCHASE_FFMC]: 'ffmc-ads',
+  [PurchasePageTypeEnum.PURCHASE_RMC]: 'rmc',
+  [PurchasePageTypeEnum.PURCHASE_FOREX]: 'forex',
+  [PurchasePageTypeEnum.PURCHASE_FOREIGN]: 'foreign',
+  [PurchasePageTypeEnum.PURCHASE_MISC]: 'misc',
+  [PurchasePageTypeEnum.PURCHASE_FRANCHISE]: 'franchise',
+};
+
+const PURCHASE_PAGE_CONFIG_BY_TYPE: Record<
+  PurchasePageType,
+  {
+    title: string;
+    partyProfileTypes: PartyProfileType[];
+  }
+> = {
+  [PurchasePageTypeEnum.PURCHASE_FFMC]: {
+    title: 'Purchase FFMC/Ads',
+    partyProfileTypes: ['FFMC', 'AUTHORISED_DEALER'],
+  },
+  [PurchasePageTypeEnum.PURCHASE_RMC]: {
+    title: 'Purchase RMC',
+    partyProfileTypes: ['RMC'],
+  },
+  [PurchasePageTypeEnum.PURCHASE_FOREX]: {
+    title: 'Purchase Forex',
+    partyProfileTypes: ['FOREX_CORRESPONDENT'],
+  },
+  [PurchasePageTypeEnum.PURCHASE_FOREIGN]: {
+    title: 'Purchase Foreign',
+    partyProfileTypes: ['FOREIGN_CORRESPONDENT'],
+  },
+  [PurchasePageTypeEnum.PURCHASE_MISC]: {
+    title: 'Purchase Misc',
+    partyProfileTypes: ['MISC_PROFILE'],
+  },
+  [PurchasePageTypeEnum.PURCHASE_FRANCHISE]: {
+    title: 'Purchase Franchise',
+    partyProfileTypes: ['FRANCHISE'],
+  },
 };
 
 export const getPurchasePageTypeFromSlug = (
@@ -29,12 +77,11 @@ export const getPurchasePageTypeFromSlug = (
 export const getPurchasePageTitle = (
   pageType: PurchasePageType | null
 ): string => {
-  switch (pageType) {
-    case PurchasePageTypeEnum.PURCHASE_FFMC:
-      return 'Purchase FFMC/Ads';
-    default:
-      return 'Purchase';
+  if (!pageType) {
+    return 'Purchase';
   }
+
+  return PURCHASE_PAGE_CONFIG_BY_TYPE[pageType]?.title ?? 'Purchase';
 };
 
 export const getPurchasePageCreateTitle = (
@@ -60,12 +107,11 @@ export const getPurchasePageSlugFromType = (
 export const getPurchasePartyProfileTypes = (
   pageType: PurchasePageType | null
 ): PartyProfileType[] => {
-  switch (pageType) {
-    case PurchasePageTypeEnum.PURCHASE_FFMC:
-      return ['FFMC', 'AUTHORISED_DEALER'];
-    default:
-      return [];
+  if (!pageType) {
+    return [];
   }
+
+  return PURCHASE_PAGE_CONFIG_BY_TYPE[pageType]?.partyProfileTypes ?? [];
 };
 
 export const getPurchaseTransactionType = (

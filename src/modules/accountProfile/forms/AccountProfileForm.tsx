@@ -184,7 +184,9 @@ export const AccountProfileForm = ({
   };
 
   const loadCurrencyOptions = useCallback(async (inputValue: string) => {
-    const data = await currencyProfileApi.getCurrencyProfiles();
+    const data = (await currencyProfileApi.getCurrencyProfiles()).filter(
+      currency => currency.active !== false
+    );
     const filtered = data.filter(
       c =>
         c.currencyCode.toLowerCase().includes(inputValue.toLowerCase()) ||
@@ -216,7 +218,12 @@ export const AccountProfileForm = ({
   }, []);
 
   const loadMapToAccountOptions = useCallback(async (inputValue: string) => {
-    const res = await accountProfileApi.getAccountProfiles({ page: 1, limit: 100, search: inputValue });
+    const res = await accountProfileApi.getAccountProfiles({
+      page: 1,
+      limit: 100,
+      search: inputValue,
+      active: true,
+    });
     const filtered = (res.data || []).filter(a => a.id !== currentId);
     return {
       options: filtered.map(a => ({

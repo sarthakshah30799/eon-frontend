@@ -12,7 +12,6 @@ import {
 } from '../utils/purchaseUtils';
 import { PurchaseForm } from '../forms/PurchaseForm';
 import {
-  PurchasePageTypeEnum,
   type PurchasePageType,
 } from '@/pages/purchase/[slug]/purchasePage.enum';
 import { getAdditionalSettingBooleanValue } from '@/modules/additionalSettings/utils';
@@ -62,15 +61,13 @@ export const PurchaseCreateView = ({
   );
   const requiresApproval = useMemo(
     () =>
-      purchasePageType === PurchasePageTypeEnum.PURCHASE_FFMC
-        ? getAdditionalSettingBooleanValue(
-            additionalSettings,
-            AdditionalSettingsCodeEnum.TransactionApprovalPolicy,
-            AdditionalSettingsCodeEnum.PurchaseFfmcAds,
-            false
-          )
-        : false,
-    [additionalSettings, purchasePageType]
+      getAdditionalSettingBooleanValue(
+        additionalSettings,
+        AdditionalSettingsCodeEnum.TransactionApprovalPolicy,
+        AdditionalSettingsCodeEnum.PurchaseFfmcAds,
+        false
+      ),
+    [additionalSettings]
   );
 
   const defaultValues = useMemo(

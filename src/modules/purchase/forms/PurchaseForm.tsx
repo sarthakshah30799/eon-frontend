@@ -145,6 +145,10 @@ const PurchaseFormBody = ({
   const { data: branchProfile } = useGetBranchProfile(branchId);
   const { data: companies = [] } = useListCompanyProfiles();
   const { data: additionalSettings = [] } = useListAdditionalSettings();
+  const agentCommissionRules = useMemo(
+    () => (agentProfileId ? agentProfile?.commissionRules ?? [] : []),
+    [agentProfile?.commissionRules, agentProfileId]
+  );
   const transactionDocumentProfiles = documentProfiles;
   const existingDocumentsByProfileId = useMemo(
     () =>
@@ -369,9 +373,7 @@ const PurchaseFormBody = ({
         pricingData={pricingData}
         onOpenCurrencyPicker={setCurrencyPickerRowIndex}
         disabled={isReadOnly}
-        agentCommissionRules={
-          agentProfileId ? agentProfile?.commissionRules ?? [] : []
-        }
+        agentCommissionRules={agentCommissionRules}
       />
 
       <TransactionAdditionalChargesFieldArray

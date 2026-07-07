@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { partyProfileApi } from '@/api/partyProfile';
 import {
@@ -35,11 +40,20 @@ const normalizePartyProfileTypeKey = (
 export const useListPartyProfiles = (
   params?: IPartyProfileListQuery,
   profileType?: PartyProfileType | PartyProfileType[],
-  enabled = true
+  enabled = true,
+  activeOnly = true
 ) => {
   return useQuery({
-    queryKey: ['party-profiles', normalizePartyProfileTypeKey(profileType), params],
+    queryKey: ['party-profiles', normalizePartyProfileTypeKey(profileType), params, activeOnly],
     queryFn: () => partyProfileApi.getPartyProfiles(params, profileType),
+    placeholderData: keepPreviousData,
+    select: response =>
+      activeOnly
+        ? {
+            ...response,
+            data: response.data.filter(profile => profile.active !== false),
+          }
+        : response,
     enabled,
   });
 };

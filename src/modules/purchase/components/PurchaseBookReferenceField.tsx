@@ -123,12 +123,9 @@ export const PurchaseBookReferenceField = ({
         const pages = await manualBillBookApi.getSelectablePages(
           isDeliveryBoyMode
             ? {
-                branchId: activeBranchId,
                 userId: assigneeId,
               }
-            : {
-                branchId: activeBranchId,
-              }
+            : undefined
         );
 
         if (isActive) {
@@ -259,10 +256,12 @@ export const PurchaseBookReferenceField = ({
       <div className="flex flex-col gap-4 lg:flex-row lg:flex-wrap lg:items-start">
         <div className="lg:w-[260px]">
           <FormFieldSelect
+            key={`manual-book-type-${pageOptions.length}`}
             name="manualBookReferenceType"
             label="Manual Book Reference Type"
             loadOptions={loadReferenceTypeOptions}
             disabled={disabled}
+            cacheOptions={false}
           />
         </div>
 
@@ -284,16 +283,18 @@ export const PurchaseBookReferenceField = ({
 
         <div className="min-w-0 flex-1 lg:max-w-[360px]">
           <FormFieldSelect
+            key={`manual-book-page-${manualBookReferenceType}-${deliveryBoyUserId || 'cashier'}-${pageOptions.length}`}
             name="manualBookPageId"
             label={
               isDeliveryBoyMode
                 ? 'Delivery Boy Page'
                 : 'Cashier Page'
             }
-          placeholder="Select bill book page"
+            placeholder="Select bill book page"
             loadOptions={loadManualBookPageOptions}
             disabled={disabled || !activeBranchId || (isDeliveryBoyMode && !deliveryBoyUserId) || isLoadingPages}
             isSearchable
+            cacheOptions={false}
           />
           <p className="mt-1 text-xs text-text-tertiary">
             {manualBookNo

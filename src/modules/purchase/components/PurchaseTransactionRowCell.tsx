@@ -8,6 +8,7 @@ import type {
   IPurchasePricingData,
 } from '../types/purchaseTypes';
 import {
+  PURCHASE_RATE_DECIMALS,
   calculateRoundedTransactionAmount,
   calculatePurchaseTransactionCommission,
   calculateTransactionRoundOff,
@@ -62,7 +63,9 @@ const formatRangeValue = (value?: string | null) => {
   }
 
   const numericValue = Number(value);
-  return Number.isFinite(numericValue) ? numericValue.toFixed(4) : value;
+  return Number.isFinite(numericValue)
+    ? numericValue.toFixed(PURCHASE_RATE_DECIMALS)
+    : value;
 };
 
 const normalizeValue = (value: unknown) => String(value ?? '').trim();
@@ -96,6 +99,10 @@ export const PurchaseTransactionRowCell = ({
   const quantity = useWatch({
     control: form.control,
     name: `transactions.${rowIndex}.quantity`,
+  });
+  const perValue = useWatch({
+    control: form.control,
+    name: `transactions.${rowIndex}.per`,
   });
   const rateValue = useWatch({
     control: form.control,
@@ -157,8 +164,13 @@ export const PurchaseTransactionRowCell = ({
     ]
   );
   const total = useMemo(
-    () => calculateTransactionTotal(String(quantity || ''), String(rateValue || '')),
-    [quantity, rateValue]
+    () =>
+      calculateTransactionTotal(
+        String(quantity || ''),
+        String(rateValue || ''),
+        selectedCurrencyProfile?.ratePer || 1
+      ),
+    [quantity, rateValue, selectedCurrencyProfile?.ratePer]
   );
   const roundedTotal = useMemo(
     () => calculateRoundedTransactionAmount(total),
@@ -172,6 +184,7 @@ export const PurchaseTransactionRowCell = ({
     () =>
       calculatePurchaseTransactionCommission(
         String(finalAmountValue || roundedTotal || total || ''),
+        String(quantity || ''),
         selectedCurrencyProfile?.ratePer || 1,
         agentCommissionRule
       ),
@@ -180,6 +193,7 @@ export const PurchaseTransactionRowCell = ({
       finalAmountValue,
       roundedTotal,
       selectedCurrencyProfile?.ratePer,
+      quantity,
       total,
     ]
   );
@@ -216,13 +230,22 @@ export const PurchaseTransactionRowCell = ({
     selectionKey: '',
     value: '',
   });
+  const hasManualRateChangeRef = useRef(false);
   const selectionKey = `${currencyId || ''}:${productId || ''}`;
+
+  useEffect(() => {
+    hasManualRateChangeRef.current = false;
+  }, [selectionKey]);
 
   useEffect(() => {
     const fieldName = `transactions.${rowIndex}.rate` as const;
     const currentRate = String(rateValue ?? '').trim();
 
     if (!hasCurrencyProductSelection || !calculatedRate) {
+      return;
+    }
+
+    if (!currentRate && hasManualRateChangeRef.current) {
       return;
     }
 
@@ -252,6 +275,20 @@ export const PurchaseTransactionRowCell = ({
     rateValue,
     selectionKey,
   ]);
+
+  useEffect(() => {
+    const fieldName = `transactions.${rowIndex}.per` as const;
+    const nextPer = String(selectedCurrencyProfile?.ratePer ?? '').trim();
+    const currentPer = normalizeValue(perValue);
+
+    if (currentPer !== nextPer) {
+      form.setValue(fieldName, nextPer, {
+        shouldDirty: false,
+        shouldTouch: false,
+        shouldValidate: false,
+      });
+    }
+  }, [form, perValue, rowIndex, selectedCurrencyProfile?.ratePer]);
 
   useEffect(() => {
     const nextProductCode = selectedProduct?.productCode ?? '';
@@ -413,7 +450,7 @@ export const PurchaseTransactionRowCell = ({
   );
 
   return (
-    <div className="grid gap-2 px-1 py-1 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1.4fr)_minmax(0,0.55fr)_minmax(0,0.75fr)_minmax(0,0.55fr)_minmax(0,0.55fr)_minmax(0,0.55fr)_minmax(0,0.55fr)_44px]">
+    <div className="grid gap-2 px-1 py-1 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1.4fr)_minmax(0,0.55fr)_minmax(0,0.65fr)_minmax(0,0.75fr)_minmax(0,0.55fr)_minmax(0,0.55fr)_minmax(0,0.55fr)_minmax(0,0.55fr)_44px]">
       <div className="min-w-0">
         <EntityPickerField
           label="Currency"
@@ -442,6 +479,8 @@ export const PurchaseTransactionRowCell = ({
           name={`transactions.${rowIndex}.quantity`}
           label="Quantity"
           type="number"
+          inputMode="numeric"
+          step={1}
           disabled={disabled}
           classes={{ container: 'max-w-[90px]' }}
         />
@@ -451,7 +490,12 @@ export const PurchaseTransactionRowCell = ({
           name={`transactions.${rowIndex}.rate`}
           label="Rate"
           type="number"
+          step={`0.${'0'.repeat(PURCHASE_RATE_DECIMALS - 1)}1`}
+          maxDecimalPlaces={PURCHASE_RATE_DECIMALS}
           disabled={disabled}
+          onChange={() => {
+            hasManualRateChangeRef.current = true;
+          }}
           classes={{ container: 'max-w-[100px]' }}
         />
         {hasCurrencyProductSelection && (
@@ -466,6 +510,14 @@ export const PurchaseTransactionRowCell = ({
             )}
           </div>
         )}
+      </div>
+      <div className="min-w-0">
+        <FormFieldInput
+          name={`transactions.${rowIndex}.per`}
+          label="Per"
+          readOnly
+          classes={{ container: 'max-w-[95px]' }}
+        />
       </div>
       <div className="min-w-0">
         <FormFieldInput

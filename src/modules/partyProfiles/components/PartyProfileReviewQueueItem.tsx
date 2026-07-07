@@ -28,7 +28,7 @@ export const PartyProfileReviewQueueItem = ({
         </div>
         <p className="text-sm text-text-secondary">{profile.name}</p>
         <p className="text-xs text-text-tertiary">
-          Branch: {profile.originBranchName || 'Not assigned'} · Created:{' '}
+          Branch: {profile.branch?.name || 'Not assigned'} · Created:{' '}
           {formatDateTime(profile.createdAt)}
         </p>
       </div>

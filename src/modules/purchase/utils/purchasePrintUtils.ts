@@ -1,6 +1,7 @@
 import type { IBranchProfile } from '@/modules/branchProfile/types';
 import type { ICompanyProfile } from '@/modules/companyProfile/types';
 import type { IPurchaseFormValues } from '../types/purchaseTypes';
+import { PURCHASE_RATE_DECIMALS } from './purchaseUtils';
 
 type PurchasePrintCopyType = 'CUSTOMER_COPY' | 'DUPLICATE_COPY';
 
@@ -12,13 +13,13 @@ const escapeHtml = (value: string) =>
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#39;');
 
-const formatAmount = (value?: string | null) => {
+const formatAmount = (value?: string | null, decimals = 2) => {
   if (value === undefined || value === null || value === '') {
-    return '0.0000';
+    return Number(0).toFixed(decimals);
   }
 
   const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed.toFixed(4) : value;
+  return Number.isFinite(parsed) ? parsed.toFixed(decimals) : value;
 };
 
 const formatDate = (value?: string | Date | null) => {
@@ -173,7 +174,8 @@ export const buildPurchasePrintHtml = ({
           <td>${escapeHtml(row.currencyCode || '-')}</td>
           <td>${escapeHtml(row.productCode || '-')}</td>
           <td class="right">${escapeHtml(formatAmount(row.quantity))}</td>
-          <td class="right">${escapeHtml(formatAmount(row.rate))}</td>
+          <td class="right">${escapeHtml(formatAmount(row.per, PURCHASE_RATE_DECIMALS))}</td>
+          <td class="right">${escapeHtml(formatAmount(row.rate, PURCHASE_RATE_DECIMALS))}</td>
           <td class="right">${escapeHtml(formatAmount(row.finalAmount || row.total))}</td>
         </tr>`
     )
@@ -201,6 +203,7 @@ export const buildPurchasePrintHtml = ({
           <td class="right">${escapeHtml(formatAmount(row.amount))}</td>
           <td>${escapeHtml(formatReferenceValue(row.chequeNumber))}</td>
           <td>${escapeHtml(formatDate(row.chequeDate))}</td>
+          <td>${escapeHtml(formatReferenceValue(row.drawnOn))}</td>
         </tr>`
     )
     .join('');
@@ -416,6 +419,7 @@ export const buildPurchasePrintHtml = ({
                 <div class="info-row"><span class="info-label">Address:</span><span>${escapeHtml(joinAddress(transaction.partyProfileAddress1, transaction.partyProfileAddress2, transaction.partyProfileAddress3, transaction.partyProfileCity, transaction.partyProfilePinCode))}</span></div>
                 <div class="info-row"><span class="info-label">Contact No:</span><span>${escapeHtml(transaction.partyProfilePhoneNo || '-')}</span></div>
                 <div class="info-row"><span class="info-label">GSTIN/UIN:</span><span>${escapeHtml(transaction.partyProfileGstNo || '-')}</span></div>
+                <div class="info-row"><span class="info-label">State:</span><span>${escapeHtml(transaction.partyProfileStateName || '-')}</span></div>
                 <div class="info-row"><span class="info-label">State Code:</span><span>${escapeHtml(transaction.partyProfileGstStateName || '-')}</span></div>
                 <div class="info-row"><span class="info-label">Manual Bill Ref:</span><span>${escapeHtml(transaction.manualBookNo || transaction.manualBookReferenceType || '-')}</span></div>
                 <div class="info-row"><span class="info-label">Place of Supply:</span><span>${escapeHtml(transaction.partyProfileGstStateName || branch?.gstState || '-')}</span></div>
@@ -432,12 +436,13 @@ export const buildPurchasePrintHtml = ({
                   <th>Currency</th>
                   <th>EX</th>
                   <th class="right">Quantity</th>
+                  <th class="right">Per</th>
                   <th class="right">Rate</th>
                   <th class="right">Final Amount</th>
                 </tr>
               </thead>
               <tbody>
-                ${itemRows || '<tr><td colspan="6">No items</td></tr>'}
+                ${itemRows || '<tr><td colspan="7">No items</td></tr>'}
               </tbody>
             </table>
           </div>
@@ -460,7 +465,7 @@ export const buildPurchasePrintHtml = ({
           </div>
 
           <div class="totals">
-            <div><strong>Total Amount:</strong> ${escapeHtml(formatAmount(payableAmount.toFixed(4)))}</div>
+            <div><strong>Total Amount:</strong> ${escapeHtml(formatAmount(payableAmount.toFixed(2)))}</div>
             <div class="words"><strong>Total Amount in Words:</strong> ${escapeHtml(amountInWords)}</div>
           </div>
 
@@ -475,10 +480,11 @@ export const buildPurchasePrintHtml = ({
                   <th class="right">Amount</th>
                   <th>Cheque Number</th>
                   <th>Date</th>
+                  <th>Drawn On</th>
                 </tr>
               </thead>
               <tbody>
-                ${paymentRows || '<tr><td colspan="6">No payment details</td></tr>'}
+                ${paymentRows || '<tr><td colspan="7">No payment details</td></tr>'}
               </tbody>
             </table>
           </div>

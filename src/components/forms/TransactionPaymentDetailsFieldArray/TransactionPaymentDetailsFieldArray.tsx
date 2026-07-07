@@ -46,7 +46,7 @@ const PaymentDetailRow = ({
   canRemove: boolean;
 }) => {
   const form = useFormContext();
-  const { activeBranchId, user } = useAuth();
+  const { activeBranchId } = useAuth();
   const paymentRows = useWatch({
     control: form.control,
     name: arrayName,
@@ -132,7 +132,7 @@ const PaymentDetailRow = ({
     let isActive = true;
 
     const loadPages = async () => {
-      if (!accountId || !activeBranchId || !user?.id) {
+      if (!accountId || !activeBranchId) {
         setPageOptions([]);
         return;
       }
@@ -140,9 +140,7 @@ const PaymentDetailRow = ({
       try {
         setIsLoadingPages(true);
         const pages = await chequebookApi.getSelectablePages({
-          branchId: activeBranchId,
           accountId: String(accountId),
-          userId: user.id,
         });
 
         if (isActive) {
@@ -165,7 +163,7 @@ const PaymentDetailRow = ({
     return () => {
       isActive = false;
     };
-  }, [accountId, activeBranchId, user?.id]);
+  }, [accountId, activeBranchId]);
 
   useEffect(() => {
     const selectedPage = pageOptions.find(page => page.id === String(chequePageId || ''));
@@ -194,6 +192,7 @@ const PaymentDetailRow = ({
         limit: 100,
         search: inputValue,
         ...accountQuery,
+        active: true,
       });
 
       const accounts = response.data || [];
@@ -209,7 +208,7 @@ const PaymentDetailRow = ({
   );
 
   return (
-    <div className="grid gap-4 rounded-sm border border-border-secondary bg-surface-primary p-4 md:grid-cols-2 xl:grid-cols-[1.3fr_1fr_1fr_1fr_1fr_1fr_auto]">
+    <div className="grid gap-4 rounded-sm border border-border-secondary bg-surface-primary p-4 md:grid-cols-2 xl:grid-cols-[1.3fr_1fr_1fr_1fr_1fr_1fr_1fr_auto]">
       <div className="md:col-span-2 xl:col-span-1">
         <FormFieldSelect
           name={`${arrayName}.${index}.accountId`}
@@ -218,11 +217,13 @@ const PaymentDetailRow = ({
           loadOptions={loadAccountOptions}
           disabled={disabled}
           isSearchable
+          cacheOptions={false}
         />
       </div>
 
       <div className="md:col-span-2 xl:col-span-1">
         <FormFieldSelect
+          key={`cheque-page-${accountId || 'empty'}-${pageOptions.length}`}
           name={`${arrayName}.${index}.chequePageId`}
           label="Cheque Page"
           placeholder="Select cheque page"
@@ -251,6 +252,7 @@ const PaymentDetailRow = ({
           }}
           disabled={disabled || !accountId || isLoadingPages}
           isSearchable
+          cacheOptions={false}
         />
       </div>
 
@@ -271,6 +273,13 @@ const PaymentDetailRow = ({
         name={`${arrayName}.${index}.branchName`}
         label="Branch Name"
         placeholder="Branch name"
+        disabled={disabled}
+      />
+
+      <FormFieldInput
+        name={`${arrayName}.${index}.drawnOn`}
+        label="Drawn On"
+        placeholder="Drawn on"
         disabled={disabled}
       />
 
@@ -354,12 +363,13 @@ export const TransactionPaymentDetailsFieldArray = ({
           </div>
         ) : (
           <div className="space-y-3">
-            <div className="hidden xl:grid xl:grid-cols-[1.3fr_1fr_1fr_1fr_1fr_auto] gap-4 px-2 text-xs font-semibold uppercase tracking-wider text-text-tertiary">
+            <div className="hidden xl:grid xl:grid-cols-[1.3fr_1fr_1fr_1fr_1fr_1fr_1fr_auto] gap-4 px-2 text-xs font-semibold uppercase tracking-wider text-text-tertiary">
               <div>Account</div>
               <div>Cheque Page</div>
               <div>Cheque / Book Ref</div>
               <div>Cheque Date</div>
               <div>Branch Name</div>
+              <div>Drawn On</div>
               <div>Amount</div>
               <div></div>
             </div>
@@ -399,6 +409,7 @@ export const TransactionPaymentDetailsFieldArray = ({
                 chequeNumber: '',
                 chequeDate: '',
                 branchName: '',
+                drawnOn: '',
                 amount: '',
               } satisfies ITransactionPaymentDetailFormRow)
             }

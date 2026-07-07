@@ -1,4 +1,5 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useFormContext, useWatch } from 'react-hook-form';
 import type { Resolver } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { CardSection } from '@/components/ui';
@@ -17,6 +18,7 @@ import type { ICreatePartyProfile } from '../types';
 
 import { branchProfileApi } from '@/api/branchProfile/branchProfile.api';
 import { partyProfileApi } from '@/api/partyProfile';
+import { useGetStateProfile } from '@/modules/stateProfile';
 import {
   toPartyProfileDisplayLabel,
   toPartyProfileApiType,
@@ -39,7 +41,7 @@ interface PartyProfileFormProps {
   disabled?: boolean;
   profileType?: PartyProfileType;
   reviewMode?: boolean;
-  originBranchDisabled?: boolean;
+  branchDisabled?: boolean;
   onReviewSubmit?: (values: IReviewPartyProfilePayload) => void | Promise<void>;
   currentId?: string;
 }
@@ -51,7 +53,7 @@ const PartyProfileFormFields = ({
   disabled = false,
   profileType,
   reviewMode = false,
-  originBranchDisabled = false,
+  branchDisabled = false,
   onReviewSubmit,
   currentId,
 }: {
@@ -59,13 +61,25 @@ const PartyProfileFormFields = ({
   disabled?: boolean;
   profileType?: PartyProfileType;
   reviewMode?: boolean;
-  originBranchDisabled?: boolean;
+  branchDisabled?: boolean;
   onReviewSubmit?: (values: IReviewPartyProfilePayload) => void | Promise<void>;
   currentId?: string;
 }) => {
+  const form = useFormContext<PartyProfileFormValues>();
   const isSubmitting = isSubmittingProp || disabled || reviewMode;
   const reviewActionsDisabled = isSubmittingProp;
   const effectiveProfileType = profileType;
+  const panNo = useWatch({ name: 'panNo' });
+  const gstStateId = useWatch({ name: 'gstStateId' });
+  const gstNo = useWatch({ name: 'gstNo' });
+  const isTdsDeducted = useWatch({ name: 'isTdsDeducted' });
+  const { data: selectedGstState } = useGetStateProfile(String(gstStateId || ''));
+  const lastAutoFilledGstNoRef = useRef('');
+  const adultDobMaxDate = useMemo(() => {
+    const date = new Date();
+    date.setFullYear(date.getFullYear() - 18);
+    return date;
+  }, []);
 
   const profileTypeLabel = toPartyProfileDisplayLabel(effectiveProfileType);
   const showTdsFields =
@@ -82,6 +96,46 @@ const PartyProfileFormFields = ({
     'CARD_ISSUER_PROFILE',
     'FRANCHISE',
   ].includes(toPartyProfileApiType(effectiveProfileType));
+  const showTdsGroup = Boolean(isTdsDeducted);
+
+  useEffect(() => {
+    if (!showTdsGroup) {
+      form.setValue('tdsGroup', '', {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: true,
+      });
+    }
+  }, [form, showTdsGroup]);
+
+  useEffect(() => {
+    const normalizedPan = String(panNo || '').trim().toUpperCase();
+    const currentGstNo = String(gstNo || '').trim().toUpperCase();
+    const gstStateCode = String(selectedGstState?.gstStateCode || '').trim().toUpperCase();
+    const nextAutoFilledGstNo = gstStateCode && normalizedPan ? `${gstStateCode}${normalizedPan}` : '';
+
+    if (!nextAutoFilledGstNo) {
+      if (!currentGstNo || currentGstNo === lastAutoFilledGstNoRef.current) {
+        form.setValue('gstNo', '', {
+          shouldDirty: true,
+          shouldTouch: true,
+          shouldValidate: false,
+        });
+      }
+
+      lastAutoFilledGstNoRef.current = '';
+      return;
+    }
+
+    if (!currentGstNo || currentGstNo === lastAutoFilledGstNoRef.current) {
+      form.setValue('gstNo', nextAutoFilledGstNo, {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: false,
+      });
+      lastAutoFilledGstNoRef.current = nextAutoFilledGstNo;
+    }
+  }, [form, gstNo, panNo, selectedGstState?.gstStateCode]);
 
   const branchLoadOptions = useCallback(async (inputValue: string) => {
     const branches = await branchProfileApi.getBranchProfiles({
@@ -411,6 +465,7 @@ const PartyProfileFormFields = ({
           <FormFieldDatePicker
             name="panDob"
             label="DOB on PAN Card"
+            maxDate={adultDobMaxDate}
             disabled={isSubmitting}
           />
         </div>
@@ -443,20 +498,16 @@ const PartyProfileFormFields = ({
                   disabled={isSubmitting}
                 />
               </div>
-              <FormFieldInput
-                name="tds"
-                label="TDS"
-                placeholder="Enter TDS percentage/value"
-                disabled={isSubmitting}
-              />
-              <FormFieldCategoryOption
-                name="tdsGroup"
-                label="TDS Group"
-                code={CategoryOptionCodeEnum.TdsGroup}
-                placeholder="Select TDS group"
-                disabled={isSubmitting}
-                isCreatable={true}
-              />
+              {showTdsGroup && (
+                <FormFieldCategoryOption
+                  name="tdsGroup"
+                  label="TDS Group"
+                  code={CategoryOptionCodeEnum.TdsGroup}
+                  placeholder="Select TDS group"
+                  disabled={isSubmitting}
+                  isCreatable={true}
+                />
+              )}
             </>
           )}
         </div>
@@ -512,11 +563,11 @@ const PartyProfileFormFields = ({
             disabled={isSubmitting}
           />
           <FormFieldSelect
-            name="originBranchId"
-            label="Origin Branch"
-            placeholder="Select branch"
+            name="branchId"
+            label="Current Branch"
+            placeholder="Select current branch"
             loadOptions={branchLoadOptions}
-            disabled={isSubmitting || originBranchDisabled}
+            disabled={isSubmitting || branchDisabled}
           />
         </div>
       </CardSection>
@@ -584,8 +635,9 @@ export const PartyProfileForm = ({
   disabled = false,
   profileType,
   reviewMode = false,
-  originBranchDisabled = false,
+  branchDisabled = false,
   onReviewSubmit,
+  currentId,
 }: PartyProfileFormProps) => {
   return (
     <Form
@@ -611,8 +663,9 @@ export const PartyProfileForm = ({
         disabled={disabled}
         profileType={profileType}
         reviewMode={reviewMode}
-        originBranchDisabled={originBranchDisabled}
+        branchDisabled={branchDisabled}
         onReviewSubmit={onReviewSubmit}
+        currentId={currentId}
       />
     </Form>
   );

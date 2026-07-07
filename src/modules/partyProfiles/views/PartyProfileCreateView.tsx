@@ -46,7 +46,6 @@ const createEmptyPartyProfileValues = (): Omit<ICreatePartyProfile, 'type'> => {
     marketingExecutive: '',
     businessNature: '',
     isTdsDeducted: false,
-    tds: '',
     tdsGroup: '',
     printAddress: false,
     eefcClient: false,
@@ -59,7 +58,7 @@ const createEmptyPartyProfileValues = (): Omit<ICreatePartyProfile, 'type'> => {
     igstNo: '',
     gstStateId: '',
     stateId: '',
-    originBranchId: '',
+    branchId: '',
     location: '',
     webSite: '',
     accountHolderName: '',
@@ -117,7 +116,7 @@ export const PartyProfileCreateView = () => {
   const formDefaultValues = useMemo(
     () => ({
       ...defaultValues,
-      originBranchId: activeBranchId || '',
+      branchId: activeBranchId || '',
     }),
     [activeBranchId, defaultValues]
   );
@@ -153,7 +152,7 @@ export const PartyProfileCreateView = () => {
       rejectReason: undefined,
       gstStateId: values.gstStateId || undefined,
       stateId: values.stateId || undefined,
-      originBranchId: values.originBranchId || undefined,
+      branchId: values.branchId || undefined,
       blockDateFrom: values.blockDateFrom || undefined,
       establishmentDate: values.establishmentDate || undefined,
       panDob: values.panDob || undefined,
@@ -178,7 +177,7 @@ export const PartyProfileCreateView = () => {
           onCancel={handleCancel}
           isSubmitting={isPending}
           submitLabel="Create Party Profile"
-          originBranchDisabled={!isAdminUser}
+          branchDisabled={!isAdminUser}
           profileType={selectedApiType}
           currentId={undefined}
         />

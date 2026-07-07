@@ -19,6 +19,7 @@ export const AccountProfileListView = () => {
       page,
       limit: pageSize,
       search: debouncedSearch.trim() || undefined,
+      activeOnly: false,
     }),
     [page, pageSize, debouncedSearch]
   );
@@ -28,7 +29,7 @@ export const AccountProfileListView = () => {
     isLoading,
     isFetching,
     error,
-  } = useListAccountProfiles(query);
+  } = useListAccountProfiles(query, false);
   const accounts = accountResponse?.data ?? [];
 
   if (error) {

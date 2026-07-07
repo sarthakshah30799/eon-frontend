@@ -1,8 +1,10 @@
 import { apiClient } from '../api';
 import type {
+  IApproveTransactionPayload,
   ICreateTransactionDraftPayload,
   IRecordTransactionPrintPayload,
   ITransactionEntity,
+  TransactionStatus,
 } from '@/modules/transactions';
 
 const appendJsonPart = (
@@ -24,6 +26,7 @@ export const transactionsApi = {
       slug?: string;
       branchId?: string;
       search?: string;
+      status?: TransactionStatus;
     }
   ): Promise<ITransactionEntity[]> => {
     const query = new URLSearchParams();
@@ -31,6 +34,7 @@ export const transactionsApi = {
     if (params?.slug) query.set('slug', params.slug);
     if (params?.branchId) query.set('branchId', params.branchId);
     if (params?.search) query.set('search', params.search);
+    if (params?.status) query.set('status', params.status);
 
     const suffix = query.toString() ? `?${query.toString()}` : '';
     const res = await apiClient.get<ITransactionEntity[]>(`/transactions${suffix}`);
@@ -85,6 +89,26 @@ export const transactionsApi = {
 
     if (!res.data) {
       throw new Error('Failed to create transaction draft');
+    }
+
+    return res.data;
+  },
+
+  approveTransaction: async (
+    transactionId: string,
+    payload: IApproveTransactionPayload = {}
+  ): Promise<ITransactionEntity> => {
+    const res = await apiClient.post<ITransactionEntity>(
+      `/transactions/${transactionId}/approve`,
+      payload
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      throw new Error('Failed to approve transaction');
     }
 
     return res.data;

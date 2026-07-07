@@ -57,6 +57,7 @@ export const PartyProfileListView = () => {
       page,
       limit: pageSize,
       search: debouncedSearch.trim() || undefined,
+      activeOnly: false,
       type: selectedApiType,
     }),
     [page, pageSize, debouncedSearch, selectedApiType]

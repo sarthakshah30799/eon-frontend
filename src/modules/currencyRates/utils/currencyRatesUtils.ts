@@ -10,6 +10,8 @@ import type { ICurrencyProfile } from '@/modules/currencyProfile/types';
 
 type CurrencyRateSide = 'buy' | 'sale';
 
+export const CURRENCY_RATE_DECIMALS = 7;
+
 const isPresent = (value: string | null | undefined) =>
   value !== null && value !== undefined && value !== '';
 
@@ -100,7 +102,7 @@ export const calculateMarginAmount = (
   }
 
   const amount = marginType === 'PERCENT' ? base * (margin / 100) : margin;
-  return amount.toFixed(4);
+  return amount.toFixed(CURRENCY_RATE_DECIMALS);
 };
 
 export const calculateFinalRate = (
@@ -119,7 +121,7 @@ export const calculateFinalRate = (
   }
 
   if (!marginType || !isPresent(marginValue)) {
-    return base.toFixed(4);
+    return base.toFixed(CURRENCY_RATE_DECIMALS);
   }
 
   const marginAmount = calculateMarginAmount(baseRate, marginType, marginValue);
@@ -128,7 +130,9 @@ export const calculateFinalRate = (
   }
 
   const amount = Number(marginAmount);
-  return (direction === 'subtract' ? base - amount : base + amount).toFixed(4);
+  return (direction === 'subtract' ? base - amount : base + amount).toFixed(
+    CURRENCY_RATE_DECIMALS
+  );
 };
 
 const resolveAppliedRate = (

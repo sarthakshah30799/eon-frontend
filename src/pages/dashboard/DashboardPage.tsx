@@ -1,11 +1,15 @@
 import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'react-hot-toast';
 import { useAuth } from '@/lib/AuthContext';
 import { usePendingPartyProfileReviews } from '@/modules/partyProfiles/hooks';
 import { PartyProfileReviewQueue } from '@/modules/partyProfiles/components';
 import { useListChequeBooks } from '@/modules/chequebooks/hooks';
 import { useListManualBillBooks } from '@/modules/manual-bill-books/hooks';
+import { transactionsApi } from '@/api/transactions';
 import { Button } from '@/components/ui';
+import type { ITransactionEntity } from '@/modules/transactions';
 
 const formatDateTime = (value?: string) => {
   if (!value) return '-';
@@ -16,8 +20,9 @@ const formatDateTime = (value?: string) => {
 
 const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, activeBranchId } = useAuth();
   const isReviewer = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
+  const queryClient = useQueryClient();
 
   const { data: pendingReviews = [], isLoading } = usePendingPartyProfileReviews();
 
@@ -27,6 +32,30 @@ const DashboardPage: React.FC = () => {
 
   const { data: pendingManualBillBooks = [], isLoading: isLoadingManualBillBooks } = useListManualBillBooks({
     status: 'Pending',
+  });
+
+  const { data: pendingTransactions = [], isLoading: isLoadingPendingTransactions } = useQuery({
+    queryKey: ['transactions', 'draft-reviews', activeBranchId],
+    queryFn: () =>
+      transactionsApi.getTransactions({
+        status: 'DRAFT',
+        branchId: activeBranchId ?? undefined,
+      }),
+    enabled: isReviewer && Boolean(activeBranchId),
+  });
+
+  const approveTransactionMutation = useMutation({
+    mutationFn: (transactionId: string) =>
+      transactionsApi.approveTransaction(transactionId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      toast.success('Transaction approved successfully');
+    },
+    onError: error => {
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to approve transaction'
+      );
+    },
   });
 
   const myPendingChequeBooks = useMemo(() => {
@@ -46,6 +75,15 @@ const DashboardPage: React.FC = () => {
       return assignedId === user?.id;
     });
   }, [pendingManualBillBooks, user?.id]);
+
+  const myPendingTransactions = useMemo(
+    () =>
+      (pendingTransactions as ITransactionEntity[]).filter(transaction => {
+        const branchId = transaction.branchId;
+        return !activeBranchId || branchId === activeBranchId;
+      }),
+    [activeBranchId, pendingTransactions]
+  );
 
   return (
     <div className="space-y-6">
@@ -91,6 +129,73 @@ const DashboardPage: React.FC = () => {
             );
           }}
         />
+      )}
+
+      {isReviewer && myPendingTransactions.length > 0 && (
+        <section className="rounded-sm border border-border-primary bg-surface-primary p-5 shadow-sm">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-wide text-text-tertiary">
+                Transactions
+              </p>
+              <h3 className="text-lg font-semibold text-text-primary">
+                Pending Transaction Reviews
+              </h3>
+            </div>
+            <p className="text-sm text-text-secondary">
+              {isLoadingPendingTransactions
+                ? 'Loading...'
+                : `${myPendingTransactions.length} item(s) pending`}
+            </p>
+          </div>
+
+          <div className="mt-4 space-y-3">
+            {myPendingTransactions.map(transaction => (
+              <article
+                key={transaction.id}
+                className="flex flex-col gap-3 rounded-sm border border-border-primary bg-surface-secondary px-4 py-4 md:flex-row md:items-center md:justify-between"
+              >
+                <div className="space-y-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-sm font-semibold text-text-primary">
+                      {transaction.number || 'Transaction'}
+                    </p>
+                    <span className="rounded-full bg-warning-100 px-2 py-0.5 text-xs font-medium text-warning-700">
+                      Draft
+                    </span>
+                  </div>
+                  <p className="text-sm text-text-secondary">
+                    Party: {transaction.partyProfileSnapshot?.label || transaction.partyProfileSnapshot?.name || transaction.partyProfileId}
+                  </p>
+                  <p className="text-xs text-text-tertiary">
+                    Branch: {transaction.branchSnapshot?.label || transaction.branchSnapshot?.name || transaction.branchId}
+                  </p>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="rounded-sm"
+                    onClick={() =>
+                      navigate(`/purchase/${transaction.slug || ''}/edit/${transaction.id}`)
+                    }
+                  >
+                    Review
+                  </Button>
+                  <Button
+                    type="button"
+                    className="rounded-sm"
+                    onClick={() => void approveTransactionMutation.mutateAsync(transaction.id)}
+                    disabled={approveTransactionMutation.isPending}
+                  >
+                    Approve
+                  </Button>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
       )}
 
       {/* Pending Chequebook dispatches */}

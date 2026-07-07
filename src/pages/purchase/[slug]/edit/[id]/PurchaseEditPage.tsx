@@ -53,15 +53,13 @@ const PurchaseEditPage = () => {
   );
   const requiresApproval = useMemo(
     () =>
-      purchasePageType === null
-        ? false
-        : getAdditionalSettingBooleanValue(
-            additionalSettings,
-            AdditionalSettingsCodeEnum.TransactionApprovalPolicy,
-            AdditionalSettingsCodeEnum.PurchaseFfmcAds,
-            false
-          ),
-    [additionalSettings, purchasePageType]
+      getAdditionalSettingBooleanValue(
+        additionalSettings,
+        AdditionalSettingsCodeEnum.TransactionApprovalPolicy,
+        AdditionalSettingsCodeEnum.PurchaseFfmcAds,
+        false
+      ),
+    [additionalSettings]
   );
 
   const pricingData = useMemo(

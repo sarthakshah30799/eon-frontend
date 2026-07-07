@@ -41,7 +41,9 @@ const CommissionRuleRow = ({
   canRemove: boolean;
 }) => {
   const loadCurrencyOptions = useCallback(async (inputValue: string): Promise<AsyncSelectResponse> => {
-    const currencies = await currencyProfileApi.getCurrencyProfiles(inputValue);
+    const currencies = (await currencyProfileApi.getCurrencyProfiles(inputValue)).filter(
+      currency => currency.active !== false
+    );
     return {
       options: currencies.map(currency => ({
         value: currency.currencyCode,

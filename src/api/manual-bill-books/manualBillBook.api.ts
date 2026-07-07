@@ -183,13 +183,11 @@ export const manualBillBookApi = {
     return res.data || [];
   },
 
-  getSelectablePages: async (params: {
-    branchId?: string;
+  getSelectablePages: async (params?: {
     userId?: string;
   }): Promise<IManualBookPageTracking[]> => {
     const query = new URLSearchParams();
-    if (params.branchId) query.set('branchId', params.branchId);
-    if (params.userId) query.set('userId', params.userId);
+    if (params?.userId) query.set('userId', params.userId);
 
     const suffix = query.toString() ? `?${query.toString()}` : '';
     const res = await apiClient.get<IManualBookPageTracking[]>(

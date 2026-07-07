@@ -1,11 +1,12 @@
 import type { Dispatch, SetStateAction } from 'react';
-import { Button, Modal } from '@/components/ui';
+import { Button, Modal, Input } from '@/components/ui';
 import type {
   CurrencyRateProvider,
   ICurrencyRate,
   ICurrencyRateEntryFormValues,
 } from '../types/currencyRatesTypes';
 import type { ICurrencyProfile } from '@/modules/currencyProfile/types';
+import { CURRENCY_RATE_DECIMALS } from '../utils/currencyRatesUtils';
 
 interface CurrencyRateEntryModalProps {
   open: boolean;
@@ -20,6 +21,7 @@ interface CurrencyRateEntryModalProps {
 
 const labelClass = 'mb-1 block text-xs font-semibold uppercase tracking-wider text-text-secondary';
 const inputClass = 'w-full rounded-sm border border-border-primary bg-surface-primary px-3 py-2 text-sm text-text-primary outline-none transition focus:border-primary-500';
+const rateStep = `0.${'0'.repeat(CURRENCY_RATE_DECIMALS - 1)}1`;
 
 export const CurrencyRateEntryModal = ({
   open,
@@ -107,8 +109,10 @@ export const CurrencyRateEntryModal = ({
             <>
               <div>
                 <label className={labelClass}>Base Buy Rate</label>
-                <input
+                <Input
                   type="number"
+                  step={rateStep}
+                  maxDecimalPlaces={CURRENCY_RATE_DECIMALS}
                   value={form.baseBuyRate}
                   disabled={isDetailView}
                   onChange={event => setForm(next => ({ ...next, baseBuyRate: event.target.value }))}
@@ -117,8 +121,10 @@ export const CurrencyRateEntryModal = ({
               </div>
               <div>
                 <label className={labelClass}>Base Sale Rate</label>
-                <input
+                <Input
                   type="number"
+                  step={rateStep}
+                  maxDecimalPlaces={CURRENCY_RATE_DECIMALS}
                   value={form.baseSaleRate}
                   disabled={isDetailView}
                   onChange={event => setForm(next => ({ ...next, baseSaleRate: event.target.value }))}
@@ -131,8 +137,10 @@ export const CurrencyRateEntryModal = ({
           {isManualLike ? (
             <div className="md:col-span-2">
               <label className={labelClass}>Base Rate</label>
-              <input
+              <Input
                 type="number"
+                step={rateStep}
+                maxDecimalPlaces={CURRENCY_RATE_DECIMALS}
                 value={form.baseRate}
                 disabled={isDetailView}
                 onChange={event => setForm(next => ({ ...next, baseRate: event.target.value }))}

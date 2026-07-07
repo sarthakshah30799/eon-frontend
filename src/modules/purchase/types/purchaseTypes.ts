@@ -23,6 +23,7 @@ export interface IPurchaseTransactionFormRow {
   productCode: string;
   productDescription: string;
   quantity: string;
+  per: string;
   rate: string;
   commission: string;
   commissionSnapshot: Record<string, unknown> | null;
@@ -49,6 +50,7 @@ export interface IPurchaseFormValues {
   partyProfilePanNo: string;
   partyProfileGstNo: string;
   partyProfileGstStateName: string;
+  partyProfileStateName: string;
   partyProfileContactName: string;
   partyProfileApplyTax: boolean;
   agentProfileId: string;
@@ -92,6 +94,7 @@ export interface IPurchaseSelectedPartyProfile {
   panNo?: string;
   gstNo?: string;
   gstStateName?: string;
+  stateName?: string;
   contactName?: string;
 }
 

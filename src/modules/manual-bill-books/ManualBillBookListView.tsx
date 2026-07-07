@@ -562,7 +562,7 @@ export const ManualBillBookListView = () => {
                     className="cursor-pointer bg-slate-900 hover:bg-slate-800 text-white rounded px-4 py-2 text-xs font-semibold shadow transition flex items-center gap-1.5"
                     disabled={isSubmitting}
                   >
-                    {isSubmitting && <Loader />}
+                    {isSubmitting && <Loader variant="spinner" />}
                     Submit Review
                   </button>
                 </div>

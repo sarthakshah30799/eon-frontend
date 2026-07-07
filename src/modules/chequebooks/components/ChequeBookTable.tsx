@@ -125,6 +125,7 @@ export const ChequeBookTable = ({
       loading={loading}
       className="min-w-full text-xs"
       onRowClick={onRowClick}
+      emptyMessage="No Records found. Create your first Cheque Book."
     />
   );
 };

@@ -116,9 +116,7 @@ export const ManualBillBookAcknowledgementChecklistTable = ({
                 type="checkbox"
                 checked={isApproved}
                 disabled={isReadOnly}
-                onChange={() =>
-                  onCheckboxChange(row.original.id, 'Approved')
-                }
+                onChange={() => onCheckboxChange(row.original.id, 'Approved')}
                 className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
@@ -141,9 +139,7 @@ export const ManualBillBookAcknowledgementChecklistTable = ({
                 type="checkbox"
                 checked={isRejected}
                 disabled={isReadOnly}
-                onChange={() =>
-                  onCheckboxChange(row.original.id, 'Rejected')
-                }
+                onChange={() => onCheckboxChange(row.original.id, 'Rejected')}
                 className="h-4 w-4 rounded border-slate-300 text-red-600 focus:ring-red-500 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
@@ -187,6 +183,7 @@ export const ManualBillBookAcknowledgementChecklistTable = ({
       enableRowSelection={false}
       enableColumnVisibility={false}
       className="min-w-full text-sm"
+      emptyMessage="No Records found."
     />
   );
 };

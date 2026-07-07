@@ -9,11 +9,16 @@ export type CurrencyRateProvider =
 
 export const CurrencyRateMarginType = {
   PERCENT: 'PERCENT',
-  RATE: 'RATE',
+  PAISA: 'PAISA',
 } as const;
 
 export type CurrencyRateMarginType =
   (typeof CurrencyRateMarginType)[keyof typeof CurrencyRateMarginType];
+
+export const CURRENCY_RATE_MARGIN_TYPE_OPTIONS = [
+  { value: CurrencyRateMarginType.PERCENT, label: 'PERCENT' },
+  { value: CurrencyRateMarginType.PAISA, label: 'PAISA' },
+] as const;
 
 export interface ICurrencyRateMargin {
   marginType: CurrencyRateMarginType | '';

@@ -1,10 +1,11 @@
 import type { Dispatch, SetStateAction } from 'react';
-import { Button, Modal } from '@/components/ui';
+import { Button, Modal, AsyncSelect } from '@/components/ui';
 import type {
   CurrencyRateMarginType,
   ICurrencyRateGroup,
   ICurrencyRateGroupFormValues,
 } from '../types/currencyRatesTypes';
+import { CURRENCY_RATE_MARGIN_TYPE_OPTIONS } from '../types/currencyRatesTypes';
 import { formatMarginValue } from '../utils/currencyRatesUtils';
 
 interface CurrencyRateGroupModalProps {
@@ -20,6 +21,13 @@ interface CurrencyRateGroupModalProps {
 
 const labelClass = 'mb-1 block text-xs font-semibold uppercase tracking-wider text-text-secondary';
 const inputClass = 'w-full rounded-sm border border-border-primary bg-surface-primary px-3 py-2 text-sm text-text-primary outline-none transition focus:border-primary-500';
+const loadMarginTypeOptions = async () => ({
+  options: CURRENCY_RATE_MARGIN_TYPE_OPTIONS.map(option => ({
+    value: option.value,
+    label: option.label,
+  })),
+  hasMore: false,
+});
 
 export const CurrencyRateGroupModal = ({
   open,
@@ -85,20 +93,25 @@ export const CurrencyRateGroupModal = ({
           </div>
           <div>
             <label className={labelClass}>Buy Margin Type</label>
-            <select
-              value={form.buyMarginType}
-              onChange={event =>
+            <AsyncSelect
+              value={
+                CURRENCY_RATE_MARGIN_TYPE_OPTIONS.find(
+                  option => option.value === form.buyMarginType
+                ) ?? null
+              }
+              onChange={option => {
+                const selectedOption = Array.isArray(option) ? option[0] : option;
                 setForm(next => ({
                   ...next,
-                  buyMarginType: event.target.value as CurrencyRateMarginType | '',
-                }))
-              }
-              className={inputClass}
-            >
-              <option value="">Select</option>
-              <option value="PERCENT">PERCENT</option>
-              <option value="RATE">RATE</option>
-            </select>
+                  buyMarginType:
+                    (selectedOption?.value as CurrencyRateMarginType | undefined) ??
+                    '',
+                }));
+              }}
+              loadOptions={loadMarginTypeOptions}
+              placeholder="Select"
+              isClearable
+            />
           </div>
           <div>
             <label className={labelClass}>Buy Margin Value</label>
@@ -110,20 +123,25 @@ export const CurrencyRateGroupModal = ({
           </div>
           <div>
             <label className={labelClass}>Sale Margin Type</label>
-            <select
-              value={form.saleMarginType}
-              onChange={event =>
+            <AsyncSelect
+              value={
+                CURRENCY_RATE_MARGIN_TYPE_OPTIONS.find(
+                  option => option.value === form.saleMarginType
+                ) ?? null
+              }
+              onChange={option => {
+                const selectedOption = Array.isArray(option) ? option[0] : option;
                 setForm(next => ({
                   ...next,
-                  saleMarginType: event.target.value as CurrencyRateMarginType | '',
-                }))
-              }
-              className={inputClass}
-            >
-              <option value="">Select</option>
-              <option value="PERCENT">PERCENT</option>
-              <option value="RATE">RATE</option>
-            </select>
+                  saleMarginType:
+                    (selectedOption?.value as CurrencyRateMarginType | undefined) ??
+                    '',
+                }));
+              }}
+              loadOptions={loadMarginTypeOptions}
+              placeholder="Select"
+              isClearable
+            />
           </div>
           <div>
             <label className={labelClass}>Sale Margin Value</label>
@@ -162,4 +180,3 @@ export const CurrencyRateGroupModal = ({
     </Modal>
   );
 };
-

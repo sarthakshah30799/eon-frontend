@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { usePermission } from '@/hooks/usePermission';
 import {
   AsyncSelect,
   Button,
@@ -46,7 +45,6 @@ export const ManualBillBookListView = () => {
   );
 
   const navigate = useNavigate();
-  const { canAdd } = usePermission('/manual-bill-books');
 
   const statusOptions = useMemo<AsyncSelectOption[]>(
     () => [

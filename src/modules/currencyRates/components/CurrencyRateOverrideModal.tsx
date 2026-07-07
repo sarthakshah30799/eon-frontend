@@ -1,5 +1,5 @@
 import { useMemo, type Dispatch, type SetStateAction } from 'react';
-import { Button, Modal } from '@/components/ui';
+import { Button, Modal, AsyncSelect } from '@/components/ui';
 import type {
   ICurrencyRate,
   ICurrencyRateComparisonPreview,
@@ -7,6 +7,7 @@ import type {
   IProductCurrencyRateFormValues,
   CurrencyRateMarginType,
 } from '../types/currencyRatesTypes';
+import { CURRENCY_RATE_MARGIN_TYPE_OPTIONS } from '../types/currencyRatesTypes';
 import type { ICurrencyProfile } from '@/modules/currencyProfile/types';
 import { CurrencyRateComparisonPanel } from './CurrencyRateComparisonPanel';
 import {
@@ -32,6 +33,13 @@ interface CurrencyRateOverrideModalProps {
 
 const labelClass = 'mb-1 block text-xs font-semibold uppercase tracking-wider text-text-secondary';
 const inputClass = 'w-full rounded-sm border border-border-primary bg-surface-primary px-3 py-2 text-sm text-text-primary outline-none transition focus:border-primary-500';
+const loadMarginTypeOptions = async () => ({
+  options: CURRENCY_RATE_MARGIN_TYPE_OPTIONS.map(option => ({
+    value: option.value,
+    label: option.label,
+  })),
+  hasMore: false,
+});
 
 export const CurrencyRateOverrideModal = ({
   open,
@@ -197,26 +205,31 @@ export const CurrencyRateOverrideModal = ({
           </div>
 
           <div className="grid gap-4 md:col-span-2 md:grid-cols-2">
-            <div>
-              <label className={labelClass}>Buy Margin Type</label>
-              <select
-                value={form.buy.marginType || ''}
-                onChange={event =>
-                  setForm(next => ({
-                    ...next,
-                    buy: {
-                      ...next.buy,
-                      marginType: event.target.value as CurrencyRateMarginType | '',
-                    },
-                  }))
-                }
-                className={inputClass}
-              >
-                <option value="">Select</option>
-                <option value="PERCENT">PERCENT</option>
-                <option value="RATE">RATE</option>
-              </select>
-            </div>
+          <div>
+            <label className={labelClass}>Buy Margin Type</label>
+            <AsyncSelect
+              value={
+                CURRENCY_RATE_MARGIN_TYPE_OPTIONS.find(
+                  option => option.value === form.buy.marginType
+                ) ?? null
+              }
+              onChange={option => {
+                const selectedOption = Array.isArray(option) ? option[0] : option;
+                setForm(next => ({
+                  ...next,
+                  buy: {
+                    ...next.buy,
+                    marginType:
+                      (selectedOption?.value as CurrencyRateMarginType | undefined) ??
+                      '',
+                  },
+                }));
+              }}
+              loadOptions={loadMarginTypeOptions}
+              placeholder="Select"
+              isClearable
+            />
+          </div>
             <div>
               <label className={labelClass}>Buy Margin Value</label>
               <input
@@ -256,26 +269,31 @@ export const CurrencyRateOverrideModal = ({
                 className={inputClass}
               />
             </div>
-            <div>
-              <label className={labelClass}>Sale Margin Type</label>
-              <select
-                value={form.sale.marginType || ''}
-                onChange={event =>
-                  setForm(next => ({
-                    ...next,
-                    sale: {
-                      ...next.sale,
-                      marginType: event.target.value as CurrencyRateMarginType | '',
-                    },
-                  }))
-                }
-                className={inputClass}
-              >
-                <option value="">Select</option>
-                <option value="PERCENT">PERCENT</option>
-                <option value="RATE">RATE</option>
-              </select>
-            </div>
+          <div>
+            <label className={labelClass}>Sale Margin Type</label>
+            <AsyncSelect
+              value={
+                CURRENCY_RATE_MARGIN_TYPE_OPTIONS.find(
+                  option => option.value === form.sale.marginType
+                ) ?? null
+              }
+              onChange={option => {
+                const selectedOption = Array.isArray(option) ? option[0] : option;
+                setForm(next => ({
+                  ...next,
+                  sale: {
+                    ...next.sale,
+                    marginType:
+                      (selectedOption?.value as CurrencyRateMarginType | undefined) ??
+                      '',
+                  },
+                }));
+              }}
+              loadOptions={loadMarginTypeOptions}
+              placeholder="Select"
+              isClearable
+            />
+          </div>
             <div>
               <label className={labelClass}>Sale Margin Value</label>
               <input

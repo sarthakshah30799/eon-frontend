@@ -1,9 +1,6 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
-import {
-  ProtectedLayout,
-  PublicLayout,
-} from '../components/layouts';
+import { ProtectedLayout, PublicLayout } from '../components/layouts';
 import { Loader } from '@/components/ui/loader';
 
 // Lazy load pages
@@ -137,11 +134,11 @@ const ManagerToCashierAllocationPage = lazy(
 const ManualBillDPMappingPage = lazy(
   () => import('../pages/manual-bill-books/ManualBillDPMappingPage')
 );
-const   ChequeBookPage = lazy(
+const ChequeBookPage = lazy(
   () => import('../pages/chequebooks/ChequeBookPage')
 );
 const ChequeBookCreatePage = lazy(
-  () => import('../pages/chequebooks/ChequeBookCreatePage')
+  () => import('../pages/chequebooks/create/ChequeBookCreatePage')
 );
 const ChequeBookAcknowledgementPage = lazy(
   () => import('../pages/chequebooks/ChequeBookAcknowledgementPage')
@@ -155,9 +152,7 @@ const ChequeBookReturnPage = lazy(
 const AdditionalSettingsPage = lazy(
   () => import('../pages/admin/additional-settings')
 );
-const CurrencyRatesPage = lazy(
-  () => import('../pages/admin/currency-rates')
-);
+const CurrencyRatesPage = lazy(() => import('../pages/admin/currency-rates'));
 const MailConsolePage = lazy(
   () => import('../pages/auth/mail-console/MailConsolePage')
 );
@@ -180,14 +175,16 @@ const AccountsProfileEditPage = lazy(
   () => import('../pages/admin/accounts-profile/edit/[id]')
 );
 const PartyProfileListPage = lazy(() => import('../pages/party-profiles/list'));
-const PartyProfileCreatePage = lazy(() => import('../pages/party-profiles/create'));
-const PartyProfileEditPage = lazy(() => import('../pages/party-profiles/edit/[id]'));
+const PartyProfileCreatePage = lazy(
+  () => import('../pages/party-profiles/create')
+);
+const PartyProfileEditPage = lazy(
+  () => import('../pages/party-profiles/edit/[id]')
+);
 const PartyProfileDocumentsPage = lazy(
   () => import('../pages/party-profiles/documents/[id]')
 );
-const PurchasePage = lazy(
-  () => import('../pages/purchase/[slug]')
-);
+const PurchasePage = lazy(() => import('../pages/purchase/[slug]'));
 const PurchaseCreatePage = lazy(
   () => import('../pages/purchase/[slug]/create')
 );
@@ -211,8 +208,7 @@ const UserProfileEditPage = lazy(
     import('../pages/master/system-setups/user-profile/edit/[id]/UserProfileEditPage')
 );
 const UserRoleListPage = lazy(
-  () =>
-    import('../pages/master/system-setups/user-role/list/UserRoleListPage')
+  () => import('../pages/master/system-setups/user-role/list/UserRoleListPage')
 );
 const UserRoleCreatePage = lazy(
   () =>
@@ -253,23 +249,29 @@ const TdsProfileEditPage = lazy(
 );
 
 const ExpenseBookingListPage = lazy(
-  () => import('../pages/master/system-setups/expense-booking/ExpenseBookingListPage')
+  () =>
+    import('../pages/master/system-setups/expense-booking/ExpenseBookingListPage')
 );
 const ExpenseBookingCreatePage = lazy(
-  () => import('../pages/master/system-setups/expense-booking/ExpenseBookingCreatePage')
+  () =>
+    import('../pages/master/system-setups/expense-booking/ExpenseBookingCreatePage')
 );
 const ExpenseBookingEditPage = lazy(
-  () => import('../pages/master/system-setups/expense-booking/ExpenseBookingEditPage')
+  () =>
+    import('../pages/master/system-setups/expense-booking/ExpenseBookingEditPage')
 );
 
 const IncomeBookingListPage = lazy(
-  () => import('../pages/master/system-setups/income-booking/IncomeBookingListPage')
+  () =>
+    import('../pages/master/system-setups/income-booking/IncomeBookingListPage')
 );
 const IncomeBookingCreatePage = lazy(
-  () => import('../pages/master/system-setups/income-booking/IncomeBookingCreatePage')
+  () =>
+    import('../pages/master/system-setups/income-booking/IncomeBookingCreatePage')
 );
 const IncomeBookingEditPage = lazy(
-  () => import('../pages/master/system-setups/income-booking/IncomeBookingEditPage')
+  () =>
+    import('../pages/master/system-setups/income-booking/IncomeBookingEditPage')
 );
 
 const router = createBrowserRouter([
@@ -955,7 +957,13 @@ const router = createBrowserRouter([
 
 export const AppRouter = () => {
   return (
-    <Suspense fallback={<div className="text-center py-4"><Loader /></div>}>
+    <Suspense
+      fallback={
+        <div className="text-center py-4">
+          <Loader />
+        </div>
+      }
+    >
       <RouterProvider router={router} />
     </Suspense>
   );

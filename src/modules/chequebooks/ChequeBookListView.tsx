@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { usePermission } from '@/hooks/usePermission';
 import {
   chequebookApi,
   type IChequeBook,
@@ -21,10 +20,7 @@ import {
 import { useListChequeBooks } from './hooks';
 import { useListBranchProfiles } from '@/modules/branchProfile/hooks';
 import { ChequeBookTable } from './components';
-import {
-  ChequeBookStatusEnum,
-  type ChequeBookStatus,
-} from './types';
+import { ChequeBookStatusEnum, type ChequeBookStatus } from './types';
 
 const resolveAssignedToLabel = (assignedTo: IChequeBook['assignedTo']) => {
   if (assignedTo && typeof assignedTo === 'object') {
@@ -36,7 +32,6 @@ const resolveAssignedToLabel = (assignedTo: IChequeBook['assignedTo']) => {
 
 export const ChequeBookListView = () => {
   const navigate = useNavigate();
-  const { canAdd } = usePermission('/checkbooks');
   // Filter states
   const [branchFilter, setBranchFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState<ChequeBookStatus | ''>('');
@@ -61,7 +56,9 @@ export const ChequeBookListView = () => {
   );
 
   const selectedReviewStatusOption = useMemo<AsyncSelectOption | null>(
-    () => reviewStatusOptions.find(option => option.value === approvalStatus) ?? null,
+    () =>
+      reviewStatusOptions.find(option => option.value === approvalStatus) ??
+      null,
     [approvalStatus, reviewStatusOptions]
   );
 
@@ -70,8 +67,8 @@ export const ChequeBookListView = () => {
       const normalizedInput = inputValue.trim().toLowerCase();
       const filteredOptions = normalizedInput
         ? reviewStatusOptions.filter(option =>
-          option.label.toLowerCase().includes(normalizedInput)
-        )
+            option.label.toLowerCase().includes(normalizedInput)
+          )
         : reviewStatusOptions;
 
       return {
@@ -104,8 +101,8 @@ export const ChequeBookListView = () => {
       const normalizedInput = inputValue.trim().toLowerCase();
       const filteredOptions = normalizedInput
         ? branchOptions.filter(option =>
-          option.label.toLowerCase().includes(normalizedInput)
-        )
+            option.label.toLowerCase().includes(normalizedInput)
+          )
         : branchOptions;
 
       return {
@@ -143,8 +140,8 @@ export const ChequeBookListView = () => {
       const normalizedInput = inputValue.trim().toLowerCase();
       const filteredOptions = normalizedInput
         ? statusOptions.filter(option =>
-          option.label.toLowerCase().includes(normalizedInput)
-        )
+            option.label.toLowerCase().includes(normalizedInput)
+          )
         : statusOptions;
 
       return {
@@ -188,14 +185,16 @@ export const ChequeBookListView = () => {
     }
   }, [reviewId, books]);
 
-
   // Page Tracking allocation list & cashier list states
   const [allocations, setAllocations] = useState<IChequeBookAllocation[]>([]);
   const [isLoadingAllocations, setIsLoadingAllocations] = useState(false);
-  const [cashiers, setCashiers] = useState<Array<{ id: string; name: string }>>([]);
+  const [cashiers, setCashiers] = useState<Array<{ id: string; name: string }>>(
+    []
+  );
 
   // Sub-modal for PageGrid states
-  const [selectedAllocation, setSelectedAllocation] = useState<IChequeBookAllocation | null>(null);
+  const [selectedAllocation, setSelectedAllocation] =
+    useState<IChequeBookAllocation | null>(null);
   const [isPagesModalOpen, setIsPagesModalOpen] = useState(false);
   const [pages, setPages] = useState<IChequeBookPageTracking[]>([]);
   const [isLoadingPages, setIsLoadingPages] = useState(false);
@@ -223,7 +222,9 @@ export const ChequeBookListView = () => {
     const fetchCashiers = async () => {
       if (!selectedBook) return;
       try {
-        const data = await chequebookApi.getAuthorizedUsers(selectedBook.branchId);
+        const data = await chequebookApi.getAuthorizedUsers(
+          selectedBook.branchId
+        );
         setCashiers(data);
       } catch (err) {
         console.error(err);
@@ -237,24 +238,40 @@ export const ChequeBookListView = () => {
     setIsPagesModalOpen(true);
     try {
       setIsLoadingPages(true);
-      const data = await chequebookApi.getPagesByBookNo(alloc.checkBookId, alloc.bookNo);
+      const data = await chequebookApi.getPagesByBookNo(
+        alloc.checkBookId,
+        alloc.bookNo
+      );
       setPages(data);
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Failed to load page tracking records.');
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : 'Failed to load page tracking records.'
+      );
     } finally {
       setIsLoadingPages(false);
     }
   };
 
-  const handleUpdatePageStatus = async (pageNos: number[], status: 'VOID', remarks?: string) => {
+  const handleUpdatePageStatus = async (
+    pageNos: number[],
+    status: 'VOID',
+    remarks?: string
+  ) => {
     if (!selectedAllocation) return;
     try {
       await chequebookApi.updatePagesStatus(pageNos, status, remarks);
       toast.success('Page status updated successfully');
-      const data = await chequebookApi.getPagesByBookNo(selectedAllocation.checkBookId, selectedAllocation.bookNo);
+      const data = await chequebookApi.getPagesByBookNo(
+        selectedAllocation.checkBookId,
+        selectedAllocation.bookNo
+      );
       setPages(data);
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Failed to update page status.');
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to update page status.'
+      );
       throw err;
     }
   };
@@ -264,10 +281,15 @@ export const ChequeBookListView = () => {
     try {
       await chequebookApi.returnPages(pageNos);
       toast.success('Pages returned successfully');
-      const data = await chequebookApi.getPagesByBookNo(selectedAllocation.checkBookId, selectedAllocation.bookNo);
+      const data = await chequebookApi.getPagesByBookNo(
+        selectedAllocation.checkBookId,
+        selectedAllocation.bookNo
+      );
       setPages(data);
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Failed to return pages.');
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to return pages.'
+      );
       throw err;
     }
   };
@@ -310,78 +332,68 @@ export const ChequeBookListView = () => {
         </Button>
       </div>
 
-      <div className="space-y-6">
-        <div className="bg-white p-6 rounded-md border border-slate-200 shadow-sm space-y-4">
-          {/* Filters */}
-          <div className="flex flex-wrap gap-4 items-center">
-            <div className="flex-1 min-w-50">
-              <AsyncSelect
-                label="Filter by Branch"
-                placeholder="All Branches"
-                value={selectedBranchOption}
-                loadOptions={loadBranchOptions}
-                defaultOptions={branchOptions}
-                onChange={option => {
-                  const selectedOption = Array.isArray(option)
-                    ? option[0] ?? null
-                    : option;
+      <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
+        {/* Filters */}
+        <div className="flex flex-wrap gap-4 items-center mb-2">
+          <div className="flex-1 min-w-50">
+            <AsyncSelect
+              label="Filter by Branch"
+              placeholder="All Branches"
+              value={selectedBranchOption}
+              loadOptions={loadBranchOptions}
+              defaultOptions={branchOptions}
+              onChange={option => {
+                const selectedOption = Array.isArray(option)
+                  ? (option[0] ?? null)
+                  : option;
 
-                  setBranchFilter(
-                    selectedOption?.value ? String(selectedOption.value) : ''
-                  );
-                }}
-                isClearable
-                isSearchable
-                pagination={false}
-              />
-            </div>
-
-            <div className="w-37.5">
-              <AsyncSelect
-                label="Filter by Status"
-                placeholder="All Statuses"
-                value={selectedStatusOption}
-                loadOptions={loadStatusOptions}
-                defaultOptions={statusOptions}
-                onChange={option => {
-                  const selectedOption = Array.isArray(option)
-                    ? option[0] ?? null
-                    : option;
-
-                  setStatusFilter(
-                    selectedOption?.value
-                      ? (String(selectedOption.value) as ChequeBookStatus)
-                      : ''
-                  );
-                }}
-                isClearable
-                isSearchable
-                pagination={false}
-              />
-            </div>
+                setBranchFilter(
+                  selectedOption?.value ? String(selectedOption.value) : ''
+                );
+              }}
+              isClearable
+              isSearchable
+              pagination={false}
+            />
           </div>
 
-          {/* Table */}
-          {isLoading || isFetching ? (
-            <div className="flex justify-center py-12">
-              <Loader />
-            </div>
-          ) : books.length === 0 ? (
-            <div className="text-center py-12 text-slate-500 border border-dashed border-slate-200 rounded-md">
-              No records found.
-            </div>
-          ) : (
-            <ChequeBookTable
-              books={books}
-              loading={false}
-              onRowClick={book => {
-                setSelectedBook(book);
-                setIsReviewOpen(true);
+          <div className="w-37.5">
+            <AsyncSelect
+              label="Filter by Status"
+              placeholder="All Statuses"
+              value={selectedStatusOption}
+              loadOptions={loadStatusOptions}
+              defaultOptions={statusOptions}
+              onChange={option => {
+                const selectedOption = Array.isArray(option)
+                  ? (option[0] ?? null)
+                  : option;
+
+                setStatusFilter(
+                  selectedOption?.value
+                    ? (String(selectedOption.value) as ChequeBookStatus)
+                    : ''
+                );
               }}
+              isClearable
+              isSearchable
+              pagination={false}
             />
-          )}
+          </div>
         </div>
-      </div>
+
+        {/* Table */}
+        <div className="overflow-x-auto border border-slate-200 rounded-md">
+          <ChequeBookTable
+            books={books}
+            loading={isLoading || isFetching}
+            onRowClick={book => {
+              setSelectedBook(book);
+              setIsReviewOpen(true);
+            }}
+          />
+        </div>
+      </section>
 
       {/* Review / Details Modal */}
       {selectedBook && (
@@ -426,7 +438,8 @@ export const ChequeBookListView = () => {
                   Bank Account Code
                 </span>
                 <span className="text-slate-800">
-                  {selectedBook.bankAccountCodeLabel || selectedBook.bankAccountCode}
+                  {selectedBook.bankAccountCodeLabel ||
+                    selectedBook.bankAccountCode}
                 </span>
               </div>
               <div>
@@ -484,7 +497,7 @@ export const ChequeBookListView = () => {
                       isSearchable={false}
                       onChange={option => {
                         const selectedOption = Array.isArray(option)
-                          ? option[0] ?? null
+                          ? (option[0] ?? null)
                           : option;
                         if (selectedOption) {
                           setApprovalStatus(
@@ -595,7 +608,9 @@ export const ChequeBookListView = () => {
                       User Allocations
                     </h4>
                     {isLoadingAllocations ? (
-                      <div className="text-xs text-slate-400 py-2">Loading allocations...</div>
+                      <div className="text-xs text-slate-400 py-2">
+                        Loading allocations...
+                      </div>
                     ) : allocations.length === 0 ? (
                       <div className="text-xs text-slate-500 italic py-2 bg-slate-50 border border-slate-100 rounded text-center">
                         No users assigned to this book yet.
@@ -603,12 +618,24 @@ export const ChequeBookListView = () => {
                     ) : (
                       <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1">
                         {allocations.map(alloc => {
-                          const cashier = cashiers.find(c => c.id === alloc.cashierId);
+                          const cashier = cashiers.find(
+                            c => c.id === alloc.cashierId
+                          );
                           return (
-                            <div key={`${alloc.checkBookId}-${alloc.bookNo}`} className="flex justify-between items-center p-3 bg-white border border-slate-200 rounded-md shadow-sm">
+                            <div
+                              key={`${alloc.checkBookId}-${alloc.bookNo}`}
+                              className="flex justify-between items-center p-3 bg-white border border-slate-200 rounded-md shadow-sm"
+                            >
                               <div>
-                                <span className="block text-xs font-bold text-slate-700">Book #{alloc.bookNo}</span>
-                                <span className="text-[10px] text-slate-500">Assigned to: <b className="text-slate-700">{cashier ? cashier.name : 'Unknown User'}</b></span>
+                                <span className="block text-xs font-bold text-slate-700">
+                                  Book #{alloc.bookNo}
+                                </span>
+                                <span className="text-[10px] text-slate-500">
+                                  Assigned to:{' '}
+                                  <b className="text-slate-700">
+                                    {cashier ? cashier.name : 'Unknown User'}
+                                  </b>
+                                </span>
                               </div>
                               <button
                                 type="button"

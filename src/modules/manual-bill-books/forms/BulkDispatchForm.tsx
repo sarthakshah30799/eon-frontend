@@ -60,12 +60,11 @@ interface BulkDispatchFormProps {
   onSuccess: () => void;
 }
 
-export const BulkDispatchForm = ({ onSuccess }: BulkDispatchFormProps) => {
-  const navigate = useNavigate();
-  const { user, activeBranchId } = useAuth();
-  const isAdmin = user?.isAdmin === true;
-  const { submitManualBillBook } = useCreateManualBillBook();
+const BulkDispatchFormFields = () => {
   const form = useFormContext<IBulkDispatchFormValues>();
+  const { user } = useAuth();
+  const isAdmin = user?.isAdmin === true;
+  const isHoStaff = !!user?.isHoStaff;
   const branchId = useWatch({ name: 'branchId', control: form.control });
   const dispatchDate = useWatch({
     name: 'dispatchDate',
@@ -123,7 +122,6 @@ export const BulkDispatchForm = ({ onSuccess }: BulkDispatchFormProps) => {
     form.setValue('assignedTo', '');
   }, [branchId, form]);
 
-  const isHoStaff = !!user?.isHoStaff;
   const { data: branches = [] } = useListBranchProfiles({
     activeOnly: true,
   });
@@ -142,6 +140,58 @@ export const BulkDispatchForm = ({ onSuccess }: BulkDispatchFormProps) => {
     })),
     hasMore: false,
   });
+  return (
+    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+      <FormFieldInput name="dispatchDate" label="Date" type="date" />
+      <FormFieldInput
+        name="no"
+        label="NO"
+        disabled
+        placeholder="Auto-Generated"
+      />
+      <FormFieldSelect
+        name="branchId"
+        label="Branch"
+        loadOptions={loadBranches}
+        disabled={!isAdmin && !isHoStaff}
+      />
+      <FormFieldCategoryOption
+        name="transactionType"
+        label="Txn Type"
+        code={CategoryOptionCodeEnum.Transaction}
+        useValueAsId={true}
+        isCreatable={false}
+      />
+      <FormFieldInput name="bookNoFrom" label="Book No. From" type="number" />
+      <FormFieldInput name="bookNoTo" label="Book No. To" type="number" />
+      <div className="md:col-span-2">
+        <FormFieldInput
+          name="vouchersPerBook"
+          label="No Of Voucher Per Book"
+          type="number"
+        />
+      </div>
+      <FormFieldInput name="mvNoFrom" label="MV No. From" type="number" />
+      <FormFieldInput name="mvNoTo" label="MV No. To" disabled />
+      {branchId && (
+        <FormFieldSelect
+          key={branchId}
+          name="assignedTo"
+          label="Assigned To"
+          loadOptions={loadAssignedTo}
+        />
+      )}
+      <FormFieldTextarea name="remarks" label="Remarks" rows={3} />
+    </div>
+  );
+};
+
+export const BulkDispatchForm = ({ onSuccess }: BulkDispatchFormProps) => {
+  const navigate = useNavigate();
+  const { user, activeBranchId } = useAuth();
+  const isAdmin = user?.isAdmin === true;
+  const { submitManualBillBook } = useCreateManualBillBook();
+
   const onCancel = () => {
     navigate('/manual-bill-books');
   };
@@ -177,53 +227,12 @@ export const BulkDispatchForm = ({ onSuccess }: BulkDispatchFormProps) => {
       footer={{
         submitLabel: 'Create',
         onBackClick: () => {
-          void onCancel();
+          onCancel();
         },
         onCancel,
       }}
     >
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <FormFieldInput name="dispatchDate" label="Date" type="date" />
-        <FormFieldInput
-          name="no"
-          label="NO"
-          disabled
-          placeholder="Auto-Generated"
-        />
-        <FormFieldSelect
-          name="branchId"
-          label="Branch"
-          loadOptions={loadBranches}
-          disabled={!isAdmin && !isHoStaff}
-        />
-        <FormFieldCategoryOption
-          name="transactionType"
-          label="Txn Type"
-          code={CategoryOptionCodeEnum.Transaction}
-          useValueAsId={true}
-          isCreatable={false}
-        />
-        <FormFieldInput name="bookNoFrom" label="Book No. From" type="number" />
-        <FormFieldInput name="bookNoTo" label="Book No. To" type="number" />
-        <div className="md:col-span-2">
-          <FormFieldInput
-            name="vouchersPerBook"
-            label="No Of Voucher Per Book"
-            type="number"
-          />
-        </div>
-        <FormFieldInput name="mvNoFrom" label="MV No. From" type="number" />
-        <FormFieldInput name="mvNoTo" label="MV No. To" disabled />
-        {branchId && (
-          <FormFieldSelect
-            key={branchId}
-            name="assignedTo"
-            label="Assigned To"
-            loadOptions={loadAssignedTo}
-          />
-        )}
-        <FormFieldTextarea name="remarks" label="Remarks" rows={3} />
-      </div>
+      <BulkDispatchFormFields />
     </Form>
   );
 };

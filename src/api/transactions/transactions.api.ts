@@ -6,6 +6,7 @@ import type {
   ITransactionEntity,
   TransactionStatus,
 } from '@/modules/transactions';
+import { API_BASE_URL } from '@/config/api';
 
 const appendJsonPart = (
   formData: FormData,
@@ -19,7 +20,7 @@ export const transactionsApi = {
   getTransactionDocumentDownloadUrl: (
     transactionId: string,
     documentId: string
-  ) => `${import.meta.env.VITE_API_BASE_URL || ''}/transactions/${transactionId}/documents/${documentId}/download`,
+  ) => `${API_BASE_URL}/transactions/${transactionId}/documents/${documentId}/download`,
 
   getTransactions: async (
     params?: {

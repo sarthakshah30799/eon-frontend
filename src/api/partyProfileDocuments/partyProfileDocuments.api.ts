@@ -3,10 +3,10 @@ import type {
   IPartyProfileDocumentsResponse,
   IUploadPartyProfileDocumentPayload,
 } from '@/modules/partyProfileDocuments/types/partyProfileDocumentTypes';
+import { API_BASE_URL } from '@/config/api';
 
 const buildDownloadUrl = (partyProfileId: string, documentProfileId: string) => {
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
-  return `${baseUrl}/party-profiles/${partyProfileId}/documents/${documentProfileId}/download`;
+  return `${API_BASE_URL}/party-profiles/${partyProfileId}/documents/${documentProfileId}/download`;
 };
 
 export const partyProfileDocumentsApi = {

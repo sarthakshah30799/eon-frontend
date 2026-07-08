@@ -6,6 +6,7 @@ import type {
   IWorkplaceSession,
 } from '../../modules/auth/types';
 import { dispatchSessionExpired } from '@/lib/authSessionEvents';
+import { API_BASE_URL } from '@/config/api';
 
 const SESSION_PROTECTED_ENDPOINTS = new Set([
   '/auth/setup-password',
@@ -29,9 +30,6 @@ export class ApiError extends Error {
     this.status = options?.status;
   }
 }
-
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
 class AuthAPI {
   private async request<T>(

@@ -653,6 +653,11 @@ pnpm format
 VITE_API_BASE_URL=http://localhost:3000/api
 ```
 
+When deploying to Vercel, set `VITE_API_BASE_URL` in the project settings for the
+same environment you are deploying (Production or Preview) and redeploy after
+changing it. Vite inlines `import.meta.env` values at build time, so a missing
+variable will not update until the app is rebuilt.
+
 ## 📊 Performance Considerations
 
 ### Bundle Size

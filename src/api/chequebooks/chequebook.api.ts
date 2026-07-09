@@ -123,6 +123,29 @@ export const chequebookApi = {
     return res.data;
   },
 
+  validateBookRange: async (params: {
+    branchId: string;
+    bookNoFrom: number;
+    bookNoTo: number;
+  }): Promise<{ valid: boolean; error?: string }> => {
+    const res = await apiClient.get<{ valid: boolean; error?: string }>(
+      `/chequebooks/validate-book-range?branchId=${encodeURIComponent(params.branchId)}&bookNoFrom=${params.bookNoFrom}&bookNoTo=${params.bookNoTo}`
+    );
+    if (res.error) throw new Error(res.error);
+    return res.data || { valid: true };
+  },
+
+  validatePageRange: async (params: {
+    mvNoFrom: number;
+    mvNoTo: number;
+  }): Promise<{ valid: boolean; error?: string }> => {
+    const res = await apiClient.get<{ valid: boolean; error?: string }>(
+      `/chequebooks/validate-page-range?mvNoFrom=${params.mvNoFrom}&mvNoTo=${params.mvNoTo}`
+    );
+    if (res.error) throw new Error(res.error);
+    return res.data || { valid: true };
+  },
+
   getAuthorizedUsers: async (branchId: string): Promise<Array<{ id: string; name: string }>> => {
     const res = await apiClient.get<Array<{ id: string; name: string }>>(
       `/chequebooks/users?branchId=${encodeURIComponent(branchId)}`
@@ -229,8 +252,7 @@ export const chequebookApi = {
     const res = await apiClient.get<IChequeBookCashierReturnGroup[]>(
       `/chequebooks/cashier-return/search?bankAccountCode=${encodeURIComponent(
         params.bankAccountCode
-      )}&bookNo=${params.bookNo}&chequeNoFrom=${params.chequeNoFrom}&chequeNoTo=${
-        params.chequeNoTo
+      )}&bookNo=${params.bookNo}&chequeNoFrom=${params.chequeNoFrom}&chequeNoTo=${params.chequeNoTo
       }`
     );
     if (res.error) throw new Error(res.error);

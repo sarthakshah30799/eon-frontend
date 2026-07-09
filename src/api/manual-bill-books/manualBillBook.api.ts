@@ -39,8 +39,6 @@ export interface ICreateManualBook {
 export interface IApproveRejectManualBook {
   status: 'Approved' | 'Rejected';
   approvalRemarks?: string;
-  fromDate?: string;
-  toDate?: string;
 }
 
 export interface IManualBookAssignmentPayload {

@@ -124,8 +124,6 @@ export const ManualBillBookListView = () => {
   const [selectedBook, setSelectedBook] = useState<IManualBook | null>(null);
   const [approvalStatus, setApprovalStatus] =
     useState<ManualBillBookReviewStatus>(ManualBillBookStatusEnum.APPROVED);
-  const [fromDate, setFromDate] = useState('');
-  const [toDate, setToDate] = useState('');
   const [approvalRemarks, setApprovalRemarks] = useState('');
 
   const reviewStatusOptions = useMemo<AsyncSelectOption[]>(
@@ -309,8 +307,6 @@ export const ManualBillBookListView = () => {
         data: {
           status: approvalStatus,
           approvalRemarks,
-          fromDate: fromDate || undefined,
-          toDate: toDate || undefined,
         },
       });
       toast.success(
@@ -514,24 +510,7 @@ export const ManualBillBookListView = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Input
-                      type="date"
-                      label="From Date"
-                      value={fromDate}
-                      onChange={e => setFromDate(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Input
-                      type="date"
-                      label="To Date"
-                      value={toDate}
-                      onChange={e => setToDate(e.target.value)}
-                    />
-                  </div>
-                </div>
+
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1">
@@ -585,15 +564,6 @@ export const ManualBillBookListView = () => {
                         ].join(' ')}
                       >
                         {selectedBook.status}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="block text-slate-400 font-semibold mb-0.5">
-                        Date Range
-                      </span>
-                      <span>
-                        {selectedBook.fromDate || 'N/A'} to{' '}
-                        {selectedBook.toDate || 'N/A'}
                       </span>
                     </div>
                   </div>

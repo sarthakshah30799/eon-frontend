@@ -87,6 +87,26 @@ const BulkDispatchFormFields = () => {
     }
   }, [bookNoFrom, bookNoTo, vouchersPerBook, mvNoFrom, form]);
 
+  const mvNoTo = useWatch({ name: 'mvNoTo' });
+  // Validations are handled natively by yup schema test async callbacks
+
+  // Debounced trigger validation on dependent changes
+  useEffect(() => {
+    if (!bookNoFrom || !bookNoTo) return;
+    const timer = setTimeout(() => {
+      form.trigger('bookNoFrom');
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [bookNoFrom, bookNoTo, form]);
+
+  useEffect(() => {
+    if (!mvNoFrom || !mvNoTo) return;
+    const timer = setTimeout(() => {
+      form.trigger('mvNoFrom');
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [mvNoFrom, mvNoTo, form]);
+
   const { user } = useAuth();
   const isAdmin = user?.isAdmin === true;
   const isHoStaff = user?.isHoStaff === true;

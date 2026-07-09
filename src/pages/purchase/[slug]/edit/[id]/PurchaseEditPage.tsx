@@ -96,7 +96,6 @@ const PurchaseEditPage = () => {
   const defaultValues = useMemo(() => {
     if (!transaction) {
       return createEmptyPurchaseFormValues(
-        branchProfile?.code ?? '',
         getPurchaseTransactionType(purchasePageType),
         getPurchaseTradeMode(purchasePageType),
         purchasePageType,

@@ -85,7 +85,6 @@ export const PurchaseCreateView = ({
   const defaultValues = useMemo(
     () =>
       createEmptyPurchaseFormValues(
-        branchProfile?.code ?? '',
         getPurchaseTransactionType(purchasePageType),
         getPurchaseTradeMode(purchasePageType),
         purchasePageType,

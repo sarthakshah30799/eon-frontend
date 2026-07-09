@@ -1,4 +1,4 @@
-import { useCallback, useRef, type ChangeEvent } from 'react';
+import { useCallback, useState, useRef, type ChangeEvent } from 'react';
 import toast from 'react-hot-toast';
 import { useFieldArray, useFormContext } from 'react-hook-form';
 import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
@@ -142,6 +142,7 @@ export const PartyProfileCommissionRulesFieldArray = ({
 }) => {
   const form = useFormContext<ICreatePartyProfile>();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [isDownloadingTemplate, setIsDownloadingTemplate] = useState(false);
   const { uploadAgentCommissionTemplate, isPending } =
     useUploadAgentCommissionTemplate(partyProfileId || '');
   const { fields, append, remove } = useFieldArray({
@@ -157,6 +158,7 @@ export const PartyProfileCommissionRulesFieldArray = ({
     }
 
     try {
+      setIsDownloadingTemplate(true);
       const csv = await partyProfileApi.getAgentCommissionTemplate(partyProfileId);
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
       const url = URL.createObjectURL(blob);
@@ -171,6 +173,8 @@ export const PartyProfileCommissionRulesFieldArray = ({
       toast.error(
         error instanceof Error ? error.message : 'Failed to download template'
       );
+    } finally {
+      setIsDownloadingTemplate(false);
     }
   };
 
@@ -197,16 +201,19 @@ export const PartyProfileCommissionRulesFieldArray = ({
                 <Button
                   type="button"
                   variant="outline"
+                  loading={isDownloadingTemplate}
+                  disabled={isDownloadingTemplate}
                   onClick={() => void handleDownloadTemplate()}
                 >
                   Download Current Template
                 </Button>
                 <Button
                   type="button"
+                  loading={isPending}
                   disabled={!canModify || isPending || isBusy}
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  Upload Commission CSV
+                  Upload Commission File
                 </Button>
               </>
             ) : null}
@@ -244,7 +251,7 @@ export const PartyProfileCommissionRulesFieldArray = ({
         <input
           ref={fileInputRef}
           type="file"
-          accept=".csv,text/csv"
+          accept=".csv,text/csv,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
           className="hidden"
           disabled={!canModify || isPending || isBusy}
           onChange={event => {

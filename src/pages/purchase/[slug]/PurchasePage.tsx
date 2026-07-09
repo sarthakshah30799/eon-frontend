@@ -7,7 +7,7 @@ import { NotFoundState } from '@/components/ui/not-found-state';
 import { Table, type TableColumnDef } from '@/components/ui/table';
 import { useAuth } from '@/lib/AuthContext';
 import { transactionsApi } from '@/api/transactions';
-import type { ITransactionEntity } from '@/modules/transactions';
+import { TransactionStatusEnum, type ITransactionEntity } from '@/modules/transactions';
 import {
   getPurchasePageBasePath,
   getPurchasePageTitle,
@@ -124,11 +124,11 @@ const PurchasePageView = ({ purchasePageType }: PurchasePageViewProps) => {
           <span
             className={[
               'inline-flex rounded px-2 py-0.5 text-[10px] font-semibold',
-              row.original.status === 'APPROVED'
+              row.original.status === TransactionStatusEnum.APPROVED
                 ? 'bg-emerald-100 text-emerald-800'
-                : row.original.status === 'REJECTED'
+                : row.original.status === TransactionStatusEnum.REJECTED
                   ? 'bg-rose-100 text-rose-800'
-                  : row.original.status === 'PENDING'
+                  : row.original.status === TransactionStatusEnum.PENDING
                     ? 'bg-amber-100 text-amber-800'
                     : 'bg-slate-100 text-slate-700',
             ].join(' ')}

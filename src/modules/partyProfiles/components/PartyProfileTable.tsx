@@ -3,6 +3,7 @@ import { PencilSquareIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button1';
 import { Table, type TableColumnDef } from '@/components/ui/table';
 import { usePermission } from '@/hooks';
+import { useAuth } from '@/lib/AuthContext';
 import type { IPartyProfile } from '../types/partyProfileTypes';
 import { PartyProfileDocumentsActionButton } from './PartyProfileDocumentsActionButton';
 
@@ -17,6 +18,11 @@ interface PartyProfileTableProps {
 
 interface PartyProfileTableRow {
   id: string;
+  createdBy: {
+    id: string;
+    name: string;
+  };
+  createdByName: string;
   type: string;
   code: string;
   name: string;
@@ -35,24 +41,33 @@ export const PartyProfileTable = ({
   searchPlaceholder,
 }: PartyProfileTableProps) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { canModify, canView } = usePermission(
     selectedType ? `/party-profiles/${selectedType}` : '/party-profiles'
   );
 
   const rows: PartyProfileTableRow[] = clients.map(client => ({
     id: client.id,
+    createdBy: client.createdBy,
+    createdByName: client.createdBy.name,
     type: client.type,
     code: client.code,
     name: client.name,
     city: client.city,
     pinCode: client.pinCode,
     phoneNo: client.phoneNo || '',
+    createdBy: client.createdBy,
     active: client.active ? 'Active' : 'Inactive',
   }));
 
   const columns: TableColumnDef<PartyProfileTableRow>[] = [
     { accessorKey: 'code', header: 'Client Code' },
     { accessorKey: 'name', header: 'Client Name' },
+    {
+      accessorKey: 'createdByName',
+      header: 'Created By',
+      cell: ({ row }) => row.original.createdByName,
+    },
     { accessorKey: 'city', header: 'City' },
     { accessorKey: 'pinCode', header: 'Pin Code' },
     { accessorKey: 'phoneNo', header: 'Phone No.' },
@@ -68,6 +83,9 @@ export const PartyProfileTable = ({
       },
       cell: ({ row }) => {
         const clientId = row.original.id;
+        const canEditThisProfile =
+          canModify &&
+          (user?.isAdmin === true || row.original.createdBy.id === user?.id);
 
         if (!canModify && !canView) return null;
 
@@ -81,7 +99,7 @@ export const PartyProfileTable = ({
             />
             <Button
               type="button"
-              aria-label={canModify ? 'Edit party profile' : 'View party profile'}
+              aria-label={canEditThisProfile ? 'Edit party profile' : 'View party profile'}
               variant="ghost"
               size="icon"
               className="rounded-sm bg-transparent text-black! hover:bg-surface-secondary hover:text-text-primary"
@@ -92,7 +110,7 @@ export const PartyProfileTable = ({
                 });
               }}
             >
-              {canModify ? (
+              {canEditThisProfile ? (
                 <PencilSquareIcon className="h-5 w-5" />
               ) : (
                 <EyeIcon className="h-5 w-5" />

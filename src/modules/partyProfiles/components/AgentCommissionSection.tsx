@@ -1,4 +1,4 @@
-import { useMemo, useRef, type ChangeEvent } from 'react';
+import { useMemo, useRef, useState, type ChangeEvent } from 'react';
 import toast from 'react-hot-toast';
 import { Button, CardSection, Table, type TableColumnDef } from '@/components/ui';
 import { partyProfileApi } from '@/api/partyProfile';
@@ -24,6 +24,7 @@ export const AgentCommissionSection = ({
   isBusy = false,
 }: AgentCommissionSectionProps) => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [isDownloadingTemplate, setIsDownloadingTemplate] = useState(false);
   const { uploadAgentCommissionTemplate, isPending } =
     useUploadAgentCommissionTemplate(partyProfileId);
 
@@ -71,6 +72,7 @@ export const AgentCommissionSection = ({
 
   const handleDownloadTemplate = async () => {
     try {
+      setIsDownloadingTemplate(true);
       const csv = await partyProfileApi.getAgentCommissionTemplate(partyProfileId);
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
       const url = URL.createObjectURL(blob);
@@ -85,6 +87,8 @@ export const AgentCommissionSection = ({
       toast.error(
         error instanceof Error ? error.message : 'Failed to download template'
       );
+    } finally {
+      setIsDownloadingTemplate(false);
     }
   };
 
@@ -108,16 +112,19 @@ export const AgentCommissionSection = ({
           <Button
             type="button"
             variant="outline"
+            loading={isDownloadingTemplate}
+            disabled={isDownloadingTemplate}
             onClick={() => void handleDownloadTemplate()}
           >
             Download Current Template
           </Button>
           <Button
             type="button"
+            loading={isPending}
             disabled={!canModify || isPending || isBusy}
             onClick={() => fileInputRef.current?.click()}
           >
-            Upload Commission CSV
+            Upload Commission File
           </Button>
         </div>
       </div>
@@ -125,7 +132,7 @@ export const AgentCommissionSection = ({
       <input
         ref={fileInputRef}
         type="file"
-        accept=".csv,text/csv"
+        accept=".csv,text/csv,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         className="hidden"
         disabled={!canModify || isPending || isBusy}
         onChange={event => {

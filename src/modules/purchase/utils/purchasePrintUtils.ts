@@ -507,7 +507,7 @@ export const buildPurchasePrintHtml = ({
             <div class="sign-box">
               <div>Signature of Customer</div>
               <div style="height: 42px;"></div>
-              <div><strong>For MARAEKAT INFOTECH LTD</strong></div>
+              <div><strong>For ${escapeHtml(company?.name || '')}</strong></div>
               <div>Authorized Signatory</div>
             </div>
           </div>

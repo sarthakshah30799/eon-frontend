@@ -1,5 +1,13 @@
-import type { PartyProfileType } from '@/modules/partyProfiles/constants';
-import type { TradeMode, TransactionType } from '@/modules/transactions';
+import {
+  PartyProfileTypeEnum,
+  type PartyProfileType,
+} from '@/modules/partyProfiles/types/partyProfileTypes';
+import {
+  TradeModeEnum,
+  TransactionTypeEnum,
+  type TradeMode,
+  type TransactionType,
+} from '@/modules/transactions';
 
 export const PurchasePageTypeEnum = {
   PURCHASE_FFMC: 'PURCHASE_FFMC',
@@ -43,31 +51,37 @@ const PURCHASE_PAGE_CONFIG_BY_TYPE: Record<
 > = {
   [PurchasePageTypeEnum.PURCHASE_FFMC]: {
     title: 'Purchase FFMC/Ads',
-    partyProfileTypes: ['FFMC', 'AUTHORISED_DEALER'],
+    partyProfileTypes: [
+      PartyProfileTypeEnum.FFMC,
+      PartyProfileTypeEnum.AUTHORISED_DEALER,
+    ],
   },
   [PurchasePageTypeEnum.SALE_FFMC]: {
     title: 'Sale FFMC/Ads',
-    partyProfileTypes: ['FFMC', 'AUTHORISED_DEALER'],
+    partyProfileTypes: [
+      PartyProfileTypeEnum.FFMC,
+      PartyProfileTypeEnum.AUTHORISED_DEALER,
+    ],
   },
   [PurchasePageTypeEnum.PURCHASE_RMC]: {
     title: 'Purchase RMC',
-    partyProfileTypes: ['RMC'],
+    partyProfileTypes: [PartyProfileTypeEnum.RMC],
   },
   [PurchasePageTypeEnum.PURCHASE_FOREX]: {
     title: 'Purchase Forex',
-    partyProfileTypes: ['FOREX_CORRESPONDENT'],
+    partyProfileTypes: [PartyProfileTypeEnum.FOREX_CORRESPONDENT],
   },
   [PurchasePageTypeEnum.PURCHASE_FOREIGN]: {
     title: 'Purchase Foreign',
-    partyProfileTypes: ['FOREIGN_CORRESPONDENT'],
+    partyProfileTypes: [PartyProfileTypeEnum.FOREIGN_CORRESPONDENT],
   },
   [PurchasePageTypeEnum.PURCHASE_MISC]: {
     title: 'Purchase Misc',
-    partyProfileTypes: ['MISC_PROFILE'],
+    partyProfileTypes: [PartyProfileTypeEnum.MISC_PROFILE],
   },
   [PurchasePageTypeEnum.PURCHASE_FRANCHISE]: {
     title: 'Purchase Franchise',
-    partyProfileTypes: ['FRANCHISE'],
+    partyProfileTypes: [PartyProfileTypeEnum.FRANCHISE],
   },
 };
 
@@ -141,11 +155,11 @@ export const getPurchaseTransactionType = (
 ): TransactionType => {
   switch (pageType) {
     case PurchasePageTypeEnum.SALE_FFMC:
-      return 'SALE';
+      return TransactionTypeEnum.SALE;
     case PurchasePageTypeEnum.PURCHASE_FFMC:
-      return 'PURCHASE';
+      return TransactionTypeEnum.PURCHASE;
     default:
-      return 'PURCHASE';
+      return TransactionTypeEnum.PURCHASE;
   }
 };
 
@@ -155,9 +169,9 @@ export const getPurchaseTradeMode = (
   switch (pageType) {
     case PurchasePageTypeEnum.SALE_FFMC:
     case PurchasePageTypeEnum.PURCHASE_FFMC:
-      return 'BULK';
+      return TradeModeEnum.BULK;
     default:
-      return 'BULK';
+      return TradeModeEnum.BULK;
   }
 };
 

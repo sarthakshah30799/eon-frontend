@@ -61,8 +61,10 @@ const isPathActive = (currentPath: string, targetPath?: string) => {
   const normalizedTargetPath = normalizePath(targetPath);
 
   return (
-    matchPath({ path: normalizedTargetPath, end: true }, normalizedCurrentPath) !==
-    null
+    matchPath(
+      { path: normalizedTargetPath, end: true },
+      normalizedCurrentPath
+    ) !== null
   );
 };
 
@@ -97,10 +99,7 @@ const resolveMenuPath = (path?: string, basePath = '') => {
   return `${basePath}${path.startsWith('/') ? path : `/${path}`}`;
 };
 
-const mapMenuNodeToItem = (
-  node: IMenu,
-  basePath = ''
-): SidebarItem | null => {
+const mapMenuNodeToItem = (node: IMenu, basePath = ''): SidebarItem | null => {
   const children = (node.children ?? [])
     .map(child => mapMenuNodeToItem(child, node.path ?? basePath))
     .filter(Boolean) as SidebarItem[];
@@ -154,12 +153,32 @@ interface SidebarTreeProps {
   onNavigate: (path?: string) => void;
   isCollapsed: boolean;
   parentKey: string;
-  openByParent: Record<string, string>;
-  collapsedByParent: Record<string, string>;
-  setOpenByParent: Dispatch<SetStateAction<Record<string, string>>>;
-  setCollapsedByParent: Dispatch<SetStateAction<Record<string, string>>>;
+  openByParent: Record<string, string[]>;
+  setOpenByParent: Dispatch<SetStateAction<Record<string, string[]>>>;
   depth?: number;
 }
+
+const toggleItemInRecord = (
+  prev: Record<string, string[]>,
+  parentKey: string,
+  itemId: string
+) => {
+  const current = prev[parentKey] ?? [];
+  const isOpen = current.includes(itemId);
+  const nextItems = isOpen
+    ? current.filter(openId => openId !== itemId)
+    : [...current, itemId];
+
+  const next = { ...prev };
+
+  if (nextItems.length === 0) {
+    delete next[parentKey];
+  } else {
+    next[parentKey] = nextItems;
+  }
+
+  return next;
+};
 
 const SidebarTree = ({
   items,
@@ -168,9 +187,7 @@ const SidebarTree = ({
   isCollapsed,
   parentKey,
   openByParent,
-  collapsedByParent,
   setOpenByParent,
-  setCollapsedByParent,
   depth = 0,
 }: SidebarTreeProps) => {
   return (
@@ -184,14 +201,14 @@ const SidebarTree = ({
               key={item.id}
               type="button"
               className={[
-                'group flex w-full cursor-pointer items-center rounded-md text-left text-sm transition',
+                'group flex w-full cursor-pointer items-center rounded-none text-left text-sm transition',
                 depth === 0
                   ? 'px-2 py-2'
                   : depth === 1
                     ? 'pl-5 pr-2 py-2'
                     : 'pl-8 pr-2 py-2',
                 isActive
-                  ? 'bg-primary-500 text-white shadow-sm'
+                  ? 'bg-primary-500 text-white'
                   : 'text-sidebar-muted hover:text-white',
               ].join(' ')}
               aria-current={isActive ? 'page' : undefined}
@@ -205,48 +222,28 @@ const SidebarTree = ({
           );
         }
 
-        const isActiveGroup = item.children.some(child =>
-          isMenuItemActive(child, currentPath)
-        );
-        const isOpen =
-          openByParent[parentKey] === item.id ||
-          (isActiveGroup && collapsedByParent[parentKey] !== item.id);
+        const isOpen = openByParent[parentKey]?.includes(item.id) ?? false;
 
         return (
           <div key={item.id} className="space-y-1">
             <button
               type="button"
               className={[
-                'group flex w-full cursor-pointer items-center justify-between gap-2 rounded-md text-left text-sm font-medium transition',
+                'group flex w-full cursor-pointer items-center justify-between gap-2 rounded-none text-left text-sm font-medium transition',
                 depth === 0
                   ? 'px-2 py-2'
                   : depth === 1
                     ? 'pl-5 pr-2 py-2'
                     : 'pl-8 pr-2 py-2',
                 isOpen
-                  ? 'bg-sidebar-accent text-white shadow-sm border-l-2 border-primary-500'
+                  ? 'bg-sidebar-accent text-white border-l-2 border-primary-500'
                   : 'text-sidebar-muted! hover:text-white',
               ].join(' ')}
               aria-expanded={isOpen}
               onClick={() => {
-                setOpenByParent(prev => {
-                  const next = { ...prev };
-                  if (next[parentKey] === item.id) {
-                    delete next[parentKey];
-                  } else {
-                    next[parentKey] = item.id;
-                  }
-                  return next;
-                });
-                setCollapsedByParent(prev => {
-                  const next = { ...prev };
-                  if (next[parentKey] === item.id) {
-                    delete next[parentKey];
-                  } else if (isOpen) {
-                    next[parentKey] = item.id;
-                  }
-                  return next;
-                });
+                setOpenByParent(prev =>
+                  toggleItemInRecord(prev, parentKey, item.id)
+                );
               }}
               title={item.label}
             >
@@ -267,7 +264,10 @@ const SidebarTree = ({
             </button>
 
             {isOpen && !isCollapsed && (
-              <div className="ml-2 border-l border-sidebar-accent pl-2.5">
+              <div
+                className=" rounded-none pl-4.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),inset_0_0_24px_rgba(0,0,0,0.2)]"
+                style={{ backgroundColor: '#202d3b' }}
+              >
                 <SidebarTree
                   items={item.children}
                   currentPath={currentPath}
@@ -275,9 +275,7 @@ const SidebarTree = ({
                   isCollapsed={isCollapsed}
                   parentKey={getParentKey(parentKey, item.id)}
                   openByParent={openByParent}
-                  collapsedByParent={collapsedByParent}
                   setOpenByParent={setOpenByParent}
-                  setCollapsedByParent={setCollapsedByParent}
                   depth={depth + 1}
                 />
               </div>
@@ -298,11 +296,10 @@ export const Sidebar = ({
   const navigate = useNavigate();
   const location = useLocation();
   const { tree: createdPages } = useMasterPages();
-  const [openSectionId, setOpenSectionId] = useState<string | null>(null);
-  const [openByParent, setOpenByParent] = useState<Record<string, string>>({});
-  const [collapsedByParent, setCollapsedByParent] = useState<
-    Record<string, string>
-  >({});
+  const [openSectionIds, setOpenSectionIds] = useState<string[]>([]);
+  const [openByParent, setOpenByParent] = useState<Record<string, string[]>>(
+    {}
+  );
 
   const { data: menuTree = [], isLoading: isMenuTreeLoading } = useQuery({
     queryKey: ['menu-tree'],
@@ -323,30 +320,29 @@ export const Sidebar = ({
   });
 
   const sections = useMemo<SidebarSection[]>(() => {
-    const dynamicSections = (menuTree || [])
-      .map<SidebarSection>(root => {
-        const rootItem = mapMenuNodeToItem(root);
-        if (!rootItem) {
-          return {
-            title: root.name,
-            items: [],
-          } satisfies SidebarGroupSection;
-        }
+    const dynamicSections = (menuTree || []).map<SidebarSection>(root => {
+      const rootItem = mapMenuNodeToItem(root);
+      if (!rootItem) {
+        return {
+          title: root.name,
+          items: [],
+        } satisfies SidebarGroupSection;
+      }
 
-        if ('children' in rootItem) {
-          return {
-            title: rootItem.label,
-            items: rootItem.children,
-          } satisfies SidebarGroupSection;
-        }
-
+      if ('children' in rootItem) {
         return {
           title: rootItem.label,
-          id: rootItem.id,
-          label: rootItem.label,
-          path: rootItem.path,
-        } satisfies SidebarLeafSection;
-      });
+          items: rootItem.children,
+        } satisfies SidebarGroupSection;
+      }
+
+      return {
+        title: rootItem.label,
+        id: rootItem.id,
+        label: rootItem.label,
+        path: rootItem.path,
+      } satisfies SidebarLeafSection;
+    });
 
     const masterPagesSection: SidebarSection = {
       title: 'Master Pages',
@@ -359,45 +355,6 @@ export const Sidebar = ({
       isGroupSection(section) ? section.items.length > 0 : true
     );
   }, [createdPages, menuTree]);
-
-  const activeSectionId = useMemo(() => {
-    const firstOpenSection = sections.find(section =>
-      isGroupSection(section)
-        ? section.items.some(item => isMenuItemActive(item, location.pathname))
-        : isPathActive(location.pathname, section.path)
-    );
-
-    return firstOpenSection?.title ?? sections[0]?.title ?? null;
-  }, [location.pathname, sections]);
-
-  const activeOpenByParent = useMemo(() => {
-    const nextOpenByParent: Record<string, string> = {};
-
-    const collectOpenGroups = (items: SidebarItem[], parentKey: string) => {
-      for (const item of items) {
-        if (!isGroupItem(item)) continue;
-
-        if (isMenuItemActive(item, location.pathname)) {
-          nextOpenByParent[parentKey] = item.id;
-          collectOpenGroups(item.children, getParentKey(parentKey, item.id));
-        }
-      }
-    };
-
-    sections.forEach(section => {
-      if (isGroupSection(section)) {
-        collectOpenGroups(section.items, section.title);
-      }
-    });
-    return nextOpenByParent;
-  }, [location.pathname, sections]);
-
-  const resolvedOpenByParent = useMemo(
-    () => ({ ...activeOpenByParent, ...openByParent }),
-    [activeOpenByParent, openByParent]
-  );
-
-  const resolvedCollapsedByParent = collapsedByParent;
 
   const handleMenuClick = (path?: string) => {
     if (path) {
@@ -508,7 +465,7 @@ export const Sidebar = ({
             <button
               type="button"
               className={[
-                'group flex w-full cursor-pointer items-center rounded-md text-left text-sm transition',
+                'group flex w-full cursor-pointer items-center rounded-none text-left text-sm transition',
                 isPathActive(location.pathname, '/')
                   ? 'bg-sidebar-accent text-white shadow-sm border-l-2 border-primary-500'
                   : 'bg-transparent text-sidebar-muted! hover:text-white!',
@@ -516,7 +473,9 @@ export const Sidebar = ({
                   ? 'mx-auto h-10 w-10 justify-center rounded-full px-0'
                   : 'px-2.5 py-2.5',
               ].join(' ')}
-              aria-current={isPathActive(location.pathname, '/') ? 'page' : undefined}
+              aria-current={
+                isPathActive(location.pathname, '/') ? 'page' : undefined
+              }
               onClick={() => handleMenuClick('/')}
               title="Dashboard"
             >
@@ -532,8 +491,7 @@ export const Sidebar = ({
             ) : (
               sections.map(section => {
                 if (isGroupSection(section)) {
-                  const isOpen =
-                    (openSectionId ?? activeSectionId) === section.title;
+                  const isOpen = openSectionIds.includes(section.title);
                   const isActiveSection = section.items.some(item =>
                     isMenuItemActive(item, location.pathname)
                   );
@@ -543,17 +501,23 @@ export const Sidebar = ({
                       <button
                         type="button"
                         className={[
-                          'group flex w-full cursor-pointer items-center justify-between rounded-md text-left text-sm font-medium transition',
+                          'group flex w-full cursor-pointer items-center justify-between rounded-none text-left text-sm font-medium transition',
                           isActiveSection
                             ? 'bg-sidebar-accent text-white shadow-sm border-l-2 border-primary-500'
                             : 'bg-transparent text-sidebar-muted! hover:text-white!',
                           isCollapsed
-                            ? 'mx-auto h-10 w-10 justify-center rounded-full px-0'
+                            ? 'mx-auto h-10 w-10 justify-center rounded-none px-0'
                             : 'px-2.5 py-2.5',
                         ].join(' ')}
+                        style={{
+                          boxShadow:
+                            '0 1px 0 rgba(255, 255, 255, 0.5), 0 8px 18px rgba(0, 0, 0, 0.08)',
+                        }}
                         onClick={() =>
-                          setOpenSectionId(prev =>
-                            prev === section.title ? null : section.title
+                          setOpenSectionIds(prev =>
+                            prev.includes(section.title)
+                              ? prev.filter(id => id !== section.title)
+                              : [...prev, section.title]
                           )
                         }
                         aria-expanded={isOpen}
@@ -572,17 +536,18 @@ export const Sidebar = ({
                       </button>
 
                       {isOpen && !isCollapsed && (
-                        <div className="ml-2 border-l border-sidebar-accent pl-2 pt-1.5">
+                        <div
+                          className="rounded-none pl-4.5"
+                          style={{ backgroundColor: '#202d3b' }}
+                        >
                           <SidebarTree
                             items={section.items}
                             currentPath={location.pathname}
                             onNavigate={handleMenuClick}
                             isCollapsed={isCollapsed}
                             parentKey={section.title}
-                            openByParent={resolvedOpenByParent}
-                            collapsedByParent={resolvedCollapsedByParent}
+                            openByParent={openByParent}
                             setOpenByParent={setOpenByParent}
-                            setCollapsedByParent={setCollapsedByParent}
                           />
                         </div>
                       )}
@@ -597,7 +562,7 @@ export const Sidebar = ({
                     key={section.title}
                     type="button"
                     className={[
-                      'group flex w-full cursor-pointer items-center rounded-md text-left text-sm transition',
+                      'group flex w-full cursor-pointer items-center rounded-none text-left text-sm transition',
                       isActive
                         ? 'bg-sidebar-accent text-white shadow-sm border-l-2 border-primary-500'
                         : 'bg-transparent text-sidebar-muted! hover:text-white!',
@@ -634,7 +599,7 @@ export const Sidebar = ({
                       <button
                         type="button"
                         className={[
-                          'group flex w-full cursor-pointer items-center justify-between rounded-md text-left text-sm transition',
+                          'group flex w-full cursor-pointer items-center justify-between rounded-none text-left text-sm transition',
                           isMasterPagesActive
                             ? 'bg-sidebar-accent text-white shadow-sm border-l-2 border-primary-500'
                             : 'bg-transparent text-sidebar-muted! hover:bg-slate-50 hover:text-sidebar-ink!',
@@ -643,13 +608,13 @@ export const Sidebar = ({
                             : 'px-2.5 py-2.5',
                         ].join(' ')}
                         onClick={() =>
-                          setOpenSectionId(prev =>
-                            prev === 'Master Pages' ? null : 'Master Pages'
+                          setOpenSectionIds(prev =>
+                            prev.includes('Master Pages')
+                              ? prev.filter(id => id !== 'Master Pages')
+                              : [...prev, 'Master Pages']
                           )
                         }
-                        aria-expanded={
-                          (openSectionId ?? activeSectionId) === 'Master Pages'
-                        }
+                        aria-expanded={openSectionIds.includes('Master Pages')}
                         title="Master Pages"
                       >
                         <span className="flex min-w-0 items-center gap-2 truncate text-xs font-medium">
@@ -660,28 +625,26 @@ export const Sidebar = ({
                         {!isCollapsed && (
                           <span className="text-slate-400">
                             <SidebarChevron
-                              isOpen={
-                                (openSectionId ?? activeSectionId) ===
-                                'Master Pages'
-                              }
+                              isOpen={openSectionIds.includes('Master Pages')}
                             />
                           </span>
                         )}
                       </button>
 
-                      {(openSectionId ?? activeSectionId) === 'Master Pages' &&
+                      {openSectionIds.includes('Master Pages') &&
                         !isCollapsed && (
-                          <div className="ml-2 border-l border-sidebar-accent pl-2 pt-1.5">
+                          <div
+                            className="ml-2 rounded-none pl-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),inset_0_0_24px_rgba(0,0,0,0.2)]"
+                            // style={{ backgroundColor: '#202d3b' }}
+                          >
                             <SidebarTree
                               items={createdPages.map(mapMasterPageNodeToItem)}
                               currentPath={location.pathname}
                               onNavigate={handleMenuClick}
                               isCollapsed={isCollapsed}
                               parentKey="Master Pages"
-                              openByParent={resolvedOpenByParent}
-                              collapsedByParent={resolvedCollapsedByParent}
+                              openByParent={openByParent}
                               setOpenByParent={setOpenByParent}
-                              setCollapsedByParent={setCollapsedByParent}
                             />
                           </div>
                         )}

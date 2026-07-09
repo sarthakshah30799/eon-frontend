@@ -32,7 +32,7 @@ export const PartyProfileEditView = () => {
   const { user } = useAuth();
   const isAdminUser = user?.isAdmin === true;
   const isReviewer = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
-  const showReviewControls = Boolean(isReviewer && (isReviewMode || user?.isAdmin));
+  const showReviewControls = Boolean(isReviewer && isReviewMode);
 
   const { data: typeOptions = [], isLoading: isTypesLoading } = usePartyProfileTypes();
   const routeOptions = useMemo(
@@ -204,6 +204,9 @@ export const PartyProfileEditView = () => {
     );
   }
 
+  const canEditPartyProfile =
+    canModify && (isAdminUser || client.createdBy.id === user?.id);
+
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
@@ -216,13 +219,18 @@ export const PartyProfileEditView = () => {
       <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
         <PartyProfileForm
           defaultValues={defaultValues}
-          onSubmit={showReviewControls ? async () => undefined : handleSubmit}
+          onSubmit={
+            showReviewControls || !canEditPartyProfile
+              ? async () => undefined
+              : handleSubmit
+          }
           profileType={selectedApiType}
           onCancel={handleCancel}
           onReviewSubmit={handleReviewSubmit}
           isSubmitting={isPending || isReviewing}
-          disabled={showReviewControls ? true : !canModify}
+          disabled={showReviewControls ? true : !canEditPartyProfile}
           reviewMode={showReviewControls}
+          showSubmit={!showReviewControls && canEditPartyProfile}
           submitLabel="Save Changes"
           branchDisabled={!isAdminUser}
           currentId={id}

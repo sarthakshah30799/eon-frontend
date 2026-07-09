@@ -46,11 +46,10 @@ export const bulkDispatchSchema = yup.object().shape({
     .positive()
     .required('Check Book No. From is required')
     .test('book-range-overlap', 'Book range overlaps', async function (value) {
-      const { branchId, bookNoTo } = this.parent;
-      if (!branchId || value === undefined || value === null || isNaN(value) || bookNoTo === undefined || bookNoTo === null || isNaN(bookNoTo)) return true;
+      const { bookNoTo } = this.parent;
+      if (value === undefined || value === null || isNaN(value) || bookNoTo === undefined || bookNoTo === null || isNaN(bookNoTo)) return true;
       try {
         const res = await debouncedValidateBookRange({
-          branchId,
           bookNoFrom: value,
           bookNoTo,
         });

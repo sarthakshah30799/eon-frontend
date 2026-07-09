@@ -124,12 +124,11 @@ export const chequebookApi = {
   },
 
   validateBookRange: async (params: {
-    branchId: string;
     bookNoFrom: number;
     bookNoTo: number;
   }): Promise<{ valid: boolean; error?: string }> => {
     const res = await apiClient.get<{ valid: boolean; error?: string }>(
-      `/chequebooks/validate-book-range?branchId=${encodeURIComponent(params.branchId)}&bookNoFrom=${params.bookNoFrom}&bookNoTo=${params.bookNoTo}`
+      `/chequebooks/validate-book-range?bookNoFrom=${params.bookNoFrom}&bookNoTo=${params.bookNoTo}`
     );
     if (res.error) throw new Error(res.error);
     return res.data || { valid: true };

@@ -21,6 +21,42 @@ import {
 import { useListBranchProfiles } from '@/modules/branchProfile/hooks';
 import type { IBulkDispatchFormValues } from '../types';
 
+function debouncePromise<T extends (...args: any[]) => Promise<any>>(
+  fn: T,
+  delay: number
+): (...args: Parameters<T>) => Promise<Awaited<ReturnType<T>>> {
+  let timer: any;
+  let activeResolve: ((value: any) => void) | null = null;
+
+  return (...args: Parameters<T>) => {
+    if (activeResolve) {
+      activeResolve({ valid: true });
+    }
+    clearTimeout(timer);
+    return new Promise(resolve => {
+      activeResolve = resolve;
+      timer = setTimeout(async () => {
+        try {
+          const result = await fn(...args);
+          resolve(result);
+        } catch {
+          resolve({ valid: true });
+        }
+      }, delay);
+    });
+  };
+}
+
+const debouncedValidateBookRange = debouncePromise(
+  manualBillBookApi.validateBookRange,
+  500
+);
+
+const debouncedValidatePageRange = debouncePromise(
+  manualBillBookApi.validatePageRange,
+  500
+);
+
 const bulkDispatchSchema = yup.object().shape({
     dispatchDate: yup.string().required('Date is required'),
     branchId: yup.string().required('Branch is required'),
@@ -30,7 +66,29 @@ const bulkDispatchSchema = yup.object().shape({
         .typeError('Must be a number')
         .integer()
         .positive()
-        .required('Book No. From is required'),
+        .required('Book No. From is required')
+        .test('book-range-overlap', 'Book range overlaps', async function (value) {
+            const { bookNoTo } = this.parent;
+            if (value === undefined || value === null || isNaN(value) || bookNoTo === undefined || bookNoTo === null || isNaN(bookNoTo)) return true;
+            try {
+                const res = await debouncedValidateBookRange({
+                    bookNoFrom: value,
+                    bookNoTo,
+                });
+                if (!res.valid) {
+                    throw this.createError({
+                        path: 'bookNoFrom',
+                        message: res.error || 'Book range overlaps',
+                    });
+                }
+                return true;
+            } catch (err) {
+                if (err && typeof err === 'object' && 'path' in err) {
+                    throw err;
+                }
+                return true;
+            }
+        }),
     bookNoTo: yup
         .number()
         .typeError('Must be a number')
@@ -50,7 +108,29 @@ const bulkDispatchSchema = yup.object().shape({
         .typeError('Must be a number')
         .integer()
         .positive()
-        .required('MV No. From is required'),
+        .required('MV No. From is required')
+        .test('page-range-overlap', 'Page range overlaps', async function (value) {
+            const { mvNoTo } = this.parent;
+            if (value === undefined || value === null || isNaN(value) || !mvNoTo || isNaN(parseInt(mvNoTo, 10))) return true;
+            try {
+                const res = await debouncedValidatePageRange({
+                    mvNoFrom: value,
+                    mvNoTo: parseInt(mvNoTo, 10),
+                });
+                if (!res.valid) {
+                    throw this.createError({
+                        path: 'mvNoFrom',
+                        message: res.error || 'Page range overlaps',
+                    });
+                }
+                return true;
+            } catch (err) {
+                if (err && typeof err === 'object' && 'path' in err) {
+                    throw err;
+                }
+                return true;
+            }
+        }),
     mvNoTo: yup.string(),
     assignedTo: yup.string().required('Assigned To is required'),
     remarks: yup.string().optional(),
@@ -60,11 +140,7 @@ interface BulkDispatchFormProps {
     onSuccess: () => void;
 }
 
-export const BulkDispatchForm = ({ onSuccess }: BulkDispatchFormProps) => {
-    const navigate = useNavigate();
-    const { user, activeBranchId } = useAuth();
-    const isAdmin = user?.isAdmin === true;
-    const { submitManualBillBook } = useCreateManualBillBook();
+const BulkDispatchFormFields = () => {
     const form = useFormContext<IBulkDispatchFormValues>();
     const branchId = useWatch({ name: 'branchId', control: form.control });
     const dispatchDate = useWatch({
@@ -123,11 +199,23 @@ export const BulkDispatchForm = ({ onSuccess }: BulkDispatchFormProps) => {
         form.setValue('assignedTo', '');
     }, [branchId, form]);
 
+    // Debounced trigger validation on dependent changes
+    useEffect(() => {
+        if (!bookNoFrom || !bookNoTo) return;
+        const timer = setTimeout(() => {
+            form.trigger('bookNoFrom');
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [bookNoFrom, bookNoTo, form]);
+
+    const { user } = useAuth();
+    const isAdmin = user?.isAdmin === true;
     const isHoStaff = !!user?.isHoStaff;
     const { data: branches = [] } = useListBranchProfiles({
         activeOnly: true,
     });
     const { data: branchManagers = [] } = useListManualBillBookManagers(branchId);
+
     const loadBranches = async () => ({
         options: branches.map(branch => ({
             value: branch.id,
@@ -142,6 +230,59 @@ export const BulkDispatchForm = ({ onSuccess }: BulkDispatchFormProps) => {
         })),
         hasMore: false,
     });
+
+    return (
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <FormFieldInput name="dispatchDate" label="Date" type="date" />
+            <FormFieldInput
+                name="no"
+                label="NO"
+                disabled
+                placeholder="Auto-Generated"
+            />
+            <FormFieldSelect
+                name="branchId"
+                label="Branch"
+                loadOptions={loadBranches}
+                disabled={!isAdmin && !isHoStaff}
+            />
+            <FormFieldCategoryOption
+                name="transactionType"
+                label="Txn Type"
+                code={CategoryOptionCodeEnum.Transaction}
+                useValueAsId={true}
+                isCreatable={false}
+            />
+            <FormFieldInput name="bookNoFrom" label="Book No. From" type="number" />
+            <FormFieldInput name="bookNoTo" label="Book No. To" type="number" />
+            <div className="md:col-span-2">
+                <FormFieldInput
+                    name="vouchersPerBook"
+                    label="No Of Voucher Per Book"
+                    type="number"
+                />
+            </div>
+            <FormFieldInput name="mvNoFrom" label="MV No. From" type="number" />
+            <FormFieldInput name="mvNoTo" label="MV No. To" disabled />
+            {branchId && (
+                <FormFieldSelect
+                    key={branchId}
+                    name="assignedTo"
+                    label="Assigned To"
+                    loadOptions={loadAssignedTo}
+                />
+            )}
+            <FormFieldTextarea name="remarks" label="Remarks" rows={3} />
+        </div>
+    );
+};
+
+export const BulkDispatchForm = ({ onSuccess }: BulkDispatchFormProps) => {
+    const navigate = useNavigate();
+    const { user, activeBranchId } = useAuth();
+    const isAdmin = user?.isAdmin === true;
+    const { submitManualBillBook } = useCreateManualBillBook();
+
     const onCancel = () => {
         navigate('/manual-bill-books');
     };
@@ -182,48 +323,7 @@ export const BulkDispatchForm = ({ onSuccess }: BulkDispatchFormProps) => {
                 onCancel,
             }}
         >
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <FormFieldInput name="dispatchDate" label="Date" type="date" />
-                <FormFieldInput
-                    name="no"
-                    label="NO"
-                    disabled
-                    placeholder="Auto-Generated"
-                />
-                <FormFieldSelect
-                    name="branchId"
-                    label="Branch"
-                    loadOptions={loadBranches}
-                    disabled={!isAdmin && !isHoStaff}
-                />
-                <FormFieldCategoryOption
-                    name="transactionType"
-                    label="Txn Type"
-                    code={CategoryOptionCodeEnum.Transaction}
-                    useValueAsId={true}
-                    isCreatable={false}
-                />
-                <FormFieldInput name="bookNoFrom" label="Book No. From" type="number" />
-                <FormFieldInput name="bookNoTo" label="Book No. To" type="number" />
-                <div className="md:col-span-2">
-                    <FormFieldInput
-                        name="vouchersPerBook"
-                        label="No Of Voucher Per Book"
-                        type="number"
-                    />
-                </div>
-                <FormFieldInput name="mvNoFrom" label="MV No. From" type="number" />
-                <FormFieldInput name="mvNoTo" label="MV No. To" disabled />
-                {branchId && (
-                    <FormFieldSelect
-                        key={branchId}
-                        name="assignedTo"
-                        label="Assigned To"
-                        loadOptions={loadAssignedTo}
-                    />
-                )}
-                <FormFieldTextarea name="remarks" label="Remarks" rows={3} />
-            </div>
+            <BulkDispatchFormFields />
         </Form>
     );
 };

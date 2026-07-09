@@ -136,6 +136,15 @@ const joinAddress = (...parts: Array<string | null | undefined>) =>
 
 const formatReferenceValue = (value?: string | null) => value?.trim() || '-';
 
+const formatSignedAmount = (value?: string | null, decimals = 2) => {
+  const formatted = formatAmount(value, decimals);
+  if (formatted === '' || formatted === '0.00' || formatted === '0.0000') {
+    return formatted || Number(0).toFixed(decimals);
+  }
+
+  return formatted.startsWith('-') ? formatted : `-${formatted}`;
+};
+
 const getCustomerCopyLabel = (copyType: PurchasePrintCopyType) =>
   copyType === 'DUPLICATE_COPY' ? 'Duplicate Copy' : 'Original Copy';
 
@@ -164,7 +173,7 @@ export const buildPurchasePrintHtml = ({
     const rowTotal = Number(row.totalAmount || row.amount || 0);
     return sum + (Number.isFinite(rowTotal) ? rowTotal : 0);
   }, 0);
-  const payableAmount = totalAmount + additionalCharges;
+  const payableAmount = totalAmount - additionalCharges;
   const amountInWords = numberToWords(payableAmount);
 
   const itemRows = transaction.transactions
@@ -189,7 +198,7 @@ export const buildPurchasePrintHtml = ({
           <td>${index + 1}</td>
           <td>${escapeHtml(row.accountName || formatReferenceValue(row.accountId))}</td>
           <td class="right">${escapeHtml(formatAmount(row.gstAmount))}</td>
-          <td class="right">${escapeHtml(formatAmount(row.totalAmount || row.amount))}</td>
+          <td class="right">${escapeHtml(formatSignedAmount(row.totalAmount || row.amount))}</td>
         </tr>`
     )
     .join('');

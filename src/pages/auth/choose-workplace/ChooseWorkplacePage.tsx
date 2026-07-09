@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../../../lib/AuthContext';
-import { Button } from '../../../components/ui/button1/Button';
+import { AsyncSelect, Button, type AsyncSelectResponse } from '../../../components/ui';
 import { Loader } from '../../../components/ui/loader';
 import { toast } from 'react-hot-toast';
 import type { IUserAssignment } from '../../../modules/auth/types';
@@ -39,7 +39,7 @@ const ChooseWorkplacePage: React.FC = () => {
   const visibleBranches = useMemo(() => {
     return Array.from(assignmentsByBranch.entries()).map(([branchId, branchAssignments]) => ({
       id: branchId,
-      name: branchAssignments[0]?.branchName || 'Unknown Branch',
+      name: branchAssignments[0]?.branchName ?? 'Unknown Branch',
     }));
   }, [assignmentsByBranch]);
 
@@ -64,6 +64,44 @@ const ChooseWorkplacePage: React.FC = () => {
 
   const effectiveSelectedCounterId =
     selectedCounterId || visibleCounters[0]?.counterId || '';
+
+  const branchOptions = useMemo(
+    () =>
+      visibleBranches.map(branch => ({
+        value: branch.id,
+        label: branch.name,
+      })),
+    [visibleBranches]
+  );
+
+  const counterOptions = useMemo(
+    () =>
+      visibleCounters.map(counter => ({
+        value: counter.counterId,
+        label: counter.counterName ?? '',
+      })),
+    [visibleCounters]
+  );
+
+  const loadBranchOptions = async (inputValue: string): Promise<AsyncSelectResponse> => ({
+    options: inputValue
+      ? branchOptions.filter(option =>
+          option.label.toLowerCase().includes(inputValue.toLowerCase())
+        )
+      : branchOptions,
+    hasMore: false,
+  });
+
+  const loadCounterOptions = async (
+    inputValue: string
+  ): Promise<AsyncSelectResponse> => ({
+    options: inputValue
+      ? counterOptions.filter(option =>
+          option.label.toLowerCase().includes(inputValue.toLowerCase())
+        )
+      : counterOptions,
+    hasMore: false,
+  });
 
   if (isAuthLoading) {
     return <Loader />;
@@ -183,48 +221,42 @@ const ChooseWorkplacePage: React.FC = () => {
                 <label className="block text-sm font-medium text-text-secondary">
                   Branch
                 </label>
-                <select
-                  value={effectiveSelectedBranchId}
-                  onChange={e => {
-                    setSelectedBranchId(e.target.value);
+                <AsyncSelect
+                  value={
+                    branchOptions.find(
+                      option => option.value === effectiveSelectedBranchId
+                    ) ?? null
+                  }
+                  onChange={option => {
+                    const nextOption = Array.isArray(option) ? option[0] : option;
+                    setSelectedBranchId(nextOption ? String(nextOption.value) : '');
                     setSelectedCounterId('');
                   }}
-                  className="block w-full rounded-sm border border-border-secondary bg-surface-primary px-3 py-2.5 text-text-primary shadow-sm focus:border-primary-500 focus:ring-primary-500 focus-visible:outline-primary-500 focus-visible:ring-1 disabled:cursor-not-allowed disabled:bg-surface-secondary disabled:text-text-tertiary transition"
-                  required
-                >
-                  <option value="" disabled>
-                    Select Branch
-                  </option>
-                  {visibleBranches.map(b => (
-                    <option key={b.id} value={b.id}>
-                      {b.name}
-                    </option>
-                  ))}
-                </select>
+                  loadOptions={loadBranchOptions}
+                  placeholder="Select Branch"
+                  isSearchable={false}
+                />
               </div>
 
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-text-secondary">
                   Counter
                 </label>
-                <select
-                  value={effectiveSelectedCounterId}
-                  onChange={e => setSelectedCounterId(e.target.value)}
-                  disabled={!effectiveSelectedBranchId}
-                  className="block w-full rounded-sm border border-border-secondary bg-surface-primary px-3 py-2.5 text-text-primary shadow-sm focus:border-primary-500 focus:ring-primary-500 focus-visible:outline-primary-500 focus-visible:ring-1 disabled:bg-surface-secondary disabled:text-text-tertiary disabled:cursor-not-allowed transition"
-                  required
-                >
-                  <option value="" disabled>
-                    {!effectiveSelectedBranchId
-                      ? 'Select Branch first'
-                      : 'Select Counter'}
-                  </option>
-                  {visibleCounters.map(c => (
-                    <option key={c.counterId} value={c.counterId}>
-                      {c.counterName}
-                    </option>
-                  ))}
-                </select>
+                <AsyncSelect
+                  value={
+                    counterOptions.find(
+                      option => option.value === effectiveSelectedCounterId
+                    ) ?? null
+                  }
+                  onChange={option => {
+                    const nextOption = Array.isArray(option) ? option[0] : option;
+                    setSelectedCounterId(nextOption ? String(nextOption.value) : '');
+                  }}
+                  loadOptions={loadCounterOptions}
+                  placeholder={effectiveSelectedBranchId ? 'Select Counter' : 'Select Branch first'}
+                  isSearchable={false}
+                  isDisabled={!effectiveSelectedBranchId}
+                />
                 {effectiveSelectedBranchId && visibleCounters.length === 0 && (
                   <p className="mt-1 text-xs text-error-600 animate-pulse">
                     No counters assigned to this branch.
@@ -247,13 +279,13 @@ const ChooseWorkplacePage: React.FC = () => {
               </Button>
 
               <div className="text-center pt-4 border-t border-border-muted">
-                <button
+                <Button
                   type="button"
                   onClick={handleLogout}
-                  className="text-sm font-medium text-error-600 hover:text-error-700 hover:underline transition"
+                  variant="link"
                 >
                   Log Out / Switch Account
-                </button>
+                </Button>
               </div>
             </form>
           </div>

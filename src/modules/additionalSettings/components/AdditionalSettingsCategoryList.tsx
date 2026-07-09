@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui';
 import type { IAdditionalSettingCategory } from '../types';
 
 interface AdditionalSettingsCategoryListProps {
@@ -14,10 +15,10 @@ export const AdditionalSettingsCategoryList = ({
   return (
     <div className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm">
       <div className="mb-4">
-        <p className="text-xs font-semibold uppercase text-text-tertiary">
+        <p className="text-sm font-medium text-text-secondary">
           Categories
         </p>
-        <h2 className="mt-2 text-lg font-semibold text-text-primary">
+        <h2 className="mt-1 text-xl font-semibold tracking-tight text-text-primary">
           Available Categories
         </h2>
       </div>
@@ -32,32 +33,33 @@ export const AdditionalSettingsCategoryList = ({
             const isActive = category.id === activeCategoryId;
 
             return (
-              <button
+              <Button
                 key={category.id}
                 type="button"
+                variant="outline"
                 className={[
-                  'w-full rounded-sm border px-4 py-3 text-left transition',
+                  'w-full justify-start rounded-sm border px-4 py-3 text-left transition',
                   isActive
-                    ? 'border-primary-500 bg-primary-50 text-primary-700'
-                    : 'border-border-primary bg-surface-secondary text-text-primary hover:border-primary-300 hover:bg-primary-50/60',
+                    ? '!border-primary-500 !bg-primary-50 !text-primary-700'
+                    : '!border-border-primary !bg-surface-secondary !text-text-primary hover:!border-primary-300 hover:!bg-primary-50/70 hover:!text-primary-700',
                 ].join(' ')}
                 onClick={() => onSelectCategory(category.id)}
               >
                 <div className="flex items-center justify-between gap-4">
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold">
+                    <p className="truncate text-sm font-semibold leading-5">
                       {category.title}
                     </p>
-                    <p className="mt-1 text-xs text-text-tertiary">
+                    <p className="mt-1 text-xs text-text-secondary">
                       {category.code}
                     </p>
                   </div>
 
-                  <span className="text-xs text-text-tertiary">
+                  <span className="text-xs font-medium text-text-secondary">
                     {category.subcategories.length} items
                   </span>
                 </div>
-              </button>
+              </Button>
             );
           })}
         </div>

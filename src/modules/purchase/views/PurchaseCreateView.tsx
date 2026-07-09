@@ -75,7 +75,7 @@ export const PurchaseCreateView = ({
     () =>
       getAdditionalSettingTextValue(
         additionalSettings,
-        AdditionalSettingsCodeEnum.TransactionPrintSettings,
+        AdditionalSettingsCodeEnum.TransactionApprovalPolicy,
         AdditionalSettingsCodeEnum.TransactionPrintSacCode,
         ''
       ),

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Table, type TableColumnDef } from '@/components/ui';
+import { Checkbox, Input, Table, type TableColumnDef } from '@/components/ui';
 import type { IChequeBook } from '@/api';
 
 export interface ChequeBookAcknowledgementRowEdit {
@@ -97,12 +97,10 @@ export const ChequeBookAcknowledgementChecklistTable = ({
 
           return (
             <div className="flex justify-center">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={isApproved}
                 disabled={isReadOnly}
                 onChange={() => onCheckboxChange(row.original.id, 'Approved')}
-                className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
           );
@@ -120,12 +118,10 @@ export const ChequeBookAcknowledgementChecklistTable = ({
 
           return (
             <div className="flex justify-center">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={isRejected}
                 disabled={isReadOnly}
                 onChange={() => onCheckboxChange(row.original.id, 'Rejected')}
-                className="h-4 w-4 rounded border-slate-300 text-red-600 focus:ring-red-500 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
           );
@@ -143,13 +139,13 @@ export const ChequeBookAcknowledgementChecklistTable = ({
           const isReadOnly = row.original.status !== 'Pending';
 
           return (
-            <input
-              type="text"
+            <Input
               value={displayRemarks}
               disabled={isReadOnly}
               onChange={e => onRemarksChange(row.original.id, e.target.value)}
               placeholder="Approval details..."
-              className="w-full rounded border border-slate-300 px-2 py-1 text-xs focus:ring-1 focus:ring-sky-500 focus:border-sky-500 disabled:bg-slate-100 disabled:text-slate-500"
+              className="max-w-none"
+              valueTransform="none"
             />
           );
         },

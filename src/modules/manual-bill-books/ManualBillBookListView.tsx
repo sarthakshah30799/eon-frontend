@@ -172,6 +172,13 @@ export const ManualBillBookListView = () => {
     status: statusFilter || undefined,
   });
 
+  const reviewBookFromQuery = useMemo(
+    () => (reviewId ? books.find(book => book.id === reviewId) ?? null : null),
+    [books, reviewId]
+  );
+  const reviewBook = selectedBook ?? reviewBookFromQuery;
+  const isReviewModalOpen = isReviewOpen || Boolean(reviewBookFromQuery);
+
   useEffect(() => {
     if (error) {
       const message =
@@ -181,16 +188,6 @@ export const ManualBillBookListView = () => {
       toast.error(message);
     }
   }, [error]);
-
-  useEffect(() => {
-    if (reviewId && books.length > 0) {
-      const book = books.find(b => b.id === reviewId);
-      if (book) {
-        setSelectedBook(book);
-        setIsReviewOpen(true);
-      }
-    }
-  }, [reviewId, books]);
 
   // Page Tracking allocation list & cashier list states
   const [allocations, setAllocations] = useState<IManualBookAllocation[]>([]);
@@ -208,13 +205,13 @@ export const ManualBillBookListView = () => {
 
   useEffect(() => {
     const fetchAllocations = async () => {
-      if (!selectedBook || selectedBook.status === 'Pending') {
+      if (!reviewBook || reviewBook.status === 'Pending') {
         setAllocations([]);
         return;
       }
       try {
         setIsLoadingAllocations(true);
-        const data = await manualBillBookApi.getAllocations([selectedBook.id]);
+        const data = await manualBillBookApi.getAllocations([reviewBook.id]);
         setAllocations(data);
       } catch (err: unknown) {
         console.error('Failed to load allocations:', err);
@@ -223,11 +220,11 @@ export const ManualBillBookListView = () => {
       }
     };
     fetchAllocations();
-  }, [selectedBook]);
+  }, [reviewBook]);
 
   useEffect(() => {
     const fetchCashiers = async () => {
-      if (!selectedBook) return;
+      if (!reviewBook) return;
       try {
         const data = await manualBillBookApi.getAuthorizedUsers();
         setCashiers(data);
@@ -236,7 +233,7 @@ export const ManualBillBookListView = () => {
       }
     };
     fetchCashiers();
-  }, [selectedBook]);
+  }, [reviewBook]);
 
   const handleViewPages = async (alloc: IManualBookAllocation) => {
     setSelectedAllocation(alloc);
@@ -301,11 +298,11 @@ export const ManualBillBookListView = () => {
 
   const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedBook) return;
+    if (!reviewBook) return;
 
     try {
       await approveOrReject({
-        id: selectedBook.id,
+        id: reviewBook.id,
         data: {
           status: approvalStatus,
           approvalRemarks,
@@ -316,7 +313,14 @@ export const ManualBillBookListView = () => {
       toast.success(
         `Record has been successfully ${approvalStatus.toLowerCase()}.`
       );
-      setIsReviewOpen(false);
+      if (reviewBookFromQuery) {
+        const nextSearchParams = new URLSearchParams(searchParams);
+        nextSearchParams.delete('reviewId');
+        navigate({ search: nextSearchParams.toString() });
+      } else {
+        setIsReviewOpen(false);
+      }
+      setSelectedBook(null);
       await refetchBooks();
     } catch (err: unknown) {
       toast.error(
@@ -401,12 +405,26 @@ export const ManualBillBookListView = () => {
       </section>
 
       {/* Review / Details Modal */}
-      {selectedBook && (
+      {reviewBook && (
         <Modal
-          open={isReviewOpen}
-          onOpenChange={setIsReviewOpen}
+          open={isReviewModalOpen}
+          onOpenChange={open => {
+            if (open) {
+              return;
+            }
+
+            if (reviewBookFromQuery) {
+              const nextSearchParams = new URLSearchParams(searchParams);
+              nextSearchParams.delete('reviewId');
+              navigate({ search: nextSearchParams.toString() });
+            } else {
+              setIsReviewOpen(false);
+            }
+
+            setSelectedBook(null);
+          }}
           title={
-            selectedBook.status === 'Pending'
+            reviewBook.status === 'Pending'
               ? 'Review Dispatch Request'
               : 'Dispatch Details'
           }
@@ -419,7 +437,7 @@ export const ManualBillBookListView = () => {
                   Voucher No
                 </span>
                 <span className="font-semibold text-slate-800">
-                  {selectedBook.no}
+                  {reviewBook.no}
                 </span>
               </div>
               <div>
@@ -427,7 +445,7 @@ export const ManualBillBookListView = () => {
                   Date
                 </span>
                 <span className="text-slate-800">
-                  {selectedBook.dispatchDate}
+                  {reviewBook.dispatchDate}
                 </span>
               </div>
               <div>
@@ -435,7 +453,7 @@ export const ManualBillBookListView = () => {
                   Branch
                 </span>
                 <span className="text-slate-800">
-                  {selectedBook.branchName} ({selectedBook.branchCode})
+                  {reviewBook.branchName} ({reviewBook.branchCode})
                 </span>
               </div>
               <div>
@@ -443,8 +461,7 @@ export const ManualBillBookListView = () => {
                   Txn Type
                 </span>
                 <span className="text-slate-800">
-                  {selectedBook.transactionTypeLabel ||
-                    selectedBook.transactionType}
+                  {reviewBook.transactionTypeLabel || reviewBook.transactionType}
                 </span>
               </div>
               <div>
@@ -452,7 +469,7 @@ export const ManualBillBookListView = () => {
                   Book Range
                 </span>
                 <span className="font-semibold text-slate-800">
-                  {selectedBook.bookNoFrom} - {selectedBook.bookNoTo}
+                  {reviewBook.bookNoFrom} - {reviewBook.bookNoTo}
                 </span>
               </div>
               <div>
@@ -460,7 +477,7 @@ export const ManualBillBookListView = () => {
                   Vouchers Per Book
                 </span>
                 <span className="text-slate-800">
-                  {selectedBook.vouchersPerBook}
+                  {reviewBook.vouchersPerBook}
                 </span>
               </div>
               <div>
@@ -468,7 +485,7 @@ export const ManualBillBookListView = () => {
                   MV Range
                 </span>
                 <span className="font-semibold text-slate-800">
-                  {selectedBook.mvNoFrom} - {selectedBook.mvNoTo}
+                  {reviewBook.mvNoFrom} - {reviewBook.mvNoTo}
                 </span>
               </div>
               <div>
@@ -476,7 +493,7 @@ export const ManualBillBookListView = () => {
                   Assigned To
                 </span>
                 <span className="text-slate-800">
-                  {resolveAssignedToLabel(selectedBook.assignedTo)}
+                  {resolveAssignedToLabel(reviewBook.assignedTo)}
                 </span>
               </div>
               <div className="col-span-2">
@@ -484,12 +501,12 @@ export const ManualBillBookListView = () => {
                   Submitter Remarks
                 </span>
                 <span className="text-slate-700 block italic">
-                  {selectedBook.remarks || 'None'}
+                  {reviewBook.remarks || 'None'}
                 </span>
               </div>
             </div>
 
-            {selectedBook.status === 'Pending' ? (
+            {reviewBook.status === 'Pending' ? (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -548,21 +565,32 @@ export const ManualBillBookListView = () => {
                 </div>
 
                 <div className="flex justify-end gap-2 pt-2">
-                  <button
-                    type="button"
-                    className="cursor-pointer border border-slate-200 text-slate-600 hover:bg-slate-50 rounded px-4 py-2 text-xs font-semibold transition"
-                    onClick={() => setIsReviewOpen(false)}
-                  >
-                    Cancel
-                  </button>
-                  <button
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        if (reviewBookFromQuery) {
+                          const nextSearchParams = new URLSearchParams(
+                            searchParams
+                          );
+                          nextSearchParams.delete('reviewId');
+                          navigate({ search: nextSearchParams.toString() });
+                        } else {
+                          setIsReviewOpen(false);
+                        }
+                        setSelectedBook(null);
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  <Button
                     type="submit"
-                    className="cursor-pointer bg-slate-900 hover:bg-slate-800 text-white rounded px-4 py-2 text-xs font-semibold shadow transition flex items-center gap-1.5"
+                    variant="default"
                     disabled={isSubmitting}
                   >
                     {isSubmitting && <Loader variant="spinner" />}
                     Submit Review
-                  </button>
+                  </Button>
                 </div>
               </div>
             ) : (
@@ -576,15 +604,15 @@ export const ManualBillBookListView = () => {
                       <span className="block text-slate-400 font-semibold mb-0.5">
                         Status
                       </span>
-                      <span
-                        className={[
-                          'px-1.5 py-0.5 rounded font-semibold text-[10px]',
-                          selectedBook.status === 'Approved'
+                        <span
+                          className={[
+                            'px-1.5 py-0.5 rounded font-semibold text-[10px]',
+                          reviewBook.status === 'Approved'
                             ? 'bg-emerald-100 text-emerald-800'
                             : 'bg-rose-100 text-rose-800',
                         ].join(' ')}
                       >
-                        {selectedBook.status}
+                        {reviewBook.status}
                       </span>
                     </div>
                     <div>
@@ -592,8 +620,7 @@ export const ManualBillBookListView = () => {
                         Date Range
                       </span>
                       <span>
-                        {selectedBook.fromDate || 'N/A'} to{' '}
-                        {selectedBook.toDate || 'N/A'}
+                        {reviewBook.fromDate || 'N/A'} to {reviewBook.toDate || 'N/A'}
                       </span>
                     </div>
                   </div>
@@ -602,12 +629,12 @@ export const ManualBillBookListView = () => {
                       Approval Remarks
                     </span>
                     <span className="italic block text-slate-700">
-                      {selectedBook.approvalRemarks || 'None'}
+                      {reviewBook.approvalRemarks || 'None'}
                     </span>
                   </div>
                 </div>
                 {/* Allocations & Page Tracking */}
-                {selectedBook.status === 'Approved' && (
+                {reviewBook.status === 'Approved' && (
                   <div className="mt-4 border-t border-slate-200 pt-4 space-y-3">
                     <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
                       User Allocations
@@ -642,13 +669,14 @@ export const ManualBillBookListView = () => {
                                   </b>
                                 </span>
                               </div>
-                              <button
+                              <Button
                                 type="button"
+                                variant="outline"
                                 onClick={() => handleViewPages(alloc)}
-                                className="cursor-pointer text-[10px] font-bold text-sky-600 hover:text-sky-700 bg-sky-50 border border-sky-100 rounded px-2.5 py-1 transition"
+                                size="sm"
                               >
                                 Track Pages
-                              </button>
+                              </Button>
                             </div>
                           );
                         })}
@@ -658,13 +686,24 @@ export const ManualBillBookListView = () => {
                 )}
 
                 <div className="flex justify-end pt-2 border-t border-slate-100">
-                  <button
+                  <Button
                     type="button"
-                    className="cursor-pointer border border-slate-200 text-slate-600 hover:bg-slate-50 rounded px-4 py-2 text-xs font-semibold transition"
-                    onClick={() => setIsReviewOpen(false)}
+                    variant="outline"
+                    onClick={() => {
+                      if (reviewBookFromQuery) {
+                        const nextSearchParams = new URLSearchParams(
+                          searchParams
+                        );
+                        nextSearchParams.delete('reviewId');
+                        navigate({ search: nextSearchParams.toString() });
+                      } else {
+                        setIsReviewOpen(false);
+                      }
+                      setSelectedBook(null);
+                    }}
                   >
                     Close
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}

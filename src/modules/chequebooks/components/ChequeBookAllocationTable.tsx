@@ -1,5 +1,12 @@
-import { useMemo } from 'react';
-import { Table, type TableColumnDef } from '@/components/ui';
+import { useCallback, useMemo } from 'react';
+import {
+  AsyncSelect,
+  Checkbox,
+  Table,
+  type AsyncSelectOption,
+  type AsyncSelectResponse,
+  type TableColumnDef,
+} from '@/components/ui';
 import type { IChequeBookCashier } from '@/modules/chequebooks/hooks';
 
 export interface IAllocationRow {
@@ -41,27 +48,40 @@ export const ChequeBookAllocationTable = ({
   onRowCashierChange,
   onRowRemarksChange,
 }: ChequeBookAllocationTableProps) => {
+  const cashierOptions = useMemo<AsyncSelectOption[]>(
+    () =>
+      cashiers.map(cashier => ({
+        value: cashier.id,
+        label: cashier.name,
+      })),
+    [cashiers]
+  );
+
+  const loadCashierOptions = useCallback(
+    async (): Promise<AsyncSelectResponse> => ({
+      options: cashierOptions,
+      hasMore: false,
+    }),
+    [cashierOptions]
+  );
+
   const columns = useMemo<TableColumnDef<IAllocationRow>[]>(
     () => [
       {
         id: 'select',
         header: () => (
           <div className="flex justify-center">
-            <input
-              type="checkbox"
+            <Checkbox
               checked={allChecked}
-              onChange={e => onHeaderCheckboxChange(e.target.checked)}
-              className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 cursor-pointer"
+              onChange={checked => onHeaderCheckboxChange(checked)}
             />
           </div>
         ),
         cell: ({ row }) => (
           <div className="flex justify-center">
-            <input
-              type="checkbox"
+            <Checkbox
               checked={row.original.isCheck}
               onChange={() => onRowCheckboxChange(row.original.id)}
-              className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 cursor-pointer"
             />
           </div>
         ),
@@ -70,18 +90,25 @@ export const ChequeBookAllocationTable = ({
         accessorKey: 'allocatedCashierId',
         header: 'Allocate User',
         cell: ({ row }) => (
-          <select
-            value={row.original.allocatedCashierId}
-            onChange={e => onRowCashierChange(row.original.id, e.target.value)}
-            className="w-32 rounded border border-slate-300 bg-white px-2 py-1 text-xs focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
-          >
-            <option value="">Select User</option>
-            {cashiers.map(cashier => (
-              <option key={cashier.id} value={cashier.id}>
-                {cashier.name}
-              </option>
-            ))}
-          </select>
+          <AsyncSelect
+            value={
+              cashierOptions.find(
+                option => option.value === row.original.allocatedCashierId
+              ) ?? null
+            }
+            onChange={option => {
+              const nextOption = Array.isArray(option) ? option[0] : option;
+              onRowCashierChange(
+                row.original.id,
+                nextOption ? String(nextOption.value) : ''
+              );
+            }}
+            loadOptions={loadCashierOptions}
+            placeholder="Select User"
+            isSearchable={false}
+            isClearable
+            className="w-32"
+          />
         ),
       },
       {
@@ -148,7 +175,8 @@ export const ChequeBookAllocationTable = ({
     ],
     [
       allChecked,
-      cashiers,
+      cashierOptions,
+      loadCashierOptions,
       onHeaderCheckboxChange,
       onRowCashierChange,
       onRowCheckboxChange,

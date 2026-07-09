@@ -96,10 +96,12 @@ const CategoryOptionRows = ({
           >
             {(mode === 'create' && fields.length > 1) ||
             (mode === 'edit' && !field.id) ? (
-              <button
+              <Button
                 type="button"
                 aria-label={`Remove option ${index + 1}`}
-                className="absolute right-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full border border-border-primary bg-surface-primary text-text-tertiary transition hover:border-error-500 hover:bg-error-50 hover:text-error-600 disabled:opacity-50"
+                variant="ghost"
+                size="icon"
+                className="absolute right-3 top-3 rounded-full border border-border-primary bg-surface-primary text-text-tertiary transition hover:border-error-500 hover:bg-error-50 hover:text-error-600 disabled:opacity-50"
                 disabled={isSubmitting}
                 onClick={() => remove(index)}
               >
@@ -117,7 +119,7 @@ const CategoryOptionRows = ({
                     d="M6 18L18 6M6 6l12 12"
                   />
                 </svg>
-              </button>
+              </Button>
             ) : null}
 
             <div className="grid gap-4 md:grid-cols-2">

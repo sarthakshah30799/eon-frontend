@@ -28,6 +28,15 @@ const formatAmount = (value?: string | null) => {
   return Number.isFinite(numericValue) ? numericValue.toFixed(4) : value;
 };
 
+const formatNegativeAmount = (value?: string | null) => {
+  const formattedValue = formatAmount(value);
+  if (!formattedValue) {
+    return '0.0000';
+  }
+
+  return formattedValue.startsWith('-') ? formattedValue : `-${formattedValue}`;
+};
+
 const AdditionalChargeRow = ({
   arrayName,
   index,
@@ -174,7 +183,7 @@ const AdditionalChargeRow = ({
 
       <FormFieldInput
         name={`${arrayName}.${index}.totalAmount`}
-        label="Total Amount"
+        label="Total Amount (-)"
         disabled
       />
 
@@ -261,8 +270,8 @@ export const TransactionAdditionalChargesFieldArray = ({
         )}
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border-secondary pt-4">
-          <div className="text-sm text-text-secondary">
-            Total additional charges: {formatAmount(String(totalAmount)) || '0.0000'}
+        <div className="text-sm text-text-secondary">
+            Total additional charges: {formatNegativeAmount(String(totalAmount))}
           </div>
 
           <Button

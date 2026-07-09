@@ -252,15 +252,15 @@ export const ManualBillBookAcknowledgementPage = () => {
               <p className="text-sm text-slate-500">
                 No dispatches found for this branch.
               </p>
-              <button
+              <Button
                 onClick={() => {
                   setView('detail');
                   setQueryResults([]);
                 }}
-                className="mt-4 cursor-pointer inline-flex items-center justify-center rounded-md bg-sky-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-500 transition"
+                className="mt-4"
               >
                 Go to Manual Bill Status Search
-              </button>
+              </Button>
             </div>
           ) : (
             <div className="overflow-x-auto">

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { useAuth } from '@/lib/AuthContext';
 import toast from 'react-hot-toast';
-import { Button, Input } from '@/components/ui';
+import { AsyncSelect, Button, Input, type AsyncSelectResponse } from '@/components/ui';
 import { FormFieldSelect } from '@/components/forms';
 import { accountProfileApi } from '@/api/accountProfile/accountProfile.api';
 import {
@@ -55,6 +55,15 @@ export const ChequeBookAllocationPage = () => {
   const { processAllocations, isProcessing } =
     useProcessChequeBookAllocations();
   const { saveAllocations, isSaving } = useSaveChequeBookAllocations();
+
+  const cashierOptions = cashiers.map(cashier => ({
+    value: cashier.id,
+    label: cashier.name,
+  }));
+  const loadCashierOptions = async (): Promise<AsyncSelectResponse> => ({
+    options: cashierOptions,
+    hasMore: false,
+  });
 
   useEffect(() => {
     if (cashiersError) {
@@ -289,22 +298,25 @@ export const ChequeBookAllocationPage = () => {
                 {isLoadingOptions ? (
                   <span className="text-xs text-slate-500">Loading...</span>
                 ) : (
-                  <select
-                    value={bulkCashierId}
-                    onChange={e => setBulkCashierId(e.target.value)}
-                    className="rounded border border-slate-300 px-2 py-1 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500"
-                  >
-                    <option value="">Select User</option>
-                    {cashiers.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
+                  <AsyncSelect
+                    value={
+                      cashierOptions.find(option => option.value === bulkCashierId) ??
+                      null
+                    }
+                    onChange={option => {
+                      const nextOption = Array.isArray(option) ? option[0] : option;
+                      setBulkCashierId(nextOption ? String(nextOption.value) : '');
+                    }}
+                    loadOptions={loadCashierOptions}
+                    placeholder="Select User"
+                    isSearchable={false}
+                    className="w-40"
+                  />
                 )}
                 <Button
                   onClick={handleApplyBulkCashier}
-                  className="cursor-pointer rounded bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-1 text-xs font-semibold shadow-sm transition"
+                  variant="outline"
+                  size="sm"
                 >
                   Apply
                 </Button>

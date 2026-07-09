@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Dropdown } from '@/components/ui/dropdown';
+import { Button, Dropdown } from '@/components/ui';
 import type { UserRightsTreeNode } from '../types';
 
 interface UserRightsTreePreviewProps {
@@ -109,7 +109,7 @@ const TreeLevel = ({
 
         return (
           <li key={node.id}>
-            <button
+            <Button
               type="button"
               className={getLeafItemClassName(isSelected)}
               onClick={() => {
@@ -117,7 +117,7 @@ const TreeLevel = ({
               }}
             >
               <span className="truncate">{node.label}</span>
-            </button>
+            </Button>
           </li>
         );
       })}

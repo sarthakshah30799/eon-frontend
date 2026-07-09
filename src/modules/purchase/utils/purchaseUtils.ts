@@ -455,5 +455,5 @@ export const calculatePurchasePayableTotal = (
     0
   );
 
-  return (transactionTotal + additionalChargeTotal).toFixed(PURCHASE_MONEY_DECIMALS);
+  return (transactionTotal - additionalChargeTotal).toFixed(PURCHASE_MONEY_DECIMALS);
 };

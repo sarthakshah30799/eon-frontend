@@ -3,7 +3,14 @@ import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { manualBillBookApi, type IManualBookDPMappingGroup } from '@/api';
 import { categoryOptionsApi } from '@/api/categoryOptions/categoryOptions.api';
-import { Button, Input, AsyncSelect, type AsyncSelectOption } from '@/components/ui';
+import {
+  AsyncSelect,
+  Button,
+  Checkbox,
+  Input,
+  type AsyncSelectOption,
+  type AsyncSelectResponse,
+} from '@/components/ui';
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import type { MultiValue, SingleValue } from 'react-select';
 import toast from 'react-hot-toast';
@@ -70,6 +77,15 @@ const ManualBillDPMappingPageContent = () => {
 
   // Bulk allocate state
   const [bulkDPId, setBulkDPId] = useState('');
+
+  const deliveryPersonOptions = deliveryPersons.map(person => ({
+    value: person.id,
+    label: person.name,
+  }));
+  const loadDeliveryPersonOptions = async (): Promise<AsyncSelectResponse> => ({
+    options: deliveryPersonOptions,
+    hasMore: false,
+  });
 
   const getErrorMessage = (error: unknown, fallback: string) =>
     error instanceof Error ? error.message : fallback;
@@ -344,18 +360,21 @@ const ManualBillDPMappingPageContent = () => {
                 {isLoadingDP ? (
                   <span className="text-xs text-slate-500">Loading...</span>
                 ) : (
-                  <select
-                    value={bulkDPId}
-                    onChange={e => setBulkDPId(e.target.value)}
-                    className="rounded border border-slate-300 px-2 py-1 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500"
-                  >
-                    <option value="">Select User</option>
-                    {deliveryPersons.map(d => (
-                      <option key={d.id} value={d.id}>
-                        {d.name}
-                      </option>
-                    ))}
-                  </select>
+                  <AsyncSelect
+                    value={
+                      deliveryPersonOptions.find(
+                        option => option.value === bulkDPId
+                      ) ?? null
+                    }
+                    onChange={option => {
+                      const nextOption = Array.isArray(option) ? option[0] : option;
+                      setBulkDPId(nextOption ? String(nextOption.value) : '');
+                    }}
+                    loadOptions={loadDeliveryPersonOptions}
+                    placeholder="Select User"
+                    isSearchable={false}
+                    className="w-40"
+                  />
                 )}
               </div>
             )}
@@ -379,11 +398,9 @@ const ManualBillDPMappingPageContent = () => {
                 <thead>
                   <tr className="border-b border-slate-200 bg-slate-50/50 text-slate-600 font-medium select-none">
                     <th className="px-4 py-3 text-center">
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={allChecked}
-                        onChange={e => handleHeaderCheckbox(e.target.checked)}
-                        className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 cursor-pointer"
+                        onChange={checked => handleHeaderCheckbox(checked)}
                       />
                     </th>
                     <th className="px-4 py-3">Remarks</th>
@@ -399,11 +416,9 @@ const ManualBillDPMappingPageContent = () => {
                   {rows.map((row, idx) => (
                     <tr key={idx} className="hover:bg-slate-50/70 transition">
                       <td className="px-4 py-4 text-center">
-                        <input
-                          type="checkbox"
+                        <Checkbox
                           checked={row.isCheck}
                           onChange={() => handleRowCheckbox(idx)}
-                          className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 cursor-pointer"
                         />
                       </td>
                       <td className="px-4 py-4">
@@ -440,17 +455,18 @@ const ManualBillDPMappingPageContent = () => {
 
           {rows.length > 0 && (
             <div className="px-5 py-4 border-t border-slate-200 bg-slate-50 flex justify-end">
-              <button
+              <Button
+                type="button"
                 onClick={handleSave}
                 disabled={isSaving}
-                className="cursor-pointer inline-flex items-center justify-center rounded-md bg-sky-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-500 transition disabled:opacity-50"
+                variant="default"
               >
                 {isSaving
                   ? 'Processing...'
                   : activeTab === 'map'
                     ? 'Save'
                     : 'Unmap'}
-              </button>
+              </Button>
             </div>
           )}
         </div>

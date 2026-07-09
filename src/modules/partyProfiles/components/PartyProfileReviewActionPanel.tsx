@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
-import { Button, Modal } from '@/components/ui';
+import { Button, Checkbox, Modal } from '@/components/ui';
 import { FormFieldTextarea } from '@/components/forms';
 import type {
   ICreatePartyProfile,
@@ -81,12 +81,10 @@ export const PartyProfileReviewActionPanel = ({
 
           <div className="flex flex-wrap items-center gap-4">
             <label className="flex items-center gap-2 text-sm font-medium text-text-primary">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={isActive}
-                onChange={event => setIsActive(event.target.checked)}
+                onChange={checked => setIsActive(checked)}
                 disabled={isDisabled}
-                className="h-4 w-4 rounded border-border-secondary text-primary-600 focus:ring-primary-500"
               />
               Active on approval
             </label>

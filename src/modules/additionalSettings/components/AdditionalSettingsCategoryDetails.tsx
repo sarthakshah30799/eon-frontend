@@ -1,11 +1,9 @@
 import { useMemo, useState } from 'react';
-import { Modal } from '@/components/ui';
-import { Checkbox } from '@/components/ui';
+import { AsyncSelect, Button, Checkbox, Input, Modal } from '@/components/ui';
 import type {
   IAdditionalSettingCategory,
   IAdditionalSettingSubcategory,
 } from '../types';
-import { Button } from '@/components/ui';
 import { PencilSquareIcon } from '@heroicons/react/24/outline';
 import {
   getAdditionalSettingCategoryDefinition,
@@ -36,10 +34,10 @@ const CategoryTitleEditor = ({
   return (
     <div className="flex items-start gap-3">
       <div className="min-w-0">
-        <h3 className="truncate text-xl font-semibold text-text-primary">
+        <h3 className="truncate text-xl font-semibold tracking-tight text-text-primary">
           {category.title}
         </h3>
-        <p className="mt-1 text-xs uppercase text-text-tertiary">
+        <p className="mt-1 text-xs font-medium text-text-secondary">
           {category.code}
         </p>
       </div>
@@ -49,7 +47,8 @@ const CategoryTitleEditor = ({
           type="button"
           aria-label="Edit category"
           onClick={() => onOpenEditCategory(category)}
-          className="border-0! bg-transparent! text-black!"
+          variant="ghost"
+          size="icon"
         >
           <PencilSquareIcon className="h-5 w-5" />
         </Button>
@@ -66,19 +65,20 @@ const SubcategoryRow = ({
   onEdit: (sub: IAdditionalSettingSubcategory) => void;
 }) => {
   return (
-    <tr className="border-t border-border-primary hover:bg-surface-secondary/30">
-      <td className="px-4 py-3 text-sm text-text-primary">
+    <tr className="border-t border-border-primary/80 hover:bg-surface-secondary/50">
+      <td className="px-4 py-4 text-xs leading-5 text-text-primary">
         {subcategory.description || subcategory.title}
       </td>
-      <td className="px-4 py-3 text-sm text-text-primary font-medium">
+      <td className="px-4 py-4 text-xs font-medium leading-5 text-text-primary">
         {subcategory.value}
       </td>
-      <td className="px-4 py-3">
+      <td className="px-4 py-4">
         <Button
           type="button"
           aria-label={`Edit ${subcategory.title}`}
           onClick={() => onEdit(subcategory)}
-          className="border-0! bg-transparent! text-black!"
+          variant="ghost"
+          size="icon"
         >
           <PencilSquareIcon className="h-5 w-5" />
         </Button>
@@ -119,6 +119,16 @@ const EditSubcategoryForm = ({
   const isNumberType = categoryType.toLowerCase() === 'number' || categoryType.toLowerCase() === 'decimal';
   const isDateType = categoryType.toLowerCase() === 'date';
   const isSelectType = categoryType.toLowerCase() === 'select';
+  const selectValueOptions = (subcategoryDefinition?.options ?? []).map(option => ({
+    value: option.value,
+    label: option.label,
+  }));
+  const selectedValueOption =
+    selectValueOptions.find(option => option.value === value) ?? null;
+  const loadSelectValueOptions = async () => ({
+    options: selectValueOptions,
+    hasMore: false,
+  });
 
   const handleNumberingValueChange = (nextValue: string) => {
     setValueError('');
@@ -163,13 +173,13 @@ const EditSubcategoryForm = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={handleSubmit} className="space-y-6">
       <div>
-        <label className="block text-xs font-semibold uppercase tracking-wider text-text-secondary mb-2">
+        <label className="mb-2 block text-xs font-medium text-text-secondary">
           Description
         </label>
         {isPolicyCategory ? (
-          <div className="w-full rounded-sm border border-border-primary bg-surface-secondary px-3 py-2 text-sm text-text-primary">
+          <div className="w-full rounded-sm border border-border-primary bg-surface-secondary px-3 py-3 text-xs leading-5 text-text-primary">
             {description}
           </div>
         ) : (
@@ -178,7 +188,7 @@ const EditSubcategoryForm = ({
             onChange={(e) => setDescription(e.target.value)}
             required
             rows={3}
-            className="w-full rounded-sm border border-border-primary bg-surface-primary px-3 py-2 text-sm text-text-primary outline-none transition focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+            className="w-full rounded-sm border border-border-primary bg-surface-primary px-3 py-2 text-xs leading-5 text-text-primary outline-none transition focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
             placeholder="Enter description"
           />
         )}
@@ -186,75 +196,77 @@ const EditSubcategoryForm = ({
 
       <div className="grid gap-4 md:grid-cols-2">
         <div>
-          <label className="block text-xs font-semibold uppercase tracking-wider text-text-secondary mb-2">
+          <label className="mb-2 block text-xs font-medium text-text-secondary">
             Code (Disabled)
           </label>
-          <input
+          <Input
             type="text"
             value={code}
             disabled
-            className="w-full rounded-sm border border-border-primary bg-surface-secondary px-3 py-2 text-sm text-text-tertiary cursor-not-allowed outline-none"
+            valueTransform="none"
+            classes={{ container: 'max-w-none' }}
           />
         </div>
 
         <div>
-          <label className="block text-xs font-semibold uppercase tracking-wider text-text-secondary mb-2">
+          <label className="mb-2 block text-xs font-medium text-text-secondary">
             Type (Disabled)
           </label>
-          <input
+          <Input
             type="text"
             value={categoryType.toUpperCase()}
             disabled
-            className="w-full rounded-sm border border-border-primary bg-surface-secondary px-3 py-2 text-sm text-text-tertiary cursor-not-allowed outline-none"
+            valueTransform="none"
+            classes={{ container: 'max-w-none' }}
           />
         </div>
       </div>
 
       <div>
-        <label className="block text-xs font-semibold uppercase tracking-wider text-text-secondary mb-2">
+        <label className="mb-2 block text-xs font-medium text-text-secondary">
           Value
         </label>
         {isBooleanType ? (
-          <div className="flex items-center gap-3 rounded-sm border border-border-primary bg-surface-primary px-3 py-2">
+          <div className="flex items-center gap-3 rounded-sm border border-border-primary bg-surface-primary px-3 py-3">
             <Checkbox
               checked={value.toUpperCase() === 'YES'}
               onChange={checked => setValue(checked ? 'YES' : 'NO')}
               aria-label={`Toggle ${subcategoryDefinition?.label ?? 'value'}`}
             />
             <div className="min-w-0">
-              <p className="text-sm font-medium text-text-primary">
+              <p className="text-sm font-semibold text-text-primary">
                 {subcategoryDefinition?.label ?? 'Enabled'}
               </p>
-              <p className="text-xs text-text-tertiary">
+              <p className="text-xs leading-5 text-text-secondary">
                 Check this box to enable the setting.
               </p>
             </div>
           </div>
         ) : isDateType ? (
-          <input
+          <Input
             type="date"
             value={value.split('T')[0]}
-            onChange={(e) => setValue(e.target.value)}
+            onChange={e => setValue(e.target.value)}
             required
-            className="w-full rounded-sm border border-border-primary bg-surface-primary px-3 py-2 text-sm text-text-primary outline-none transition focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+            valueTransform="none"
+            classes={{ container: 'max-w-none' }}
           />
         ) : isSelectType ? (
-          <select
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            required={isRequiredPolicyValue}
-            className="w-full rounded-sm border border-border-primary bg-surface-primary px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
-          >
-            <option value="">Select value</option>
-            {(subcategoryDefinition?.options ?? []).map(option => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+          <AsyncSelect
+            value={selectedValueOption}
+            onChange={option => {
+              const nextOption = Array.isArray(option) ? option[0] : option;
+              setValue(nextOption ? String(nextOption.value) : '');
+            }}
+            loadOptions={loadSelectValueOptions}
+            placeholder="Select value"
+            isSearchable={false}
+            isClearable={!isRequiredPolicyValue}
+            isDisabled={false}
+          />
         ) : isNumberType ? (
           <div className="space-y-1">
-            <input
+            <Input
               type={isTransactionNumberingCategory ? 'text' : 'number'}
               inputMode={isTransactionNumberingCategory ? 'numeric' : undefined}
               pattern={isTransactionNumberingCategory ? '\\d*' : undefined}
@@ -269,7 +281,8 @@ const EditSubcategoryForm = ({
               minLength={isTransactionNumberingCategory ? 9 : undefined}
               min={subcategoryDefinition?.valueType === 'number' ? 0 : undefined}
               step={subcategoryDefinition?.valueType === 'number' ? '1' : 'any'}
-              className="w-full rounded-sm border border-border-primary bg-surface-primary px-3 py-2 text-sm text-text-primary outline-none transition focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+              valueTransform="none"
+              classes={{ container: 'max-w-none' }}
               placeholder={
                 isTransactionNumberingCategory
                   ? 'Enter 9-digit series counter'
@@ -278,42 +291,42 @@ const EditSubcategoryForm = ({
               }
             />
             {isTransactionNumberingCategory ? (
-              <p className="text-[11px] leading-tight text-text-tertiary">
+              <p className="text-[11px] leading-5 text-text-secondary">
                 Enter exactly 9 digits. The final number is branch code + financial year + series = 15 characters.
               </p>
             ) : null}
             {valueError ? (
-              <p className="text-[11px] leading-tight text-error-600">{valueError}</p>
+              <p className="text-[11px] leading-5 text-error-600">{valueError}</p>
             ) : null}
           </div>
         ) : (
-          <input
+          <Input
             type="text"
             value={value}
-            onChange={(e) => setValue(e.target.value)}
+            onChange={e => setValue(e.target.value)}
             required={isRequiredPolicyValue}
-            className="w-full rounded-sm border border-border-primary bg-surface-primary px-3 py-2 text-sm text-text-primary outline-none transition focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+            valueTransform="none"
+            classes={{ container: 'max-w-none' }}
             placeholder={subcategoryDefinition?.placeholder ?? 'Enter value'}
           />
         )}
       </div>
 
       <div className="flex justify-end gap-3 border-t border-border-primary pt-4">
-        <button
+        <Button
           type="button"
           onClick={onCancel}
           disabled={isSaving}
-          className="rounded-sm border border-border-primary bg-surface-primary px-4 py-2 text-sm font-medium text-text-primary transition hover:bg-surface-secondary"
+          variant="outline"
         >
           Cancel
-        </button>
-        <button
+        </Button>
+        <Button
           type="submit"
           disabled={isSaving || !description.trim()}
-          className="rounded-sm border border-primary-500 bg-primary-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-primary-600 disabled:opacity-50"
         >
           {isSaving ? 'Saving...' : 'Save Changes'}
-        </button>
+        </Button>
       </div>
     </form>
   );
@@ -336,12 +349,12 @@ export const AdditionalSettingsCategoryDetails = ({
 
   return (
     <div className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm">
-      <div className="mb-4 flex items-start justify-between gap-4">
+      <div className="mb-5 flex items-start justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase text-text-tertiary">
+          <p className="text-xs font-medium text-text-secondary">
             Details
           </p>
-          <h2 className="mt-2 text-lg font-semibold text-text-primary">
+          <h2 className="mt-1 text-xl font-semibold tracking-tight text-text-primary">
             Category Details
           </h2>
         </div>
@@ -353,10 +366,10 @@ export const AdditionalSettingsCategoryDetails = ({
 
       {!category ? (
         <div className="rounded-sm border border-dashed border-border-primary bg-surface-secondary p-6 text-center">
-          <p className="text-sm font-medium text-text-primary">
+          <p className="text-sm font-semibold text-text-primary">
             No categories created yet
           </p>
-          <p className="mt-2 text-sm text-text-tertiary">
+          <p className="mt-2 text-sm leading-6 text-text-secondary">
             Create a category to start managing additional settings.
           </p>
           <Button type="button" onClick={onOpenCreateCategory}>
@@ -365,24 +378,24 @@ export const AdditionalSettingsCategoryDetails = ({
         </div>
       ) : (
         <div className="space-y-5">
-          <section className="rounded-sm border border-border-primary bg-surface-secondary p-4">
+          <section className="rounded-sm border border-border-primary bg-surface-secondary p-5">
             <CategoryTitleEditor
               category={category}
               onOpenEditCategory={onOpenEditCategory}
             />
           </section>
 
-          <section className="rounded-sm border border-border-primary bg-surface-secondary p-4">
+          <section className="rounded-sm border border-border-primary bg-surface-secondary p-5">
             <div className="mb-4 flex items-center justify-between">
               <div>
-                <p className="text-sm font-semibold text-text-primary">
+                <p className="text-base font-semibold text-text-primary">
                   Subcategories
                 </p>
-                <p className="text-xs text-text-tertiary">
+                <p className="mt-1 text-sm leading-6 text-text-secondary">
                   Manage subcategory definitions for this category.
                 </p>
               </div>
-              <p className="text-xs text-text-tertiary">
+              <p className="text-sm font-medium text-text-secondary">
                 {category.subcategories.length} items
               </p>
             </div>
@@ -391,10 +404,10 @@ export const AdditionalSettingsCategoryDetails = ({
               <div className="overflow-hidden rounded-sm border border-border-primary bg-surface-primary">
                 <table className="w-full border-collapse">
                   <thead className="bg-surface-secondary">
-                    <tr className="text-left text-xs uppercase tracking-[0.2em] text-text-tertiary">
-                      <th className="px-4 py-3">Description</th>
-                      <th className="px-4 py-3">Value</th>
-                      <th className="px-4 py-3">Actions</th>
+                    <tr className="text-left text-sm text-text-secondary">
+                      <th className="px-4 py-3 font-medium">Description</th>
+                      <th className="px-4 py-3 font-medium">Value</th>
+                      <th className="px-4 py-3 font-medium">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -409,7 +422,7 @@ export const AdditionalSettingsCategoryDetails = ({
                 </table>
               </div>
             ) : (
-              <div className="rounded-sm border border-dashed border-border-primary bg-surface-primary p-4 text-sm text-text-tertiary">
+              <div className="rounded-sm border border-dashed border-border-primary bg-surface-primary p-4 text-xs leading-5 text-text-secondary">
                 No subcategories for this category yet.
               </div>
             )}

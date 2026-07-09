@@ -68,7 +68,7 @@ export const PartyProfileListView = () => {
     isLoading,
     isFetching,
     error,
-  } = useListPartyProfiles(query, selectedApiType, canLoadList);
+  } = useListPartyProfiles(query, selectedApiType, canLoadList, false);
   const clients = clientResponse?.data ?? [];
 
   if (isTypesLoading) {

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useFormContext, type Resolver } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { CardSection } from '@/components/ui';
@@ -16,8 +16,10 @@ import { productProfileSchema } from '../schema';
 import type { ICreateProductProfile } from '../types';
 import { useNavigate } from 'react-router-dom';
 import { productProfileApi } from '@/api/productProfile';
+import { accountProfileApi } from '@/api/accountProfile';
 import { normalizeCodeValue } from '@/utils';
-import { useListAccountProfiles } from '@/modules/accountProfile/hooks';
+
+const ACCOUNT_PROFILE_OPTION_PAGE_SIZE = 30;
 
 const ACCOUNT_PROFILE_SELECT_FIELDS: ReadonlySet<keyof ICreateProductProfile> =
   new Set([
@@ -368,37 +370,24 @@ export const ProductProfileForm = ({
   currentId,
 }: ProductProfileFormProps) => {
   const navigate = useNavigate();
-  const {
-    data: accountProfileResponse,
-    isLoading: isAccountProfilesLoading,
-    isFetching: isAccountProfilesFetching,
-  } = useListAccountProfiles({ page: 1, limit: 1000 });
-
-  const accountProfileOptions = useMemo(
-    () =>
-      accountProfileResponse?.data.map(account => ({
-        value: account.id,
-        label: `${account.accountCode} - ${account.accountName}`,
-      })) ?? [],
-    [accountProfileResponse?.data]
-  );
 
   const loadAccountProfileOptions = useCallback(
-    async (inputValue: string) => {
-      const search = inputValue.trim().toLowerCase();
-      const options =
-        search.length > 0
-          ? accountProfileOptions.filter(option =>
-              option.label.toLowerCase().includes(search)
-            )
-          : accountProfileOptions;
+    async (inputValue: string, page = 1) => {
+      const response = await accountProfileApi.getAccountProfiles({
+        page,
+        limit: ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
+        search: inputValue,
+      });
 
       return {
-        options,
-        hasMore: false,
+        options: (response.data ?? []).map(account => ({
+          value: account.id,
+          label: `${account.accountCode} - ${account.accountName}`,
+        })),
+        hasMore: (response.data ?? []).length === ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
       };
     },
-    [accountProfileOptions]
+    []
   );
 
   const validateProductCode = useCallback(
@@ -470,11 +459,9 @@ export const ProductProfileForm = ({
                 label={field.label}
                 placeholder={`Select ${field.label.toLowerCase()}`}
                 loadOptions={loadAccountProfileOptions}
-                disabled={
-                  isSubmitting ||
-                  isAccountProfilesLoading ||
-                  isAccountProfilesFetching
-                }
+                pagination
+                pageSize={ACCOUNT_PROFILE_OPTION_PAGE_SIZE}
+                disabled={isSubmitting}
               />
             ) : (
               <FormFieldInput

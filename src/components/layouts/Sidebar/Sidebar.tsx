@@ -504,8 +504,27 @@ export const Sidebar = ({
         </div>
 
         <nav className="flex-1 overflow-y-auto px-2 py-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-          {' '}
           <div className="space-y-1.5">
+            <button
+              type="button"
+              className={[
+                'group flex w-full cursor-pointer items-center rounded-md text-left text-sm transition',
+                isPathActive(location.pathname, '/')
+                  ? 'bg-sidebar-accent text-white shadow-sm border-l-2 border-primary-500'
+                  : 'bg-transparent text-sidebar-muted! hover:text-white!',
+                isCollapsed
+                  ? 'mx-auto h-10 w-10 justify-center rounded-full px-0'
+                  : 'px-2.5 py-2.5',
+              ].join(' ')}
+              aria-current={isPathActive(location.pathname, '/') ? 'page' : undefined}
+              onClick={() => handleMenuClick('/')}
+              title="Dashboard"
+            >
+              <span className="flex min-w-0 items-center gap-2 truncate text-xs font-medium">
+                {isCollapsed ? 'DB' : 'Dashboard'}
+              </span>
+            </button>
+
             {isMenuTreeLoading ? (
               <div className="flex min-h-[12rem] items-center justify-center px-3 py-6">
                 <Loader />

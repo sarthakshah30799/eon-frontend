@@ -214,12 +214,24 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
     meta: { title: 'Purchase' },
   },
   {
+    path: '/sale/:slug',
+    meta: { title: 'Sale' },
+  },
+  {
     path: '/purchase/:slug/create',
     meta: { title: 'Purchase' },
   },
   {
+    path: '/sale/:slug/create',
+    meta: { title: 'Sale' },
+  },
+  {
     path: '/purchase/:slug/edit/:id',
     meta: { title: 'Purchase' },
+  },
+  {
+    path: '/sale/:slug/edit/:id',
+    meta: { title: 'Sale' },
   },
   {
     path: '/party-profiles/:type/documents/:id',

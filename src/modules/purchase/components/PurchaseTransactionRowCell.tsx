@@ -479,8 +479,9 @@ export const PurchaseTransactionRowCell = ({
           name={`transactions.${rowIndex}.quantity`}
           label="Quantity"
           type="number"
-          inputMode="numeric"
-          step={1}
+          inputMode="decimal"
+          step={`0.${'0'.repeat(PURCHASE_RATE_DECIMALS - 1)}1`}
+          maxDecimalPlaces={PURCHASE_RATE_DECIMALS}
           disabled={disabled}
           classes={{ container: 'max-w-[90px]' }}
         />

@@ -93,10 +93,13 @@ export interface ITransactionEntity {
   id: string;
   rootTransactionId: string | null;
   revisionNo: number;
-  number: string;
+  number: string | null;
   slug: string | null;
   branchId: string;
   branchSnapshot?: ITransactionReferenceSnapshot | null;
+  companyId: string | null;
+  companySnapshot?: ITransactionReferenceSnapshot | null;
+  sacCode: string | null;
   partyProfileId: string;
   partyProfileSnapshot?: ITransactionReferenceSnapshot | null;
   agentProfileId: string | null;
@@ -121,6 +124,7 @@ export interface ITransactionEntity {
   documents?: ITransactionDocumentEntity[];
   additionalCharges?: ITransactionAdditionalChargeEntity[];
   payments?: ITransactionPaymentEntity[];
+  logs?: ITransactionLogEntity[];
 }
 
 export interface ITransactionItemEntity {
@@ -271,7 +275,7 @@ export interface ICreateTransactionPaymentPayload {
 export interface ICreateTransactionPayload {
   rootTransactionId?: string | null;
   revisionNo?: number;
-  number: string;
+  number?: string | null;
   slug: string;
   branchId: string;
   branchSnapshot?: ITransactionReferenceSnapshot | null;

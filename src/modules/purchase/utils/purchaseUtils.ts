@@ -67,7 +67,6 @@ export const createEmptyPurchaseTransactionRow = (): IPurchaseTransactionFormRow
 });
 
 export const createEmptyPurchaseFormValues = (
-  branchCode = '',
   transactionType: TransactionType = TransactionTypeEnum.PURCHASE,
   tradeMode: TradeMode = TradeModeEnum.BULK,
   purchasePageType: PurchasePageType | null = null,
@@ -104,7 +103,7 @@ export const createEmptyPurchaseFormValues = (
   deliveryBoyUserId: '',
   deliveryBoyUserCode: '',
   deliveryBoyUserName: '',
-  number: branchCode ? `${branchCode}-` : '',
+  number: '',
   transactions: [createEmptyPurchaseTransactionRow()],
   additionalCharges: [],
   paymentDetails: [],
@@ -122,7 +121,6 @@ export const mapPurchaseFormValuesToSubmitPayload = (
 
   return {
     transaction: {
-      number: values.number.trim(),
       branchId,
       branchSnapshot: values.branchSnapshot,
       requiresApproval,
@@ -229,7 +227,7 @@ export const mapPurchaseTransactionToFormValues = (
   deliveryBoyUserId: '',
   deliveryBoyUserCode: '',
   deliveryBoyUserName: '',
-  number: transaction.number,
+  number: transaction.number ?? '',
   transactions: (transaction.items ?? []).map(item => ({
     currencyId: item.currencyId,
     currencyCode: item.currencySnapshot?.label ?? item.currencySnapshot?.code ?? '',

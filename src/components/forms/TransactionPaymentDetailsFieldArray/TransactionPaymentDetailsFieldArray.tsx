@@ -10,6 +10,8 @@ import type { IAccountProfileListQuery } from '@/modules/accountProfile/types/ac
 import { useAuth } from '@/lib/AuthContext';
 import type { ITransactionPaymentDetailFormRow } from './transactionPaymentDetailsTypes';
 
+const ACCOUNT_PROFILE_OPTION_PAGE_SIZE = 30;
+
 interface TransactionPaymentDetailsFieldArrayProps {
   name: string;
   title?: string;
@@ -186,10 +188,10 @@ const PaymentDetailRow = ({
   }, [accountId, arrayName, chequePageId, form, index, pageOptions]);
 
   const loadAccountOptions = useCallback(
-    async (inputValue: string): Promise<AsyncSelectResponse> => {
+    async (inputValue: string, page = 1): Promise<AsyncSelectResponse> => {
       const response = await accountProfileApi.getAccountProfiles({
-        page: 1,
-        limit: 100,
+        page,
+        limit: ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
         search: inputValue,
         ...accountQuery,
         active: true,
@@ -202,6 +204,7 @@ const PaymentDetailRow = ({
           value: account.id,
           label: `${account.accountCode} - ${account.accountName}`,
         })),
+        hasMore: accounts.length === ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
       };
     },
     [accountQuery]
@@ -215,6 +218,8 @@ const PaymentDetailRow = ({
           label="Account"
           placeholder="Select account code"
           loadOptions={loadAccountOptions}
+          pagination
+          pageSize={ACCOUNT_PROFILE_OPTION_PAGE_SIZE}
           disabled={disabled}
           isSearchable
           cacheOptions={false}

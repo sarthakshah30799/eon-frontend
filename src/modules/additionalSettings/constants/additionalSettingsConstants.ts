@@ -15,6 +15,14 @@ export const AdditionalSettingsCodeEnum = {
   PurchaseFfmcAds: 'PURCHASE_FFMC_ADS',
   TransactionPrintSettings: 'TRANSACTION_PRINT_SETTINGS',
   TransactionPrintSacCode: 'TRANSACTION_PRINT_SAC_CODE',
+  TransactionNumbering: 'TRANSACTION_NUMBERING',
+  PurchaseFfmcNumberSeries: 'PURCHASE_FFMC',
+  SaleFfmcNumberSeries: 'SALE_FFMC',
+  PurchaseRmcNumberSeries: 'PURCHASE_RMC',
+  PurchaseForexNumberSeries: 'PURCHASE_FOREX',
+  PurchaseForeignNumberSeries: 'PURCHASE_FOREIGN',
+  PurchaseMiscNumberSeries: 'PURCHASE_MISC',
+  PurchaseFranchiseNumberSeries: 'PURCHASE_FRANCHISE',
 } as const;
 
 export const ADDITIONAL_SETTINGS_TEXTS = {

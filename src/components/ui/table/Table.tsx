@@ -61,6 +61,7 @@ export interface TableProps<T extends object>
   enableRowSelection?: boolean;
   enableColumnVisibility?: boolean;
   pageSize?: number;
+  pageSizeOptions?: number[];
   className?: string;
   onRowSelectionChange?: (selectedRows: RowSelectionState) => void;
   onSortingChange?: (sorting: SortingState) => void;
@@ -86,6 +87,7 @@ function Table<T extends object>({
   enableRowSelection = false,
   enableColumnVisibility = false,
   pageSize = 10,
+  pageSizeOptions = [10, 20, 30, 40, 50, 100, 250, 500, 1000],
   className = '',
   variant,
   size,
@@ -368,10 +370,10 @@ function Table<T extends object>({
             }}
             className="rounded-md border border-border-secondary px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
-            {[10, 20, 30, 40, 50].map(pageSize => (
-              <option key={pageSize} value={pageSize}>
-                Show {pageSize}
-              </option>
+          {pageSizeOptions.map(pageSize => (
+            <option key={pageSize} value={pageSize}>
+              Show {pageSize}
+            </option>
             ))}
           </select>
         </div>

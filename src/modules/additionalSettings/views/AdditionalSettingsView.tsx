@@ -151,6 +151,7 @@ export const AdditionalSettingsView = () => {
               ? mapCategoryToFormValues(editingCategory)
               : createEmptyAdditionalSettingCategoryFormValues()
           }
+          existingCategoryCodes={categories.map(category => category.code)}
           onSubmit={
             categoryModalMode === 'edit'
               ? handleUpdateSubmit

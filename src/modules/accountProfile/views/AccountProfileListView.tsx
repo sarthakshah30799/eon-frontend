@@ -19,7 +19,6 @@ export const AccountProfileListView = () => {
       page,
       limit: pageSize,
       search: debouncedSearch.trim() || undefined,
-      activeOnly: false,
     }),
     [page, pageSize, debouncedSearch]
   );

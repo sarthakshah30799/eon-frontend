@@ -123,6 +123,58 @@ const TRANSACTION_PRINT_SETTINGS_SUBCATEGORIES: readonly AdditionalSettingSubcat
   },
 ];
 
+const TRANSACTION_NUMBERING_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] = [
+  {
+    code: AdditionalSettingsCodeEnum.PurchaseFfmcNumberSeries,
+    label: 'PURCHASE FFMC/ADS',
+    valueType: 'number',
+    required: true,
+    placeholder: 'Enter starting sequence number',
+  },
+  {
+    code: AdditionalSettingsCodeEnum.SaleFfmcNumberSeries,
+    label: 'SALE FFMC/ADS',
+    valueType: 'number',
+    required: true,
+    placeholder: 'Enter starting sequence number',
+  },
+  {
+    code: AdditionalSettingsCodeEnum.PurchaseRmcNumberSeries,
+    label: 'PURCHASE RMC',
+    valueType: 'number',
+    required: true,
+    placeholder: 'Enter starting sequence number',
+  },
+  {
+    code: AdditionalSettingsCodeEnum.PurchaseForexNumberSeries,
+    label: 'PURCHASE FOREX',
+    valueType: 'number',
+    required: true,
+    placeholder: 'Enter starting sequence number',
+  },
+  {
+    code: AdditionalSettingsCodeEnum.PurchaseForeignNumberSeries,
+    label: 'PURCHASE FOREIGN',
+    valueType: 'number',
+    required: true,
+    placeholder: 'Enter starting sequence number',
+  },
+  {
+    code: AdditionalSettingsCodeEnum.PurchaseMiscNumberSeries,
+    label: 'PURCHASE MISC',
+    valueType: 'number',
+    required: true,
+    placeholder: 'Enter starting sequence number',
+  },
+  {
+    code: AdditionalSettingsCodeEnum.PurchaseFranchiseNumberSeries,
+    label: 'PURCHASE FRANCHISE',
+    valueType: 'number',
+    required: true,
+    placeholder: 'Enter starting sequence number',
+  },
+];
+
 export const ADDITIONAL_SETTING_DEFINITIONS: readonly AdditionalSettingCategoryDefinition[] = [
   {
     code: AdditionalSettingsCodeEnum.PasswordPolicy,
@@ -151,6 +203,13 @@ export const ADDITIONAL_SETTING_DEFINITIONS: readonly AdditionalSettingCategoryD
     rendererKey: 'default',
     titleLocked: true,
     subcategories: TRANSACTION_PRINT_SETTINGS_SUBCATEGORIES,
+  },
+  {
+    code: AdditionalSettingsCodeEnum.TransactionNumbering,
+    label: 'TRANSACTION NUMBERING',
+    rendererKey: 'default',
+    titleLocked: true,
+    subcategories: TRANSACTION_NUMBERING_SUBCATEGORIES,
   },
 ];
 

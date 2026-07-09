@@ -16,15 +16,15 @@ const decimalStringSchema = yup
     return /^\d+(\.\d+)?$/.test(value);
   });
 
-const integerStringSchema = yup
+const quantityStringSchema = yup
   .string()
   .trim()
-  .test('integer', 'Must be a valid whole number', value => {
+  .test('decimal', 'Must be a valid decimal number', value => {
     if (!value) {
       return true;
     }
 
-    return /^\d+$/.test(value);
+    return /^\d+(\.\d{1,7})?$/.test(value);
   });
 
 const signedDecimalStringSchema = yup
@@ -45,7 +45,7 @@ const purchaseTransactionSchema = yup.object({
   productId: yup.string().trim().required('Product is required'),
   productCode: yup.string().trim().default(''),
   productDescription: yup.string().trim().default(''),
-  quantity: integerStringSchema.required('Quantity is required'),
+  quantity: quantityStringSchema.required('Quantity is required'),
   per: decimalStringSchema.default(''),
   rate: decimalStringSchema.default(''),
   commission: decimalStringSchema.default(''),

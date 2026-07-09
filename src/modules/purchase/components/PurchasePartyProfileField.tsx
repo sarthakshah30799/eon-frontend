@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { useFormContext } from 'react-hook-form';
+import { useFormContext, useWatch } from 'react-hook-form';
 import { SelectPartyProfiles } from '@/modules/partyProfiles/components';
 import type { PartyProfileType } from '@/modules/partyProfiles/constants';
+import type { IPartyProfileListQuery } from '@/modules/partyProfiles/types';
 import type { IPurchaseFormValues } from '../types/purchaseTypes';
 import { formatPurchaseEntityLabel } from '../utils/purchaseUtils';
 import { EntityPickerField } from './EntityPickerField';
@@ -20,6 +21,15 @@ export const PurchasePartyProfileField = ({
 
   const partyProfileCode = form.watch('partyProfileCode');
   const partyProfileName = form.watch('partyProfileName');
+  const transactionType = useWatch({
+    control: form.control,
+    name: 'transactionType',
+  });
+  const profileQueryParams = (
+    transactionType === 'SALE'
+      ? { sale: true, activeOnly: true }
+      : { purchase: true, activeOnly: true }
+  ) satisfies Pick<IPartyProfileListQuery, 'sale' | 'purchase' | 'activeOnly'>;
 
   return (
     <>
@@ -39,6 +49,7 @@ export const PurchasePartyProfileField = ({
         multiple={false}
         title="Select Party Profile"
         description="Choose a single party profile for the purchase transaction."
+        queryParams={profileQueryParams}
         onContinue={profiles => {
           const selectedProfile = profiles[0];
           if (!selectedProfile) {

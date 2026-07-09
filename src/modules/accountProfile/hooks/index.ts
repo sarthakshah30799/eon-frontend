@@ -9,12 +9,12 @@ import type {
 const getErrorMessage = (error: unknown, fallback: string) =>
   error instanceof Error ? error.message : fallback;
 
-export const useListAccountProfiles = (params?: IAccountProfileListQuery, activeOnly = true) => {
+export const useListAccountProfiles = (params?: IAccountProfileListQuery, filterActive = true) => {
   return useQuery({
-    queryKey: ['account-profiles', params, activeOnly],
+    queryKey: ['account-profiles', params, filterActive],
     queryFn: () => accountProfileApi.getAccountProfiles(params),
     select: response =>
-      activeOnly
+      filterActive
         ? {
             ...response,
             data: response.data.filter(account => account.active !== false),

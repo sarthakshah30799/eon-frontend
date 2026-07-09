@@ -106,21 +106,47 @@ const EditSubcategoryForm = ({
   const [code] = useState(subcategory.code);
   const [categoryType] = useState(subcategory.categoryType || 'text');
   const [value, setValue] = useState(subcategory.value);
+  const [valueError, setValueError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const isBooleanType = categoryType.toLowerCase() === 'boolean';
   const subcategoryDefinition = getAdditionalSettingSubcategoryDefinition(
     categoryCode,
     subcategory.code
   );
+  const isTransactionNumberingCategory =
+    categoryCode?.trim().toUpperCase() === 'TRANSACTION_NUMBERING';
   const isRequiredPolicyValue = subcategoryDefinition?.required ?? true;
   const isNumberType = categoryType.toLowerCase() === 'number' || categoryType.toLowerCase() === 'decimal';
   const isDateType = categoryType.toLowerCase() === 'date';
   const isSelectType = categoryType.toLowerCase() === 'select';
 
+  const handleNumberingValueChange = (nextValue: string) => {
+    setValueError('');
+    setValue(nextValue.replace(/\D/g, '').slice(0, 9));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const cleanDesc = description.trim();
     if (!cleanDesc) return;
+
+    if (isTransactionNumberingCategory) {
+      const cleanValue = value.trim();
+      if (!cleanValue) {
+        setValueError('Series value is required');
+        return;
+      }
+
+      if (!/^\d+$/.test(cleanValue)) {
+        setValueError('Only digits are allowed');
+        return;
+      }
+
+      if (cleanValue.length !== 9) {
+        setValueError('Series value must be exactly 9 digits');
+        return;
+      }
+    }
 
     setIsSaving(true);
     try {
@@ -227,19 +253,39 @@ const EditSubcategoryForm = ({
             ))}
           </select>
         ) : isNumberType ? (
-          <input
-            type="number"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            required={isRequiredPolicyValue}
-            min={subcategoryDefinition?.valueType === 'number' ? 0 : undefined}
-            step={subcategoryDefinition?.valueType === 'number' ? '1' : 'any'}
-            className="w-full rounded-sm border border-border-primary bg-surface-primary px-3 py-2 text-sm text-text-primary outline-none transition focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
-            placeholder={
-              subcategoryDefinition?.placeholder ??
-              (isRequiredPolicyValue ? 'Enter value' : 'Enter value or leave blank')
-            }
-          />
+          <div className="space-y-1">
+            <input
+              type={isTransactionNumberingCategory ? 'text' : 'number'}
+              inputMode={isTransactionNumberingCategory ? 'numeric' : undefined}
+              pattern={isTransactionNumberingCategory ? '\\d*' : undefined}
+              maxLength={isTransactionNumberingCategory ? 9 : undefined}
+              value={value}
+              onChange={(e) =>
+                isTransactionNumberingCategory
+                  ? handleNumberingValueChange(e.target.value)
+                  : setValue(e.target.value)
+              }
+              required={isRequiredPolicyValue}
+              minLength={isTransactionNumberingCategory ? 9 : undefined}
+              min={subcategoryDefinition?.valueType === 'number' ? 0 : undefined}
+              step={subcategoryDefinition?.valueType === 'number' ? '1' : 'any'}
+              className="w-full rounded-sm border border-border-primary bg-surface-primary px-3 py-2 text-sm text-text-primary outline-none transition focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+              placeholder={
+                isTransactionNumberingCategory
+                  ? 'Enter 9-digit series counter'
+                  : subcategoryDefinition?.placeholder ??
+                    (isRequiredPolicyValue ? 'Enter value' : 'Enter value or leave blank')
+              }
+            />
+            {isTransactionNumberingCategory ? (
+              <p className="text-[11px] leading-tight text-text-tertiary">
+                Enter exactly 9 digits. The final number is branch code + financial year + series = 15 characters.
+              </p>
+            ) : null}
+            {valueError ? (
+              <p className="text-[11px] leading-tight text-error-600">{valueError}</p>
+            ) : null}
+          </div>
         ) : (
           <input
             type="text"

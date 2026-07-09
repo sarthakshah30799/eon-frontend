@@ -5,7 +5,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { Button, CardSection } from '@/components/ui';
-import { Form, FormFieldInput } from '@/components/forms';
+import { Form } from '@/components/forms';
 import { TransactionAdditionalChargesFieldArray } from '@/components/forms';
 import { TransactionPaymentDetailsFieldArray } from '@/components/forms';
 import { documentProfileApi } from '@/api/documentProfile';
@@ -15,9 +15,6 @@ import type { IDocumentProfileFile } from '@/modules/documentProfiles/types';
 import { SelectCurrencyProfiles } from '@/modules/currencyProfile/components';
 import { useGetBranchProfile } from '@/modules/branchProfile/hooks/useGetBranchProfile';
 import { useListCompanyProfiles } from '@/modules/companyProfile/hooks';
-import { useListAdditionalSettings } from '@/modules/additionalSettings/hooks';
-import { AdditionalSettingsCodeEnum } from '@/modules/additionalSettings/constants';
-import { getAdditionalSettingTextValue } from '@/modules/additionalSettings/utils';
 import { useGetPartyProfile } from '@/modules/partyProfiles/hooks';
 import type { PartyProfileType } from '@/modules/partyProfiles/constants';
 import type { PurchasePageType } from '@/pages/purchase/[slug]/purchasePage.enum';
@@ -28,16 +25,21 @@ import type {
   IPurchasePricingData,
   IPurchaseTransactionDocument,
 } from '../types/purchaseTypes';
+import type { ITransactionEntity } from '@/modules/transactions';
 import { purchaseFormSchema } from '../schema/purchaseSchema';
 import { PurchaseAgentProfileField } from '../components/PurchaseAgentProfileField';
 import { PurchaseBookReferenceField } from '../components/PurchaseBookReferenceField';
 import { PurchasePartyProfileField } from '../components/PurchasePartyProfileField';
+import { PurchaseReferenceNumberField } from '../components/PurchaseReferenceNumberField';
 import { PurchaseTransactionTable } from '../components/PurchaseTransactionTable';
 import { calculatePurchasePayableTotal } from '../utils/purchaseUtils';
 import {
   buildPurchasePrintHtml,
   getPurchasePrintCopyLabel,
 } from '../utils/purchasePrintUtils';
+import { TransactionLogActionEnum } from '@/modules/transactions';
+
+const ACCOUNT_PROFILE_OPTION_PAGE_SIZE = 30;
 
 interface PurchaseFormProps {
   purchasePageType: PurchasePageType | null;
@@ -47,8 +49,8 @@ interface PurchaseFormProps {
   requiresApproval: boolean;
   branchId?: string;
   branchCode?: string;
-  savedTransactionId?: string | null;
-  savedTransactionNumber?: string | null;
+  sacCode?: string | null;
+  savedTransaction?: Pick<ITransactionEntity, 'id' | 'number' | 'logs'> | null;
   isFreshlyCreated?: boolean;
   readOnly?: boolean;
   isSubmitting?: boolean;
@@ -68,8 +70,8 @@ interface PurchaseFormBodyProps {
   requiresApproval: boolean;
   branchId: string;
   branchCode: string;
-  savedTransactionId: string | null;
-  savedTransactionNumber: string | null;
+  sacCode: string;
+  savedTransaction: Pick<ITransactionEntity, 'id' | 'number' | 'logs'> | null;
   isFreshlyCreated: boolean;
   isSubmitting: boolean;
   readOnly: boolean;
@@ -85,10 +87,10 @@ const PurchaseFormBody = ({
   partyProfileTypes,
   requiresApproval,
   branchId,
-  branchCode,
-  savedTransactionId,
-  savedTransactionNumber,
-  isFreshlyCreated,
+  sacCode,
+  savedTransaction,
+  branchCode: _branchCode,
+  isFreshlyCreated: _isFreshlyCreated,
   isSubmitting,
   readOnly,
   draftDocuments,
@@ -96,6 +98,8 @@ const PurchaseFormBody = ({
   onSelectDraftDocument,
   onClearDraftDocument,
 }: PurchaseFormBodyProps) => {
+  void _branchCode;
+  void _isFreshlyCreated;
   const form = useFormContext<IPurchaseFormValues>();
   const [currencyPickerRowIndex, setCurrencyPickerRowIndex] = useState<
     number | null
@@ -114,7 +118,7 @@ const PurchaseFormBody = ({
   const additionalChargeAccountQuery = useMemo(
     () => ({
       page: 1,
-      limit: 100,
+      limit: ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
       active: true,
       bulkPurchase: true,
     }),
@@ -123,7 +127,7 @@ const PurchaseFormBody = ({
   const paymentAccountQuery = useMemo(
     () => ({
       page: 1,
-      limit: 100,
+      limit: ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
       active: true,
     }),
     []
@@ -144,7 +148,15 @@ const PurchaseFormBody = ({
   );
   const { data: branchProfile } = useGetBranchProfile(branchId);
   const { data: companies = [] } = useListCompanyProfiles();
-  const { data: additionalSettings = [] } = useListAdditionalSettings();
+  const { data: nextTransactionNumber } = useQuery({
+    queryKey: ['purchase-next-transaction-number', branchId, purchasePageType],
+    queryFn: () =>
+      transactionsApi.getNextNumber({
+        slug: purchasePageType ?? '',
+        branchId,
+      }),
+    enabled: Boolean(branchId && purchasePageType && !savedTransaction?.number),
+  });
   const agentCommissionRules = useMemo(
     () => (agentProfileId ? agentProfile?.commissionRules ?? [] : []),
     [agentProfile?.commissionRules, agentProfileId]
@@ -193,12 +205,12 @@ const PurchaseFormBody = ({
     );
   };
   const getDocumentDownloadUrl = (document: IPurchaseTransactionDocument) => {
-    if (!savedTransactionId) {
+    if (!savedTransaction?.id) {
       return document.storageUrl ?? undefined;
     }
 
     return transactionsApi.getTransactionDocumentDownloadUrl(
-      savedTransactionId,
+      savedTransaction.id,
       document.id
     );
   };
@@ -227,17 +239,12 @@ const PurchaseFormBody = ({
 
     return activeCompany ?? companies[0] ?? null;
   }, [companies]);
-  const sacCode = useMemo(
-    () =>
-      getAdditionalSettingTextValue(
-        additionalSettings,
-        AdditionalSettingsCodeEnum.TransactionPrintSettings,
-        AdditionalSettingsCodeEnum.TransactionPrintSacCode,
-        ''
-      ),
-    [additionalSettings]
+  const hasPrintedHistory = Boolean(
+    savedTransaction?.logs?.some(log => log.action === TransactionLogActionEnum.PRINT)
   );
-  const canPrint = Boolean(savedTransactionId && savedTransactionNumber);
+  const displayReferenceNumber =
+    savedTransaction?.number ?? nextTransactionNumber?.nextNumber ?? '';
+  const canPrint = Boolean(savedTransaction?.id && savedTransaction?.number);
 
   const handleCurrencySelect = (
     currencies: Array<{
@@ -289,7 +296,7 @@ const PurchaseFormBody = ({
   });
 
   const handlePrintCopy = async () => {
-    if (!savedTransactionId || !savedTransactionNumber) {
+    if (!savedTransaction?.id || !savedTransaction?.number) {
       toast.error('Save the transaction before printing.');
       return;
     }
@@ -301,10 +308,10 @@ const PurchaseFormBody = ({
     try {
       setIsPrinting(true);
       const copyType =
-        !hasPrintedOnce && isFreshlyCreated ? 'CUSTOMER_COPY' : 'DUPLICATE_COPY';
+        !hasPrintedOnce && !hasPrintedHistory ? 'CUSTOMER_COPY' : 'DUPLICATE_COPY';
       const html = buildPurchasePrintHtml({
         copyType,
-        transactionNumber: savedTransactionNumber,
+        transactionNumber: savedTransaction.number,
         transactionDate: new Date(),
         company: currentCompany,
         branch: branchProfile ?? null,
@@ -312,10 +319,10 @@ const PurchaseFormBody = ({
         sacCode,
       });
 
-      await transactionsApi.recordPrint(savedTransactionId, {
+      await transactionsApi.recordPrint(savedTransaction.id, {
         copyType,
-        subject: `${savedTransactionNumber} - ${getPurchasePrintCopyLabel(copyType)}`,
-        text: `Printed ${getPurchasePrintCopyLabel(copyType).toLowerCase()} for transaction ${savedTransactionNumber}.`,
+        subject: `${savedTransaction.number} - ${getPurchasePrintCopyLabel(copyType)}`,
+        text: `Printed ${getPurchasePrintCopyLabel(copyType).toLowerCase()} for transaction ${savedTransaction.number}.`,
         html,
         sendEmail: false,
       });
@@ -348,7 +355,7 @@ const PurchaseFormBody = ({
   return (
     <>
       <CardSection heading={pageTitle}>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-4 lg:grid-cols-3">
           <PurchasePartyProfileField
             partyProfileTypes={partyProfileTypes}
             disabled={isReadOnly}
@@ -356,11 +363,10 @@ const PurchaseFormBody = ({
 
           <PurchaseAgentProfileField disabled={isReadOnly} />
 
-          <FormFieldInput
-            name="number"
-            label="Number"
-            placeholder={branchCode ? `${branchCode}-00000000` : '00000000'}
-            disabled={isReadOnly}
+          <PurchaseReferenceNumberField
+            value={displayReferenceNumber}
+            placeholder="Will be generated on save or approval"
+            helperText="Format: branch code + financial year + running series. The backend rechecks the latest counter on submit."
           />
         </div>
       </CardSection>
@@ -445,7 +451,7 @@ const PurchaseFormBody = ({
       {canPrint ? (
         <CardSection heading="Print Copy" className="space-y-4">
           <p className="text-sm text-text-secondary">
-            {hasPrintedOnce || !isFreshlyCreated
+            {hasPrintedOnce || hasPrintedHistory
               ? 'Print the duplicate copy for this saved transaction.'
               : 'Print the original copy for this newly saved transaction.'}
           </p>
@@ -481,8 +487,8 @@ export const PurchaseForm = ({
   requiresApproval,
   branchId = '',
   branchCode = '',
-  savedTransactionId = null,
-  savedTransactionNumber = null,
+  sacCode = '',
+  savedTransaction = null,
   isFreshlyCreated = false,
   readOnly = false,
   isSubmitting = false,
@@ -542,8 +548,8 @@ export const PurchaseForm = ({
         requiresApproval={requiresApproval}
         branchId={branchId}
         branchCode={branchCode}
-        savedTransactionId={savedTransactionId}
-        savedTransactionNumber={savedTransactionNumber}
+        sacCode={sacCode ?? ''}
+        savedTransaction={savedTransaction}
         isFreshlyCreated={isFreshlyCreated}
         isSubmitting={isSubmitting || readOnly}
         readOnly={readOnly}

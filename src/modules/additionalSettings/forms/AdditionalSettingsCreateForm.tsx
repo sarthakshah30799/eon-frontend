@@ -24,6 +24,7 @@ import {
 
 interface AdditionalSettingsCreateFormProps {
   defaultValues?: IAdditionalSettingCategoryFormValues;
+  existingCategoryCodes?: string[];
   onSubmit: (values: IAdditionalSettingCategoryFormValues) => void | Promise<void>;
   isSubmitting?: boolean;
   submitLabel?: string;
@@ -42,6 +43,7 @@ const SubcategoryRowFields = ({
   remove,
   fieldsLength,
   isFixed = false,
+  usedCodes,
 }: {
   index: number;
   categoryCode?: string;
@@ -50,6 +52,7 @@ const SubcategoryRowFields = ({
   remove: (index: number) => void;
   fieldsLength: number;
   isFixed?: boolean;
+  usedCodes: string[];
 }) => {
   const { control, setValue } = useFormContext<IAdditionalSettingCategoryFormValues>();
 
@@ -70,7 +73,6 @@ const SubcategoryRowFields = ({
     categoryCode,
     subcategoryCode
   );
-
   const isBooleanType = categoryType?.toLowerCase() === 'boolean';
   const isDateType = categoryType?.toLowerCase() === 'date';
   const isSelectType = categoryType?.toLowerCase() === 'select';
@@ -110,13 +112,22 @@ const SubcategoryRowFields = ({
     hasMore: false,
   });
 
-  const loadCodeOptions = async () => ({
-    options: getAdditionalSettingSubcategoryCodeOptions(categoryCode).map(option => ({
-      value: option.value,
-      label: option.label,
-    })),
-    hasMore: false,
-  });
+  const loadCodeOptions = async () => {
+    const currentCode = String(subcategoryCode ?? '').trim().toUpperCase();
+    const blockedCodes = new Set(
+      usedCodes.filter(code => code && code !== currentCode)
+    );
+
+    return {
+      options: getAdditionalSettingSubcategoryCodeOptions(categoryCode)
+        .filter(option => !blockedCodes.has(String(option.value).trim().toUpperCase()))
+        .map(option => ({
+          value: option.value,
+          label: option.label,
+        })),
+      hasMore: false,
+    };
+  };
 
   return (
     <div className="relative rounded-sm border border-border-primary bg-surface-primary p-4">
@@ -213,15 +224,22 @@ const SubcategoryRowFields = ({
             rows={3}
           />
         ) : isNumberType ? (
-          <FormFieldInput
-            name={`subcategories.${index}.value`}
-            label="Value"
-            placeholder={subcategoryDefinition?.placeholder ?? 'Enter number value'}
-            type="number"
-            disabled={isSubmitting}
-            required={subcategoryDefinition?.required ?? true}
-            {...noTransformInputProps}
-          />
+          <div className="space-y-1">
+            <FormFieldInput
+              name={`subcategories.${index}.value`}
+              label="Value"
+              placeholder={subcategoryDefinition?.placeholder ?? 'Enter number value'}
+              type="number"
+              disabled={isSubmitting}
+              required={subcategoryDefinition?.required ?? true}
+              {...noTransformInputProps}
+            />
+            {categoryCode?.trim().toUpperCase() === 'TRANSACTION_NUMBERING' ? (
+              <p className="text-[11px] leading-tight text-text-tertiary">
+                Enter the starting series counter. The backend pads this to 9 digits when building the final number: branch code + financial year + series = 15 characters.
+              </p>
+            ) : null}
+          </div>
         ) : (
           <FormFieldInput
             name={`subcategories.${index}.value`}
@@ -256,6 +274,13 @@ const SubcategoryFields = ({
     control,
     name: 'subcategories',
   }) as IAdditionalSettingCategoryFormValues['subcategories'];
+  const selectedSubcategoryCodes = Array.from(
+    new Set(
+      (subcategories ?? [])
+        .map(subcategory => String(subcategory?.code ?? '').trim().toUpperCase())
+        .filter(Boolean)
+    )
+  );
   const isTransactionApprovalCategory =
     categoryCode?.trim().toUpperCase() ===
     AdditionalSettingsCodeEnum.TransactionApprovalPolicy;
@@ -352,6 +377,7 @@ const SubcategoryFields = ({
               remove={remove}
               fieldsLength={fields.length}
               isFixed={isTransactionApprovalCategory}
+              usedCodes={selectedSubcategoryCodes}
             />
           ))}
         </div>
@@ -362,6 +388,7 @@ const SubcategoryFields = ({
 
 export const AdditionalSettingsCreateForm = ({
   defaultValues,
+  existingCategoryCodes = [],
   onSubmit,
   isSubmitting = false,
   submitLabel = ADDITIONAL_SETTINGS_TEXTS.CREATE_CATEGORY,
@@ -369,11 +396,27 @@ export const AdditionalSettingsCreateForm = ({
 }: AdditionalSettingsCreateFormProps) => {
   const initialValues =
     defaultValues ?? createEmptyAdditionalSettingCategoryFormValues();
+  const normalizedExistingCategoryCodes = new Set(
+    existingCategoryCodes.map(code => String(code ?? '').trim().toUpperCase()).filter(Boolean)
+  );
   const loadCategoryCodeOptions = async () => ({
-    options: getAdditionalSettingCategoryCodeOptions().map(option => ({
-      value: option.value,
-      label: option.label,
-    })),
+    options: getAdditionalSettingCategoryCodeOptions()
+      .filter(option => {
+        const code = String(option.value).trim().toUpperCase();
+        if (!code) {
+          return false;
+        }
+
+        if (currentId) {
+          return code === String(defaultValues?.code ?? '').trim().toUpperCase();
+        }
+
+        return !normalizedExistingCategoryCodes.has(code);
+      })
+      .map(option => ({
+        value: option.value,
+        label: option.label,
+      })),
     hasMore: false,
   });
 
@@ -386,12 +429,14 @@ export const AdditionalSettingsCreateForm = ({
     >
       <CardSection heading={ADDITIONAL_SETTINGS_TEXTS.CATEGORY_TITLE}>
         <div className="grid gap-4 md:grid-cols-2">
-          <FormFieldInput
-            name="title"
-            label={ADDITIONAL_SETTINGS_TEXTS.CATEGORY_TITLE}
-            placeholder="Enter category title"
-            disabled={isSubmitting}
-          />
+          <div className="space-y-1">
+            <FormFieldInput
+              name="title"
+              label={ADDITIONAL_SETTINGS_TEXTS.CATEGORY_TITLE}
+              placeholder="Enter category title"
+              disabled={isSubmitting}
+            />
+          </div>
           <FormFieldSelect
             name="code"
             label={ADDITIONAL_SETTINGS_TEXTS.CATEGORY_CODE}

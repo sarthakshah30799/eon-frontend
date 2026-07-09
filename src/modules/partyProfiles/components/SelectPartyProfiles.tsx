@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react';
 import { Checkbox, SelectEntity, type TableColumnDef } from '@/components/ui';
-import { PaginationControls } from '@/components/ui/pagination';
+import type { PaginationState } from '@tanstack/react-table';
 import { useDebounce } from '@/hooks';
 import { useListPartyProfiles } from '../hooks';
 import type { PartyProfileType } from '../constants';
-import type { IPartyProfile } from '../types';
+import type { IPartyProfile, IPartyProfileListQuery } from '../types';
 
 interface SelectPartyProfilesProps {
   open: boolean;
@@ -13,7 +13,7 @@ interface SelectPartyProfilesProps {
   multiple?: boolean;
   title?: string;
   description?: string;
-  filterProfiles?: (profile: IPartyProfile) => boolean;
+  queryParams?: Omit<IPartyProfileListQuery, 'page' | 'limit' | 'search'>;
   onContinue: (profiles: IPartyProfile[]) => void;
   onClose: () => void;
 }
@@ -109,13 +109,12 @@ export const SelectPartyProfiles = ({
   multiple = false,
   title = 'Select Party Profiles',
   description = 'Search and choose party profiles from the list.',
-  filterProfiles,
+  queryParams,
   onContinue,
   onClose,
 }: SelectPartyProfilesProps) => {
   const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(50);
   const debouncedSearch = useDebounce(search, 350);
 
   const normalizedTypes = useMemo(
@@ -126,17 +125,16 @@ export const SelectPartyProfiles = ({
   const { data: response, isLoading, isFetching } = useListPartyProfiles(
     {
       search: debouncedSearch.trim() || undefined,
-      page,
+      page: 1,
       limit: pageSize,
+      ...queryParams,
     },
     normalizedTypes,
     open,
     true
   );
 
-  const profiles = (response?.data ?? EMPTY_PARTY_PROFILE_ROWS).filter(profile =>
-    filterProfiles ? filterProfiles(profile) : true
-  );
+  const profiles = response?.data ?? EMPTY_PARTY_PROFILE_ROWS;
   const rows = useMemo<SelectablePartyProfileRow[]>(
     () =>
       profiles.map(profile => ({
@@ -151,11 +149,8 @@ export const SelectPartyProfiles = ({
     [multiple, selectable]
   );
 
-  const totalItems = response?.totalItems ?? profiles.length;
-  const totalPages = response?.totalPages ?? 0;
-
   return (
-    <div>
+    <>
       <SelectEntity<SelectablePartyProfileRow>
         open={open}
         title={title}
@@ -167,7 +162,6 @@ export const SelectPartyProfiles = ({
         multiple={multiple}
         searchValue={search}
         onSearch={value => {
-          setPage(1);
           setSearch(value);
         }}
         searchPlaceholder="Search code, name, city, phone"
@@ -182,29 +176,16 @@ export const SelectPartyProfiles = ({
           )
         }
         onClose={() => {
-          setPage(1);
-          setPageSize(10);
           onClose();
         }}
         getRowId={row => row.rowKey}
-        enablePagination={false}
+        enablePagination
+        pageSize={pageSize}
+        onPaginationChange={(pagination: PaginationState) => {
+          setPageSize(pagination.pageSize);
+        }}
       />
-
-      <div className="mt-5">
-        <PaginationControls
-          page={page}
-          pageSize={pageSize}
-          totalItems={totalItems}
-          totalPages={totalPages}
-          onPageChange={nextPage => setPage(nextPage)}
-          onPageSizeChange={nextPageSize => {
-            setPage(1);
-            setPageSize(nextPageSize);
-          }}
-          itemLabel="party profiles"
-        />
-      </div>
-    </div>
+    </>
   );
 };
 

@@ -25,6 +25,8 @@ import {
   type ChequeBookStatus,
 } from '@/modules/chequebooks/types';
 
+const ACCOUNT_PROFILE_OPTION_PAGE_SIZE = 30;
+
 export const ChequeBookAcknowledgementPage = () => {
   const { activeBranchId } = useAuth();
   const getPastDateStr = (daysAgo: number) => {
@@ -344,11 +346,11 @@ export const ChequeBookAcknowledgementPage = () => {
                   name="bankAccountCode"
                   label="Bank Account Code"
                   placeholder="All"
-                  loadOptions={async (inputValue) => {
+                  loadOptions={async (inputValue: string, page = 1) => {
                     try {
                       const response = await accountProfileApi.getAccountProfiles({
-                        page: 1,
-                        limit: 100,
+                        page,
+                        limit: ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
                         search: inputValue,
                         active: true,
                       });
@@ -359,13 +361,13 @@ export const ChequeBookAcknowledgementPage = () => {
                           (acc.financialCode && acc.financialCode === 'BANKBL')
                         );
                       });
-                      return {
-                        options: bankAccounts.map(acc => ({
-                          value: acc.id,
-                          label: `${acc.accountCode} - ${acc.accountName}`,
-                        })),
-                        hasMore: false,
-                      };
+                        return {
+                          options: bankAccounts.map(acc => ({
+                            value: acc.id,
+                            label: `${acc.accountCode} - ${acc.accountName}`,
+                          })),
+                          hasMore: (response.data || []).length === ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
+                        };
                     } catch {
                       return {
                         options: [],
@@ -373,7 +375,9 @@ export const ChequeBookAcknowledgementPage = () => {
                       };
                     }
                   }}
-                />
+                    pagination
+                    pageSize={ACCOUNT_PROFILE_OPTION_PAGE_SIZE}
+                  />
               </div>
 
               <div>

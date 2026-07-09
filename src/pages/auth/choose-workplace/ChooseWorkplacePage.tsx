@@ -46,8 +46,9 @@ const ChooseWorkplacePage: React.FC = () => {
   const effectiveSelectedBranchId =
     selectedBranchId || visibleBranches[0]?.id || '';
 
-  const selectedBranchAssignments =
-    assignmentsByBranch.get(effectiveSelectedBranchId) ?? [];
+  const selectedBranchAssignments = useMemo(() => {
+    return assignmentsByBranch.get(effectiveSelectedBranchId) ?? [];
+  }, [assignmentsByBranch, effectiveSelectedBranchId]);
 
   const visibleCounters = useMemo(() => {
     const seen = new Set<string>();
@@ -100,7 +101,7 @@ const ChooseWorkplacePage: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      setWorkplace(effectiveSelectedBranchId, effectiveSelectedCounterId);
+      await setWorkplace(effectiveSelectedBranchId, effectiveSelectedCounterId);
       toast.success('Workplace set successfully!');
       navigate('/');
     } catch {
@@ -235,7 +236,8 @@ const ChooseWorkplacePage: React.FC = () => {
                 type="submit"
                 className="w-full mt-4"
                 size="lg"
-              disabled={
+                loading={isSubmitting}
+                disabled={
                   isSubmitting ||
                   !effectiveSelectedBranchId ||
                   !effectiveSelectedCounterId

@@ -13,8 +13,8 @@ export const useCreatePurchaseTransaction = () => {
       void queryClient.invalidateQueries({ queryKey: ['transactions'] });
       toast.success(
         variables.transaction.requiresApproval
-          ? `Transaction draft saved successfully with ${variables.transaction.number}`
-          : `Transaction saved successfully with ${variables.transaction.number}`
+          ? 'Transaction draft saved successfully'
+          : `Transaction saved successfully with ${variables.transaction.number ?? 'generated reference'}`
       );
     },
     onError: error => {

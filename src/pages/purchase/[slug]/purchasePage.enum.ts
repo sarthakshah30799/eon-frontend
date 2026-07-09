@@ -3,6 +3,7 @@ import type { TradeMode, TransactionType } from '@/modules/transactions';
 
 export const PurchasePageTypeEnum = {
   PURCHASE_FFMC: 'PURCHASE_FFMC',
+  SALE_FFMC: 'SALE_FFMC',
   PURCHASE_RMC: 'PURCHASE_RMC',
   PURCHASE_FOREX: 'PURCHASE_FOREX',
   PURCHASE_FOREIGN: 'PURCHASE_FOREIGN',
@@ -15,6 +16,7 @@ export type PurchasePageType =
 
 const PURCHASE_PAGE_TYPE_BY_SLUG: Record<string, PurchasePageType> = {
   'ffmc-ads': PurchasePageTypeEnum.PURCHASE_FFMC,
+  'sale-ffmc-ads': PurchasePageTypeEnum.SALE_FFMC,
   rmc: PurchasePageTypeEnum.PURCHASE_RMC,
   forex: PurchasePageTypeEnum.PURCHASE_FOREX,
   foreign: PurchasePageTypeEnum.PURCHASE_FOREIGN,
@@ -24,6 +26,7 @@ const PURCHASE_PAGE_TYPE_BY_SLUG: Record<string, PurchasePageType> = {
 
 const PURCHASE_PAGE_SLUG_BY_TYPE: Record<PurchasePageType, string> = {
   [PurchasePageTypeEnum.PURCHASE_FFMC]: 'ffmc-ads',
+  [PurchasePageTypeEnum.SALE_FFMC]: 'ffmc-ads',
   [PurchasePageTypeEnum.PURCHASE_RMC]: 'rmc',
   [PurchasePageTypeEnum.PURCHASE_FOREX]: 'forex',
   [PurchasePageTypeEnum.PURCHASE_FOREIGN]: 'foreign',
@@ -40,6 +43,10 @@ const PURCHASE_PAGE_CONFIG_BY_TYPE: Record<
 > = {
   [PurchasePageTypeEnum.PURCHASE_FFMC]: {
     title: 'Purchase FFMC/Ads',
+    partyProfileTypes: ['FFMC', 'AUTHORISED_DEALER'],
+  },
+  [PurchasePageTypeEnum.SALE_FFMC]: {
+    title: 'Sale FFMC/Ads',
     partyProfileTypes: ['FFMC', 'AUTHORISED_DEALER'],
   },
   [PurchasePageTypeEnum.PURCHASE_RMC]: {
@@ -72,6 +79,21 @@ export const getPurchasePageTypeFromSlug = (
   }
 
   return PURCHASE_PAGE_TYPE_BY_SLUG[slug] ?? null;
+};
+
+export const getPurchasePageTypeFromPath = (
+  pathname?: string | null,
+  slug?: string
+): PurchasePageType | null => {
+  const normalizedPath = pathname?.trim().toLowerCase() ?? '';
+  if (normalizedPath.startsWith('/sale/')) {
+    const normalizedSlug = slug?.trim().toLowerCase();
+    if (normalizedSlug === 'ffmc-ads' || normalizedSlug === 'sale-ffmc-ads') {
+      return PurchasePageTypeEnum.SALE_FFMC;
+    }
+  }
+
+  return getPurchasePageTypeFromSlug(slug);
 };
 
 export const getPurchasePageTitle = (
@@ -118,6 +140,8 @@ export const getPurchaseTransactionType = (
   pageType: PurchasePageType | null
 ): TransactionType => {
   switch (pageType) {
+    case PurchasePageTypeEnum.SALE_FFMC:
+      return 'SALE';
     case PurchasePageTypeEnum.PURCHASE_FFMC:
       return 'PURCHASE';
     default:
@@ -129,9 +153,21 @@ export const getPurchaseTradeMode = (
   pageType: PurchasePageType | null
 ): TradeMode => {
   switch (pageType) {
+    case PurchasePageTypeEnum.SALE_FFMC:
     case PurchasePageTypeEnum.PURCHASE_FFMC:
       return 'BULK';
     default:
       return 'BULK';
+  }
+};
+
+export const getPurchasePageBasePath = (
+  pageType: PurchasePageType | null
+): 'purchase' | 'sale' => {
+  switch (pageType) {
+    case PurchasePageTypeEnum.SALE_FFMC:
+      return 'sale';
+    default:
+      return 'purchase';
   }
 };

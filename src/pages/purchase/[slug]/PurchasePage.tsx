@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { EyeIcon, PencilSquareIcon } from '@heroicons/react/24/outline';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button1';
@@ -9,8 +9,9 @@ import { useAuth } from '@/lib/AuthContext';
 import { transactionsApi } from '@/api/transactions';
 import type { ITransactionEntity } from '@/modules/transactions';
 import {
+  getPurchasePageBasePath,
   getPurchasePageTitle,
-  getPurchasePageTypeFromSlug,
+  getPurchasePageTypeFromPath,
   getPurchasePageSlugFromType,
   type PurchasePageType,
 } from './purchasePage.enum';
@@ -46,6 +47,7 @@ const formatDateTime = (value?: string | null) => {
 
 const PurchasePageView = ({ purchasePageType }: PurchasePageViewProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { slug: routeSlug } = useParams<{ slug?: string }>();
   const { user } = useAuth();
   const [search, setSearch] = useState('');
@@ -53,6 +55,10 @@ const PurchasePageView = ({ purchasePageType }: PurchasePageViewProps) => {
   const selectedSlug = useMemo(
     () => getPurchasePageSlugFromType(purchasePageType) ?? routeSlug ?? '',
     [purchasePageType, routeSlug]
+  );
+  const basePath = useMemo(
+    () => getPurchasePageBasePath(purchasePageType),
+    [purchasePageType]
   );
 
   const canCreate = Boolean(user);
@@ -63,7 +69,7 @@ const PurchasePageView = ({ purchasePageType }: PurchasePageViewProps) => {
     isFetching,
     error,
   } = useQuery({
-    queryKey: ['transactions', selectedSlug, search],
+    queryKey: ['transactions', purchasePageType, selectedSlug, search],
     queryFn: () =>
       transactionsApi.getTransactions({
         slug: purchasePageType ?? undefined,
@@ -72,11 +78,22 @@ const PurchasePageView = ({ purchasePageType }: PurchasePageViewProps) => {
     enabled: Boolean(purchasePageType),
   });
 
+  useEffect(() => {
+    const resolvedType = getPurchasePageTypeFromPath(location.pathname, routeSlug);
+    if (!resolvedType || resolvedType === purchasePageType) {
+      return;
+    }
+
+    navigate(`/${getPurchasePageBasePath(resolvedType)}/${routeSlug}`, {
+      replace: true,
+    });
+  }, [location.pathname, navigate, purchasePageType, routeSlug]);
+
   const rows = useMemo<TransactionRow[]>(
     () =>
       (transactions as ITransactionEntity[]).map(transaction => ({
         id: transaction.id,
-        number: transaction.number,
+        number: transaction.number ?? '-',
         branch: formatReference(transaction.branchSnapshot),
         partyProfile: formatReference(transaction.partyProfileSnapshot),
         transactionType: transaction.transactionType,
@@ -141,7 +158,7 @@ const PurchasePageView = ({ purchasePageType }: PurchasePageViewProps) => {
               onClick={event => {
                 event.stopPropagation();
                 navigate({
-                  pathname: `/purchase/${routeSlug}/edit/${row.original.id}`,
+                  pathname: `/${basePath}/${routeSlug}/edit/${row.original.id}`,
                 });
               }}
             >
@@ -156,14 +173,14 @@ const PurchasePageView = ({ purchasePageType }: PurchasePageViewProps) => {
         enableSorting: false,
       },
     ],
-    [canCreate, navigate, routeSlug]
+    [basePath, canCreate, navigate, routeSlug]
   );
 
   useEffect(() => {
     if (!routeSlug && selectedSlug) {
-      navigate(`/purchase/${selectedSlug}`, { replace: true });
+      navigate(`/${basePath}/${selectedSlug}`, { replace: true });
     }
-  }, [navigate, routeSlug, selectedSlug]);
+  }, [basePath, navigate, routeSlug, selectedSlug]);
 
   if (!purchasePageType) {
     return (
@@ -195,7 +212,7 @@ const PurchasePageView = ({ purchasePageType }: PurchasePageViewProps) => {
           <Button
             type="button"
             className="rounded-sm"
-            onClick={() => navigate(`/purchase/${routeSlug}/create`)}
+            onClick={() => navigate(`/${basePath}/${routeSlug}/create`)}
           >
             Create Transaction
           </Button>
@@ -217,7 +234,7 @@ const PurchasePageView = ({ purchasePageType }: PurchasePageViewProps) => {
           searchPlaceholder="Search transaction number"
           onRowClick={row =>
             navigate({
-              pathname: `/purchase/${routeSlug}/edit/${row.id}`,
+              pathname: `/${basePath}/${routeSlug}/edit/${row.id}`,
             })
           }
           emptyMessage="No transactions found."
@@ -229,7 +246,8 @@ const PurchasePageView = ({ purchasePageType }: PurchasePageViewProps) => {
 
 const PurchasePage = () => {
   const { slug } = useParams<{ slug?: string }>();
-  const purchasePageType = getPurchasePageTypeFromSlug(slug);
+  const location = useLocation();
+  const purchasePageType = getPurchasePageTypeFromPath(location.pathname, slug);
 
   if (!purchasePageType) {
     return (

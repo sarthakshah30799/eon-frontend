@@ -2,6 +2,7 @@ import type { IBranchProfile } from '@/modules/branchProfile/types';
 import type { ICompanyProfile } from '@/modules/companyProfile/types';
 import type { IPurchaseFormValues } from '../types/purchaseTypes';
 import { PURCHASE_RATE_DECIMALS } from './purchaseUtils';
+const PURCHASE_QUANTITY_DECIMALS = 7;
 
 type PurchasePrintCopyType = 'CUSTOMER_COPY' | 'DUPLICATE_COPY';
 
@@ -173,7 +174,7 @@ export const buildPurchasePrintHtml = ({
           <td>${index + 1}</td>
           <td>${escapeHtml(row.currencyCode || '-')}</td>
           <td>${escapeHtml(row.productCode || '-')}</td>
-          <td class="right">${escapeHtml(formatAmount(row.quantity))}</td>
+          <td class="right">${escapeHtml(formatAmount(row.quantity, PURCHASE_QUANTITY_DECIMALS))}</td>
           <td class="right">${escapeHtml(formatAmount(row.per, PURCHASE_RATE_DECIMALS))}</td>
           <td class="right">${escapeHtml(formatAmount(row.rate, PURCHASE_RATE_DECIMALS))}</td>
           <td class="right">${escapeHtml(formatAmount(row.finalAmount || row.total))}</td>

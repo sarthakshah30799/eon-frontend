@@ -5,6 +5,8 @@ import type { AsyncSelectResponse } from '@/components/ui';
 import { Button, CardSection } from '@/components/ui';
 import { FormFieldInput, FormFieldSelect } from '@/components/forms';
 import { accountProfileApi } from '@/api/accountProfile';
+
+const ACCOUNT_PROFILE_OPTION_PAGE_SIZE = 30;
 import type { IAccountProfileListQuery } from '@/modules/accountProfile/types/accountProfileTypes';
 import type { ITransactionAdditionalChargeFormRow } from './transactionAdditionalChargesTypes';
 
@@ -113,10 +115,10 @@ const AdditionalChargeRow = ({
   }, [applyTax, arrayName, form, gstAmount, index, totalAmount]);
 
   const loadAccountOptions = useCallback(
-    async (inputValue: string): Promise<AsyncSelectResponse> => {
+    async (inputValue: string, page = 1): Promise<AsyncSelectResponse> => {
       const response = await accountProfileApi.getAccountProfiles({
-        page: 1,
-        limit: 100,
+        page,
+        limit: ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
         search: inputValue,
         ...accountQuery,
         active: true,
@@ -129,6 +131,7 @@ const AdditionalChargeRow = ({
           value: account.id,
           label: `${account.accountCode} - ${account.accountName}`,
         })),
+        hasMore: accounts.length === ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
       };
     },
     [accountQuery]
@@ -142,6 +145,8 @@ const AdditionalChargeRow = ({
           label="Account"
           placeholder="Select bulk purchase account"
           loadOptions={loadAccountOptions}
+          pagination
+          pageSize={ACCOUNT_PROFILE_OPTION_PAGE_SIZE}
           disabled={disabled}
           isSearchable
         />

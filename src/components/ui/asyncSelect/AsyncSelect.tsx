@@ -69,6 +69,7 @@ export interface AsyncSelectProps<IsMulti extends boolean = false>
   ) => Promise<AsyncSelectResponse>;
   onMenuScrollToBottom?: () => void;
   pagination?: boolean;
+  pageSize?: number;
   debounceDelay?: number;
   className?: string;
   disabled?: boolean;
@@ -86,6 +87,7 @@ const AsyncSelectComponent = React.forwardRef<
       error,
       loadOptions,
       pagination = false,
+      pageSize = 20,
       debounceDelay = 300,
       className = '',
       size,
@@ -99,8 +101,12 @@ const AsyncSelectComponent = React.forwardRef<
   ) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
+    const [hasMore, setHasMore] = useState(true);
     const [inputValue, setInputValue] = useState('');
     const allOptionsRef = useRef<AsyncSelectOption[]>([]);
+    const loadOptionsCallbackRef = useRef<
+      ((options: AsyncSelectOption[]) => void) | null
+    >(null);
     const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
       null
     );
@@ -111,69 +117,108 @@ const AsyncSelectComponent = React.forwardRef<
       setCurrentPage(1);
       allOptionsRef.current = [];
       setIsLoadingMore(false);
+      setHasMore(true);
     }, []);
+
+    const fetchOptionsPage = useCallback(
+      async (
+        searchValue: string,
+        page: number,
+        callback: (options: AsyncSelectOption[]) => void
+      ) => {
+        const response = await loadOptions(searchValue, page);
+        const options = response.options ?? [];
+        const nextHasMore = response.hasMore ?? options.length >= pageSize;
+
+        if (pagination && page > 1) {
+          const merged = [...allOptionsRef.current, ...options];
+          allOptionsRef.current = merged;
+          callback(merged);
+        } else {
+          allOptionsRef.current = options;
+          callback(options);
+        }
+
+        setHasMore(!pagination ? false : nextHasMore);
+      },
+      [loadOptions, pagination, pageSize]
+    );
 
     // Debounced load options function
     const debouncedLoadOptions = useCallback(
       (
-        inputValue: string,
+        searchValue: string,
         callback: (options: AsyncSelectOption[]) => void
       ) => {
-        // Clear existing timeout
+        loadOptionsCallbackRef.current = callback;
+
         if (debounceTimeoutRef.current) {
           clearTimeout(debounceTimeoutRef.current);
         }
 
-        // Set new timeout
         debounceTimeoutRef.current = setTimeout(async () => {
           try {
-            // Reset if input changed significantly (not just scrolling)
-            if (inputValue.trim() !== prevInputValueRef.current.trim()) {
+            if (searchValue.trim() !== prevInputValueRef.current.trim()) {
               resetPagination();
-              prevInputValueRef.current = inputValue;
+              prevInputValueRef.current = searchValue;
             }
 
             const page = pagination ? currentPage : 1;
-            const response = await loadOptions(inputValue, page);
-            const options = response.options ?? [];
-
-            if (pagination && currentPage > 1) {
-              // Append to existing options for pagination
-              const merged = [...allOptionsRef.current, ...options];
-              allOptionsRef.current = merged;
-              callback(merged);
-            } else {
-              // Replace options for new search
-              allOptionsRef.current = options;
-              callback(options);
-            }
-
-            setIsLoadingMore(false);
+            await fetchOptionsPage(searchValue, page, callback);
           } catch (error) {
             console.error('Error loading options:', error);
             callback([]);
+            setHasMore(false);
+          } finally {
             setIsLoadingMore(false);
           }
         }, debounceDelay);
       },
       [
-        loadOptions,
-        pagination,
         currentPage,
-        resetPagination,
         debounceDelay,
+        fetchOptionsPage,
+        pagination,
+        resetPagination,
       ]
     );
 
     // Handle menu scroll to bottom for pagination
     const handleMenuScrollToBottom = useCallback(() => {
-      if (pagination && !isLoadingMore) {
+      if (
+        pagination &&
+        !isLoadingMore &&
+        hasMore &&
+        loadOptionsCallbackRef.current
+      ) {
+        const nextPage = currentPage + 1;
         setIsLoadingMore(true);
-        setCurrentPage(prev => prev + 1);
+        setCurrentPage(nextPage);
+        void fetchOptionsPage(
+          inputValue,
+          nextPage,
+          loadOptionsCallbackRef.current
+        )
+          .catch(error => {
+            console.error('Error loading more options:', error);
+            loadOptionsCallbackRef.current?.([]);
+            setHasMore(false);
+          })
+          .finally(() => {
+            setIsLoadingMore(false);
+          });
       }
       props.onMenuScrollToBottom?.();
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [pagination, isLoadingMore, props.onMenuScrollToBottom]);
+    }, [
+      currentPage,
+      fetchOptionsPage,
+      hasMore,
+      inputValue,
+      isLoadingMore,
+      pagination,
+      props.onMenuScrollToBottom,
+    ]);
 
     // Handle input change
     const handleInputChange = useCallback(

@@ -21,6 +21,8 @@ import { accountProfileSchema } from '../schema/accountProfileSchema';
 import type { ICreateAccountProfile } from '../types/accountProfileTypes';
 import { normalizeCodeValue } from '@/utils';
 
+const ACCOUNT_PROFILE_OPTION_PAGE_SIZE = 30;
+
 interface AccountProfileFormProps {
   defaultValues: ICreateAccountProfile;
   onSubmit: (values: ICreateAccountProfile) => void | Promise<void>;
@@ -217,10 +219,10 @@ export const AccountProfileForm = ({
     };
   }, []);
 
-  const loadMapToAccountOptions = useCallback(async (inputValue: string) => {
+  const loadMapToAccountOptions = useCallback(async (inputValue: string, page = 1) => {
     const res = await accountProfileApi.getAccountProfiles({
-      page: 1,
-      limit: 100,
+      page,
+      limit: ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
       search: inputValue,
       active: true,
     });
@@ -230,6 +232,7 @@ export const AccountProfileForm = ({
         value: a.id,
         label: `${a.accountCode} - ${a.accountName}`,
       })),
+      hasMore: (res.data || []).length === ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
     };
   }, [currentId]);
 
@@ -242,7 +245,7 @@ export const AccountProfileForm = ({
 
       const res = await accountProfileApi.getAccountProfiles({
         page: 1,
-        limit: 20,
+        limit: ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
         search: normalizedCode,
       });
       return (res.data || []).some(
@@ -353,14 +356,16 @@ export const AccountProfileForm = ({
             loadOptions={loadBranchOptions}
             isClearable
           />
-          <FormFieldSelect
-            name="mapToAccountId"
-            label="Map To Account"
-            placeholder="Select Account to Map"
-            disabled={isDisabled}
-            loadOptions={loadMapToAccountOptions}
-            isClearable
-          />
+      <FormFieldSelect
+        name="mapToAccountId"
+        label="Map To Account"
+        placeholder="Select Account to Map"
+        disabled={isDisabled}
+        loadOptions={loadMapToAccountOptions}
+        pagination
+        pageSize={ACCOUNT_PROFILE_OPTION_PAGE_SIZE}
+        isClearable
+      />
         </div>
       </CardSection>
 

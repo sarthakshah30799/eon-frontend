@@ -2,7 +2,10 @@ import { useState } from 'react';
 import { Button } from '../button1';
 import { Modal } from '../modal';
 import { Table, type TableColumnDef } from '../table';
-import type { RowSelectionState } from '@tanstack/react-table';
+import type {
+  PaginationState,
+  RowSelectionState,
+} from '@tanstack/react-table';
 
 interface SelectEntityProps<T extends { id: string }> {
   open: boolean;
@@ -14,6 +17,9 @@ interface SelectEntityProps<T extends { id: string }> {
   selectable?: boolean;
   multiple?: boolean;
   enablePagination?: boolean;
+  pageSize?: number;
+  pageSizeOptions?: number[];
+  onPaginationChange?: (pagination: PaginationState) => void;
   searchValue?: string;
   onSearch?: (value: string) => void;
   searchPlaceholder?: string;
@@ -37,6 +43,9 @@ export const SelectEntity = <T extends { id: string }>({
   selectable = true,
   multiple = false,
   enablePagination = true,
+  pageSize = 10,
+  pageSizeOptions,
+  onPaginationChange,
   searchValue = '',
   onSearch,
   searchPlaceholder = 'Search',
@@ -105,10 +114,12 @@ export const SelectEntity = <T extends { id: string }>({
         enableSorting={false}
         enableFiltering={false}
         enablePagination={enablePagination}
-        pageSize={10}
+        pageSize={pageSize}
+        pageSizeOptions={pageSizeOptions}
         enableRowSelection={selectable}
         rowSelection={rowSelection}
-          onRowSelectionChange={handleRowSelectionChange}
+        onPaginationChange={onPaginationChange}
+        onRowSelectionChange={handleRowSelectionChange}
           onSearch={onSearch}
           searchValue={searchValue}
           searchPlaceholder={searchPlaceholder}

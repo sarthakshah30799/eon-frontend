@@ -15,6 +15,8 @@ import {
   useSaveChequeBookAllocations,
 } from '@/modules/chequebooks/hooks';
 
+const ACCOUNT_PROFILE_OPTION_PAGE_SIZE = 30;
+
 const getErrorMessage = (error: unknown, fallback: string) =>
   error instanceof Error ? error.message : fallback;
 
@@ -201,11 +203,11 @@ export const ChequeBookAllocationPage = () => {
                 name="bankAccountCode"
                 label="Bank Account Code"
                 placeholder="ALL"
-                loadOptions={async (inputValue) => {
+                loadOptions={async (inputValue: string, page = 1) => {
                   try {
                     const response = await accountProfileApi.getAccountProfiles({
-                      page: 1,
-                      limit: 100,
+                      page,
+                      limit: ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
                       search: inputValue,
                       active: true,
                     });
@@ -221,7 +223,7 @@ export const ChequeBookAllocationPage = () => {
                         value: acc.id,
                         label: `${acc.accountCode} - ${acc.accountName}`,
                       })),
-                      hasMore: false,
+                      hasMore: (response.data || []).length === ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
                     };
                   } catch {
                     return {
@@ -230,6 +232,8 @@ export const ChequeBookAllocationPage = () => {
                     };
                   }
                 }}
+                pagination
+                pageSize={ACCOUNT_PROFILE_OPTION_PAGE_SIZE}
               />
             </div>
           </FormProvider>

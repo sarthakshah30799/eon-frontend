@@ -21,8 +21,9 @@ import {
   getPurchaseTradeMode,
   getPurchaseTransactionType,
 } from '@/pages/purchase/[slug]/purchasePage.enum';
-import type { ITransactionReferenceSnapshot } from '@/modules/transactions';
+import type { ITransactionEntity, ITransactionReferenceSnapshot } from '@/modules/transactions';
 import { AdditionalSettingsCodeEnum } from '@/modules/additionalSettings/constants';
+import { getAdditionalSettingTextValue } from '@/modules/additionalSettings/utils';
 
 interface PurchaseCreateViewProps {
   purchasePageType: PurchasePageType | null;
@@ -35,7 +36,8 @@ export const PurchaseCreateView = ({
   const { activeBranchId } = useAuth();
   const [savedTransaction, setSavedTransaction] = useState<{
     id: string;
-    number: string;
+    number: string | null;
+    logs?: ITransactionEntity['logs'];
   } | null>(null);
   const {
     data: branchProfile,
@@ -66,6 +68,16 @@ export const PurchaseCreateView = ({
         AdditionalSettingsCodeEnum.TransactionApprovalPolicy,
         AdditionalSettingsCodeEnum.PurchaseFfmcAds,
         false
+      ),
+    [additionalSettings]
+  );
+  const sacCode = useMemo(
+    () =>
+      getAdditionalSettingTextValue(
+        additionalSettings,
+        AdditionalSettingsCodeEnum.TransactionPrintSettings,
+        AdditionalSettingsCodeEnum.TransactionPrintSacCode,
+        ''
       ),
     [additionalSettings]
   );
@@ -149,6 +161,7 @@ export const PurchaseCreateView = ({
         requiresApproval={requiresApproval}
         branchId={activeBranchId ?? ''}
         branchCode={branchProfile?.code ?? ''}
+        sacCode={sacCode}
         isSubmitting={isSaving}
         submitLabel={requiresApproval ? 'Submit for Approval' : 'Save'}
         onSubmit={async (values, attachments) => {
@@ -159,11 +172,14 @@ export const PurchaseCreateView = ({
             requiresApproval
           );
           const created = await createPurchaseTransaction(payload);
-          setSavedTransaction({ id: created.id, number: created.number });
+          setSavedTransaction({
+            id: created.id,
+            number: created.number,
+            logs: created.logs ?? [],
+          });
         }}
         onCancel={() => navigate(-1)}
-        savedTransactionId={savedTransaction?.id ?? null}
-        savedTransactionNumber={savedTransaction?.number ?? null}
+        savedTransaction={savedTransaction}
         isFreshlyCreated={Boolean(savedTransaction)}
       />
     </div>

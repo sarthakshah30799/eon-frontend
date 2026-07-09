@@ -4,9 +4,11 @@ export {
   PurchasePageTypeEnum,
   getPurchasePageTitle,
   getPurchasePageTypeFromSlug,
+  getPurchasePageTypeFromPath,
   getPurchasePartyProfileTypes,
   getPurchaseTransactionType,
   getPurchaseTradeMode,
   getPurchasePageSlugFromType,
   getPurchasePageCreateTitle,
+  getPurchasePageBasePath,
 } from './purchasePage.enum';

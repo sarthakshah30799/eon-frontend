@@ -64,7 +64,7 @@ export interface IPurchaseFormValues {
   deliveryBoyUserId: string;
   deliveryBoyUserCode: string;
   deliveryBoyUserName: string;
-  number: string;
+  number: string | null;
   transactions: IPurchaseTransactionFormRow[];
   additionalCharges: ITransactionAdditionalChargeFormRow[];
   paymentDetails: ITransactionPaymentDetailFormRow[];
@@ -120,7 +120,7 @@ export interface IPurchasePricingData {
 
 export interface IPurchaseSubmitPayload {
   transaction: {
-    number: string;
+    number?: string | null;
     slug: string;
     branchId: string;
     branchSnapshot: ITransactionReferenceSnapshot | null;

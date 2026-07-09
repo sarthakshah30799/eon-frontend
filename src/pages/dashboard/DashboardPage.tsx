@@ -10,6 +10,11 @@ import { useListManualBillBooks } from '@/modules/manual-bill-books/hooks';
 import { transactionsApi } from '@/api/transactions';
 import { Button } from '@/components/ui';
 import type { ITransactionEntity } from '@/modules/transactions';
+import {
+  getPurchasePageBasePath,
+  getPurchasePageSlugFromType,
+  type PurchasePageType,
+} from '@/pages/purchase/[slug]/purchasePage.enum';
 
 const formatDateTime = (value?: string) => {
   if (!value) return '-';
@@ -178,7 +183,18 @@ const DashboardPage: React.FC = () => {
                     variant="outline"
                     className="rounded-sm"
                     onClick={() =>
-                      navigate(`/purchase/${transaction.slug || ''}/edit/${transaction.id}`)
+                      {
+                        const transactionPageType =
+                          transaction.slug as PurchasePageType | null;
+                        const routeSlug =
+                          getPurchasePageSlugFromType(transactionPageType) ??
+                          transaction.slug ??
+                          '';
+
+                        navigate(
+                          `/${getPurchasePageBasePath(transactionPageType)}/${routeSlug}/edit/${transaction.id}`
+                        );
+                      }
                     }
                   >
                     Review

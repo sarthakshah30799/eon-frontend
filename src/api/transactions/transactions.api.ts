@@ -57,6 +57,28 @@ export const transactionsApi = {
     return res.data || null;
   },
 
+  getNextNumber: async (
+    params: { slug: string; branchId: string }
+  ): Promise<{ nextNumber: string }> => {
+    const query = new URLSearchParams();
+    query.set('slug', params.slug);
+    query.set('branchId', params.branchId);
+
+    const res = await apiClient.get<{ nextNumber: string }>(
+      `/transactions/next-number?${query.toString()}`
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      throw new Error('Failed to fetch next transaction number');
+    }
+
+    return res.data;
+  },
+
   createDraft: async (
     payload: ICreateTransactionDraftPayload
   ): Promise<ITransactionEntity> => {

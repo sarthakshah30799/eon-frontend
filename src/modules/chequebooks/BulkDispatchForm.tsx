@@ -17,6 +17,8 @@ import {
   bulkDispatchSchema,
 } from './bulkDispatchSchema';
 
+const ACCOUNT_PROFILE_OPTION_PAGE_SIZE = 30;
+
 interface IBulkDispatchFormValues {
   dispatchDate: string;
   no: string;
@@ -109,11 +111,11 @@ const BulkDispatchFormFields = () => {
     }
   };
 
-  const loadBankAccounts = async (inputValue: string) => {
+  const loadBankAccounts = async (inputValue: string, page = 1) => {
     try {
       const response = await accountProfileApi.getAccountProfiles({
-        page: 1,
-        limit: 100,
+        page,
+        limit: ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
         search: inputValue,
         active: true,
       });
@@ -129,7 +131,7 @@ const BulkDispatchFormFields = () => {
           value: acc.id,
           label: `${acc.accountCode} - ${acc.accountName}`,
         })),
-        hasMore: false,
+        hasMore: (response.data || []).length === ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
       };
     } catch {
       return {
@@ -182,6 +184,8 @@ const BulkDispatchFormFields = () => {
         name="bankAccountCode"
         label="Bank Account Code"
         loadOptions={loadBankAccounts}
+        pagination
+        pageSize={ACCOUNT_PROFILE_OPTION_PAGE_SIZE}
       />
       <FormFieldInput
         name="bookNoFrom"

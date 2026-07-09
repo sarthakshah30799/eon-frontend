@@ -17,6 +17,8 @@ import type { ICreateExpenseIncomeBookingMaster } from '../types/expenseIncomeBo
 import { accountProfileApi } from '@/api/accountProfile/accountProfile.api';
 import { normalizeCodeValue } from '@/utils';
 import { expenseIncomeBookingApi } from '@/api/expenseIncomeBooking/expenseIncomeBooking.api';
+
+const ACCOUNT_PROFILE_OPTION_PAGE_SIZE = 30;
  
 interface ExpenseIncomeBookingFormProps {
   type: 'EXPENSE' | 'INCOME';
@@ -78,7 +80,10 @@ const TdsFieldsSection = ({
   loadAccountOptions,
 }: {
   isDisabled: boolean;
-  loadAccountOptions: (inputValue: string) => Promise<{ options: { value: string; label: string }[] }>;
+  loadAccountOptions: (inputValue: string, page?: number) => Promise<{
+    options: { value: string; label: string }[];
+    hasMore?: boolean;
+  }>;
 }) => {
   const tdsApplicable = useWatch({ name: 'tdsApplicable' }) as boolean;
 
@@ -107,7 +112,8 @@ const TdsFieldsSection = ({
             placeholder="Select account profile"
             loadOptions={loadAccountOptions}
             disabled={isDisabled}
-            pagination={false}
+            pagination
+            pageSize={ACCOUNT_PROFILE_OPTION_PAGE_SIZE}
           />
         </div>
       </div>
@@ -213,11 +219,11 @@ export const ExpenseIncomeBookingForm = ({
   const isDisabled = isSubmitting || readOnly;
 
   const loadAccountOptions = useCallback(
-    async (inputValue: string) => {
+    async (inputValue: string, page = 1) => {
       try {
         const response = await accountProfileApi.getAccountProfiles({
-          limit: 100,
-          page: 1,
+          limit: ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
+          page,
           active: true,
         });
         const options = (response.data ?? []).map(acc => ({
@@ -231,6 +237,7 @@ export const ExpenseIncomeBookingForm = ({
 
         return {
           options: filtered,
+          hasMore: (response.data ?? []).length === ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
         };
       } catch (err) {
         console.error('Error fetching account profiles:', err);

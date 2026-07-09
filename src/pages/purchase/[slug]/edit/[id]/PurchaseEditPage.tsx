@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Loader } from '@/components/ui/loader';
 import { NotFoundState } from '@/components/ui/not-found-state';
@@ -9,11 +9,15 @@ import { useListAdditionalSettings } from '@/modules/additionalSettings/hooks';
 import { useGetBranchProfile } from '@/modules/branchProfile/hooks/useGetBranchProfile';
 import { transactionsApi } from '@/api/transactions';
 import { PurchaseForm } from '@/modules/purchase';
-import { getAdditionalSettingBooleanValue } from '@/modules/additionalSettings/utils';
+import {
+  getAdditionalSettingBooleanValue,
+  getAdditionalSettingTextValue,
+} from '@/modules/additionalSettings/utils';
 import { AdditionalSettingsCodeEnum } from '@/modules/additionalSettings/constants';
 import {
+  getPurchasePageBasePath,
   getPurchasePageTitle,
-  getPurchasePageTypeFromSlug,
+  getPurchasePageTypeFromPath,
   getPurchasePartyProfileTypes,
   getPurchaseTradeMode,
   getPurchaseTransactionType,
@@ -22,9 +26,11 @@ import { mapPurchaseTransactionToFormValues, createEmptyPurchaseFormValues } fro
 
 const PurchaseEditPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { slug, id } = useParams<{ slug?: string; id?: string }>();
   const { activeBranchId } = useAuth();
-  const purchasePageType = getPurchasePageTypeFromSlug(slug);
+  const purchasePageType = getPurchasePageTypeFromPath(location.pathname, slug);
+  const basePath = getPurchasePageBasePath(purchasePageType);
 
   const { data: transaction, isLoading: isTransactionLoading, error: transactionError } = useQuery({
     queryKey: ['transaction', id],
@@ -58,6 +64,16 @@ const PurchaseEditPage = () => {
         AdditionalSettingsCodeEnum.TransactionApprovalPolicy,
         AdditionalSettingsCodeEnum.PurchaseFfmcAds,
         false
+      ),
+    [additionalSettings]
+  );
+  const sacCode = useMemo(
+    () =>
+      getAdditionalSettingTextValue(
+        additionalSettings,
+        AdditionalSettingsCodeEnum.TransactionPrintSettings,
+        AdditionalSettingsCodeEnum.TransactionPrintSacCode,
+        ''
       ),
     [additionalSettings]
   );
@@ -143,15 +159,15 @@ const PurchaseEditPage = () => {
         requiresApproval={requiresApproval}
         branchId={transaction.branchId}
         branchCode={branchProfile?.code ?? ''}
-        savedTransactionId={transaction.id}
-        savedTransactionNumber={transaction.number}
+        sacCode={sacCode}
+        savedTransaction={transaction}
         isFreshlyCreated={false}
         readOnly
         isSubmitting={false}
         existingDocuments={transaction.documents ?? []}
         submitLabel="Save"
         onSubmit={async () => undefined}
-        onCancel={() => navigate(`/purchase/${slug}`)}
+        onCancel={() => navigate(`/${basePath}/${slug}`)}
       />
     </div>
   );

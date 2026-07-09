@@ -265,7 +265,7 @@ const SidebarTree = ({
 
             {isOpen && !isCollapsed && (
               <div
-                className=" rounded-none pl-4.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),inset_0_0_24px_rgba(0,0,0,0.2)]"
+                className=" rounded-none pl-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),inset_0_0_24px_rgba(0,0,0,0.2)]"
                 style={{ backgroundColor: '#202d3b' }}
               >
                 <SidebarTree
@@ -537,7 +537,7 @@ export const Sidebar = ({
 
                       {isOpen && !isCollapsed && (
                         <div
-                          className="rounded-none pl-4.5"
+                          className="rounded-none pl-2.5"
                           style={{ backgroundColor: '#202d3b' }}
                         >
                           <SidebarTree

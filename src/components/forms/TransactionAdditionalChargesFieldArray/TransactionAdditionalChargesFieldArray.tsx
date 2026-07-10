@@ -5,13 +5,18 @@ import type { AsyncSelectResponse } from '@/components/ui';
 import { Button, CardSection } from '@/components/ui';
 import { FormFieldInput, FormFieldSelect } from '@/components/forms';
 import { accountProfileApi } from '@/api/accountProfile';
+import { useCategoryOptions } from '@/hooks';
+import {
+  AccountProfileLedgerLabelEnum,
+  type IAccountProfileListQuery,
+} from '@/modules/accountProfile';
 import {
   TransactionTypeEnum,
   type TransactionType,
 } from '@/modules/transactions';
+import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 
 const ACCOUNT_PROFILE_OPTION_PAGE_SIZE = 30;
-import type { IAccountProfileListQuery } from '@/modules/accountProfile/types/accountProfileTypes';
 import type { ITransactionAdditionalChargeFormRow } from './transactionAdditionalChargesTypes';
 
 interface TransactionAdditionalChargesFieldArrayProps {
@@ -64,6 +69,16 @@ const AdditionalChargeRow = ({
   const isSale = transactionType === TransactionTypeEnum.SALE;
   const chargeMultiplier = isSale ? 1 : -1;
   const form = useFormContext();
+  const { defaultOptions: accountTypeOptions } = useCategoryOptions(
+    CategoryOptionCodeEnum.AccountType
+  );
+  const generalLedgerAccountTypeId = useMemo(() => {
+    const match = accountTypeOptions.find(option =>
+      option.label.trim().toUpperCase() === AccountProfileLedgerLabelEnum.GeneralLedger
+    );
+
+    return match ? String(match.value) : '';
+  }, [accountTypeOptions]);
   const amount = useWatch({
     control: form.control,
     name: `${arrayName}.${index}.amount`,
@@ -134,12 +149,22 @@ const AdditionalChargeRow = ({
 
   const loadAccountOptions = useCallback(
     async (inputValue: string, page = 1): Promise<AsyncSelectResponse> => {
-      const response = await accountProfileApi.getAccountProfiles({
+      if (!generalLedgerAccountTypeId) {
+        return { options: [], hasMore: false };
+      }
+
+      const derivedQuery: IAccountProfileListQuery = {
+        ...accountQuery,
         page,
         limit: ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
         search: inputValue,
-        ...accountQuery,
         active: true,
+        accountType: generalLedgerAccountTypeId,
+        ...(isSale ? { bulkSale: true } : { bulkPurchase: true }),
+      };
+
+      const response = await accountProfileApi.getAccountProfiles({
+        ...derivedQuery,
       });
 
       const accounts = response.data || [];
@@ -152,7 +177,7 @@ const AdditionalChargeRow = ({
         hasMore: accounts.length === ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
       };
     },
-    [accountQuery]
+    [accountQuery, generalLedgerAccountTypeId, isSale]
   );
 
   return (
@@ -161,7 +186,11 @@ const AdditionalChargeRow = ({
         <FormFieldSelect
           name={`${arrayName}.${index}.accountId`}
           label="Account"
-          placeholder="Select bulk purchase account"
+          placeholder={
+            isSale
+              ? 'Select bulk sale account'
+              : 'Select bulk purchase account'
+          }
           loadOptions={loadAccountOptions}
           pagination
           pageSize={ACCOUNT_PROFILE_OPTION_PAGE_SIZE}

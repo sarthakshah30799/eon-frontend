@@ -120,7 +120,6 @@ const PurchaseFormBody = ({
       page: 1,
       limit: ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
       active: true,
-      bulkPurchase: true,
     }),
     []
   );
@@ -397,16 +396,17 @@ const PurchaseFormBody = ({
         disabled={isReadOnly}
         transactionType={transactionType}
         title="Additional Charges"
-        description="Add optional charges for this transaction. Only bulk purchase accounts are shown."
+        description="Add optional charges for this transaction. The account list is filtered by ledger type and purchase/sale mode."
       />
 
       <TransactionPaymentDetailsFieldArray
         name="paymentDetails"
         maxAmount={totalPayableAmount}
         accountQuery={paymentAccountQuery}
+        transactionType={transactionType}
         disabled={isReadOnly}
         title="Payment Details"
-        description="Store how this transaction will be settled. Payment amounts cannot exceed the total payable amount."
+        description="Store how this transaction will be settled. Payment accounts are filtered by ledger type and purchase/sale mode."
       />
 
       <CardSection

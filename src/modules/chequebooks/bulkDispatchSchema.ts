@@ -1,38 +1,17 @@
 import * as yup from 'yup';
 import { chequebookApi } from '@/api';
-function debouncePromise<T extends (...args: any[]) => Promise<any>>(
-  fn: T,
-  delay: number
-): (...args: Parameters<T>) => Promise<any> {
-  let timer: NodeJS.Timeout | null = null;
-  let activeResolve: ((value: any) => void) | null = null;
-
-  return (...args: Parameters<T>) => {
-    if (timer) clearTimeout(timer);
-    if (activeResolve) activeResolve({ valid: true });
-
-    return new Promise((resolve) => {
-      activeResolve = resolve;
-      timer = setTimeout(async () => {
-        try {
-          const result = await fn(...args);
-          resolve(result);
-        } catch {
-          resolve({ valid: true });
-        }
-      }, delay);
-    });
-  };
-}
+import { debouncePromise } from '@/hooks';
 
 const debouncedValidateBookRange = debouncePromise(
   chequebookApi.validateBookRange,
-  500
+  500,
+  { valid: true }
 );
 
 const debouncedValidatePageRange = debouncePromise(
   chequebookApi.validatePageRange,
-  500
+  500,
+  { valid: true }
 );
 
 export const bulkDispatchSchema = yup.object().shape({
@@ -47,7 +26,16 @@ export const bulkDispatchSchema = yup.object().shape({
     .required('Check Book No. From is required')
     .test('book-range-overlap', 'Book range overlaps', async function (value) {
       const { bookNoTo } = this.parent;
-      if (value === undefined || value === null || isNaN(value) || bookNoTo === undefined || bookNoTo === null || isNaN(bookNoTo)) return true;
+      if (
+        value === undefined ||
+        value === null ||
+        isNaN(value) ||
+        bookNoTo === undefined ||
+        bookNoTo === null ||
+        isNaN(bookNoTo)
+      ) {
+        return true;
+      }
       try {
         const res = await debouncedValidateBookRange({
           bookNoFrom: value,
@@ -92,7 +80,15 @@ export const bulkDispatchSchema = yup.object().shape({
     .required('Cheque No. From is required')
     .test('page-range-overlap', 'Page range overlaps', async function (value) {
       const { mvNoTo } = this.parent;
-      if (value === undefined || value === null || isNaN(value) || !mvNoTo || isNaN(parseInt(mvNoTo, 10))) return true;
+      if (
+        value === undefined ||
+        value === null ||
+        isNaN(value) ||
+        !mvNoTo ||
+        isNaN(parseInt(mvNoTo, 10))
+      ) {
+        return true;
+      }
       try {
         const res = await debouncedValidatePageRange({
           mvNoFrom: value,

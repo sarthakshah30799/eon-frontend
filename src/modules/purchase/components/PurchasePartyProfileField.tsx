@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { SelectPartyProfiles } from '@/modules/partyProfiles/components';
-import type { PartyProfileType } from '@/modules/partyProfiles/constants';
+import type { PartyProfileType } from '@/modules/partyProfiles/types';
 import type { IPartyProfileListQuery } from '@/modules/partyProfiles/types';
 import type { IPurchaseFormValues } from '../types/purchaseTypes';
 import { formatPurchaseEntityLabel } from '../utils/purchaseUtils';
 import { EntityPickerField } from './EntityPickerField';
+import { TransactionTypeEnum } from '@/modules/transactions';
 
 interface PurchasePartyProfileFieldProps {
   partyProfileTypes: PartyProfileType[];
@@ -26,7 +27,7 @@ export const PurchasePartyProfileField = ({
     name: 'transactionType',
   });
   const profileQueryParams = (
-    transactionType === 'SALE'
+    transactionType === TransactionTypeEnum.SALE
       ? { sale: true, activeOnly: true }
       : { purchase: true, activeOnly: true }
   ) satisfies Pick<IPartyProfileListQuery, 'sale' | 'purchase' | 'activeOnly'>;
@@ -39,7 +40,7 @@ export const PurchasePartyProfileField = ({
         placeholder="Select party profile"
         onClick={() => setOpen(true)}
         disabled={disabled}
-        helperText="Choose a party profile for this purchase transaction."
+        helperText="Choose a party profile for this transaction."
       />
 
       <SelectPartyProfiles
@@ -48,7 +49,7 @@ export const PurchasePartyProfileField = ({
         selectable
         multiple={false}
         title="Select Party Profile"
-        description="Choose a single party profile for the purchase transaction."
+        description="Choose a single party profile for the transaction."
         queryParams={profileQueryParams}
         onContinue={profiles => {
           const selectedProfile = profiles[0];

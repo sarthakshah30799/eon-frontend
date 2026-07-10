@@ -16,6 +16,7 @@ import {
 } from '../constants';
 import { PartyProfileDocumentsActionButton } from '../components';
 import { NotFoundState } from '@/components/ui/not-found-state';
+import type { PartyProfileType } from '../types/partyProfileTypes';
 
 const formatDateForInput = (dateString?: string | Date) => {
   if (!dateString) return '';
@@ -48,7 +49,7 @@ export const PartyProfileEditView = () => {
     [routeOptions, routeType]
   );
   const selectedApiType = useMemo(
-    () => toPartyProfileApiType(selectedType),
+    () => toPartyProfileApiType(selectedType) as PartyProfileType,
     [selectedType]
   );
   const { canModify, canView } = usePermission(

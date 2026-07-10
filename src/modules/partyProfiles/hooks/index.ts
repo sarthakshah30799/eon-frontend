@@ -8,7 +8,6 @@ import { toast } from 'react-hot-toast';
 import { partyProfileApi } from '@/api/partyProfile';
 import {
   toPartyProfileDisplayLabel,
-  type PartyProfileType,
 } from '../constants';
 import { PartyProfileStatusEnum } from '../types/partyProfileTypes';
 import type {
@@ -16,6 +15,7 @@ import type {
   IPartyProfileListQuery,
   IReviewPartyProfilePayload,
   IUpdatePartyProfile,
+  PartyProfileType,
 } from '../types/partyProfileTypes';
 
 const getErrorMessage = (error: unknown, fallback: string) => {

@@ -4,6 +4,7 @@ import { SelectPartyProfiles } from '@/modules/partyProfiles/components';
 import type { IPurchaseFormValues } from '../types/purchaseTypes';
 import { formatPurchaseEntityLabel } from '../utils/purchaseUtils';
 import { EntityPickerField } from './EntityPickerField';
+import { TransactionTypeEnum } from '@/modules/transactions';
 
 export const PurchaseAgentProfileField = ({
   disabled = false,
@@ -17,7 +18,7 @@ export const PurchaseAgentProfileField = ({
   const agentProfileName = form.watch('agentProfileName');
   const transactionType = form.watch('transactionType');
   const profileQueryParams =
-    transactionType === 'SALE'
+    transactionType === TransactionTypeEnum.SALE
       ? { sale: true, activeOnly: true }
       : { purchase: true, activeOnly: true };
 
@@ -29,7 +30,7 @@ export const PurchaseAgentProfileField = ({
         placeholder="Select agent profile"
         onClick={() => setOpen(true)}
         disabled={disabled}
-        helperText="Optional. Choose an agent profile if this purchase transaction needs one."
+        helperText="Optional. Choose an agent profile if this transaction needs one."
       />
 
       <SelectPartyProfiles
@@ -38,7 +39,7 @@ export const PurchaseAgentProfileField = ({
         selectable
         multiple={false}
         title="Select Agent Profile"
-        description="Choose a single agent profile for the purchase transaction."
+        description="Choose a single agent profile for the transaction."
         queryParams={profileQueryParams}
         onContinue={profiles => {
           const selectedProfile = profiles[0];

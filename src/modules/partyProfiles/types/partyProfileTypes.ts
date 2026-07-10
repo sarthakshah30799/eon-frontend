@@ -127,6 +127,7 @@ export interface IPartyProfile {
 export type ICreatePartyProfile = Omit<
   IPartyProfile,
   | 'id'
+  | 'createdBy'
   | 'kycRiskCategory'
   | 'defaultAgent'
   | 'gstStateName'

@@ -1,33 +1,36 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { FormFieldSelect } from '@/components/forms';
-import { manualBillBookApi, type IManualBookPageTracking } from '@/api';
 import { SelectUserProfiles } from '@/modules/userProfile/components';
 import { useAuth } from '@/lib/AuthContext';
+import { TransactionTypeEnum } from '@/modules/transactions';
+import type { PurchasePageType } from '@/pages/purchase/[slug]/purchasePage.enum';
 import type { IPurchaseFormValues } from '../types/purchaseTypes';
 import { formatPurchaseEntityLabel } from '../utils/purchaseUtils';
 import { EntityPickerField } from './EntityPickerField';
+import { useSelectableManualBillBookPages } from '@/modules/manual-bill-books/hooks';
 
 interface PurchaseBookReferenceFieldProps {
   branchId?: string;
+  purchasePageType?: PurchasePageType | null;
   disabled?: boolean;
 }
 
-const createStaticLoadOptions = (options: { value: string; label: string }[]) =>
-  async () => ({
+const createStaticLoadOptions =
+  (options: { value: string; label: string }[]) => async () => ({
     options,
     hasMore: false,
   });
 
 export const PurchaseBookReferenceField = ({
   branchId,
+  purchasePageType,
   disabled = false,
 }: PurchaseBookReferenceFieldProps) => {
   const form = useFormContext<IPurchaseFormValues>();
   const { activeBranchId } = useAuth();
   const [deliveryBoyPickerOpen, setDeliveryBoyPickerOpen] = useState(false);
-  const [pageOptions, setPageOptions] = useState<IManualBookPageTracking[]>([]);
-  const [isLoadingPages, setIsLoadingPages] = useState(false);
+  const resolvedBranchId = branchId?.trim() || activeBranchId || undefined;
 
   const manualBookReferenceType = useWatch({
     control: form.control,
@@ -53,9 +56,31 @@ export const PurchaseBookReferenceField = ({
     control: form.control,
     name: 'manualBookNo',
   });
+  const transactionType = useWatch({
+    control: form.control,
+    name: 'transactionType',
+  });
+  const deliveryBoyAssigneeId =
+    manualBookReferenceType === 'DELIVERY_BOY' ? deliveryBoyUserId || '' : '';
   const previousReferenceTypeRef = useRef<string>(manualBookReferenceType);
+  const previousTransactionTypeRef = useRef<string>(transactionType);
 
   const isDeliveryBoyMode = manualBookReferenceType === 'DELIVERY_BOY';
+  const isSale = transactionType === TransactionTypeEnum.SALE;
+  const resolvedTransactionType = purchasePageType ?? (transactionType || undefined);
+  const {
+    data: pageOptions = [],
+    isLoading: isLoadingPages,
+    isFetching: isFetchingPages,
+  } = useSelectableManualBillBookPages({
+    branchId: resolvedBranchId,
+    userId: deliveryBoyAssigneeId,
+    transactionType: resolvedTransactionType,
+    enabled:
+      Boolean(resolvedBranchId) &&
+      (!isDeliveryBoyMode || Boolean(deliveryBoyAssigneeId)),
+  });
+  const isBookPagesLoading = isLoadingPages || isFetchingPages;
 
   useEffect(() => {
     if (previousReferenceTypeRef.current === manualBookReferenceType) {
@@ -101,57 +126,37 @@ export const PurchaseBookReferenceField = ({
   }, [form, manualBookReferenceType]);
 
   useEffect(() => {
-    let isActive = true;
-    const assigneeId =
-      manualBookReferenceType === 'DELIVERY_BOY'
-        ? deliveryBoyUserId || ''
-        : '';
+    if (previousTransactionTypeRef.current === transactionType) {
+      return;
+    }
 
-    const loadPages = async () => {
-      if (!activeBranchId) {
-        setPageOptions([]);
-        return;
-      }
-
-      if (isDeliveryBoyMode && !assigneeId) {
-        setPageOptions([]);
-        return;
-      }
-
-      try {
-        setIsLoadingPages(true);
-        const pages = await manualBillBookApi.getSelectablePages(
-          isDeliveryBoyMode
-            ? {
-                userId: assigneeId,
-              }
-            : undefined
-        );
-
-        if (isActive) {
-          setPageOptions(pages);
-        }
-      } catch (error) {
-        if (isActive) {
-          setPageOptions([]);
-        }
-        console.error('Failed to load selectable manual book pages:', error);
-      } finally {
-        if (isActive) {
-          setIsLoadingPages(false);
-        }
-      }
-    };
-
-    void loadPages();
-
-    return () => {
-      isActive = false;
-    };
-  }, [activeBranchId, deliveryBoyUserId, isDeliveryBoyMode, manualBookReferenceType]);
+    previousTransactionTypeRef.current = transactionType;
+    form.setValue('manualBookId', '', {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
+    form.setValue('manualBookNo', '', {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: false,
+    });
+    form.setValue('manualBookPageId', '', {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
+    form.setValue('manualBookPageSnapshot', null, {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: false,
+    });
+  }, [form, transactionType]);
 
   useEffect(() => {
-    const selectedPage = pageOptions.find(page => page.id === String(manualBookPageId || ''));
+    const selectedPage = pageOptions.find(
+      page => page.id === String(manualBookPageId || '')
+    );
     if (!selectedPage) {
       return;
     }
@@ -219,15 +224,17 @@ export const PurchaseBookReferenceField = ({
         })
         .map(page => ({
           value: page.id,
-          label: `${page.manualBook?.no || 'Book'} | Page ${page.pageNo}`,
+          label: `${page.manualBook?.no || 'Book'} | Page ${page.pageNo}${page.manualBook?.transactionType ? ` (${page.manualBook.transactionType})` : isSale ? ' (SALE)' : ' (PURCHASE)'}`,
         }));
 
       return { options, hasMore: false };
     },
-    [pageOptions]
+    [isSale, pageOptions]
   );
 
-  const handleDeliveryBoyContinue = (users: Array<{ id: string; code: string; name: string }>) => {
+  const handleDeliveryBoyContinue = (
+    users: Array<{ id: string; code: string; name: string }>
+  ) => {
     const selectedUser = users[0];
     if (!selectedUser) {
       return;
@@ -256,7 +263,6 @@ export const PurchaseBookReferenceField = ({
       <div className="flex flex-col gap-4 lg:flex-row lg:flex-wrap lg:items-start">
         <div className="lg:w-[260px]">
           <FormFieldSelect
-            key={`manual-book-type-${pageOptions.length}`}
             name="manualBookReferenceType"
             label="Manual Book Reference Type"
             loadOptions={loadReferenceTypeOptions}
@@ -283,23 +289,27 @@ export const PurchaseBookReferenceField = ({
 
         <div className="min-w-0 flex-1 lg:max-w-[360px]">
           <FormFieldSelect
-            key={`manual-book-page-${manualBookReferenceType}-${deliveryBoyUserId || 'cashier'}-${pageOptions.length}`}
+            key={`manual-book-page-${manualBookReferenceType}-${transactionType}-${deliveryBoyUserId || 'cashier'}-${pageOptions.length}`}
             name="manualBookPageId"
-            label={
-              isDeliveryBoyMode
-                ? 'Delivery Boy Page'
-                : 'Cashier Page'
-            }
-            placeholder="Select bill book page"
+            label={isDeliveryBoyMode ? 'Delivery Boy Page' : 'Cashier Page'}
+            isLoading={isBookPagesLoading}
+            placeholder={'Select bill book page'}
             loadOptions={loadManualBookPageOptions}
-            disabled={disabled || !activeBranchId || (isDeliveryBoyMode && !deliveryBoyUserId) || isLoadingPages}
+            disabled={
+              disabled ||
+              !resolvedBranchId ||
+              (isDeliveryBoyMode && !deliveryBoyUserId) ||
+              isBookPagesLoading
+            }
             isSearchable
             cacheOptions={false}
           />
           <p className="mt-1 text-xs text-text-tertiary">
-            {manualBookNo
-              ? `Selected book: ${manualBookNo}`
-              : 'Choose a page from the filtered list.'}
+            {isBookPagesLoading
+              ? 'Loading available bill book pages...'
+              : manualBookNo
+                ? `Selected book: ${manualBookNo}`
+                : 'Choose a page from the filtered list.'}
           </p>
         </div>
       </div>
@@ -315,7 +325,6 @@ export const PurchaseBookReferenceField = ({
         onContinue={handleDeliveryBoyContinue}
         onClose={() => setDeliveryBoyPickerOpen(false)}
       />
-
     </>
   );
 };

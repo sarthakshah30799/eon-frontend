@@ -56,7 +56,6 @@ export const PartyProfileTable = ({
     city: client.city,
     pinCode: client.pinCode,
     phoneNo: client.phoneNo || '',
-    createdBy: client.createdBy,
     active: client.active ? 'Active' : 'Inactive',
   }));
 

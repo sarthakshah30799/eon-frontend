@@ -27,19 +27,19 @@ const isHighlightedNode = (
 
 const getTriggerClassName = (isHighlighted: boolean, level: number) =>
   [
-    'flex w-full items-center justify-between gap-2 rounded-sm !border-0 !bg-transparent !shadow-none px-0! py-1 text-left text-sm transition',
+    'flex w-full items-center justify-between gap-2 rounded-md !border-0 !bg-transparent !px-0 !py-1.5 !shadow-none text-left text-sm transition',
     level === 0 ? 'font-semibold' : 'font-medium',
     isHighlighted
       ? '!text-primary-700'
-      : '!text-text-primary hover:!text-primary-700',
+      : '!text-text-primary hover:!text-primary-700 hover:!bg-surface-secondary/70',
   ].join(' ');
 
 const getLeafItemClassName = (isSelected: boolean) =>
   [
-    'w-full rounded-sm !border-0 px-0 py-1 text-left text-sm transition',
+    'w-full rounded-md !border-0 !bg-transparent !px-0 !py-1.5 !shadow-none text-left text-sm transition',
     isSelected
       ? '!text-primary-700'
-      : '!text-text-primary hover:!text-primary-700',
+      : '!text-text-primary hover:!text-primary-700 hover:!bg-surface-secondary/70',
   ].join(' ');
 
 const TreeLevel = ({
@@ -65,7 +65,7 @@ const TreeLevel = ({
           return (
             <li key={node.id}>
               <Dropdown
-                className="w-full px-0!"
+                className="w-full"
                 align="start"
                 closeOnOutsideClick={false}
                 closeOnEscape={false}
@@ -112,6 +112,7 @@ const TreeLevel = ({
             <Button
               type="button"
               className={getLeafItemClassName(isSelected)}
+              variant="ghost"
               onClick={() => {
                 onSelectNode(node.id);
               }}

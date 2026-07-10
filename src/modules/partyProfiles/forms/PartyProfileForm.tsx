@@ -22,9 +22,8 @@ import { useGetStateProfile } from '@/modules/stateProfile';
 import {
   toPartyProfileDisplayLabel,
   toPartyProfileApiType,
-  type PartyProfileType,
 } from '../constants';
-import { PartyProfileTypeEnum } from '../types/partyProfileTypes';
+import { PartyProfileTypeEnum, type PartyProfileType } from '../types/partyProfileTypes';
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import type { IReviewPartyProfilePayload } from '../types';
 import { PartyProfileReviewActionPanel } from '../components';

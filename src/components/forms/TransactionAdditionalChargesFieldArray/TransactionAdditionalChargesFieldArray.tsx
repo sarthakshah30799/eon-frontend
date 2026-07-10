@@ -5,6 +5,10 @@ import type { AsyncSelectResponse } from '@/components/ui';
 import { Button, CardSection } from '@/components/ui';
 import { FormFieldInput, FormFieldSelect } from '@/components/forms';
 import { accountProfileApi } from '@/api/accountProfile';
+import {
+  TransactionTypeEnum,
+  type TransactionType,
+} from '@/modules/transactions';
 
 const ACCOUNT_PROFILE_OPTION_PAGE_SIZE = 30;
 import type { IAccountProfileListQuery } from '@/modules/accountProfile/types/accountProfileTypes';
@@ -17,6 +21,7 @@ interface TransactionAdditionalChargesFieldArrayProps {
   applyTax?: boolean;
   accountQuery?: IAccountProfileListQuery;
   disabled?: boolean;
+  transactionType?: TransactionType;
 }
 
 const formatAmount = (value?: string | null) => {
@@ -42,6 +47,7 @@ const AdditionalChargeRow = ({
   index,
   applyTax,
   accountQuery,
+  transactionType,
   disabled = false,
   onRemove,
   canRemove,
@@ -50,10 +56,13 @@ const AdditionalChargeRow = ({
   index: number;
   applyTax?: boolean;
   accountQuery?: IAccountProfileListQuery;
+  transactionType?: TransactionType;
   disabled?: boolean;
   onRemove: (index: number) => void;
   canRemove: boolean;
 }) => {
+  const isSale = transactionType === TransactionTypeEnum.SALE;
+  const chargeMultiplier = isSale ? 1 : -1;
   const form = useFormContext();
   const amount = useWatch({
     control: form.control,
@@ -92,11 +101,11 @@ const AdditionalChargeRow = ({
     }
 
     if (!Number.isFinite(gstAmountValue)) {
-      return amountValue.toFixed(4);
+      return (amountValue * chargeMultiplier).toFixed(4);
     }
 
-    return (amountValue + gstAmountValue).toFixed(4);
-  }, [amount, gstAmount]);
+    return ((amountValue + gstAmountValue) * chargeMultiplier).toFixed(4);
+  }, [amount, chargeMultiplier, gstAmount]);
 
   useEffect(() => {
     const gstRateField = `${arrayName}.${index}.gstRate` as const;
@@ -183,7 +192,7 @@ const AdditionalChargeRow = ({
 
       <FormFieldInput
         name={`${arrayName}.${index}.totalAmount`}
-        label="Total Amount (-)"
+        label={isSale ? 'Total Amount (+)' : 'Total Amount (-)'}
         disabled
       />
 
@@ -210,6 +219,7 @@ export const TransactionAdditionalChargesFieldArray = ({
   applyTax = true,
   accountQuery,
   disabled = false,
+  transactionType = TransactionTypeEnum.PURCHASE,
 }: TransactionAdditionalChargesFieldArrayProps) => {
   const form = useFormContext();
   const { fields, append, remove } = useFieldArray({
@@ -229,6 +239,8 @@ export const TransactionAdditionalChargesFieldArray = ({
       return sum + (Number.isFinite(totalValue) ? totalValue : amountValue);
     }, 0);
   }, [charges]);
+
+  const isSale = transactionType === TransactionTypeEnum.SALE;
 
   const canRemove = fields.length > 1;
 
@@ -261,6 +273,7 @@ export const TransactionAdditionalChargesFieldArray = ({
                 index={index}
                 applyTax={applyTax}
                 accountQuery={accountQuery}
+                transactionType={transactionType}
                 disabled={disabled}
                 onRemove={remove}
                 canRemove={canRemove}
@@ -271,8 +284,11 @@ export const TransactionAdditionalChargesFieldArray = ({
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border-secondary pt-4">
         <div className="text-sm text-text-secondary">
-            Total additional charges: {formatNegativeAmount(String(totalAmount))}
-          </div>
+          Total additional charges:{' '}
+          {isSale
+            ? formatAmount(String(totalAmount))
+            : formatNegativeAmount(String(Math.abs(totalAmount)))}
+        </div>
 
           <Button
             type="button"

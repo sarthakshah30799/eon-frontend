@@ -173,7 +173,7 @@ export const buildPurchasePrintHtml = ({
     const rowTotal = Number(row.totalAmount || row.amount || 0);
     return sum + (Number.isFinite(rowTotal) ? rowTotal : 0);
   }, 0);
-  const payableAmount = totalAmount - additionalCharges;
+  const payableAmount = totalAmount + additionalCharges;
   const amountInWords = numberToWords(payableAmount);
 
   const itemRows = transaction.transactions

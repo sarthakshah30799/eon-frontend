@@ -207,9 +207,11 @@ export const manualBillBookApi = {
 
   getSelectablePages: async (params?: {
     userId?: string;
+    transactionType?: string;
   }): Promise<IManualBookPageTracking[]> => {
     const query = new URLSearchParams();
     if (params?.userId) query.set('userId', params.userId);
+    if (params?.transactionType) query.set('transactionType', params.transactionType);
 
     const suffix = query.toString() ? `?${query.toString()}` : '';
     const res = await apiClient.get<IManualBookPageTracking[]>(

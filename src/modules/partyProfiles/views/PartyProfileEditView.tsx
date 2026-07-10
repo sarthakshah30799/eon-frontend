@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { usePermission } from '@/hooks';
 import {
@@ -10,10 +10,7 @@ import {
 } from '../hooks';
 import { PartyProfileForm } from '../forms/PartyProfileForm';
 import type { ICreatePartyProfile, IReviewPartyProfilePayload } from '../types';
-import {
-  toPartyProfileApiType,
-  toPartyProfileRouteType,
-} from '../constants';
+import { toPartyProfileApiType, toPartyProfileRouteType } from '../constants';
 import { PartyProfileDocumentsActionButton } from '../components';
 import { NotFoundState } from '@/components/ui/not-found-state';
 import type { PartyProfileType } from '../types/partyProfileTypes';
@@ -28,14 +25,13 @@ const formatDateForInput = (dateString?: string | Date) => {
 export const PartyProfileEditView = () => {
   const { id, type: routeType } = useParams<{ id: string; type?: string }>();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const isReviewMode = searchParams.get('review') === '1';
   const { user } = useAuth();
   const isAdminUser = user?.isAdmin === true;
   const isReviewer = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
-  const showReviewControls = Boolean(isReviewer && isReviewMode);
+  const showReviewControls = Boolean(isReviewer);
 
-  const { data: typeOptions = [], isLoading: isTypesLoading } = usePartyProfileTypes();
+  const { data: typeOptions = [], isLoading: isTypesLoading } =
+    usePartyProfileTypes();
   const routeOptions = useMemo(
     () =>
       typeOptions.map(option => ({
@@ -45,7 +41,8 @@ export const PartyProfileEditView = () => {
     [typeOptions]
   );
   const selectedType = useMemo(
-    () => (routeType ? toPartyProfileRouteType(routeType) : routeOptions[0]?.value),
+    () =>
+      routeType ? toPartyProfileRouteType(routeType) : routeOptions[0]?.value,
     [routeOptions, routeType]
   );
   const selectedApiType = useMemo(
@@ -55,15 +52,23 @@ export const PartyProfileEditView = () => {
   const { canModify, canView } = usePermission(
     selectedType ? `/party-profiles/${selectedType}` : '/party-profiles'
   );
-  const isInvalidTypeRoute = Boolean(routeType) && !routeOptions.some(option => option.value === selectedType);
+  const isInvalidTypeRoute =
+    Boolean(routeType) &&
+    !routeOptions.some(option => option.value === selectedType);
 
-  const { data: client, isLoading, error } = useGetPartyProfile(
+  const {
+    data: client,
+    isLoading,
+    error,
+  } = useGetPartyProfile(
     id || '',
     selectedApiType,
     Boolean(selectedApiType) && !isInvalidTypeRoute
   );
-  const { updatePartyProfile, isPending } = useUpdatePartyProfile(selectedApiType);
-  const { reviewPartyProfile, isPending: isReviewing } = useReviewPartyProfile();
+  const { updatePartyProfile, isPending } =
+    useUpdatePartyProfile(selectedApiType);
+  const { reviewPartyProfile, isPending: isReviewing } =
+    useReviewPartyProfile();
 
   useEffect(() => {
     if (!routeType && routeOptions[0] && id) {
@@ -180,29 +185,37 @@ export const PartyProfileEditView = () => {
   };
 
   if (isTypesLoading) {
-    return <div className="py-6 text-center text-text-secondary">Loading party profile details...</div>;
+    return (
+      <div className="py-6 text-center text-text-secondary">
+        Loading party profile details...
+      </div>
+    );
   }
 
   if (!routeOptions.length || isInvalidTypeRoute || (!canModify && !canView)) {
     return (
-      <NotFoundState
-        message="You do not have access to edit this party profile type."
-      />
+      <NotFoundState message="You do not have access to edit this party profile type." />
     );
   }
 
   if (!selectedType) {
-    return <div className="py-6 text-center text-text-secondary">Loading party profile details...</div>;
+    return (
+      <div className="py-6 text-center text-text-secondary">
+        Loading party profile details...
+      </div>
+    );
   }
 
   if (isLoading) {
-    return <div className="py-6 text-center text-text-secondary">Loading party profile details...</div>;
+    return (
+      <div className="py-6 text-center text-text-secondary">
+        Loading party profile details...
+      </div>
+    );
   }
 
   if (error || !client) {
-    return (
-      <NotFoundState message="Party profile details were not found." />
-    );
+    return <NotFoundState message="Party profile details were not found." />;
   }
 
   const canEditPartyProfile =

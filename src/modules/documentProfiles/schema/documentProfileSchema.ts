@@ -1,5 +1,6 @@
 import * as yup from 'yup';
 import { DOCUMENT_TYPE_OPTIONS } from '../constants/documentProfileConstants';
+import { DocumentSpecificationTypeEnum } from '../hooks';
 
 export const documentProfileSchema = yup.object({
   documentCode: yup
@@ -31,7 +32,10 @@ export const documentProfileSchema = yup.object({
     .required('Max size is required'),
   specificationType: yup
     .string()
-    .oneOf(['MASTER', 'TRANSACTION'], 'Select a valid specification type')
+    .oneOf(
+      Object.values(DocumentSpecificationTypeEnum),
+      'Select a valid specification type'
+    )
     .required('Specification type is required'),
   type: yup.string().uuid('Select a valid type').required('Type is required'),
   groupSelection: yup

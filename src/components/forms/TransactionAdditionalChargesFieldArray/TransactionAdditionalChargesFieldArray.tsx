@@ -5,7 +5,6 @@ import type { AsyncSelectResponse } from '@/components/ui';
 import { Button, CardSection } from '@/components/ui';
 import { FormFieldInput, FormFieldSelect } from '@/components/forms';
 import { accountProfileApi } from '@/api/accountProfile';
-import { useCategoryOptions } from '@/hooks';
 import {
   AccountProfileLedgerLabelEnum,
   type IAccountProfileListQuery,
@@ -14,7 +13,6 @@ import {
   TransactionTypeEnum,
   type TransactionType,
 } from '@/modules/transactions';
-import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 
 const ACCOUNT_PROFILE_OPTION_PAGE_SIZE = 30;
 import type { ITransactionAdditionalChargeFormRow } from './transactionAdditionalChargesTypes';
@@ -35,13 +33,13 @@ const formatAmount = (value?: string | null) => {
   }
 
   const numericValue = Number(value);
-  return Number.isFinite(numericValue) ? numericValue.toFixed(4) : value;
+  return Number.isFinite(numericValue) ? numericValue.toFixed(2) : value;
 };
 
 const formatNegativeAmount = (value?: string | null) => {
   const formattedValue = formatAmount(value);
   if (!formattedValue) {
-    return '0.0000';
+    return '0.00';
   }
 
   return formattedValue.startsWith('-') ? formattedValue : `-${formattedValue}`;
@@ -55,7 +53,6 @@ const AdditionalChargeRow = ({
   transactionType,
   disabled = false,
   onRemove,
-  canRemove,
 }: {
   arrayName: string;
   index: number;
@@ -64,21 +61,10 @@ const AdditionalChargeRow = ({
   transactionType?: TransactionType;
   disabled?: boolean;
   onRemove: (index: number) => void;
-  canRemove: boolean;
 }) => {
   const isSale = transactionType === TransactionTypeEnum.SALE;
   const chargeMultiplier = isSale ? 1 : -1;
   const form = useFormContext();
-  const { defaultOptions: accountTypeOptions } = useCategoryOptions(
-    CategoryOptionCodeEnum.AccountType
-  );
-  const generalLedgerAccountTypeId = useMemo(() => {
-    const match = accountTypeOptions.find(option =>
-      option.label.trim().toUpperCase() === AccountProfileLedgerLabelEnum.GeneralLedger
-    );
-
-    return match ? String(match.value) : '';
-  }, [accountTypeOptions]);
   const amount = useWatch({
     control: form.control,
     name: `${arrayName}.${index}.amount`,
@@ -97,14 +83,14 @@ const AdditionalChargeRow = ({
     }
 
     if (!applyTax) {
-      return '0.0000';
+      return '0.00';
     }
 
     if (!Number.isFinite(rateValue)) {
       return '';
     }
 
-    return ((amountValue * rateValue) / 100).toFixed(4);
+    return ((amountValue * rateValue) / 100).toFixed(2);
   }, [amount, applyTax, gstRate]);
 
   const totalAmount = useMemo(() => {
@@ -116,10 +102,10 @@ const AdditionalChargeRow = ({
     }
 
     if (!Number.isFinite(gstAmountValue)) {
-      return (amountValue * chargeMultiplier).toFixed(4);
+      return (amountValue * chargeMultiplier).toFixed(2);
     }
 
-    return ((amountValue + gstAmountValue) * chargeMultiplier).toFixed(4);
+    return ((amountValue + gstAmountValue) * chargeMultiplier).toFixed(2);
   }, [amount, chargeMultiplier, gstAmount]);
 
   useEffect(() => {
@@ -149,17 +135,13 @@ const AdditionalChargeRow = ({
 
   const loadAccountOptions = useCallback(
     async (inputValue: string, page = 1): Promise<AsyncSelectResponse> => {
-      if (!generalLedgerAccountTypeId) {
-        return { options: [], hasMore: false };
-      }
-
       const derivedQuery: IAccountProfileListQuery = {
         ...accountQuery,
         page,
         limit: ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
         search: inputValue,
         active: true,
-        accountType: generalLedgerAccountTypeId,
+        accountType: AccountProfileLedgerLabelEnum.GeneralLedger,
         ...(isSale ? { bulkSale: true } : { bulkPurchase: true }),
       };
 
@@ -177,7 +159,7 @@ const AdditionalChargeRow = ({
         hasMore: accounts.length === ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
       };
     },
-    [accountQuery, generalLedgerAccountTypeId, isSale]
+    [accountQuery, isSale]
   );
 
   return (
@@ -187,9 +169,7 @@ const AdditionalChargeRow = ({
           name={`${arrayName}.${index}.accountId`}
           label="Account"
           placeholder={
-            isSale
-              ? 'Select bulk sale account'
-              : 'Select bulk purchase account'
+            isSale ? 'Select bulk sale account' : 'Select bulk purchase account'
           }
           loadOptions={loadAccountOptions}
           pagination
@@ -230,7 +210,7 @@ const AdditionalChargeRow = ({
           type="button"
           variant="destructive"
           size="icon"
-          disabled={!canRemove || disabled}
+          disabled={disabled}
           onClick={() => onRemove(index)}
           aria-label="Remove additional charge"
         >
@@ -271,12 +251,8 @@ export const TransactionAdditionalChargesFieldArray = ({
 
   const isSale = transactionType === TransactionTypeEnum.SALE;
 
-  const canRemove = fields.length > 1;
-
   return (
-    <CardSection
-      heading={title}
-    >
+    <CardSection heading={title}>
       <div className="space-y-4">
         <p className="text-sm text-text-secondary">{description}</p>
 
@@ -305,19 +281,18 @@ export const TransactionAdditionalChargesFieldArray = ({
                 transactionType={transactionType}
                 disabled={disabled}
                 onRemove={remove}
-                canRemove={canRemove}
               />
             ))}
           </div>
         )}
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border-secondary pt-4">
-        <div className="text-sm text-text-secondary">
-          Total additional charges:{' '}
-          {isSale
-            ? formatAmount(String(totalAmount))
-            : formatNegativeAmount(String(Math.abs(totalAmount)))}
-        </div>
+          <div className="text-sm text-text-secondary">
+            Total additional charges:{' '}
+            {isSale
+              ? formatAmount(String(totalAmount))
+              : formatNegativeAmount(String(Math.abs(totalAmount)))}
+          </div>
 
           <Button
             type="button"

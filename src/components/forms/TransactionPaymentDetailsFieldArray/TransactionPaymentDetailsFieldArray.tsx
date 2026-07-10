@@ -6,7 +6,6 @@ import { Button, CardSection } from '@/components/ui';
 import { FormFieldDatePicker, FormFieldInput, FormFieldSelect } from '@/components/forms';
 import { accountProfileApi } from '@/api/accountProfile';
 import { chequebookApi, type IChequeBookPageTracking } from '@/api';
-import { useCategoryOptions } from '@/hooks';
 import {
   AccountProfileLedgerLabelEnum,
   type IAccountProfileListQuery,
@@ -16,7 +15,6 @@ import {
   type TransactionType,
 } from '@/modules/transactions';
 import { useAuth } from '@/lib/AuthContext';
-import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import type { ITransactionPaymentDetailFormRow } from './transactionPaymentDetailsTypes';
 
 const ACCOUNT_PROFILE_OPTION_PAGE_SIZE = 30;
@@ -33,11 +31,11 @@ interface TransactionPaymentDetailsFieldArrayProps {
 
 const formatAmount = (value?: string | number | null) => {
   if (value === undefined || value === null || value === '') {
-    return '0.0000';
+    return '0.00';
   }
 
   const numericValue = Number(value);
-  return Number.isFinite(numericValue) ? numericValue.toFixed(4) : String(value);
+  return Number.isFinite(numericValue) ? numericValue.toFixed(2) : String(value);
 };
 
 const PaymentDetailRow = ({
@@ -61,17 +59,7 @@ const PaymentDetailRow = ({
 }) => {
   const form = useFormContext();
   const { activeBranchId } = useAuth();
-  const { defaultOptions: accountTypeOptions } = useCategoryOptions(
-    CategoryOptionCodeEnum.AccountType
-  );
   const isSale = transactionType === TransactionTypeEnum.SALE;
-  const bankLedgerAccountTypeId = useMemo(() => {
-    const match = accountTypeOptions.find(option =>
-      option.label.trim().toUpperCase() === AccountProfileLedgerLabelEnum.BankLedger
-    );
-
-    return match ? String(match.value) : '';
-  }, [accountTypeOptions]);
   const paymentRows = useWatch({
     control: form.control,
     name: arrayName,
@@ -212,17 +200,13 @@ const PaymentDetailRow = ({
 
   const loadAccountOptions = useCallback(
     async (inputValue: string, page = 1): Promise<AsyncSelectResponse> => {
-      if (!bankLedgerAccountTypeId) {
-        return { options: [], hasMore: false };
-      }
-
       const response = await accountProfileApi.getAccountProfiles({
         ...accountQuery,
         page,
         limit: ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
         search: inputValue,
         active: true,
-        accountType: bankLedgerAccountTypeId,
+        accountType: AccountProfileLedgerLabelEnum.BankLedger,
         ...(isSale ? { bulkSale: true } : { bulkPurchase: true }),
       });
 
@@ -236,7 +220,7 @@ const PaymentDetailRow = ({
         hasMore: accounts.length === ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
       };
     },
-    [accountQuery, bankLedgerAccountTypeId, isSale]
+    [accountQuery, isSale]
   );
 
   return (

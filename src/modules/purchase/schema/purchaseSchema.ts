@@ -61,7 +61,7 @@ const additionalChargeSchema = yup.object({
   amount: decimalStringSchema.default(''),
   gstRate: decimalStringSchema.default(''),
   gstAmount: decimalStringSchema.default(''),
-  totalAmount: decimalStringSchema.default(''),
+  totalAmount: signedDecimalStringSchema.default(''),
 });
 
 const paymentDetailSchema = yup.object({

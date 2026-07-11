@@ -40,12 +40,9 @@ const resolveAssignedToLabel = (assignedTo: IManualBook['assignedTo']) => {
 };
 
 /** Normalises status to uppercase for comparison — handles both old PascalCase and new UPPERCASE DB values */
-const normalizeStatus = (status: string) => status.toUpperCase();
-
 const getStatusBadgeClass = (status: string) => {
-  const s = normalizeStatus(status);
-  if (s === ManualBillBookStatusEnum.APPROVED) return 'bg-emerald-100 text-emerald-800';
-  if (s === ManualBillBookStatusEnum.REJECTED) return 'bg-rose-100 text-rose-800';
+  if (status === ManualBillBookStatusEnum.APPROVE) return 'bg-emerald-100 text-emerald-800';
+  if (status === ManualBillBookStatusEnum.REJECT) return 'bg-rose-100 text-rose-800';
   return 'bg-amber-100 text-amber-800'; // PENDING
 };
 
@@ -54,6 +51,7 @@ export const ManualBillBookListView = () => {
   const { user } = useAuth();
   const isUserHo = (user?.isHo || user?.isHoStaff) && !user?.isAdmin;
   const isCashierOrDelivery = !!(user?.isCashier || user?.isDeliveryBoy);
+  const isBranchManager = !user?.isAdmin && !isUserHo && !isCashierOrDelivery;
   const { hasAnyPermission: canAllocate } = usePermission('/manual-bill-books/allocation');
   const { hasAnyPermission: canMap } = usePermission('/manual-bill-books/dp-mapping');
   const { hasAnyPermission: canUnmap } = usePermission('/manual-bill-books/dp-unmapping');
@@ -70,12 +68,12 @@ export const ManualBillBookListView = () => {
         label: ManualBillBookStatusEnum.PENDING,
       },
       {
-        value: ManualBillBookStatusEnum.APPROVED,
-        label: ManualBillBookStatusEnum.APPROVED,
+        value: ManualBillBookStatusEnum.APPROVE,
+        label: ManualBillBookStatusEnum.APPROVE,
       },
       {
-        value: ManualBillBookStatusEnum.REJECTED,
-        label: ManualBillBookStatusEnum.REJECTED,
+        value: ManualBillBookStatusEnum.REJECT,
+        label: ManualBillBookStatusEnum.REJECT,
       },
     ],
     []
@@ -140,13 +138,13 @@ export const ManualBillBookListView = () => {
   const [isReviewOpen, setIsReviewOpen] = useState(false);
   const [selectedBook, setSelectedBook] = useState<IManualBook | null>(null);
   const [approvalStatus, setApprovalStatus] =
-    useState<ManualBillBookReviewStatus>(ManualBillBookStatusEnum.APPROVED);
+    useState<ManualBillBookReviewStatus>(ManualBillBookStatusEnum.APPROVE);
   const [approvalRemarks, setApprovalRemarks] = useState('');
 
   const reviewStatusOptions = useMemo<AsyncSelectOption[]>(
     () => [
-      { value: ManualBillBookStatusEnum.APPROVED, label: 'APPROVE' },
-      { value: ManualBillBookStatusEnum.REJECTED, label: 'REJECT' },
+      { value: ManualBillBookStatusEnum.APPROVE, label: 'APPROVE' },
+      { value: ManualBillBookStatusEnum.REJECT, label: 'REJECT' },
     ],
     []
   );
@@ -223,7 +221,7 @@ export const ManualBillBookListView = () => {
 
   useEffect(() => {
     const fetchAllocations = async () => {
-      if (!selectedBook || normalizeStatus(selectedBook.status) === ManualBillBookStatusEnum.PENDING) {
+      if (!selectedBook || selectedBook.status === ManualBillBookStatusEnum.PENDING) {
         setAllocations([]);
         return;
       }
@@ -345,7 +343,7 @@ export const ManualBillBookListView = () => {
   const [isReassigning, setIsReassigning] = useState(false);
 
   useEffect(() => {
-    if (!selectedBook || normalizeStatus(selectedBook.status) !== ManualBillBookStatusEnum.REJECTED) return;
+    if (!selectedBook || selectedBook.status !== ManualBillBookStatusEnum.REJECT) return;
     manualBillBookApi.getBranchManagers(selectedBook.branchId)
       .then(setReassignUsers)
       .catch(console.error);
@@ -390,27 +388,29 @@ export const ManualBillBookListView = () => {
       <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
         {/* Filters */}
         <div className="flex flex-wrap gap-4 items-center mb-2">
-          <div className="flex-1 min-w-50">
-            <AsyncSelect
-              label="Filter by Branch"
-              placeholder="All Branches"
-              value={selectedBranchOption}
-              loadOptions={loadBranchOptions}
-              defaultOptions={branchOptions}
-              onChange={option => {
-                const selectedOption = Array.isArray(option)
-                  ? (option[0] ?? null)
-                  : option;
+          {!isBranchManager && (
+            <div className="flex-1 min-w-50">
+              <AsyncSelect
+                label="Filter by Branch"
+                placeholder="All Branches"
+                value={selectedBranchOption}
+                loadOptions={loadBranchOptions}
+                defaultOptions={branchOptions}
+                onChange={option => {
+                  const selectedOption = Array.isArray(option)
+                    ? (option[0] ?? null)
+                    : option;
 
-                setBranchFilter(
-                  selectedOption?.value ? String(selectedOption.value) : ''
-                );
-              }}
-              isClearable
-              isSearchable
-              pagination={false}
-            />
-          </div>
+                  setBranchFilter(
+                    selectedOption?.value ? String(selectedOption.value) : ''
+                  );
+                }}
+                isClearable
+                isSearchable
+                pagination={false}
+              />
+            </div>
+          )}
 
           <div className="w-37.5">
             <AsyncSelect
@@ -446,13 +446,13 @@ export const ManualBillBookListView = () => {
             onRowClick={book => {
               // HO clicking a REJECTED book → redirect to create page pre-filled for reassignment
               if (
-                normalizeStatus(book.status) === ManualBillBookStatusEnum.REJECTED &&
+                book.status === ManualBillBookStatusEnum.REJECT &&
                 (user?.isHo || user?.isHoStaff || user?.isAdmin)
               ) {
                 navigate(`/manual-bill-books/create?reassignId=${book.id}`);
                 return;
               }
-              if (normalizeStatus(book.status) === ManualBillBookStatusEnum.APPROVED && !isUserHo) {
+              if (book.status === ManualBillBookStatusEnum.APPROVE && !isUserHo) {
                 if (canAllocate) {
                   navigate(`/manual-bill-books/allocation?bookId=${book.id}`);
                 } else if (canMap) {
@@ -481,7 +481,7 @@ export const ManualBillBookListView = () => {
             if (!open) { setReassignUserId(''); setReassignRemarks(''); }
           }}
           title={
-            normalizeStatus(selectedBook.status) === ManualBillBookStatusEnum.PENDING
+            selectedBook.status === ManualBillBookStatusEnum.PENDING
               ? 'Review Dispatch Request'
               : 'Dispatch Details'
           }
@@ -564,7 +564,7 @@ export const ManualBillBookListView = () => {
               </div>
             </div>
 
-            {normalizeStatus(selectedBook.status) === ManualBillBookStatusEnum.PENDING && !isUserHo ? (
+            {selectedBook.status === ManualBillBookStatusEnum.PENDING && !isUserHo ? (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -601,7 +601,7 @@ export const ManualBillBookListView = () => {
                     placeholder="Provide comments for approval or rejection..."
                     value={approvalRemarks}
                     onChange={e => setApprovalRemarks(e.target.value)}
-                    required={approvalStatus === ManualBillBookStatusEnum.REJECTED}
+                    required={approvalStatus === ManualBillBookStatusEnum.REJECT}
                   />
                 </div>
 
@@ -637,7 +637,7 @@ export const ManualBillBookListView = () => {
                       <span
                         className={`px-1.5 py-0.5 rounded font-semibold text-[10px] ${getStatusBadgeClass(selectedBook.status)}`}
                       >
-                        {normalizeStatus(selectedBook.status)}
+                        {selectedBook.status}
                       </span>
                     </div>
                   </div>
@@ -651,7 +651,7 @@ export const ManualBillBookListView = () => {
                   </div>
                 </div>
                 {/* HO Reassign panel for REJECTED dispatches */}
-                {normalizeStatus(selectedBook.status) === ManualBillBookStatusEnum.REJECTED && (user?.isHo || user?.isHoStaff || user?.isAdmin) && (
+                {selectedBook.status === ManualBillBookStatusEnum.REJECT && (user?.isHo || user?.isHoStaff || user?.isAdmin) && (
                   <form onSubmit={handleReassignSubmit} className="mt-4 border-t border-slate-200 pt-4 space-y-3">
                     <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
                       Edit &amp; Reassign
@@ -698,7 +698,7 @@ export const ManualBillBookListView = () => {
                 )}
 
                 {/* Allocations & Page Tracking */}
-                {normalizeStatus(selectedBook.status) === ManualBillBookStatusEnum.APPROVED && (
+                {selectedBook.status === ManualBillBookStatusEnum.APPROVE && (
                   <div className="mt-4 border-t border-slate-200 pt-4 space-y-3">
                     <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
                       User Allocations

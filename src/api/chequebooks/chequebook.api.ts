@@ -1,5 +1,10 @@
 import { apiClient } from '../api';
 import type { IUserReference } from '../sharedTypes';
+import { ChequeBookStatusEnum, type ChequeBookStatus } from '@/modules/chequebooks/types';
+
+export enum AuthorizedUserRole {
+  CASHIER = 'is_cashier',
+}
 
 export interface IChequeBook {
   id: string;
@@ -18,9 +23,7 @@ export interface IChequeBook {
   mvNoTo: number;
   assignedTo: string | IUserReference;
   remarks?: string;
-  status: string; // 'Pending' | 'Approved' | 'Rejected'
-  fromDate?: string;
-  toDate?: string;
+  status: ChequeBookStatus;
   approvalRemarks?: string;
   createdAt: string;
 }
@@ -38,10 +41,20 @@ export interface ICreateChequeBook {
 }
 
 export interface IApproveRejectChequeBook {
-  status: 'Approved' | 'Rejected';
+  status: ChequeBookStatusEnum.APPROVE | ChequeBookStatusEnum.REJECT;
   approvalRemarks?: string;
-  fromDate?: string;
-  toDate?: string;
+}
+
+export interface IReassignChequeBook {
+  assignedTo: string;
+  dispatchDate?: string;
+  bankAccountCode?: string;
+  bookNoFrom?: number;
+  bookNoTo?: number;
+  vouchersPerBook?: number;
+  mvNoFrom?: number;
+  mvNoTo?: number;
+  remarks?: string;
 }
 
 export interface IChequeBookAllocationPayload {
@@ -83,16 +96,12 @@ export const chequebookApi = {
     branchId?: string,
     status?: string,
     bankAccountCode?: string,
-    fromDate?: string,
-    toDate?: string
   ): Promise<IChequeBook[]> => {
     let url = '/chequebooks/dispatches';
     const params: string[] = [];
     if (branchId) params.push(`branchId=${encodeURIComponent(branchId)}`);
     if (status) params.push(`status=${encodeURIComponent(status)}`);
     if (bankAccountCode) params.push(`bankAccountCode=${encodeURIComponent(bankAccountCode)}`);
-    if (fromDate) params.push(`fromDate=${encodeURIComponent(fromDate)}`);
-    if (toDate) params.push(`toDate=${encodeURIComponent(toDate)}`);
     if (params.length > 0) {
       url += `?${params.join('&')}`;
     }
@@ -145,9 +154,11 @@ export const chequebookApi = {
     return res.data || { valid: true };
   },
 
-  getAuthorizedUsers: async (branchId: string): Promise<Array<{ id: string; name: string }>> => {
+  getAuthorizedUsers: async (branchId: string, role?: AuthorizedUserRole): Promise<Array<{ id: string; name: string }>> => {
+    const params = new URLSearchParams({ branchId });
+    if (role) params.set('role', role);
     const res = await apiClient.get<Array<{ id: string; name: string }>>(
-      `/chequebooks/users?branchId=${encodeURIComponent(branchId)}`
+      `/chequebooks/users?${params.toString()}`
     );
     if (res.error) throw new Error(res.error);
     return res.data || [];
@@ -257,12 +268,28 @@ export const chequebookApi = {
     if (res.error) throw new Error(res.error);
     return res.data || [];
   },
+
+  findById: async (id: string): Promise<IChequeBook> => {
+    const res = await apiClient.get<IChequeBook>(`/chequebooks/dispatches/${id}`);
+    if (res.error) throw new Error(res.error);
+    if (!res.data) throw new Error(`Chequebook dispatch ${id} not found`);
+    return res.data;
+  },
+
+  reassignDispatch: async (id: string, data: IReassignChequeBook): Promise<IChequeBook> => {
+    const res = await apiClient.put<IChequeBook>(`/chequebooks/dispatches/${id}/reassign`, data);
+    if (res.error) throw new Error(res.error);
+    if (!res.data) throw new Error('Failed to reassign dispatch');
+    return res.data;
+  },
 };
 
 export interface IChequeBookPageTracking {
   id: string;
   checkBookId: string;
   userId: string;
+  assignedBy?: string | null;
+  assignedByName?: string | null;
   pageNo: number;
   isVoided: boolean;
   remarks?: string;
@@ -279,5 +306,6 @@ export interface IChequeBookPageTracking {
     mvNoTo: number;
     branchId: string;
     bankAccountCode: string | null;
+    bankAccountCodeLabel?: string | null;
   } | null;
 }

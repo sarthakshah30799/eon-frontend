@@ -1,5 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
-import { chequebookApi } from '@/api';
+import { chequebookApi, AuthorizedUserRole } from '@/api';
+
+export type { AuthorizedUserRole };
 
 export interface IChequeBookCashier {
   id: string;
@@ -14,7 +16,7 @@ export const useListChequeBookCashiers = (branchId: string | null) => {
         return [];
       }
 
-      return chequebookApi.getAuthorizedUsers(branchId);
+      return chequebookApi.getAuthorizedUsers(branchId, AuthorizedUserRole.CASHIER);
     },
     enabled: Boolean(branchId),
   });

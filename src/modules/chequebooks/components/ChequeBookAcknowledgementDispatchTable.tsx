@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { Table, type TableColumnDef } from '@/components/ui';
 import type { IChequeBook } from '@/api';
+import { ChequeBookStatusEnum } from '../types';
 
 const resolveAssignedToLabel = (assignedTo: IChequeBook['assignedTo']) => {
   if (assignedTo && typeof assignedTo === 'object') {
@@ -92,9 +93,9 @@ export const ChequeBookAcknowledgementDispatchTable = ({
         cell: ({ row }) => (
           <span
             className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold border ${
-              row.original.status === 'Approved'
+              row.original.status === ChequeBookStatusEnum.APPROVE
                 ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                : row.original.status === 'Rejected'
+                : row.original.status === ChequeBookStatusEnum.REJECT
                   ? 'bg-rose-50 text-rose-700 border-rose-200'
                   : 'bg-amber-50 text-amber-700 border-amber-200'
             }`}

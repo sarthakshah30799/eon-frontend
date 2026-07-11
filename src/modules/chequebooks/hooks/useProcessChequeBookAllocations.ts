@@ -1,5 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { chequebookApi, type IChequeBook } from '@/api';
+import { ChequeBookStatusEnum } from '../types';
 
 export interface IAllocationRow {
   id: string;
@@ -84,7 +85,7 @@ export const useProcessChequeBookAllocations = () => {
       fromVal,
       toVal,
     }: IProcessChequeBookAllocationsInput) => {
-      const data = await chequebookApi.findAll(branchId, 'Approved');
+      const data = await chequebookApi.findAll(branchId, ChequeBookStatusEnum.APPROVE);
 
       const matched = data.filter(book => {
         if (bankAccountCode !== 'ALL' && book.bankAccountCode !== bankAccountCode) {

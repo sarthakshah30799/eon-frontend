@@ -1,8 +1,7 @@
-export const ChequeBookStatusEnum = {
-  PENDING: 'Pending',
-  APPROVED: 'Approved',
-  REJECTED: 'Rejected',
-} as const;
+import { WorkflowStatus } from '../../../api/sharedTypes';
 
-export type ChequeBookStatus =
-  (typeof ChequeBookStatusEnum)[keyof typeof ChequeBookStatusEnum];
+export { WorkflowStatus as ChequeBookStatusEnum };
+export { WorkflowStatus };
+
+export type ChequeBookStatus = `${WorkflowStatus}`;
+export type ChequeBookReviewStatus = WorkflowStatus.APPROVE | WorkflowStatus.REJECT;

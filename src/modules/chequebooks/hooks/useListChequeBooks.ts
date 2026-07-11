@@ -5,8 +5,6 @@ export interface IChequeBookListQuery {
   branchId?: string;
   status?: string;
   bankAccountCode?: string;
-  fromDate?: string;
-  toDate?: string;
 }
 
 export const useListChequeBooks = (params?: IChequeBookListQuery) => {
@@ -17,8 +15,6 @@ export const useListChequeBooks = (params?: IChequeBookListQuery) => {
         params?.branchId,
         params?.status,
         params?.bankAccountCode,
-        params?.fromDate,
-        params?.toDate
       );
       return data;
     },

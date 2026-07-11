@@ -311,9 +311,9 @@ export const ManualBillBookAcknowledgementPage = () => {
                       <td className="px-6 py-4">
                         <span
                           className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold border ${
-                            book.status.toUpperCase() === ManualBillBookStatusEnum.APPROVED
+                            book.status.toUpperCase() === ManualBillBookStatusEnum.APPROVE
                               ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                              : book.status.toUpperCase() === ManualBillBookStatusEnum.REJECTED
+                              : book.status.toUpperCase() === ManualBillBookStatusEnum.REJECT
                                 ? 'bg-rose-50 text-rose-700 border-rose-200'
                                 : 'bg-amber-50 text-amber-700 border-amber-200'
                           }`}
@@ -346,8 +346,8 @@ export const ManualBillBookAcknowledgementPage = () => {
                       ? { value: '', label: 'All' }
                       : [
                           { value: ManualBillBookStatusEnum.PENDING, label: 'PENDING' },
-                          { value: ManualBillBookStatusEnum.APPROVED, label: 'APPROVED' },
-                          { value: ManualBillBookStatusEnum.REJECTED, label: 'REJECTED' },
+                          { value: ManualBillBookStatusEnum.APPROVE, label: 'APPROVED' },
+                          { value: ManualBillBookStatusEnum.REJECT, label: 'REJECTED' },
                         ].find(o => o.value === searchStatus)
                   }
                   onChange={(
@@ -367,8 +367,8 @@ export const ManualBillBookAcknowledgementPage = () => {
                   loadOptions={async () => ({
                     options: [
                       { value: ManualBillBookStatusEnum.PENDING, label: 'PENDING' },
-                      { value: ManualBillBookStatusEnum.APPROVED, label: 'APPROVED' },
-                      { value: ManualBillBookStatusEnum.REJECTED, label: 'REJECTED' },
+                      { value: ManualBillBookStatusEnum.APPROVE, label: 'APPROVED' },
+                      { value: ManualBillBookStatusEnum.REJECT, label: 'REJECTED' },
                       { value: '', label: 'All' },
                     ],
                     hasMore: false,

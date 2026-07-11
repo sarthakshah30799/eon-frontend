@@ -21,8 +21,6 @@ export interface IManualBook {
   assignedTo: string | IUserReference;
   remarks?: string;
   status: ManualBookStatus;
-  fromDate?: string;
-  toDate?: string;
   approvalRemarks?: string;
   createdAt: string;
 }
@@ -104,16 +102,12 @@ export const manualBillBookApi = {
     branchId?: string,
     status?: string,
     transactionType?: string,
-    fromDate?: string,
-    toDate?: string
   ): Promise<IManualBook[]> => {
     let url = '/manual-bill-books/dispatches';
     const params: string[] = [];
     if (branchId) params.push(`branchId=${encodeURIComponent(branchId)}`);
     if (status) params.push(`status=${encodeURIComponent(status)}`);
     if (transactionType) params.push(`transactionType=${encodeURIComponent(transactionType)}`);
-    if (fromDate) params.push(`fromDate=${encodeURIComponent(fromDate)}`);
-    if (toDate) params.push(`toDate=${encodeURIComponent(toDate)}`);
     if (params.length > 0) {
       url += `?${params.join('&')}`;
     }

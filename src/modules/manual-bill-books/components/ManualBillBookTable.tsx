@@ -12,9 +12,8 @@ const resolveAssignedToLabel = (assignedTo: IManualBook['assignedTo']) => {
 };
 
 const getStatusBadgeClass = (status: string) => {
-  const s = status.toUpperCase();
-  if (s === ManualBillBookStatusEnum.APPROVED) return 'bg-emerald-100 text-emerald-800';
-  if (s === ManualBillBookStatusEnum.REJECTED) return 'bg-rose-100 text-rose-800';
+  if (status === ManualBillBookStatusEnum.APPROVE) return 'bg-emerald-100 text-emerald-800';
+  if (status === ManualBillBookStatusEnum.REJECT) return 'bg-rose-100 text-rose-800';
   return 'bg-amber-100 text-amber-800';
 };
 
@@ -106,7 +105,7 @@ export const ManualBillBookTable = ({
           <span
             className={`inline-flex rounded px-2 py-0.5 text-[10px] font-semibold ${getStatusBadgeClass(row.original.status)}`}
           >
-            {row.original.status.toUpperCase()}
+            {row.original.status}
           </span>
         ),
       },

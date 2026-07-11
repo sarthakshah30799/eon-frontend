@@ -127,7 +127,7 @@ export const ManagerToCashierAllocationPage = () => {
         isAutoProcessedRef.current = true;
         try {
           setIsProcessing(true);
-          const data = await manualBillBookApi.findAll(activeBranchId, ManualBillBookStatusEnum.APPROVED);
+          const data = await manualBillBookApi.findAll(activeBranchId, ManualBillBookStatusEnum.APPROVE);
           const book = data.find(b => b.id === bookId);
           if (book) {
             // Only pre-fill the form fields — do NOT render the table yet.
@@ -161,7 +161,7 @@ export const ManagerToCashierAllocationPage = () => {
       setIsProcessing(true);
       setAllocatedWarning('');
       // Fetch all dispatches for the branch (to query approved allocations)
-      const data = await manualBillBookApi.findAll(activeBranchId, ManualBillBookStatusEnum.APPROVED);
+      const data = await manualBillBookApi.findAll(activeBranchId, ManualBillBookStatusEnum.APPROVE);
       
       // Filter by range and txnType in memory
       const matched = data.filter(book => {

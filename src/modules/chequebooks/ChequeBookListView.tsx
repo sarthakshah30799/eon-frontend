@@ -1,26 +1,21 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import {
-  chequebookApi,
-  type IChequeBook,
-  type IChequeBookAllocation,
-  type IChequeBookPageTracking,
-} from '@/api';
+import { chequebookApi, type IChequeBook } from '@/api';
 import { Modal } from '@/components/ui/modal/Modal';
 import toast from 'react-hot-toast';
 import { Loader } from '@/components/ui/loader';
 import {
   AsyncSelect,
   Button,
-  Input,
-  PageGrid,
   type AsyncSelectOption,
   type AsyncSelectResponse,
 } from '@/components/ui';
 import { useListChequeBooks } from './hooks';
 import { useListBranchProfiles } from '@/modules/branchProfile/hooks';
 import { ChequeBookTable } from './components';
-import { ChequeBookStatusEnum, type ChequeBookStatus } from './types';
+import { CashierChequeBookListView } from './components/CashierChequeBookListView';
+import { ChequeBookStatusEnum, type ChequeBookStatus, type ChequeBookReviewStatus } from './types';
+import { useAuth } from '@/lib/AuthContext';
 
 const resolveAssignedToLabel = (assignedTo: IChequeBook['assignedTo']) => {
   if (assignedTo && typeof assignedTo === 'object') {
@@ -30,27 +25,31 @@ const resolveAssignedToLabel = (assignedTo: IChequeBook['assignedTo']) => {
   return assignedTo || 'N/A';
 };
 
+/** Normalises status to uppercase for comparison — handles both old PascalCase and new UPPERCASE DB values */
 export const ChequeBookListView = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isCashierOrDelivery = !!(user?.isCashier || user?.isDeliveryBoy);
+  const isHoStaff = !!(user?.isHo || user?.isHoStaff) && !user?.isAdmin;
+  const isBranchManager = !user?.isAdmin && !isHoStaff && !isCashierOrDelivery;
+
   // Filter states
   const [branchFilter, setBranchFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState<ChequeBookStatus | ''>('');
 
   // Review modal states
   const [isReviewOpen, setIsReviewOpen] = useState(false);
-  const [approvalStatus, setApprovalStatus] = useState<'Approved' | 'Rejected'>(
-    'Approved'
+  const [approvalStatus, setApprovalStatus] = useState<ChequeBookReviewStatus>(
+    ChequeBookStatusEnum.APPROVE
   );
-  const [fromDate, setFromDate] = useState('');
-  const [toDate, setToDate] = useState('');
   const [approvalRemarks, setApprovalRemarks] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedBook, setSelectedBook] = useState<IChequeBook | null>(null);
 
   const reviewStatusOptions = useMemo<AsyncSelectOption[]>(
     () => [
-      { value: 'Approved', label: 'APPROVE' },
-      { value: 'Rejected', label: 'REJECT' },
+      { value: ChequeBookStatusEnum.APPROVE, label: 'APPROVE' },
+      { value: ChequeBookStatusEnum.REJECT, label: 'REJECT' },
     ],
     []
   );
@@ -119,12 +118,12 @@ export const ChequeBookListView = () => {
         label: ChequeBookStatusEnum.PENDING,
       },
       {
-        value: ChequeBookStatusEnum.APPROVED,
-        label: ChequeBookStatusEnum.APPROVED,
+        value: ChequeBookStatusEnum.APPROVE,
+        label: ChequeBookStatusEnum.APPROVE,
       },
       {
-        value: ChequeBookStatusEnum.REJECTED,
-        label: ChequeBookStatusEnum.REJECTED,
+        value: ChequeBookStatusEnum.REJECT,
+        label: ChequeBookStatusEnum.REJECT,
       },
     ],
     []
@@ -185,115 +184,6 @@ export const ChequeBookListView = () => {
     }
   }, [reviewId, books]);
 
-  // Page Tracking allocation list & cashier list states
-  const [allocations, setAllocations] = useState<IChequeBookAllocation[]>([]);
-  const [isLoadingAllocations, setIsLoadingAllocations] = useState(false);
-  const [cashiers, setCashiers] = useState<Array<{ id: string; name: string }>>(
-    []
-  );
-
-  // Sub-modal for PageGrid states
-  const [selectedAllocation, setSelectedAllocation] =
-    useState<IChequeBookAllocation | null>(null);
-  const [isPagesModalOpen, setIsPagesModalOpen] = useState(false);
-  const [pages, setPages] = useState<IChequeBookPageTracking[]>([]);
-  const [isLoadingPages, setIsLoadingPages] = useState(false);
-
-  useEffect(() => {
-    const fetchAllocations = async () => {
-      if (!selectedBook || selectedBook.status === 'Pending') {
-        setAllocations([]);
-        return;
-      }
-      try {
-        setIsLoadingAllocations(true);
-        const data = await chequebookApi.getAllocations([selectedBook.id]);
-        setAllocations(data);
-      } catch (err: unknown) {
-        console.error('Failed to load allocations:', err);
-      } finally {
-        setIsLoadingAllocations(false);
-      }
-    };
-    fetchAllocations();
-  }, [selectedBook]);
-
-  useEffect(() => {
-    const fetchCashiers = async () => {
-      if (!selectedBook) return;
-      try {
-        const data = await chequebookApi.getAuthorizedUsers(
-          selectedBook.branchId
-        );
-        setCashiers(data);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    fetchCashiers();
-  }, [selectedBook]);
-
-  const handleViewPages = async (alloc: IChequeBookAllocation) => {
-    setSelectedAllocation(alloc);
-    setIsPagesModalOpen(true);
-    try {
-      setIsLoadingPages(true);
-      const data = await chequebookApi.getPagesByBookNo(
-        alloc.checkBookId,
-        alloc.bookNo
-      );
-      setPages(data);
-    } catch (err: unknown) {
-      toast.error(
-        err instanceof Error
-          ? err.message
-          : 'Failed to load page tracking records.'
-      );
-    } finally {
-      setIsLoadingPages(false);
-    }
-  };
-
-  const handleUpdatePageStatus = async (
-    pageNos: number[],
-    status: 'VOID',
-    remarks?: string
-  ) => {
-    if (!selectedAllocation) return;
-    try {
-      await chequebookApi.updatePagesStatus(pageNos, status, remarks);
-      toast.success('Page status updated successfully');
-      const data = await chequebookApi.getPagesByBookNo(
-        selectedAllocation.checkBookId,
-        selectedAllocation.bookNo
-      );
-      setPages(data);
-    } catch (err: unknown) {
-      toast.error(
-        err instanceof Error ? err.message : 'Failed to update page status.'
-      );
-      throw err;
-    }
-  };
-
-  const handleReturnPages = async (pageNos: number[]) => {
-    if (!selectedAllocation) return;
-    try {
-      await chequebookApi.returnPages(pageNos);
-      toast.success('Pages returned successfully');
-      const data = await chequebookApi.getPagesByBookNo(
-        selectedAllocation.checkBookId,
-        selectedAllocation.bookNo
-      );
-      setPages(data);
-    } catch (err: unknown) {
-      toast.error(
-        err instanceof Error ? err.message : 'Failed to return pages.'
-      );
-      throw err;
-    }
-  };
-
   const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedBook) return;
@@ -303,8 +193,6 @@ export const ChequeBookListView = () => {
       await chequebookApi.approveOrReject(selectedBook.id, {
         status: approvalStatus,
         approvalRemarks,
-        fromDate: fromDate || undefined,
-        toDate: toDate || undefined,
       });
       toast.success(
         `Record has been successfully ${approvalStatus.toLowerCase()}.`
@@ -319,6 +207,10 @@ export const ChequeBookListView = () => {
       setIsSubmitting(false);
     }
   };
+
+  if (isCashierOrDelivery) {
+    return <CashierChequeBookListView />;
+  }
 
   return (
     <div className="space-y-6">
@@ -335,27 +227,29 @@ export const ChequeBookListView = () => {
       <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
         {/* Filters */}
         <div className="flex flex-wrap gap-4 items-center mb-2">
-          <div className="flex-1 min-w-50">
-            <AsyncSelect
-              label="Filter by Branch"
-              placeholder="All Branches"
-              value={selectedBranchOption}
-              loadOptions={loadBranchOptions}
-              defaultOptions={branchOptions}
-              onChange={option => {
-                const selectedOption = Array.isArray(option)
-                  ? (option[0] ?? null)
-                  : option;
+          {!isBranchManager && (
+            <div className="flex-1 min-w-50">
+              <AsyncSelect
+                label="Filter by Branch"
+                placeholder="All Branches"
+                value={selectedBranchOption}
+                loadOptions={loadBranchOptions}
+                defaultOptions={branchOptions}
+                onChange={option => {
+                  const selectedOption = Array.isArray(option)
+                    ? (option[0] ?? null)
+                    : option;
 
-                setBranchFilter(
-                  selectedOption?.value ? String(selectedOption.value) : ''
-                );
-              }}
-              isClearable
-              isSearchable
-              pagination={false}
-            />
-          </div>
+                  setBranchFilter(
+                    selectedOption?.value ? String(selectedOption.value) : ''
+                  );
+                }}
+                isClearable
+                isSearchable
+                pagination={false}
+              />
+            </div>
+          )}
 
           <div className="w-37.5">
             <AsyncSelect
@@ -388,6 +282,14 @@ export const ChequeBookListView = () => {
             books={books}
             loading={isLoading || isFetching}
             onRowClick={book => {
+              if (isHoStaff && book.status === ChequeBookStatusEnum.REJECT) {
+                navigate(`/cheque-books/create?reassignId=${book.id}`);
+                return;
+              }
+              if (isBranchManager && book.status === ChequeBookStatusEnum.APPROVE) {
+                navigate(`/cheque-books/allocation?bookId=${book.id}`);
+                return;
+              }
               setSelectedBook(book);
               setIsReviewOpen(true);
             }}
@@ -401,7 +303,7 @@ export const ChequeBookListView = () => {
           open={isReviewOpen}
           onOpenChange={setIsReviewOpen}
           title={
-            selectedBook.status === 'Pending'
+            selectedBook.status === ChequeBookStatusEnum.PENDING && !isHoStaff
               ? 'Review Dispatch Request'
               : 'Dispatch Details'
           }
@@ -484,7 +386,7 @@ export const ChequeBookListView = () => {
               </div>
             </div>
 
-            {selectedBook.status === 'Pending' ? (
+            {selectedBook.status === ChequeBookStatusEnum.PENDING && !isHoStaff ? (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -501,29 +403,10 @@ export const ChequeBookListView = () => {
                           : option;
                         if (selectedOption) {
                           setApprovalStatus(
-                            selectedOption.value as 'Approved' | 'Rejected'
+                            selectedOption.value as ChequeBookReviewStatus
                           );
                         }
                       }}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Input
-                      type="date"
-                      label="From Date"
-                      value={fromDate}
-                      onChange={e => setFromDate(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Input
-                      type="date"
-                      label="To Date"
-                      value={toDate}
-                      onChange={e => setToDate(e.target.value)}
                     />
                   </div>
                 </div>
@@ -538,7 +421,7 @@ export const ChequeBookListView = () => {
                     placeholder="Provide comments for approval or rejection..."
                     value={approvalRemarks}
                     onChange={e => setApprovalRemarks(e.target.value)}
-                    required={approvalStatus === 'Rejected'}
+                    required={approvalStatus === ChequeBookStatusEnum.REJECT}
                   />
                 </div>
 
@@ -574,21 +457,14 @@ export const ChequeBookListView = () => {
                       <span
                         className={[
                           'px-1.5 py-0.5 rounded font-semibold text-[10px]',
-                          selectedBook.status === 'Approved'
+                          selectedBook.status === ChequeBookStatusEnum.APPROVE
                             ? 'bg-emerald-100 text-emerald-800'
-                            : 'bg-rose-100 text-rose-800',
+                            : selectedBook.status === ChequeBookStatusEnum.REJECT
+                              ? 'bg-rose-100 text-rose-800'
+                              : 'bg-amber-100 text-amber-800',
                         ].join(' ')}
                       >
                         {selectedBook.status}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="block text-slate-400 font-semibold mb-0.5">
-                        Date Range
-                      </span>
-                      <span>
-                        {selectedBook.fromDate || 'N/A'} to{' '}
-                        {selectedBook.toDate || 'N/A'}
                       </span>
                     </div>
                   </div>
@@ -601,56 +477,6 @@ export const ChequeBookListView = () => {
                     </span>
                   </div>
                 </div>
-                {/* Allocations & Page Tracking */}
-                {selectedBook.status === 'Approved' && (
-                  <div className="mt-4 border-t border-slate-200 pt-4 space-y-3">
-                    <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
-                      User Allocations
-                    </h4>
-                    {isLoadingAllocations ? (
-                      <div className="text-xs text-slate-400 py-2">
-                        Loading allocations...
-                      </div>
-                    ) : allocations.length === 0 ? (
-                      <div className="text-xs text-slate-500 italic py-2 bg-slate-50 border border-slate-100 rounded text-center">
-                        No users assigned to this book yet.
-                      </div>
-                    ) : (
-                      <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1">
-                        {allocations.map(alloc => {
-                          const cashier = cashiers.find(
-                            c => c.id === alloc.cashierId
-                          );
-                          return (
-                            <div
-                              key={`${alloc.checkBookId}-${alloc.bookNo}`}
-                              className="flex justify-between items-center p-3 bg-white border border-slate-200 rounded-md shadow-sm"
-                            >
-                              <div>
-                                <span className="block text-xs font-bold text-slate-700">
-                                  Book #{alloc.bookNo}
-                                </span>
-                                <span className="text-[10px] text-slate-500">
-                                  Assigned to:{' '}
-                                  <b className="text-slate-700">
-                                    {cashier ? cashier.name : 'Unknown User'}
-                                  </b>
-                                </span>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => handleViewPages(alloc)}
-                                className="cursor-pointer text-[10px] font-bold text-sky-600 hover:text-sky-700 bg-sky-50 border border-sky-100 rounded px-2.5 py-1 transition"
-                              >
-                                Track Pages
-                              </button>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                )}
 
                 <div className="flex justify-end pt-2 border-t border-slate-100">
                   <button
@@ -667,26 +493,6 @@ export const ChequeBookListView = () => {
         </Modal>
       )}
 
-      {selectedAllocation && (
-        <Modal
-          open={isPagesModalOpen}
-          onOpenChange={setIsPagesModalOpen}
-          title={`Book #${selectedAllocation.bookNo} Page Tracking`}
-          size="lg"
-        >
-          <PageGrid
-            title={`Leaf range of Book #${selectedAllocation.bookNo}`}
-            pages={pages.map(p => ({
-              pageNo: p.pageNo,
-              isVoided: p.isVoided,
-              remarks: p.remarks,
-            }))}
-            isLoading={isLoadingPages}
-            onUpdateStatus={handleUpdatePageStatus}
-            onReturnPages={handleReturnPages}
-          />
-        </Modal>
-      )}
     </div>
   );
 };

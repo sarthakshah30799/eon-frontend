@@ -1,9 +1,10 @@
 import { useMemo } from 'react';
 import { Table, type TableColumnDef } from '@/components/ui';
 import type { IChequeBook } from '@/api';
+import { ChequeBookStatusEnum } from '../types';
 
 export interface ChequeBookAcknowledgementRowEdit {
-  status?: 'Approved' | 'Rejected';
+  status?: ChequeBookStatusEnum.APPROVE | ChequeBookStatusEnum.REJECT;
   remarks: string;
 }
 
@@ -11,7 +12,7 @@ interface ChequeBookAcknowledgementChecklistTableProps {
   books: IChequeBook[];
   rowEdits: Record<string, ChequeBookAcknowledgementRowEdit>;
   loading?: boolean;
-  onCheckboxChange: (id: string, status: 'Approved' | 'Rejected') => void;
+  onCheckboxChange: (id: string, status: ChequeBookStatusEnum.APPROVE | ChequeBookStatusEnum.REJECT) => void;
   onRemarksChange: (id: string, remarks: string) => void;
 }
 
@@ -91,9 +92,9 @@ export const ChequeBookAcknowledgementChecklistTable = ({
         cell: ({ row }) => {
           const edit = rowEdits[row.original.id] || { remarks: '' };
           const isApproved =
-            edit.status === 'Approved' ||
-            (row.original.status === 'Approved' && edit.status === undefined);
-          const isReadOnly = row.original.status !== 'Pending';
+            edit.status === ChequeBookStatusEnum.APPROVE ||
+            (row.original.status === ChequeBookStatusEnum.APPROVE && edit.status === undefined);
+          const isReadOnly = row.original.status !== ChequeBookStatusEnum.PENDING;
 
           return (
             <div className="flex justify-center">
@@ -101,7 +102,7 @@ export const ChequeBookAcknowledgementChecklistTable = ({
                 type="checkbox"
                 checked={isApproved}
                 disabled={isReadOnly}
-                onChange={() => onCheckboxChange(row.original.id, 'Approved')}
+                onChange={() => onCheckboxChange(row.original.id, ChequeBookStatusEnum.APPROVE)}
                 className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
@@ -114,9 +115,9 @@ export const ChequeBookAcknowledgementChecklistTable = ({
         cell: ({ row }) => {
           const edit = rowEdits[row.original.id] || { remarks: '' };
           const isRejected =
-            edit.status === 'Rejected' ||
-            (row.original.status === 'Rejected' && edit.status === undefined);
-          const isReadOnly = row.original.status !== 'Pending';
+            edit.status === ChequeBookStatusEnum.REJECT ||
+            (row.original.status === ChequeBookStatusEnum.REJECT && edit.status === undefined);
+          const isReadOnly = row.original.status !== ChequeBookStatusEnum.PENDING;
 
           return (
             <div className="flex justify-center">
@@ -124,7 +125,7 @@ export const ChequeBookAcknowledgementChecklistTable = ({
                 type="checkbox"
                 checked={isRejected}
                 disabled={isReadOnly}
-                onChange={() => onCheckboxChange(row.original.id, 'Rejected')}
+                onChange={() => onCheckboxChange(row.original.id, ChequeBookStatusEnum.REJECT)}
                 className="h-4 w-4 rounded border-slate-300 text-red-600 focus:ring-red-500 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
@@ -140,7 +141,7 @@ export const ChequeBookAcknowledgementChecklistTable = ({
             edit.remarks !== undefined && edit.status !== undefined
               ? edit.remarks
               : row.original.approvalRemarks || '';
-          const isReadOnly = row.original.status !== 'Pending';
+          const isReadOnly = row.original.status !== ChequeBookStatusEnum.PENDING;
 
           return (
             <input

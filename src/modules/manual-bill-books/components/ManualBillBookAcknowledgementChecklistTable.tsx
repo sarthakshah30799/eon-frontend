@@ -106,8 +106,8 @@ export const ManualBillBookAcknowledgementChecklistTable = ({
         cell: ({ row }) => {
           const edit = rowEdits[row.original.id] || { remarks: '' };
           const isApproved =
-            edit.status === ManualBillBookStatusEnum.APPROVED ||
-            (row.original.status === ManualBillBookStatusEnum.APPROVED && edit.status === undefined);
+            edit.status === ManualBillBookStatusEnum.APPROVE ||
+            (row.original.status === ManualBillBookStatusEnum.APPROVE && edit.status === undefined);
           const isReadOnly = row.original.status !== ManualBillBookStatusEnum.PENDING;
 
           return (
@@ -116,7 +116,7 @@ export const ManualBillBookAcknowledgementChecklistTable = ({
                 type="checkbox"
                 checked={isApproved}
                 disabled={isReadOnly}
-                onChange={() => onCheckboxChange(row.original.id, ManualBillBookStatusEnum.APPROVED)}
+                onChange={() => onCheckboxChange(row.original.id, ManualBillBookStatusEnum.APPROVE)}
                 className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
@@ -129,8 +129,8 @@ export const ManualBillBookAcknowledgementChecklistTable = ({
         cell: ({ row }) => {
           const edit = rowEdits[row.original.id] || { remarks: '' };
           const isRejected =
-            edit.status === ManualBillBookStatusEnum.REJECTED ||
-            (row.original.status === ManualBillBookStatusEnum.REJECTED && edit.status === undefined);
+            edit.status === ManualBillBookStatusEnum.REJECT ||
+            (row.original.status === ManualBillBookStatusEnum.REJECT && edit.status === undefined);
           const isReadOnly = row.original.status !== ManualBillBookStatusEnum.PENDING;
 
           return (
@@ -139,7 +139,7 @@ export const ManualBillBookAcknowledgementChecklistTable = ({
                 type="checkbox"
                 checked={isRejected}
                 disabled={isReadOnly}
-                onChange={() => onCheckboxChange(row.original.id, ManualBillBookStatusEnum.REJECTED)}
+                onChange={() => onCheckboxChange(row.original.id, ManualBillBookStatusEnum.REJECT)}
                 className="h-4 w-4 rounded border-slate-300 text-red-600 focus:ring-red-500 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>

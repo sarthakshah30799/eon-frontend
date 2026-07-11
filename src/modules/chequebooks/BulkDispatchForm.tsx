@@ -35,9 +35,14 @@ interface IBulkDispatchFormValues {
 
 interface BulkDispatchFormProps {
   onSuccess: () => void;
+  reassignId?: string;
 }
 
-const BulkDispatchFormFields = () => {
+interface BulkDispatchFormFieldsProps {
+  reassignId?: string;
+}
+
+const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => {
   const form = useFormContext();
   const branchId = useWatch({ name: 'branchId' });
   const dispatchDate = useWatch({ name: 'dispatchDate' });
@@ -46,10 +51,34 @@ const BulkDispatchFormFields = () => {
   const vouchersPerBook = useWatch({ name: 'vouchersPerBook' });
   const mvNoFrom = useWatch({ name: 'mvNoFrom' });
 
-  // Reset assignedTo when branchId changes to avoid invalid branch manager assignment
+  // Pre-fill form when reassigning a rejected book
   useEffect(() => {
+    if (!reassignId) return;
+    chequebookApi.findById(reassignId).then(book => {
+      const assignedToId = book.assignedTo && typeof book.assignedTo === 'object'
+        ? book.assignedTo.id
+        : (book.assignedTo as string) ?? '';
+      form.setValue('dispatchDate', new Date().toISOString().slice(0, 10));
+      form.setValue('branchId', book.branchId ?? '');
+      form.setValue('bankAccountCode', book.bankAccountCode ?? '');
+      form.setValue('bookNoFrom', book.bookNoFrom ?? '');
+      form.setValue('bookNoTo', book.bookNoTo ?? '');
+      form.setValue('vouchersPerBook', book.vouchersPerBook ?? 50);
+      form.setValue('mvNoFrom', book.mvNoFrom ?? '');
+      form.setValue('remarks', book.remarks ?? '');
+      // Set assignedTo after a tick so the reset-on-branchId effect has already fired
+      setTimeout(() => form.setValue('assignedTo', assignedToId), 0);
+    }).catch(err => {
+      console.error('Failed to pre-fill reassign data', err);
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reassignId]);
+
+  // Reset assignedTo when branchId changes — skip in reassign mode (branchId is locked)
+  useEffect(() => {
+    if (reassignId) return;
     form.setValue('assignedTo', '');
-  }, [branchId, form]);
+  }, [branchId, form, reassignId]);
 
   useEffect(() => {
     const fetchNextNumber = async () => {
@@ -235,7 +264,7 @@ const BulkDispatchFormFields = () => {
   );
 };
 
-export const BulkDispatchForm = ({ onSuccess }: BulkDispatchFormProps) => {
+export const BulkDispatchForm = ({ onSuccess, reassignId }: BulkDispatchFormProps) => {
   const navigate = useNavigate();
   const { user, activeBranchId } = useAuth();
   const isAdmin = user?.isAdmin === true;
@@ -246,15 +275,29 @@ export const BulkDispatchForm = ({ onSuccess }: BulkDispatchFormProps) => {
 
   const handleSubmit = async (values: IBulkDispatchFormValues) => {
     try {
-      const formattedValues = {
+      const formatted = {
         ...values,
         bookNoFrom: Number(values.bookNoFrom),
         bookNoTo: Number(values.bookNoTo),
         vouchersPerBook: Number(values.vouchersPerBook),
         mvNoFrom: Number(values.mvNoFrom),
       };
-      await chequebookApi.create(formattedValues);
-      toast.success('ChequeBook record saved successfully.');
+      if (reassignId) {
+        await chequebookApi.reassignDispatch(reassignId, {
+          assignedTo: formatted.assignedTo,
+          dispatchDate: formatted.dispatchDate,
+          bankAccountCode: formatted.bankAccountCode,
+          bookNoFrom: formatted.bookNoFrom,
+          bookNoTo: formatted.bookNoTo,
+          vouchersPerBook: formatted.vouchersPerBook,
+          mvNoFrom: formatted.mvNoFrom,
+          remarks: formatted.remarks,
+        });
+        toast.success('ChequeBook dispatch reassigned successfully.');
+      } else {
+        await chequebookApi.create(formatted);
+        toast.success('ChequeBook record saved successfully.');
+      }
       onSuccess();
     } catch (error: unknown) {
       toast.error(
@@ -294,7 +337,7 @@ export const BulkDispatchForm = ({ onSuccess }: BulkDispatchFormProps) => {
         onCancel,
       }}
     >
-      <BulkDispatchFormFields />
+      <BulkDispatchFormFields reassignId={reassignId} />
     </Form>
   );
 };

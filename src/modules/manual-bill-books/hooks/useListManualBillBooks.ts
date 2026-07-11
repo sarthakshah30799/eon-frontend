@@ -5,8 +5,6 @@ export interface IManualBillBookListQuery {
   branchId?: string;
   status?: string;
   transactionType?: string;
-  fromDate?: string;
-  toDate?: string;
 }
 
 export const useListManualBillBooks = (params?: IManualBillBookListQuery) => {
@@ -17,8 +15,6 @@ export const useListManualBillBooks = (params?: IManualBillBookListQuery) => {
         params?.branchId,
         params?.status,
         params?.transactionType,
-        params?.fromDate,
-        params?.toDate
       );
     },
   });

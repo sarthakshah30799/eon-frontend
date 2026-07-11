@@ -3,10 +3,7 @@ import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { useAuth } from '@/lib/AuthContext';
 import { chequebookApi, type IChequeBook } from '@/api';
 import toast from 'react-hot-toast';
-import {
-  FormFieldSelect,
-  FormFieldDatePicker,
-} from '@/components/forms';
+import { FormFieldSelect } from '@/components/forms';
 import { accountProfileApi } from '@/api/accountProfile/accountProfile.api';
 import {
   AsyncSelect,
@@ -29,38 +26,19 @@ const ACCOUNT_PROFILE_OPTION_PAGE_SIZE = 30;
 
 export const ChequeBookAcknowledgementPage = () => {
   const { activeBranchId } = useAuth();
-  const getPastDateStr = (daysAgo: number) => {
-    const d = new Date();
-    d.setDate(d.getDate() - daysAgo);
-    return d.toISOString().slice(0, 10);
-  };
   const txnTypeForm = useForm<{
     bankAccountCode: string;
-    fromDate: string;
-    toDate: string;
   }>({
     defaultValues: {
       bankAccountCode: '',
-      fromDate: getPastDateStr(30),
-      toDate: getPastDateStr(0),
     },
   });
   const watchedBankAccountCode = useWatch({
     control: txnTypeForm.control,
     name: 'bankAccountCode',
   });
-  const watchedFromDate = useWatch({
-    control: txnTypeForm.control,
-    name: 'fromDate',
-  });
-  const watchedToDate = useWatch({
-    control: txnTypeForm.control,
-    name: 'toDate',
-  });
 
   const currentBankAccountCode = watchedBankAccountCode || 'ALL';
-  const currentFromDate = watchedFromDate || '';
-  const currentToDate = watchedToDate || '';
 
   // Navigation: 'list' | 'detail'
   const [view, setView] = useState<'list' | 'detail'>('list');
@@ -75,7 +53,6 @@ export const ChequeBookAcknowledgementPage = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Record of updates: id -> { status: 'Approved' | 'Rejected', remarks: string }
   const [rowEdits, setRowEdits] = useState<
     Record<string, ChequeBookAcknowledgementRowEdit>
   >({});
@@ -92,12 +69,12 @@ export const ChequeBookAcknowledgementPage = () => {
       label: ChequeBookStatusEnum.PENDING,
     },
     {
-      value: ChequeBookStatusEnum.APPROVED,
-      label: ChequeBookStatusEnum.APPROVED,
+      value: ChequeBookStatusEnum.APPROVE,
+      label: ChequeBookStatusEnum.APPROVE,
     },
     {
-      value: ChequeBookStatusEnum.REJECTED,
-      label: ChequeBookStatusEnum.REJECTED,
+      value: ChequeBookStatusEnum.REJECT,
+      label: ChequeBookStatusEnum.REJECT,
     },
   ] satisfies AsyncSelectOption[];
 
@@ -143,8 +120,6 @@ export const ChequeBookAcknowledgementPage = () => {
         activeBranchId,
         searchStatus || undefined,
         currentBankAccountCode === 'ALL' ? undefined : currentBankAccountCode,
-        currentFromDate || undefined,
-        currentToDate || undefined
       );
       if (selectedBookId) {
         setQueryResults(data.filter(b => b.id === selectedBookId));
@@ -163,7 +138,7 @@ export const ChequeBookAcknowledgementPage = () => {
 
   const handleCheckboxChange = (
     id: string,
-    status: 'Approved' | 'Rejected'
+    status: ChequeBookStatusEnum.APPROVE | ChequeBookStatusEnum.REJECT
   ) => {
     setRowEdits(prev => {
       const current = prev[id] || { remarks: '' };
@@ -227,15 +202,6 @@ export const ChequeBookAcknowledgementPage = () => {
     // Pre-populate filter parameters
     setSearchStatus(book.status as ChequeBookStatus);
     txnTypeForm.setValue('bankAccountCode', book.bankAccountCode);
-
-    const dispatchDate = new Date(book.dispatchDate);
-    const fromD = new Date(dispatchDate);
-    fromD.setDate(fromD.getDate() - 15);
-    const toD = new Date(dispatchDate);
-    toD.setDate(toD.getDate() + 15);
-
-    txnTypeForm.setValue('fromDate', fromD.toISOString().slice(0, 10));
-    txnTypeForm.setValue('toDate', toD.toISOString().slice(0, 10));
 
     setSelectedBookId(book.id);
     setView('detail');
@@ -380,21 +346,6 @@ export const ChequeBookAcknowledgementPage = () => {
                   />
               </div>
 
-              <div>
-                <FormFieldDatePicker
-                  name="fromDate"
-                  label="From Date *"
-                  onValueChange={() => setSelectedBookId(null)}
-                />
-              </div>
-
-              <div>
-                <FormFieldDatePicker
-                  name="toDate"
-                  label="To Date *"
-                  onValueChange={() => setSelectedBookId(null)}
-                />
-              </div>
               </FormProvider>
             </div>
 

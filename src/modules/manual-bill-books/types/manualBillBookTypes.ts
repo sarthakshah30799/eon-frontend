@@ -1,13 +1,7 @@
-export const ManualBillBookStatusEnum = {
-  PENDING: 'PENDING',
-  APPROVED: 'APPROVED',
-  REJECTED: 'REJECTED',
-} as const;
+import { WorkflowStatus } from '../../../api/sharedTypes';
 
-export type ManualBillBookStatus =
-  (typeof ManualBillBookStatusEnum)[keyof typeof ManualBillBookStatusEnum];
+export { WorkflowStatus as ManualBillBookStatusEnum };
+export { WorkflowStatus };
 
-export type ManualBillBookReviewStatus = Exclude<
-  ManualBillBookStatus,
-  typeof ManualBillBookStatusEnum.PENDING
->;
+export type ManualBillBookStatus = `${WorkflowStatus}`;
+export type ManualBillBookReviewStatus = WorkflowStatus.APPROVE | WorkflowStatus.REJECT;

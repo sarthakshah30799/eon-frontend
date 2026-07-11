@@ -62,6 +62,8 @@ export interface IUser {
   isHo?: boolean;
   isHoStaff?: boolean;
   isAdmin?: boolean;
+  isCashier?: boolean;
+  isDeliveryBoy?: boolean;
   branchId?: string;
   branchName?: string;
   counterId?: string;

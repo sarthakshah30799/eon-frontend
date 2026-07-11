@@ -1,7 +1,7 @@
 export const ManualBillBookStatusEnum = {
-  PENDING: 'Pending',
-  APPROVED: 'Approved',
-  REJECTED: 'Rejected',
+  PENDING: 'PENDING',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED',
 } as const;
 
 export type ManualBillBookStatus =

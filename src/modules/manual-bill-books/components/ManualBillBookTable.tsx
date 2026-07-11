@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { Table, type TableColumnDef } from '@/components/ui';
 import type { IManualBook } from '@/api';
+import { ManualBillBookStatusEnum } from '../types';
 
 const resolveAssignedToLabel = (assignedTo: IManualBook['assignedTo']) => {
   if (assignedTo && typeof assignedTo === 'object') {
@@ -8,6 +9,13 @@ const resolveAssignedToLabel = (assignedTo: IManualBook['assignedTo']) => {
   }
 
   return assignedTo || 'N/A';
+};
+
+const getStatusBadgeClass = (status: string) => {
+  const s = status.toUpperCase();
+  if (s === ManualBillBookStatusEnum.APPROVED) return 'bg-emerald-100 text-emerald-800';
+  if (s === ManualBillBookStatusEnum.REJECTED) return 'bg-rose-100 text-rose-800';
+  return 'bg-amber-100 text-amber-800';
 };
 
 interface ManualBillBookTableProps {
@@ -96,16 +104,9 @@ export const ManualBillBookTable = ({
         header: 'Status',
         cell: ({ row }) => (
           <span
-            className={[
-              'inline-flex rounded px-2 py-0.5 text-[10px] font-semibold',
-              row.original.status === 'Approved'
-                ? 'bg-emerald-100 text-emerald-800'
-                : row.original.status === 'Rejected'
-                  ? 'bg-rose-100 text-rose-800'
-                  : 'bg-amber-100 text-amber-800',
-            ].join(' ')}
+            className={`inline-flex rounded px-2 py-0.5 text-[10px] font-semibold ${getStatusBadgeClass(row.original.status)}`}
           >
-            {row.original.status}
+            {row.original.status.toUpperCase()}
           </span>
         ),
       },

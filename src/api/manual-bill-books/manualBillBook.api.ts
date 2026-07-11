@@ -1,5 +1,8 @@
 import { apiClient } from '../api';
 import type { IUserReference } from '../sharedTypes';
+import { ManualBillBookStatusEnum } from '@/modules/manual-bill-books/types';
+
+export type ManualBookStatus = typeof ManualBillBookStatusEnum[keyof typeof ManualBillBookStatusEnum];
 
 export interface IManualBook {
   id: string;
@@ -17,7 +20,7 @@ export interface IManualBook {
   mvNoTo: number;
   assignedTo: string | IUserReference;
   remarks?: string;
-  status: string; // 'Pending' | 'Approved' | 'Rejected'
+  status: ManualBookStatus;
   fromDate?: string;
   toDate?: string;
   approvalRemarks?: string;
@@ -37,7 +40,7 @@ export interface ICreateManualBook {
 }
 
 export interface IApproveRejectManualBook {
-  status: 'Approved' | 'Rejected';
+  status: Exclude<ManualBookStatus, typeof ManualBillBookStatusEnum.PENDING>;
   approvalRemarks?: string;
 }
 
@@ -53,6 +56,9 @@ export interface IManualBookAllocation {
   manualBookId: string;
   bookNo: number;
   cashierId: string;
+  cashierName?: string | null;
+  assignedBy?: string | null;
+  assignedByName?: string | null;
   remarks?: string;
 }
 
@@ -87,6 +93,13 @@ export const manualBillBookApi = {
     return res.data;
   },
 
+  findById: async (id: string): Promise<IManualBook> => {
+    const res = await apiClient.get<IManualBook>(`/manual-bill-books/dispatches/${id}`);
+    if (res.error) throw new Error(res.error);
+    if (!res.data) throw new Error('Dispatch not found');
+    return res.data;
+  },
+
   findAll: async (
     branchId?: string,
     status?: string,
@@ -113,6 +126,23 @@ export const manualBillBookApi = {
     const res = await apiClient.put<IManualBook>(`/manual-bill-books/dispatches/${id}/approve`, data);
     if (res.error) throw new Error(res.error);
     if (!res.data) throw new Error('Failed to approve/reject dispatch');
+    return res.data;
+  },
+
+  reassignDispatch: async (id: string, data: {
+    assignedTo: string;
+    remarks?: string;
+    dispatchDate?: string;
+    transactionType?: string;
+    bookNoFrom?: number;
+    bookNoTo?: number;
+    vouchersPerBook?: number;
+    mvNoFrom?: number;
+    mvNoTo?: number;
+  }): Promise<IManualBook> => {
+    const res = await apiClient.put<IManualBook>(`/manual-bill-books/dispatches/${id}/reassign`, data);
+    if (res.error) throw new Error(res.error);
+    if (!res.data) throw new Error('Failed to reassign dispatch');
     return res.data;
   },
 
@@ -312,13 +342,93 @@ export const manualBillBookApi = {
     if (res.error) throw new Error(res.error);
     return res.data || [];
   },
+
+  getBranchUsersForDP: async (): Promise<Array<{ id: string; name: string; isDeliveryPerson: boolean }>> => {
+    const res = await apiClient.get<Array<{ id: string; name: string; isDeliveryPerson: boolean }>>(
+      '/manual-bill-books/dp-management/users'
+    );
+    if (res.error) throw new Error(res.error);
+    return res.data || [];
+  },
+
+  addDeliveryPerson: async (userId: string): Promise<{ success: boolean }> => {
+    const res = await apiClient.post<{ success: boolean }>(
+      '/manual-bill-books/dp-management/add',
+      { userId }
+    );
+    if (res.error) throw new Error(res.error);
+    return res.data || { success: false };
+  },
+
+  removeDeliveryPerson: async (userId: string): Promise<{ success: boolean }> => {
+    const res = await apiClient.post<{ success: boolean }>(
+      '/manual-bill-books/dp-management/remove',
+      { userId }
+    );
+    if (res.error) throw new Error(res.error);
+    return res.data || { success: false };
+  },
+
+  getDPAllocatedPages: async (): Promise<IDPAllocatedPageRow[]> => {
+    const res = await apiClient.get<IDPAllocatedPageRow[]>('/manual-bill-books/dp-unmap/pages');
+    if (res.error) throw new Error(res.error);
+    return res.data || [];
+  },
+
+  unmapFromDP: async (params: {
+    dpUserId: string;
+    manualBookId: string;
+    mvFrom: number;
+    mvTo: number;
+    remarks?: string;
+  }): Promise<{ success: boolean }> => {
+    const res = await apiClient.post<{ success: boolean }>(
+      '/manual-bill-books/dp-unmap/execute',
+      params
+    );
+    if (res.error) throw new Error(res.error);
+    return res.data || { success: false };
+  },
 };
+
+export interface IDPAllocatedPageRow {
+  dpUserId: string;
+  dpName: string;
+  manualBookId: string;
+  dispatchNo: string;
+  txnType: string;
+  bookNoFrom: number;
+  bookNoTo: number;
+  mvFrom: number;
+  mvTo: number;
+  pageCount: number;
+  /** Who assigned pages to this DP (cashier = pages return to cashier; BM = records deleted) */
+  assignedByUserId: string | null;
+  assignedByName: string | null;
+  /** Non-null when assignedBy is a Cashier (pages return to that cashier on unmap) */
+  returnToUserId: string | null;
+  returnToUserName: string | null;
+  pageIds: string[];
+  book: {
+    id: string;
+    no: string;
+    bookNoFrom: number;
+    bookNoTo: number;
+    vouchersPerBook: number;
+    mvNoFrom: number;
+    mvNoTo: number;
+    branchId: string;
+    transactionType: string;
+  };
+}
 
 export interface IManualBookPageTracking {
   id: string;
   manualBookId: string;
   userId: string;
   pageNo: number;
+  assignedBy?: string | null;
+  assignedByName?: string | null;
   isVoided: boolean;
   remarks?: string;
   updatedBy?: string;

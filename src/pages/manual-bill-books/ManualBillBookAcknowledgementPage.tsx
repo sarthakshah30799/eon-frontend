@@ -13,6 +13,7 @@ import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import type { MultiValue, SingleValue } from 'react-select';
 import toast from 'react-hot-toast';
 import { ManualBillBookAcknowledgementChecklistTable } from '@/modules/manual-bill-books/components';
+import { ManualBillBookStatusEnum, type ManualBillBookReviewStatus } from '@/modules/manual-bill-books/types';
 
 export const ManualBillBookAcknowledgementPage = () => {
   const { activeBranchId } = useAuth();
@@ -23,7 +24,7 @@ export const ManualBillBookAcknowledgementPage = () => {
   const [dispatches, setDispatches] = useState<IManualBook[]>([]);
 
   // Filter states for Detail View
-  const [searchStatus, setSearchStatus] = useState('Pending');
+  const [searchStatus, setSearchStatus] = useState('PENDING');
   const [searchTxnType, setSearchTxnType] = useState('ALL');
   const [txnTypes, setTxnTypes] = useState<
     Array<{ id: string; label: string }>
@@ -35,7 +36,7 @@ export const ManualBillBookAcknowledgementPage = () => {
         const options = await categoryOptionsApi.getCategoryOptionsByCode(
           CategoryOptionCodeEnum.Transaction
         );
-        setTxnTypes(options.map(o => ({ id: o.id, label: o.label })));
+        setTxnTypes(options.map(o => ({ id: o.value, label: o.label })));
       } catch (err) {
         console.error('Failed to load transaction types', err);
       }
@@ -59,9 +60,9 @@ export const ManualBillBookAcknowledgementPage = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [reloadToken, setReloadToken] = useState(0);
 
-  // Record of updates: id -> { status: 'Approved' | 'Rejected', remarks: string }
+  // Record of updates: id -> { status: 'APPROVED' | 'REJECTED', remarks: string }
   const [rowEdits, setRowEdits] = useState<
-    Record<string, { status?: 'Approved' | 'Rejected'; remarks: string }>
+    Record<string, { status?: ManualBillBookReviewStatus; remarks: string }>
   >({});
   const selectedTxnType = txnTypes.find(t => t.id === searchTxnType);
 
@@ -127,7 +128,7 @@ export const ManualBillBookAcknowledgementPage = () => {
 
   const handleCheckboxChange = (
     id: string,
-    status: 'Approved' | 'Rejected'
+    status: ManualBillBookReviewStatus
   ) => {
     setRowEdits(prev => {
       const current = prev[id] || { remarks: '' };
@@ -310,9 +311,9 @@ export const ManualBillBookAcknowledgementPage = () => {
                       <td className="px-6 py-4">
                         <span
                           className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold border ${
-                            book.status === 'Approved'
+                            book.status.toUpperCase() === ManualBillBookStatusEnum.APPROVED
                               ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                              : book.status === 'Rejected'
+                              : book.status.toUpperCase() === ManualBillBookStatusEnum.REJECTED
                                 ? 'bg-rose-50 text-rose-700 border-rose-200'
                                 : 'bg-amber-50 text-amber-700 border-amber-200'
                           }`}
@@ -344,9 +345,9 @@ export const ManualBillBookAcknowledgementPage = () => {
                     searchStatus === ''
                       ? { value: '', label: 'All' }
                       : [
-                          { value: 'Pending', label: 'Pending' },
-                          { value: 'Approved', label: 'Approved' },
-                          { value: 'Rejected', label: 'Rejected' },
+                          { value: ManualBillBookStatusEnum.PENDING, label: 'PENDING' },
+                          { value: ManualBillBookStatusEnum.APPROVED, label: 'APPROVED' },
+                          { value: ManualBillBookStatusEnum.REJECTED, label: 'REJECTED' },
                         ].find(o => o.value === searchStatus)
                   }
                   onChange={(
@@ -365,9 +366,9 @@ export const ManualBillBookAcknowledgementPage = () => {
                   }}
                   loadOptions={async () => ({
                     options: [
-                      { value: 'Pending', label: 'Pending' },
-                      { value: 'Approved', label: 'Approved' },
-                      { value: 'Rejected', label: 'Rejected' },
+                      { value: ManualBillBookStatusEnum.PENDING, label: 'PENDING' },
+                      { value: ManualBillBookStatusEnum.APPROVED, label: 'APPROVED' },
+                      { value: ManualBillBookStatusEnum.REJECTED, label: 'REJECTED' },
                       { value: '', label: 'All' },
                     ],
                     hasMore: false,
@@ -378,6 +379,7 @@ export const ManualBillBookAcknowledgementPage = () => {
 
               <div>
                 <AsyncSelect
+                  key={txnTypes.length}
                   label="Transaction Type"
                   placeholder="Select Type"
                   value={

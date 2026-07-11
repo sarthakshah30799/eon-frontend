@@ -134,6 +134,9 @@ const ManagerToCashierAllocationPage = lazy(
 const ManualBillDPMappingPage = lazy(
   () => import('../pages/manual-bill-books/ManualBillDPMappingPage')
 );
+const DeliveryPersonManagementPage = lazy(
+  () => import('../pages/manual-bill-books/DeliveryPersonManagementPage')
+);
 const ChequeBookPage = lazy(
   () => import('../pages/chequebooks/ChequeBookPage')
 );
@@ -548,6 +551,14 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <ManualBillDPMappingPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/manual-bill-books/delivery-persons',
+    element: (
+      <ProtectedLayout>
+        <DeliveryPersonManagementPage />
       </ProtectedLayout>
     ),
   },

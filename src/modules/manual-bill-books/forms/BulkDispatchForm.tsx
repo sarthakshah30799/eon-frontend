@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -138,11 +139,43 @@ const bulkDispatchSchema = yup.object().shape({
 
 interface BulkDispatchFormProps {
     onSuccess: () => void;
+    reassignId?: string;
 }
 
-const BulkDispatchFormFields = () => {
+interface BulkDispatchFormFieldsProps {
+    isReassign?: boolean;
+    reassignId?: string;
+}
+
+const BulkDispatchFormFields = ({ isReassign, reassignId }: BulkDispatchFormFieldsProps) => {
     const form = useFormContext<IBulkDispatchFormValues>();
     const branchId = useWatch({ name: 'branchId', control: form.control });
+
+    // Pre-fill form with rejected book data in reassign mode
+    useEffect(() => {
+        if (!reassignId) return;
+        manualBillBookApi.findById(reassignId)
+            .then(book => {
+                const assignedToId = book.assignedTo && typeof book.assignedTo === 'object'
+                    ? book.assignedTo.id
+                    : book.assignedTo as string;
+                form.reset({
+                    dispatchDate: book.dispatchDate,
+                    no: book.no,
+                    branchId: book.branchId,
+                    transactionType: book.transactionType,
+                    bookNoFrom: String(book.bookNoFrom),
+                    bookNoTo: String(book.bookNoTo),
+                    vouchersPerBook: book.vouchersPerBook,
+                    mvNoFrom: String(book.mvNoFrom),
+                    mvNoTo: String(book.mvNoTo),
+                    assignedTo: assignedToId,
+                    remarks: book.remarks || '',
+                });
+            })
+            .catch(console.error);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [reassignId]);
     const dispatchDate = useWatch({
         name: 'dispatchDate',
         control: form.control,
@@ -277,19 +310,36 @@ const BulkDispatchFormFields = () => {
     );
 };
 
-export const BulkDispatchForm = ({ onSuccess }: BulkDispatchFormProps) => {
+export const BulkDispatchForm = ({ onSuccess, reassignId }: BulkDispatchFormProps) => {
     const navigate = useNavigate();
     const { user, activeBranchId } = useAuth();
     const isAdmin = user?.isAdmin === true;
     const { submitManualBillBook } = useCreateManualBillBook();
+    const isReassign = !!reassignId;
 
     const onCancel = () => {
         navigate('/manual-bill-books');
     };
 
     const handleSubmit = async (values: IBulkDispatchFormValues) => {
-        await submitManualBillBook(values);
-        onSuccess();
+        if (isReassign && reassignId) {
+            await manualBillBookApi.reassignDispatch(reassignId, {
+                assignedTo: values.assignedTo,
+                remarks: values.remarks || undefined,
+                dispatchDate: values.dispatchDate,
+                transactionType: values.transactionType,
+                bookNoFrom: Number(values.bookNoFrom),
+                bookNoTo: Number(values.bookNoTo),
+                vouchersPerBook: Number(values.vouchersPerBook),
+                mvNoFrom: Number(values.mvNoFrom),
+                mvNoTo: values.mvNoTo ? Number(values.mvNoTo) : undefined,
+            });
+            toast.success('Dispatch reassigned and reset to Pending.');
+            onSuccess();
+        } else {
+            await submitManualBillBook(values);
+            onSuccess();
+        }
     };
 
     const defaultValues = {
@@ -316,14 +366,14 @@ export const BulkDispatchForm = ({ onSuccess }: BulkDispatchFormProps) => {
             defaultValues={defaultValues}
             mode="all"
             footer={{
-                submitLabel: 'Create',
+                submitLabel: isReassign ? 'Reassign' : 'Create',
                 onBackClick: () => {
                     void onCancel();
                 },
                 onCancel,
             }}
         >
-            <BulkDispatchFormFields />
+            <BulkDispatchFormFields isReassign={isReassign} reassignId={reassignId} />
         </Form>
     );
 };

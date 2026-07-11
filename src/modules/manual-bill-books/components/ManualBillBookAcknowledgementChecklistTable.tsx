@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Table, type TableColumnDef } from '@/components/ui';
 import type { IManualBook } from '@/api';
-import type { ManualBillBookReviewStatus } from '../types';
+import { ManualBillBookStatusEnum, type ManualBillBookReviewStatus } from '../types';
 
 export interface ManualBillBookAcknowledgementRowEdit {
   status?: ManualBillBookReviewStatus;
@@ -106,9 +106,9 @@ export const ManualBillBookAcknowledgementChecklistTable = ({
         cell: ({ row }) => {
           const edit = rowEdits[row.original.id] || { remarks: '' };
           const isApproved =
-            edit.status === 'Approved' ||
-            (row.original.status === 'Approved' && edit.status === undefined);
-          const isReadOnly = row.original.status !== 'Pending';
+            edit.status === ManualBillBookStatusEnum.APPROVED ||
+            (row.original.status === ManualBillBookStatusEnum.APPROVED && edit.status === undefined);
+          const isReadOnly = row.original.status !== ManualBillBookStatusEnum.PENDING;
 
           return (
             <div className="flex justify-center">
@@ -116,7 +116,7 @@ export const ManualBillBookAcknowledgementChecklistTable = ({
                 type="checkbox"
                 checked={isApproved}
                 disabled={isReadOnly}
-                onChange={() => onCheckboxChange(row.original.id, 'Approved')}
+                onChange={() => onCheckboxChange(row.original.id, ManualBillBookStatusEnum.APPROVED)}
                 className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
@@ -129,9 +129,9 @@ export const ManualBillBookAcknowledgementChecklistTable = ({
         cell: ({ row }) => {
           const edit = rowEdits[row.original.id] || { remarks: '' };
           const isRejected =
-            edit.status === 'Rejected' ||
-            (row.original.status === 'Rejected' && edit.status === undefined);
-          const isReadOnly = row.original.status !== 'Pending';
+            edit.status === ManualBillBookStatusEnum.REJECTED ||
+            (row.original.status === ManualBillBookStatusEnum.REJECTED && edit.status === undefined);
+          const isReadOnly = row.original.status !== ManualBillBookStatusEnum.PENDING;
 
           return (
             <div className="flex justify-center">
@@ -139,7 +139,7 @@ export const ManualBillBookAcknowledgementChecklistTable = ({
                 type="checkbox"
                 checked={isRejected}
                 disabled={isReadOnly}
-                onChange={() => onCheckboxChange(row.original.id, 'Rejected')}
+                onChange={() => onCheckboxChange(row.original.id, ManualBillBookStatusEnum.REJECTED)}
                 className="h-4 w-4 rounded border-slate-300 text-red-600 focus:ring-red-500 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
@@ -155,7 +155,7 @@ export const ManualBillBookAcknowledgementChecklistTable = ({
             edit.remarks !== undefined && edit.status !== undefined
               ? edit.remarks
               : row.original.approvalRemarks || '';
-          const isReadOnly = row.original.status !== 'Pending';
+          const isReadOnly = row.original.status !== ManualBillBookStatusEnum.PENDING;
 
           return (
             <input

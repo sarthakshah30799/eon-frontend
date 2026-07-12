@@ -56,6 +56,10 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
     path: '/admin/additional-settings',
     meta: { title: 'Additional Settings' },
   },
+  {
+    path: '/admin/migrations',
+    meta: { title: 'Migration Tool' },
+  },
   { path: '/admin/currency-rates', meta: { title: 'Currency Rates' } },
   {
     path: '/admin/country-profile',

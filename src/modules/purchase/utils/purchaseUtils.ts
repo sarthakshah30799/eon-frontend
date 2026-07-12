@@ -253,13 +253,15 @@ export const mapPurchaseTransactionToFormValues = (
     totalAmount: (() => {
       const amountValue = Number(charge.amount ?? 0);
       const gstValue = Number(charge.gstAmount ?? 0);
+      const isSale = transaction.transactionType === TransactionTypeEnum.SALE;
+      const signedMultiplier = isSale ? 1 : -1;
       if (!Number.isFinite(amountValue)) {
         return '';
       }
       if (!Number.isFinite(gstValue)) {
-        return amountValue.toFixed(PURCHASE_MONEY_DECIMALS);
+        return (amountValue * signedMultiplier).toFixed(PURCHASE_MONEY_DECIMALS);
       }
-      return (amountValue + gstValue).toFixed(PURCHASE_MONEY_DECIMALS);
+      return ((amountValue + gstValue) * signedMultiplier).toFixed(PURCHASE_MONEY_DECIMALS);
     })(),
     applyTax: Boolean(charge.applyTax),
     remarks: charge.remarks ?? '',
@@ -455,5 +457,7 @@ export const calculatePurchasePayableTotal = (
     0
   );
 
-  return (transactionTotal + additionalChargeTotal).toFixed(PURCHASE_MONEY_DECIMALS);
+  return (transactionTotal + additionalChargeTotal).toFixed(
+    PURCHASE_MONEY_DECIMALS
+  );
 };

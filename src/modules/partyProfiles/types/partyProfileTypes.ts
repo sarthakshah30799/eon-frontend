@@ -1,5 +1,21 @@
 import type { ICategoryOption } from '@/types/categoryOptionTypes';
 import type { IBranchProfile } from '@/modules/branchProfile/types/branchProfileTypes';
+import type { IUserReference } from '@/api/sharedTypes';
+
+export const PartyProfileTypeEnum = {
+  CORPORATE_CLIENT: 'CORPORATE_CLIENT',
+  FFMC: 'FFMC',
+  RF: 'RF',
+  AUTHORISED_DEALER: 'AUTHORISED_DEALER',
+  RMC: 'RMC',
+  FRANCHISE: 'FRANCHISE',
+  AGENT: 'AGENT',
+  FOREIGN_CORRESPONDENT: 'FOREIGN_CORRESPONDENT',
+  FOREX_CORRESPONDENT: 'FOREX_CORRESPONDENT',
+  MARKETING_EXECUTIVE: 'MARKETING_EXECUTIVE',
+  CARD_ISSUER_PROFILE: 'CARD_ISSUER_PROFILE',
+  MISC_PROFILE: 'MISC_PROFILE',
+} as const;
 
 export const PartyProfileCommissionTypeEnum = {
   PERCENTAGE: 'PERCENTAGE',
@@ -8,6 +24,9 @@ export const PartyProfileCommissionTypeEnum = {
 
 export type PartyProfileCommissionType =
   (typeof PartyProfileCommissionTypeEnum)[keyof typeof PartyProfileCommissionTypeEnum];
+
+export type PartyProfileType =
+  (typeof PartyProfileTypeEnum)[keyof typeof PartyProfileTypeEnum];
 
 export interface IPartyProfileCommissionRule {
   currencyCode: string;
@@ -29,6 +48,7 @@ export type PartyProfileStatus =
 
 export interface IPartyProfile {
   id: string;
+  createdBy: IUserReference;
   dateOfIntro: string;
   code: string;
   name: string;
@@ -95,7 +115,7 @@ export interface IPartyProfile {
   ffmcRegNo?: string;
   ffmcRegDate?: string;
   divisionFactor?: number;
-  type: string;
+  type: PartyProfileType;
   status?: PartyProfileStatus;
   statusUpdatedById?: string | null;
   statusUpdatedByName?: string | null;
@@ -107,6 +127,7 @@ export interface IPartyProfile {
 export type ICreatePartyProfile = Omit<
   IPartyProfile,
   | 'id'
+  | 'createdBy'
   | 'kycRiskCategory'
   | 'defaultAgent'
   | 'gstStateName'

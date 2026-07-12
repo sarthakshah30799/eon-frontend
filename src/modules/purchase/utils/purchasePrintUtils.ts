@@ -136,6 +136,15 @@ const joinAddress = (...parts: Array<string | null | undefined>) =>
 
 const formatReferenceValue = (value?: string | null) => value?.trim() || '-';
 
+const formatSignedAmount = (value?: string | null, decimals = 2) => {
+  const formatted = formatAmount(value, decimals);
+  if (formatted === '' || formatted === '0.00' || formatted === '0.0000') {
+    return formatted || Number(0).toFixed(decimals);
+  }
+
+  return formatted.startsWith('-') ? formatted : `-${formatted}`;
+};
+
 const getCustomerCopyLabel = (copyType: PurchasePrintCopyType) =>
   copyType === 'DUPLICATE_COPY' ? 'Duplicate Copy' : 'Original Copy';
 
@@ -189,7 +198,7 @@ export const buildPurchasePrintHtml = ({
           <td>${index + 1}</td>
           <td>${escapeHtml(row.accountName || formatReferenceValue(row.accountId))}</td>
           <td class="right">${escapeHtml(formatAmount(row.gstAmount))}</td>
-          <td class="right">${escapeHtml(formatAmount(row.totalAmount || row.amount))}</td>
+          <td class="right">${escapeHtml(formatSignedAmount(row.totalAmount || row.amount))}</td>
         </tr>`
     )
     .join('');
@@ -498,7 +507,7 @@ export const buildPurchasePrintHtml = ({
             <div class="sign-box">
               <div>Signature of Customer</div>
               <div style="height: 42px;"></div>
-              <div><strong>For MARAEKAT INFOTECH LTD</strong></div>
+              <div><strong>For ${escapeHtml(company?.name || '')}</strong></div>
               <div>Authorized Signatory</div>
             </div>
           </div>

@@ -1,6 +1,6 @@
 import * as yup from 'yup';
 import {
-  PurchasePageTypeEnum,
+  TransactionTypeProfileEnum,
   type PurchasePageType,
 } from '@/pages/purchase/[slug]/purchasePage.enum';
 import { TradeModeEnum, TransactionTypeEnum } from '@/modules/transactions';
@@ -61,7 +61,7 @@ const additionalChargeSchema = yup.object({
   amount: decimalStringSchema.default(''),
   gstRate: decimalStringSchema.default(''),
   gstAmount: decimalStringSchema.default(''),
-  totalAmount: decimalStringSchema.default(''),
+  totalAmount: signedDecimalStringSchema.default(''),
 });
 
 const paymentDetailSchema = yup.object({
@@ -84,7 +84,7 @@ const manualBookReferenceTypeSchema = yup
 export const purchaseFormSchema = yup.object({
   purchasePageType: yup
     .mixed<PurchasePageType>()
-    .oneOf(Object.values(PurchasePageTypeEnum))
+    .oneOf(Object.values(TransactionTypeProfileEnum))
     .nullable()
     .default(null),
   branchSnapshot: yup.mixed().nullable().default(null),

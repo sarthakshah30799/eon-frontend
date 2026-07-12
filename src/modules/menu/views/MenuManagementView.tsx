@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui';
+import { Accordion } from '@/components/ui/accordion';
 import { menuApi } from '@/api';
 import type { ICreateMenu, IMenu } from '@/types/menuTypes';
 import { MenuForm } from '../forms/MenuForm';
@@ -106,6 +107,7 @@ const MenuTreeRow = ({
 
 export const MenuManagementView = () => {
   const [selectedMenu, setSelectedMenu] = useState<IMenu | null>(null);
+  const [openMenuSections, setOpenMenuSections] = useState<string[]>([]);
   const { submitMenu, isPending: isCreating } = useCreateMenu();
   const { submitMenuUpdate, isPending: isUpdating } = useUpdateMenu();
   const { submitMenuDelete, isPending: isDeleting } = useDeleteMenu();
@@ -196,7 +198,16 @@ export const MenuManagementView = () => {
                   {MENU_TEXTS.EMPTY_STATE}
                 </p>
               ) : (
-                <ul className="space-y-3">
+                <Accordion
+                  type="multiple"
+                  value={openMenuSections}
+                  onValueChange={value =>
+                    setOpenMenuSections(
+                      Array.isArray(value) ? value : value ? [value] : []
+                    )
+                  }
+                  className="rounded-none border-0 bg-transparent shadow-none"
+                >
                   {menuTree
                     .slice()
                     .sort(
@@ -204,15 +215,112 @@ export const MenuManagementView = () => {
                         a.sortOrder - b.sortOrder ||
                         a.name.localeCompare(b.name)
                     )
-                    .map(menu => (
-                      <MenuTreeRow
-                        key={menu.id}
-                        menu={menu}
-                        onEdit={setSelectedMenu}
-                        onDelete={handleDelete}
-                      />
-                    ))}
-                </ul>
+                    .map(menu => {
+                      const childCount = menu.children?.length ?? 0;
+                      const isOpen = openMenuSections.includes(menu.id);
+
+                      return (
+                        <Accordion.Item
+                          key={menu.id}
+                          value={menu.id}
+                          className="overflow-hidden rounded-sm border border-border-primary bg-surface-primary last:border-b"
+                        >
+                          <div className="grid gap-2 px-4 py-3 sm:px-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-4">
+                            <Accordion.Trigger className="w-full px-0 py-0 hover:bg-transparent lg:min-w-0">
+                              <span className="flex min-w-0 flex-col gap-1 text-left">
+                                <span className="truncate text-sm font-semibold text-text-primary">
+                                  {menu.name}
+                                </span>
+                                <span className="truncate text-xs text-text-secondary">
+                                  {menu.path || MENU_TEXTS.ROOT_LABEL}
+                                  {menu.icon ? ` | ${menu.icon}` : ''}
+                                </span>
+                              </span>
+
+                              <span className="ml-4 flex shrink-0 items-center gap-2">
+                                <span
+                                  className={[
+                                    'rounded-full px-2 py-0.5 text-[11px] font-medium uppercase tracking-[0.18em]',
+                                    menu.isActive
+                                      ? 'bg-emerald-50 text-emerald-700'
+                                      : 'bg-slate-100 text-slate-600',
+                                  ].join(' ')}
+                                >
+                                  {menu.isActive ? 'Active' : 'Inactive'}
+                                </span>
+                                {menu.isAdmin && (
+                                  <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-medium uppercase tracking-[0.18em] text-blue-700">
+                                    Admin
+                                  </span>
+                                )}
+                                <span className="rounded-full bg-surface-secondary px-2 py-0.5 text-[11px] font-medium uppercase tracking-[0.18em] text-text-secondary">
+                                  {childCount} child
+                                  {childCount === 1 ? '' : 'ren'}
+                                </span>
+                                <span className="hidden text-xs font-medium text-primary-600 sm:inline">
+                                  {isOpen ? 'Collapse' : 'Expand'}
+                                </span>
+                              </span>
+                            </Accordion.Trigger>
+
+                            <div className="flex items-center justify-end gap-1">
+                              <Button
+                                type="button"
+                                aria-label={`Edit ${menu.name}`}
+                                onClick={() => setSelectedMenu(menu)}
+                                className="border-0! bg-transparent! text-black!"
+                                size="sm"
+                              >
+                                <PencilSquareIcon
+                                  className="h-4 w-4"
+                                  aria-hidden="true"
+                                />
+                              </Button>
+                              <Button
+                                type="button"
+                                aria-label={`Delete ${menu.name}`}
+                                className="border-0! bg-transparent! text-red-700!"
+                                onClick={() => handleDelete(menu)}
+                                size="sm"
+                              >
+                                <TrashIcon
+                                  className="h-4 w-4"
+                                  aria-hidden="true"
+                                />
+                              </Button>
+                            </div>
+                          </div>
+
+                          <Accordion.Content className="px-4 pb-4 sm:px-5">
+                            {menu.children && menu.children.length > 0 ? (
+                              <ul className="space-y-2 border-l border-dashed border-border-primary pl-4">
+                                {menu.children
+                                  .slice()
+                                  .sort(
+                                    (a, b) =>
+                                      a.sortOrder - b.sortOrder ||
+                                      a.name.localeCompare(b.name)
+                                  )
+                                  .map(child => (
+                                    <MenuTreeRow
+                                      key={child.id}
+                                      menu={child}
+                                      depth={1}
+                                      onEdit={setSelectedMenu}
+                                      onDelete={handleDelete}
+                                    />
+                                  ))}
+                              </ul>
+                            ) : (
+                              <p className="text-sm text-text-secondary">
+                                No child menus under this section.
+                              </p>
+                            )}
+                          </Accordion.Content>
+                        </Accordion.Item>
+                      );
+                    })}
+                </Accordion>
               )}
             </div>
           </div>

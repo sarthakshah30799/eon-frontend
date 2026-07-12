@@ -87,10 +87,12 @@ export interface IAccountProfileListQuery {
   search?: string;
   accountCode?: string;
   accountName?: string;
+  accountType?: string;
   financialCodeId?: string;
   currencyId?: string;
   active?: boolean;
   bulkPurchase?: boolean;
+  bulkSale?: boolean;
 }
 
 export interface IAccountProfileListResponse {

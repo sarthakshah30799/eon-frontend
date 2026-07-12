@@ -16,7 +16,7 @@ import { SelectCurrencyProfiles } from '@/modules/currencyProfile/components';
 import { useGetBranchProfile } from '@/modules/branchProfile/hooks/useGetBranchProfile';
 import { useListCompanyProfiles } from '@/modules/companyProfile/hooks';
 import { useGetPartyProfile } from '@/modules/partyProfiles/hooks';
-import type { PartyProfileType } from '@/modules/partyProfiles/constants';
+import type { PartyProfileType } from '@/modules/partyProfiles/types';
 import type { PurchasePageType } from '@/pages/purchase/[slug]/purchasePage.enum';
 import { getPurchasePageTitle } from '@/pages/purchase/[slug]/purchasePage.enum';
 import type {
@@ -120,7 +120,6 @@ const PurchaseFormBody = ({
       page: 1,
       limit: ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
       active: true,
-      bulkPurchase: true,
     }),
     []
   );
@@ -180,10 +179,14 @@ const PurchaseFormBody = ({
     control: form.control,
     name: 'additionalCharges',
   });
+  const transactionType = useWatch({
+    control: form.control,
+    name: 'transactionType',
+  });
   const totalPayableAmount = useMemo(
     () =>
       calculatePurchasePayableTotal(
-        (transactions ?? []) as Array<{ total?: string | null }>,
+        (transactions ?? []) as Array<{ total?: string | null; finalAmount?: string | null }>,
         (additionalCharges ?? []) as Array<{
           totalAmount?: string | null;
           amount?: string | null;
@@ -372,7 +375,11 @@ const PurchaseFormBody = ({
       </CardSection>
 
       <CardSection heading="Manual Book Reference">
-        <PurchaseBookReferenceField branchId={branchId} disabled={isReadOnly} />
+        <PurchaseBookReferenceField
+          branchId={branchId}
+          purchasePageType={purchasePageType}
+          disabled={isReadOnly}
+        />
       </CardSection>
 
       <PurchaseTransactionTable
@@ -387,17 +394,19 @@ const PurchaseFormBody = ({
         applyTax={Boolean(partyProfileApplyTax)}
         accountQuery={additionalChargeAccountQuery}
         disabled={isReadOnly}
+        transactionType={transactionType}
         title="Additional Charges"
-        description="Add optional charges for this transaction. Only bulk purchase accounts are shown."
+        description="Add optional charges for this transaction. The account list is filtered by ledger type and purchase/sale mode."
       />
 
       <TransactionPaymentDetailsFieldArray
         name="paymentDetails"
         maxAmount={totalPayableAmount}
         accountQuery={paymentAccountQuery}
+        transactionType={transactionType}
         disabled={isReadOnly}
         title="Payment Details"
-        description="Store how this transaction will be settled. Payment amounts cannot exceed the total payable amount."
+        description="Store how this transaction will be settled. Payment accounts are filtered by ledger type and purchase/sale mode."
       />
 
       <CardSection

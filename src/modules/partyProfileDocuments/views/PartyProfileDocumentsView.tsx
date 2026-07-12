@@ -10,6 +10,7 @@ import {
   toPartyProfileApiType,
   toPartyProfileRouteType,
 } from '@/modules/partyProfiles/constants';
+import type { PartyProfileType } from '@/modules/partyProfiles/types';
 import {
   useGetPartyProfileDocuments,
   useSavePartyProfileDocuments,
@@ -26,7 +27,10 @@ export const PartyProfileDocumentsView = () => {
     () => (routeType ? toPartyProfileRouteType(routeType) : ''),
     [routeType]
   );
-  const selectedApiType = useMemo(() => toPartyProfileApiType(selectedType), [selectedType]);
+  const selectedApiType = useMemo(
+    () => toPartyProfileApiType(selectedType) as PartyProfileType,
+    [selectedType]
+  );
   const { canView: canViewPartyProfileType } = usePermission(
     selectedType ? `/party-profiles/${selectedType}` : '/party-profiles'
   );

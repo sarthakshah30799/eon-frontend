@@ -28,6 +28,25 @@ export const createEmptyAdditionalSettingSubcategoryFormValues =
     categoryType: '',
   });
 
+const findSubcategoryByCode = (
+  categories: IAdditionalSettingCategory[] | undefined,
+  subcategoryCode: string
+) => {
+  const normalizedSubcategoryCode = subcategoryCode.trim().toUpperCase();
+
+  for (const category of categories ?? []) {
+    const subcategory = category.subcategories.find(
+      item => item.code.trim().toUpperCase() === normalizedSubcategoryCode
+    );
+
+    if (subcategory) {
+      return subcategory;
+    }
+  }
+
+  return null;
+};
+
 export const mapCategoryToFormValues = (
   category: IAdditionalSettingCategory
 ): IAdditionalSettingCategoryFormValues => ({
@@ -120,9 +139,10 @@ export const getAdditionalSettingBooleanValue = (
   const category = categories?.find(
     item => item.code.trim().toUpperCase() === normalizedCategoryCode
   );
-  const subcategory = category?.subcategories.find(
-    item => item.code.trim().toUpperCase() === normalizedSubcategoryCode
-  );
+  const subcategory =
+    category?.subcategories.find(
+      item => item.code.trim().toUpperCase() === normalizedSubcategoryCode
+    ) ?? findSubcategoryByCode(categories, subcategoryCode);
 
   if (!subcategory) {
     return fallback;
@@ -148,9 +168,10 @@ export const getAdditionalSettingTextValue = (
   const category = categories?.find(
     item => item.code.trim().toUpperCase() === normalizedCategoryCode
   );
-  const subcategory = category?.subcategories.find(
-    item => item.code.trim().toUpperCase() === normalizedSubcategoryCode
-  );
+  const subcategory =
+    category?.subcategories.find(
+      item => item.code.trim().toUpperCase() === normalizedSubcategoryCode
+    ) ?? findSubcategoryByCode(categories, subcategoryCode);
 
   if (!subcategory) {
     return fallback;

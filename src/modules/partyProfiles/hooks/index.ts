@@ -8,13 +8,14 @@ import { toast } from 'react-hot-toast';
 import { partyProfileApi } from '@/api/partyProfile';
 import {
   toPartyProfileDisplayLabel,
-  type PartyProfileType,
 } from '../constants';
+import { PartyProfileStatusEnum } from '../types/partyProfileTypes';
 import type {
   ICreatePartyProfile,
   IPartyProfileListQuery,
   IReviewPartyProfilePayload,
   IUpdatePartyProfile,
+  PartyProfileType,
 } from '../types/partyProfileTypes';
 
 const getErrorMessage = (error: unknown, fallback: string) => {
@@ -103,10 +104,14 @@ export const useUpdatePartyProfile = (
   const mutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: IUpdatePartyProfile }) =>
       partyProfileApi.updatePartyProfile(id, data),
-    onSuccess: (_, variables) => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['party-profiles', profileType] });
       queryClient.invalidateQueries({ queryKey: ['party-profile', profileType, variables.id] });
-      toast.success(`${typeLabel} updated successfully!`);
+      toast.success(
+        data?.status === PartyProfileStatusEnum.PENDING
+          ? `${typeLabel} submitted for review!`
+          : `${typeLabel} updated successfully!`
+      );
     },
     onError: (error: unknown) => {
       toast.error(getErrorMessage(error, `Failed to update ${typeLabel.toLowerCase()}`));

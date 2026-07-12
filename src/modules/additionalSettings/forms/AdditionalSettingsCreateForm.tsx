@@ -130,12 +130,14 @@ const SubcategoryRowFields = ({
   };
 
   return (
-    <div className="relative rounded-sm border border-border-primary bg-surface-primary p-4">
+      <div className="relative rounded-sm border border-border-primary bg-surface-primary p-4">
       {fieldsLength > 0 && !isFixed && (
-        <button
+        <Button
           type="button"
           aria-label={`Remove subcategory ${index + 1}`}
-          className="absolute right-3 top-0 inline-flex h-9 w-9 items-center justify-center rounded-full border border-border-primary bg-surface-primary text-text-tertiary transition hover:border-error-500 hover:bg-error-50 hover:text-error-600 disabled:opacity-50"
+          variant="ghost"
+          size="icon"
+          className="absolute right-3 top-0 rounded-full border border-border-primary bg-surface-primary text-text-tertiary transition hover:border-error-500 hover:bg-error-50 hover:text-error-600 disabled:opacity-50"
           disabled={isSubmitting}
           onClick={() => remove(index)}
         >
@@ -153,7 +155,7 @@ const SubcategoryRowFields = ({
               d="M6 18L18 6M6 6l12 12"
             />
           </svg>
-        </button>
+        </Button>
       )}
 
       <div className="grid gap-4 md:grid-cols-2">

@@ -9,7 +9,7 @@ import {
   type Path,
   type UseFormSetError,
 } from 'react-hook-form';
-import { Button } from '@/components/ui/button1';
+import { Button } from '@/components/ui';
 import {
   FormFieldCheckbox,
   FormFieldInput,
@@ -183,10 +183,12 @@ const NodeFields = ({ name, depth, onRemove }: NodeFieldsProps) => {
       ].join(' ')}
     >
       {onRemove && (
-        <button
+        <Button
           type="button"
           aria-label="Remove child page"
-          className="absolute right-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full border border-border-primary bg-surface-primary text-text-tertiary transition hover:border-error-500 hover:bg-error-50 hover:text-error-600"
+          variant="ghost"
+          size="icon"
+          className="absolute right-3 top-3 rounded-full border border-border-primary bg-surface-primary text-text-tertiary transition hover:border-error-500 hover:bg-error-50 hover:text-error-600"
           onClick={onRemove}
         >
           <svg
@@ -203,7 +205,7 @@ const NodeFields = ({ name, depth, onRemove }: NodeFieldsProps) => {
               d="M6 18L18 6M6 6l12 12"
             />
           </svg>
-        </button>
+        </Button>
       )}
 
       <div className="grid gap-4 md:grid-cols-2">

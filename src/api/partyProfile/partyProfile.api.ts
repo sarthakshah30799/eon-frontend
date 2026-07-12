@@ -1,5 +1,5 @@
 import { apiClient } from '../api';
-import type { PartyProfileType } from '@/modules/partyProfiles/constants';
+import type { PartyProfileType } from '@/modules/partyProfiles/types';
 import type {
   IPartyProfile,
   IPartyProfileListQuery,

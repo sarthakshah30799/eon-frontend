@@ -6,7 +6,14 @@ import { Button, CardSection } from '@/components/ui';
 import { FormFieldDatePicker, FormFieldInput, FormFieldSelect } from '@/components/forms';
 import { accountProfileApi } from '@/api/accountProfile';
 import { chequebookApi, type IChequeBookPageTracking } from '@/api';
-import type { IAccountProfileListQuery } from '@/modules/accountProfile/types/accountProfileTypes';
+import {
+  AccountProfileLedgerLabelEnum,
+  type IAccountProfileListQuery,
+} from '@/modules/accountProfile';
+import {
+  TransactionTypeEnum,
+  type TransactionType,
+} from '@/modules/transactions';
 import { useAuth } from '@/lib/AuthContext';
 import type { ITransactionPaymentDetailFormRow } from './transactionPaymentDetailsTypes';
 
@@ -18,16 +25,17 @@ interface TransactionPaymentDetailsFieldArrayProps {
   description?: string;
   maxAmount?: string | number;
   accountQuery?: IAccountProfileListQuery;
+  transactionType?: TransactionType;
   disabled?: boolean;
 }
 
 const formatAmount = (value?: string | number | null) => {
   if (value === undefined || value === null || value === '') {
-    return '0.0000';
+    return '0.00';
   }
 
   const numericValue = Number(value);
-  return Number.isFinite(numericValue) ? numericValue.toFixed(4) : String(value);
+  return Number.isFinite(numericValue) ? numericValue.toFixed(2) : String(value);
 };
 
 const PaymentDetailRow = ({
@@ -35,6 +43,7 @@ const PaymentDetailRow = ({
   index,
   maxAmount,
   accountQuery,
+  transactionType,
   disabled = false,
   onRemove,
   canRemove,
@@ -43,12 +52,14 @@ const PaymentDetailRow = ({
   index: number;
   maxAmount?: string | number;
   accountQuery?: IAccountProfileListQuery;
+  transactionType?: TransactionType;
   disabled?: boolean;
   onRemove: (index: number) => void;
   canRemove: boolean;
 }) => {
   const form = useFormContext();
   const { activeBranchId } = useAuth();
+  const isSale = transactionType === TransactionTypeEnum.SALE;
   const paymentRows = useWatch({
     control: form.control,
     name: arrayName,
@@ -190,11 +201,13 @@ const PaymentDetailRow = ({
   const loadAccountOptions = useCallback(
     async (inputValue: string, page = 1): Promise<AsyncSelectResponse> => {
       const response = await accountProfileApi.getAccountProfiles({
+        ...accountQuery,
         page,
         limit: ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
         search: inputValue,
-        ...accountQuery,
         active: true,
+        accountType: AccountProfileLedgerLabelEnum.BankLedger,
+        ...(isSale ? { bulkSale: true } : { bulkPurchase: true }),
       });
 
       const accounts = response.data || [];
@@ -207,7 +220,7 @@ const PaymentDetailRow = ({
         hasMore: accounts.length === ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
       };
     },
-    [accountQuery]
+    [accountQuery, isSale]
   );
 
   return (
@@ -216,7 +229,11 @@ const PaymentDetailRow = ({
         <FormFieldSelect
           name={`${arrayName}.${index}.accountId`}
           label="Account"
-          placeholder="Select account code"
+          placeholder={
+            isSale
+              ? 'Select bulk sale bank account'
+              : 'Select bulk purchase bank account'
+          }
           loadOptions={loadAccountOptions}
           pagination
           pageSize={ACCOUNT_PROFILE_OPTION_PAGE_SIZE}
@@ -329,6 +346,7 @@ export const TransactionPaymentDetailsFieldArray = ({
   description = 'Store payment records before final submission.',
   maxAmount,
   accountQuery,
+  transactionType = TransactionTypeEnum.PURCHASE,
   disabled = false,
 }: TransactionPaymentDetailsFieldArrayProps) => {
   const form = useFormContext();
@@ -382,14 +400,15 @@ export const TransactionPaymentDetailsFieldArray = ({
             {fields.map((field, index) => (
               <PaymentDetailRow
                 key={field.id}
-                arrayName={name}
-                index={index}
-                maxAmount={maxAmount}
-                accountQuery={accountQuery}
-                disabled={disabled}
-                onRemove={remove}
-                canRemove={canRemove}
-              />
+              arrayName={name}
+              index={index}
+              maxAmount={maxAmount}
+              accountQuery={accountQuery}
+              transactionType={transactionType}
+              disabled={disabled}
+              onRemove={remove}
+              canRemove={canRemove}
+            />
             ))}
           </div>
         )}

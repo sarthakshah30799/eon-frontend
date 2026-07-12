@@ -1,5 +1,11 @@
 import type { Dispatch, SetStateAction } from 'react';
-import { Button, Modal, Input } from '@/components/ui';
+import {
+  AsyncSelect,
+  Button,
+  Input,
+  Modal,
+  type AsyncSelectResponse,
+} from '@/components/ui';
 import type {
   CurrencyRateProvider,
   ICurrencyRate,
@@ -22,6 +28,11 @@ interface CurrencyRateEntryModalProps {
 const labelClass = 'mb-1 block text-xs font-semibold uppercase tracking-wider text-text-secondary';
 const inputClass = 'w-full rounded-sm border border-border-primary bg-surface-primary px-3 py-2 text-sm text-text-primary outline-none transition focus:border-primary-500';
 const rateStep = `0.${'0'.repeat(CURRENCY_RATE_DECIMALS - 1)}1`;
+const providerOptions = [
+  { value: 'TICKER', label: 'TICKER' },
+  { value: 'FOREX', label: 'FOREX' },
+  { value: 'MANUAL', label: 'MANUAL' },
+] as const;
 
 export const CurrencyRateEntryModal = ({
   open,
@@ -36,6 +47,21 @@ export const CurrencyRateEntryModal = ({
   const isDetailView = Boolean(selectedRate);
   const isTicker = form.provider === 'TICKER';
   const isManualLike = form.provider === 'MANUAL' || form.provider === 'FOREX';
+  const currencyOptions = currencies.map(currency => ({
+    value: currency.id,
+    label: `${currency.currencyCode} - ${currency.currencyName}`,
+  }));
+  const loadCurrencyOptions = async (): Promise<AsyncSelectResponse> => ({
+    options: currencyOptions,
+    hasMore: false,
+  });
+  const loadProviderOptions = async (): Promise<AsyncSelectResponse> => ({
+    options: providerOptions.map(option => ({
+      value: option.value,
+      label: option.label,
+    })),
+    hasMore: false,
+  });
 
   return (
     <Modal
@@ -70,39 +96,46 @@ export const CurrencyRateEntryModal = ({
         <div className="grid gap-4 md:grid-cols-2">
           <div>
             <label className={labelClass}>Currency</label>
-            <select
-              value={form.currencyId}
-              disabled={isDetailView}
-              onChange={event => setForm(next => ({ ...next, currencyId: event.target.value }))}
-              className={inputClass}
-            >
-              <option value="">Select currency</option>
-              {currencies.map(currency => (
-                <option key={currency.id} value={currency.id}>
-                  {currency.currencyCode} - {currency.currencyName}
-                </option>
-              ))}
-            </select>
+            <AsyncSelect
+              value={
+                currencyOptions.find(option => option.value === form.currencyId) ??
+                null
+              }
+              onChange={option => {
+                const nextOption = Array.isArray(option) ? option[0] : option;
+                setForm(next => ({
+                  ...next,
+                  currencyId: nextOption ? String(nextOption.value) : '',
+                }));
+              }}
+              loadOptions={loadCurrencyOptions}
+              placeholder="Select currency"
+              isDisabled={isDetailView}
+              isSearchable={false}
+            />
           </div>
 
           <div>
             <label className={labelClass}>Provider</label>
-            <select
-              value={form.provider}
-              disabled={isDetailView}
-              onChange={event =>
+            <AsyncSelect
+              value={
+                providerOptions.find(option => option.value === form.provider) ??
+                null
+              }
+              onChange={option => {
+                const nextOption = Array.isArray(option) ? option[0] : option;
                 setForm(next => ({
                   ...next,
-                  provider: event.target.value as CurrencyRateProvider | '',
-                }))
-              }
-              className={inputClass}
-            >
-              <option value="">Select provider</option>
-              <option value="TICKER">TICKER</option>
-              <option value="FOREX">FOREX</option>
-              <option value="MANUAL">MANUAL</option>
-            </select>
+                  provider:
+                    (nextOption?.value as CurrencyRateProvider | undefined) ??
+                    '',
+                }));
+              }}
+              loadOptions={loadProviderOptions}
+              placeholder="Select provider"
+              isDisabled={isDetailView}
+              isSearchable={false}
+            />
           </div>
 
           {isTicker ? (

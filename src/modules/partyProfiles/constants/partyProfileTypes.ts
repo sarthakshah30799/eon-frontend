@@ -1,5 +1,3 @@
-export type PartyProfileType = string;
-
 const normalizeDelimitedValue = (value: string) =>
   value
     .trim()

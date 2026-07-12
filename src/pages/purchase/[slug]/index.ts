@@ -1,7 +1,7 @@
 export { default } from './PurchasePage';
 export type { PurchasePageType } from './purchasePage.enum';
 export {
-  PurchasePageTypeEnum,
+  TransactionTypeProfileEnum,
   getPurchasePageTitle,
   getPurchasePageTypeFromSlug,
   getPurchasePageTypeFromPath,

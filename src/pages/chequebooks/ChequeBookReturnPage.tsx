@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { useAuth } from '@/lib/AuthContext';
 import toast from 'react-hot-toast';
-import { Button, Input } from '@/components/ui';
+import { Button, Checkbox, Input } from '@/components/ui';
 import { FormFieldSelect } from '@/components/forms';
 import { accountProfileApi } from '@/api/accountProfile/accountProfile.api';
 import { chequebookApi, type IChequeBookCashierReturnGroup } from '@/api';
@@ -270,11 +270,9 @@ export const ChequeBookReturnPage = () => {
                 <thead>
                   <tr className="border-b border-slate-200 bg-slate-50/50 text-slate-600 font-medium select-none">
                     <th className="px-4 py-3 text-center">
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={allChecked}
-                        onChange={e => handleHeaderCheckbox(e.target.checked)}
-                        className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 cursor-pointer"
+                        onChange={checked => handleHeaderCheckbox(checked)}
                       />
                     </th>
                     <th className="px-4 py-3">Book No</th>
@@ -288,11 +286,9 @@ export const ChequeBookReturnPage = () => {
                   {rows.map((row, idx) => (
                     <tr key={idx} className="hover:bg-slate-50/70 transition">
                       <td className="px-4 py-4 text-center">
-                        <input
-                          type="checkbox"
+                        <Checkbox
                           checked={row.isCheck}
                           onChange={() => handleRowCheckbox(idx)}
-                          className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 cursor-pointer"
                         />
                       </td>
                       <td className="px-4 py-4 font-semibold text-slate-800">{row.bookNo}</td>

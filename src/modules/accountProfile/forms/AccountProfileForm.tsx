@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback, useMemo } from 'react';
 import { useFormContext, type Resolver } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
+import { Button } from '@/components/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { CardSection } from '@/components/ui';
@@ -413,13 +414,13 @@ export const AccountProfileForm = ({
 
       {readOnly && (
         <div className="flex justify-end border-t border-border-primary pt-4">
-          <button
+          <Button
             type="button"
             onClick={onCancel}
-            className="rounded-sm bg-neutral-100 hover:bg-neutral-200 text-text-primary px-4 py-2 text-sm font-semibold"
+            variant="outline"
           >
             Close
-          </button>
+          </Button>
         </div>
       )}
     </Form>

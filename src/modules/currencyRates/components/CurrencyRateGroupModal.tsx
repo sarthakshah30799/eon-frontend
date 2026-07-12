@@ -1,5 +1,5 @@
 import type { Dispatch, SetStateAction } from 'react';
-import { Button, Modal, AsyncSelect } from '@/components/ui';
+import { AsyncSelect, Button, Checkbox, Input, Modal } from '@/components/ui';
 import type {
   CurrencyRateMarginType,
   ICurrencyRateGroup,
@@ -66,20 +66,22 @@ export const CurrencyRateGroupModal = ({
         <div className="grid gap-4 md:grid-cols-2">
           <div>
             <label className={labelClass}>Group Code</label>
-            <input
+            <Input
               value={form.code}
               onChange={event => setForm(next => ({ ...next, code: event.target.value }))}
-              className={inputClass}
               placeholder="MAJOR"
+              valueTransform="none"
+              classes={{ container: 'max-w-none' }}
             />
           </div>
           <div>
             <label className={labelClass}>Group Name</label>
-            <input
+            <Input
               value={form.name}
               onChange={event => setForm(next => ({ ...next, name: event.target.value }))}
-              className={inputClass}
               placeholder="Major"
+              valueTransform="none"
+              classes={{ container: 'max-w-none' }}
             />
           </div>
           <div className="md:col-span-2">
@@ -115,10 +117,11 @@ export const CurrencyRateGroupModal = ({
           </div>
           <div>
             <label className={labelClass}>Buy Margin Value</label>
-            <input
+            <Input
               value={form.buyMarginValue}
               onChange={event => setForm(next => ({ ...next, buyMarginValue: event.target.value }))}
-              className={inputClass}
+              valueTransform="none"
+              classes={{ container: 'max-w-none' }}
             />
           </div>
           <div>
@@ -145,19 +148,19 @@ export const CurrencyRateGroupModal = ({
           </div>
           <div>
             <label className={labelClass}>Sale Margin Value</label>
-            <input
+            <Input
               value={form.saleMarginValue}
               onChange={event => setForm(next => ({ ...next, saleMarginValue: event.target.value }))}
-              className={inputClass}
+              valueTransform="none"
+              classes={{ container: 'max-w-none' }}
             />
           </div>
         </div>
 
         <label className="flex items-center gap-2 text-sm text-text-primary">
-          <input
-            type="checkbox"
+          <Checkbox
             checked={form.isActive}
-            onChange={event => setForm(next => ({ ...next, isActive: event.target.checked }))}
+            onChange={checked => setForm(next => ({ ...next, isActive: checked }))}
           />
           Active
         </label>

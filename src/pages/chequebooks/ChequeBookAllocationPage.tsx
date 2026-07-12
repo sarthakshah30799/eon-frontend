@@ -5,7 +5,7 @@ import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '@/lib/AuthContext';
 import { chequebookApi } from '@/api';
 import toast from 'react-hot-toast';
-import { Button, Input } from '@/components/ui';
+import { AsyncSelect, Button, Input, type AsyncSelectResponse } from '@/components/ui';
 import { FormFieldSelect } from '@/components/forms';
 import { accountProfileApi } from '@/api/accountProfile/accountProfile.api';
 import { useListChequeBookCashiers } from '@/modules/chequebooks/hooks';
@@ -146,6 +146,15 @@ export const ChequeBookAllocationPage = () => {
     isLoading: isLoadingOptions,
     error: cashiersError,
   } = useListChequeBookCashiers(activeBranchId ?? null);
+
+  const cashierOptions = cashiers.map(cashier => ({
+    value: cashier.id,
+    label: cashier.name,
+  }));
+  const loadCashierOptions = async (): Promise<AsyncSelectResponse> => ({
+    options: cashierOptions,
+    hasMore: false,
+  });
 
   useEffect(() => {
     if (cashiersError) toast.error(getErrorMessage(cashiersError, 'Failed to load cashier list.'));
@@ -383,7 +392,8 @@ export const ChequeBookAllocationPage = () => {
                 )}
                 <button
                   onClick={handleApplyBulkCashier}
-                  className="cursor-pointer rounded bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-1 text-xs font-semibold shadow-sm transition"
+                  variant="outline"
+                  size="sm"
                 >
                   Apply
                 </button>

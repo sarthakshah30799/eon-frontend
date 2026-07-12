@@ -21,41 +21,18 @@ import {
 } from '../hooks';
 import { useListBranchProfiles } from '@/modules/branchProfile/hooks';
 import type { IBulkDispatchFormValues } from '../types';
-
-function debouncePromise<T extends (...args: any[]) => Promise<any>>(
-  fn: T,
-  delay: number
-): (...args: Parameters<T>) => Promise<Awaited<ReturnType<T>>> {
-  let timer: any;
-  let activeResolve: ((value: any) => void) | null = null;
-
-  return (...args: Parameters<T>) => {
-    if (activeResolve) {
-      activeResolve({ valid: true });
-    }
-    clearTimeout(timer);
-    return new Promise(resolve => {
-      activeResolve = resolve;
-      timer = setTimeout(async () => {
-        try {
-          const result = await fn(...args);
-          resolve(result);
-        } catch {
-          resolve({ valid: true });
-        }
-      }, delay);
-    });
-  };
-}
+import { debouncePromise } from '@/hooks';
 
 const debouncedValidateBookRange = debouncePromise(
   manualBillBookApi.validateBookRange,
-  500
+  500,
+  { valid: true }
 );
 
 const debouncedValidatePageRange = debouncePromise(
   manualBillBookApi.validatePageRange,
-  500
+  500,
+  { valid: true }
 );
 
 const bulkDispatchSchema = yup.object().shape({

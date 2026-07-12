@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Table, type TableColumnDef } from '@/components/ui';
+import { Checkbox, Input, Table, type TableColumnDef } from '@/components/ui';
 import type { IManualBook } from '@/api';
 import { ManualBillBookStatusEnum, type ManualBillBookReviewStatus } from '../types';
 
@@ -112,8 +112,7 @@ export const ManualBillBookAcknowledgementChecklistTable = ({
 
           return (
             <div className="flex justify-center">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={isApproved}
                 disabled={isReadOnly}
                 onChange={() => onCheckboxChange(row.original.id, ManualBillBookStatusEnum.APPROVE)}
@@ -135,8 +134,7 @@ export const ManualBillBookAcknowledgementChecklistTable = ({
 
           return (
             <div className="flex justify-center">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={isRejected}
                 disabled={isReadOnly}
                 onChange={() => onCheckboxChange(row.original.id, ManualBillBookStatusEnum.REJECT)}
@@ -158,13 +156,13 @@ export const ManualBillBookAcknowledgementChecklistTable = ({
           const isReadOnly = row.original.status !== ManualBillBookStatusEnum.PENDING;
 
           return (
-            <input
-              type="text"
+            <Input
               value={displayRemarks}
               disabled={isReadOnly}
               onChange={e => onRemarksChange(row.original.id, e.target.value)}
               placeholder="Approval details..."
-              className="w-full rounded border border-slate-300 px-2 py-1 text-xs focus:ring-1 focus:ring-sky-500 focus:border-sky-500 disabled:bg-slate-100 disabled:text-slate-500"
+              className="max-w-none"
+              valueTransform="none"
             />
           );
         },

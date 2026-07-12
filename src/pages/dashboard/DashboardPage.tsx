@@ -29,17 +29,25 @@ const DashboardPage: React.FC = () => {
   const isReviewer = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
   const queryClient = useQueryClient();
 
-  const { data: pendingReviews = [], isLoading } = usePendingPartyProfileReviews();
+  const { data: pendingReviews = [], isLoading } =
+    usePendingPartyProfileReviews();
 
-  const { data: pendingChequeBooks = [], isLoading: isLoadingChequebooks } = useListChequeBooks({
+  const { data: pendingChequeBooks = [], isLoading: isLoadingChequebooks } =
+    useListChequeBooks({
+      status: 'Pending',
+    });
+
+  const {
+    data: pendingManualBillBooks = [],
+    isLoading: isLoadingManualBillBooks,
+  } = useListManualBillBooks({
     status: 'Pending',
   });
 
-  const { data: pendingManualBillBooks = [], isLoading: isLoadingManualBillBooks } = useListManualBillBooks({
-    status: 'Pending',
-  });
-
-  const { data: pendingTransactions = [], isLoading: isLoadingPendingTransactions } = useQuery({
+  const {
+    data: pendingTransactions = [],
+    isLoading: isLoadingPendingTransactions,
+  } = useQuery({
     queryKey: ['transactions', 'draft-reviews', activeBranchId],
     queryFn: () =>
       transactionsApi.getTransactions({
@@ -65,18 +73,20 @@ const DashboardPage: React.FC = () => {
 
   const myPendingChequeBooks = useMemo(() => {
     return pendingChequeBooks.filter(book => {
-      const assignedId = typeof book.assignedTo === 'object' && book.assignedTo !== null
-        ? book.assignedTo.id
-        : book.assignedTo;
+      const assignedId =
+        typeof book.assignedTo === 'object' && book.assignedTo !== null
+          ? book.assignedTo.id
+          : book.assignedTo;
       return assignedId === user?.id;
     });
   }, [pendingChequeBooks, user?.id]);
 
   const myPendingManualBillBooks = useMemo(() => {
     return pendingManualBillBooks.filter(book => {
-      const assignedId = typeof book.assignedTo === 'object' && book.assignedTo !== null
-        ? book.assignedTo.id
-        : book.assignedTo;
+      const assignedId =
+        typeof book.assignedTo === 'object' && book.assignedTo !== null
+          ? book.assignedTo.id
+          : book.assignedTo;
       return assignedId === user?.id;
     });
   }, [pendingManualBillBooks, user?.id]);
@@ -100,8 +110,8 @@ const DashboardPage: React.FC = () => {
                 Welcome back{user?.name ? `, ${user.name}` : ''}
               </h2>
               <p className="max-w-2xl text-sm leading-6 text-text-secondary sm:text-base">
-                Review pending party profiles, manage master data, and keep the approval
-                flow moving from one place.
+                Review pending party profiles, manage master data, and keep the
+                approval flow moving from one place.
               </p>
             </div>
           </div>
@@ -117,7 +127,9 @@ const DashboardPage: React.FC = () => {
                 className="rounded-sm border border-border-primary bg-gradient-to-br from-surface-primary to-surface-secondary px-4 py-3"
               >
                 <p className="text-xs uppercase text-text-tertiary">{label}</p>
-                <p className="mt-1 text-sm font-medium text-text-primary">{value}</p>
+                <p className="mt-1 text-sm font-medium text-text-primary">
+                  {value}
+                </p>
               </div>
             ))}
           </div>
@@ -129,9 +141,7 @@ const DashboardPage: React.FC = () => {
           profiles={pendingReviews}
           isLoading={isLoading}
           onReviewProfile={profile => {
-            navigate(
-              `/party-profiles/${profile.type}/edit/${profile.id}?review=1`
-            );
+            navigate(`/party-profiles/${profile.type}/edit/${profile.id}`);
           }}
         />
       )}
@@ -170,10 +180,16 @@ const DashboardPage: React.FC = () => {
                     </span>
                   </div>
                   <p className="text-sm text-text-secondary">
-                    Party: {transaction.partyProfileSnapshot?.label || transaction.partyProfileSnapshot?.name || transaction.partyProfileId}
+                    Party:{' '}
+                    {transaction.partyProfileSnapshot?.label ||
+                      transaction.partyProfileSnapshot?.name ||
+                      transaction.partyProfileId}
                   </p>
                   <p className="text-xs text-text-tertiary">
-                    Branch: {transaction.branchSnapshot?.label || transaction.branchSnapshot?.name || transaction.branchId}
+                    Branch:{' '}
+                    {transaction.branchSnapshot?.label ||
+                      transaction.branchSnapshot?.name ||
+                      transaction.branchId}
                   </p>
                 </div>
 
@@ -182,27 +198,29 @@ const DashboardPage: React.FC = () => {
                     type="button"
                     variant="outline"
                     className="rounded-sm"
-                    onClick={() =>
-                      {
-                        const transactionPageType =
-                          transaction.slug as PurchasePageType | null;
-                        const routeSlug =
-                          getPurchasePageSlugFromType(transactionPageType) ??
-                          transaction.slug ??
-                          '';
+                    onClick={() => {
+                      const transactionPageType =
+                        transaction.slug as PurchasePageType | null;
+                      const routeSlug =
+                        getPurchasePageSlugFromType(transactionPageType) ??
+                        transaction.slug ??
+                        '';
 
-                        navigate(
-                          `/${getPurchasePageBasePath(transactionPageType)}/${routeSlug}/edit/${transaction.id}`
-                        );
-                      }
-                    }
+                      navigate(
+                        `/${getPurchasePageBasePath(transactionPageType)}/${routeSlug}/edit/${transaction.id}`
+                      );
+                    }}
                   >
                     Review
                   </Button>
                   <Button
                     type="button"
                     className="rounded-sm"
-                    onClick={() => void approveTransactionMutation.mutateAsync(transaction.id)}
+                    onClick={() =>
+                      void approveTransactionMutation.mutateAsync(
+                        transaction.id
+                      )
+                    }
                     disabled={approveTransactionMutation.isPending}
                   >
                     Approve
@@ -227,7 +245,9 @@ const DashboardPage: React.FC = () => {
               </h3>
             </div>
             <p className="text-sm text-text-secondary">
-              {isLoadingChequebooks ? 'Loading...' : `${myPendingChequeBooks.length} item(s) pending`}
+              {isLoadingChequebooks
+                ? 'Loading...'
+                : `${myPendingChequeBooks.length} item(s) pending`}
             </p>
           </div>
 
@@ -239,13 +259,16 @@ const DashboardPage: React.FC = () => {
               >
                 <div className="space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-sm font-semibold text-text-primary">{book.no || 'Chequebook'}</p>
+                    <p className="text-sm font-semibold text-text-primary">
+                      {book.no || 'Chequebook'}
+                    </p>
                     <span className="rounded-full bg-warning-100 px-2 py-0.5 text-xs font-medium text-warning-700">
                       Pending Approval
                     </span>
                   </div>
                   <p className="text-sm text-text-secondary">
-                    Branch: {book.branchName || book.branchCode || 'N/A'} · Range: {book.bookNoFrom} - {book.bookNoTo}
+                    Branch: {book.branchName || book.branchCode || 'N/A'} ·
+                    Range: {book.bookNoFrom} - {book.bookNoTo}
                   </p>
                   <p className="text-xs text-text-tertiary">
                     Dispatch Date: {formatDateTime(book.dispatchDate)}
@@ -279,7 +302,9 @@ const DashboardPage: React.FC = () => {
               </h3>
             </div>
             <p className="text-sm text-text-secondary">
-              {isLoadingManualBillBooks ? 'Loading...' : `${myPendingManualBillBooks.length} item(s) pending`}
+              {isLoadingManualBillBooks
+                ? 'Loading...'
+                : `${myPendingManualBillBooks.length} item(s) pending`}
             </p>
           </div>
 
@@ -291,13 +316,16 @@ const DashboardPage: React.FC = () => {
               >
                 <div className="space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-sm font-semibold text-text-primary">{book.no || 'Manual Bill Book'}</p>
+                    <p className="text-sm font-semibold text-text-primary">
+                      {book.no || 'Manual Bill Book'}
+                    </p>
                     <span className="rounded-full bg-warning-100 px-2 py-0.5 text-xs font-medium text-warning-700">
                       Pending Approval
                     </span>
                   </div>
                   <p className="text-sm text-text-secondary">
-                    Branch: {book.branchName || book.branchCode || 'N/A'} · Range: {book.bookNoFrom} - {book.bookNoTo}
+                    Branch: {book.branchName || book.branchCode || 'N/A'} ·
+                    Range: {book.bookNoFrom} - {book.bookNoTo}
                   </p>
                   <p className="text-xs text-text-tertiary">
                     Dispatch Date: {formatDateTime(book.dispatchDate)}
@@ -308,7 +336,9 @@ const DashboardPage: React.FC = () => {
                   type="button"
                   variant="outline"
                   className="rounded-sm"
-                  onClick={() => navigate(`/manual-bill-books?reviewId=${book.id}`)}
+                  onClick={() =>
+                    navigate(`/manual-bill-books?reviewId=${book.id}`)
+                  }
                 >
                   Review
                 </Button>

@@ -1,7 +1,15 @@
-import type { PartyProfileType } from '@/modules/partyProfiles/constants';
-import type { TradeMode, TransactionType } from '@/modules/transactions';
+import {
+  PartyProfileTypeEnum,
+  type PartyProfileType,
+} from '@/modules/partyProfiles/types/partyProfileTypes';
+import {
+  TradeModeEnum,
+  TransactionTypeEnum,
+  type TradeMode,
+  type TransactionType,
+} from '@/modules/transactions';
 
-export const PurchasePageTypeEnum = {
+export const TransactionTypeProfileEnum = {
   PURCHASE_FFMC: 'PURCHASE_FFMC',
   SALE_FFMC: 'SALE_FFMC',
   PURCHASE_RMC: 'PURCHASE_RMC',
@@ -12,26 +20,26 @@ export const PurchasePageTypeEnum = {
 } as const;
 
 export type PurchasePageType =
-  (typeof PurchasePageTypeEnum)[keyof typeof PurchasePageTypeEnum];
+  (typeof TransactionTypeProfileEnum)[keyof typeof TransactionTypeProfileEnum];
 
 const PURCHASE_PAGE_TYPE_BY_SLUG: Record<string, PurchasePageType> = {
-  'ffmc-ads': PurchasePageTypeEnum.PURCHASE_FFMC,
-  'sale-ffmc-ads': PurchasePageTypeEnum.SALE_FFMC,
-  rmc: PurchasePageTypeEnum.PURCHASE_RMC,
-  forex: PurchasePageTypeEnum.PURCHASE_FOREX,
-  foreign: PurchasePageTypeEnum.PURCHASE_FOREIGN,
-  misc: PurchasePageTypeEnum.PURCHASE_MISC,
-  franchise: PurchasePageTypeEnum.PURCHASE_FRANCHISE,
+  'ffmc-ads': TransactionTypeProfileEnum.PURCHASE_FFMC,
+  'sale-ffmc-ads': TransactionTypeProfileEnum.SALE_FFMC,
+  rmc: TransactionTypeProfileEnum.PURCHASE_RMC,
+  forex: TransactionTypeProfileEnum.PURCHASE_FOREX,
+  foreign: TransactionTypeProfileEnum.PURCHASE_FOREIGN,
+  misc: TransactionTypeProfileEnum.PURCHASE_MISC,
+  franchise: TransactionTypeProfileEnum.PURCHASE_FRANCHISE,
 };
 
 const PURCHASE_PAGE_SLUG_BY_TYPE: Record<PurchasePageType, string> = {
-  [PurchasePageTypeEnum.PURCHASE_FFMC]: 'ffmc-ads',
-  [PurchasePageTypeEnum.SALE_FFMC]: 'ffmc-ads',
-  [PurchasePageTypeEnum.PURCHASE_RMC]: 'rmc',
-  [PurchasePageTypeEnum.PURCHASE_FOREX]: 'forex',
-  [PurchasePageTypeEnum.PURCHASE_FOREIGN]: 'foreign',
-  [PurchasePageTypeEnum.PURCHASE_MISC]: 'misc',
-  [PurchasePageTypeEnum.PURCHASE_FRANCHISE]: 'franchise',
+  [TransactionTypeProfileEnum.PURCHASE_FFMC]: 'ffmc-ads',
+  [TransactionTypeProfileEnum.SALE_FFMC]: 'ffmc-ads',
+  [TransactionTypeProfileEnum.PURCHASE_RMC]: 'rmc',
+  [TransactionTypeProfileEnum.PURCHASE_FOREX]: 'forex',
+  [TransactionTypeProfileEnum.PURCHASE_FOREIGN]: 'foreign',
+  [TransactionTypeProfileEnum.PURCHASE_MISC]: 'misc',
+  [TransactionTypeProfileEnum.PURCHASE_FRANCHISE]: 'franchise',
 };
 
 const PURCHASE_PAGE_CONFIG_BY_TYPE: Record<
@@ -41,33 +49,39 @@ const PURCHASE_PAGE_CONFIG_BY_TYPE: Record<
     partyProfileTypes: PartyProfileType[];
   }
 > = {
-  [PurchasePageTypeEnum.PURCHASE_FFMC]: {
+  [TransactionTypeProfileEnum.PURCHASE_FFMC]: {
     title: 'Purchase FFMC/Ads',
-    partyProfileTypes: ['FFMC', 'AUTHORISED_DEALER'],
+    partyProfileTypes: [
+      PartyProfileTypeEnum.FFMC,
+      PartyProfileTypeEnum.AUTHORISED_DEALER,
+    ],
   },
-  [PurchasePageTypeEnum.SALE_FFMC]: {
+  [TransactionTypeProfileEnum.SALE_FFMC]: {
     title: 'Sale FFMC/Ads',
-    partyProfileTypes: ['FFMC', 'AUTHORISED_DEALER'],
+    partyProfileTypes: [
+      PartyProfileTypeEnum.FFMC,
+      PartyProfileTypeEnum.AUTHORISED_DEALER,
+    ],
   },
-  [PurchasePageTypeEnum.PURCHASE_RMC]: {
+  [TransactionTypeProfileEnum.PURCHASE_RMC]: {
     title: 'Purchase RMC',
-    partyProfileTypes: ['RMC'],
+    partyProfileTypes: [PartyProfileTypeEnum.RMC],
   },
-  [PurchasePageTypeEnum.PURCHASE_FOREX]: {
+  [TransactionTypeProfileEnum.PURCHASE_FOREX]: {
     title: 'Purchase Forex',
-    partyProfileTypes: ['FOREX_CORRESPONDENT'],
+    partyProfileTypes: [PartyProfileTypeEnum.FOREX_CORRESPONDENT],
   },
-  [PurchasePageTypeEnum.PURCHASE_FOREIGN]: {
+  [TransactionTypeProfileEnum.PURCHASE_FOREIGN]: {
     title: 'Purchase Foreign',
-    partyProfileTypes: ['FOREIGN_CORRESPONDENT'],
+    partyProfileTypes: [PartyProfileTypeEnum.FOREIGN_CORRESPONDENT],
   },
-  [PurchasePageTypeEnum.PURCHASE_MISC]: {
+  [TransactionTypeProfileEnum.PURCHASE_MISC]: {
     title: 'Purchase Misc',
-    partyProfileTypes: ['MISC_PROFILE'],
+    partyProfileTypes: [PartyProfileTypeEnum.MISC_PROFILE],
   },
-  [PurchasePageTypeEnum.PURCHASE_FRANCHISE]: {
+  [TransactionTypeProfileEnum.PURCHASE_FRANCHISE]: {
     title: 'Purchase Franchise',
-    partyProfileTypes: ['FRANCHISE'],
+    partyProfileTypes: [PartyProfileTypeEnum.FRANCHISE],
   },
 };
 
@@ -89,7 +103,7 @@ export const getPurchasePageTypeFromPath = (
   if (normalizedPath.startsWith('/sale/')) {
     const normalizedSlug = slug?.trim().toLowerCase();
     if (normalizedSlug === 'ffmc-ads' || normalizedSlug === 'sale-ffmc-ads') {
-      return PurchasePageTypeEnum.SALE_FFMC;
+      return TransactionTypeProfileEnum.SALE_FFMC;
     }
   }
 
@@ -140,12 +154,12 @@ export const getPurchaseTransactionType = (
   pageType: PurchasePageType | null
 ): TransactionType => {
   switch (pageType) {
-    case PurchasePageTypeEnum.SALE_FFMC:
-      return 'SALE';
-    case PurchasePageTypeEnum.PURCHASE_FFMC:
-      return 'PURCHASE';
+    case TransactionTypeProfileEnum.SALE_FFMC:
+      return TransactionTypeEnum.SALE;
+    case TransactionTypeProfileEnum.PURCHASE_FFMC:
+      return TransactionTypeEnum.PURCHASE;
     default:
-      return 'PURCHASE';
+      return TransactionTypeEnum.PURCHASE;
   }
 };
 
@@ -153,11 +167,11 @@ export const getPurchaseTradeMode = (
   pageType: PurchasePageType | null
 ): TradeMode => {
   switch (pageType) {
-    case PurchasePageTypeEnum.SALE_FFMC:
-    case PurchasePageTypeEnum.PURCHASE_FFMC:
-      return 'BULK';
+    case TransactionTypeProfileEnum.SALE_FFMC:
+    case TransactionTypeProfileEnum.PURCHASE_FFMC:
+      return TradeModeEnum.BULK;
     default:
-      return 'BULK';
+      return TradeModeEnum.BULK;
   }
 };
 
@@ -165,7 +179,7 @@ export const getPurchasePageBasePath = (
   pageType: PurchasePageType | null
 ): 'purchase' | 'sale' => {
   switch (pageType) {
-    case PurchasePageTypeEnum.SALE_FFMC:
+    case TransactionTypeProfileEnum.SALE_FFMC:
       return 'sale';
     default:
       return 'purchase';

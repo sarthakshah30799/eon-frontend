@@ -10,6 +10,7 @@ import {
   toPartyProfileRouteType,
 } from '../constants';
 import { useListPartyProfiles, usePartyProfileTypes } from '../hooks';
+import type { PartyProfileType } from '../types/partyProfileTypes';
 
 export const PartyProfileListView = () => {
   const navigate = useNavigate();
@@ -37,7 +38,7 @@ export const PartyProfileListView = () => {
   );
 
   const selectedApiType = useMemo(
-    () => toPartyProfileApiType(selectedType),
+    () => toPartyProfileApiType(selectedType) as PartyProfileType,
     [selectedType]
   );
   const { canAdd } = usePermission(

@@ -1,7 +1,7 @@
 import { useCallback, useEffect } from 'react';
 import { useFormContext, type Resolver } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { CardSection } from '@/components/ui';
+import { Button, CardSection } from '@/components/ui';
 import {
   Form,
   FormFieldCheckbox,
@@ -120,32 +120,26 @@ const RetailTransactionConfig = ({
                 Series Applicable
               </span>
               <div className="inline-flex rounded-full bg-surface-secondary p-0.5 border border-border-primary">
-                <button
+                <Button
                   type="button"
+                  variant={retailBuyingSeriesApplicable ? 'default' : 'ghost'}
                   disabled={isSubmitting}
                   onClick={() => setValue('retailBuyingSeriesApplicable', true)}
-                  className={`rounded-full px-3 py-1 text-xs font-semibold transition-all duration-200 ${
-                    retailBuyingSeriesApplicable
-                      ? 'bg-primary-500! text-white shadow-sm'
-                      : 'text-text-tertiary hover:text-text-secondary'
-                  }`}
+                  className="rounded-full px-3 py-1 text-xs font-semibold transition-all duration-200"
                 >
                   Yes
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant={!retailBuyingSeriesApplicable ? 'default' : 'ghost'}
                   disabled={isSubmitting}
                   onClick={() =>
                     setValue('retailBuyingSeriesApplicable', false)
                   }
-                  className={`rounded-full px-3 py-1 text-xs font-semibold transition-all duration-200 ${
-                    !retailBuyingSeriesApplicable
-                      ? 'bg-neutral-500 text-white shadow-sm'
-                      : 'text-text-tertiary hover:text-text-secondary'
-                  }`}
+                  className="rounded-full px-3 py-1 text-xs font-semibold transition-all duration-200"
                 >
                   No
-                </button>
+                </Button>
               </div>
             </div>
           ) : (
@@ -175,34 +169,28 @@ const RetailTransactionConfig = ({
                 Series Applicable
               </span>
               <div className="inline-flex rounded-full bg-surface-secondary p-0.5 border border-border-primary">
-                <button
+                <Button
                   type="button"
+                  variant={retailSellingSeriesApplicable ? 'default' : 'ghost'}
                   disabled={isSubmitting}
                   onClick={() =>
                     setValue('retailSellingSeriesApplicable', true)
                   }
-                  className={`rounded-full px-3 py-1 text-xs font-semibold transition-all duration-200 ${
-                    retailSellingSeriesApplicable
-                      ? 'bg-primary-500 text-white shadow-sm'
-                      : 'text-text-tertiary hover:text-text-secondary'
-                  }`}
+                  className="rounded-full px-3 py-1 text-xs font-semibold transition-all duration-200"
                 >
                   Yes
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant={!retailSellingSeriesApplicable ? 'default' : 'ghost'}
                   disabled={isSubmitting}
                   onClick={() =>
                     setValue('retailSellingSeriesApplicable', false)
                   }
-                  className={`rounded-full px-3 py-1 text-xs font-semibold transition-all duration-200 ${
-                    !retailSellingSeriesApplicable
-                      ? 'bg-neutral-500 text-white shadow-sm'
-                      : 'text-text-tertiary hover:text-text-secondary'
-                  }`}
+                  className="rounded-full px-3 py-1 text-xs font-semibold transition-all duration-200"
                 >
                   No
-                </button>
+                </Button>
               </div>
             </div>
           ) : (
@@ -232,30 +220,24 @@ const RetailTransactionConfig = ({
                 Series Applicable
               </span>
               <div className="inline-flex rounded-full bg-surface-secondary p-0.5 border border-border-primary">
-                <button
+                <Button
                   type="button"
+                  variant={bulkBuyingSeriesApplicable ? 'default' : 'ghost'}
                   disabled={isSubmitting}
                   onClick={() => setValue('bulkBuyingSeriesApplicable', true)}
-                  className={`rounded-full px-3 py-1 text-xs font-semibold transition-all duration-200 ${
-                    bulkBuyingSeriesApplicable
-                      ? 'bg-primary-500 text-white shadow-sm'
-                      : 'text-text-tertiary hover:text-text-secondary'
-                  }`}
+                  className="rounded-full px-3 py-1 text-xs font-semibold transition-all duration-200"
                 >
                   Yes
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant={!bulkBuyingSeriesApplicable ? 'default' : 'ghost'}
                   disabled={isSubmitting}
                   onClick={() => setValue('bulkBuyingSeriesApplicable', false)}
-                  className={`rounded-full px-3 py-1 text-xs font-semibold transition-all duration-200 ${
-                    !bulkBuyingSeriesApplicable
-                      ? 'bg-neutral-500 text-white shadow-sm'
-                      : 'text-text-tertiary hover:text-text-secondary'
-                  }`}
+                  className="rounded-full px-3 py-1 text-xs font-semibold transition-all duration-200"
                 >
                   No
-                </button>
+                </Button>
               </div>
             </div>
           ) : (
@@ -285,30 +267,24 @@ const RetailTransactionConfig = ({
                 Series Applicable
               </span>
               <div className="inline-flex rounded-full bg-surface-secondary p-0.5 border border-border-primary">
-                <button
+                <Button
                   type="button"
+                  variant={bulkSellingSeriesApplicable ? 'default' : 'ghost'}
                   disabled={isSubmitting}
                   onClick={() => setValue('bulkSellingSeriesApplicable', true)}
-                  className={`rounded-full px-3 py-1 text-xs font-semibold transition-all duration-200 ${
-                    bulkSellingSeriesApplicable
-                      ? 'bg-primary-500! text-white shadow-sm'
-                      : 'text-text-tertiary hover:text-text-secondary'
-                  }`}
+                  className="rounded-full px-3 py-1 text-xs font-semibold transition-all duration-200"
                 >
                   Yes
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant={!bulkSellingSeriesApplicable ? 'default' : 'ghost'}
                   disabled={isSubmitting}
                   onClick={() => setValue('bulkSellingSeriesApplicable', false)}
-                  className={`rounded-full px-3 py-1 text-xs font-semibold transition-all duration-200 ${
-                    !bulkSellingSeriesApplicable
-                      ? 'bg-neutral-500 text-white shadow-sm'
-                      : 'text-text-tertiary hover:text-text-secondary'
-                  }`}
+                  className="rounded-full px-3 py-1 text-xs font-semibold transition-all duration-200"
                 >
                   No
-                </button>
+                </Button>
               </div>
             </div>
           ) : (

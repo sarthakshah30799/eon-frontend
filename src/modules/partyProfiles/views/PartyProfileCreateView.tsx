@@ -8,6 +8,7 @@ import { useAuth } from '@/lib';
 import { buildPartyProfileDocumentsPath } from '@/modules/partyProfileDocuments/utils/partyProfileDocumentRoutes';
 import { NotFoundState } from '@/components/ui/not-found-state';
 import { usePermission } from '@/hooks';
+import type { PartyProfileType } from '../types/partyProfileTypes';
 
 const createEmptyPartyProfileValues = (): Omit<ICreatePartyProfile, 'type'> => {
   return {
@@ -94,7 +95,7 @@ export const PartyProfileCreateView = () => {
     ? toPartyProfileRouteType(routeType)
     : routeOptions[0]?.value;
   const selectedApiType = useMemo(
-    () => toPartyProfileApiType(selectedType),
+    () => toPartyProfileApiType(selectedType) as PartyProfileType,
     [selectedType]
   );
   const isInvalidTypeRoute = Boolean(routeType) && !routeOptions.some(option => option.value === selectedType);

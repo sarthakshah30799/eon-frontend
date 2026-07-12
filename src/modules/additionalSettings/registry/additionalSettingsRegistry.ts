@@ -103,7 +103,7 @@ const SESSION_POLICY_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinit
   },
 ];
 
-const BUY_FROM_FFMC_ADS_APPROVAL_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] = [
+const TRANSACTION_APPROVAL_POLICY_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] = [
   {
     code: AdditionalSettingsCodeEnum.PurchaseFfmcAds,
     label: 'BUY FROM FFMC/ADS',
@@ -111,15 +111,12 @@ const BUY_FROM_FFMC_ADS_APPROVAL_SUBCATEGORIES: readonly AdditionalSettingSubcat
     required: true,
     placeholder: 'Check if approval is required',
   },
-];
-
-const TRANSACTION_PRINT_SETTINGS_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] = [
   {
     code: AdditionalSettingsCodeEnum.TransactionPrintSacCode,
     label: 'SAC CODE',
     valueType: 'text',
     required: false,
-    placeholder: 'Enter SAC code for print header',
+    placeholder: 'Enter SAC code',
   },
 ];
 
@@ -195,14 +192,7 @@ export const ADDITIONAL_SETTING_DEFINITIONS: readonly AdditionalSettingCategoryD
     label: 'TRANSACTION APPROVAL POLICY',
     rendererKey: 'default',
     titleLocked: true,
-    subcategories: BUY_FROM_FFMC_ADS_APPROVAL_SUBCATEGORIES,
-  },
-  {
-    code: AdditionalSettingsCodeEnum.TransactionPrintSettings,
-    label: 'TRANSACTION PRINT SETTINGS',
-    rendererKey: 'default',
-    titleLocked: true,
-    subcategories: TRANSACTION_PRINT_SETTINGS_SUBCATEGORIES,
+    subcategories: TRANSACTION_APPROVAL_POLICY_SUBCATEGORIES,
   },
   {
     code: AdditionalSettingsCodeEnum.TransactionNumbering,

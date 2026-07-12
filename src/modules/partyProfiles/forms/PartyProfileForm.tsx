@@ -22,8 +22,8 @@ import { useGetStateProfile } from '@/modules/stateProfile';
 import {
   toPartyProfileDisplayLabel,
   toPartyProfileApiType,
-  type PartyProfileType,
 } from '../constants';
+import { PartyProfileTypeEnum, type PartyProfileType } from '../types/partyProfileTypes';
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import type { IReviewPartyProfilePayload } from '../types';
 import { PartyProfileReviewActionPanel } from '../components';
@@ -44,6 +44,7 @@ interface PartyProfileFormProps {
   branchDisabled?: boolean;
   onReviewSubmit?: (values: IReviewPartyProfilePayload) => void | Promise<void>;
   currentId?: string;
+  showSubmit?: boolean;
 }
 
 const FORM_ID = 'party-profile-form';
@@ -196,16 +197,16 @@ const PartyProfileFormFields = ({
             name="code"
             label="Client Code"
             placeholder="Enter client code (5-20 chars)"
-            disabled={isSubmitting}
+            disabled={isSubmitting || Boolean(currentId)}
             maxLength={20}
             asyncValidation={{
-              enabled: !isSubmitting,
+              enabled: !isSubmitting && !currentId,
               check: validatePartyCode,
               message: 'Client code already exists',
               normalize: normalizeCodeValue,
             }}
           />
-          {profileType?.toUpperCase() === 'FFMC' && (
+          {toPartyProfileApiType(profileType) === PartyProfileTypeEnum.FFMC && (
             <>
               <FormFieldInput
                 name="ffmcRegNo"
@@ -638,6 +639,7 @@ export const PartyProfileForm = ({
   branchDisabled = false,
   onReviewSubmit,
   currentId,
+  showSubmit = true,
 }: PartyProfileFormProps) => {
   return (
     <Form
@@ -650,14 +652,15 @@ export const PartyProfileForm = ({
       }
       defaultValues={defaultValues}
       className="space-y-6"
-      footer={{
-        submitLabel,
-        onBackClick: () => {
-          void onCancel?.();
-        },
-        onCancel,
-      }}
-    >
+        footer={{
+          submitLabel,
+          onBackClick: () => {
+            void onCancel?.();
+          },
+          onCancel,
+          showSubmit,
+        }}
+      >
       <PartyProfileFormFields
         isSubmitting={isSubmitting}
         disabled={disabled}

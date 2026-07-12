@@ -3,7 +3,7 @@ import { Checkbox, SelectEntity, type TableColumnDef } from '@/components/ui';
 import type { PaginationState } from '@tanstack/react-table';
 import { useDebounce } from '@/hooks';
 import { useListPartyProfiles } from '../hooks';
-import type { PartyProfileType } from '../constants';
+import type { PartyProfileType } from '../types';
 import type { IPartyProfile, IPartyProfileListQuery } from '../types';
 
 interface SelectPartyProfilesProps {

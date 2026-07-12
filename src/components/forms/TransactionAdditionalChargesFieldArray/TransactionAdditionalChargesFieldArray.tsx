@@ -5,9 +5,16 @@ import type { AsyncSelectResponse } from '@/components/ui';
 import { Button, CardSection } from '@/components/ui';
 import { FormFieldInput, FormFieldSelect } from '@/components/forms';
 import { accountProfileApi } from '@/api/accountProfile';
+import {
+  AccountProfileLedgerLabelEnum,
+  type IAccountProfileListQuery,
+} from '@/modules/accountProfile';
+import {
+  TransactionTypeEnum,
+  type TransactionType,
+} from '@/modules/transactions';
 
 const ACCOUNT_PROFILE_OPTION_PAGE_SIZE = 30;
-import type { IAccountProfileListQuery } from '@/modules/accountProfile/types/accountProfileTypes';
 import type { ITransactionAdditionalChargeFormRow } from './transactionAdditionalChargesTypes';
 
 interface TransactionAdditionalChargesFieldArrayProps {
@@ -17,6 +24,7 @@ interface TransactionAdditionalChargesFieldArrayProps {
   applyTax?: boolean;
   accountQuery?: IAccountProfileListQuery;
   disabled?: boolean;
+  transactionType?: TransactionType;
 }
 
 const formatAmount = (value?: string | null) => {
@@ -25,7 +33,16 @@ const formatAmount = (value?: string | null) => {
   }
 
   const numericValue = Number(value);
-  return Number.isFinite(numericValue) ? numericValue.toFixed(4) : value;
+  return Number.isFinite(numericValue) ? numericValue.toFixed(2) : value;
+};
+
+const formatNegativeAmount = (value?: string | null) => {
+  const formattedValue = formatAmount(value);
+  if (!formattedValue) {
+    return '0.00';
+  }
+
+  return formattedValue.startsWith('-') ? formattedValue : `-${formattedValue}`;
 };
 
 const AdditionalChargeRow = ({
@@ -33,18 +50,20 @@ const AdditionalChargeRow = ({
   index,
   applyTax,
   accountQuery,
+  transactionType,
   disabled = false,
   onRemove,
-  canRemove,
 }: {
   arrayName: string;
   index: number;
   applyTax?: boolean;
   accountQuery?: IAccountProfileListQuery;
+  transactionType?: TransactionType;
   disabled?: boolean;
   onRemove: (index: number) => void;
-  canRemove: boolean;
 }) => {
+  const isSale = transactionType === TransactionTypeEnum.SALE;
+  const chargeMultiplier = isSale ? 1 : -1;
   const form = useFormContext();
   const amount = useWatch({
     control: form.control,
@@ -64,14 +83,14 @@ const AdditionalChargeRow = ({
     }
 
     if (!applyTax) {
-      return '0.0000';
+      return '0.00';
     }
 
     if (!Number.isFinite(rateValue)) {
       return '';
     }
 
-    return ((amountValue * rateValue) / 100).toFixed(4);
+    return ((amountValue * rateValue) / 100).toFixed(2);
   }, [amount, applyTax, gstRate]);
 
   const totalAmount = useMemo(() => {
@@ -83,11 +102,11 @@ const AdditionalChargeRow = ({
     }
 
     if (!Number.isFinite(gstAmountValue)) {
-      return amountValue.toFixed(4);
+      return (amountValue * chargeMultiplier).toFixed(2);
     }
 
-    return (amountValue + gstAmountValue).toFixed(4);
-  }, [amount, gstAmount]);
+    return ((amountValue + gstAmountValue) * chargeMultiplier).toFixed(2);
+  }, [amount, chargeMultiplier, gstAmount]);
 
   useEffect(() => {
     const gstRateField = `${arrayName}.${index}.gstRate` as const;
@@ -116,12 +135,18 @@ const AdditionalChargeRow = ({
 
   const loadAccountOptions = useCallback(
     async (inputValue: string, page = 1): Promise<AsyncSelectResponse> => {
-      const response = await accountProfileApi.getAccountProfiles({
+      const derivedQuery: IAccountProfileListQuery = {
+        ...accountQuery,
         page,
         limit: ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
         search: inputValue,
-        ...accountQuery,
         active: true,
+        accountType: AccountProfileLedgerLabelEnum.GeneralLedger,
+        ...(isSale ? { bulkSale: true } : { bulkPurchase: true }),
+      };
+
+      const response = await accountProfileApi.getAccountProfiles({
+        ...derivedQuery,
       });
 
       const accounts = response.data || [];
@@ -134,7 +159,7 @@ const AdditionalChargeRow = ({
         hasMore: accounts.length === ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
       };
     },
-    [accountQuery]
+    [accountQuery, isSale]
   );
 
   return (
@@ -143,7 +168,9 @@ const AdditionalChargeRow = ({
         <FormFieldSelect
           name={`${arrayName}.${index}.accountId`}
           label="Account"
-          placeholder="Select bulk purchase account"
+          placeholder={
+            isSale ? 'Select bulk sale account' : 'Select bulk purchase account'
+          }
           loadOptions={loadAccountOptions}
           pagination
           pageSize={ACCOUNT_PROFILE_OPTION_PAGE_SIZE}
@@ -174,7 +201,7 @@ const AdditionalChargeRow = ({
 
       <FormFieldInput
         name={`${arrayName}.${index}.totalAmount`}
-        label="Total Amount"
+        label={isSale ? 'Total Amount (+)' : 'Total Amount (-)'}
         disabled
       />
 
@@ -183,7 +210,7 @@ const AdditionalChargeRow = ({
           type="button"
           variant="destructive"
           size="icon"
-          disabled={!canRemove || disabled}
+          disabled={disabled}
           onClick={() => onRemove(index)}
           aria-label="Remove additional charge"
         >
@@ -201,6 +228,7 @@ export const TransactionAdditionalChargesFieldArray = ({
   applyTax = true,
   accountQuery,
   disabled = false,
+  transactionType = TransactionTypeEnum.PURCHASE,
 }: TransactionAdditionalChargesFieldArrayProps) => {
   const form = useFormContext();
   const { fields, append, remove } = useFieldArray({
@@ -221,12 +249,10 @@ export const TransactionAdditionalChargesFieldArray = ({
     }, 0);
   }, [charges]);
 
-  const canRemove = fields.length > 1;
+  const isSale = transactionType === TransactionTypeEnum.SALE;
 
   return (
-    <CardSection
-      heading={title}
-    >
+    <CardSection heading={title}>
       <div className="space-y-4">
         <p className="text-sm text-text-secondary">{description}</p>
 
@@ -252,9 +278,9 @@ export const TransactionAdditionalChargesFieldArray = ({
                 index={index}
                 applyTax={applyTax}
                 accountQuery={accountQuery}
+                transactionType={transactionType}
                 disabled={disabled}
                 onRemove={remove}
-                canRemove={canRemove}
               />
             ))}
           </div>
@@ -262,7 +288,10 @@ export const TransactionAdditionalChargesFieldArray = ({
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border-secondary pt-4">
           <div className="text-sm text-text-secondary">
-            Total additional charges: {formatAmount(String(totalAmount)) || '0.0000'}
+            Total additional charges:{' '}
+            {isSale
+              ? formatAmount(String(totalAmount))
+              : formatNegativeAmount(String(Math.abs(totalAmount)))}
           </div>
 
           <Button

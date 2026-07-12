@@ -145,7 +145,7 @@ export const DocumentRequirementCard = ({
     <article className="rounded-xl border border-border-primary bg-surface-primary px-3 py-3 shadow-sm">
       <div className="grid gap-3 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:items-center">
         <div className="flex items-center gap-3">
-          <button
+          <Button
             type="button"
             title={hasFile ? 'Preview file' : 'Upload file'}
             aria-label={hasFile ? 'Preview file' : 'Upload file'}
@@ -189,7 +189,7 @@ export const DocumentRequirementCard = ({
                 </span>
               </div>
             )}
-          </button>
+          </Button>
 
           <div className="min-w-0">
             <div className="flex items-center gap-2">

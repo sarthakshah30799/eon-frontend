@@ -9,7 +9,6 @@ import {
   Checkbox,
   Input,
   type AsyncSelectOption,
-  type AsyncSelectResponse,
 } from '@/components/ui';
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import { CashierBillBookListView, CashierDPUnmapView, type ICashierBookRow } from '@/modules/manual-bill-books/components';
@@ -74,12 +73,15 @@ const ManualBillDPMappingPageContent = () => {
 
   useEffect(() => {
     if (!activeBranchId) return;
-    setIsLoadingDP(true);
-    manualBillBookApi
-      .getDeliveryPersons()
-      .then(data => setDeliveryPersons(data))
-      .catch(err => toast.error(getErrorMessage(err, 'Failed to load delivery person list.')))
-      .finally(() => setIsLoadingDP(false));
+    let cancelled = false;
+    Promise.resolve().then(() => {
+      if (!cancelled) setIsLoadingDP(true);
+      return manualBillBookApi.getDeliveryPersons();
+    })
+      .then(data => { if (!cancelled) setDeliveryPersons(data); })
+      .catch(err => { if (!cancelled) toast.error(getErrorMessage(err, 'Failed to load delivery person list.')); })
+      .finally(() => { if (!cancelled) setIsLoadingDP(false); });
+    return () => { cancelled = true; };
   }, [activeBranchId]);
 
   // When cashier selects a row, pre-fill the form

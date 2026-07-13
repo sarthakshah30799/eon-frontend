@@ -47,7 +47,7 @@ function computeMVRangeForBook(
 /* ─── Component ──────────────────────────────────────────────────────────── */
 
 export const CashierDPUnmapView = () => {
-  const { activeBranchId, user } = useAuth();
+  const { activeBranchId } = useAuth();
   const queryClient = useQueryClient();
 
   const { data: dpRows = [], isLoading, isFetching } = useQuery<IDPAllocatedPageRow[]>({
@@ -404,7 +404,7 @@ export const CashierDPUnmapView = () => {
 
   if (confirmState) {
     const { row } = confirmState;
-    const pageCount = confirmState.mvTo - confirmState.mvFrom + 1; // approximate; backend is authoritative
+
     return (
       <>
         {/* Keep form visible behind modal */}

@@ -2,10 +2,11 @@ import { apiClient } from '../api';
 import type { IUserReference } from '../sharedTypes';
 import { ChequeBookStatusEnum, type ChequeBookStatus } from '@/modules/chequebooks/types';
 
-export enum AuthorizedUserRole {
-  CASHIER = 'is_cashier',
-}
+export const AuthorizedUserRole = {
+  CASHIER: 'is_cashier',
+} as const;
 
+export type AuthorizedUserRole = (typeof AuthorizedUserRole)[keyof typeof AuthorizedUserRole];
 export interface IChequeBook {
   id: string;
   dispatchDate: string;
@@ -41,7 +42,7 @@ export interface ICreateChequeBook {
 }
 
 export interface IApproveRejectChequeBook {
-  status: ChequeBookStatusEnum.APPROVE | ChequeBookStatusEnum.REJECT;
+  status: typeof ChequeBookStatusEnum.APPROVE | typeof ChequeBookStatusEnum.REJECT;
   approvalRemarks?: string;
 }
 

@@ -296,8 +296,7 @@ export const manualBillBookApi = {
     const res = await apiClient.get<IManualBookDPMappingGroup[]>(
       `/manual-bill-books/dp-mapping/search?transactionType=${encodeURIComponent(
         params.transactionType
-      )}&bookNo=${params.bookNo}&mvNoFrom=${params.mvNoFrom}&mvNoTo=${
-        params.mvNoTo
+      )}&bookNo=${params.bookNo}&mvNoFrom=${params.mvNoFrom}&mvNoTo=${params.mvNoTo
       }&actionType=${params.actionType}`
     );
     if (res.error) throw new Error(res.error);

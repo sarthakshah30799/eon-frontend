@@ -6,7 +6,9 @@ import { useAuth } from '@/lib/AuthContext';
 import { usePendingPartyProfileReviews } from '@/modules/partyProfiles/hooks';
 import { PartyProfileReviewQueue } from '@/modules/partyProfiles/components';
 import { useListChequeBooks } from '@/modules/chequebooks/hooks';
+import { ChequeBookStatusEnum } from '@/modules/chequebooks/types';
 import { useListManualBillBooks } from '@/modules/manual-bill-books/hooks';
+import { ManualBillBookStatusEnum } from '@/modules/manual-bill-books/types';
 import { transactionsApi } from '@/api/transactions';
 import { Button } from '@/components/ui';
 import type { ITransactionEntity } from '@/modules/transactions';
@@ -34,14 +36,14 @@ const DashboardPage: React.FC = () => {
 
   const { data: pendingChequeBooks = [], isLoading: isLoadingChequebooks } =
     useListChequeBooks({
-      status: 'Pending',
+      status: ChequeBookStatusEnum.PENDING,
     });
 
   const {
     data: pendingManualBillBooks = [],
     isLoading: isLoadingManualBillBooks,
   } = useListManualBillBooks({
-    status: 'Pending',
+    status: ManualBillBookStatusEnum.PENDING,
   });
 
   const {

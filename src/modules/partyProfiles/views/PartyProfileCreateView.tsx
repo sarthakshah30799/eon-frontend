@@ -80,7 +80,7 @@ export const PartyProfileCreateView = () => {
   const navigate = useNavigate();
   const { type: routeType } = useParams<{ type?: string }>();
   const { activeBranchId, user } = useAuth();
-  const isAdminUser = user?.isAdmin === true;
+  const canSelectBranch = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
 
   const { data: typeOptions = [], isLoading: isTypesLoading } = usePartyProfileTypes();
   const routeOptions = useMemo(
@@ -178,7 +178,7 @@ export const PartyProfileCreateView = () => {
           onCancel={handleCancel}
           isSubmitting={isPending}
           submitLabel="Create Party Profile"
-          branchDisabled={!isAdminUser}
+          branchDisabled={!canSelectBranch}
           profileType={selectedApiType}
           currentId={undefined}
         />

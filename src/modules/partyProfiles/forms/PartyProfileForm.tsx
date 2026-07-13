@@ -15,6 +15,7 @@ import {
 } from '@/components/forms';
 import { partyProfileSchema } from '../schema';
 import type { ICreatePartyProfile } from '../types';
+import { useAuth } from '@/lib/AuthContext';
 
 import { branchProfileApi } from '@/api/branchProfile/branchProfile.api';
 import { partyProfileApi } from '@/api/partyProfile';
@@ -67,6 +68,8 @@ const PartyProfileFormFields = ({
   currentId?: string;
 }) => {
   const form = useFormContext<PartyProfileFormValues>();
+  const { user } = useAuth();
+  const canSelectBranch = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
   const isSubmitting = isSubmittingProp || disabled || reviewMode;
   const reviewActionsDisabled = isSubmittingProp;
   const effectiveProfileType = profileType;
@@ -568,7 +571,7 @@ const PartyProfileFormFields = ({
             label="Current Branch"
             placeholder="Select current branch"
             loadOptions={branchLoadOptions}
-            disabled={isSubmitting || branchDisabled}
+            disabled={isSubmitting || (branchDisabled && !canSelectBranch)}
           />
         </div>
       </CardSection>

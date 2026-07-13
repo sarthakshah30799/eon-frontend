@@ -4,6 +4,15 @@ import { useMemo } from 'react';
 const normalizePermissionPath = (value: string) =>
   value !== '/' ? value.replace(/\/+$/, '') : value;
 
+const PARTY_PROFILE_PATH_ALIAS_MAP: Record<string, string[]> = {
+  '/party-profiles/foreign-correspondent': ['/party-profiles/forex-correspondent'],
+  '/party-profiles/forex-correspondent': ['/party-profiles/foreign-correspondent'],
+};
+
+const getPermissionPathAliases = (path: string) => {
+  return [path, ...(PARTY_PROFILE_PATH_ALIAS_MAP[path] || [])];
+};
+
 export interface UsePermissionResult {
   canAdd: boolean;
   canModify: boolean;
@@ -72,15 +81,18 @@ export const usePermission = (path?: string): UsePermissionResult => {
     }
 
     const normalizedPath = normalizePermissionPath(path);
+    const candidatePaths = getPermissionPathAliases(normalizedPath);
     const matchingPermissionEntry = Object.entries(user.permissions || {})
       .map(([permissionPath, granted]) => [normalizePermissionPath(permissionPath), granted] as const)
       .filter(([permissionPath]) =>
-        normalizedPath === permissionPath ||
-        normalizedPath.startsWith(`${permissionPath}/`)
+        candidatePaths.includes(permissionPath) ||
+        candidatePaths.some(candidatePath => candidatePath.startsWith(`${permissionPath}/`))
       )
       .sort((a, b) => b[0].length - a[0].length)[0];
 
-    const permissions = matchingPermissionEntry?.[1] || user.permissions?.[normalizedPath] || [];
+    const permissions =
+      matchingPermissionEntry?.[1] ||
+      candidatePaths.flatMap(candidatePath => user.permissions?.[candidatePath] || []) || [];
 
     return {
       canAdd: permissions.includes('add'),

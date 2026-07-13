@@ -137,8 +137,7 @@ const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => 
   }, [mvNoFrom, mvNoTo, form]);
 
   const { user } = useAuth();
-  const isAdmin = user?.isAdmin === true;
-  const isHoStaff = user?.isHoStaff === true;
+  const canSelectBranch = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
 
   const loadBranches = async () => {
     try {
@@ -227,7 +226,7 @@ const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => 
         name="branchId"
         label="Branch"
         loadOptions={loadBranches}
-        disabled={!isAdmin && !isHoStaff}
+        disabled={!canSelectBranch}
       />
       <FormFieldSelect
         name="bankAccountCode"
@@ -267,7 +266,7 @@ const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => 
 export const BulkDispatchForm = ({ onSuccess, reassignId }: BulkDispatchFormProps) => {
   const navigate = useNavigate();
   const { user, activeBranchId } = useAuth();
-  const isAdmin = user?.isAdmin === true;
+  const canSelectBranch = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
 
   const onCancel = () => {
     navigate('/cheque-books');
@@ -309,7 +308,7 @@ export const BulkDispatchForm = ({ onSuccess, reassignId }: BulkDispatchFormProp
   const defaultValues: IBulkDispatchFormValues = {
     dispatchDate: new Date().toISOString().slice(0, 10),
     no: '',
-    branchId: isAdmin ? '' : (activeBranchId || ''),
+    branchId: canSelectBranch ? '' : (activeBranchId || ''),
     bankAccountCode: '',
     bookNoFrom: '',
     bookNoTo: '',

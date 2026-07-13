@@ -27,6 +27,7 @@ export const PartyProfileEditView = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const isAdminUser = user?.isAdmin === true;
+  const canSelectBranch = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
   const isReviewer = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
   const showReviewControls = Boolean(isReviewer);
 
@@ -246,7 +247,7 @@ export const PartyProfileEditView = () => {
           reviewMode={showReviewControls}
           showSubmit={!showReviewControls && canEditPartyProfile}
           submitLabel="Save Changes"
-          branchDisabled={!isAdminUser}
+          branchDisabled={!canSelectBranch}
           currentId={id}
         />
       </section>

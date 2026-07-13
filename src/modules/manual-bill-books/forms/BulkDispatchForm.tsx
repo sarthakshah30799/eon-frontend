@@ -120,11 +120,10 @@ interface BulkDispatchFormProps {
 }
 
 interface BulkDispatchFormFieldsProps {
-    isReassign?: boolean;
     reassignId?: string;
 }
 
-const BulkDispatchFormFields = ({ isReassign, reassignId }: BulkDispatchFormFieldsProps) => {
+const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => {
     const form = useFormContext<IBulkDispatchFormValues>();
     const branchId = useWatch({ name: 'branchId', control: form.control });
 
@@ -219,8 +218,7 @@ const BulkDispatchFormFields = ({ isReassign, reassignId }: BulkDispatchFormFiel
     }, [bookNoFrom, bookNoTo, form]);
 
     const { user } = useAuth();
-    const isAdmin = user?.isAdmin === true;
-    const isHoStaff = !!user?.isHoStaff;
+    const canSelectBranch = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
     const { data: branches = [] } = useListBranchProfiles({
         activeOnly: true,
     });
@@ -254,7 +252,7 @@ const BulkDispatchFormFields = ({ isReassign, reassignId }: BulkDispatchFormFiel
                 name="branchId"
                 label="Branch"
                 loadOptions={loadBranches}
-                disabled={!isAdmin && !isHoStaff}
+                disabled={!canSelectBranch}
             />
             <FormFieldCategoryOption
                 name="transactionType"
@@ -290,7 +288,7 @@ const BulkDispatchFormFields = ({ isReassign, reassignId }: BulkDispatchFormFiel
 export const BulkDispatchForm = ({ onSuccess, reassignId }: BulkDispatchFormProps) => {
     const navigate = useNavigate();
     const { user, activeBranchId } = useAuth();
-    const isAdmin = user?.isAdmin === true;
+    const canSelectBranch = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
     const { submitManualBillBook } = useCreateManualBillBook();
     const isReassign = !!reassignId;
 
@@ -322,7 +320,7 @@ export const BulkDispatchForm = ({ onSuccess, reassignId }: BulkDispatchFormProp
     const defaultValues = {
         dispatchDate: new Date().toISOString().slice(0, 10),
         no: '',
-        branchId: isAdmin ? '' : activeBranchId || '',
+        branchId: canSelectBranch ? '' : activeBranchId || '',
         transactionType: '',
         bookNoFrom: '',
         bookNoTo: '',
@@ -350,7 +348,7 @@ export const BulkDispatchForm = ({ onSuccess, reassignId }: BulkDispatchFormProp
                 onCancel,
             }}
         >
-            <BulkDispatchFormFields isReassign={isReassign} reassignId={reassignId} />
+            <BulkDispatchFormFields reassignId={reassignId} />
         </Form>
     );
 };

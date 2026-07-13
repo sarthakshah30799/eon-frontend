@@ -1,3 +1,4 @@
+import type { QueryClient } from '@tanstack/react-query';
 import type {
   ICreateCounterProfile,
   ICounterProfile,
@@ -35,3 +36,21 @@ export const mapFormValuesToRecord = (
   updatedAt,
   ...values,
 });
+
+export const syncCounterProfileCache = (
+  queryClient: QueryClient,
+  updatedCounter: ICounterProfile
+): void => {
+  queryClient.setQueriesData<ICounterProfile[]>(
+    { queryKey: ['counter-profiles'] },
+    currentCounters =>
+      currentCounters?.map(counter =>
+        counter.id === updatedCounter.id ? updatedCounter : counter
+      ) ?? currentCounters
+  );
+
+  queryClient.setQueryData(
+    ['counter-profile', updatedCounter.id],
+    updatedCounter
+  );
+};

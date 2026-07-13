@@ -65,8 +65,8 @@ export const syncUserRoleCache = (
   queryClient: QueryClient,
   updatedRole: IUserRole
 ): void => {
-  queryClient.setQueryData<IUserRole[] | undefined>(
-    ['user-roles'],
+  queryClient.setQueriesData<IUserRole[]>(
+    { queryKey: ['user-roles'] },
     currentRoles =>
       currentRoles?.map(role =>
         role.id === updatedRole.id ? updatedRole : role

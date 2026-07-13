@@ -1,3 +1,4 @@
+import type { QueryClient } from '@tanstack/react-query';
 import type { ICreateProductProfile, IProductProfile } from '../types';
 
 export const createEmptyProductProfileFormValues =
@@ -125,3 +126,21 @@ export const mapFormValuesToRecord = (
   updatedAt,
   ...values,
 });
+
+export const syncProductProfileCache = (
+  queryClient: QueryClient,
+  updatedProduct: IProductProfile
+): void => {
+  queryClient.setQueriesData<IProductProfile[]>(
+    { queryKey: ['product-profiles'] },
+    currentProducts =>
+      currentProducts?.map(product =>
+        product.id === updatedProduct.id ? updatedProduct : product
+      ) ?? currentProducts
+  );
+
+  queryClient.setQueryData(
+    ['product-profile', updatedProduct.id],
+    updatedProduct
+  );
+};

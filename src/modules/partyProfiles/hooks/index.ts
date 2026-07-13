@@ -6,17 +6,18 @@ import {
 } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { partyProfileApi } from '@/api/partyProfile';
-import {
-  toPartyProfileDisplayLabel,
-} from '../constants';
+import { toPartyProfileDisplayLabel } from '../constants';
 import { PartyProfileStatusEnum } from '../types/partyProfileTypes';
 import type {
   ICreatePartyProfile,
+  IPartyProfile,
+  IPartyProfileListResponse,
   IPartyProfileListQuery,
   IReviewPartyProfilePayload,
   IUpdatePartyProfile,
   PartyProfileType,
 } from '../types/partyProfileTypes';
+import { syncPartyProfileCache } from '../utils/partyProfileUtils';
 
 const getErrorMessage = (error: unknown, fallback: string) => {
   if (error instanceof Error) {
@@ -105,8 +106,11 @@ export const useUpdatePartyProfile = (
     mutationFn: ({ id, data }: { id: string; data: IUpdatePartyProfile }) =>
       partyProfileApi.updatePartyProfile(id, data),
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['party-profiles', profileType] });
-      queryClient.invalidateQueries({ queryKey: ['party-profile', profileType, variables.id] });
+      if (data) {
+        syncPartyProfileCache(queryClient, data);
+      }
+      void queryClient.invalidateQueries({ queryKey: ['party-profiles'] });
+      void queryClient.invalidateQueries({ queryKey: ['party-profile', profileType, variables.id] });
       toast.success(
         data?.status === PartyProfileStatusEnum.PENDING
           ? `${typeLabel} submitted for review!`
@@ -160,12 +164,46 @@ export const useReviewPartyProfile = () => {
   const mutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: IReviewPartyProfilePayload }) =>
       partyProfileApi.reviewPartyProfile(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['party-profiles', 'review-queue'] });
-      queryClient.invalidateQueries({ queryKey: ['party-profiles'] });
+    onMutate: async ({ id, data }) => {
+      await queryClient.cancelQueries({ queryKey: ['party-profiles'] });
+      await queryClient.cancelQueries({ queryKey: ['party-profile'] });
+
+      const previousProfiles = queryClient.getQueriesData<
+        IPartyProfile[] | IPartyProfileListResponse
+      >({
+        queryKey: ['party-profiles'],
+      });
+      const previousProfileQueries = queryClient.getQueriesData<IPartyProfile>({
+        queryKey: ['party-profile'],
+      });
+      const currentProfile = previousProfileQueries.find(
+        ([, value]) => value?.id === id
+      )?.[1];
+
+      const optimisticProfile = currentProfile
+        ? { ...currentProfile, ...data }
+        : undefined;
+
+      if (optimisticProfile) {
+        syncPartyProfileCache(queryClient, optimisticProfile);
+      }
+
+      return { previousProfiles, previousProfileQueries };
     },
-    onError: (error: unknown) => {
-      toast.error(getErrorMessage(error, 'Failed to update party profile status'));
+    onError: (_error, _variables, context) => {
+      context?.previousProfiles.forEach(([queryKey, value]) => {
+        queryClient.setQueryData(queryKey, value);
+      });
+
+      context?.previousProfileQueries.forEach(([queryKey, value]) => {
+        queryClient.setQueryData(queryKey, value);
+      });
+
+      toast.error('Failed to update party profile status');
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['party-profiles', 'review-queue'] });
+      void queryClient.invalidateQueries({ queryKey: ['party-profiles'] });
     },
   });
 

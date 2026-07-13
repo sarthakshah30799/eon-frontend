@@ -3,7 +3,6 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   AsyncSelect,
   Button,
-  Input,
   PageGrid,
   type AsyncSelectOption,
   type AsyncSelectResponse,
@@ -190,7 +189,6 @@ export const ManualBillBookListView = () => {
     [books, reviewId]
   );
   const reviewBook = selectedBook ?? reviewBookFromQuery;
-  const isReviewModalOpen = isReviewOpen || Boolean(reviewBookFromQuery);
 
   useEffect(() => {
     if (error) {
@@ -609,24 +607,24 @@ export const ManualBillBookListView = () => {
                 </div>
 
                 <div className="flex justify-end gap-2 pt-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        if (reviewBookFromQuery) {
-                          const nextSearchParams = new URLSearchParams(
-                            searchParams
-                          );
-                          nextSearchParams.delete('reviewId');
-                          navigate({ search: nextSearchParams.toString() });
-                        } else {
-                          setIsReviewOpen(false);
-                        }
-                        setSelectedBook(null);
-                      }}
-                    >
-                      Cancel
-                    </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      if (reviewBookFromQuery) {
+                        const nextSearchParams = new URLSearchParams(
+                          searchParams
+                        );
+                        nextSearchParams.delete('reviewId');
+                        navigate({ search: nextSearchParams.toString() });
+                      } else {
+                        setIsReviewOpen(false);
+                      }
+                      setSelectedBook(null);
+                    }}
+                  >
+                    Cancel
+                  </Button>
                   <Button
                     type="submit"
                     variant="default"

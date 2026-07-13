@@ -5,7 +5,7 @@ import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '@/lib/AuthContext';
 import { chequebookApi } from '@/api';
 import toast from 'react-hot-toast';
-import { AsyncSelect, Button, Input, type AsyncSelectResponse } from '@/components/ui';
+import { Button, Input } from '@/components/ui';
 import { FormFieldSelect } from '@/components/forms';
 import { accountProfileApi } from '@/api/accountProfile/accountProfile.api';
 import { useListChequeBookCashiers } from '@/modules/chequebooks/hooks';
@@ -147,14 +147,7 @@ export const ChequeBookAllocationPage = () => {
     error: cashiersError,
   } = useListChequeBookCashiers(activeBranchId ?? null);
 
-  const cashierOptions = cashiers.map(cashier => ({
-    value: cashier.id,
-    label: cashier.name,
-  }));
-  const loadCashierOptions = async (): Promise<AsyncSelectResponse> => ({
-    options: cashierOptions,
-    hasMore: false,
-  });
+
 
   useEffect(() => {
     if (cashiersError) toast.error(getErrorMessage(cashiersError, 'Failed to load cashier list.'));
@@ -209,7 +202,6 @@ export const ChequeBookAllocationPage = () => {
     } finally {
       setIsProcessing(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeBranchId, bookNoFromStr, bookNoToStr, watchedBankAccountCode]);
 
   // Auto-populate and process when navigated from list view with bookId
@@ -226,7 +218,7 @@ export const ChequeBookAllocationPage = () => {
     }).catch(() => {
       toast.error('Failed to load cheque book details.');
     });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookId, activeBranchId]);
 
   const handleRowCheckbox = (rowId: string) =>
@@ -392,8 +384,7 @@ export const ChequeBookAllocationPage = () => {
                 )}
                 <button
                   onClick={handleApplyBulkCashier}
-                  variant="outline"
-                  size="sm"
+                  className="cursor-pointer border border-slate-200 text-slate-600 hover:bg-slate-50 rounded px-3 py-1 text-xs font-semibold transition"
                 >
                   Apply
                 </button>

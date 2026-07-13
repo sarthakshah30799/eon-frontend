@@ -4,4 +4,4 @@ export { WorkflowStatus as ChequeBookStatusEnum };
 export { WorkflowStatus };
 
 export type ChequeBookStatus = `${WorkflowStatus}`;
-export type ChequeBookReviewStatus = WorkflowStatus.APPROVE | WorkflowStatus.REJECT;
+export type ChequeBookReviewStatus = typeof WorkflowStatus.APPROVE | typeof WorkflowStatus.REJECT;

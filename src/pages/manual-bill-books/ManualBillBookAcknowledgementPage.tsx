@@ -108,8 +108,6 @@ export const ManualBillBookAcknowledgementPage = () => {
         activeBranchId,
         searchStatus || undefined,
         searchTxnType === 'ALL' ? undefined : searchTxnType,
-        fromDate || undefined,
-        toDate || undefined
       );
       if (selectedBookId) {
         setQueryResults(data.filter(b => b.id === selectedBookId));
@@ -304,19 +302,13 @@ export const ManualBillBookAcknowledgementPage = () => {
                         {book.mvNoFrom} - {book.mvNoTo}
                       </td>
                       <td className="px-6 py-4">
-                        {book.assignedTo && typeof book.assignedTo === 'object'
-                          ? book.assignedTo.name || book.assignedTo.id
-                          : book.assignedTo || 'N/A'}
-                      </td>
-                      <td className="px-6 py-4">
                         <span
-                          className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold border ${
-                            book.status === ManualBillBookStatusEnum.APPROVE
+                          className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold border ${book.status === ManualBillBookStatusEnum.APPROVE
                               ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                               : book.status === ManualBillBookStatusEnum.REJECT
                                 ? 'bg-rose-50 text-rose-700 border-rose-200'
                                 : 'bg-amber-50 text-amber-700 border-amber-200'
-                          }`}
+                            }`}
                         >
                           {book.status}
                         </span>
@@ -345,10 +337,10 @@ export const ManualBillBookAcknowledgementPage = () => {
                     searchStatus === ''
                       ? { value: '', label: 'All' }
                       : [
-                          { value: ManualBillBookStatusEnum.PENDING, label: 'PENDING' },
-                          { value: ManualBillBookStatusEnum.APPROVE, label: 'APPROVED' },
-                          { value: ManualBillBookStatusEnum.REJECT, label: 'REJECTED' },
-                        ].find(o => o.value === searchStatus)
+                        { value: ManualBillBookStatusEnum.PENDING, label: 'PENDING' },
+                        { value: ManualBillBookStatusEnum.APPROVE, label: 'APPROVED' },
+                        { value: ManualBillBookStatusEnum.REJECT, label: 'REJECTED' },
+                      ].find(o => o.value === searchStatus)
                   }
                   onChange={(
                     option:

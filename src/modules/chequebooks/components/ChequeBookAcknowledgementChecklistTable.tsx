@@ -4,7 +4,7 @@ import type { IChequeBook } from '@/api';
 import { ChequeBookStatusEnum } from '../types';
 
 export interface ChequeBookAcknowledgementRowEdit {
-  status?: ChequeBookStatusEnum.APPROVE | ChequeBookStatusEnum.REJECT;
+  status?: typeof ChequeBookStatusEnum.APPROVE | typeof ChequeBookStatusEnum.REJECT;
   remarks: string;
 }
 
@@ -12,7 +12,7 @@ interface ChequeBookAcknowledgementChecklistTableProps {
   books: IChequeBook[];
   rowEdits: Record<string, ChequeBookAcknowledgementRowEdit>;
   loading?: boolean;
-  onCheckboxChange: (id: string, status: ChequeBookStatusEnum.APPROVE | ChequeBookStatusEnum.REJECT) => void;
+  onCheckboxChange: (id: string, status: typeof ChequeBookStatusEnum.APPROVE | typeof ChequeBookStatusEnum.REJECT) => void;
   onRemarksChange: (id: string, remarks: string) => void;
 }
 

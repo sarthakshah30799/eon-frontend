@@ -111,6 +111,9 @@ const TRANSACTION_APPROVAL_POLICY_SUBCATEGORIES: readonly AdditionalSettingSubca
     required: true,
     placeholder: 'Check if approval is required',
   },
+];
+
+const TRANSACTION_SAC_CODE_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] = [
   {
     code: AdditionalSettingsCodeEnum.TransactionPrintSacCode,
     label: 'SAC CODE',
@@ -193,6 +196,13 @@ export const ADDITIONAL_SETTING_DEFINITIONS: readonly AdditionalSettingCategoryD
     rendererKey: 'default',
     titleLocked: true,
     subcategories: TRANSACTION_APPROVAL_POLICY_SUBCATEGORIES,
+  },
+  {
+    code: AdditionalSettingsCodeEnum.TransactionSacCode,
+    label: 'SAC CODE',
+    rendererKey: 'default',
+    titleLocked: true,
+    subcategories: TRANSACTION_SAC_CODE_SUBCATEGORIES,
   },
   {
     code: AdditionalSettingsCodeEnum.TransactionNumbering,

@@ -286,18 +286,29 @@ const SubcategoryFields = ({
   const isTransactionApprovalCategory =
     categoryCode?.trim().toUpperCase() ===
     AdditionalSettingsCodeEnum.TransactionApprovalPolicy;
+  const isTransactionSacCategory =
+    categoryCode?.trim().toUpperCase() ===
+    AdditionalSettingsCodeEnum.TransactionSacCode;
+  const isFixedCategory = isTransactionApprovalCategory || isTransactionSacCategory;
 
   useEffect(() => {
-    if (!isTransactionApprovalCategory) {
+    if (!isFixedCategory) {
       return;
     }
 
-    const predefinedRows = getAdditionalSettingSubcategoryCodeOptions(categoryCode).map(option => ({
-      title: option.label,
-      code: option.value,
-      value: 'NO',
-      categoryType: 'boolean',
-    }));
+    const predefinedRows = getAdditionalSettingSubcategoryCodeOptions(categoryCode).map(option => {
+      const subcategoryDefinition = getAdditionalSettingSubcategoryDefinition(
+        categoryCode,
+        option.value
+      );
+
+      return {
+        title: option.label,
+        code: option.value,
+        value: subcategoryDefinition?.valueType === 'boolean' ? 'NO' : '',
+        categoryType: subcategoryDefinition?.valueType ?? 'text',
+      };
+    });
 
     const currentCodes = (subcategories ?? [])
       .map(subcategory => String(subcategory?.code ?? '').trim().toUpperCase())
@@ -310,7 +321,7 @@ const SubcategoryFields = ({
     if (!hasAllPredefinedRows) {
       replace(predefinedRows);
     }
-  }, [categoryCode, isTransactionApprovalCategory, replace, subcategories]);
+  }, [categoryCode, isFixedCategory, replace, subcategories]);
 
   useEffect(() => {
     const allowedCodes = new Set(
@@ -348,7 +359,7 @@ const SubcategoryFields = ({
           </p>
         </div>
 
-        {!isTransactionApprovalCategory ? (
+        {!isFixedCategory ? (
           <Button
             type="button"
             variant="outline"
@@ -378,7 +389,7 @@ const SubcategoryFields = ({
               loadTypeOptions={loadTypeOptions}
               remove={remove}
               fieldsLength={fields.length}
-              isFixed={isTransactionApprovalCategory}
+              isFixed={isFixedCategory}
               usedCodes={selectedSubcategoryCodes}
             />
           ))}

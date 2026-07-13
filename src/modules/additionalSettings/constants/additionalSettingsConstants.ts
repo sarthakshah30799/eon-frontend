@@ -13,6 +13,7 @@ export const AdditionalSettingsCodeEnum = {
   SessionIdleTimeoutSeconds: 'IDLE_TIMEOUT_SECONDS',
   TransactionApprovalPolicy: 'TRANSACTION_APPROVAL_POLICY',
   PurchaseFfmcAds: 'PURCHASE_FFMC_ADS',
+  TransactionSacCode: 'TRANSACTION_SAC_CODE',
   TransactionPrintSacCode: 'TRANSACTION_PRINT_SAC_CODE',
   TransactionNumbering: 'TRANSACTION_NUMBERING',
   PurchaseFfmcNumberSeries: 'PURCHASE_FFMC',

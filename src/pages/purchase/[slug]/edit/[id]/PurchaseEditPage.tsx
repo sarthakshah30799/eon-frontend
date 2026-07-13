@@ -71,7 +71,7 @@ const PurchaseEditPage = () => {
     () =>
       getAdditionalSettingTextValue(
         additionalSettings,
-        AdditionalSettingsCodeEnum.TransactionApprovalPolicy,
+        AdditionalSettingsCodeEnum.TransactionSacCode,
         AdditionalSettingsCodeEnum.TransactionPrintSacCode,
         ''
       ),

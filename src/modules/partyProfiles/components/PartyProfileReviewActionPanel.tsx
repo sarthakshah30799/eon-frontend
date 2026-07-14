@@ -111,6 +111,7 @@ export const PartyProfileReviewActionPanel = ({
               type="button"
               variant="outline"
               disabled={isDisabled}
+              loading={isReviewing}
               onClick={() => {
                 if (!isRejectExpanded) {
                   setIsRejectExpanded(true);
@@ -126,6 +127,7 @@ export const PartyProfileReviewActionPanel = ({
             <Button
               type="button"
               disabled={isDisabled}
+              loading={isReviewing}
               onClick={() => setIsApproveModalOpen(true)}
             >
               Approve
@@ -147,6 +149,7 @@ export const PartyProfileReviewActionPanel = ({
               variant="outline"
               onClick={() => setIsApproveModalOpen(false)}
               disabled={isReviewing}
+              loading={isReviewing}
             >
               Cancel
             </Button>
@@ -154,6 +157,7 @@ export const PartyProfileReviewActionPanel = ({
               type="button"
               onClick={() => void submitReview(PartyProfileStatusEnum.APPROVE)}
               disabled={isReviewing}
+              loading={isReviewing}
             >
               Confirm Approve
             </Button>

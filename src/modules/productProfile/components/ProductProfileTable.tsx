@@ -13,6 +13,7 @@ interface ProductProfileTableProps {
     isActiveProduct: boolean
   ) => void | Promise<void>;
   isUpdatingStatus?: boolean;
+  loading?: boolean;
   onSearch?: (value: string) => void;
   searchValue?: string;
   searchPlaceholder?: string;
@@ -31,6 +32,7 @@ export const ProductProfileTable = ({
   products,
   onToggleStatus,
   isUpdatingStatus = false,
+  loading = false,
   onSearch,
   searchValue = '',
   searchPlaceholder = 'Search',
@@ -70,6 +72,7 @@ export const ProductProfileTable = ({
                 onToggleStatus(productId, nextChecked);
               }}
               disabled={isUpdatingStatus}
+              loading={isUpdatingStatus}
             />
           </div>
         );
@@ -118,6 +121,7 @@ export const ProductProfileTable = ({
         enablePagination={false}
         enableRowSelection={false}
         enableColumnVisibility={false}
+        loading={loading}
         onSearch={onSearch}
         searchValue={searchValue}
         searchPlaceholder={searchPlaceholder}

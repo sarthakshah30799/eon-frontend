@@ -60,6 +60,7 @@ export const UserRoleTable = ({
                 onToggleStatus(roleId, nextChecked);
               }}
               disabled={isUpdatingStatus}
+              loading={isUpdatingStatus}
             />
           </div>
         );

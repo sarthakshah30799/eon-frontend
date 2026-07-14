@@ -18,7 +18,12 @@ export const ProductProfileListView = () => {
     () => debouncedSearch.trim().toLowerCase(),
     [debouncedSearch]
   );
-  const { data: products = [], isLoading, error } = useListProductProfiles(false);
+  const {
+    data: products = [],
+    isLoading,
+    isFetching,
+    error,
+  } = useListProductProfiles(false);
   const filteredProducts = useMemo(
     () =>
       query
@@ -79,6 +84,7 @@ export const ProductProfileListView = () => {
           products={filteredProducts}
           onToggleStatus={handleToggleStatus}
           isUpdatingStatus={isUpdatingStatus}
+          loading={isLoading || isFetching}
           onSearch={value =>
             setSearchParams(prev => {
               const nextParams = new URLSearchParams(prev);

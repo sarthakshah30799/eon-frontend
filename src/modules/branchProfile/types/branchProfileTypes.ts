@@ -14,6 +14,7 @@ export interface IBranchProfileListQuery {
 
 export interface IBranchProfile {
   id: string;
+  companyId?: string | null;
   country: ICountryProfile | null;
   state: IStateProfile | null;
   code: string;

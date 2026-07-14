@@ -8,7 +8,7 @@ import { useCurrencyRatesViewData } from '@/modules/currencyRates/hooks/useCurre
 import { useListAdditionalSettings } from '@/modules/additionalSettings/hooks';
 import { useGetBranchProfile } from '@/modules/branchProfile/hooks/useGetBranchProfile';
 import { transactionsApi } from '@/api/transactions';
-import { PurchaseForm } from '@/modules/purchase';
+import { PurchaseForm, AD1EditView } from '@/modules/purchase';
 import {
   getAdditionalSettingBooleanValue,
   getAdditionalSettingTextValue,
@@ -32,10 +32,12 @@ const PurchaseEditPage = () => {
   const purchasePageType = getPurchasePageTypeFromPath(location.pathname, slug);
   const basePath = getPurchasePageBasePath(purchasePageType);
 
+  const isAd1 = slug === 'ad1';
+
   const { data: transaction, isLoading: isTransactionLoading, error: transactionError } = useQuery({
     queryKey: ['transaction', id],
     queryFn: () => transactionsApi.getTransactionById(id ?? ''),
-    enabled: Boolean(id),
+    enabled: Boolean(id) && !isAd1,
   });
   const {
     data: branchProfile,
@@ -118,6 +120,10 @@ const PurchaseEditPage = () => {
     isBranchLoading ||
     isPricingLoading ||
     isAdditionalSettingsLoading;
+
+  if (isAd1) {
+    return <AD1EditView />;
+  }
 
   if (!purchasePageType) {
     return (

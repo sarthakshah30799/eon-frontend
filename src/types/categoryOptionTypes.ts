@@ -19,6 +19,13 @@ export const CategoryOptionCodeEnum = {
   FfmcGroup: 'FFMCGROUP',
   Master: 'MASTER',
   Transaction: 'TRANSACTION',
+  Segment: 'SEGMENT',
+  Purpose: 'PURPOSE',
+  Relationship: 'RELATIONSHIP',
+  CommissionGiven: 'COMMISSIONGIVEN',
+  ServicedBy: 'SERVICEDBY',
+  Product: 'PRODUCT',
+  Marketing: 'MARKETING',
 } as const;
 
 export type CategoryOptionCode =

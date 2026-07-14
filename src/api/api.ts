@@ -7,6 +7,11 @@ interface ApiResponse<T = unknown> {
   message?: string;
 }
 
+interface ApiDownloadResponse {
+  blob: Blob;
+  filename?: string;
+}
+
 class ApiClient {
   private baseURL: string;
 
@@ -62,6 +67,59 @@ class ApiClient {
     }
   }
 
+  private async requestBlob(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<ApiResponse<ApiDownloadResponse>> {
+    try {
+      const url = `${this.baseURL}${endpoint}`;
+      const headers = new Headers(options.headers);
+      if (options.body instanceof FormData) {
+        headers.delete('Content-Type');
+      } else if (options.body !== undefined && !headers.has('Content-Type')) {
+        headers.set('Content-Type', 'application/json');
+      }
+
+      const response = await fetch(url, {
+        ...options,
+        headers,
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        if (response.status === 401) {
+          dispatchSessionExpired({
+            message:
+              typeof errorData?.message === 'string'
+                ? errorData.message
+                : undefined,
+            status: response.status,
+          });
+        }
+        throw new Error(
+          errorData.message || `HTTP error! status: ${response.status}`
+        );
+      }
+
+      const disposition = response.headers.get('content-disposition') || '';
+      const filenameMatch = disposition.match(
+        /filename="?([^"]+)"?/i
+      );
+      return {
+        data: {
+          blob: await response.blob(),
+          filename: filenameMatch?.[1],
+        },
+      };
+    } catch (error) {
+      return {
+        error:
+          error instanceof Error ? error.message : 'An unknown error occurred',
+      };
+    }
+  }
+
   async get<T>(
     endpoint: string,
     options?: RequestInit
@@ -109,6 +167,18 @@ class ApiClient {
       ...options,
       method: 'POST',
       body: data,
+    });
+  }
+
+  async postDownload(
+    endpoint: string,
+    data?: unknown,
+    options?: RequestInit
+  ): Promise<ApiResponse<ApiDownloadResponse>> {
+    return this.requestBlob(endpoint, {
+      ...options,
+      method: 'POST',
+      body: data ? JSON.stringify(data) : undefined,
     });
   }
 }

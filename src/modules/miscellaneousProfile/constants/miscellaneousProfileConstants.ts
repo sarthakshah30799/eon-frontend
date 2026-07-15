@@ -87,6 +87,34 @@ export const CATEGORY_OPTION_CODE_OPTIONS: CategoryOptionCodeOption[] = [
     label: 'MARKETING EXECUTIVE',
   },
   {
+    value: CategoryOptionCodeEnum.Marketing,
+    label: 'MARKETING',
+  },
+  {
+    value: CategoryOptionCodeEnum.Segment,
+    label: 'SEGMENT',
+  },
+  {
+    value: CategoryOptionCodeEnum.Purpose,
+    label: 'PURPOSE',
+  },
+  {
+    value: CategoryOptionCodeEnum.Relationship,
+    label: 'RELATIONSHIP',
+  },
+  {
+    value: CategoryOptionCodeEnum.CommissionGiven,
+    label: 'COMMISSION GIVEN',
+  },
+  {
+    value: CategoryOptionCodeEnum.ServicedBy,
+    label: 'SERVICED BY',
+  },
+  {
+    value: CategoryOptionCodeEnum.Product,
+    label: 'PRODUCT',
+  },
+  {
     value: CategoryOptionCodeEnum.BusinessNature,
     label: 'BUSINESS NATURE',
   },
@@ -136,6 +164,13 @@ export const CATEGORY_OPTION_CODE_LABELS = {
   [CategoryOptionCodeEnum.FfmcGroup]: 'FFMC GROUP',
   [CategoryOptionCodeEnum.Master]: 'MASTER',
   [CategoryOptionCodeEnum.Transaction]: 'TRANSACTION',
+  [CategoryOptionCodeEnum.Segment]: 'SEGMENT',
+  [CategoryOptionCodeEnum.Purpose]: 'PURPOSE',
+  [CategoryOptionCodeEnum.Relationship]: 'RELATIONSHIP',
+  [CategoryOptionCodeEnum.CommissionGiven]: 'COMMISSION GIVEN',
+  [CategoryOptionCodeEnum.ServicedBy]: 'SERVICED BY',
+  [CategoryOptionCodeEnum.Product]: 'PRODUCT',
+  [CategoryOptionCodeEnum.Marketing]: 'MARKETING',
 } as const;
 
 export const loadCategoryOptionCodeOptions =

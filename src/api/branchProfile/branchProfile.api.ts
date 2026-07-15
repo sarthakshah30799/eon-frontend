@@ -12,7 +12,7 @@ import { buildQueryString } from '@/utils';
 
 interface BackendBranch {
   id: string;
-  company_id?: string | null;
+  companyId?: string | null;
   country?: ICountryProfile | null;
   state?: IStateProfile | null;
   code: string;
@@ -46,6 +46,7 @@ interface BackendBranch {
 const mapBackendToFrontend = (branch: BackendBranch): IBranchProfile => {
   return {
     id: branch.id,
+    companyId: branch.companyId || null,
     country: branch.country || null,
     state: branch.state || null,
     code: branch.code || '',

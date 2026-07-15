@@ -38,6 +38,14 @@ const buildQueryString = (params?: IPartyProfileListQuery) => {
 };
 
 export const partyProfileApi = {
+  getAd1Agents: async (
+    params: { branchId: string; search?: string }
+  ): Promise<IPartyProfile[]> => {
+    const res = await apiClient.get<IPartyProfile[]>(`/transactions/ad1/agents${buildQueryString(params)}`);
+    if (res.error) throw new Error(res.error);
+    return res.data || [];
+  },
+
   getPartyProfiles: async (
     params?: IPartyProfileListQuery,
     profileType?: PartyProfileType | PartyProfileType[]

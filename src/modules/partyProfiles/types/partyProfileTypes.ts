@@ -178,6 +178,7 @@ export interface IPartyProfileListQuery {
   type?: string | string[];
   page?: number;
   limit?: number;
+  branchId?: string;
 }
 
 export interface IPartyProfileListResponse {

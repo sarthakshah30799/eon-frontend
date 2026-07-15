@@ -1,12 +1,16 @@
 import { useLocation, useParams } from 'react-router-dom';
 import { NotFoundState } from '@/components/ui/not-found-state';
-import { PurchaseCreateView } from '@/modules/purchase';
+import { PurchaseCreateView, AD1CreateView } from '@/modules/purchase';
 import { getPurchasePageTypeFromPath } from '../purchasePage.enum';
 
 const PurchaseCreatePage = () => {
   const { slug } = useParams<{ slug?: string }>();
   const location = useLocation();
   const purchasePageType = getPurchasePageTypeFromPath(location.pathname, slug);
+
+  if (slug === 'ad1') {
+    return <AD1CreateView />;
+  }
 
   if (!purchasePageType) {
     return (

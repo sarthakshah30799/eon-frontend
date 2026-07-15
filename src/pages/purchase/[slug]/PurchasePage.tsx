@@ -8,6 +8,7 @@ import { Table, type TableColumnDef } from '@/components/ui/table';
 import { useAuth } from '@/lib/AuthContext';
 import { transactionsApi } from '@/api/transactions';
 import { TransactionStatusEnum, type ITransactionEntity } from '@/modules/transactions';
+import { AD1ListView } from '@/modules/purchase';
 import {
   getPurchasePageBasePath,
   getPurchasePageTitle,
@@ -248,6 +249,10 @@ const PurchasePage = () => {
   const { slug } = useParams<{ slug?: string }>();
   const location = useLocation();
   const purchasePageType = getPurchasePageTypeFromPath(location.pathname, slug);
+
+  if (slug === 'ad1') {
+    return <AD1ListView />;
+  }
 
   if (!purchasePageType) {
     return (

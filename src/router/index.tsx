@@ -195,6 +195,9 @@ const PurchaseCreatePage = lazy(
 const PurchaseEditPage = lazy(
   () => import('../pages/purchase/[slug]/edit/[id]')
 );
+const AD1ListPage = lazy(() => import('../modules/purchase/views/AD1ListView').then(m => ({ default: m.AD1ListView })));
+const AD1CreatePage = lazy(() => import('../modules/purchase/views/AD1CreateView').then(m => ({ default: m.AD1CreateView })));
+const AD1EditPage = lazy(() => import('../modules/purchase/views/AD1EditView').then(m => ({ default: m.AD1EditView })));
 
 const MasterPagesPage = lazy(
   () => import('../pages/master/system-setups/master-pages/MasterPagesPage')
@@ -713,6 +716,30 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <PartyProfileDocumentsPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/ad1',
+    element: (
+      <ProtectedLayout>
+        <AD1ListPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/ad1/create',
+    element: (
+      <ProtectedLayout>
+        <AD1CreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/ad1/edit/:id',
+    element: (
+      <ProtectedLayout>
+        <AD1EditPage />
       </ProtectedLayout>
     ),
   },

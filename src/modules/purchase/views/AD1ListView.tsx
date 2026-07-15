@@ -7,6 +7,7 @@ import { Table, type TableColumnDef } from '@/components/ui/table';
 import { NotFoundState } from '@/components/ui/not-found-state';
 import { usePermission } from '@/hooks/usePermission';
 import { transactionAd1Api } from '@/api/transactionAd1/transactionAd1.api';
+import { formatDateTime } from '@/utils';
 
 interface Ad1Row {
   id: string;
@@ -18,13 +19,6 @@ interface Ad1Row {
   fcVolume: string;
   createdAt: string;
 }
-
-const formatDateTime = (value?: string | null) => {
-  if (!value) return '-';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString();
-};
 
 export const AD1ListView = () => {
   const navigate = useNavigate();

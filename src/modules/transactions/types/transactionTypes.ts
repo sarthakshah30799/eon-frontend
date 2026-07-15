@@ -47,6 +47,14 @@ export const TransactionPaymentMethodEnum = {
 export type TransactionPaymentMethod =
   (typeof TransactionPaymentMethodEnum)[keyof typeof TransactionPaymentMethodEnum];
 
+export const TransactionPaymentDirectionEnum = {
+  PAYMENT: 'PAYMENT',
+  RECEIPT: 'RECEIPT',
+} as const;
+
+export type TransactionPaymentDirection =
+  (typeof TransactionPaymentDirectionEnum)[keyof typeof TransactionPaymentDirectionEnum];
+
 export const TransactionEventStatusEnum = {
   PENDING: 'PENDING',
   PROCESSING: 'PROCESSING',
@@ -118,6 +126,11 @@ export interface ITransactionEntity {
   approvalRemarks: string | null;
   rejectionReason: string | null;
   isLatest: boolean;
+  byCash: string | null;
+  byCheque: string | null;
+  byCard: string | null;
+  byTransfer: string | null;
+  byOther: string | null;
   createdAt: string;
   updatedAt: string;
   items?: ITransactionItemEntity[];
@@ -133,12 +146,16 @@ export interface ITransactionItemEntity {
   lineNo: number;
   currencyId: string;
   productId: string;
+  accountId: string | null;
+  accountSnapshot: ITransactionReferenceSnapshot | null;
   currencyRateId: string | null;
   productCurrencyRateId: string | null;
   quantity: string;
   per: string | null;
   rate: string;
   commission: string | null;
+  holdCost: string | null;
+  profit: string | null;
   currencySnapshot: ITransactionReferenceSnapshot | null;
   productSnapshot: ITransactionReferenceSnapshot | null;
   currencyRateSnapshot: ITransactionReferenceSnapshot | null;
@@ -193,6 +210,7 @@ export interface ITransactionPaymentEntity {
   chequePageId: string | null;
   chequePageSnapshot?: Record<string, unknown> | null;
   paymentMethod: TransactionPaymentMethod;
+  paymentDirection: TransactionPaymentDirection;
   referenceNumber: string | null;
   referenceDate: string | null;
   branchName: string | null;
@@ -262,6 +280,7 @@ export interface ICreateTransactionAdditionalChargePayload {
 export interface ICreateTransactionPaymentPayload {
   accountId: string;
   paymentMethod: TransactionPaymentMethod;
+  paymentDirection?: TransactionPaymentDirection;
   referenceNumber?: string | null;
   referenceDate?: string | null;
   branchName?: string | null;

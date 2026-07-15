@@ -3,62 +3,23 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { transactionAd1Api } from '@/api/transactionAd1/transactionAd1.api';
 import { TransactionTypeEnum } from '@/modules/transactions';
-import { TransactionProfileType } from '../forms/AD1Form';
+import { TransactionProfileType } from '../forms/ad1ProfileType';
 import { AD1Form } from '../forms/AD1Form';
+import { createEmptyAd1FormValues, type IAd1FormValues } from '../types';
 
 export const AD1CreateView = () => {
   const navigate = useNavigate();
   const { activeBranchId, user } = useAuth();
-  const defaultValues = useMemo(() => {
-    const today = new Date().toISOString().split('T')[0];
-    return {
-      transactionType: TransactionTypeEnum.PURCHASE,
-      profileType: TransactionProfileType.AD1,
-      branchId: activeBranchId ?? '',
-      dealId: '',
-      docNo: '',
-      transactionDate: today,
-      marketingId: '',
-      segmentId: '',
-      servicedBy: '',
-      purposeId: '',
-      remitterName: '',
-      contactNo: '',
-      email: '',
-      address: '',
-      pan: '',
-      dateOfBirth: '',
-      productId: '',
-      beneficiaryName: '',
-      beniAddress: '',
-      beneAccountNumber: '',
-      beneBankName: '',
-      swiftCode: '',
-      relationshipId: '',
-      currencyId: '',
-      fcVolume: '',
-      saleRate: '',
-      totalInrAmt: '',
-      gst: '0',
-      bankCharges: '0',
-      tcs: '0',
-      otherIncome: '0',
-      finalAmount: '',
-      settlementRate: '',
-      grossRevenue: '',
-      revenueReceivable: '0',
-      fxRefAgentId: '',
-      commGivenId: '',
-      commPercentOnFe: '0',
-      agentComm: '0',
-      tds: '0',
-      commissionPayable: '',
-      netRevenue: '',
-      bankNameId: '',
-      rtgsImpsNeftRefNo: '',
-      remarks: '',
-    };
-  }, [activeBranchId]);
+  const defaultValues = useMemo<IAd1FormValues>(
+    () =>
+      createEmptyAd1FormValues({
+        transactionType: TransactionTypeEnum.PURCHASE,
+        profileType: TransactionProfileType.AD1,
+        branchId: activeBranchId ?? '',
+        transactionDate: new Date().toISOString().split('T')[0],
+      }),
+    [activeBranchId]
+  );
 
   return (
     <div className="space-y-6">

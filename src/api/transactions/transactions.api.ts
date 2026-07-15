@@ -5,6 +5,7 @@ import type {
   IRecordTransactionPrintPayload,
   ITransactionEntity,
   TransactionStatus,
+  TransactionType,
 } from '@/modules/transactions';
 import { API_BASE_URL } from '@/config/api';
 
@@ -28,6 +29,8 @@ export const transactionsApi = {
       branchId?: string;
       search?: string;
       status?: TransactionStatus;
+      partyProfileId?: string;
+      transactionType?: TransactionType;
     }
   ): Promise<ITransactionEntity[]> => {
     const query = new URLSearchParams();
@@ -36,6 +39,8 @@ export const transactionsApi = {
     if (params?.branchId) query.set('branchId', params.branchId);
     if (params?.search) query.set('search', params.search);
     if (params?.status) query.set('status', params.status);
+    if (params?.partyProfileId) query.set('partyProfileId', params.partyProfileId);
+    if (params?.transactionType) query.set('transactionType', params.transactionType);
 
     const suffix = query.toString() ? `?${query.toString()}` : '';
     const res = await apiClient.get<ITransactionEntity[]>(`/transactions${suffix}`);
@@ -45,6 +50,25 @@ export const transactionsApi = {
     }
 
     return res.data || [];
+  },
+
+  requestAccountPostingRebuild: async (
+    transactionId: string
+  ): Promise<{ message: string }> => {
+    const res = await apiClient.post<{ message: string }>(
+      `/transactions/${transactionId}/account-postings/rebuild`,
+      {}
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      throw new Error('Failed to queue account posting rebuild');
+    }
+
+    return res.data;
   },
 
   getTransactionById: async (id: string): Promise<ITransactionEntity | null> => {

@@ -1,17 +1,11 @@
 import { Button } from '@/components/ui';
+import { formatDateTime } from '@/utils';
 import type { IPartyProfile } from '../types';
 
 interface PartyProfileReviewQueueItemProps {
   profile: IPartyProfile;
   onReviewProfile: (profile: IPartyProfile) => void;
 }
-
-const formatDateTime = (value?: string) => {
-  if (!value) return '-';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '-';
-  return date.toLocaleString();
-};
 
 export const PartyProfileReviewQueueItem = ({
   profile,

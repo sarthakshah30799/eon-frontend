@@ -1,14 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { EyeIcon, PencilSquareIcon } from '@heroicons/react/24/outline';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button1';
 import { NotFoundState } from '@/components/ui/not-found-state';
-import { Table, type TableColumnDef } from '@/components/ui/table';
 import { useAuth } from '@/lib/AuthContext';
 import { transactionsApi } from '@/api/transactions';
-import { TransactionStatusEnum, type ITransactionEntity } from '@/modules/transactions';
+import type { ITransactionEntity } from '@/modules/transactions';
 import { AD1ListView } from '@/modules/purchase';
+import {
+  TransactionListTable,
+  type TransactionListRow,
+} from '@/modules/transactions';
+import { formatDateTime, formatReferenceLabel } from '@/utils';
 import {
   getPurchasePageBasePath,
   getPurchasePageTitle,
@@ -20,31 +23,6 @@ import {
 interface PurchasePageViewProps {
   purchasePageType: PurchasePageType | null;
 }
-
-interface TransactionRow {
-  id: string;
-  number: string;
-  branch: string;
-  partyProfile: string;
-  transactionType: string;
-  tradeMode: string;
-  status: string;
-  createdAt: string;
-}
-
-const formatReference = (value?: { code?: string | null; name?: string | null; label?: string | null } | null) => {
-  if (!value) return '-';
-  if (value.label) return value.label;
-  if (value.code && value.name) return `${value.code} - ${value.name}`;
-  return value.name || value.code || '-';
-};
-
-const formatDateTime = (value?: string | null) => {
-  if (!value) return '-';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString();
-};
 
 const PurchasePageView = ({ purchasePageType }: PurchasePageViewProps) => {
   const navigate = useNavigate();
@@ -90,91 +68,19 @@ const PurchasePageView = ({ purchasePageType }: PurchasePageViewProps) => {
     });
   }, [location.pathname, navigate, purchasePageType, routeSlug]);
 
-  const rows = useMemo<TransactionRow[]>(
+  const rows = useMemo<TransactionListRow[]>(
     () =>
       (transactions as ITransactionEntity[]).map(transaction => ({
         id: transaction.id,
         number: transaction.number ?? '-',
-        branch: formatReference(transaction.branchSnapshot),
-        partyProfile: formatReference(transaction.partyProfileSnapshot),
+        branch: formatReferenceLabel(transaction.branchSnapshot),
+        partyProfile: formatReferenceLabel(transaction.partyProfileSnapshot),
         transactionType: transaction.transactionType,
         tradeMode: transaction.tradeMode,
         status: transaction.status,
         createdAt: formatDateTime(transaction.createdAt),
       })),
     [transactions]
-  );
-
-  const columns: TableColumnDef<TransactionRow>[] = useMemo(
-    () => [
-      {
-        accessorKey: 'number',
-        header: 'Number',
-        cell: ({ row }) => (
-          <span className="font-semibold text-text-primary">{row.original.number}</span>
-        ),
-      },
-      { accessorKey: 'branch', header: 'Branch' },
-      { accessorKey: 'partyProfile', header: 'Party Profile' },
-      { accessorKey: 'transactionType', header: 'Type' },
-      { accessorKey: 'tradeMode', header: 'Trade Mode' },
-      {
-        accessorKey: 'status',
-        header: 'Status',
-        cell: ({ row }) => (
-          <span
-            className={[
-              'inline-flex rounded px-2 py-0.5 text-[10px] font-semibold',
-              row.original.status === TransactionStatusEnum.APPROVED
-                ? 'bg-emerald-100 text-emerald-800'
-                : row.original.status === TransactionStatusEnum.REJECTED
-                  ? 'bg-rose-100 text-rose-800'
-                  : row.original.status === TransactionStatusEnum.PENDING
-                    ? 'bg-amber-100 text-amber-800'
-                    : 'bg-slate-100 text-slate-700',
-            ].join(' ')}
-          >
-            {row.original.status}
-          </span>
-        ),
-      },
-      { accessorKey: 'createdAt', header: 'Created At' },
-      {
-        id: 'actions',
-        header: 'Actions',
-        meta: {
-          headerClassName:
-            'sticky right-0 z-20 border-l border-border-primary bg-surface-secondary',
-          cellClassName:
-            'sticky right-0 z-10 border-l border-border-primary bg-surface-primary',
-        },
-        cell: ({ row }) => (
-          <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              aria-label="Edit transaction"
-              variant="ghost"
-              size="icon"
-              className="rounded-sm bg-transparent text-black! hover:bg-surface-secondary hover:text-text-primary"
-              onClick={event => {
-                event.stopPropagation();
-                navigate({
-                  pathname: `/${basePath}/${routeSlug}/edit/${row.original.id}`,
-                });
-              }}
-            >
-              {canCreate ? (
-                <PencilSquareIcon className="h-5 w-5" />
-              ) : (
-                <EyeIcon className="h-5 w-5" />
-              )}
-            </Button>
-          </div>
-        ),
-        enableSorting: false,
-      },
-    ],
-    [basePath, canCreate, navigate, routeSlug]
   );
 
   useEffect(() => {
@@ -221,23 +127,24 @@ const PurchasePageView = ({ purchasePageType }: PurchasePageViewProps) => {
       </div>
 
       <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
-        <Table
-          columns={columns}
-          data={rows}
+        <TransactionListTable
+          rows={rows}
           loading={isLoading || isFetching}
-          enableFiltering={false}
-          enablePagination={false}
-          enableColumnVisibility={false}
-          enableRowSelection={false}
-          enableSorting={false}
+          search={search}
           onSearch={setSearch}
-          searchValue={search}
           searchPlaceholder="Search transaction number"
           onRowClick={row =>
             navigate({
               pathname: `/${basePath}/${routeSlug}/edit/${row.id}`,
             })
           }
+          onActionClick={row =>
+            navigate({
+              pathname: `/${basePath}/${routeSlug}/edit/${row.id}`,
+            })
+          }
+          actionLabel={canCreate ? 'Edit transaction' : 'View transaction'}
+          actionMode={canCreate ? 'edit' : 'view'}
           emptyMessage="No transactions found."
         />
       </section>

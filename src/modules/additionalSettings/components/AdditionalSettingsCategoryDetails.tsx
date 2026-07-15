@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { AsyncSelect, Button, Checkbox, Input, Modal } from '@/components/ui';
+import { useQuery } from '@tanstack/react-query';
 import type {
   IAdditionalSettingCategory,
   IAdditionalSettingSubcategory,
@@ -9,6 +10,7 @@ import {
   getAdditionalSettingCategoryDefinition,
   getAdditionalSettingSubcategoryDefinition,
 } from '../registry/additionalSettingsRegistry';
+import { accountProfileApi } from '@/api/accountProfile';
 
 interface AdditionalSettingsCategoryDetailsProps {
   category: IAdditionalSettingCategory | null;
@@ -123,12 +125,51 @@ const EditSubcategoryForm = ({
     value: option.value,
     label: option.label,
   }));
-  const selectedValueOption =
-    selectValueOptions.find(option => option.value === value) ?? null;
-  const loadSelectValueOptions = async () => ({
-    options: selectValueOptions,
-    hasMore: false,
+  const { data: selectedAccountOption } = useQuery({
+    queryKey: ['additional-settings-account-option', value],
+    queryFn: async () => {
+      if (subcategoryDefinition?.optionsSource !== 'account-profile' || !value) {
+        return null;
+      }
+
+      const account = await accountProfileApi.getAccountProfileById(value);
+      return account
+        ? {
+            value: account.id,
+            label: `${account.accountCode} - ${account.accountName}`,
+          }
+        : null;
+    },
+    enabled: subcategoryDefinition?.optionsSource === 'account-profile' && Boolean(value),
   });
+  const selectedValueOption =
+    selectedAccountOption ?? selectValueOptions.find(option => option.value === value) ?? null;
+  const loadAccountProfileOptions = useCallback(async (inputValue: string, page = 1) => {
+    const response = await accountProfileApi.getAccountProfiles({
+      page,
+      limit: 30,
+      search: inputValue,
+      active: true,
+    });
+
+    return {
+      options: (response.data || []).map(account => ({
+        value: account.id,
+        label: `${account.accountCode} - ${account.accountName}`,
+      })),
+      hasMore: (response.data || []).length === 30,
+    };
+  }, []);
+  const loadSelectValueOptions = async (inputValue = '') => {
+    if (subcategoryDefinition?.optionsSource === 'account-profile') {
+      return loadAccountProfileOptions(inputValue);
+    }
+
+    return {
+      options: selectValueOptions,
+      hasMore: false,
+    };
+  };
 
   const handleNumberingValueChange = (nextValue: string) => {
     setValueError('');
@@ -260,7 +301,7 @@ const EditSubcategoryForm = ({
             }}
             loadOptions={loadSelectValueOptions}
             placeholder="Select value"
-            isSearchable={false}
+            isSearchable={subcategoryDefinition?.optionsSource === 'account-profile'}
             isClearable={!isRequiredPolicyValue}
             isDisabled={false}
           />

@@ -1,10 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import type { Resolver } from 'react-hook-form';
 import { Button } from '@/components/ui/button1';
 import { CardSection, Checkbox } from '@/components/ui';
 import { Form, FormFieldInput, FormFieldSelect, FormFieldDatePicker, FormFieldTextarea } from '@/components/forms';
+import { accountProfileApi } from '@/api/accountProfile';
 import { additionalSettingsSchema } from '../schema';
 import {
   createEmptyAdditionalSettingCategoryFormValues,
@@ -104,13 +105,36 @@ const SubcategoryRowFields = ({
     }
   }, [index, subcategoryDefinition, setValue]);
 
-  const loadSelectValueOptions = async () => ({
-    options: (subcategoryDefinition?.options ?? []).map(option => ({
-      value: option.value,
-      label: option.label,
-    })),
-    hasMore: false,
-  });
+  const loadAccountProfileOptions = useCallback(async (inputValue: string, page = 1) => {
+    const response = await accountProfileApi.getAccountProfiles({
+      page,
+      limit: 30,
+      search: inputValue,
+      active: true,
+    });
+
+    return {
+      options: (response.data || []).map(account => ({
+        value: account.id,
+        label: `${account.accountCode} - ${account.accountName}`,
+      })),
+      hasMore: (response.data || []).length === 30,
+    };
+  }, []);
+
+  const loadSelectValueOptions = async (inputValue: string, page = 1) => {
+    if (subcategoryDefinition?.optionsSource === 'account-profile') {
+      return loadAccountProfileOptions(inputValue, page);
+    }
+
+    return {
+      options: (subcategoryDefinition?.options ?? []).map(option => ({
+        value: option.value,
+        label: option.label,
+      })),
+      hasMore: false,
+    };
+  };
 
   const loadCodeOptions = async () => {
     const currentCode = String(subcategoryCode ?? '').trim().toUpperCase();
@@ -209,14 +233,14 @@ const SubcategoryRowFields = ({
             disabled={isSubmitting}
           />
         ) : isSelectType ? (
-          <FormFieldSelect
-            name={`subcategories.${index}.value`}
-            label="Value"
-            placeholder="Select value"
-            disabled={isSubmitting}
-            loadOptions={loadSelectValueOptions}
-            isSearchable={false}
-          />
+        <FormFieldSelect
+          name={`subcategories.${index}.value`}
+          label="Value"
+          placeholder="Select value"
+          disabled={isSubmitting}
+          loadOptions={loadSelectValueOptions}
+          isSearchable={subcategoryDefinition?.optionsSource === 'account-profile'}
+        />
         ) : isJsonType ? (
           <FormFieldTextarea
             name={`subcategories.${index}.value`}

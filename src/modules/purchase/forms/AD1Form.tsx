@@ -16,6 +16,7 @@ import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import { AccountProfileLedgerLabelEnum } from '@/modules/accountProfile/utils/accountProfileLedgerLabels';
 import type { IAccountProfileListQuery } from '@/modules/accountProfile/types/accountProfileTypes';
 import { ad1Schema } from '../schema/ad1Schema';
+import { TransactionProfileType } from './ad1ProfileType';
 import { currencyProfileApi } from '@/api/currencyProfile';
 import { partyProfileApi } from '@/api/partyProfile';
 import { categoryOptionsApi } from '@/api/categoryOptions';
@@ -27,11 +28,12 @@ import type { ICurrencyProfile } from '@/modules/currencyProfile/types';
 import { TransactionTypeEnum } from '@/modules/transactions';
 import type { AsyncSelectResponse } from '@/components/ui';
 import type { IUser } from '@/modules/users/types/userTypes';
-export { TransactionProfileType } from './ad1ProfileType';
+import type { DefaultValues } from 'react-hook-form';
+import type { IAd1FormValues } from '../types';
 
 interface AD1FormProps {
-  defaultValues: Record<string, unknown>;
-  onSubmit: (values: Record<string, unknown>) => Promise<void> | void;
+  defaultValues: DefaultValues<IAd1FormValues>;
+  onSubmit: (values: IAd1FormValues) => Promise<void> | void;
   onCancel: () => void;
   readOnly?: boolean;
   user: IUser | null;
@@ -45,7 +47,7 @@ export const AD1Form = ({
   user,
 }: AD1FormProps) => {
   return (
-    <Form
+    <Form<IAd1FormValues>
       id="ad1-form"
       onSubmit={onSubmit}
       resolver={yupResolver(ad1Schema)}
@@ -73,7 +75,7 @@ interface AD1FormBodyProps {
 }
 
 const AD1FormBody = ({ readOnly, user }: AD1FormBodyProps) => {
-  const form = useFormContext();
+  const form = useFormContext<IAd1FormValues>();
   const { control, setValue } = form;
 
   const transactionType = useWatch({ name: 'transactionType', control });
@@ -81,6 +83,7 @@ const AD1FormBody = ({ readOnly, user }: AD1FormBodyProps) => {
   const currencyId = useWatch({ name: 'currencyId', control });
   const fxRefAgentId = useWatch({ name: 'fxRefAgentId', control });
   const branchId = useWatch({ name: 'branchId', control });
+  const fcVolume = useWatch({ name: 'fcVolume', control });
 
   const [products, setProducts] = useState<ICategoryOption[]>([]);
   const [currencies, setCurrencies] = useState<ICurrencyProfile[]>([]);

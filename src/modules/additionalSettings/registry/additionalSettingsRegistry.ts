@@ -32,6 +32,7 @@ export interface AdditionalSettingSubcategoryDefinition {
   valueLocked?: boolean;
   placeholder?: string;
   options?: readonly { value: string; label: string }[];
+  optionsSource?: 'account-profile';
 }
 
 export interface AdditionalSettingCategoryDefinition {
@@ -123,6 +124,25 @@ const TRANSACTION_SAC_CODE_SUBCATEGORIES: readonly AdditionalSettingSubcategoryD
   },
 ];
 
+const TRANSACTION_ACCOUNTING_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] = [
+  {
+    code: AdditionalSettingsCodeEnum.PurchaseControlAccount,
+    label: 'PURCHASE CONTROL ACCOUNT',
+    valueType: 'select',
+    required: true,
+    placeholder: 'Select purchase control account',
+    optionsSource: 'account-profile',
+  },
+  {
+    code: AdditionalSettingsCodeEnum.SaleControlAccount,
+    label: 'SALE CONTROL ACCOUNT',
+    valueType: 'select',
+    required: true,
+    placeholder: 'Select sale control account',
+    optionsSource: 'account-profile',
+  },
+];
+
 const TRANSACTION_NUMBERING_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] = [
   {
     code: AdditionalSettingsCodeEnum.PurchaseFfmcNumberSeries,
@@ -203,6 +223,13 @@ export const ADDITIONAL_SETTING_DEFINITIONS: readonly AdditionalSettingCategoryD
     rendererKey: 'default',
     titleLocked: true,
     subcategories: TRANSACTION_SAC_CODE_SUBCATEGORIES,
+  },
+  {
+    code: AdditionalSettingsCodeEnum.TransactionAccounting,
+    label: 'TRANSACTION ACCOUNTING',
+    rendererKey: 'default',
+    titleLocked: true,
+    subcategories: TRANSACTION_ACCOUNTING_SUBCATEGORIES,
   },
   {
     code: AdditionalSettingsCodeEnum.TransactionNumbering,

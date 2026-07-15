@@ -5,8 +5,9 @@ import { Loader } from '@/components/ui/loader';
 import { useAuth } from '@/lib/AuthContext';
 import { transactionAd1Api } from '@/api/transactionAd1/transactionAd1.api';
 import { TransactionTypeEnum } from '@/modules/transactions';
-import { TransactionProfileType } from '../forms/AD1Form';
+import { TransactionProfileType } from '../forms/ad1ProfileType';
 import { AD1Form } from '../forms/AD1Form';
+import { createEmptyAd1FormValues, type IAd1FormValues } from '../types';
 
 export const AD1EditView = () => {
   const { id } = useParams<{ id: string }>();
@@ -19,56 +20,65 @@ export const AD1EditView = () => {
     enabled: Boolean(id),
   });
 
-  const defaultValues = useMemo(() => {
-    if (!transaction) return {};
-    return {
-      transactionType: transaction.transactionType ?? TransactionTypeEnum.PURCHASE,
-      profileType: transaction.profileType ?? TransactionProfileType.AD1,
-      branchId: transaction.branchId ?? '',
-      dealId: transaction.dealId ?? '',
-      docNo: transaction.docNo ?? '',
-      transactionDate: transaction.transactionDate ? transaction.transactionDate.split('T')[0] : '',
-      marketingId: transaction.marketingId ?? '',
-      segmentId: transaction.segmentId ?? '',
-      servicedBy: transaction.servicedBy ?? '',
-      purposeId: transaction.purposeId ?? '',
-      remitterName: transaction.remitterName ?? '',
-      contactNo: transaction.contactNo ?? '',
-      email: transaction.email ?? '',
-      address: transaction.address ?? '',
-      pan: transaction.pan ?? '',
-      dateOfBirth: transaction.dateOfBirth ? transaction.dateOfBirth.split('T')[0] : '',
-      productId: transaction.productId ?? '',
-      beneficiaryName: transaction.beneficiaryName ?? '',
-      beniAddress: transaction.beniAddress ?? '',
-      beneAccountNumber: transaction.beneAccountNumber ?? '',
-      beneBankName: transaction.beneBankName ?? '',
-      swiftCode: transaction.swiftCode ?? '',
-      relationshipId: transaction.relationshipId ?? '',
-      currencyId: transaction.currencyId ?? '',
-      fcVolume: transaction.fcVolume ?? '',
-      saleRate: transaction.saleRate ?? '',
-      totalInrAmt: transaction.totalInrAmt ?? '',
-      gst: transaction.gst ?? '0',
-      bankCharges: transaction.bankCharges ?? '0',
-      tcs: transaction.tcs ?? '0',
-      otherIncome: transaction.otherIncome ?? '0',
-      finalAmount: transaction.finalAmount ?? '',
-      settlementRate: transaction.settlementRate ?? '',
-      grossRevenue: transaction.grossRevenue ?? '',
-      revenueReceivable: transaction.revenueReceivable ?? '0',
-      fxRefAgentId: transaction.fxRefAgentId ?? '',
-      commGivenId: transaction.commGivenId ?? '',
-      commPercentOnFe: transaction.commPercentOnFe ?? '0',
-      agentComm: transaction.agentComm ?? '0',
-      tds: transaction.tds ?? '0',
-      commissionPayable: transaction.commissionPayable ?? '',
-      netRevenue: transaction.netRevenue ?? '',
-      bankNameId: transaction.bankNameId ?? '',
-      rtgsImpsNeftRefNo: transaction.rtgsImpsNeftRefNo ?? '',
-      remarks: transaction.remarks ?? '',
-    };
-  }, [transaction]);
+  const defaultValues = useMemo<IAd1FormValues>(
+    () =>
+      createEmptyAd1FormValues(
+        transaction
+          ? {
+              transactionType: transaction.transactionType ?? TransactionTypeEnum.PURCHASE,
+              profileType: transaction.profileType ?? TransactionProfileType.AD1,
+              branchId: transaction.branchId ?? '',
+              dealId: transaction.dealId ?? '',
+              docNo: transaction.docNo ?? '',
+              transactionDate: transaction.transactionDate
+                ? transaction.transactionDate.split('T')[0]
+                : '',
+              marketingId: transaction.marketingId ?? '',
+              segmentId: transaction.segmentId ?? '',
+              servicedBy: transaction.servicedBy ?? '',
+              purposeId: transaction.purposeId ?? '',
+              remitterName: transaction.remitterName ?? '',
+              contactNo: transaction.contactNo ?? '',
+              email: transaction.email ?? '',
+              address: transaction.address ?? '',
+              pan: transaction.pan ?? '',
+              dateOfBirth: transaction.dateOfBirth
+                ? transaction.dateOfBirth.split('T')[0]
+                : '',
+              productId: transaction.productId ?? '',
+              beneficiaryName: transaction.beneficiaryName ?? '',
+              beniAddress: transaction.beniAddress ?? '',
+              beneAccountNumber: transaction.beneAccountNumber ?? '',
+              beneBankName: transaction.beneBankName ?? '',
+              swiftCode: transaction.swiftCode ?? '',
+              relationshipId: transaction.relationshipId ?? '',
+              currencyId: transaction.currencyId ?? '',
+              fcVolume: transaction.fcVolume ?? '',
+              saleRate: transaction.saleRate ?? '',
+              totalInrAmt: transaction.totalInrAmt ?? '',
+              gst: transaction.gst ?? '0',
+              bankCharges: transaction.bankCharges ?? '0',
+              tcs: transaction.tcs ?? '0',
+              otherIncome: transaction.otherIncome ?? '0',
+              finalAmount: transaction.finalAmount ?? '',
+              settlementRate: transaction.settlementRate ?? '',
+              grossRevenue: transaction.grossRevenue ?? '',
+              revenueReceivable: transaction.revenueReceivable ?? '0',
+              fxRefAgentId: transaction.fxRefAgentId ?? '',
+              commGivenId: transaction.commGivenId ?? '',
+              commPercentOnFe: transaction.commPercentOnFe ?? '0',
+              agentComm: transaction.agentComm ?? '0',
+              tds: transaction.tds ?? '0',
+              commissionPayable: transaction.commissionPayable ?? '',
+              netRevenue: transaction.netRevenue ?? '',
+              bankNameId: transaction.bankNameId ?? '',
+              rtgsImpsNeftRefNo: transaction.rtgsImpsNeftRefNo ?? '',
+              remarks: transaction.remarks ?? '',
+            }
+          : {}
+      ),
+    [transaction]
+  );
 
   if (isLoading) {
     return (

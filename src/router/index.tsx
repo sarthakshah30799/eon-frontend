@@ -155,6 +155,9 @@ const ChequeBookReturnPage = lazy(
 const AdditionalSettingsPage = lazy(
   () => import('../pages/admin/additional-settings')
 );
+const TransactionAccountPostingsPage = lazy(
+  () => import('../pages/admin/transaction-account-postings/TransactionAccountPostingsPage')
+);
 const MigrationsPage = lazy(() => import('../pages/admin/migrations'));
 const CurrencyRatesPage = lazy(() => import('../pages/admin/currency-rates'));
 const MailConsolePage = lazy(
@@ -611,6 +614,14 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <AdditionalSettingsPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/transaction-account-postings',
+    element: (
+      <ProtectedLayout>
+        <TransactionAccountPostingsPage />
       </ProtectedLayout>
     ),
   },

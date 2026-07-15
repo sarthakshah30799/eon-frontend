@@ -35,9 +35,9 @@ export interface IAd1FormValues {
   settlementRate: string;
   grossRevenue: string;
   revenueReceivable: string;
-  fxRefAgentId: string;
-  commGivenId: string;
-  commPercentOnFe: string;
+  agentId: string;
+  commGiven: string;       // display only — not saved to DB
+  commPercentOnFe: string; // used for agentComm calculation only
   agentComm: string;
   tds: string;
   commissionPayable: string;
@@ -86,8 +86,8 @@ export const createEmptyAd1FormValues = (
   settlementRate: '',
   grossRevenue: '',
   revenueReceivable: '0',
-  fxRefAgentId: '',
-  commGivenId: '',
+  agentId: '',
+  commGiven: '',
   commPercentOnFe: '0',
   agentComm: '0',
   tds: '0',

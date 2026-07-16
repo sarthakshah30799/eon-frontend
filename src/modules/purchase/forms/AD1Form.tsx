@@ -18,18 +18,19 @@ import type { IAccountProfileListQuery } from '@/modules/accountProfile/types/ac
 import { ad1Schema } from '../schema/ad1Schema';
 import { TransactionProfileType } from './ad1ProfileType';
 import { currencyProfileApi } from '@/api/currencyProfile';
+import { currencyRatesApi } from '@/api/currencyRates/currencyRates.api';
 import { partyProfileApi } from '@/api/partyProfile';
-import { categoryOptionsApi } from '@/api/categoryOptions';
 import { accountProfileApi } from '@/api/accountProfile';
 import { branchProfileApi } from '@/api/branchProfile/branchProfile.api';
+import { productProfileApi } from '@/api/productProfile/productProfile.api';
 import { PartyProfileCommissionTypeEnum, type PartyProfileCommissionType } from '@/modules/partyProfiles/types/partyProfileTypes';
-import type { ICategoryOption } from '@/types/categoryOptionTypes';
 import type { ICurrencyProfile } from '@/modules/currencyProfile/types';
 import { TransactionTypeEnum } from '@/modules/transactions';
 import type { AsyncSelectResponse } from '@/components/ui';
 import type { IUser } from '@/modules/users/types/userTypes';
 import type { DefaultValues } from 'react-hook-form';
 import type { IAd1FormValues } from '../types';
+export { TransactionProfileType } from './ad1ProfileType';
 
 interface AD1FormProps {
   defaultValues: DefaultValues<IAd1FormValues>;
@@ -37,6 +38,7 @@ interface AD1FormProps {
   onCancel: () => void;
   readOnly?: boolean;
   user: IUser | null;
+  submitLabel?: string;
 }
 
 export const AD1Form = ({
@@ -45,6 +47,7 @@ export const AD1Form = ({
   onCancel,
   readOnly = false,
   user,
+  submitLabel = 'Save',
 }: AD1FormProps) => {
   return (
     <Form<IAd1FormValues>
@@ -54,7 +57,7 @@ export const AD1Form = ({
       defaultValues={defaultValues}
       className="space-y-6"
       footer={{
-        submitLabel: 'Create',
+        submitLabel,
         backLabel: 'Back',
         onBackClick: onCancel,
         onCancel,
@@ -81,39 +84,60 @@ const AD1FormBody = ({ readOnly, user }: AD1FormBodyProps) => {
   const transactionType = useWatch({ name: 'transactionType', control });
   const productId = useWatch({ name: 'productId', control });
   const currencyId = useWatch({ name: 'currencyId', control });
-  const fxRefAgentId = useWatch({ name: 'fxRefAgentId', control });
+  const agentId = useWatch({ name: 'agentId', control });
   const branchId = useWatch({ name: 'branchId', control });
   const fcVolume = useWatch({ name: 'fcVolume', control });
+  const saleRate = useWatch({ name: 'saleRate', control });
+  const bankCharges = useWatch({ name: 'bankCharges', control });
+  const otherIncome = useWatch({ name: 'otherIncome', control });
+  const watchedFinalAmount = useWatch({ name: 'finalAmount', control });
+  const commPercentOnFe = useWatch({ name: 'commPercentOnFe', control });
+  const watchedAgentComm = useWatch({ name: 'agentComm', control });
+  const tds = useWatch({ name: 'tds', control });
+  const tcs = useWatch({ name: 'tcs', control });
 
-  const [products, setProducts] = useState<ICategoryOption[]>([]);
+  const [productProfiles, setProductProfiles] = useState<import('@/modules/productProfile/types').IProductProfile[]>([]);
   const [currencies, setCurrencies] = useState<ICurrencyProfile[]>([]);
-  const [commGivenOptions, setCommGivenOptions] = useState<ICategoryOption[]>([]);
   const agentRuleRef = useRef<{ type: PartyProfileCommissionType; value: number } | null>(null);
+  // Cache of full agent data (with commissionRules) keyed by agent ID
+  const agentCacheRef = useRef<Map<string, import('@/modules/partyProfiles/types/partyProfileTypes').IPartyProfile>>(new Map());
 
-  // Load products, currencies and commission options on mount
+  // Load product profiles and currencies on mount
   useEffect(() => {
-    categoryOptionsApi.getCategoryOptionsByCode(CategoryOptionCodeEnum.Product).then(setProducts).catch(console.error);
+    productProfileApi.getProductProfiles().then(setProductProfiles).catch(console.error);
     currencyProfileApi.getCurrencyProfiles().then(res => setCurrencies(res.filter(c => c.active))).catch(console.error);
-    categoryOptionsApi.getCategoryOptionsByCode(CategoryOptionCodeEnum.CommissionGiven).then(setCommGivenOptions).catch(console.error);
   }, []);
 
   // Fetch and apply agent's commission rule
   useEffect(() => {
     if (readOnly) return;
-    if (!fxRefAgentId || !productId || !currencyId || products.length === 0 || currencies.length === 0 || commGivenOptions.length === 0) {
+    if (!agentId) {
       agentRuleRef.current = null;
+      return;
+    }
+    // Need product and currency to match commission rules
+    if (!productId || !currencyId || currencies.length === 0) {
+      // Don't clear agentRuleRef — wait until product+currency are selected
       return;
     }
 
     const fetchAgentRule = async () => {
       try {
-        const agent = await partyProfileApi.getPartyProfileById(fxRefAgentId);
+        // Only use cache if commissionRules was actually loaded (property exists).
+        // The agents list endpoint omits commissionRules, so always fall back to
+        // the full party profile fetch which includes them via relations.
+        const cached = agentCacheRef.current.get(agentId);
+        const agent = cached?.commissionRules !== undefined
+          ? cached
+          : await partyProfileApi.getPartyProfileById(agentId);
         if (!agent) {
           agentRuleRef.current = null;
           return;
         }
 
-        const productVal = products.find(p => p.id === productId)?.value;
+        // productId is now a product profile UUID — get productCode directly
+        const productProfile = productProfiles.find(p => p.id === productId);
+        const productVal = productProfile?.productCode;
         const currencyVal = currencies.find(c => c.id === currencyId)?.currencyCode;
 
         if (!productVal || !currencyVal) {
@@ -129,27 +153,24 @@ const AD1FormBody = ({ readOnly, user }: AD1FormBodyProps) => {
 
         if (rule) {
           const ruleVal = parseFloat(rule.commissionValue) || 0;
+
           if (rule.commissionType === PartyProfileCommissionTypeEnum.PERCENTAGE) {
-            const opt = commGivenOptions.find(o => String(o.value) === PartyProfileCommissionTypeEnum.PERCENTAGE);
-            if (opt) {
-              agentRuleRef.current = { type: PartyProfileCommissionTypeEnum.PERCENTAGE, value: ruleVal };
-              setValue('commGivenId', opt.id, { shouldValidate: true });
-              setValue('commPercentOnFe', rule.commissionValue, { shouldValidate: true });
-              setValue('agentComm', '0', { shouldValidate: true });
-            }
+            agentRuleRef.current = { type: PartyProfileCommissionTypeEnum.PERCENTAGE, value: ruleVal };
+            setValue('commGiven', PartyProfileCommissionTypeEnum.PERCENTAGE, { shouldValidate: false });
+            setValue('commPercentOnFe', rule.commissionValue, { shouldValidate: false });
           } else if (rule.commissionType === PartyProfileCommissionTypeEnum.PAISA) {
-            const opt = commGivenOptions.find(o => String(o.value) === PartyProfileCommissionTypeEnum.PAISA);
-            if (opt) {
-              agentRuleRef.current = { type: PartyProfileCommissionTypeEnum.PAISA, value: ruleVal };
-              setValue('commGivenId', opt.id, { shouldValidate: true });
-              setValue('commPercentOnFe', '0', { shouldValidate: true });
-              const fc = parseFloat(fcVolume) || 0;
-              const calculatedAgentComm = (ruleVal / 100) * fc;
-              setValue('agentComm', calculatedAgentComm.toFixed(2), { shouldValidate: true });
-            }
+            agentRuleRef.current = { type: PartyProfileCommissionTypeEnum.PAISA, value: ruleVal };
+            setValue('commGiven', PartyProfileCommissionTypeEnum.PAISA, { shouldValidate: false });
+            setValue('commPercentOnFe', '0', { shouldValidate: false });
+            const fc = parseFloat(String(fcVolume)) || 0;
+            setValue('agentComm', ((ruleVal / 100) * fc).toFixed(2), { shouldValidate: false });
           }
         } else {
+          // No matching rule — default to PAISA
           agentRuleRef.current = null;
+          setValue('commGiven', PartyProfileCommissionTypeEnum.PAISA, { shouldValidate: false });
+          setValue('commPercentOnFe', '0', { shouldValidate: false });
+          setValue('agentComm', '0', { shouldValidate: false });
         }
       } catch (error) {
         console.error('Error fetching agent commission rule:', error);
@@ -158,7 +179,73 @@ const AD1FormBody = ({ readOnly, user }: AD1FormBodyProps) => {
     };
 
     void fetchAgentRule();
-  }, [fxRefAgentId, productId, currencyId, products, currencies, commGivenOptions, setValue, readOnly]);
+  }, [agentId, productId, currencyId, productProfiles, currencies, setValue, readOnly, fcVolume]);
+
+  // Auto-calculate Total INR Amt = FC Volume × Sale Rate
+  useEffect(() => {
+    const fc = parseFloat(String(fcVolume)) || 0;
+    const rate = parseFloat(String(saleRate)) || 0;
+    const total = fc * rate;
+    setValue('totalInrAmt', total === 0 ? '' : total.toFixed(2), { shouldValidate: false });
+  }, [fcVolume, saleRate, setValue]);
+
+  // Auto-fill sale rate from currency's latest rate when currency changes
+  useEffect(() => {
+    if (!currencyId || readOnly) return;
+    const fetchRate = async () => {
+      try {
+        const rates = await currencyRatesApi.getLatestRates(currencyId);
+        if (!rates.length) return;
+        const latestRate = rates[0];
+        const baseSale = parseFloat(latestRate.baseSaleRate) || 0;
+        const currency = currencies.find(c => c.id === currencyId);
+        const ratePer = parseFloat(currency?.ratePer ?? '1') || 1;
+        const perUnit = ratePer / baseSale;
+        if (perUnit > 0) {
+          setValue('saleRate', perUnit.toFixed(7), { shouldValidate: false });
+        }
+      } catch {
+        // ignore rate fetch errors
+      }
+    };
+    void fetchRate();
+  }, [currencyId, currencies, setValue, readOnly]);
+
+  // Auto-calculate Final Amount based on transaction type (includes TCS)
+  useEffect(() => {
+    const fc = parseFloat(String(fcVolume)) || 0;
+    const rate = parseFloat(String(saleRate)) || 0;
+    const totalInr = fc * rate;
+    const charges = parseFloat(String(bankCharges)) || 0;
+    const income = parseFloat(String(otherIncome)) || 0;
+    const tcsVal = parseFloat(String(tcs)) || 0;
+    let final: number;
+    if (transactionType === TransactionTypeEnum.PURCHASE) {
+      final = totalInr - charges - income + tcsVal;
+    } else {
+      final = totalInr + charges + income + tcsVal;
+    }
+    setValue('finalAmount', final === 0 ? '' : final.toFixed(2), { shouldValidate: false });
+  }, [fcVolume, saleRate, bankCharges, otherIncome, tcs, transactionType, setValue]);
+
+  // Auto-calculate Agent Comm = Final Amount × Comm% / 100 (PERCENTAGE type only)
+  useEffect(() => {
+    if (readOnly) return;
+    if (agentRuleRef.current?.type !== PartyProfileCommissionTypeEnum.PERCENTAGE) return;
+    const finalAmt = parseFloat(String(watchedFinalAmount)) || 0;
+    const pct = parseFloat(String(commPercentOnFe)) || 0;
+    const comm = (finalAmt * pct) / 100;
+    setValue('agentComm', comm === 0 ? '0' : comm.toFixed(2), { shouldValidate: false });
+  }, [watchedFinalAmount, commPercentOnFe, readOnly, setValue]);
+
+  // Auto-calculate Commission Payable = Agent Comm − TDS
+  useEffect(() => {
+    if (readOnly) return;
+    const comm = parseFloat(String(watchedAgentComm)) || 0;
+    const tdsVal = parseFloat(String(tds)) || 0;
+    const payable = comm - tdsVal;
+    setValue('commissionPayable', payable === 0 ? '0' : payable.toFixed(2), { shouldValidate: false });
+  }, [watchedAgentComm, tds, readOnly, setValue]);
 
   // Reset Bank field if Type changes
   const prevTypeRef = useRef(transactionType);
@@ -173,7 +260,7 @@ const AD1FormBody = ({ readOnly, user }: AD1FormBodyProps) => {
   const prevBranchRef = useRef(branchId);
   useEffect(() => {
     if (prevBranchRef.current !== branchId) {
-      setValue('fxRefAgentId', '');
+      setValue('agentId', '');
       prevBranchRef.current = branchId;
     }
   }, [branchId, setValue]);
@@ -196,6 +283,8 @@ const AD1FormBody = ({ readOnly, user }: AD1FormBodyProps) => {
       search: search || undefined,
       branchId,
     });
+    // Cache full agent data (including commissionRules) for use when agent is selected
+    res.forEach(a => agentCacheRef.current.set(a.id, a));
     return {
       options: res.map(a => ({
         value: a.id,
@@ -216,6 +305,27 @@ const AD1FormBody = ({ readOnly, user }: AD1FormBodyProps) => {
       }))
     };
   }, []);
+
+  const loadProducts = useCallback(async (search: string): Promise<AsyncSelectResponse> => {
+    const filter = transactionType === TransactionTypeEnum.PURCHASE
+      ? { bulkBuying: true }
+      : { bulkSelling: true };
+    const products = await productProfileApi.getProductProfiles(filter);
+    const filtered = search
+      ? products.filter(p =>
+          p.productCode.toLowerCase().includes(search.toLowerCase()) ||
+          (p.productDescription ?? '').toLowerCase().includes(search.toLowerCase())
+        )
+      : products;
+    return {
+      options: filtered
+        .filter(p => p.isActiveProduct)
+        .map(p => ({
+          value: p.id,
+          label: `${p.productCode} - ${p.productDescription ?? p.productCode}`,
+        }))
+    };
+  }, [transactionType]);
 
   const loadBanks = useCallback(async (search: string): Promise<AsyncSelectResponse> => {
     const params: IAccountProfileListQuery = {
@@ -315,7 +425,7 @@ const AD1FormBody = ({ readOnly, user }: AD1FormBodyProps) => {
       {/* Beneficiary section */}
       <CardSection heading="Beneficiary & Product Details">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <FormFieldCategoryOption name="productId" code={CategoryOptionCodeEnum.Product} label="Product" disabled={readOnly} />
+          <FormFieldSelect key={`product-${transactionType}`} name="productId" label="Product" loadOptions={loadProducts} disabled={readOnly} />
           <FormFieldInput name="beneficiaryName" label="Beneficiary Name" placeholder="Beneficiary Name" disabled={readOnly} />
           <FormFieldInput name="beneAccountNumber" label="Bene. Account Number" placeholder="Bene. Account Number" disabled={readOnly} />
           <FormFieldInput name="beneBankName" label="Bene Bank Name" placeholder="Bene. Bank Name" disabled={readOnly} />
@@ -331,14 +441,14 @@ const AD1FormBody = ({ readOnly, user }: AD1FormBodyProps) => {
       {/* Pricing calculations section */}
       <CardSection heading="Pricing & Calculations">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <FormFieldInput name="fcVolume" label="FC Volume" type="number" step="any" placeholder="0.0000000" valueTransform="none" disabled={readOnly} />
+          <FormFieldInput name="fcVolume" label="Quantity" type="number" step="any" placeholder="0.0000000" valueTransform="none" disabled={readOnly} />
           <FormFieldInput name="saleRate" label="Sale Rate" type="number" step="any" placeholder="0.0000000" valueTransform="none" disabled={readOnly} />
-          <FormFieldInput name="totalInrAmt" label="Total INR Amt." type="number" step="any" valueTransform="none" disabled={readOnly} placeholder="0.00" />
-          <FormFieldInput name="gst" label="GST" type="number" step="any" placeholder="0.00" valueTransform="none" disabled={readOnly} />
+          <FormFieldInput name="totalInrAmt" label="Total INR Amt." type="number" step="any" valueTransform="none" disabled placeholder="0.00" />
+          <FormFieldInput name="gst" label="GST" type="number" step="any" placeholder="0.00" valueTransform="none" disabled />
           <FormFieldInput name="bankCharges" label="Bank Charges" type="number" step="any" placeholder="0.00" valueTransform="none" disabled={readOnly} />
           <FormFieldInput name="tcs" label="TCS" type="number" step="any" placeholder="0.00" valueTransform="none" disabled={readOnly} />
           <FormFieldInput name="otherIncome" label="Other Income" type="number" step="any" placeholder="0.00" valueTransform="none" disabled={readOnly} />
-          <FormFieldInput name="finalAmount" label="Final Amount" type="number" step="any" valueTransform="none" disabled={readOnly} placeholder="0.00" />
+          <FormFieldInput name="finalAmount" label="Final Amount" type="number" step="any" valueTransform="none" disabled placeholder="0.00" />
           <FormFieldInput name="settlementRate" label="Settlement Rate" type="number" step="any" placeholder="0.00" valueTransform="none" disabled={readOnly} />
           <FormFieldInput name="grossRevenue" label="Gross Revenue" type="number" step="any" valueTransform="none" disabled={readOnly} placeholder="0.00" />
           <FormFieldInput name="revenueReceivable" label="Revenue Receivable" type="number" step="any" placeholder="0.00" valueTransform="none" disabled={readOnly} />
@@ -348,12 +458,12 @@ const AD1FormBody = ({ readOnly, user }: AD1FormBodyProps) => {
       {/* Agent Commissions section */}
       <CardSection heading="Agent Commissions">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <FormFieldSelect key={`agent-${branchId || ''}`} name="fxRefAgentId" label="FX Ref Agents" loadOptions={loadAgents} disabled={readOnly} />
-          <FormFieldCategoryOption name="commGivenId" code={CategoryOptionCodeEnum.CommissionGiven} label="Comm. Given" disabled={readOnly} />
-          <FormFieldInput name="commPercentOnFe" label="Comm % on FE" type="number" step="any" placeholder="0.0000" valueTransform="none" disabled={readOnly} />
-          <FormFieldInput name="agentComm" label="Agent Comm." type="number" step="any" placeholder="0.00" valueTransform="none" disabled={readOnly} />
+          <FormFieldSelect key={`agent-${branchId || ''}`} name="agentId" label="Agent" loadOptions={loadAgents} disabled={readOnly} />
+          <FormFieldInput name="commGiven" label="Comm. Given" placeholder="—" disabled />
+          <FormFieldInput name="commPercentOnFe" label="Comm % on FE" type="number" step="any" placeholder="0.0000" valueTransform="none" disabled />
+          <FormFieldInput name="agentComm" label="Agent Comm." type="number" step="any" placeholder="0.00" valueTransform="none" disabled />
           <FormFieldInput name="tds" label="TDS" type="number" step="any" placeholder="0.00" valueTransform="none" disabled={readOnly} />
-          <FormFieldInput name="commissionPayable" label="Commission Payable" type="number" step="any" valueTransform="none" disabled={readOnly} placeholder="0.00" />
+          <FormFieldInput name="commissionPayable" label="Commission Payable" type="number" step="any" valueTransform="none" disabled placeholder="0.00" />
           <FormFieldInput name="netRevenue" label="Net Revenue" type="number" step="any" valueTransform="none" disabled={readOnly} placeholder="0.00" />
         </div>
       </CardSection>

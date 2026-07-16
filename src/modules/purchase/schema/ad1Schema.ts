@@ -93,8 +93,8 @@ export const ad1Schema = yup.object({
     
   grossRevenue: decimalStringSchema.default('0'),
   revenueReceivable: decimalStringSchema.default('0'),
-  fxRefAgentId: yup.string().trim().default(''),
-  commGivenId: yup.string().trim().default(''),
+  agentId: yup.string().trim().default(''),
+  commGiven: yup.string().trim().default(''),
   commPercentOnFe: decimalStringSchema.default('0'),
   agentComm: decimalStringSchema.default('0'),
   tds: decimalStringSchema.default('0'),

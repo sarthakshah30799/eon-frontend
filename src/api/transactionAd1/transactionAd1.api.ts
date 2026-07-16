@@ -1,5 +1,7 @@
 import { apiClient } from '../api';
 
+export type Ad1TransactionStatus = 'DRAFT' | 'APPROVED' | 'REJECTED';
+
 export interface ITransactionAd1 {
   id: string;
   number: string;
@@ -7,6 +9,14 @@ export interface ITransactionAd1 {
   companyId: string | null;
   transactionType: string;
   profileType: string;
+  status: Ad1TransactionStatus;
+  submittedAt: string | null;
+  approvedAt: string | null;
+  rejectedAt: string | null;
+  approvedById: string | null;
+  rejectedById: string | null;
+  approvalRemarks: string | null;
+  rejectionReason: string | null;
   dealId: string | null;
   docNo: string | null;
   transactionDate: string | null;
@@ -53,8 +63,10 @@ export interface ITransactionAd1 {
   updatedAt: string;
 }
 
-export type ICreateTransactionAd1 = Omit<ITransactionAd1, 'id' | 'number' | 'companyId' | 'createdAt' | 'updatedAt'>;
-export type IUpdateTransactionAd1 = Partial<ICreateTransactionAd1>;
+export type ICreateTransactionAd1 = Omit<ITransactionAd1, 'id' | 'number' | 'companyId' | 'status' | 'submittedAt' | 'approvedAt' | 'rejectedAt' | 'approvedById' | 'rejectedById' | 'approvalRemarks' | 'rejectionReason' | 'createdAt' | 'updatedAt'> & {
+  requiresApproval?: boolean;
+};
+export type IUpdateTransactionAd1 = Partial<Omit<ICreateTransactionAd1, 'requiresApproval'>>;
 
 export const transactionAd1Api = {
   create: async (payload: ICreateTransactionAd1): Promise<ITransactionAd1> => {
@@ -81,6 +93,18 @@ export const transactionAd1Api = {
 
   update: async (id: string, payload: IUpdateTransactionAd1): Promise<ITransactionAd1> => {
     const res = await apiClient.put<ITransactionAd1>(`/transactions/ad1/${id}`, payload);
+    if (res.error) throw new Error(res.error);
+    return res.data!;
+  },
+
+  approve: async (id: string, payload?: { approvalRemarks?: string }): Promise<ITransactionAd1> => {
+    const res = await apiClient.post<ITransactionAd1>(`/transactions/ad1/${id}/approve`, payload ?? {});
+    if (res.error) throw new Error(res.error);
+    return res.data!;
+  },
+
+  reject: async (id: string, payload?: { rejectionReason?: string }): Promise<ITransactionAd1> => {
+    const res = await apiClient.post<ITransactionAd1>(`/transactions/ad1/${id}/reject`, payload ?? {});
     if (res.error) throw new Error(res.error);
     return res.data!;
   },

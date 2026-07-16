@@ -273,6 +273,7 @@ export const AD1EditView = () => {
             grossRevenue: (values.grossRevenue as string) || null,
             revenueReceivable: (values.revenueReceivable as string) || null,
             agentId: (values.agentId as string) || null,
+            commPercentOnFe: (values.commPercentOnFe as string) || null,
             agentComm: (values.agentComm as string) || null,
             tds: (values.tds as string) || null,
             commissionPayable: (values.commissionPayable as string) || null,

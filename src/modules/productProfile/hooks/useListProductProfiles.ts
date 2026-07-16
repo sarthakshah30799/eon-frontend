@@ -4,7 +4,7 @@ import { productProfileApi } from '@/api/productProfile';
 export const useListProductProfiles = (activeOnly = true) => {
   return useQuery({
     queryKey: ['product-profiles', activeOnly],
-    queryFn: productProfileApi.getProductProfiles,
+    queryFn: () => productProfileApi.getProductProfiles(),
     select: products =>
       activeOnly
         ? products.filter(product => product.isActiveProduct !== false)

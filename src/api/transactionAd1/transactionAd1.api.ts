@@ -49,8 +49,7 @@ export interface ITransactionAd1 {
   settlementRate: string | null;
   grossRevenue: string | null;
   revenueReceivable: string | null;
-  fxRefAgentId: string | null;
-  commGivenId: string | null;
+  agentId: string | null;
   commPercentOnFe: string | null;
   agentComm: string | null;
   tds: string | null;
@@ -63,7 +62,55 @@ export interface ITransactionAd1 {
   updatedAt: string;
 }
 
-export type ICreateTransactionAd1 = Omit<ITransactionAd1, 'id' | 'number' | 'companyId' | 'status' | 'submittedAt' | 'approvedAt' | 'rejectedAt' | 'approvedById' | 'rejectedById' | 'approvalRemarks' | 'rejectionReason' | 'createdAt' | 'updatedAt'> & {
+type ITransactionAd1WriteFields = Pick<
+  ITransactionAd1,
+  | 'branchId'
+  | 'transactionType'
+  | 'profileType'
+  | 'dealId'
+  | 'docNo'
+  | 'transactionDate'
+  | 'marketingId'
+  | 'segmentId'
+  | 'servicedBy'
+  | 'purposeId'
+  | 'remitterName'
+  | 'contactNo'
+  | 'email'
+  | 'address'
+  | 'pan'
+  | 'dateOfBirth'
+  | 'productId'
+  | 'beneficiaryName'
+  | 'beniAddress'
+  | 'beneAccountNumber'
+  | 'beneBankName'
+  | 'swiftCode'
+  | 'relationshipId'
+  | 'currencyId'
+  | 'fcVolume'
+  | 'saleRate'
+  | 'totalInrAmt'
+  | 'gst'
+  | 'bankCharges'
+  | 'tcs'
+  | 'otherIncome'
+  | 'finalAmount'
+  | 'settlementRate'
+  | 'grossRevenue'
+  | 'revenueReceivable'
+  | 'agentId'
+  | 'commPercentOnFe'
+  | 'agentComm'
+  | 'tds'
+  | 'commissionPayable'
+  | 'netRevenue'
+  | 'bankNameId'
+  | 'rtgsImpsNeftRefNo'
+  | 'remarks'
+>;
+
+export type ICreateTransactionAd1 = ITransactionAd1WriteFields & {
   requiresApproval?: boolean;
 };
 export type IUpdateTransactionAd1 = Partial<Omit<ICreateTransactionAd1, 'requiresApproval'>>;

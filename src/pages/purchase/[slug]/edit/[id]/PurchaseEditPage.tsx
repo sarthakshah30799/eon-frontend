@@ -90,6 +90,7 @@ const PurchaseEditPage = () => {
         latestRates: [],
         productCurrencyRates: [],
       }),
+      products: data?.products ?? [],
       latestRates: data?.latestRates ?? data?.rates ?? [],
     }),
     [data]

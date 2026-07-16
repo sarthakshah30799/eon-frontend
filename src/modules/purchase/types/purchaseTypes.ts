@@ -108,6 +108,8 @@ export interface IPurchaseProductOption {
   id: string;
   productCode: string;
   productDescription: string;
+  availableInBulkBuying: boolean;
+  availableInBulkSelling: boolean;
 }
 
 export interface IPurchasePricingData {

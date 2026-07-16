@@ -30,6 +30,11 @@ import type { AsyncSelectResponse } from '@/components/ui';
 import type { IUser } from '@/modules/users/types/userTypes';
 import type { DefaultValues } from 'react-hook-form';
 import type { IAd1FormValues } from '../types';
+import type { TransactionType } from '@/modules/transactions';
+import {
+  getPurchaseTransactionAccountFilter,
+  getPurchaseTransactionProductFilter,
+} from '../utils/purchaseUtils';
 export { TransactionProfileType } from './ad1ProfileType';
 
 interface AD1FormProps {
@@ -81,7 +86,10 @@ const AD1FormBody = ({ readOnly, user }: AD1FormBodyProps) => {
   const form = useFormContext<IAd1FormValues>();
   const { control, setValue } = form;
 
-  const transactionType = useWatch({ name: 'transactionType', control });
+  const transactionType = useWatch({
+    name: 'transactionType',
+    control,
+  }) as TransactionType;
   const productId = useWatch({ name: 'productId', control });
   const currencyId = useWatch({ name: 'currencyId', control });
   const agentId = useWatch({ name: 'agentId', control });
@@ -307,10 +315,9 @@ const AD1FormBody = ({ readOnly, user }: AD1FormBodyProps) => {
   }, []);
 
   const loadProducts = useCallback(async (search: string): Promise<AsyncSelectResponse> => {
-    const filter = transactionType === TransactionTypeEnum.PURCHASE
-      ? { bulkBuying: true }
-      : { bulkSelling: true };
-    const products = await productProfileApi.getProductProfiles(filter);
+    const products = await productProfileApi.getProductProfiles(
+      getPurchaseTransactionProductFilter(transactionType)
+    );
     const filtered = search
       ? products.filter(p =>
           p.productCode.toLowerCase().includes(search.toLowerCase()) ||
@@ -333,12 +340,7 @@ const AD1FormBody = ({ readOnly, user }: AD1FormBodyProps) => {
       limit: 100,
       active: true,
     };
-
-    if (transactionType === TransactionTypeEnum.SALE) {
-      params.bulkSale = true;
-    } else if (transactionType === TransactionTypeEnum.PURCHASE) {
-      params.bulkPurchase = true;
-    }
+    Object.assign(params, getPurchaseTransactionAccountFilter(transactionType));
 
     const res = await accountProfileApi.getAccountProfiles(params);
     // Filter only Bank Ledger accounts

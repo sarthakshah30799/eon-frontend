@@ -291,6 +291,37 @@ export const formatPurchaseEntityLabel = (code?: string | null, name?: string | 
   return normalizedCode || normalizedName || '';
 };
 
+export const getPurchaseTransactionProductFilter = (
+  transactionType: TransactionType
+) =>
+  transactionType === TransactionTypeEnum.SALE
+    ? ({ bulkSelling: true } as const)
+    : ({ bulkBuying: true } as const);
+
+export const getPurchaseTransactionAccountFilter = (
+  transactionType: TransactionType
+) =>
+  transactionType === TransactionTypeEnum.SALE
+    ? ({ bulkSale: true } as const)
+    : ({ bulkPurchase: true } as const);
+
+export const getPurchaseTransactionPartyProfileFilter = (
+  transactionType: TransactionType
+) =>
+  transactionType === TransactionTypeEnum.SALE
+    ? ({ sale: true } as const)
+    : ({ purchase: true } as const);
+
+export const getPurchaseTransactionPricingSide = (
+  transactionType: TransactionType | null | undefined
+): 'buy' | 'sale' =>
+  transactionType === TransactionTypeEnum.SALE ? 'sale' : 'buy';
+
+export const getPurchaseTransactionPricingSideLabel = (
+  transactionType: TransactionType | null | undefined
+): 'Sale' | 'Buy' =>
+  transactionType === TransactionTypeEnum.SALE ? 'Sale' : 'Buy';
+
 export const resolveAgentCommissionRule = (
   rules: IPartyProfileCommissionRule[] = [],
   currencyCode: string,

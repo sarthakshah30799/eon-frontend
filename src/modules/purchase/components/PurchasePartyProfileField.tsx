@@ -4,9 +4,11 @@ import { SelectPartyProfiles } from '@/modules/partyProfiles/components';
 import type { PartyProfileType } from '@/modules/partyProfiles/types';
 import type { IPartyProfileListQuery } from '@/modules/partyProfiles/types';
 import type { IPurchaseFormValues } from '../types/purchaseTypes';
-import { formatPurchaseEntityLabel } from '../utils/purchaseUtils';
+import {
+  formatPurchaseEntityLabel,
+  getPurchaseTransactionPartyProfileFilter,
+} from '../utils/purchaseUtils';
 import { EntityPickerField } from './EntityPickerField';
-import { TransactionTypeEnum } from '@/modules/transactions';
 
 interface PurchasePartyProfileFieldProps {
   partyProfileTypes: PartyProfileType[];
@@ -26,11 +28,10 @@ export const PurchasePartyProfileField = ({
     control: form.control,
     name: 'transactionType',
   });
-  const profileQueryParams = (
-    transactionType === TransactionTypeEnum.SALE
-      ? { sale: true, activeOnly: true }
-      : { purchase: true, activeOnly: true }
-  ) satisfies Pick<IPartyProfileListQuery, 'sale' | 'purchase' | 'activeOnly'>;
+  const profileQueryParams = {
+    ...getPurchaseTransactionPartyProfileFilter(transactionType),
+    activeOnly: true,
+  } satisfies Pick<IPartyProfileListQuery, 'sale' | 'purchase' | 'activeOnly'>;
 
   return (
     <>

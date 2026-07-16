@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { SelectPartyProfiles } from '@/modules/partyProfiles/components';
 import type { IPurchaseFormValues } from '../types/purchaseTypes';
-import { formatPurchaseEntityLabel } from '../utils/purchaseUtils';
+import {
+  formatPurchaseEntityLabel,
+  getPurchaseTransactionPartyProfileFilter,
+} from '../utils/purchaseUtils';
 import { EntityPickerField } from './EntityPickerField';
-import { TransactionTypeEnum } from '@/modules/transactions';
 
 export const PurchaseAgentProfileField = ({
   disabled = false,
@@ -17,10 +19,10 @@ export const PurchaseAgentProfileField = ({
   const agentProfileCode = form.watch('agentProfileCode');
   const agentProfileName = form.watch('agentProfileName');
   const transactionType = form.watch('transactionType');
-  const profileQueryParams =
-    transactionType === TransactionTypeEnum.SALE
-      ? { sale: true, activeOnly: true }
-      : { purchase: true, activeOnly: true };
+  const profileQueryParams = {
+    ...getPurchaseTransactionPartyProfileFilter(transactionType),
+    activeOnly: true,
+  };
 
   return (
     <>

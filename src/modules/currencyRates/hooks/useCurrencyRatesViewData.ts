@@ -15,6 +15,8 @@ interface CurrencyRatesViewData {
     id: string;
     productCode: string;
     productDescription: string;
+    availableInBulkBuying: boolean;
+    availableInBulkSelling: boolean;
   }>;
   currencies: ICurrencyProfile[];
   rates: ICurrencyRate[];
@@ -42,6 +44,8 @@ const loadCurrencyRatesViewData = async (): Promise<CurrencyRatesViewData> => {
       id: product.id,
       productCode: product.productCode,
       productDescription: product.productDescription,
+      availableInBulkBuying: product.availableInBulkBuying,
+      availableInBulkSelling: product.availableInBulkSelling,
     })),
     currencies,
     rates,

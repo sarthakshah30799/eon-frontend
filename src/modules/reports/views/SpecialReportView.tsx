@@ -1,45 +1,33 @@
 import { useMemo } from 'react';
 import { Button } from '@/components/ui';
 import { useAuth } from '@/lib/AuthContext';
-import { ReportCommonFiltersSection, SalePurchaseReportTable } from '../components';
-import { useSalePurchaseReport } from '../hooks';
-import { ReportExportFormatEnum, ReportTransactionTypeEnum } from '../types';
+import { SalePurchaseReportTable, SpecialReportFiltersSection } from '../components';
+import { useSpecialReport } from '../hooks';
+import { ReportExportFormatEnum } from '../types';
 import { summarizeReportSelection } from '../utils';
 
-export const ReportSalePurchaseView = () => {
+export const SpecialReportView = () => {
   const { user } = useAuth();
-  const report = useSalePurchaseReport();
+  const report = useSpecialReport();
   const canView = Boolean(user);
 
   const currentSummary = useMemo(() => {
-    const stateLabels = summarizeReportSelection(report.filters.stateIds, report.filters.stateOptions);
-    const branchLabels = summarizeReportSelection(report.filters.branchIds, report.filters.branchOptions);
-    const counterLabels = summarizeReportSelection(report.filters.counterIds, report.filters.counterOptions);
-    const typeLabels = summarizeReportSelection(
-      report.filters.partyTypeCodes,
-      report.filters.partyTypeOptions,
-    );
-    const txnTypeLabels = report.filters.transactionTypes.map(type =>
-      type === ReportTransactionTypeEnum.PURCHASE ? 'Purchase' : 'Sale',
+    const branchLabels = summarizeReportSelection(
+      report.filters.branchIds,
+      report.filters.branchOptions,
     );
 
     return {
-      states: stateLabels,
       branches: branchLabels,
-      counters: counterLabels,
-      types: typeLabels,
-      transactionTypes: txnTypeLabels,
+      template:
+        report.filters.templateOptions.find(option => option.id === report.filters.template)?.label ??
+        'Account Posting',
     };
   }, [
     report.filters.branchIds,
     report.filters.branchOptions,
-    report.filters.counterIds,
-    report.filters.counterOptions,
-    report.filters.partyTypeCodes,
-    report.filters.partyTypeOptions,
-    report.filters.stateIds,
-    report.filters.stateOptions,
-    report.filters.transactionTypes,
+    report.filters.template,
+    report.filters.templateOptions,
   ]);
 
   if (!canView) {
@@ -54,32 +42,19 @@ export const ReportSalePurchaseView = () => {
     <div className="space-y-3">
       <div className="space-y-1">
         <h1 className="text-lg font-semibold tracking-tight text-text-primary">
-          Sale & Purchase Reports
+          Special Reports
         </h1>
-      <p className="max-w-3xl text-[11px] text-text-secondary">
-          Grouped report for review, flat export for CSV/XLSX downloads.
+        <p className="max-w-3xl text-[11px] text-text-secondary">
+          Account posting special report with branch filter and direct CSV/XLSX export.
         </p>
       </div>
 
-      <ReportCommonFiltersSection filters={report.filters} />
+      <SpecialReportFiltersSection filters={report.filters} />
 
       {report.filters.appliedFilters && (
         <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-[11px] text-text-secondary">
-          Applied: {report.filters.appliedDateRangeLabel} | States{' '}
-          {currentSummary.states.length ? currentSummary.states.join(', ') : 'All'} | Branches{' '}
-          {currentSummary.branches.length ? currentSummary.branches.join(', ') : 'All'} | Counters{' '}
-          {currentSummary.counters.length ? currentSummary.counters.join(', ') : 'All'} | Party Types{' '}
-          {currentSummary.types.length ? currentSummary.types.join(', ') : 'All'} | Transaction{' '}
-          {currentSummary.transactionTypes.length
-            ? currentSummary.transactionTypes.join(', ')
-            : 'All'} | Party Profiles{' '}
-          {report.filters.partyProfileSelection.allSelected
-            ? report.filters.partyProfileSelection.excludedIds.length > 0
-              ? `All matching except ${report.filters.partyProfileSelection.excludedIds.length}`
-              : 'All matching'
-            : report.filters.partyProfileSelection.selectedIds.length > 0
-              ? `${report.filters.partyProfileSelection.selectedIds.length} selected`
-              : 'None selected'}
+          Applied: Branches {currentSummary.branches.length ? currentSummary.branches.join(', ') : 'All'} | Template{' '}
+          {currentSummary.template}
         </div>
       )}
 
@@ -89,7 +64,7 @@ export const ReportSalePurchaseView = () => {
             <div className="space-y-0.5">
               <h2 className="text-sm font-semibold text-text-primary">Report View</h2>
               <p className="text-[11px] text-text-secondary">
-                Grouped rows show transaction details on the first line, then item subtotal rows.
+                Every account posting is shown as a single row using transaction snapshots only.
               </p>
             </div>
 
@@ -128,22 +103,11 @@ export const ReportSalePurchaseView = () => {
                 variant="outline"
                 className="h-8 px-3 text-xs"
                 onClick={() => {
-                  void report.downloadGroupedReport();
+                  void report.downloadReport();
                 }}
                 disabled={!report.isReady || report.isLoadingReport}
               >
                 Download
-              </Button>
-
-              <Button
-                type="button"
-                className="h-8 px-3 text-xs"
-                onClick={() => {
-                  void report.downloadFlatReport();
-                }}
-                disabled={!report.isReady || report.isLoadingReport}
-              >
-                Download Flat
               </Button>
             </div>
           </div>
@@ -165,4 +129,4 @@ export const ReportSalePurchaseView = () => {
   );
 };
 
-export default ReportSalePurchaseView;
+export default SpecialReportView;

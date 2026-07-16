@@ -11,14 +11,24 @@ interface SalePurchaseReportTableProps {
 }
 
 const getCellClassName = (row: ISalePurchaseReportRow, key: string) => {
-  const isNumeric = [
-    'quantity',
-    'rate',
-    'amount',
-    'taxAmount',
-    'netAmount',
-    'profit',
-  ].includes(key) || key.includes('_amount');
+  const isNumeric =
+    [
+      'quantity',
+      'rate',
+      'amount',
+      'taxAmount',
+      'netAmount',
+      'debit',
+      'credit',
+      'profit',
+      'cost',
+      'totalGp',
+      'otherIncome',
+      'otherExpense',
+      'commissionRate',
+      'commissionAmount',
+      'netProfit',
+    ].includes(key) || key.toLowerCase().includes('amount') || key.toLowerCase().includes('rate');
 
   return [
     'border-b border-slate-100 px-2 py-1.5 text-[11px] align-top',

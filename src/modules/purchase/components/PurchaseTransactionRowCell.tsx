@@ -13,6 +13,8 @@ import {
   calculatePurchaseTransactionCommission,
   calculateTransactionRoundOff,
   calculateTransactionTotal,
+  getPurchaseTransactionPricingSide,
+  getPurchaseTransactionPricingSideLabel,
   resolveAgentCommissionRule,
   resolvePurchaseTransactionPreview,
 } from '../utils/purchaseUtils';
@@ -96,6 +98,10 @@ export const PurchaseTransactionRowCell = ({
     control: form.control,
     name: `transactions.${rowIndex}.productId`,
   });
+  const transactionType = useWatch({
+    control: form.control,
+    name: 'transactionType',
+  });
   const quantity = useWatch({
     control: form.control,
     name: `transactions.${rowIndex}.quantity`,
@@ -130,6 +136,8 @@ export const PurchaseTransactionRowCell = ({
       ) ?? null,
     [currencyId, pricingData.productCurrencyRates, productId]
   );
+  const pricingSide = getPurchaseTransactionPricingSide(transactionType);
+  const pricingSideLabel = getPurchaseTransactionPricingSideLabel(transactionType);
 
   const preview = useMemo(
     () =>
@@ -142,7 +150,9 @@ export const PurchaseTransactionRowCell = ({
   );
 
   const effectiveGroupCode = preview?.effectiveGroupCode ?? '';
-  const calculatedRate = preview?.buy.appliedFinalRate ?? '';
+  const selectedSidePreview =
+    pricingSide === 'sale' ? preview?.sale ?? null : preview?.buy ?? null;
+  const calculatedRate = selectedSidePreview?.appliedFinalRate ?? '';
   const selectedCurrencyProfile = useMemo(
     () =>
       (pricingData.currencies ?? []).find(
@@ -223,9 +233,10 @@ export const PurchaseTransactionRowCell = ({
       : preview?.effectiveSource === 'group-default'
         ? `Using group default${effectiveGroupCode ? ` (${effectiveGroupCode})` : ''}`
         : 'No matching rate found';
-  const buyMinRate = selectedProductCurrencyRule?.buy.minRate ?? '';
-  const buyMaxRate = selectedProductCurrencyRule?.buy.maxRate ?? '';
-  const hasBuyRange = Boolean(buyMinRate || buyMaxRate);
+  const selectedSideCurrencyRule = selectedProductCurrencyRule?.[pricingSide] ?? null;
+  const sideMinRate = selectedSideCurrencyRule?.minRate ?? '';
+  const sideMaxRate = selectedSideCurrencyRule?.maxRate ?? '';
+  const hasSideRange = Boolean(sideMinRate || sideMaxRate);
   const lastAutoFilledRateRef = useRef({
     selectionKey: '',
     value: '',
@@ -340,8 +351,8 @@ export const PurchaseTransactionRowCell = ({
     }
 
     const parsedRate = Number(currentRate);
-    const parsedMinRate = buyMinRate ? Number(buyMinRate) : null;
-    const parsedMaxRate = buyMaxRate ? Number(buyMaxRate) : null;
+    const parsedMinRate = sideMinRate ? Number(sideMinRate) : null;
+    const parsedMaxRate = sideMaxRate ? Number(sideMaxRate) : null;
 
     if (!Number.isFinite(parsedRate)) {
       form.setError(fieldName, {
@@ -358,7 +369,7 @@ export const PurchaseTransactionRowCell = ({
     ) {
       form.setError(fieldName, {
         type: rangeErrorType,
-        message: `Buy rate cannot be lower than ${formatRangeValue(buyMinRate)}`,
+        message: `${pricingSideLabel} rate cannot be lower than ${formatRangeValue(sideMinRate)}`,
       });
       return;
     }
@@ -370,7 +381,7 @@ export const PurchaseTransactionRowCell = ({
     ) {
       form.setError(fieldName, {
         type: rangeErrorType,
-        message: `Buy rate cannot be higher than ${formatRangeValue(buyMaxRate)}`,
+        message: `${pricingSideLabel} rate cannot be higher than ${formatRangeValue(sideMaxRate)}`,
       });
       return;
     }
@@ -378,7 +389,7 @@ export const PurchaseTransactionRowCell = ({
     if (form.getFieldState(fieldName).error?.type === rangeErrorType) {
       form.clearErrors(fieldName);
     }
-  }, [buyMaxRate, buyMinRate, form, hasCurrencyProductSelection, rowIndex, rateValue]);
+  }, [form, hasCurrencyProductSelection, pricingSideLabel, rowIndex, rateValue, sideMaxRate, sideMinRate]);
 
   useEffect(() => {
     const fieldName = `transactions.${rowIndex}.total` as const;
@@ -445,8 +456,15 @@ export const PurchaseTransactionRowCell = ({
 
   const productLoadOptions = useCallback(
     (inputValue: string) =>
-      loadProductOptions(inputValue, pricingData.products ?? []),
-    [pricingData.products]
+      loadProductOptions(
+        inputValue,
+        (pricingData.products ?? []).filter(product =>
+          pricingSide === 'sale'
+            ? product.availableInBulkSelling !== false
+            : product.availableInBulkBuying !== false
+        )
+      ),
+    [pricingData.products, pricingSide]
   );
 
   return (
@@ -501,13 +519,25 @@ export const PurchaseTransactionRowCell = ({
         />
         {hasCurrencyProductSelection && (
           <div className="mt-1 space-y-0.5 text-[11px] leading-tight text-text-tertiary">
-            {hasBuyRange ? (
+            {selectedSidePreview?.baseRate ? (
+              <div>
+                Base {pricingSideLabel.toLowerCase()} rate:{' '}
+                {formatRangeValue(selectedSidePreview.baseRate)}
+              </div>
+            ) : null}
+            {hasSideRange ? (
               <>
-                <div>Buy min: {formatRangeValue(buyMinRate)}</div>
-                <div>Buy max: {formatRangeValue(buyMaxRate)}</div>
+                <div>
+                  {pricingSideLabel} min: {formatRangeValue(sideMinRate)}
+                </div>
+                <div>
+                  {pricingSideLabel} max: {formatRangeValue(sideMaxRate)}
+                </div>
               </>
             ) : (
-              <div>No buy min/max configured for this product-currency pair.</div>
+              <div>
+                No {pricingSideLabel.toLowerCase()} min/max configured for this product-currency pair.
+              </div>
             )}
           </div>
         )}

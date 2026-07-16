@@ -7,6 +7,9 @@ import { useDebounce } from '@/hooks';
 import {
   buildReportDateRange,
   formatReportDateRangeLabel,
+  buildReportOptionLabel,
+  toggleId,
+  uniqueOptions,
 } from '../utils';
 import {
   ReportDatePresetEnum,
@@ -20,34 +23,6 @@ import {
 import type { PartyProfileType } from '@/modules/partyProfiles/types';
 
 const PAGE_SIZE = 30;
-
-const toOptionLabel = (code?: string | null, name?: string | null) => {
-  const normalizedCode = String(code ?? '').trim();
-  const normalizedName = String(name ?? '').trim();
-  if (normalizedCode && normalizedName) {
-    return `${normalizedCode} - ${normalizedName}`;
-  }
-  return normalizedName || normalizedCode || '-';
-};
-
-const toggleId = (currentIds: string[], id: string, checked: boolean) => {
-  if (checked) {
-    return currentIds.includes(id) ? currentIds : [...currentIds, id];
-  }
-
-  return currentIds.filter(item => item !== id);
-};
-
-const uniqueOptions = (options: IReportSelectOption[]) => {
-  const seen = new Set<string>();
-  return options.filter(option => {
-    if (seen.has(option.id)) {
-      return false;
-    }
-    seen.add(option.id);
-    return true;
-  });
-};
 
 export const useSalePurchaseReportFilters = () => {
   const { user } = useAuth();
@@ -115,7 +90,7 @@ export const useSalePurchaseReportFilters = () => {
       return [
         {
           id: state.id,
-          label: toOptionLabel(state.code, state.name),
+          label: buildReportOptionLabel(state.code, state.name),
         },
       ];
     });
@@ -125,7 +100,7 @@ export const useSalePurchaseReportFilters = () => {
     return uniqueOptions(
       accessibleBranchProfiles.map(branch => ({
         id: branch.id,
-        label: toOptionLabel(branch.code, branch.name),
+        label: buildReportOptionLabel(branch.code, branch.name),
       })),
     );
   }, [accessibleBranchProfiles]);
@@ -142,7 +117,7 @@ export const useSalePurchaseReportFilters = () => {
         .filter(branch => branch.state?.id && selectedStateSet.has(branch.state.id))
         .map(branch => ({
           id: branch.id,
-          label: toOptionLabel(branch.code, branch.name),
+          label: buildReportOptionLabel(branch.code, branch.name),
         })),
     );
   }, [accessibleBranchProfiles, allBranchOptions, selectedStateSet, stateIds.length]);
@@ -164,7 +139,7 @@ export const useSalePurchaseReportFilters = () => {
         )
         .map(branch => ({
           id: branch.id,
-          label: toOptionLabel(branch.code, branch.name),
+          label: buildReportOptionLabel(branch.code, branch.name),
         })),
     ).map(option => option.id);
   }, [accessibleBranchProfiles, counterIds]);
@@ -391,9 +366,9 @@ export const useSalePurchaseReportFilters = () => {
 
           return branch.state?.id && nextStateIds.includes(branch.state.id);
         })
-        .map(branch => ({
+          .map(branch => ({
           id: branch.id,
-          label: toOptionLabel(branch.code, branch.name),
+          label: buildReportOptionLabel(branch.code, branch.name),
         })),
     ).map(option => option.id);
 
@@ -562,3 +537,5 @@ export const useSalePurchaseReportFilters = () => {
     handleView,
   };
 };
+
+export type SalePurchaseReportFilters = ReturnType<typeof useSalePurchaseReportFilters>;

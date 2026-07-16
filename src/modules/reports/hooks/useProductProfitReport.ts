@@ -3,15 +3,14 @@ import { useQuery } from '@tanstack/react-query';
 import { reportsApi } from '@/api';
 import {
   ReportExportFormatEnum,
-  ReportLayoutEnum,
-  type ISalePurchaseReportResponse,
+  type IProductProfitReportResponse,
 } from '../types';
 import { downloadBlob } from '../utils';
-import { useSalePurchaseReportFilters } from './useSalePurchaseReportFilters';
+import { useProductProfitReportFilters } from './useProductProfitReportFilters';
 import { useResolvedPartyProfileIds } from './useResolvedPartyProfileIds';
 
-export const useSalePurchaseReport = () => {
-  const filters = useSalePurchaseReportFilters();
+export const useProductProfitReport = () => {
+  const filters = useProductProfitReportFilters();
   const [exportFormat, setExportFormat] = useState<
     typeof ReportExportFormatEnum.CSV | typeof ReportExportFormatEnum.XLSX
   >(ReportExportFormatEnum.XLSX);
@@ -30,17 +29,18 @@ export const useSalePurchaseReport = () => {
       stateIds: hasExplicitPartyProfileSelection ? [] : filters.appliedFilters?.stateIds ?? [],
       counterIds: hasExplicitPartyProfileSelection ? [] : filters.appliedFilters?.counterIds ?? [],
       partyTypeCodes: filters.appliedFilters?.partyTypeCodes ?? [],
-      transactionTypes: filters.appliedFilters?.transactionTypes ?? [],
+      currencyIds: filters.appliedFilters?.currencyIds ?? [],
+      productIds: filters.appliedFilters?.productIds ?? [],
     }),
     [filters.appliedFilters, hasExplicitPartyProfileSelection],
   );
 
   const reportQueryKey = useMemo(
-    () => ['sale-purchase-report', filters.appliedFilters],
+    () => ['product-profit-report', filters.appliedFilters],
     [filters.appliedFilters],
   );
 
-  const reportQuery = useQuery<ISalePurchaseReportResponse>({
+  const reportQuery = useQuery<IProductProfitReportResponse>({
     queryKey: reportQueryKey,
     enabled: Boolean(filters.appliedFilters),
     queryFn: async () => {
@@ -49,14 +49,13 @@ export const useSalePurchaseReport = () => {
         return {
           columns: [],
           rows: [],
-          layout: ReportLayoutEnum.GROUPED,
+          layout: 'single',
         };
       }
 
-      return reportsApi.getSalePurchaseReport({
+      return reportsApi.getProductProfitReport({
         ...requestParams,
         ...(partyProfileIds ? { partyProfileIds } : {}),
-        layout: ReportLayoutEnum.GROUPED,
       });
     },
   });
@@ -64,36 +63,32 @@ export const useSalePurchaseReport = () => {
   const reportColumns = reportQuery.data?.columns ?? [];
   const reportRows = reportQuery.data?.rows ?? [];
 
-  const downloadReport = useCallback(
-    async (layout: typeof ReportLayoutEnum.GROUPED | typeof ReportLayoutEnum.FLAT) => {
-      if (!filters.appliedFilters) {
-        return;
-      }
+  const downloadReport = useCallback(async () => {
+    if (!filters.appliedFilters) {
+      return;
+    }
 
-      const partyProfileIds = await resolvePartyProfileIds();
-      if (hasExplicitPartyProfileSelection && (!partyProfileIds || partyProfileIds.length === 0)) {
-        return;
-      }
+    const partyProfileIds = await resolvePartyProfileIds();
+    if (hasExplicitPartyProfileSelection && (!partyProfileIds || partyProfileIds.length === 0)) {
+      return;
+    }
 
-      const payload = await reportsApi.downloadSalePurchaseReport(
-        {
-          ...requestParams,
-          ...(partyProfileIds ? { partyProfileIds } : {}),
-        },
-        exportFormat,
-        layout,
-      );
-
-      downloadBlob(payload.blob, payload.filename || 'sale-purchase-report.xlsx');
-    },
-    [
+    const payload = await reportsApi.downloadProductProfitReport(
+      {
+        ...requestParams,
+        ...(partyProfileIds ? { partyProfileIds } : {}),
+      },
       exportFormat,
-      filters.appliedFilters,
-      hasExplicitPartyProfileSelection,
-      requestParams,
-      resolvePartyProfileIds,
-    ],
-  );
+    );
+
+    downloadBlob(payload.blob, payload.filename || 'product-profit-report.xlsx');
+  }, [
+    exportFormat,
+    filters.appliedFilters,
+    hasExplicitPartyProfileSelection,
+    requestParams,
+    resolvePartyProfileIds,
+  ]);
 
   const isReady = Boolean(filters.appliedFilters);
 
@@ -107,10 +102,9 @@ export const useSalePurchaseReport = () => {
     isFetchingReport: reportQuery.isFetching,
     reportError: reportQuery.error,
     isReady,
-    downloadGroupedReport: () => downloadReport(ReportLayoutEnum.GROUPED),
-    downloadFlatReport: () => downloadReport(ReportLayoutEnum.FLAT),
+    downloadReport,
     appliedDateRangeLabel: filters.appliedDateRangeLabel,
   };
 };
 
-export default useSalePurchaseReport;
+export default useProductProfitReport;

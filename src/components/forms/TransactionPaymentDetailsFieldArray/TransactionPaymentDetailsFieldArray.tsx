@@ -16,6 +16,7 @@ import {
 } from '@/modules/transactions';
 import { useAuth } from '@/lib/AuthContext';
 import type { ITransactionPaymentDetailFormRow } from './transactionPaymentDetailsTypes';
+import { getPurchaseTransactionAccountFilter } from '@/modules/purchase/utils/purchaseUtils';
 
 const ACCOUNT_PROFILE_OPTION_PAGE_SIZE = 30;
 
@@ -207,7 +208,7 @@ const PaymentDetailRow = ({
         search: inputValue,
         active: true,
         accountType: AccountProfileLedgerLabelEnum.BankLedger,
-        ...(isSale ? { bulkSale: true } : { bulkPurchase: true }),
+        ...getPurchaseTransactionAccountFilter(transactionType ?? TransactionTypeEnum.PURCHASE),
       });
 
       const accounts = response.data || [];

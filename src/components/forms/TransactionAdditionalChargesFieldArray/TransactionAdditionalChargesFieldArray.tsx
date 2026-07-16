@@ -13,6 +13,7 @@ import {
   TransactionTypeEnum,
   type TransactionType,
 } from '@/modules/transactions';
+import { getPurchaseTransactionAccountFilter } from '@/modules/purchase/utils/purchaseUtils';
 
 const ACCOUNT_PROFILE_OPTION_PAGE_SIZE = 30;
 import type { ITransactionAdditionalChargeFormRow } from './transactionAdditionalChargesTypes';
@@ -142,7 +143,7 @@ const AdditionalChargeRow = ({
         search: inputValue,
         active: true,
         accountType: AccountProfileLedgerLabelEnum.GeneralLedger,
-        ...(isSale ? { bulkSale: true } : { bulkPurchase: true }),
+        ...getPurchaseTransactionAccountFilter(transactionType ?? TransactionTypeEnum.PURCHASE),
       };
 
       const response = await accountProfileApi.getAccountProfiles({

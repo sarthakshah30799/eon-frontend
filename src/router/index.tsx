@@ -283,6 +283,7 @@ const IncomeBookingEditPage = lazy(
   () =>
     import('../pages/master/system-setups/income-booking/IncomeBookingEditPage')
 );
+const ReportsPage = lazy(() => import('../pages/reports'));
 
 const router = createBrowserRouter([
   {
@@ -494,6 +495,22 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <MenuPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/reports',
+    element: (
+      <ProtectedLayout>
+        <ReportsPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/reports/:slug',
+    element: (
+      <ProtectedLayout>
+        <ReportsPage />
       </ProtectedLayout>
     ),
   },

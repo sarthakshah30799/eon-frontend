@@ -181,6 +181,13 @@ class ApiClient {
       body: data ? JSON.stringify(data) : undefined,
     });
   }
+
+  async getDownload(
+    endpoint: string,
+    options?: RequestInit
+  ): Promise<ApiResponse<ApiDownloadResponse>> {
+    return this.requestBlob(endpoint, { ...options, method: 'GET' });
+  }
 }
 
 export const apiClient = new ApiClient();

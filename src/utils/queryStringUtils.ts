@@ -10,6 +10,15 @@ export const buildQueryString = <T extends object>(params?: T): string => {
       return;
     }
 
+    if (Array.isArray(value)) {
+      value.forEach(item => {
+        if (item !== undefined && item !== null && item !== '') {
+          query.append(key, String(item));
+        }
+      });
+      return;
+    }
+
     query.set(key, String(value));
   });
 

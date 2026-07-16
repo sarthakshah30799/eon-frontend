@@ -66,6 +66,7 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
     meta: { title: 'Edit Miscellaneous Profile' },
   },
   { path: '/admin/menu-management', meta: { title: 'Menu Management' } },
+  { path: '/reports/:slug', meta: { title: 'Reports' } },
   {
     path: '/admin/additional-settings',
     meta: { title: 'Additional Settings' },

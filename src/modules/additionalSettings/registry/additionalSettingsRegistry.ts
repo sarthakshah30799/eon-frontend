@@ -1,4 +1,9 @@
 import { AdditionalSettingsCodeEnum } from '../constants';
+import {
+  TRANSACTION_TYPE_PROFILE_ORDER,
+  TransactionTypeProfileEnum,
+  type TransactionTypeProfile,
+} from '@/modules/transactions';
 
 export type AdditionalSettingsCode =
   (typeof AdditionalSettingsCodeEnum)[keyof typeof AdditionalSettingsCodeEnum];
@@ -151,57 +156,103 @@ const TRANSACTION_ACCOUNTING_SUBCATEGORIES: readonly AdditionalSettingSubcategor
   },
 ];
 
-const TRANSACTION_NUMBERING_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] = [
-  {
+const TRANSACTION_NUMBERING_SUBCATEGORY_CONFIG: Record<
+  TransactionTypeProfile,
+  Pick<
+    AdditionalSettingSubcategoryDefinition,
+    'code' | 'label' | 'valueType' | 'required' | 'placeholder'
+  >
+> = {
+  [TransactionTypeProfileEnum.PURCHASE_FFMC]: {
     code: AdditionalSettingsCodeEnum.PurchaseFfmcNumberSeries,
     label: 'PURCHASE FFMC/ADS',
     valueType: 'number',
     required: true,
     placeholder: 'Enter starting sequence number',
   },
-  {
+  [TransactionTypeProfileEnum.SALE_FFMC]: {
     code: AdditionalSettingsCodeEnum.SaleFfmcNumberSeries,
     label: 'SALE FFMC/ADS',
     valueType: 'number',
     required: true,
     placeholder: 'Enter starting sequence number',
   },
-  {
+  [TransactionTypeProfileEnum.SALE_RMC]: {
+    code: AdditionalSettingsCodeEnum.SaleRmcNumberSeries,
+    label: 'SALE RMC',
+    valueType: 'number',
+    required: true,
+    placeholder: 'Enter starting sequence number',
+  },
+  [TransactionTypeProfileEnum.SALE_FOREX]: {
+    code: AdditionalSettingsCodeEnum.SaleForexNumberSeries,
+    label: 'SALE FOREX',
+    valueType: 'number',
+    required: true,
+    placeholder: 'Enter starting sequence number',
+  },
+  [TransactionTypeProfileEnum.SALE_FOREIGN]: {
+    code: AdditionalSettingsCodeEnum.SaleForeignNumberSeries,
+    label: 'SALE FOREIGN',
+    valueType: 'number',
+    required: true,
+    placeholder: 'Enter starting sequence number',
+  },
+  [TransactionTypeProfileEnum.SALE_MISC]: {
+    code: AdditionalSettingsCodeEnum.SaleMiscNumberSeries,
+    label: 'SALE MISC',
+    valueType: 'number',
+    required: true,
+    placeholder: 'Enter starting sequence number',
+  },
+  [TransactionTypeProfileEnum.SALE_FRANCHISE]: {
+    code: AdditionalSettingsCodeEnum.SaleFranchiseNumberSeries,
+    label: 'SALE FRANCHISE',
+    valueType: 'number',
+    required: true,
+    placeholder: 'Enter starting sequence number',
+  },
+  [TransactionTypeProfileEnum.PURCHASE_RMC]: {
     code: AdditionalSettingsCodeEnum.PurchaseRmcNumberSeries,
     label: 'PURCHASE RMC',
     valueType: 'number',
     required: true,
     placeholder: 'Enter starting sequence number',
   },
-  {
+  [TransactionTypeProfileEnum.PURCHASE_FOREX]: {
     code: AdditionalSettingsCodeEnum.PurchaseForexNumberSeries,
     label: 'PURCHASE FOREX',
     valueType: 'number',
     required: true,
     placeholder: 'Enter starting sequence number',
   },
-  {
+  [TransactionTypeProfileEnum.PURCHASE_FOREIGN]: {
     code: AdditionalSettingsCodeEnum.PurchaseForeignNumberSeries,
     label: 'PURCHASE FOREIGN',
     valueType: 'number',
     required: true,
     placeholder: 'Enter starting sequence number',
   },
-  {
+  [TransactionTypeProfileEnum.PURCHASE_MISC]: {
     code: AdditionalSettingsCodeEnum.PurchaseMiscNumberSeries,
     label: 'PURCHASE MISC',
     valueType: 'number',
     required: true,
     placeholder: 'Enter starting sequence number',
   },
-  {
+  [TransactionTypeProfileEnum.PURCHASE_FRANCHISE]: {
     code: AdditionalSettingsCodeEnum.PurchaseFranchiseNumberSeries,
     label: 'PURCHASE FRANCHISE',
     valueType: 'number',
     required: true,
     placeholder: 'Enter starting sequence number',
   },
-];
+};
+
+const TRANSACTION_NUMBERING_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] =
+  TRANSACTION_TYPE_PROFILE_ORDER.map(profileType => ({
+    ...TRANSACTION_NUMBERING_SUBCATEGORY_CONFIG[profileType],
+  }));
 
 export const ADDITIONAL_SETTING_DEFINITIONS: readonly AdditionalSettingCategoryDefinition[] = [
   {

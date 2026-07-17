@@ -12,6 +12,11 @@ import {
 export const TransactionTypeProfileEnum = {
   PURCHASE_FFMC: 'PURCHASE_FFMC',
   SALE_FFMC: 'SALE_FFMC',
+  SALE_RMC: 'SALE_RMC',
+  SALE_FOREX: 'SALE_FOREX',
+  SALE_FOREIGN: 'SALE_FOREIGN',
+  SALE_MISC: 'SALE_MISC',
+  SALE_FRANCHISE: 'SALE_FRANCHISE',
   PURCHASE_RMC: 'PURCHASE_RMC',
   PURCHASE_FOREX: 'PURCHASE_FOREX',
   PURCHASE_FOREIGN: 'PURCHASE_FOREIGN',
@@ -25,6 +30,11 @@ export type PurchasePageType =
 const PURCHASE_PAGE_TYPE_BY_SLUG: Record<string, PurchasePageType> = {
   'ffmc-ads': TransactionTypeProfileEnum.PURCHASE_FFMC,
   'sale-ffmc-ads': TransactionTypeProfileEnum.SALE_FFMC,
+  'sale-rmc': TransactionTypeProfileEnum.SALE_RMC,
+  'sale-forex': TransactionTypeProfileEnum.SALE_FOREX,
+  'sale-foreign': TransactionTypeProfileEnum.SALE_FOREIGN,
+  'sale-misc': TransactionTypeProfileEnum.SALE_MISC,
+  'sale-franchise': TransactionTypeProfileEnum.SALE_FRANCHISE,
   rmc: TransactionTypeProfileEnum.PURCHASE_RMC,
   forex: TransactionTypeProfileEnum.PURCHASE_FOREX,
   foreign: TransactionTypeProfileEnum.PURCHASE_FOREIGN,
@@ -35,6 +45,11 @@ const PURCHASE_PAGE_TYPE_BY_SLUG: Record<string, PurchasePageType> = {
 const PURCHASE_PAGE_SLUG_BY_TYPE: Record<PurchasePageType, string> = {
   [TransactionTypeProfileEnum.PURCHASE_FFMC]: 'ffmc-ads',
   [TransactionTypeProfileEnum.SALE_FFMC]: 'ffmc-ads',
+  [TransactionTypeProfileEnum.SALE_RMC]: 'sale-rmc',
+  [TransactionTypeProfileEnum.SALE_FOREX]: 'sale-forex',
+  [TransactionTypeProfileEnum.SALE_FOREIGN]: 'sale-foreign',
+  [TransactionTypeProfileEnum.SALE_MISC]: 'sale-misc',
+  [TransactionTypeProfileEnum.SALE_FRANCHISE]: 'sale-franchise',
   [TransactionTypeProfileEnum.PURCHASE_RMC]: 'rmc',
   [TransactionTypeProfileEnum.PURCHASE_FOREX]: 'forex',
   [TransactionTypeProfileEnum.PURCHASE_FOREIGN]: 'foreign',
@@ -62,6 +77,26 @@ const PURCHASE_PAGE_CONFIG_BY_TYPE: Record<
       PartyProfileTypeEnum.FFMC,
       PartyProfileTypeEnum.AUTHORISED_DEALER,
     ],
+  },
+  [TransactionTypeProfileEnum.SALE_RMC]: {
+    title: 'Sale RMC',
+    partyProfileTypes: [PartyProfileTypeEnum.RMC],
+  },
+  [TransactionTypeProfileEnum.SALE_FOREX]: {
+    title: 'Sale Forex',
+    partyProfileTypes: [PartyProfileTypeEnum.FOREX_CORRESPONDENT],
+  },
+  [TransactionTypeProfileEnum.SALE_FOREIGN]: {
+    title: 'Sale Foreign',
+    partyProfileTypes: [PartyProfileTypeEnum.FOREIGN_CORRESPONDENT],
+  },
+  [TransactionTypeProfileEnum.SALE_MISC]: {
+    title: 'Sale Misc',
+    partyProfileTypes: [PartyProfileTypeEnum.MISC_PROFILE],
+  },
+  [TransactionTypeProfileEnum.SALE_FRANCHISE]: {
+    title: 'Sale Franchise',
+    partyProfileTypes: [PartyProfileTypeEnum.FRANCHISE],
   },
   [TransactionTypeProfileEnum.PURCHASE_RMC]: {
     title: 'Purchase RMC',
@@ -155,6 +190,11 @@ export const getPurchaseTransactionType = (
 ): TransactionType => {
   switch (pageType) {
     case TransactionTypeProfileEnum.SALE_FFMC:
+    case TransactionTypeProfileEnum.SALE_RMC:
+    case TransactionTypeProfileEnum.SALE_FOREX:
+    case TransactionTypeProfileEnum.SALE_FOREIGN:
+    case TransactionTypeProfileEnum.SALE_MISC:
+    case TransactionTypeProfileEnum.SALE_FRANCHISE:
       return TransactionTypeEnum.SALE;
     case TransactionTypeProfileEnum.PURCHASE_FFMC:
       return TransactionTypeEnum.PURCHASE;
@@ -168,6 +208,11 @@ export const getPurchaseTradeMode = (
 ): TradeMode => {
   switch (pageType) {
     case TransactionTypeProfileEnum.SALE_FFMC:
+    case TransactionTypeProfileEnum.SALE_RMC:
+    case TransactionTypeProfileEnum.SALE_FOREX:
+    case TransactionTypeProfileEnum.SALE_FOREIGN:
+    case TransactionTypeProfileEnum.SALE_MISC:
+    case TransactionTypeProfileEnum.SALE_FRANCHISE:
     case TransactionTypeProfileEnum.PURCHASE_FFMC:
       return TradeModeEnum.BULK;
     default:
@@ -180,6 +225,11 @@ export const getPurchasePageBasePath = (
 ): 'purchase' | 'sale' => {
   switch (pageType) {
     case TransactionTypeProfileEnum.SALE_FFMC:
+    case TransactionTypeProfileEnum.SALE_RMC:
+    case TransactionTypeProfileEnum.SALE_FOREX:
+    case TransactionTypeProfileEnum.SALE_FOREIGN:
+    case TransactionTypeProfileEnum.SALE_MISC:
+    case TransactionTypeProfileEnum.SALE_FRANCHISE:
       return 'sale';
     default:
       return 'purchase';

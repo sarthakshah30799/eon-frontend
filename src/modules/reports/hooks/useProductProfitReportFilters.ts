@@ -61,6 +61,7 @@ export const useProductProfitReportFilters = () => {
       partyProfileSearch: baseFilters.partyProfileSearch,
       partyProfileSelection: baseFilters.partyProfileSelection,
       transactionTypes: baseFilters.transactionTypes,
+      sortBy: baseFilters.sortBy,
       currencyIds: selectedCurrencyIds,
       productIds: selectedProductIds,
     });

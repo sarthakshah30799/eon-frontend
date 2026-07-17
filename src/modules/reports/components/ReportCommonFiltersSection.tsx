@@ -4,6 +4,7 @@ import type { SalePurchaseReportFilters } from '../hooks/useSalePurchaseReportFi
 import { ReportTransactionTypeEnum } from '../types';
 import CheckboxFilterGroup from './CheckboxFilterGroup';
 import ReportDatePresetFilter from './ReportDatePresetFilter';
+import ReportSortByFilter from './ReportSortByFilter';
 import ScrollablePartyProfileFilter from './ScrollablePartyProfileFilter';
 
 interface ReportCommonFiltersSectionProps {
@@ -31,6 +32,8 @@ export const ReportCommonFiltersSection = ({
         value={filters.dateRange}
         onChange={nextValue => filters.setDateRange(nextValue)}
       />
+
+      <ReportSortByFilter value={filters.sortBy} onChange={filters.setSortBy} />
 
       <CheckboxFilterGroup
         heading="State"

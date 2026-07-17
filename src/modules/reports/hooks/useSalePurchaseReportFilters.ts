@@ -14,11 +14,13 @@ import {
 import {
   ReportDatePresetEnum,
   ReportTransactionTypeEnum,
+  ReportSortByEnum,
   type IReportDateRange,
   type IReportFiltersState,
   type IReportPartyProfileSelection,
   type IReportSelectOption,
   type ReportTransactionType,
+  type ReportSortBy,
 } from '../types';
 import type { PartyProfileType } from '@/modules/partyProfiles/types';
 
@@ -41,6 +43,7 @@ export const useSalePurchaseReportFilters = () => {
     ReportTransactionTypeEnum.PURCHASE,
     ReportTransactionTypeEnum.SALE,
   ]);
+  const [sortBy, setSortBy] = useState<ReportSortBy>(ReportSortByEnum.DATE_ASC);
   const [partyProfileSelection, setPartyProfileSelection] =
     useState<IReportPartyProfileSelection>({
       allSelected: false,
@@ -455,6 +458,7 @@ export const useSalePurchaseReportFilters = () => {
       ReportTransactionTypeEnum.PURCHASE,
       ReportTransactionTypeEnum.SALE,
     ]);
+    setSortBy(ReportSortByEnum.DATE_ASC);
     setPartyProfileSelection({
       allSelected: false,
       selectedIds: [],
@@ -474,6 +478,7 @@ export const useSalePurchaseReportFilters = () => {
       partyProfileSearch,
       partyProfileSelection,
       transactionTypes,
+      sortBy,
     });
   };
 
@@ -520,6 +525,8 @@ export const useSalePurchaseReportFilters = () => {
     transactionTypes,
     toggleTransactionType,
     toggleAllTransactionTypes,
+    sortBy,
+    setSortBy,
     partyProfileSearch,
     setPartyProfileSearch,
     partyProfiles,

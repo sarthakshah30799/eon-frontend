@@ -6,7 +6,10 @@ import { useAuth } from '@/lib/AuthContext';
 import { TransactionTypeEnum } from '@/modules/transactions';
 import type { PurchasePageType } from '@/pages/purchase/[slug]/purchasePage.enum';
 import type { IPurchaseFormValues } from '../types/purchaseTypes';
-import { formatPurchaseEntityLabel } from '../utils/purchaseUtils';
+import {
+  createStaticLoadOptions,
+  formatPurchaseEntityLabel,
+} from '../utils/purchaseUtils';
 import { EntityPickerField } from './EntityPickerField';
 import { useSelectableManualBillBookPages } from '@/modules/manual-bill-books/hooks';
 
@@ -16,20 +19,16 @@ interface PurchaseBookReferenceFieldProps {
   disabled?: boolean;
 }
 
-const createStaticLoadOptions =
-  (options: { value: string; label: string }[]) => async () => ({
-    options,
-    hasMore: false,
-  });
-
 export const PurchaseBookReferenceField = ({
   branchId,
   purchasePageType,
   disabled = false,
 }: PurchaseBookReferenceFieldProps) => {
   const form = useFormContext<IPurchaseFormValues>();
-  const { activeBranchId } = useAuth();
+  const { user, activeBranchId } = useAuth();
   const [deliveryBoyPickerOpen, setDeliveryBoyPickerOpen] = useState(false);
+  const [cashierPickerOpen, setCashierPickerOpen] = useState(false);
+  const canOverrideWorkplace = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
   const resolvedBranchId = branchId?.trim() || activeBranchId || undefined;
 
   const manualBookReferenceType = useWatch({
@@ -48,6 +47,18 @@ export const PurchaseBookReferenceField = ({
     control: form.control,
     name: 'deliveryBoyUserName',
   });
+  const cashierUserId = useWatch({
+    control: form.control,
+    name: 'cashierUserId',
+  });
+  const cashierUserCode = useWatch({
+    control: form.control,
+    name: 'cashierUserCode',
+  });
+  const cashierUserName = useWatch({
+    control: form.control,
+    name: 'cashierUserName',
+  });
   const manualBookPageId = useWatch({
     control: form.control,
     name: 'manualBookPageId',
@@ -62,11 +73,17 @@ export const PurchaseBookReferenceField = ({
   });
   const deliveryBoyAssigneeId =
     manualBookReferenceType === 'DELIVERY_BOY' ? deliveryBoyUserId || '' : '';
+  const cashierAssigneeId =
+    manualBookReferenceType === 'CASHIER' ? cashierUserId || '' : '';
   const previousReferenceTypeRef = useRef<string>(manualBookReferenceType);
   const previousTransactionTypeRef = useRef<string>(transactionType);
+  const previousBranchRef = useRef<string | undefined>(resolvedBranchId);
 
   const isDeliveryBoyMode = manualBookReferenceType === 'DELIVERY_BOY';
   const isSale = transactionType === TransactionTypeEnum.SALE;
+  const selectedReferenceUserId = isDeliveryBoyMode
+    ? deliveryBoyAssigneeId
+    : cashierAssigneeId;
   const resolvedTransactionType = purchasePageType ?? (transactionType || undefined);
   const {
     data: pageOptions = [],
@@ -74,11 +91,12 @@ export const PurchaseBookReferenceField = ({
     isFetching: isFetchingPages,
   } = useSelectableManualBillBookPages({
     branchId: resolvedBranchId,
-    userId: deliveryBoyAssigneeId,
+    userId: selectedReferenceUserId,
     transactionType: resolvedTransactionType,
     enabled:
       Boolean(resolvedBranchId) &&
-      (!isDeliveryBoyMode || Boolean(deliveryBoyAssigneeId)),
+      (!isDeliveryBoyMode || Boolean(deliveryBoyAssigneeId)) &&
+      (!canOverrideWorkplace || isDeliveryBoyMode || Boolean(cashierAssigneeId)),
   });
   const isBookPagesLoading = isLoadingPages || isFetchingPages;
 
@@ -123,6 +141,21 @@ export const PurchaseBookReferenceField = ({
       shouldTouch: true,
       shouldValidate: false,
     });
+    form.setValue('cashierUserId', '', {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
+    form.setValue('cashierUserCode', '', {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: false,
+    });
+    form.setValue('cashierUserName', '', {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: false,
+    });
   }, [form, manualBookReferenceType]);
 
   useEffect(() => {
@@ -152,6 +185,64 @@ export const PurchaseBookReferenceField = ({
       shouldValidate: false,
     });
   }, [form, transactionType]);
+
+  useEffect(() => {
+    if (previousBranchRef.current === resolvedBranchId) {
+      return;
+    }
+
+    previousBranchRef.current = resolvedBranchId;
+    form.setValue('manualBookId', '', {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
+    form.setValue('manualBookNo', '', {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: false,
+    });
+    form.setValue('manualBookPageId', '', {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
+    form.setValue('manualBookPageSnapshot', null, {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: false,
+    });
+    form.setValue('deliveryBoyUserId', '', {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
+    form.setValue('deliveryBoyUserCode', '', {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: false,
+    });
+    form.setValue('deliveryBoyUserName', '', {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: false,
+    });
+    form.setValue('cashierUserId', '', {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
+    form.setValue('cashierUserCode', '', {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: false,
+    });
+    form.setValue('cashierUserName', '', {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: false,
+    });
+  }, [form, resolvedBranchId]);
 
   useEffect(() => {
     const selectedPage = pageOptions.find(
@@ -258,6 +349,32 @@ export const PurchaseBookReferenceField = ({
     setDeliveryBoyPickerOpen(false);
   };
 
+  const handleCashierContinue = (
+    users: Array<{ id: string; code: string; name: string }>
+  ) => {
+    const selectedUser = users[0];
+    if (!selectedUser) {
+      return;
+    }
+
+    form.setValue('cashierUserId', selectedUser.id, {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
+    form.setValue('cashierUserCode', selectedUser.code, {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: false,
+    });
+    form.setValue('cashierUserName', selectedUser.name, {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: false,
+    });
+    setCashierPickerOpen(false);
+  };
+
   return (
     <>
       <div className="flex flex-col gap-4 lg:flex-row lg:flex-wrap lg:items-start">
@@ -287,9 +404,25 @@ export const PurchaseBookReferenceField = ({
           </div>
         ) : null}
 
+        {!isDeliveryBoyMode && canOverrideWorkplace ? (
+          <div className="min-w-0 lg:w-[280px]">
+            <EntityPickerField
+              label="Cashier"
+              value={formatPurchaseEntityLabel(
+                cashierUserCode,
+                cashierUserName
+              )}
+              placeholder="Select cashier"
+              onClick={() => setCashierPickerOpen(true)}
+              disabled={disabled}
+              helperText="Select a cashier from the chosen branch before choosing the book reference."
+            />
+          </div>
+        ) : null}
+
         <div className="min-w-0 flex-1 lg:max-w-[360px]">
           <FormFieldSelect
-            key={`manual-book-page-${manualBookReferenceType}-${transactionType}-${deliveryBoyUserId || 'cashier'}-${pageOptions.length}`}
+            key={`manual-book-page-${manualBookReferenceType}-${transactionType}-${selectedReferenceUserId || 'cashier'}-${resolvedBranchId || 'branch'}-${pageOptions.length}`}
             name="manualBookPageId"
             label={isDeliveryBoyMode ? 'Delivery Boy Page' : 'Cashier Page'}
             isLoading={isBookPagesLoading}
@@ -299,6 +432,7 @@ export const PurchaseBookReferenceField = ({
               disabled ||
               !resolvedBranchId ||
               (isDeliveryBoyMode && !deliveryBoyUserId) ||
+              (!isDeliveryBoyMode && canOverrideWorkplace && !cashierUserId) ||
               isBookPagesLoading
             }
             isSearchable
@@ -317,13 +451,25 @@ export const PurchaseBookReferenceField = ({
       <SelectUserProfiles
         open={deliveryBoyPickerOpen}
         branchId={branchId}
-        roleCode="DELIVERY_BOY"
+        roleFilter="DELIVERY_BOY"
         selectable
         multiple={false}
         title="Select Delivery Boy"
         description="Choose a delivery boy from the current branch."
         onContinue={handleDeliveryBoyContinue}
         onClose={() => setDeliveryBoyPickerOpen(false)}
+      />
+
+      <SelectUserProfiles
+        open={cashierPickerOpen}
+        branchId={resolvedBranchId}
+        roleFilter="CASHIER"
+        selectable
+        multiple={false}
+        title="Select Cashier"
+        description="Choose a cashier from the selected branch."
+        onContinue={handleCashierContinue}
+        onClose={() => setCashierPickerOpen(false)}
       />
     </>
   );

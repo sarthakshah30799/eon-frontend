@@ -3,7 +3,7 @@ import { Button } from '@/components/ui';
 import { useAuth } from '@/lib/AuthContext';
 import { CheckboxFilterGroup, ReportCommonFiltersSection, SalePurchaseReportTable } from '../components';
 import { useProductProfitReport } from '../hooks';
-import { ReportExportFormatEnum } from '../types';
+import { ReportExportFormatEnum, ReportSortByEnum } from '../types';
 import { summarizeReportSelection } from '../utils';
 
 const buildSelectionDescription = (count: number, total: number) => {
@@ -26,6 +26,8 @@ export const ProductProfitReportView = () => {
     const typeLabels = summarizeReportSelection(report.filters.partyTypeCodes, report.filters.partyTypeOptions);
     const currencyLabels = summarizeReportSelection(report.filters.currencyIds, report.filters.currencyOptions);
     const productLabels = summarizeReportSelection(report.filters.productIds, report.filters.productOptions);
+    const sortLabel =
+      report.filters.sortBy === ReportSortByEnum.DATE_DESC ? 'Date Desc' : 'Date Asc';
 
     return {
       states: stateLabels,
@@ -34,6 +36,7 @@ export const ProductProfitReportView = () => {
       types: typeLabels,
       currencies: currencyLabels,
       products: productLabels,
+      sortLabel,
     };
   }, [
     report.filters.branchIds,
@@ -48,6 +51,7 @@ export const ProductProfitReportView = () => {
     report.filters.productOptions,
     report.filters.stateIds,
     report.filters.stateOptions,
+    report.filters.sortBy,
   ]);
 
   if (!canView) {
@@ -114,7 +118,8 @@ export const ProductProfitReportView = () => {
           {currentSummary.counters.length ? currentSummary.counters.join(', ') : 'All'} | Party Types{' '}
           {currentSummary.types.length ? currentSummary.types.join(', ') : 'All'} | Currency{' '}
           {currentSummary.currencies.length ? currentSummary.currencies.join(', ') : 'All'} | Product{' '}
-          {currentSummary.products.length ? currentSummary.products.join(', ') : 'All'}
+          {currentSummary.products.length ? currentSummary.products.join(', ') : 'All'} | Sort By{' '}
+          {currentSummary.sortLabel}
         </div>
       )}
 

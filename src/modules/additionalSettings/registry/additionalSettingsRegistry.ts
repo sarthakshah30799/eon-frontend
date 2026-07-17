@@ -141,6 +141,14 @@ const TRANSACTION_ACCOUNTING_SUBCATEGORIES: readonly AdditionalSettingSubcategor
     placeholder: 'Select sale control account',
     optionsSource: 'account-profile',
   },
+  {
+    code: AdditionalSettingsCodeEnum.RoundOffAccount,
+    label: 'ROUND OFF ACCOUNT',
+    valueType: 'select',
+    required: true,
+    placeholder: 'Select round off account',
+    optionsSource: 'account-profile',
+  },
 ];
 
 const TRANSACTION_NUMBERING_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] = [

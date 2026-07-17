@@ -31,6 +31,7 @@ export const useSalePurchaseReport = () => {
       counterIds: hasExplicitPartyProfileSelection ? [] : filters.appliedFilters?.counterIds ?? [],
       partyTypeCodes: filters.appliedFilters?.partyTypeCodes ?? [],
       transactionTypes: filters.appliedFilters?.transactionTypes ?? [],
+      sortBy: filters.appliedFilters?.sortBy,
     }),
     [filters.appliedFilters, hasExplicitPartyProfileSelection],
   );

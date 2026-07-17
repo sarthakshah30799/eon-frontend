@@ -50,6 +50,10 @@ const CategoryOptionRows = ({
     control: form.control,
     name: 'code',
   });
+  const items = useWatch({
+    control: form.control,
+    name: 'items',
+  });
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: 'items',
@@ -59,6 +63,40 @@ const CategoryOptionRows = ({
     loadOptions: loadStaticValueOptions,
     isStaticCategoryCode,
   } = useStaticMiscellaneousProfileOptions(code);
+  const normalizeValue = (value: unknown) =>
+    String(value ?? '')
+      .trim()
+      .toLowerCase()
+      .replace(/[_\s-]/g, '');
+
+  const getFilteredOptionsForRow = (rowIndex: number) => {
+    const currentValue = normalizeValue(items?.[rowIndex]?.value);
+    const selectedValues = new Set(
+      (items ?? [])
+        .map(item => normalizeValue(item?.value))
+        .filter(value => Boolean(value))
+    );
+
+    if (currentValue) {
+      selectedValues.delete(currentValue);
+    }
+
+    return {
+      defaultOptions: staticValueOptions.filter(option => {
+        const normalizedOption = normalizeValue(option.value);
+        return !selectedValues.has(normalizedOption);
+      }),
+      loadOptions: async (inputValue: string) => {
+        const response = await loadStaticValueOptions(inputValue);
+        return {
+          options: response.options.filter(option => {
+            const normalizedOption = normalizeValue(option.value);
+            return !selectedValues.has(normalizedOption);
+          }),
+        };
+      },
+    };
+  };
 
   return (
     <div className="space-y-4">
@@ -124,16 +162,22 @@ const CategoryOptionRows = ({
 
             <div className="grid gap-4 md:grid-cols-2">
               {isStaticCategoryCode ? (
-                <FormFieldSelect
-                  name={`items.${index}.value`}
-                  label={`VALUE ${index + 1}`}
-                  placeholder="SELECT VALUE"
-                  loadOptions={loadStaticValueOptions}
-                  defaultOptions={staticValueOptions}
-                  disabled={isSubmitting}
-                  isSearchable={false}
-                  isCreatable={false}
-                />
+                (() => {
+                  const filteredOptions = getFilteredOptionsForRow(index);
+
+                  return (
+                    <FormFieldSelect
+                      name={`items.${index}.value`}
+                      label={`VALUE ${index + 1}`}
+                      placeholder="SELECT VALUE"
+                      loadOptions={filteredOptions.loadOptions}
+                      defaultOptions={filteredOptions.defaultOptions}
+                      disabled={isSubmitting}
+                      isSearchable={false}
+                      isCreatable={false}
+                    />
+                  );
+                })()
               ) : (
                 <FormFieldInput
                   name={`items.${index}.value`}

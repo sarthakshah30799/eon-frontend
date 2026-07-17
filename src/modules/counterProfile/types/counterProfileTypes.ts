@@ -6,6 +6,8 @@ export interface ICounterProfile {
   isRetail: boolean;
   isBulk: boolean;
   isCombine: boolean;
+  branchId?: string;
+  branchCode?: string;
   createdAt: string;
   updatedAt: string;
   createdBy?: string;
@@ -15,6 +17,7 @@ export interface ICounterProfile {
 export interface ICounterProfileListQuery {
   activeOnly?: boolean;
   search?: string;
+  branchId?: string;
 }
 
 export type ICreateCounterProfile = Omit<

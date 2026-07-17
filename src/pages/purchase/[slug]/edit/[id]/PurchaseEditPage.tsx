@@ -110,6 +110,8 @@ const PurchaseEditPage = () => {
               label: `${branchProfile.code} - ${branchProfile.name}`,
             }
           : null,
+        branchProfile?.id ?? '',
+        ''
       );
     }
 

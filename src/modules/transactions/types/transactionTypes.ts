@@ -105,6 +105,8 @@ export interface ITransactionEntity {
   slug: string | null;
   branchId: string;
   branchSnapshot?: ITransactionReferenceSnapshot | null;
+  counterId: string;
+  counterSnapshot?: ITransactionReferenceSnapshot | null;
   companyId: string | null;
   companySnapshot?: ITransactionReferenceSnapshot | null;
   sacCode: string | null;
@@ -156,6 +158,7 @@ export interface ITransactionItemEntity {
   commission: string | null;
   holdCost: string | null;
   profit: string | null;
+  roundOff: string | null;
   currencySnapshot: ITransactionReferenceSnapshot | null;
   productSnapshot: ITransactionReferenceSnapshot | null;
   currencyRateSnapshot: ITransactionReferenceSnapshot | null;
@@ -339,4 +342,13 @@ export interface IRecordTransactionPrintPayload {
   text?: string;
   html?: string;
   sendEmail?: boolean;
+}
+
+export interface ITransactionQuantityAvailability {
+  branchId: string;
+  currencyId: string;
+  productId: string;
+  purchasedQuantity: string;
+  soldQuantity: string;
+  availableQuantity: string;
 }

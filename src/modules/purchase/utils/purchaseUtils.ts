@@ -49,6 +49,12 @@ export const formatPurchaseDecimal = (
   return Number.isFinite(parsedValue) ? parsedValue.toFixed(decimals) : String(value);
 };
 
+export const createStaticLoadOptions =
+  (options: { value: string; label: string }[]) => async () => ({
+    options,
+    hasMore: false,
+  });
+
 export const createEmptyPurchaseTransactionRow = (): IPurchaseTransactionFormRow => ({
   currencyId: '',
   currencyCode: '',
@@ -70,10 +76,14 @@ export const createEmptyPurchaseFormValues = (
   transactionType: TransactionType = TransactionTypeEnum.PURCHASE,
   tradeMode: TradeMode = TradeModeEnum.BULK,
   purchasePageType: PurchasePageType | null = null,
-  branchSnapshot: ITransactionReferenceSnapshot | null = null
+  branchSnapshot: ITransactionReferenceSnapshot | null = null,
+  branchId = '',
+  counterId = ''
 ): IPurchaseFormValues => ({
   purchasePageType,
+  branchId,
   branchSnapshot,
+  counterId,
   transactionType,
   tradeMode,
   partyProfileId: '',
@@ -100,6 +110,9 @@ export const createEmptyPurchaseFormValues = (
   manualBookNo: '',
   manualBookPageId: '',
   manualBookPageSnapshot: null,
+  cashierUserId: '',
+  cashierUserCode: '',
+  cashierUserName: '',
   deliveryBoyUserId: '',
   deliveryBoyUserCode: '',
   deliveryBoyUserName: '',
@@ -111,7 +124,6 @@ export const createEmptyPurchaseFormValues = (
 
 export const mapPurchaseFormValuesToSubmitPayload = (
   values: IPurchaseFormValues,
-  branchId: string,
   attachments: IPurchaseDocumentAttachment[],
   requiresApproval: boolean
 ): IPurchaseSubmitPayload => {
@@ -121,8 +133,9 @@ export const mapPurchaseFormValuesToSubmitPayload = (
 
   return {
     transaction: {
-      branchId,
+      branchId: values.branchId,
       branchSnapshot: values.branchSnapshot,
+      counterId: values.counterId,
       requiresApproval,
       slug: values.purchasePageType,
       partyProfileId: values.partyProfileId,
@@ -177,7 +190,9 @@ export const mapPurchaseTransactionToFormValues = (
   purchasePageType: PurchasePageType | null
 ): IPurchaseFormValues => ({
   purchasePageType,
+  branchId: transaction.branchId ?? '',
   branchSnapshot: transaction.branchSnapshot ?? null,
+  counterId: transaction.counterId ?? '',
   transactionType: transaction.transactionType,
   tradeMode: transaction.tradeMode,
   partyProfileId: transaction.partyProfileId,
@@ -224,6 +239,9 @@ export const mapPurchaseTransactionToFormValues = (
   })(),
   manualBookPageId: transaction.manualBookPageId ?? '',
   manualBookPageSnapshot: transaction.manualBookPageSnapshot ?? null,
+  cashierUserId: '',
+  cashierUserCode: '',
+  cashierUserName: '',
   deliveryBoyUserId: '',
   deliveryBoyUserCode: '',
   deliveryBoyUserName: '',

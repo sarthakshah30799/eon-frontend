@@ -3,7 +3,7 @@ import { Button } from '@/components/ui';
 import { useAuth } from '@/lib/AuthContext';
 import { ReportCommonFiltersSection, SalePurchaseReportTable } from '../components';
 import { useSalePurchaseReport } from '../hooks';
-import { ReportExportFormatEnum, ReportTransactionTypeEnum } from '../types';
+import { ReportExportFormatEnum, ReportSortByEnum, ReportTransactionTypeEnum } from '../types';
 import { summarizeReportSelection } from '../utils';
 
 export const ReportSalePurchaseView = () => {
@@ -22,6 +22,8 @@ export const ReportSalePurchaseView = () => {
     const txnTypeLabels = report.filters.transactionTypes.map(type =>
       type === ReportTransactionTypeEnum.PURCHASE ? 'Purchase' : 'Sale',
     );
+    const sortLabel =
+      report.filters.sortBy === ReportSortByEnum.DATE_DESC ? 'Date Desc' : 'Date Asc';
 
     return {
       states: stateLabels,
@@ -29,6 +31,7 @@ export const ReportSalePurchaseView = () => {
       counters: counterLabels,
       types: typeLabels,
       transactionTypes: txnTypeLabels,
+      sortLabel,
     };
   }, [
     report.filters.branchIds,
@@ -40,6 +43,7 @@ export const ReportSalePurchaseView = () => {
     report.filters.stateIds,
     report.filters.stateOptions,
     report.filters.transactionTypes,
+    report.filters.sortBy,
   ]);
 
   if (!canView) {
@@ -72,7 +76,7 @@ export const ReportSalePurchaseView = () => {
           {currentSummary.types.length ? currentSummary.types.join(', ') : 'All'} | Transaction{' '}
           {currentSummary.transactionTypes.length
             ? currentSummary.transactionTypes.join(', ')
-            : 'All'} | Party Profiles{' '}
+            : 'All'} | Sort By {currentSummary.sortLabel} | Party Profiles{' '}
           {report.filters.partyProfileSelection.allSelected
             ? report.filters.partyProfileSelection.excludedIds.length > 0
               ? `All matching except ${report.filters.partyProfileSelection.excludedIds.length}`

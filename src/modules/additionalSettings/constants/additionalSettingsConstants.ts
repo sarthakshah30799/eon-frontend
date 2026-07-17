@@ -19,6 +19,7 @@ export const AdditionalSettingsCodeEnum = {
   TransactionAccounting: 'TRANSACTION_ACCOUNTING',
   PurchaseControlAccount: 'PURCHASE_CONTROL_ACCOUNT',
   SaleControlAccount: 'SALE_CONTROL_ACCOUNT',
+  RoundOffAccount: 'ROUND_OFF_ACCOUNT',
   TransactionNumbering: 'TRANSACTION_NUMBERING',
   PurchaseFfmcNumberSeries: 'PURCHASE_FFMC',
   SaleFfmcNumberSeries: 'SALE_FFMC',

@@ -4,6 +4,7 @@ import type {
   ICreateTransactionDraftPayload,
   IRecordTransactionPrintPayload,
   ITransactionEntity,
+  ITransactionQuantityAvailability,
   TransactionStatus,
   TransactionType,
 } from '@/modules/transactions';
@@ -50,6 +51,38 @@ export const transactionsApi = {
     }
 
     return res.data || [];
+  },
+
+  getQuantityAvailability: async (
+    params: {
+      branchId: string;
+      currencyId: string;
+      productId: string;
+      excludeTransactionId?: string;
+    }
+  ): Promise<ITransactionQuantityAvailability> => {
+    const query = new URLSearchParams();
+    query.set('branchId', params.branchId);
+    query.set('currencyId', params.currencyId);
+    query.set('productId', params.productId);
+
+    if (params.excludeTransactionId) {
+      query.set('excludeTransactionId', params.excludeTransactionId);
+    }
+
+    const res = await apiClient.get<ITransactionQuantityAvailability>(
+      `/transactions/quantity-availability?${query.toString()}`
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      throw new Error('Failed to fetch quantity availability');
+    }
+
+    return res.data;
   },
 
   requestAccountPostingRebuild: async (

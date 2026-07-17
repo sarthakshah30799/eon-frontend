@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { TrashIcon, PlusIcon } from '@heroicons/react/24/outline';
 import type { AsyncSelectResponse } from '@/components/ui';
@@ -27,6 +27,8 @@ interface TransactionPaymentDetailsFieldArrayProps {
   maxAmount?: string | number;
   accountQuery?: IAccountProfileListQuery;
   transactionType?: TransactionType;
+  branchId?: string;
+  selectablePagesUserId?: string;
   disabled?: boolean;
 }
 
@@ -45,6 +47,8 @@ const PaymentDetailRow = ({
   maxAmount,
   accountQuery,
   transactionType,
+  branchId,
+  selectablePagesUserId,
   disabled = false,
   onRemove,
   canRemove,
@@ -54,12 +58,15 @@ const PaymentDetailRow = ({
   maxAmount?: string | number;
   accountQuery?: IAccountProfileListQuery;
   transactionType?: TransactionType;
+  branchId?: string;
+  selectablePagesUserId?: string;
   disabled?: boolean;
   onRemove: (index: number) => void;
   canRemove: boolean;
 }) => {
   const form = useFormContext();
   const { activeBranchId } = useAuth();
+  const resolvedBranchId = branchId?.trim() || activeBranchId || undefined;
   const isSale = transactionType === TransactionTypeEnum.SALE;
   const paymentRows = useWatch({
     control: form.control,
@@ -85,6 +92,7 @@ const PaymentDetailRow = ({
 
   const [pageOptions, setPageOptions] = useState<IChequeBookPageTracking[]>([]);
   const [isLoadingPages, setIsLoadingPages] = useState(false);
+  const previousSelectionKeyRef = useRef<string | null>(null);
 
   const priorAmount = useMemo(() => {
     return (paymentRows ?? [])
@@ -146,7 +154,7 @@ const PaymentDetailRow = ({
     let isActive = true;
 
     const loadPages = async () => {
-      if (!accountId || !activeBranchId) {
+      if (!accountId || !resolvedBranchId) {
         setPageOptions([]);
         return;
       }
@@ -155,6 +163,7 @@ const PaymentDetailRow = ({
         setIsLoadingPages(true);
         const pages = await chequebookApi.getSelectablePages({
           accountId: String(accountId),
+          userId: selectablePagesUserId || undefined,
         });
 
         if (isActive) {
@@ -177,7 +186,42 @@ const PaymentDetailRow = ({
     return () => {
       isActive = false;
     };
-  }, [accountId, activeBranchId]);
+  }, [accountId, resolvedBranchId, selectablePagesUserId]);
+
+  useEffect(() => {
+    const nextSelectionKey = `${resolvedBranchId || ''}:${accountId || ''}:${selectablePagesUserId || ''}`;
+
+    if (previousSelectionKeyRef.current === null) {
+      previousSelectionKeyRef.current = nextSelectionKey;
+      return;
+    }
+
+    if (previousSelectionKeyRef.current === nextSelectionKey) {
+      return;
+    }
+
+    previousSelectionKeyRef.current = nextSelectionKey;
+
+    if (!accountId) {
+      return;
+    }
+
+    form.setValue(`${arrayName}.${index}.chequePageId`, '', {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
+    form.setValue(`${arrayName}.${index}.chequeNumber`, '', {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: false,
+    });
+    form.setValue(`${arrayName}.${index}.chequePageSnapshot`, null, {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: false,
+    });
+  }, [accountId, arrayName, form, index, resolvedBranchId, selectablePagesUserId]);
 
   useEffect(() => {
     const selectedPage = pageOptions.find(page => page.id === String(chequePageId || ''));
@@ -348,6 +392,8 @@ export const TransactionPaymentDetailsFieldArray = ({
   maxAmount,
   accountQuery,
   transactionType = TransactionTypeEnum.PURCHASE,
+  branchId,
+  selectablePagesUserId,
   disabled = false,
 }: TransactionPaymentDetailsFieldArrayProps) => {
   const form = useFormContext();
@@ -399,17 +445,19 @@ export const TransactionPaymentDetailsFieldArray = ({
             </div>
 
             {fields.map((field, index) => (
-              <PaymentDetailRow
+        <PaymentDetailRow
                 key={field.id}
-              arrayName={name}
-              index={index}
-              maxAmount={maxAmount}
-              accountQuery={accountQuery}
-              transactionType={transactionType}
-              disabled={disabled}
-              onRemove={remove}
-              canRemove={canRemove}
-            />
+                arrayName={name}
+                index={index}
+                maxAmount={maxAmount}
+                accountQuery={accountQuery}
+                transactionType={transactionType}
+                branchId={branchId}
+                selectablePagesUserId={selectablePagesUserId}
+                disabled={disabled}
+                onRemove={remove}
+                canRemove={canRemove}
+              />
             ))}
           </div>
         )}

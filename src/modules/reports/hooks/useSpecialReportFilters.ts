@@ -5,9 +5,11 @@ import { branchProfileApi } from '@/api';
 import { buildReportOptionLabel, toggleId, uniqueOptions } from '../utils';
 import {
   SpecialReportTemplateEnum,
+  ReportSortByEnum,
   type IReportSelectOption,
   type IReportTemplateOption,
   type ISpecialReportRequest,
+  type ReportSortBy,
   type SpecialReportTemplate,
 } from '../types';
 
@@ -26,6 +28,8 @@ export const useSpecialReportFilters = () => {
   const [template, setTemplate] = useState<SpecialReportTemplate>(
     SpecialReportTemplateEnum.ACCOUNT_POSTING,
   );
+  const [sortBy, setSortBy] = useState<ReportSortBy>(ReportSortByEnum.DATE_ASC);
+  const [transactionNumbersText, setTransactionNumbersText] = useState('');
   const [appliedFilters, setAppliedFilters] = useState<ISpecialReportRequest | null>(null);
 
   const { data: branchProfiles = [] } = useQuery({
@@ -73,15 +77,24 @@ export const useSpecialReportFilters = () => {
       return;
     }
 
+    const transactionNumbers = transactionNumbersText
+      .split(/[\n,]/)
+      .map(item => item.trim())
+      .filter(Boolean);
+
     setAppliedFilters({
       branchIds: selectedBranchIds,
       template,
+      transactionNumbers,
+      sortBy,
     });
   };
 
   const resetFilters = () => {
     setBranchIds([]);
     setTemplate(SpecialReportTemplateEnum.ACCOUNT_POSTING);
+    setSortBy(ReportSortByEnum.DATE_ASC);
+    setTransactionNumbersText('');
     setAppliedFilters(null);
   };
 
@@ -101,6 +114,10 @@ export const useSpecialReportFilters = () => {
     toggleAllBranches,
     template,
     setTemplate,
+    sortBy,
+    setSortBy,
+    transactionNumbersText,
+    setTransactionNumbersText,
     templateOptions: TEMPLATE_OPTIONS,
     appliedFilters,
     handleView,

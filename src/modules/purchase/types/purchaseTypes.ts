@@ -34,7 +34,9 @@ export interface IPurchaseTransactionFormRow {
 
 export interface IPurchaseFormValues {
   purchasePageType: PurchasePageType | null;
+  branchId: string;
   branchSnapshot: ITransactionReferenceSnapshot | null;
+  counterId: string;
   transactionType: TransactionType;
   tradeMode: TradeMode;
   partyProfileId: string;
@@ -61,6 +63,9 @@ export interface IPurchaseFormValues {
   manualBookNo: string;
   manualBookPageId: string;
   manualBookPageSnapshot: Record<string, unknown> | null;
+  cashierUserId: string;
+  cashierUserCode: string;
+  cashierUserName: string;
   deliveryBoyUserId: string;
   deliveryBoyUserCode: string;
   deliveryBoyUserName: string;
@@ -126,6 +131,7 @@ export interface IPurchaseSubmitPayload {
     slug: string;
     branchId: string;
     branchSnapshot: ITransactionReferenceSnapshot | null;
+    counterId: string;
     requiresApproval: boolean;
     partyProfileId: string;
     agentProfileId?: string | null;

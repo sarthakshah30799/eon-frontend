@@ -15,6 +15,8 @@ export const useSpecialReport = () => {
     () => ({
       branchIds: filters.appliedFilters?.branchIds ?? [],
       template: filters.appliedFilters?.template,
+      transactionNumbers: filters.appliedFilters?.transactionNumbers ?? [],
+      sortBy: filters.appliedFilters?.sortBy,
     }),
     [filters.appliedFilters],
   );

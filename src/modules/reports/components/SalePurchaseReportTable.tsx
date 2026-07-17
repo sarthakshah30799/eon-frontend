@@ -11,6 +11,10 @@ interface SalePurchaseReportTableProps {
 }
 
 const getCellClassName = (row: ISalePurchaseReportRow, key: string) => {
+  if (row.rowType === 'GROUP') {
+    return 'border-b border-slate-200 px-2 py-2 text-[11px] font-semibold uppercase tracking-wide text-slate-700';
+  }
+
   const isNumeric =
     [
       'quantity',
@@ -82,18 +86,31 @@ export const SalePurchaseReportTable = ({
               <tr
                 key={`${row.transactionId}-${row.rowType}-${rowIndex}`}
                 className={[
-                  row.rowType === 'SUBTOTAL' ? 'bg-slate-50' : '',
-                  rowIndex % 2 === 0 ? 'bg-white' : 'bg-slate-50/30',
+                  row.rowType === 'GROUP'
+                    ? 'bg-slate-100'
+                    : row.rowType === 'SUBTOTAL'
+                      ? 'bg-slate-50'
+                      : rowIndex % 2 === 0
+                        ? 'bg-white'
+                        : 'bg-slate-50/30',
                 ].join(' ')}
               >
-                {columns.map(column => {
-                  const value = row[column.key] ?? '';
-                  return (
-                    <td key={column.key} className={getCellClassName(row, column.key)}>
-                      {value || <span className="text-slate-300">-</span>}
-                    </td>
-                  );
-                })}
+                {row.rowType === 'GROUP' ? (
+                  <td colSpan={columns.length} className={getCellClassName(row, 'partyProfileName')}>
+                    {row.partyProfileName
+                      ? `Party Profile: ${row.partyProfileName}`
+                      : 'Party Profile'}
+                  </td>
+                ) : (
+                  columns.map(column => {
+                    const value = row[column.key] ?? '';
+                    return (
+                      <td key={column.key} className={getCellClassName(row, column.key)}>
+                        {value || <span className="text-slate-300">-</span>}
+                      </td>
+                    );
+                  })
+                )}
               </tr>
             ))
           )}

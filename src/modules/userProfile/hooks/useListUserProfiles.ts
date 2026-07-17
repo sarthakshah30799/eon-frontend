@@ -5,7 +5,7 @@ export const useListUserProfiles = (options?: {
   activeOnly?: boolean;
   search?: string;
   branchId?: string;
-  roleCode?: string;
+  roleFilter?: string;
 }) => {
   return useQuery({
     queryKey: [
@@ -13,7 +13,7 @@ export const useListUserProfiles = (options?: {
       options?.activeOnly === false,
       options?.search?.trim() || '',
       options?.branchId?.trim() || '',
-      options?.roleCode?.trim() || '',
+      options?.roleFilter?.trim() || '',
     ],
     queryFn: () => userProfileApi.getUserProfiles(options),
   });

@@ -31,6 +31,7 @@ export const useProductProfitReport = () => {
       partyTypeCodes: filters.appliedFilters?.partyTypeCodes ?? [],
       currencyIds: filters.appliedFilters?.currencyIds ?? [],
       productIds: filters.appliedFilters?.productIds ?? [],
+      sortBy: filters.appliedFilters?.sortBy,
     }),
     [filters.appliedFilters, hasExplicitPartyProfileSelection],
   );

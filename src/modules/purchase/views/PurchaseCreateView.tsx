@@ -33,7 +33,7 @@ export const PurchaseCreateView = ({
   purchasePageType,
 }: PurchaseCreateViewProps) => {
   const navigate = useNavigate();
-  const { activeBranchId } = useAuth();
+  const { activeBranchId, activeCounterId } = useAuth();
   const [savedTransaction, setSavedTransaction] = useState<{
     id: string;
     number: string | null;
@@ -95,9 +95,11 @@ export const PurchaseCreateView = ({
               name: branchProfile.name,
               label: `${branchProfile.code} - ${branchProfile.name}`,
             } satisfies ITransactionReferenceSnapshot)
-          : null
+          : null,
+        activeBranchId ?? '',
+        activeCounterId ?? ''
       ),
-    [branchProfile, purchasePageType]
+    [activeBranchId, activeCounterId, branchProfile, purchasePageType]
   );
   const pricingData = useMemo(
     () => ({
@@ -167,7 +169,6 @@ export const PurchaseCreateView = ({
         onSubmit={async (values, attachments) => {
           const payload = mapPurchaseFormValuesToSubmitPayload(
             values,
-            activeBranchId ?? '',
             attachments,
             requiresApproval
           );

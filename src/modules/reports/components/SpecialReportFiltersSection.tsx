@@ -1,5 +1,6 @@
-import { Button, Dropdown } from '@/components/ui';
+import { Button, Dropdown, Input } from '@/components/ui';
 import CheckboxFilterGroup from './CheckboxFilterGroup';
+import ReportSortByFilter from './ReportSortByFilter';
 import type { SpecialReportFilters } from '../hooks/useSpecialReportFilters';
 
 interface SpecialReportFiltersSectionProps {
@@ -65,6 +66,16 @@ export const SpecialReportFiltersSection = ({
             </Dropdown>
           </div>
         </div>
+      </div>
+
+      <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_260px]">
+        <Input
+          label="Transaction Numbers"
+          placeholder="Comma-separated numbers"
+          value={filters.transactionNumbersText}
+          onChange={event => filters.setTransactionNumbersText(event.target.value)}
+        />
+        <ReportSortByFilter value={filters.sortBy} onChange={filters.setSortBy} />
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-2">

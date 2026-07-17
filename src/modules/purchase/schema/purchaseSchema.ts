@@ -87,7 +87,9 @@ export const purchaseFormSchema = yup.object({
     .oneOf(Object.values(TransactionTypeProfileEnum))
     .nullable()
     .default(null),
+  branchId: yup.string().trim().required('Branch is required'),
   branchSnapshot: yup.mixed().nullable().default(null),
+  counterId: yup.string().trim().required('Counter is required'),
   transactionType: yup
     .mixed<(typeof TransactionTypeEnum)[keyof typeof TransactionTypeEnum]>()
     .oneOf(Object.values(TransactionTypeEnum))
@@ -120,6 +122,9 @@ export const purchaseFormSchema = yup.object({
   manualBookNo: yup.string().trim().default(''),
   manualBookPageId: yup.string().trim().required('Manual book page is required'),
   manualBookPageSnapshot: yup.mixed().nullable().default(null),
+  cashierUserId: yup.string().trim().default(''),
+  cashierUserCode: yup.string().trim().default(''),
+  cashierUserName: yup.string().trim().default(''),
   deliveryBoyUserId: yup.string().trim().when('manualBookReferenceType', {
     is: 'DELIVERY_BOY',
     then: schema => schema.required('Delivery boy is required'),

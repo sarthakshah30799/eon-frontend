@@ -262,7 +262,7 @@ const SubcategoryRowFields = ({
             />
             {categoryCode?.trim().toUpperCase() === 'TRANSACTION_NUMBERING' ? (
               <p className="text-[11px] leading-tight text-text-tertiary">
-                Enter the starting series counter. The backend pads this to 9 digits when building the final number: branch code + financial year + series = 15 characters.
+                Enter the starting series counter. The backend fits the series width so the final number stays within 15 characters: branch code + financial year + series.
               </p>
             ) : null}
           </div>

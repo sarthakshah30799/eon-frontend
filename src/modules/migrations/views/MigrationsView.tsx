@@ -189,10 +189,10 @@ export const MigrationsView = () => {
       setIsRunningMock(true);
       setStatusMessage('');
       const result = await migrationsApi.runMock(payload);
-      downloadBlob(result.blob, result.filename || 'migration-mock.xlsx');
-      setMessage(`Mock migration completed for ${selectedTableIds.length} table(s).`);
+      downloadBlob(result.blob, result.filename || 'migration-soft-run.xlsx');
+      setMessage(`Soft run completed for ${selectedTableIds.length} table(s). Review the XLSX before real migration.`);
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Mock migration failed.');
+      setMessage(error instanceof Error ? error.message : 'Soft run failed.');
     } finally {
       setIsRunningMock(false);
     }
@@ -391,12 +391,12 @@ export const MigrationsView = () => {
       <CardSection heading="Run Migration" className="border-border-primary bg-surface-primary">
         <div className="space-y-4">
           <p className="text-sm text-text-secondary">
-            Mock test downloads the XLSX review sheet first. Real migration uses the same selection and
+            Soft run downloads the XLSX review sheet first. Real migration uses the same selection and
             writes to the new database only after you confirm the source data.
           </p>
           <div className="flex flex-wrap gap-3">
             <Button onClick={handleMockTest} loading={isRunningMock}>
-              Run Mock Test
+              Run Soft Run
             </Button>
             <Button onClick={handleRunMigration} loading={isRunningReal} variant="secondary">
               Run Migration

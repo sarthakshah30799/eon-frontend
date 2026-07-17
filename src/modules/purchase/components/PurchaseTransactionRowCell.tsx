@@ -3,6 +3,7 @@ import { useFormContext, useWatch } from 'react-hook-form';
 import { TrashIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui';
 import { FormFieldAsyncSelect, FormFieldInput } from '@/components/forms';
+import { TransactionTypeEnum } from '@/modules/transactions';
 import type {
   IPurchaseFormValues,
   IPurchasePricingData,
@@ -13,6 +14,7 @@ import {
   calculatePurchaseTransactionCommission,
   calculateTransactionRoundOff,
   calculateTransactionTotal,
+  formatPurchaseDecimal,
   getPurchaseTransactionPricingSide,
   getPurchaseTransactionPricingSideLabel,
   resolveAgentCommissionRule,
@@ -21,9 +23,12 @@ import {
 import { EntityPickerField } from './EntityPickerField';
 import type { AsyncSelectResponse } from '@/components/ui';
 import type { IPartyProfileCommissionRule } from '@/modules/partyProfiles/types';
+import { usePurchaseQuantityAvailability } from '../hooks';
 
 interface PurchaseTransactionRowCellProps {
   rowIndex: number;
+  branchId?: string;
+  excludeTransactionId?: string;
   pricingData: IPurchasePricingData;
   agentCommissionRules?: IPartyProfileCommissionRule[];
   onOpenCurrencyPicker: (rowIndex: number) => void;
@@ -74,6 +79,8 @@ const normalizeValue = (value: unknown) => String(value ?? '').trim();
 
 export const PurchaseTransactionRowCell = ({
   rowIndex,
+  branchId = '',
+  excludeTransactionId,
   pricingData,
   agentCommissionRules = [],
   onOpenCurrencyPicker,
@@ -160,6 +167,14 @@ export const PurchaseTransactionRowCell = ({
       ) ?? null,
     [currencyId, pricingData.currencies]
   );
+  const quantityAvailabilityQuery = usePurchaseQuantityAvailability({
+    branchId,
+    currencyId: String(currencyId || ''),
+    productId: String(productId || ''),
+    excludeTransactionId,
+    enabled: Boolean(branchId && currencyId && productId),
+  });
+  const quantityAvailability = quantityAvailabilityQuery.data ?? null;
   const agentCommissionRule = useMemo(
     () =>
       resolveAgentCommissionRule(
@@ -237,6 +252,7 @@ export const PurchaseTransactionRowCell = ({
   const sideMinRate = selectedSideCurrencyRule?.minRate ?? '';
   const sideMaxRate = selectedSideCurrencyRule?.maxRate ?? '';
   const hasSideRange = Boolean(sideMinRate || sideMaxRate);
+  const availabilityErrorType = 'available-quantity-exceeded';
   const lastAutoFilledRateRef = useRef({
     selectionKey: '',
     value: '',
@@ -392,6 +408,47 @@ export const PurchaseTransactionRowCell = ({
   }, [form, hasCurrencyProductSelection, pricingSideLabel, rowIndex, rateValue, sideMaxRate, sideMinRate]);
 
   useEffect(() => {
+    const fieldName = `transactions.${rowIndex}.quantity` as const;
+    const currentQuantity = Number(String(quantity ?? '').trim() || 0);
+    const availableQuantity = Number(
+      String(quantityAvailability?.availableQuantity ?? '').trim() || 0
+    );
+
+    if (!hasCurrencyProductSelection || transactionType !== TransactionTypeEnum.SALE) {
+      if (form.getFieldState(fieldName).error?.type === availabilityErrorType) {
+        form.clearErrors(fieldName);
+      }
+      return;
+    }
+
+    if (!Number.isFinite(currentQuantity) || currentQuantity <= 0) {
+      if (form.getFieldState(fieldName).error?.type === availabilityErrorType) {
+        form.clearErrors(fieldName);
+      }
+      return;
+    }
+
+    if (Number.isFinite(availableQuantity) && currentQuantity > availableQuantity) {
+      form.setError(fieldName, {
+        type: availabilityErrorType,
+        message: `Quantity cannot exceed available stock of ${formatPurchaseDecimal(availableQuantity, PURCHASE_RATE_DECIMALS)}`,
+      });
+      return;
+    }
+
+    if (form.getFieldState(fieldName).error?.type === availabilityErrorType) {
+      form.clearErrors(fieldName);
+    }
+  }, [
+    form,
+    hasCurrencyProductSelection,
+    quantity,
+    quantityAvailability?.availableQuantity,
+    rowIndex,
+    transactionType,
+  ]);
+
+  useEffect(() => {
     const fieldName = `transactions.${rowIndex}.total` as const;
     const currentTotal = normalizeValue(form.getValues(fieldName));
 
@@ -503,6 +560,25 @@ export const PurchaseTransactionRowCell = ({
           disabled={disabled}
           classes={{ container: 'max-w-[90px]' }}
         />
+        {hasCurrencyProductSelection ? (
+          <div className="mt-1 space-y-0.5 text-[11px] leading-tight text-text-tertiary">
+            {quantityAvailabilityQuery.isLoading ? (
+              <div>Checking available quantity...</div>
+            ) : (
+              <>
+                <div>
+                  Available: {formatPurchaseDecimal(quantityAvailability?.availableQuantity, PURCHASE_RATE_DECIMALS)}
+                </div>
+                <div>
+                  Purchased: {formatPurchaseDecimal(quantityAvailability?.purchasedQuantity, PURCHASE_RATE_DECIMALS)}
+                </div>
+                <div>
+                  Sold: {formatPurchaseDecimal(quantityAvailability?.soldQuantity, PURCHASE_RATE_DECIMALS)}
+                </div>
+              </>
+            )}
+          </div>
+        ) : null}
       </div>
       <div className="min-w-0">
         <FormFieldInput

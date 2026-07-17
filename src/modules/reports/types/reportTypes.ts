@@ -19,6 +19,14 @@ export const ReportTransactionTypeEnum = {
 export type ReportTransactionType =
   (typeof ReportTransactionTypeEnum)[keyof typeof ReportTransactionTypeEnum];
 
+export const ReportSortByEnum = {
+  DATE_ASC: 'DATE_ASC',
+  DATE_DESC: 'DATE_DESC',
+} as const;
+
+export type ReportSortBy =
+  (typeof ReportSortByEnum)[keyof typeof ReportSortByEnum];
+
 export const ReportPageTypeEnum = {
   SALE_PURCHASE: 'sale-purchase-report',
   PRODUCT_PROFIT: 'product-profit-report',
@@ -109,6 +117,7 @@ export interface IReportFiltersState {
   partyProfileSearch: string;
   partyProfileSelection: IReportPartyProfileSelection;
   transactionTypes: ReportTransactionType[];
+  sortBy: ReportSortBy;
 }
 
 export interface IProductProfitReportFiltersState extends IReportFiltersState {
@@ -139,7 +148,7 @@ export interface ISalePurchaseReportColumn {
 }
 
 export interface ISalePurchaseReportRow {
-  rowType: 'ITEM' | 'SUBTOTAL';
+  rowType: 'GROUP' | 'ITEM' | 'SUBTOTAL';
   transactionId: string;
   partyProfileId: string;
   sortPartyProfile?: string;
@@ -166,6 +175,7 @@ export interface ISalePurchaseReportRequest {
   partyTypeCodes?: string[];
   transactionTypes?: ReportTransactionType[];
   layout?: ReportLayout;
+  sortBy?: ReportSortBy;
 }
 
 export interface IProductProfitReportResponse {
@@ -184,6 +194,7 @@ export interface IProductProfitReportRequest {
   partyTypeCodes?: string[];
   currencyIds?: string[];
   productIds?: string[];
+  sortBy?: ReportSortBy;
 }
 
 export const SpecialReportTemplateEnum = {
@@ -196,6 +207,8 @@ export type SpecialReportTemplate =
 export interface ISpecialReportRequest {
   branchIds?: string[];
   template?: SpecialReportTemplate;
+  transactionNumbers?: string[];
+  sortBy?: ReportSortBy;
 }
 
 export type ISpecialReportRow = ISalePurchaseReportRow;

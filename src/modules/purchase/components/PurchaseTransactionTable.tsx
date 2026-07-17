@@ -11,6 +11,8 @@ import { PurchaseTransactionRowCell } from './PurchaseTransactionRowCell';
 import type { IPartyProfileCommissionRule } from '@/modules/partyProfiles/types';
 
 interface PurchaseTransactionTableProps {
+  branchId?: string;
+  excludeTransactionId?: string;
   pricingData: IPurchasePricingData;
   agentCommissionRules?: IPartyProfileCommissionRule[];
   onOpenCurrencyPicker: (rowIndex: number) => void;
@@ -18,6 +20,8 @@ interface PurchaseTransactionTableProps {
 }
 
 export const PurchaseTransactionTable = ({
+  branchId = '',
+  excludeTransactionId,
   pricingData,
   agentCommissionRules = [],
   onOpenCurrencyPicker,
@@ -37,6 +41,8 @@ export const PurchaseTransactionTable = ({
         cell: ({ row }) => (
           <PurchaseTransactionRowCell
             rowIndex={row.index}
+            branchId={branchId}
+            excludeTransactionId={excludeTransactionId}
             pricingData={pricingData}
             agentCommissionRules={agentCommissionRules}
             onOpenCurrencyPicker={onOpenCurrencyPicker}
@@ -53,6 +59,8 @@ export const PurchaseTransactionTable = ({
     ];
   }, [
     agentCommissionRules,
+    branchId,
+    excludeTransactionId,
     disabled,
     fields.length,
     onOpenCurrencyPicker,

@@ -9,7 +9,7 @@ type SelectUserProfilesProps = {
   selectable?: boolean;
   multiple?: boolean;
   branchId?: string;
-  roleCode?: 'CASHIER' | 'DELIVERY_BOY';
+  roleFilter?: 'CASHIER' | 'DELIVERY_BOY';
   title?: string;
   description?: string;
   onContinue: (users: IUserProfile[]) => void;
@@ -114,7 +114,7 @@ export const SelectUserProfiles = ({
   selectable = true,
   multiple = false,
   branchId,
-  roleCode,
+  roleFilter,
   title = 'Select Users',
   description = 'Search and choose users from the list.',
   onContinue,
@@ -127,7 +127,7 @@ export const SelectUserProfiles = ({
     activeOnly: true,
     search: debouncedSearch.trim() || undefined,
     branchId: branchId?.trim() || undefined,
-    roleCode,
+    roleFilter,
   });
 
   const rows = useMemo<SelectableUserProfileRow[]>(

@@ -3,7 +3,7 @@ import { Button } from '@/components/ui';
 import { useAuth } from '@/lib/AuthContext';
 import { SalePurchaseReportTable, SpecialReportFiltersSection } from '../components';
 import { useSpecialReport } from '../hooks';
-import { ReportExportFormatEnum } from '../types';
+import { ReportExportFormatEnum, ReportSortByEnum } from '../types';
 import { summarizeReportSelection } from '../utils';
 
 export const SpecialReportView = () => {
@@ -12,22 +12,29 @@ export const SpecialReportView = () => {
   const canView = Boolean(user);
 
   const currentSummary = useMemo(() => {
+    const applied = report.filters.appliedFilters;
     const branchLabels = summarizeReportSelection(
-      report.filters.branchIds,
+      applied?.branchIds ?? [],
       report.filters.branchOptions,
     );
 
     return {
       branches: branchLabels,
+      transactionNumbers: applied?.transactionNumbers ?? [],
       template:
-        report.filters.templateOptions.find(option => option.id === report.filters.template)?.label ??
+        report.filters.templateOptions.find(option => option.id === (applied?.template ?? report.filters.template))?.label ??
         'Account Posting',
+      sortBy:
+        (applied?.sortBy ?? report.filters.sortBy) === ReportSortByEnum.DATE_DESC
+          ? 'Date Desc'
+          : 'Date Asc',
     };
   }, [
-    report.filters.branchIds,
+    report.filters.appliedFilters,
     report.filters.branchOptions,
     report.filters.template,
     report.filters.templateOptions,
+    report.filters.sortBy,
   ]);
 
   if (!canView) {
@@ -52,9 +59,12 @@ export const SpecialReportView = () => {
       <SpecialReportFiltersSection filters={report.filters} />
 
       {report.filters.appliedFilters && (
-        <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-[11px] text-text-secondary">
+          <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-[11px] text-text-secondary">
           Applied: Branches {currentSummary.branches.length ? currentSummary.branches.join(', ') : 'All'} | Template{' '}
-          {currentSummary.template}
+          {currentSummary.template} | Transaction Numbers{' '}
+          {currentSummary.transactionNumbers.length
+            ? currentSummary.transactionNumbers.join(', ')
+            : 'All'} | Sort By {currentSummary.sortBy}
         </div>
       )}
 

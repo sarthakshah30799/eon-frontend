@@ -28,6 +28,8 @@ const mapBackendToFrontend = (counter: BackendCounter): ICounterProfile => {
     isRetail: counter.isRetail,
     isBulk: counter.isBulk,
     isCombine: counter.isCombine,
+    branchId: counter.branchId || '',
+    branchCode: counter.branchCode || '',
     createdAt: counter.createdAt,
     updatedAt: counter.updatedAt,
   };
@@ -48,6 +50,7 @@ export const counterProfileApi = {
   getCounterProfiles: async (options?: {
     activeOnly?: boolean;
     search?: string;
+    branchId?: string;
   }): Promise<ICounterProfile[]> => {
     const endpoint = `/counters${buildQueryString(options)}`;
     const res = await apiClient.get<BackendCounter[]>(endpoint);

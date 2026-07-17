@@ -1,8 +1,6 @@
 import * as yup from 'yup';
-import {
-  TransactionTypeProfileEnum,
-  type PurchasePageType,
-} from '@/pages/purchase/[slug]/purchasePage.enum';
+import { TransactionTypeProfileEnum } from '@/modules/transactions';
+import type { PurchasePageType } from '@/pages/purchase/[slug]/purchasePage.enum';
 import { TradeModeEnum, TransactionTypeEnum } from '@/modules/transactions';
 
 const decimalStringSchema = yup

@@ -1,7 +1,7 @@
 export { default } from './PurchasePage';
 export type { PurchasePageType } from './purchasePage.enum';
+export { TransactionTypeProfileEnum } from '@/modules/transactions';
 export {
-  TransactionTypeProfileEnum,
   getPurchasePageTitle,
   getPurchasePageTypeFromSlug,
   getPurchasePageTypeFromPath,

@@ -16,6 +16,39 @@ export const TransactionTypeEnum = {
 export type TransactionType =
   (typeof TransactionTypeEnum)[keyof typeof TransactionTypeEnum];
 
+export const TransactionTypeProfileEnum = {
+  PURCHASE_FFMC: 'PURCHASE_FFMC',
+  SALE_FFMC: 'SALE_FFMC',
+  SALE_RMC: 'SALE_RMC',
+  SALE_FOREX: 'SALE_FOREX',
+  SALE_FOREIGN: 'SALE_FOREIGN',
+  SALE_MISC: 'SALE_MISC',
+  SALE_FRANCHISE: 'SALE_FRANCHISE',
+  PURCHASE_RMC: 'PURCHASE_RMC',
+  PURCHASE_FOREX: 'PURCHASE_FOREX',
+  PURCHASE_FOREIGN: 'PURCHASE_FOREIGN',
+  PURCHASE_MISC: 'PURCHASE_MISC',
+  PURCHASE_FRANCHISE: 'PURCHASE_FRANCHISE',
+} as const;
+
+export type TransactionTypeProfile =
+  (typeof TransactionTypeProfileEnum)[keyof typeof TransactionTypeProfileEnum];
+
+export const TRANSACTION_TYPE_PROFILE_ORDER = [
+  TransactionTypeProfileEnum.PURCHASE_FFMC,
+  TransactionTypeProfileEnum.SALE_FFMC,
+  TransactionTypeProfileEnum.SALE_RMC,
+  TransactionTypeProfileEnum.SALE_FOREX,
+  TransactionTypeProfileEnum.SALE_FOREIGN,
+  TransactionTypeProfileEnum.SALE_MISC,
+  TransactionTypeProfileEnum.SALE_FRANCHISE,
+  TransactionTypeProfileEnum.PURCHASE_RMC,
+  TransactionTypeProfileEnum.PURCHASE_FOREX,
+  TransactionTypeProfileEnum.PURCHASE_FOREIGN,
+  TransactionTypeProfileEnum.PURCHASE_MISC,
+  TransactionTypeProfileEnum.PURCHASE_FRANCHISE,
+] as const satisfies readonly TransactionTypeProfile[];
+
 export const TradeModeEnum = {
   BULK: 'BULK',
   RETAIL: 'RETAIL',

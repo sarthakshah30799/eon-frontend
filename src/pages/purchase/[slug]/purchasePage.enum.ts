@@ -5,27 +5,14 @@ import {
 import {
   TradeModeEnum,
   TransactionTypeEnum,
+  TransactionTypeProfileEnum,
+  type TransactionTypeProfile,
   type TradeMode,
   type TransactionType,
 } from '@/modules/transactions';
 
-export const TransactionTypeProfileEnum = {
-  PURCHASE_FFMC: 'PURCHASE_FFMC',
-  SALE_FFMC: 'SALE_FFMC',
-  SALE_RMC: 'SALE_RMC',
-  SALE_FOREX: 'SALE_FOREX',
-  SALE_FOREIGN: 'SALE_FOREIGN',
-  SALE_MISC: 'SALE_MISC',
-  SALE_FRANCHISE: 'SALE_FRANCHISE',
-  PURCHASE_RMC: 'PURCHASE_RMC',
-  PURCHASE_FOREX: 'PURCHASE_FOREX',
-  PURCHASE_FOREIGN: 'PURCHASE_FOREIGN',
-  PURCHASE_MISC: 'PURCHASE_MISC',
-  PURCHASE_FRANCHISE: 'PURCHASE_FRANCHISE',
-} as const;
-
-export type PurchasePageType =
-  (typeof TransactionTypeProfileEnum)[keyof typeof TransactionTypeProfileEnum];
+export { TransactionTypeProfileEnum } from '@/modules/transactions';
+export type PurchasePageType = TransactionTypeProfile;
 
 const PURCHASE_PAGE_TYPE_BY_SLUG: Record<string, PurchasePageType> = {
   'ffmc-ads': TransactionTypeProfileEnum.PURCHASE_FFMC,

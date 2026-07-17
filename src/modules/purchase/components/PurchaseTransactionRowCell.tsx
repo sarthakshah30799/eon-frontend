@@ -144,7 +144,8 @@ export const PurchaseTransactionRowCell = ({
     [currencyId, pricingData.productCurrencyRates, productId]
   );
   const pricingSide = getPurchaseTransactionPricingSide(transactionType);
-  const pricingSideLabel = getPurchaseTransactionPricingSideLabel(transactionType);
+  const pricingSideLabel =
+    getPurchaseTransactionPricingSideLabel(transactionType);
 
   const preview = useMemo(
     () =>
@@ -158,7 +159,7 @@ export const PurchaseTransactionRowCell = ({
 
   const effectiveGroupCode = preview?.effectiveGroupCode ?? '';
   const selectedSidePreview =
-    pricingSide === 'sale' ? preview?.sale ?? null : preview?.buy ?? null;
+    pricingSide === 'sale' ? (preview?.sale ?? null) : (preview?.buy ?? null);
   const calculatedRate = selectedSidePreview?.appliedFinalRate ?? '';
   const selectedCurrencyProfile = useMemo(
     () =>
@@ -248,7 +249,8 @@ export const PurchaseTransactionRowCell = ({
       : preview?.effectiveSource === 'group-default'
         ? `Using group default${effectiveGroupCode ? ` (${effectiveGroupCode})` : ''}`
         : 'No matching rate found';
-  const selectedSideCurrencyRule = selectedProductCurrencyRule?.[pricingSide] ?? null;
+  const selectedSideCurrencyRule =
+    selectedProductCurrencyRule?.[pricingSide] ?? null;
   const sideMinRate = selectedSideCurrencyRule?.minRate ?? '';
   const sideMaxRate = selectedSideCurrencyRule?.maxRate ?? '';
   const hasSideRange = Boolean(sideMinRate || sideMaxRate);
@@ -405,7 +407,15 @@ export const PurchaseTransactionRowCell = ({
     if (form.getFieldState(fieldName).error?.type === rangeErrorType) {
       form.clearErrors(fieldName);
     }
-  }, [form, hasCurrencyProductSelection, pricingSideLabel, rowIndex, rateValue, sideMaxRate, sideMinRate]);
+  }, [
+    form,
+    hasCurrencyProductSelection,
+    pricingSideLabel,
+    rowIndex,
+    rateValue,
+    sideMaxRate,
+    sideMinRate,
+  ]);
 
   useEffect(() => {
     const fieldName = `transactions.${rowIndex}.quantity` as const;
@@ -414,7 +424,10 @@ export const PurchaseTransactionRowCell = ({
       String(quantityAvailability?.availableQuantity ?? '').trim() || 0
     );
 
-    if (!hasCurrencyProductSelection || transactionType !== TransactionTypeEnum.SALE) {
+    if (
+      !hasCurrencyProductSelection ||
+      transactionType !== TransactionTypeEnum.SALE
+    ) {
       if (form.getFieldState(fieldName).error?.type === availabilityErrorType) {
         form.clearErrors(fieldName);
       }
@@ -428,7 +441,10 @@ export const PurchaseTransactionRowCell = ({
       return;
     }
 
-    if (Number.isFinite(availableQuantity) && currentQuantity > availableQuantity) {
+    if (
+      Number.isFinite(availableQuantity) &&
+      currentQuantity > availableQuantity
+    ) {
       form.setError(fieldName, {
         type: availabilityErrorType,
         message: `Quantity cannot exceed available stock of ${formatPurchaseDecimal(availableQuantity, PURCHASE_RATE_DECIMALS)}`,
@@ -525,150 +541,169 @@ export const PurchaseTransactionRowCell = ({
   );
 
   return (
-    <div className="grid gap-2 px-1 py-1 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1.4fr)_minmax(0,0.55fr)_minmax(0,0.65fr)_minmax(0,0.75fr)_minmax(0,0.55fr)_minmax(0,0.55fr)_minmax(0,0.55fr)_minmax(0,0.55fr)_44px]">
-      <div className="min-w-0">
-        <EntityPickerField
-          label="Currency"
-          value={currencyCode ? `${currencyCode}${currencyName ? ` - ${currencyName}` : ''}` : ''}
-          placeholder="Select currency"
-          onClick={() => onOpenCurrencyPicker(rowIndex)}
-          disabled={disabled}
-          helperText={rateHelperText || undefined}
-          buttonPosition="bottom"
-        />
-      </div>
-      <div className="min-w-0">
-        <FormFieldAsyncSelect
-          name={`transactions.${rowIndex}.productId`}
-          label="Product"
-          loadOptions={productLoadOptions}
-          placeholder="Select product"
-          disabled={disabled}
-          size="sm"
-          isSearchable
-          className="max-w-[220px]"
-        />
-      </div>
-      <div className="min-w-0">
-        <FormFieldInput
-          name={`transactions.${rowIndex}.quantity`}
-          label="Quantity"
-          type="number"
-          inputMode="decimal"
-          step={`0.${'0'.repeat(PURCHASE_RATE_DECIMALS - 1)}1`}
-          maxDecimalPlaces={PURCHASE_RATE_DECIMALS}
-          disabled={disabled}
-          classes={{ container: 'max-w-[90px]' }}
-        />
-        {hasCurrencyProductSelection ? (
-          <div className="mt-1 space-y-0.5 text-[11px] leading-tight text-text-tertiary">
-            {quantityAvailabilityQuery.isLoading ? (
-              <div>Checking available quantity...</div>
-            ) : (
-              <>
-                <div>
-                  Available: {formatPurchaseDecimal(quantityAvailability?.availableQuantity, PURCHASE_RATE_DECIMALS)}
-                </div>
-                <div>
-                  Purchased: {formatPurchaseDecimal(quantityAvailability?.purchasedQuantity, PURCHASE_RATE_DECIMALS)}
-                </div>
-                <div>
-                  Sold: {formatPurchaseDecimal(quantityAvailability?.soldQuantity, PURCHASE_RATE_DECIMALS)}
-                </div>
-              </>
-            )}
-          </div>
-        ) : null}
-      </div>
-      <div className="min-w-0">
-        <FormFieldInput
-          name={`transactions.${rowIndex}.rate`}
-          label="Rate"
-          type="number"
-          step={`0.${'0'.repeat(PURCHASE_RATE_DECIMALS - 1)}1`}
-          maxDecimalPlaces={PURCHASE_RATE_DECIMALS}
-          disabled={disabled}
-          onChange={() => {
-            hasManualRateChangeRef.current = true;
-          }}
-          classes={{ container: 'max-w-[100px]' }}
-        />
-        {hasCurrencyProductSelection && (
-          <div className="mt-1 space-y-0.5 text-[11px] leading-tight text-text-tertiary">
-            {selectedSidePreview?.baseRate ? (
+    <div className="flex flex-col items-start gap-2 border-b border-border-base px-1 py-1 last:border-b-0">
+      {hasCurrencyProductSelection ? (
+        <div className="flex w-full space-y-0.5 space-x-2 break-words text-[10px] leading-snug text-text-tertiary">
+          {quantityAvailabilityQuery.isLoading ? (
+            <div>Checking available quantity...</div>
+          ) : (
+            <>
               <div>
-                Base {pricingSideLabel.toLowerCase()} rate:{' '}
-                {formatRangeValue(selectedSidePreview.baseRate)}
+                <b>Available:{' '}</b>
+                {formatPurchaseDecimal(
+                  quantityAvailability?.availableQuantity,
+                  PURCHASE_RATE_DECIMALS
+                )}
               </div>
-            ) : null}
-            {hasSideRange ? (
-              <>
-                <div>
-                  {pricingSideLabel} min: {formatRangeValue(sideMinRate)}
-                </div>
-                <div>
-                  {pricingSideLabel} max: {formatRangeValue(sideMaxRate)}
-                </div>
-              </>
-            ) : (
               <div>
-                No {pricingSideLabel.toLowerCase()} min/max configured for this product-currency pair.
+                <b>Purchased:{' '}</b>
+                {formatPurchaseDecimal(
+                  quantityAvailability?.purchasedQuantity,
+                  PURCHASE_RATE_DECIMALS
+                )}
               </div>
-            )}
-          </div>
-        )}
-      </div>
-      <div className="min-w-0">
-        <FormFieldInput
-          name={`transactions.${rowIndex}.per`}
-          label="Per"
-          readOnly
-          classes={{ container: 'max-w-[95px]' }}
-        />
-      </div>
-      <div className="min-w-0">
-        <FormFieldInput
-          name={`transactions.${rowIndex}.total`}
-          label="Total"
-          readOnly
-          classes={{ container: 'max-w-[95px]' }}
-        />
-      </div>
-      <div className="min-w-0">
-        <FormFieldInput
-          name={`transactions.${rowIndex}.roundOff`}
-          label="Round Off"
-          readOnly
-          classes={{ container: 'max-w-[95px]' }}
-        />
-      </div>
-      <div className="min-w-0">
-        <FormFieldInput
-          name={`transactions.${rowIndex}.finalAmount`}
-          label="Final Amount"
-          readOnly
-          classes={{ container: 'max-w-[95px]' }}
-        />
-      </div>
-      <div className="min-w-0">
-        <FormFieldInput
-          name={`transactions.${rowIndex}.commission`}
-          label="Commission"
-          readOnly
-          classes={{ container: 'max-w-[95px]' }}
-        />
-      </div>
-      <div className="flex min-w-0 items-start justify-end pt-4">
-        <Button
-          type="button"
-          variant="destructive"
-          size="icon"
-          disabled={!canRemove || disabled}
-          onClick={() => onRemove(rowIndex)}
-          aria-label="Remove transaction row"
-        >
-          <TrashIcon className="h-4 w-4" aria-hidden="true" />
-        </Button>
+              <div>
+                <b>Sold:{' '}</b>
+                {formatPurchaseDecimal(
+                  quantityAvailability?.soldQuantity,
+                  PURCHASE_RATE_DECIMALS
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      ) : null}
+      <div className="grid gap-2 px-1 py-1 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1.4fr)_minmax(0,0.55fr)_minmax(0,0.65fr)_minmax(0,0.75fr)_minmax(0,0.55fr)_minmax(0,0.55fr)_minmax(0,0.55fr)_minmax(0,0.55fr)_44px]">
+        <div className="min-w-0">
+          <EntityPickerField
+            label="Currency"
+            value={
+              currencyCode
+                ? `${currencyCode}${currencyName ? ` - ${currencyName}` : ''}`
+                : ''
+            }
+            placeholder="Select currency"
+            onClick={() => onOpenCurrencyPicker(rowIndex)}
+            disabled={disabled}
+            helperText={rateHelperText || undefined}
+            buttonPosition="bottom"
+          />
+        </div>
+        <div className="min-w-0">
+          <FormFieldAsyncSelect
+            name={`transactions.${rowIndex}.productId`}
+            label="Product"
+            loadOptions={productLoadOptions}
+            placeholder="Select product"
+            disabled={disabled}
+            size="sm"
+            isSearchable
+            className="max-w-[220px]"
+          />
+        </div>
+        <div className="relative min-w-0 pb-14">
+          <FormFieldInput
+            name={`transactions.${rowIndex}.quantity`}
+            label="Quantity"
+            type="number"
+            inputMode="decimal"
+            step={`0.${'0'.repeat(PURCHASE_RATE_DECIMALS - 1)}1`}
+            maxDecimalPlaces={PURCHASE_RATE_DECIMALS}
+            disabled={disabled}
+            classes={{ container: 'max-w-[90px]' }}
+          />
+        </div>
+        <div className="relative min-w-0 pb-14">
+          <FormFieldInput
+            name={`transactions.${rowIndex}.rate`}
+            label="Rate"
+            type="number"
+            step={`0.${'0'.repeat(PURCHASE_RATE_DECIMALS - 1)}1`}
+            maxDecimalPlaces={PURCHASE_RATE_DECIMALS}
+            disabled={disabled}
+            onChange={() => {
+              hasManualRateChangeRef.current = true;
+            }}
+            classes={{ container: 'max-w-[100px]' }}
+          />
+          {hasCurrencyProductSelection && (
+            <div className="mt-1 space-y-0.5 text-[11px] leading-tight text-text-tertiary">
+              {selectedSidePreview?.baseRate ? (
+                <div>
+                  Base {pricingSideLabel.toLowerCase()} rate:{' '}
+                  {formatRangeValue(selectedSidePreview.baseRate)}
+                </div>
+              ) : null}
+              {hasSideRange ? (
+                <>
+                  <div>
+                    {pricingSideLabel} min: {formatRangeValue(sideMinRate)}
+                  </div>
+                  <div>
+                    {pricingSideLabel} max: {formatRangeValue(sideMaxRate)}
+                  </div>
+                </>
+              ) : (
+                <div>
+                  No {pricingSideLabel.toLowerCase()} min/max configured for
+                  this product-currency pair.
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+        <div className="min-w-0">
+          <FormFieldInput
+            name={`transactions.${rowIndex}.per`}
+            label="Per"
+            readOnly
+            classes={{ container: 'max-w-[95px]' }}
+          />
+        </div>
+        <div className="min-w-0">
+          <FormFieldInput
+            name={`transactions.${rowIndex}.total`}
+            label="Total"
+            readOnly
+            classes={{ container: 'max-w-[95px]' }}
+          />
+        </div>
+        <div className="min-w-0">
+          <FormFieldInput
+            name={`transactions.${rowIndex}.roundOff`}
+            label="Round Off"
+            readOnly
+            classes={{ container: 'max-w-[95px]' }}
+          />
+        </div>
+        <div className="min-w-0">
+          <FormFieldInput
+            name={`transactions.${rowIndex}.finalAmount`}
+            label="Final Amount"
+            readOnly
+            classes={{ container: 'max-w-[95px]' }}
+          />
+        </div>
+        <div className="min-w-0">
+          <FormFieldInput
+            name={`transactions.${rowIndex}.commission`}
+            label="Commission"
+            readOnly
+            classes={{ container: 'max-w-[95px]' }}
+          />
+        </div>
+        <div className="flex min-w-0 items-start justify-end pt-4">
+          <Button
+            type="button"
+            variant="destructive"
+            size="icon"
+            disabled={!canRemove || disabled}
+            onClick={() => onRemove(rowIndex)}
+            aria-label="Remove transaction row"
+          >
+            <TrashIcon className="h-4 w-4" aria-hidden="true" />
+          </Button>
+        </div>
       </div>
     </div>
   );

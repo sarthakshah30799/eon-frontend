@@ -27,7 +27,6 @@ import { PartyProfileCommissionTypeEnum, type PartyProfileCommissionType } from 
 import type { ICurrencyProfile } from '@/modules/currencyProfile/types';
 import { TransactionTypeEnum } from '@/modules/transactions';
 import type { AsyncSelectResponse } from '@/components/ui';
-import type { IUser } from '@/modules/users/types/userTypes';
 import type { DefaultValues } from 'react-hook-form';
 import type { IAd1FormValues } from '../types';
 import type { TransactionType } from '@/modules/transactions';
@@ -42,7 +41,6 @@ interface AD1FormProps {
   onSubmit: (values: IAd1FormValues) => Promise<void> | void;
   onCancel: () => void;
   readOnly?: boolean;
-  user: IUser | null;
   submitLabel?: string;
 }
 
@@ -51,7 +49,6 @@ export const AD1Form = ({
   onSubmit,
   onCancel,
   readOnly = false,
-  user,
   submitLabel = 'Save',
 }: AD1FormProps) => {
   return (
@@ -71,7 +68,6 @@ export const AD1Form = ({
     >
       <AD1FormBody
         readOnly={readOnly}
-        user={user}
       />
     </Form>
   );
@@ -79,10 +75,9 @@ export const AD1Form = ({
 
 interface AD1FormBodyProps {
   readOnly: boolean;
-  user: IUser | null;
 }
 
-const AD1FormBody = ({ readOnly, user }: AD1FormBodyProps) => {
+const AD1FormBody = ({ readOnly }: AD1FormBodyProps) => {
   const form = useFormContext<IAd1FormValues>();
   const { control, setValue } = form;
 
@@ -356,8 +351,6 @@ const AD1FormBody = ({ readOnly, user }: AD1FormBodyProps) => {
     };
   }, [transactionType]);
 
-  const canSelectBranch = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
-
   const typeOptions = Object.values(TransactionTypeEnum).map(val => ({
     value: val,
     label: val === TransactionTypeEnum.SALE ? 'Sale' : 'Purchase',
@@ -398,7 +391,7 @@ const AD1FormBody = ({ readOnly, user }: AD1FormBodyProps) => {
             name="branchId"
             label="Branch"
             loadOptions={loadBranches}
-            disabled={readOnly || !canSelectBranch}
+            disabled={true}
           />
           <FormFieldInput name="dealId" label="Deal ID" placeholder="Deal ID" disabled={readOnly} />
           <FormFieldInput name="docNo" label="Doc No." placeholder="Doc No." disabled={readOnly} />

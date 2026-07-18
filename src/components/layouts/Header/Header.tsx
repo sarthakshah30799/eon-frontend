@@ -6,6 +6,8 @@ import { Dropdown, Button } from '@/components/ui';
 import { MenuIcon, LogoutIcon, UserIcon } from '@/assets/icons';
 import { resolveHeaderMeta } from '@/router/headerMeta';
 import { useAuth } from '@/lib/AuthContext';
+import { useGetBranchProfile } from '@/modules/branchProfile/hooks';
+import { useGetCounterProfile } from '@/modules/counterProfile/hooks';
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -36,9 +38,22 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
       assignment.counterId === activeCounterId
   );
 
-  const activeBranchLabel = activeAssignment?.branchName || 'Not selected';
+  const { data: activeBranchProfile } = useGetBranchProfile(activeBranchId ?? '');
+  const { data: activeCounterProfile } = useGetCounterProfile(activeCounterId ?? '');
 
-  const activeCounterLabel = activeAssignment?.counterName || 'Not selected';
+  const activeBranchLabel =
+    activeBranchProfile ? `${activeBranchProfile.code} - ${activeBranchProfile.name}` :
+    user?.branchName?.trim() ||
+    activeAssignment?.branchName ||
+    'Not selected';
+
+  const activeCounterLabel =
+    activeCounterProfile
+      ? `${activeCounterProfile.counterNo} - ${activeCounterProfile.name}`
+      :
+    user?.counterName?.trim() ||
+    activeAssignment?.counterName ||
+    'Not selected';
   const displayName = user?.name?.trim() || 'Profile';
   const userEmail = user?.email?.trim() || 'No email available';
   const userAvatar = user?.avatar;

@@ -1,10 +1,20 @@
-import React, { useMemo, useState } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
+import React, { useMemo } from 'react';
+import { Navigate, useNavigate } from 'react-router-dom';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from 'yup';
 import { useAuth } from '../../../lib/AuthContext';
-import { AsyncSelect, Button, type AsyncSelectResponse } from '../../../components/ui';
 import { Loader } from '../../../components/ui/loader';
+import { Form } from '../../../components/forms';
 import { toast } from 'react-hot-toast';
-import type { IUserAssignment } from '../../../modules/auth/types';
+import { useListBranchProfiles } from '@/modules/branchProfile/hooks';
+import { useListCounterProfiles } from '@/modules/counterProfile/hooks';
+import { WorkplaceFormFields } from './WorkplaceFormFields';
+import type { IWorkplaceFormValues } from './chooseWorkplaceTypes';
+
+const workplaceSchema = yup.object().shape({
+  branchId: yup.string().required('Branch is required'),
+  counterId: yup.string().required('Counter is required'),
+});
 
 const ChooseWorkplacePage: React.FC = () => {
   const {
@@ -18,90 +28,35 @@ const ChooseWorkplacePage: React.FC = () => {
   } = useAuth();
   const navigate = useNavigate();
 
-  const [selectedBranchId, setSelectedBranchId] = useState<string>('');
-  const [selectedCounterId, setSelectedCounterId] = useState<string>('');
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const isAdminUser = user?.isAdmin === true;
+  const canSelectAllBranches = Boolean(
+    user?.isAdmin || user?.isHo || user?.isHoStaff
+  );
   const userAssignments = useMemo(() => user?.assignments ?? [], [user?.assignments]);
 
-  const assignmentsByBranch = useMemo(() => {
-    const grouped = new Map<string, IUserAssignment[]>();
+  const { isLoading: isBranchesLoading } = useListBranchProfiles(
+    { activeOnly: true },
+    canSelectAllBranches
+  );
 
-    for (const assignment of userAssignments) {
-      const list = grouped.get(assignment.branchId) ?? [];
-      list.push(assignment);
-      grouped.set(assignment.branchId, list);
+  const { isLoading: isCountersLoading } = useListCounterProfiles(
+    { activeOnly: true },
+    canSelectAllBranches
+  );
+
+  const defaultValues = useMemo<IWorkplaceFormValues>(() => {
+    if (canSelectAllBranches) {
+      return {
+        branchId: '',
+        counterId: '',
+      };
     }
 
-    return grouped;
-  }, [userAssignments]);
-
-  const visibleBranches = useMemo(() => {
-    return Array.from(assignmentsByBranch.entries()).map(([branchId, branchAssignments]) => ({
-      id: branchId,
-      name: branchAssignments[0]?.branchName ?? 'Unknown Branch',
-    }));
-  }, [assignmentsByBranch]);
-
-  const effectiveSelectedBranchId =
-    selectedBranchId || visibleBranches[0]?.id || '';
-
-  const selectedBranchAssignments = useMemo(() => {
-    return assignmentsByBranch.get(effectiveSelectedBranchId) ?? [];
-  }, [assignmentsByBranch, effectiveSelectedBranchId]);
-
-  const visibleCounters = useMemo(() => {
-    const seen = new Set<string>();
-
-    return selectedBranchAssignments.filter(assignment => {
-      if (seen.has(assignment.counterId)) {
-        return false;
-      }
-      seen.add(assignment.counterId);
-      return true;
-    });
-  }, [selectedBranchAssignments]);
-
-  const effectiveSelectedCounterId =
-    selectedCounterId || visibleCounters[0]?.counterId || '';
-
-  const branchOptions = useMemo(
-    () =>
-      visibleBranches.map(branch => ({
-        value: branch.id,
-        label: branch.name,
-      })),
-    [visibleBranches]
-  );
-
-  const counterOptions = useMemo(
-    () =>
-      visibleCounters.map(counter => ({
-        value: counter.counterId,
-        label: counter.counterName ?? '',
-      })),
-    [visibleCounters]
-  );
-
-  const loadBranchOptions = async (inputValue: string): Promise<AsyncSelectResponse> => ({
-    options: inputValue
-      ? branchOptions.filter(option =>
-          option.label.toLowerCase().includes(inputValue.toLowerCase())
-        )
-      : branchOptions,
-    hasMore: false,
-  });
-
-  const loadCounterOptions = async (
-    inputValue: string
-  ): Promise<AsyncSelectResponse> => ({
-    options: inputValue
-      ? counterOptions.filter(option =>
-          option.label.toLowerCase().includes(inputValue.toLowerCase())
-        )
-      : counterOptions,
-    hasMore: false,
-  });
+    const firstAssignment = userAssignments[0];
+    return {
+      branchId: firstAssignment?.branchId ?? '',
+      counterId: firstAssignment?.counterId ?? '',
+    };
+  }, [canSelectAllBranches, userAssignments]);
 
   if (isAuthLoading) {
     return <Loader />;
@@ -111,18 +66,11 @@ const ChooseWorkplacePage: React.FC = () => {
     return <Navigate to="/login" replace />;
   }
 
-  if (user && user.isAdmin) {
-    return <Navigate to="/" replace />;
-  }
-
-  // If already chosen branch and counter, navigate to Dashboard
   if (activeBranchId && activeCounterId) {
     return <Navigate to="/" replace />;
   }
 
-  if (
-    !isAdminUser && userAssignments.length === 0
-  ) {
+  if (!canSelectAllBranches && userAssignments.length === 0) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <Loader />
@@ -130,22 +78,17 @@ const ChooseWorkplacePage: React.FC = () => {
     );
   }
 
-  const handleConfirm = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!effectiveSelectedBranchId || !effectiveSelectedCounterId) {
-      toast.error('Please select both branch and counter');
-      return;
-    }
+  if (canSelectAllBranches && (isBranchesLoading || isCountersLoading)) {
+    return <Loader />;
+  }
 
-    setIsSubmitting(true);
+  const handleSubmit = async (values: IWorkplaceFormValues) => {
     try {
-      await setWorkplace(effectiveSelectedBranchId, effectiveSelectedCounterId);
+      await setWorkplace(values.branchId, values.counterId);
       toast.success('Workplace set successfully!');
       navigate('/');
     } catch {
       toast.error('Failed to set workplace. Please try again.');
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -158,13 +101,11 @@ const ChooseWorkplacePage: React.FC = () => {
     }
   };
 
-
   return (
     <div className="relative flex min-h-screen overflow-hidden bg-gradient-to-br from-primary-50 via-surface-primary to-primary-100">
       <div className="pointer-events-none absolute -left-24 top-16 h-72 w-72 rounded-full bg-primary-200/40 blur-3xl" />
       <div className="pointer-events-none absolute -right-24 bottom-10 h-80 w-80 rounded-full bg-primary-300/30 blur-3xl" />
 
-      {/* Left side - Image & Decorative content */}
       <div className="relative hidden overflow-hidden lg:block lg:w-1/2 xl:w-3/5">
         <div className="absolute inset-0 bg-gradient-to-br from-sidebar-primary via-primary-700 to-sidebar-secondary">
           <img
@@ -188,10 +129,9 @@ const ChooseWorkplacePage: React.FC = () => {
         </div>
       </div>
 
-      {/* Right side - Workplace Select Form */}
       <div className="flex flex-1 flex-col justify-center px-4 py-10 sm:px-6 lg:px-8">
         <div className="w-full">
-          <div className="mx-auto mb-8 max-w-lg rounded-3xl bg-surface-primary/92 px-6 py-8 shadow-2xl shadow-primary-100/70 backdrop-blur-xl border border-border-primary">
+          <div className="mx-auto mb-8 max-w-lg rounded-3xl border border-border-primary bg-surface-primary/92 px-6 py-8 shadow-2xl shadow-primary-100/70 backdrop-blur-xl">
             <div className="text-center">
               <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-600 via-primary-700 to-primary-800 shadow-lg shadow-primary-200/60">
                 <svg
@@ -216,78 +156,21 @@ const ChooseWorkplacePage: React.FC = () => {
               </p>
             </div>
 
-            <form onSubmit={handleConfirm} className="mt-8 space-y-6">
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-text-secondary">
-                  Branch
-                </label>
-                <AsyncSelect
-                  value={
-                    branchOptions.find(
-                      option => option.value === effectiveSelectedBranchId
-                    ) ?? null
-                  }
-                  onChange={option => {
-                    const nextOption = Array.isArray(option) ? option[0] : option;
-                    setSelectedBranchId(nextOption ? String(nextOption.value) : '');
-                    setSelectedCounterId('');
-                  }}
-                  loadOptions={loadBranchOptions}
-                  placeholder="Select Branch"
-                  isSearchable={false}
+            <Form<IWorkplaceFormValues>
+              id="choose-workplace-form"
+              onSubmit={handleSubmit}
+              resolver={yupResolver(workplaceSchema)}
+              defaultValues={defaultValues}
+              mode="all"
+            >
+              <div className="mt-8">
+                <WorkplaceFormFields
+                  canSelectAllBranches={canSelectAllBranches}
+                  userAssignments={userAssignments}
+                  onLogout={handleLogout}
                 />
               </div>
-
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-text-secondary">
-                  Counter
-                </label>
-                <AsyncSelect
-                  value={
-                    counterOptions.find(
-                      option => option.value === effectiveSelectedCounterId
-                    ) ?? null
-                  }
-                  onChange={option => {
-                    const nextOption = Array.isArray(option) ? option[0] : option;
-                    setSelectedCounterId(nextOption ? String(nextOption.value) : '');
-                  }}
-                  loadOptions={loadCounterOptions}
-                  placeholder={effectiveSelectedBranchId ? 'Select Counter' : 'Select Branch first'}
-                  isSearchable={false}
-                  isDisabled={!effectiveSelectedBranchId}
-                />
-                {effectiveSelectedBranchId && visibleCounters.length === 0 && (
-                  <p className="mt-1 text-xs text-error-600 animate-pulse">
-                    No counters assigned to this branch.
-                  </p>
-                )}
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full mt-4"
-                size="lg"
-                loading={isSubmitting}
-                disabled={
-                  isSubmitting ||
-                  !effectiveSelectedBranchId ||
-                  !effectiveSelectedCounterId
-                }
-              >
-                {isSubmitting ? 'Confirming...' : 'Confirm & Continue'}
-              </Button>
-
-              <div className="text-center pt-4 border-t border-border-muted">
-                <Button
-                  type="button"
-                  onClick={handleLogout}
-                  variant="link"
-                >
-                  Log Out / Switch Account
-                </Button>
-              </div>
-            </form>
+            </Form>
           </div>
         </div>
       </div>

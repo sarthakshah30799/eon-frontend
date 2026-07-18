@@ -15,7 +15,6 @@ import {
 } from '@/components/forms';
 import { partyProfileSchema } from '../schema';
 import type { ICreatePartyProfile } from '../types';
-import { useAuth } from '@/lib/AuthContext';
 
 import { branchProfileApi } from '@/api/branchProfile/branchProfile.api';
 import { partyProfileApi } from '@/api/partyProfile';
@@ -42,7 +41,6 @@ interface PartyProfileFormProps {
   disabled?: boolean;
   profileType?: PartyProfileType;
   reviewMode?: boolean;
-  branchDisabled?: boolean;
   onReviewSubmit?: (values: IReviewPartyProfilePayload) => void | Promise<void>;
   currentId?: string;
   showSubmit?: boolean;
@@ -55,7 +53,6 @@ const PartyProfileFormFields = ({
   disabled = false,
   profileType,
   reviewMode = false,
-  branchDisabled = false,
   onReviewSubmit,
   currentId,
 }: {
@@ -63,13 +60,10 @@ const PartyProfileFormFields = ({
   disabled?: boolean;
   profileType?: PartyProfileType;
   reviewMode?: boolean;
-  branchDisabled?: boolean;
   onReviewSubmit?: (values: IReviewPartyProfilePayload) => void | Promise<void>;
   currentId?: string;
 }) => {
   const form = useFormContext<PartyProfileFormValues>();
-  const { user } = useAuth();
-  const canSelectBranch = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
   const isSubmitting = isSubmittingProp || disabled || reviewMode;
   const reviewActionsDisabled = isSubmittingProp;
   const effectiveProfileType = profileType;
@@ -571,7 +565,7 @@ const PartyProfileFormFields = ({
             label="Current Branch"
             placeholder="Select current branch"
             loadOptions={branchLoadOptions}
-            disabled={isSubmitting || (branchDisabled && !canSelectBranch)}
+            disabled={true}
           />
         </div>
       </CardSection>
@@ -639,7 +633,6 @@ export const PartyProfileForm = ({
   disabled = false,
   profileType,
   reviewMode = false,
-  branchDisabled = false,
   onReviewSubmit,
   currentId,
   showSubmit = true,
@@ -669,7 +662,6 @@ export const PartyProfileForm = ({
         disabled={disabled}
         profileType={profileType}
         reviewMode={reviewMode}
-        branchDisabled={branchDisabled}
         onReviewSubmit={onReviewSubmit}
         currentId={currentId}
       />

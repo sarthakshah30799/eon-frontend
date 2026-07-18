@@ -27,7 +27,6 @@ export const PartyProfileEditView = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const isAdminUser = user?.isAdmin === true;
-  const canSelectBranch = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
   const isReviewer = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
   const showReviewControls = Boolean(isReviewer);
 
@@ -154,7 +153,6 @@ export const PartyProfileEditView = () => {
       rejectReason: undefined,
       gstStateId: values.gstStateId || undefined,
       stateId: values.stateId || undefined,
-      branchId: values.branchId || undefined,
       blockDateFrom: values.blockDateFrom || undefined,
       establishmentDate: values.establishmentDate || undefined,
       panDob: values.panDob || undefined,
@@ -247,7 +245,6 @@ export const PartyProfileEditView = () => {
           reviewMode={showReviewControls}
           showSubmit={!showReviewControls && canEditPartyProfile}
           submitLabel="Save Changes"
-          branchDisabled={!canSelectBranch}
           currentId={id}
         />
       </section>

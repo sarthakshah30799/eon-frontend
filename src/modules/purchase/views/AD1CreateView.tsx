@@ -11,7 +11,7 @@ import { AdditionalSettingsCodeEnum } from '@/modules/additionalSettings/constan
 
 export const AD1CreateView = () => {
   const navigate = useNavigate();
-  const { activeBranchId, user } = useAuth();
+  const { activeBranchId } = useAuth();
 
   const { data: additionalSettings = [] } = useListAdditionalSettings();
 
@@ -88,11 +88,9 @@ export const AD1CreateView = () => {
 
       <AD1Form
         defaultValues={defaultValues}
-        user={user}
         submitLabel={requiresApproval ? 'Submit for Approval' : 'Create'}
         onSubmit={async (values) => {
           await transactionAd1Api.create({
-            branchId: values.branchId as string,
             transactionType: values.transactionType as string,
             profileType: values.profileType as string,
             requiresApproval,

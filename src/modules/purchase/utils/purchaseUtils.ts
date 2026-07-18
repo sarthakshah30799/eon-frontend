@@ -133,9 +133,7 @@ export const mapPurchaseFormValuesToSubmitPayload = (
 
   return {
     transaction: {
-      branchId: values.branchId,
       branchSnapshot: values.branchSnapshot,
-      counterId: values.counterId,
       requiresApproval,
       slug: values.purchasePageType,
       partyProfileId: values.partyProfileId,

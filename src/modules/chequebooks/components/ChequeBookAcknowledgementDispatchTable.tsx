@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { Table, type TableColumnDef } from '@/components/ui';
+import { formatDateTime } from '@/utils';
 import type { IChequeBook } from '@/api';
 import { ChequeBookStatusEnum } from '../types';
 
@@ -29,7 +30,7 @@ export const ChequeBookAcknowledgementDispatchTable = ({
         header: 'Date',
         cell: ({ row }) => (
           <span className="whitespace-nowrap">
-            {new Date(row.original.dispatchDate).toLocaleDateString('en-GB')}
+            {formatDateTime(row.original.dispatchDate)}
           </span>
         ),
       },

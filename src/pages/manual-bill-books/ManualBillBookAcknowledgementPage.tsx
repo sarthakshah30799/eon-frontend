@@ -9,6 +9,7 @@ import {
   DatePicker,
   type AsyncSelectOption,
 } from '@/components/ui';
+import { formatDateTime } from '@/utils';
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import type { MultiValue, SingleValue } from 'react-select';
 import toast from 'react-hot-toast';
@@ -285,7 +286,7 @@ export const ManualBillBookAcknowledgementPage = () => {
                       className="hover:bg-slate-50/80 cursor-pointer transition"
                     >
                       <td className="px-6 py-4">
-                        {new Date(book.dispatchDate).toLocaleDateString('en-GB')}
+                        {formatDateTime(book.dispatchDate)}
                       </td>
                       <td className="px-6 py-4 font-mono font-semibold text-slate-900">
                         {book.no}

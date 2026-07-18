@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { PencilSquareIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button1';
 import { Table, type TableColumnDef } from '@/components/ui/table';
+import { formatDateTime } from '@/utils';
 import { usePermission } from '@/hooks';
 import type { IExpenseIncomeBookingMaster } from '../types/expenseIncomeBookingTypes';
 
@@ -40,8 +41,8 @@ export const ExpenseIncomeBookingTable = ({
   const rows: ExpenseIncomeBookingTableRow[] = masters.map(m => {
     let validity = '-';
     if (m.from || m.to) {
-      const fromStr = m.from ? new Date(m.from).toLocaleDateString('en-GB') : 'Always';
-      const toStr = m.to ? new Date(m.to).toLocaleDateString('en-GB') : 'Forever';
+      const fromStr = m.from ? formatDateTime(m.from) : 'Always';
+      const toStr = m.to ? formatDateTime(m.to) : 'Forever';
       validity = `${fromStr} - ${toStr}`;
     }
 

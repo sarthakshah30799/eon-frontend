@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { Checkbox, Input, Table, type TableColumnDef } from '@/components/ui';
+import { formatDateTime } from '@/utils';
 import type { IChequeBook } from '@/api';
 import { ChequeBookStatusEnum } from '../types';
 
@@ -39,7 +40,7 @@ export const ChequeBookAcknowledgementChecklistTable = ({
         header: 'Request Date',
         cell: ({ row }) => (
           <span className="whitespace-nowrap text-text-secondary">
-            {new Date(row.original.dispatchDate).toLocaleDateString('en-GB')} 00:00:00
+            {formatDateTime(row.original.dispatchDate)} 00:00:00
           </span>
         ),
       },

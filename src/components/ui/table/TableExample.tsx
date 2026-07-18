@@ -1,4 +1,5 @@
 import { Table, type TableColumnDef } from './Table';
+import { formatDateTime } from '@/utils';
 
 // Example data type
 interface User {
@@ -146,14 +147,14 @@ export const TableExample = () => {
       accessorKey: 'createdAt',
       header: 'Created',
       cell: ({ row }) => (
-        <div>{new Date(row.getValue('createdAt')).toLocaleDateString('en-GB')}</div>
+        <div>{formatDateTime(row.getValue('createdAt'))}</div>
       ),
     },
     {
       accessorKey: 'lastLogin',
       header: 'Last Login',
       cell: ({ row }) => (
-        <div>{new Date(row.getValue('lastLogin')).toLocaleDateString('en-GB')}</div>
+        <div>{formatDateTime(row.getValue('lastLogin'))}</div>
       ),
     },
     {

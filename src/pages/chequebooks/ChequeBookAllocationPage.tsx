@@ -7,6 +7,7 @@ import { chequebookApi } from '@/api';
 import toast from 'react-hot-toast';
 import { Button, Input } from '@/components/ui';
 import { FormFieldSelect } from '@/components/forms';
+import { formatDateTime } from '@/utils';
 import { accountProfileApi } from '@/api/accountProfile/accountProfile.api';
 import { useListChequeBookCashiers } from '@/modules/chequebooks/hooks';
 import { ChequeBookStatusEnum } from '@/modules/chequebooks/types';
@@ -87,7 +88,7 @@ const buildRows = (
         id: `${book.id}_${from}`,
         bookId: book.id,
         requestNo: book.no,
-        requestDate: new Date(book.dispatchDate).toLocaleDateString('en-GB') + ' 00:00:00',
+        requestDate: formatDateTime(book.dispatchDate) + ' 00:00:00',
         bankAccountCodeLabel: book.bankAccountCodeLabel || book.bankAccountCodeName || book.bankAccountCode || '-',
         bookNoFrom: from,
         bookNoTo: to,

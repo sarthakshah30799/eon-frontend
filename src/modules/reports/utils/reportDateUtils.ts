@@ -1,4 +1,4 @@
-import { formatDateInput } from '@/utils';
+import { formatDateInput, formatDateTime } from '@/utils';
 import {
   ReportDatePresetEnum,
   type IReportDateRange,
@@ -114,13 +114,11 @@ export const buildReportDateRange = (
 };
 
 export const formatReportDateRangeLabel = (range: IReportDateRange) => {
-  const formatDate = (dateStr: string) => {
+  const fmt = (dateStr: string) => {
     if (!dateStr) return '-';
-    const date = new Date(dateStr + 'T00:00:00');
-    if (Number.isNaN(date.getTime())) return dateStr;
-    return date.toLocaleDateString('en-GB');
+    const withTime = dateStr.match(/^\d{4}-\d{2}-\d{2}$/) ? `${dateStr}T00:00:00` : dateStr;
+    return formatDateTime(withTime);
   };
-
-  return `${formatDate(range.startDate)} to ${formatDate(range.endDate)}`;
+  return `${fmt(range.startDate)} to ${fmt(range.endDate)}`;
 };
 

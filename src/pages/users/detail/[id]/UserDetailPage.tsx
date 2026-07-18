@@ -1,6 +1,7 @@
 import { useParams } from 'react-router-dom';
 import { useGetUser } from '../../../../modules/user/hooks/useGetUser';
 import { Loader } from '@/components/ui/loader';
+import { formatDateTime } from '@/utils';
 
 const UserDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -37,11 +38,11 @@ const UserDetailPage = () => {
         </div>
         <div>
           <strong>Created:</strong>{' '}
-          {new Date(user.createdAt).toLocaleDateString('en-GB')}
+          {formatDateTime(user.createdAt)}
         </div>
         <div>
           <strong>Updated:</strong>{' '}
-          {new Date(user.updatedAt).toLocaleDateString('en-GB')}
+          {formatDateTime(user.updatedAt)}
         </div>
       </div>
     </div>

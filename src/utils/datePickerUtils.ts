@@ -1,17 +1,11 @@
-export const formatDateInput = (date: Date): string => {
-  const year = date.getFullYear();
-  const month = `${date.getMonth() + 1}`.padStart(2, '0');
-  const day = `${date.getDate()}`.padStart(2, '0');
+import { formatDateTime } from './dateTimeUtils';
 
-  return `${year}-${month}-${day}`;
+export const formatDateInput = (date: Date): string => {
+  return formatDateTime(date, 'YYYY-MM-DD');
 };
 
 export const formatDateDisplayInput = (date: Date): string => {
-  const day = `${date.getDate()}`.padStart(2, '0');
-  const month = `${date.getMonth() + 1}`.padStart(2, '0');
-  const year = date.getFullYear();
-
-  return `${day}/${month}/${year}`;
+  return formatDateTime(date);
 };
 
 export const maskDateInput = (value: string): string => {

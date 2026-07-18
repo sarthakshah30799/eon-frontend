@@ -12,6 +12,7 @@ import {
   type AsyncSelectOption,
   type AsyncSelectResponse,
 } from '@/components/ui';
+import { formatDateTime } from '@/utils';
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import type { MultiValue, SingleValue } from 'react-select';
 import toast from 'react-hot-toast';
@@ -230,7 +231,7 @@ export const ManagerToCashierAllocationPage = () => {
             id: `${book.id}_${from}`,
             bookId: book.id,
             requestNo: book.no,
-            requestDate: new Date(book.dispatchDate).toLocaleDateString('en-GB') + ' 00:00:00',
+            requestDate: formatDateTime(book.dispatchDate) + ' 00:00:00',
             transactionType: book.transactionTypeLabel || book.transactionType,
             bookNoFrom: from,
             bookNoTo: to,

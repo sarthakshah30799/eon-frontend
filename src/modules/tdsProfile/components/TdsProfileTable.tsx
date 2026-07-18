@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button1';
 import { Table, type TableColumnDef } from '@/components/ui/table';
+import { formatDateTime } from '@/utils';
 import type { ITdsProfile } from '../types';
 
 interface TdsProfileTableProps {
@@ -27,18 +28,6 @@ interface TdsProfileTableRow {
   active: boolean;
 }
 
-const formatDisplayDate = (value: string) => {
-  if (!value) {
-    return '-';
-  }
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return '-';
-  }
-
-  return date.toLocaleDateString('en-GB');
-};
 
 export const TdsProfileTable = ({
   tdsProfiles,
@@ -74,12 +63,12 @@ export const TdsProfileTable = ({
     {
       accessorKey: 'from',
       header: 'From',
-      cell: ({ row }) => formatDisplayDate(row.original.from),
+      cell: ({ row }) => formatDateTime(row.original.from),
     },
     {
       accessorKey: 'to',
       header: 'To',
-      cell: ({ row }) => formatDisplayDate(row.original.to),
+      cell: ({ row }) => formatDateTime(row.original.to),
     },
     { accessorKey: 'value', header: 'Value' },
     { accessorKey: 'sortOrder', header: 'Sort Order' },

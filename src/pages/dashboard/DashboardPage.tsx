@@ -267,7 +267,7 @@ const DashboardPage: React.FC = () => {
                     Range: {book.bookNoFrom} - {book.bookNoTo}
                   </p>
                   <p className="text-xs text-text-tertiary">
-                    Dispatch Date: {formatDateTime(book.dispatchDate, true)}
+                    Dispatch Date: {formatDateTime(book.dispatchDate)}
                   </p>
                 </div>
 
@@ -324,7 +324,7 @@ const DashboardPage: React.FC = () => {
                     Range: {book.bookNoFrom} - {book.bookNoTo}
                   </p>
                   <p className="text-xs text-text-tertiary">
-                    Dispatch Date: {formatDateTime(book.dispatchDate, true)}
+                    Dispatch Date: {formatDateTime(book.dispatchDate)}
                   </p>
                 </div>
 

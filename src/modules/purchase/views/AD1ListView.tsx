@@ -40,7 +40,7 @@ export const AD1ListView = () => {
         transactionType: t.transactionType ?? '-',
         currencyId: t.currencyId ?? '-',
         fcVolume: t.fcVolume ?? '-',
-        createdAt: formatDateTime(t.createdAt, true),
+        createdAt: formatDateTime(t.createdAt),
       })),
     [data]
   );

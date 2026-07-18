@@ -152,7 +152,7 @@ export const useTransactionAccountPostings = (enabled = true) => {
         transactionType: transaction.transactionType,
         tradeMode: transaction.tradeMode,
         status: transaction.status,
-        createdAt: formatDateTime(transaction.createdAt, true),
+        createdAt: formatDateTime(transaction.createdAt),
       })),
     [transactions]
   );

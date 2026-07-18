@@ -285,7 +285,7 @@ export const ManualBillBookAcknowledgementPage = () => {
                       className="hover:bg-slate-50/80 cursor-pointer transition"
                     >
                       <td className="px-6 py-4">
-                        {new Date(book.dispatchDate).toISOString().slice(0, 10)}
+                        {new Date(book.dispatchDate).toLocaleDateString('en-GB')}
                       </td>
                       <td className="px-6 py-4 font-mono font-semibold text-slate-900">
                         {book.no}

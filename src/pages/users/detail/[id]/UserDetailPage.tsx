@@ -37,11 +37,11 @@ const UserDetailPage = () => {
         </div>
         <div>
           <strong>Created:</strong>{' '}
-          {new Date(user.createdAt).toLocaleDateString()}
+          {new Date(user.createdAt).toLocaleDateString('en-GB')}
         </div>
         <div>
           <strong>Updated:</strong>{' '}
-          {new Date(user.updatedAt).toLocaleDateString()}
+          {new Date(user.updatedAt).toLocaleDateString('en-GB')}
         </div>
       </div>
     </div>

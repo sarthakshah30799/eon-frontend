@@ -114,10 +114,13 @@ export const buildReportDateRange = (
 };
 
 export const formatReportDateRangeLabel = (range: IReportDateRange) => {
-  if (range.preset === ReportDatePresetEnum.CUSTOM) {
-    return `${range.startDate || '-'} to ${range.endDate || '-'}`;
-  }
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return '-';
+    const date = new Date(dateStr + 'T00:00:00');
+    if (Number.isNaN(date.getTime())) return dateStr;
+    return date.toLocaleDateString('en-GB');
+  };
 
-  return `${range.startDate || '-'} to ${range.endDate || '-'}`;
+  return `${formatDate(range.startDate)} to ${formatDate(range.endDate)}`;
 };
 

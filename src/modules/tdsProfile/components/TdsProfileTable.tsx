@@ -37,7 +37,7 @@ const formatDisplayDate = (value: string) => {
     return '-';
   }
 
-  return date.toLocaleDateString();
+  return date.toLocaleDateString('en-GB');
 };
 
 export const TdsProfileTable = ({

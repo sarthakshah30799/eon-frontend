@@ -7,11 +7,11 @@ export const formatDateInput = (date: Date): string => {
 };
 
 export const formatDateDisplayInput = (date: Date): string => {
-  const month = `${date.getMonth() + 1}`.padStart(2, '0');
   const day = `${date.getDate()}`.padStart(2, '0');
+  const month = `${date.getMonth() + 1}`.padStart(2, '0');
   const year = date.getFullYear();
 
-  return `${month}/${day}/${year}`;
+  return `${day}/${month}/${year}`;
 };
 
 export const maskDateInput = (value: string): string => {
@@ -21,19 +21,19 @@ export const maskDateInput = (value: string): string => {
     return '';
   }
 
-  const month = digits.slice(0, 2);
-  const day = digits.slice(2, 4);
+  const day = digits.slice(0, 2);
+  const month = digits.slice(2, 4);
   const year = digits.slice(4, 8);
 
   if (digits.length <= 2) {
-    return month;
+    return day;
   }
 
   if (digits.length <= 4) {
-    return `${month}/${day}`;
+    return `${day}/${month}`;
   }
 
-  return `${month}/${day}/${year}`;
+  return `${day}/${month}/${year}`;
 };
 
 export const parseDateInput = (value: string): Date | null => {
@@ -51,7 +51,7 @@ export const parseDateInput = (value: string): Date | null => {
     return null;
   }
 
-  const [, month, day, year] = match;
+  const [, day, month, year] = match;
   const parsed = new Date(Number(year), Number(month) - 1, Number(day));
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 };

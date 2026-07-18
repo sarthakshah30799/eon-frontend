@@ -40,8 +40,8 @@ export const ExpenseIncomeBookingTable = ({
   const rows: ExpenseIncomeBookingTableRow[] = masters.map(m => {
     let validity = '-';
     if (m.from || m.to) {
-      const fromStr = m.from ? new Date(m.from).toLocaleDateString() : 'Always';
-      const toStr = m.to ? new Date(m.to).toLocaleDateString() : 'Forever';
+      const fromStr = m.from ? new Date(m.from).toLocaleDateString('en-GB') : 'Always';
+      const toStr = m.to ? new Date(m.to).toLocaleDateString('en-GB') : 'Forever';
       validity = `${fromStr} - ${toStr}`;
     }
 

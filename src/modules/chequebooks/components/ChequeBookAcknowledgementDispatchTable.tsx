@@ -29,7 +29,7 @@ export const ChequeBookAcknowledgementDispatchTable = ({
         header: 'Date',
         cell: ({ row }) => (
           <span className="whitespace-nowrap">
-            {new Date(row.original.dispatchDate).toISOString().slice(0, 10)}
+            {new Date(row.original.dispatchDate).toLocaleDateString('en-GB')}
           </span>
         ),
       },

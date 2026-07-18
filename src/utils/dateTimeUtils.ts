@@ -4,7 +4,7 @@ type ReferenceLike = {
   label?: string | null;
 };
 
-export const formatDateTime = (value?: string | Date | null): string => {
+export const formatDateTime = (value?: string | Date | null, dateOnly = false): string => {
   if (!value) {
     return '-';
   }
@@ -15,7 +15,11 @@ export const formatDateTime = (value?: string | Date | null): string => {
     return '-';
   }
 
-  return date.toLocaleString();
+  if (dateOnly) {
+    return date.toLocaleDateString('en-GB');
+  }
+
+  return date.toLocaleString('en-GB');
 };
 
 export const formatReferenceLabel = (

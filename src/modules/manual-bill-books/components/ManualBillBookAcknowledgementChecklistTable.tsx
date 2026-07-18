@@ -37,7 +37,7 @@ export const ManualBillBookAcknowledgementChecklistTable = ({
         header: 'Request Date',
         cell: ({ row }) => (
           <span className="whitespace-nowrap text-text-secondary">
-            {new Date(row.original.dispatchDate).toLocaleDateString()} 00:00:00
+            {new Date(row.original.dispatchDate).toLocaleDateString('en-GB')} 00:00:00
           </span>
         ),
       },

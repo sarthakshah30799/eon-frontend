@@ -146,14 +146,14 @@ export const TableExample = () => {
       accessorKey: 'createdAt',
       header: 'Created',
       cell: ({ row }) => (
-        <div>{new Date(row.getValue('createdAt')).toLocaleDateString()}</div>
+        <div>{new Date(row.getValue('createdAt')).toLocaleDateString('en-GB')}</div>
       ),
     },
     {
       accessorKey: 'lastLogin',
       header: 'Last Login',
       cell: ({ row }) => (
-        <div>{new Date(row.getValue('lastLogin')).toLocaleDateString()}</div>
+        <div>{new Date(row.getValue('lastLogin')).toLocaleDateString('en-GB')}</div>
       ),
     },
     {

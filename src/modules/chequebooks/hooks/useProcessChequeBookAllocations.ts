@@ -58,7 +58,7 @@ const buildAllocationRows = (
         id: `${book.id}-${i}`,
         bookId: book.id,
         requestNo: book.no,
-        requestDate: new Date(book.dispatchDate).toLocaleDateString() + ' 00:00:00',
+        requestDate: new Date(book.dispatchDate).toLocaleDateString('en-GB') + ' 00:00:00',
         bankAccountCode: book.bankAccountCode,
         bankAccountCodeName: book.bankAccountCodeName,
         bankAccountCodeLabel: book.bankAccountCodeLabel,

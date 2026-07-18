@@ -64,7 +64,6 @@ export interface ITransactionAd1 {
 
 type ITransactionAd1WriteFields = Pick<
   ITransactionAd1,
-  | 'branchId'
   | 'transactionType'
   | 'profileType'
   | 'dealId'

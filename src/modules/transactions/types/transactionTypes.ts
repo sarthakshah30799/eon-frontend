@@ -332,7 +332,6 @@ export interface ICreateTransactionPayload {
   revisionNo?: number;
   number?: string | null;
   slug: string;
-  branchId: string;
   branchSnapshot?: ITransactionReferenceSnapshot | null;
   requiresApproval?: boolean;
   partyProfileId: string;

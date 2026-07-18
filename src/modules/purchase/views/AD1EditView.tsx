@@ -64,6 +64,7 @@ export const AD1EditView = () => {
       transactionType: transaction.transactionType ?? TransactionTypeEnum.PURCHASE,
       profileType: transaction.profileType ?? TransactionProfileType.AD1,
       branchId: transaction.branchId ?? '',
+      counterId: '',
       dealId: transaction.dealId ?? '',
       docNo: transaction.docNo ?? '',
       transactionDate: transaction.transactionDate ? transaction.transactionDate.split('T')[0] : '',
@@ -233,6 +234,7 @@ export const AD1EditView = () => {
 
       <AD1Form
         defaultValues={defaultValues}
+        allowWorkplaceSelection={false}
         submitLabel="Save"
         onSubmit={async (values) => {
           await transactionAd1Api.update(transaction.id, {

@@ -21,7 +21,6 @@ import { currencyProfileApi } from '@/api/currencyProfile';
 import { currencyRatesApi } from '@/api/currencyRates/currencyRates.api';
 import { partyProfileApi } from '@/api/partyProfile';
 import { accountProfileApi } from '@/api/accountProfile';
-import { branchProfileApi } from '@/api/branchProfile/branchProfile.api';
 import { productProfileApi } from '@/api/productProfile/productProfile.api';
 import { PartyProfileCommissionTypeEnum, type PartyProfileCommissionType } from '@/modules/partyProfiles/types/partyProfileTypes';
 import type { ICurrencyProfile } from '@/modules/currencyProfile/types';
@@ -34,6 +33,7 @@ import {
   getPurchaseTransactionAccountFilter,
   getPurchaseTransactionProductFilter,
 } from '../utils/purchaseUtils';
+import { PurchaseWorkplaceFields } from '../components/PurchaseWorkplaceFields';
 export { TransactionProfileType } from './ad1ProfileType';
 
 interface AD1FormProps {
@@ -41,6 +41,7 @@ interface AD1FormProps {
   onSubmit: (values: IAd1FormValues) => Promise<void> | void;
   onCancel: () => void;
   readOnly?: boolean;
+  allowWorkplaceSelection?: boolean;
   submitLabel?: string;
 }
 
@@ -49,6 +50,7 @@ export const AD1Form = ({
   onSubmit,
   onCancel,
   readOnly = false,
+  allowWorkplaceSelection = true,
   submitLabel = 'Save',
 }: AD1FormProps) => {
   return (
@@ -66,18 +68,17 @@ export const AD1Form = ({
         showSubmit: !readOnly,
       }}
     >
-      <AD1FormBody
-        readOnly={readOnly}
-      />
+      <AD1FormBody readOnly={readOnly} allowWorkplaceSelection={allowWorkplaceSelection} />
     </Form>
   );
 };
 
 interface AD1FormBodyProps {
   readOnly: boolean;
+  allowWorkplaceSelection: boolean;
 }
 
-const AD1FormBody = ({ readOnly }: AD1FormBodyProps) => {
+const AD1FormBody = ({ readOnly, allowWorkplaceSelection }: AD1FormBodyProps) => {
   const form = useFormContext<IAd1FormValues>();
   const { control, setValue } = form;
 
@@ -296,19 +297,6 @@ const AD1FormBody = ({ readOnly }: AD1FormBodyProps) => {
     };
   }, [branchId]);
 
-  const loadBranches = useCallback(async (search: string): Promise<AsyncSelectResponse> => {
-    const branches = await branchProfileApi.getBranchProfiles({ activeOnly: true });
-    const filtered = search
-      ? branches.filter(b => b.name.toLowerCase().includes(search.toLowerCase()) || b.code.toLowerCase().includes(search.toLowerCase()))
-      : branches;
-    return {
-      options: filtered.map(b => ({
-        value: b.id,
-        label: `${b.code} - ${b.name}`,
-      }))
-    };
-  }, []);
-
   const loadProducts = useCallback(async (search: string): Promise<AsyncSelectResponse> => {
     const products = await productProfileApi.getProductProfiles(
       getPurchaseTransactionProductFilter(transactionType)
@@ -368,6 +356,10 @@ const AD1FormBody = ({ readOnly }: AD1FormBodyProps) => {
 
   return (
     <div className="space-y-6">
+      <CardSection heading="Workplace">
+        <PurchaseWorkplaceFields readOnly={readOnly || !allowWorkplaceSelection} />
+      </CardSection>
+
       {/* Header section */}
       <CardSection heading="AD1 Header Details">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -386,12 +378,6 @@ const AD1FormBody = ({ readOnly }: AD1FormBodyProps) => {
             loadOptions={async () => ({ options: profileTypeOptions })}
             isSearchable={false}
             disabled={readOnly}
-          />
-          <FormFieldSelect
-            name="branchId"
-            label="Branch"
-            loadOptions={loadBranches}
-            disabled={true}
           />
           <FormFieldInput name="dealId" label="Deal ID" placeholder="Deal ID" disabled={readOnly} />
           <FormFieldInput name="docNo" label="Doc No." placeholder="Doc No." disabled={readOnly} />

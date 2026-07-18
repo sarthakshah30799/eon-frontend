@@ -154,6 +154,14 @@ const TRANSACTION_ACCOUNTING_SUBCATEGORIES: readonly AdditionalSettingSubcategor
     placeholder: 'Select round off account',
     optionsSource: 'account-profile',
   },
+  {
+    code: AdditionalSettingsCodeEnum.CashControlAccount,
+    label: 'CASH CONTROL ACCOUNT',
+    valueType: 'select',
+    required: true,
+    placeholder: 'Select cash control account',
+    optionsSource: 'account-profile',
+  },
 ];
 
 const TRANSACTION_NUMBERING_SUBCATEGORY_CONFIG: Record<

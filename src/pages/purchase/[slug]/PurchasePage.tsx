@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button1';
+import { Button, AsyncSelect, type AsyncSelectOption, type AsyncSelectResponse } from '@/components/ui';
 import { NotFoundState } from '@/components/ui/not-found-state';
 import { useAuth } from '@/lib/AuthContext';
 import { transactionsApi } from '@/api/transactions';
 import type { ITransactionEntity } from '@/modules/transactions';
 import { AD1ListView } from '@/modules/purchase';
+import { useListBranchProfiles } from '@/modules/branchProfile/hooks';
 import {
   TransactionListTable,
   type TransactionListRow,
@@ -30,6 +31,35 @@ const PurchasePageView = ({ purchasePageType }: PurchasePageViewProps) => {
   const { slug: routeSlug } = useParams<{ slug?: string }>();
   const { user } = useAuth();
   const [search, setSearch] = useState('');
+  const [branchFilter, setBranchFilter] = useState('');
+  const canSeeBranchFilter = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
+
+  const { data: branches = [] } = useListBranchProfiles({ activeOnly: true });
+  const branchOptions = useMemo<AsyncSelectOption[]>(
+    () =>
+      branches.map(branch => ({
+        value: branch.id,
+        label: `${branch.code} - ${branch.name}`,
+      })),
+    [branches]
+  );
+  const selectedBranchOption = useMemo<AsyncSelectOption | null>(
+    () => branchOptions.find(option => option.value === branchFilter) ?? null,
+    [branchFilter, branchOptions]
+  );
+  const loadBranchOptions = useMemo(
+    () => async (inputValue: string): Promise<AsyncSelectResponse> => {
+      const normalizedInput = inputValue.trim().toLowerCase();
+      const filteredOptions = normalizedInput
+        ? branchOptions.filter(option =>
+            option.label.toLowerCase().includes(normalizedInput)
+          )
+        : branchOptions;
+
+      return { options: filteredOptions };
+    },
+    [branchOptions]
+  );
 
   const selectedSlug = useMemo(
     () => getPurchasePageSlugFromType(purchasePageType) ?? routeSlug ?? '',
@@ -48,11 +78,12 @@ const PurchasePageView = ({ purchasePageType }: PurchasePageViewProps) => {
     isFetching,
     error,
   } = useQuery({
-    queryKey: ['transactions', purchasePageType, selectedSlug, search],
+    queryKey: ['transactions', purchasePageType, selectedSlug, search, branchFilter],
     queryFn: () =>
       transactionsApi.getTransactions({
         slug: purchasePageType ?? undefined,
         search: search.trim() || undefined,
+        branchId: branchFilter || undefined,
       }),
     enabled: Boolean(purchasePageType),
   });
@@ -124,6 +155,27 @@ const PurchasePageView = ({ purchasePageType }: PurchasePageViewProps) => {
             Create Transaction
           </Button>
         ) : null}
+      </div>
+
+      <div className="flex flex-wrap items-end gap-4">
+        {canSeeBranchFilter && (
+          <div className="min-w-[240px] flex-1">
+            <AsyncSelect
+              label="Branch Filter"
+              placeholder="All Branches"
+              value={selectedBranchOption}
+              loadOptions={loadBranchOptions}
+              defaultOptions={branchOptions}
+              isClearable
+              onChange={option => {
+                const selectedOption = Array.isArray(option)
+                  ? (option[0] ?? null)
+                  : option;
+                setBranchFilter(selectedOption?.value ? String(selectedOption.value) : '');
+              }}
+            />
+          </div>
+        )}
       </div>
 
       <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">

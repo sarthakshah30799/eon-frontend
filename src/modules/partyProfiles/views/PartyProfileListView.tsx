@@ -1,6 +1,6 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { Button } from '@/components/ui/button1';
+import { Button, AsyncSelect, type AsyncSelectOption, type AsyncSelectResponse } from '@/components/ui';
 import { NotFoundState } from '@/components/ui/not-found-state';
 import { useDebounce, usePermission } from '@/hooks';
 import { PartyProfileTable } from '../components';
@@ -11,17 +11,23 @@ import {
 } from '../constants';
 import { useListPartyProfiles, usePartyProfileTypes } from '../hooks';
 import type { PartyProfileType } from '../types/partyProfileTypes';
+import { useListBranchProfiles } from '@/modules/branchProfile/hooks';
+import { useAuth } from '@/lib/AuthContext';
 
 export const PartyProfileListView = () => {
   const navigate = useNavigate();
   const { type: routeType } = useParams<{ type?: string }>();
+  const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const page = 1;
   const pageSize = 10;
   const search = searchParams.get('search') ?? '';
   const debouncedSearch = useDebounce(search, 400);
+  const [branchFilter, setBranchFilter] = useState('');
+  const canSeeBranchFilter = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
 
   const { data: typeOptions = [], isLoading: isTypesLoading } = usePartyProfileTypes();
+  const { data: branches = [] } = useListBranchProfiles({ activeOnly: true });
   const routeOptions = useMemo(
     () =>
       typeOptions.map(option => ({
@@ -46,6 +52,31 @@ export const PartyProfileListView = () => {
   );
   const isInvalidTypeRoute = Boolean(routeType) && !routeOptions.some(option => option.value === selectedType);
   const canLoadList = Boolean(selectedApiType) && !isInvalidTypeRoute;
+  const branchOptions = useMemo<AsyncSelectOption[]>(
+    () =>
+      branches.map(branch => ({
+        value: branch.id,
+        label: `${branch.code} - ${branch.name}`,
+      })),
+    [branches]
+  );
+  const selectedBranchOption = useMemo<AsyncSelectOption | null>(
+    () => branchOptions.find(option => option.value === branchFilter) ?? null,
+    [branchFilter, branchOptions]
+  );
+  const loadBranchOptions = useMemo(
+    () => async (inputValue: string): Promise<AsyncSelectResponse> => {
+      const normalizedInput = inputValue.trim().toLowerCase();
+      const filteredOptions = normalizedInput
+        ? branchOptions.filter(option =>
+            option.label.toLowerCase().includes(normalizedInput)
+          )
+        : branchOptions;
+
+      return { options: filteredOptions };
+    },
+    [branchOptions]
+  );
 
   useEffect(() => {
     if (!routeType && routeOptions[0]) {
@@ -60,8 +91,9 @@ export const PartyProfileListView = () => {
       search: debouncedSearch.trim() || undefined,
       activeOnly: false,
       type: selectedApiType,
+      branchId: branchFilter || undefined,
     }),
-    [page, pageSize, debouncedSearch, selectedApiType]
+    [branchFilter, debouncedSearch, page, pageSize, selectedApiType]
   );
 
   const {
@@ -119,6 +151,27 @@ export const PartyProfileListView = () => {
           </Button>
         )}
       </div>
+
+      {canSeeBranchFilter && (
+        <div className="flex flex-wrap items-end gap-4">
+          <div className="min-w-[240px] flex-1">
+            <AsyncSelect
+              label="Branch Filter"
+              placeholder="All Branches"
+              value={selectedBranchOption}
+              loadOptions={loadBranchOptions}
+              defaultOptions={branchOptions}
+              isClearable
+              onChange={option => {
+                const selectedOption = Array.isArray(option)
+                  ? (option[0] ?? null)
+                  : option;
+                setBranchFilter(selectedOption?.value ? String(selectedOption.value) : '');
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
         <PartyProfileTable

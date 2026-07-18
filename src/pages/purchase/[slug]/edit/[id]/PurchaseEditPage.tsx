@@ -79,6 +79,16 @@ const PurchaseEditPage = () => {
       ),
     [additionalSettings]
   );
+  const cashControlAccountId = useMemo(
+    () =>
+      getAdditionalSettingTextValue(
+        additionalSettings,
+        AdditionalSettingsCodeEnum.TransactionAccounting,
+        AdditionalSettingsCodeEnum.CashControlAccount,
+        ''
+      ),
+    [additionalSettings]
+  );
 
   const pricingData = useMemo(
     () => ({
@@ -165,6 +175,7 @@ const PurchaseEditPage = () => {
         pricingData={pricingData}
         partyProfileTypes={partyProfileTypes}
         requiresApproval={requiresApproval}
+        cashControlAccountId={cashControlAccountId}
         branchId={transaction.branchId}
         branchCode={branchProfile?.code ?? ''}
         sacCode={sacCode}

@@ -1,4 +1,5 @@
 export interface ITransactionPaymentDetailFormRow {
+  paymentMethod: string;
   accountId: string;
   accountName: string;
   chequePageId?: string;
@@ -8,4 +9,5 @@ export interface ITransactionPaymentDetailFormRow {
   branchName: string;
   drawnOn: string;
   amount: string;
+  remarks?: string;
 }

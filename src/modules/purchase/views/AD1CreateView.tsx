@@ -11,7 +11,8 @@ import { AdditionalSettingsCodeEnum } from '@/modules/additionalSettings/constan
 
 export const AD1CreateView = () => {
   const navigate = useNavigate();
-  const { activeBranchId } = useAuth();
+  const { user, activeBranchId, activeCounterId, setWorkplace } = useAuth();
+  const canSelectWorkplace = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
 
   const { data: additionalSettings = [] } = useListAdditionalSettings();
 
@@ -31,7 +32,8 @@ export const AD1CreateView = () => {
     return {
       transactionType: TransactionTypeEnum.PURCHASE,
       profileType: TransactionProfileType.AD1,
-      branchId: activeBranchId ?? '',
+      branchId: canSelectWorkplace ? '' : activeBranchId ?? '',
+      counterId: canSelectWorkplace ? '' : activeCounterId ?? '',
       dealId: '',
       docNo: '',
       transactionDate: today,
@@ -75,7 +77,7 @@ export const AD1CreateView = () => {
       rtgsImpsNeftRefNo: '',
       remarks: '',
     };
-  }, [activeBranchId]);
+  }, [activeBranchId, activeCounterId, canSelectWorkplace]);
 
   return (
     <div className="space-y-6">
@@ -88,8 +90,10 @@ export const AD1CreateView = () => {
 
       <AD1Form
         defaultValues={defaultValues}
+        allowWorkplaceSelection={canSelectWorkplace}
         submitLabel={requiresApproval ? 'Submit for Approval' : 'Create'}
         onSubmit={async (values) => {
+          await setWorkplace(values.branchId, values.counterId);
           await transactionAd1Api.create({
             transactionType: values.transactionType as string,
             profileType: values.profileType as string,

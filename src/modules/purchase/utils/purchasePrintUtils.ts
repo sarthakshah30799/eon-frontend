@@ -136,6 +136,19 @@ const joinAddress = (...parts: Array<string | null | undefined>) =>
 
 const formatReferenceValue = (value?: string | null) => value?.trim() || '-';
 
+const formatPaymentMethodLabel = (value?: string | null) => {
+  const normalized = value?.trim().toUpperCase();
+  if (normalized === 'CASH') {
+    return 'Cash';
+  }
+
+  if (normalized === 'CHEQUE') {
+    return 'Cheque';
+  }
+
+  return formatReferenceValue(value);
+};
+
 const formatSignedAmount = (value?: string | null, decimals = 2) => {
   const formatted = formatAmount(value, decimals);
   if (formatted === '' || formatted === '0.00' || formatted === '0.0000') {
@@ -207,9 +220,9 @@ export const buildPurchasePrintHtml = ({
     .map(
       (row, index) => `
         <tr>
-          <td>${index + 1}</td>
-          <td>${escapeHtml('R/P')}</td>
-          <td>${escapeHtml(row.accountName || formatReferenceValue(row.accountId))}</td>
+      <td>${index + 1}</td>
+      <td>${escapeHtml(formatPaymentMethodLabel(row.paymentMethod))}</td>
+      <td>${escapeHtml(row.accountName || formatReferenceValue(row.accountId))}</td>
           <td class="right">${escapeHtml(formatAmount(row.amount))}</td>
           <td>${escapeHtml(formatReferenceValue(row.chequeNumber))}</td>
           <td>${escapeHtml(formatDate(row.chequeDate))}</td>

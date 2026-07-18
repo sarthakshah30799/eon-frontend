@@ -18,6 +18,7 @@ import type { ICreatePartyProfile } from '../types';
 
 import { branchProfileApi } from '@/api/branchProfile/branchProfile.api';
 import { partyProfileApi } from '@/api/partyProfile';
+import { useAuth } from '@/lib/AuthContext';
 import { useGetStateProfile } from '@/modules/stateProfile';
 import {
   toPartyProfileDisplayLabel,
@@ -44,6 +45,7 @@ interface PartyProfileFormProps {
   onReviewSubmit?: (values: IReviewPartyProfilePayload) => void | Promise<void>;
   currentId?: string;
   showSubmit?: boolean;
+  allowBranchSelection?: boolean;
 }
 
 const FORM_ID = 'party-profile-form';
@@ -55,6 +57,7 @@ const PartyProfileFormFields = ({
   reviewMode = false,
   onReviewSubmit,
   currentId,
+  allowBranchSelection = false,
 }: {
   isSubmitting?: boolean;
   disabled?: boolean;
@@ -62,10 +65,13 @@ const PartyProfileFormFields = ({
   reviewMode?: boolean;
   onReviewSubmit?: (values: IReviewPartyProfilePayload) => void | Promise<void>;
   currentId?: string;
+  allowBranchSelection?: boolean;
 }) => {
   const form = useFormContext<PartyProfileFormValues>();
+  const { user } = useAuth();
   const isSubmitting = isSubmittingProp || disabled || reviewMode;
   const reviewActionsDisabled = isSubmittingProp;
+  const canEditBranch = allowBranchSelection && Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
   const effectiveProfileType = profileType;
   const panNo = useWatch({ name: 'panNo' });
   const gstStateId = useWatch({ name: 'gstStateId' });
@@ -565,7 +571,7 @@ const PartyProfileFormFields = ({
             label="Current Branch"
             placeholder="Select current branch"
             loadOptions={branchLoadOptions}
-            disabled={true}
+            disabled={isSubmitting || !canEditBranch || Boolean(currentId)}
           />
         </div>
       </CardSection>
@@ -636,6 +642,7 @@ export const PartyProfileForm = ({
   onReviewSubmit,
   currentId,
   showSubmit = true,
+  allowBranchSelection = false,
 }: PartyProfileFormProps) => {
   return (
     <Form
@@ -664,6 +671,7 @@ export const PartyProfileForm = ({
         reviewMode={reviewMode}
         onReviewSubmit={onReviewSubmit}
         currentId={currentId}
+        allowBranchSelection={allowBranchSelection}
       />
     </Form>
   );

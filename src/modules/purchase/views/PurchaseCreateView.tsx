@@ -33,7 +33,10 @@ export const PurchaseCreateView = ({
   purchasePageType,
 }: PurchaseCreateViewProps) => {
   const navigate = useNavigate();
-  const { activeBranchId, activeCounterId } = useAuth();
+  const { user, activeBranchId, activeCounterId, setWorkplace } = useAuth();
+  const canSelectWorkplace = Boolean(
+    user?.isAdmin || user?.isHo || user?.isHoStaff
+  );
   const [savedTransaction, setSavedTransaction] = useState<{
     id: string;
     number: string | null;
@@ -81,6 +84,16 @@ export const PurchaseCreateView = ({
       ),
     [additionalSettings]
   );
+  const cashControlAccountId = useMemo(
+    () =>
+      getAdditionalSettingTextValue(
+        additionalSettings,
+        AdditionalSettingsCodeEnum.TransactionAccounting,
+        AdditionalSettingsCodeEnum.CashControlAccount,
+        ''
+      ),
+    [additionalSettings]
+  );
 
   const defaultValues = useMemo(
     () =>
@@ -88,7 +101,7 @@ export const PurchaseCreateView = ({
         getPurchaseTransactionType(purchasePageType),
         getPurchaseTradeMode(purchasePageType),
         purchasePageType,
-        branchProfile
+        branchProfile && !canSelectWorkplace
           ? ({
               id: branchProfile.id,
               code: branchProfile.code,
@@ -96,10 +109,10 @@ export const PurchaseCreateView = ({
               label: `${branchProfile.code} - ${branchProfile.name}`,
             } satisfies ITransactionReferenceSnapshot)
           : null,
-        activeBranchId ?? '',
-        activeCounterId ?? ''
+        canSelectWorkplace ? '' : activeBranchId ?? '',
+        canSelectWorkplace ? '' : activeCounterId ?? ''
       ),
-    [activeBranchId, activeCounterId, branchProfile, purchasePageType]
+    [activeBranchId, activeCounterId, branchProfile, canSelectWorkplace, purchasePageType]
   );
   const pricingData = useMemo(
     () => ({
@@ -161,12 +174,14 @@ export const PurchaseCreateView = ({
         pricingData={pricingData}
         partyProfileTypes={partyProfileTypes}
         requiresApproval={requiresApproval}
-        branchId={activeBranchId ?? ''}
-        branchCode={branchProfile?.code ?? ''}
+        cashControlAccountId={cashControlAccountId}
+        branchId={canSelectWorkplace ? '' : activeBranchId ?? ''}
+        branchCode={canSelectWorkplace ? '' : branchProfile?.code ?? ''}
         sacCode={sacCode}
         isSubmitting={isSaving}
         submitLabel={requiresApproval ? 'Submit for Approval' : 'Save'}
         onSubmit={async (values, attachments) => {
+          await setWorkplace(values.branchId, values.counterId);
           const payload = mapPurchaseFormValuesToSubmitPayload(
             values,
             attachments,

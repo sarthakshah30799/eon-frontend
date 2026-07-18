@@ -229,7 +229,7 @@ export const FormFieldSelect = ({
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 w-full">
       <AsyncSelect
         label={label}
         placeholder={placeholder}

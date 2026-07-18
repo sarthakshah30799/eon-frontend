@@ -19,7 +19,7 @@ import {
     useCreateManualBillBook,
     useListManualBillBookManagers,
 } from '../hooks';
-import { useListBranchProfiles } from '@/modules/branchProfile/hooks';
+import { useGetBranchProfile } from '@/modules/branchProfile/hooks';
 import type { IBulkDispatchFormValues } from '../types';
 import { debouncePromise } from '@/hooks';
 
@@ -125,6 +125,7 @@ interface BulkDispatchFormFieldsProps {
 
 const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => {
     const form = useFormContext<IBulkDispatchFormValues>();
+    const { activeBranchId } = useAuth();
     const branchId = useWatch({ name: 'branchId', control: form.control });
 
     // Pre-fill form with rejected book data in reassign mode
@@ -138,7 +139,7 @@ const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => 
                 form.reset({
                     dispatchDate: book.dispatchDate,
                     no: book.no,
-                    branchId: book.branchId,
+                    branchId: activeBranchId || '',
                     transactionType: book.transactionType,
                     bookNoFrom: String(book.bookNoFrom),
                     bookNoTo: String(book.bookNoTo),
@@ -151,7 +152,7 @@ const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => 
             })
             .catch(console.error);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [reassignId]);
+    }, [reassignId, activeBranchId]);
     const dispatchDate = useWatch({
         name: 'dispatchDate',
         control: form.control,
@@ -203,10 +204,11 @@ const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => 
         }
     }, [bookNoFrom, bookNoTo, vouchersPerBook, mvNoFrom, form]);
 
-    // Reset Assigned To when Branch changes
+    // Reset Assigned To when Branch changes in create mode.
     useEffect(() => {
+        if (reassignId) return;
         form.setValue('assignedTo', '');
-    }, [branchId, form]);
+    }, [branchId, form, reassignId]);
 
     // Debounced trigger validation on dependent changes
     useEffect(() => {
@@ -217,18 +219,14 @@ const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => 
         return () => clearTimeout(timer);
     }, [bookNoFrom, bookNoTo, form]);
 
-    const { user } = useAuth();
-    const canSelectBranch = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
-    const { data: branches = [] } = useListBranchProfiles({
-        activeOnly: true,
-    });
+    const { data: activeBranch } = useGetBranchProfile(activeBranchId || '');
     const { data: branchManagers = [] } = useListManualBillBookManagers(branchId);
 
     const loadBranches = async () => ({
-        options: branches.map(branch => ({
-            value: branch.id,
-            label: `${branch.code} - ${branch.name}`,
-        })),
+        options: activeBranchId && activeBranch ? [{
+            value: activeBranch.id,
+            label: `${activeBranch.code} - ${activeBranch.name}`,
+        }] : [],
         hasMore: false,
     });
     const loadAssignedTo = async () => ({
@@ -252,7 +250,7 @@ const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => 
                 name="branchId"
                 label="Branch"
                 loadOptions={loadBranches}
-                disabled={!canSelectBranch}
+                disabled
             />
             <FormFieldCategoryOption
                 name="transactionType"
@@ -287,8 +285,7 @@ const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => 
 
 export const BulkDispatchForm = ({ onSuccess, reassignId }: BulkDispatchFormProps) => {
     const navigate = useNavigate();
-    const { user, activeBranchId } = useAuth();
-    const canSelectBranch = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
+    const { activeBranchId } = useAuth();
     const { submitManualBillBook } = useCreateManualBillBook();
     const isReassign = !!reassignId;
 
@@ -320,7 +317,7 @@ export const BulkDispatchForm = ({ onSuccess, reassignId }: BulkDispatchFormProp
     const defaultValues = {
         dispatchDate: new Date().toISOString().slice(0, 10),
         no: '',
-        branchId: canSelectBranch ? '' : activeBranchId || '',
+        branchId: activeBranchId || '',
         transactionType: '',
         bookNoFrom: '',
         bookNoTo: '',

@@ -10,13 +10,10 @@ import { TransactionAdditionalChargesFieldArray } from '@/components/forms';
 import { TransactionPaymentDetailsFieldArray } from '@/components/forms';
 import { documentProfileApi } from '@/api/documentProfile';
 import { transactionsApi } from '@/api/transactions';
-import { useAuth } from '@/lib/AuthContext';
 import { DocumentRequirementCard } from '@/modules/documentProfiles/components/DocumentRequirementCard';
 import type { IDocumentProfileFile } from '@/modules/documentProfiles/types';
 import { SelectCurrencyProfiles } from '@/modules/currencyProfile/components';
 import { useGetBranchProfile } from '@/modules/branchProfile/hooks/useGetBranchProfile';
-import { useListBranchProfiles } from '@/modules/branchProfile/hooks';
-import { useListCounterProfiles } from '@/modules/counterProfile/hooks';
 import { useListCompanyProfiles } from '@/modules/companyProfile/hooks';
 import { useGetPartyProfile } from '@/modules/partyProfiles/hooks';
 import type { PartyProfileType } from '@/modules/partyProfiles/types';
@@ -37,14 +34,12 @@ import { PurchaseReferenceNumberField } from '../components/PurchaseReferenceNum
 import { PurchaseTransactionTable } from '../components/PurchaseTransactionTable';
 import {
   calculatePurchasePayableTotal,
-  createStaticLoadOptions,
 } from '../utils/purchaseUtils';
 import {
   buildPurchasePrintHtml,
   getPurchasePrintCopyLabel,
 } from '../utils/purchasePrintUtils';
 import { TransactionLogActionEnum } from '@/modules/transactions';
-import { FormFieldSelect } from '@/components/forms';
 
 const ACCOUNT_PROFILE_OPTION_PAGE_SIZE = 30;
 
@@ -108,8 +103,6 @@ const PurchaseFormBody = ({
   void _branchCode;
   void _isFreshlyCreated;
   const form = useFormContext<IPurchaseFormValues>();
-  const { user, activeBranchId: sessionBranchId, activeCounterId: sessionCounterId } = useAuth();
-  const canOverrideWorkplace = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
   const [currencyPickerRowIndex, setCurrencyPickerRowIndex] = useState<
     number | null
   >(null);
@@ -124,28 +117,11 @@ const PurchaseFormBody = ({
     control: form.control,
     name: 'agentProfileId',
   });
-  const selectedBranchId = useWatch({
-    control: form.control,
-    name: 'branchId',
-  });
-  const selectedCounterId = useWatch({
-    control: form.control,
-    name: 'counterId',
-  });
   const cashierUserId = useWatch({
     control: form.control,
     name: 'cashierUserId',
   });
-  const {
-    data: branchSelectOptions = [],
-    isLoading: isBranchOptionsLoading,
-  } = useListBranchProfiles({ activeOnly: true });
-  const {
-    data: counterSelectOptions = [],
-    isLoading: isCounterOptionsLoading,
-    isFetching: isCounterOptionsFetching,
-  } = useListCounterProfiles({ activeOnly: true });
-  const resolvedBranchId = selectedBranchId || branchId;
+  const resolvedBranchId = branchId;
   const additionalChargeAccountQuery = useMemo(
     () => ({
       page: 1,
@@ -253,46 +229,6 @@ const PurchaseFormBody = ({
     () => getPurchasePageTitle(purchasePageType),
     [purchasePageType]
   );
-  const branchLoadOptions = useMemo(
-    () =>
-      createStaticLoadOptions(
-        branchSelectOptions.map(branch => ({
-          value: branch.id,
-          label: `${branch.code} - ${branch.name}`,
-        }))
-      ),
-    [branchSelectOptions]
-  );
-  const branchDefaultOptions = useMemo(
-    () =>
-      branchSelectOptions.map(branch => ({
-        value: branch.id,
-        label: `${branch.code} - ${branch.name}`,
-      })),
-    [branchSelectOptions]
-  );
-  const counterLoadOptions = useMemo(
-    () =>
-      createStaticLoadOptions(
-        counterSelectOptions
-          .filter(counter => !resolvedBranchId || counter.branchId === resolvedBranchId)
-          .map(counter => ({
-            value: counter.id,
-            label: `${counter.counterNo} - ${counter.name}`,
-          }))
-      ),
-    [counterSelectOptions, resolvedBranchId]
-  );
-  const counterDefaultOptions = useMemo(
-    () =>
-      counterSelectOptions
-        .filter(counter => !resolvedBranchId || counter.branchId === resolvedBranchId)
-        .map(counter => ({
-          value: counter.id,
-          label: `${counter.counterNo} - ${counter.name}`,
-        })),
-    [counterSelectOptions, resolvedBranchId]
-  );
   const currentCompany = useMemo(() => {
     const now = new Date();
 
@@ -321,73 +257,21 @@ const PurchaseFormBody = ({
   const canPrint = Boolean(savedTransaction?.id && savedTransaction?.number);
 
   useEffect(() => {
-    if (isBranchOptionsLoading) {
+    if (!branchProfile) {
       return;
     }
 
-    const selectedBranch = branchSelectOptions.find(
-      branch => branch.id === resolvedBranchId
-    );
-
-    if (selectedBranch) {
-      form.setValue('branchSnapshot', {
-        id: selectedBranch.id,
-        code: selectedBranch.code,
-        name: selectedBranch.name,
-        label: `${selectedBranch.code} - ${selectedBranch.name}`,
-      }, {
-        shouldDirty: true,
-        shouldTouch: true,
-        shouldValidate: false,
-      });
-    }
-  }, [branchSelectOptions, form, isBranchOptionsLoading, resolvedBranchId]);
-
-  useEffect(() => {
-    if (!resolvedBranchId) {
-      return;
-    }
-
-    if (isCounterOptionsLoading || isCounterOptionsFetching) {
-      return;
-    }
-
-    const allowedCounterIds = new Set(
-      counterSelectOptions
-        .filter(counter => counter.branchId === resolvedBranchId)
-        .map(counter => counter.id)
-    );
-
-    if (selectedCounterId && !allowedCounterIds.has(selectedCounterId)) {
-      form.setValue('counterId', '', {
-        shouldDirty: true,
-        shouldTouch: true,
-        shouldValidate: true,
-      });
-    }
-  }, [
-    counterSelectOptions,
-    form,
-    isCounterOptionsFetching,
-    isCounterOptionsLoading,
-    resolvedBranchId,
-    selectedCounterId,
-  ]);
-
-  useEffect(() => {
-    if (!canOverrideWorkplace) {
-      form.setValue('branchId', sessionBranchId ?? branchId, {
-        shouldDirty: false,
-        shouldTouch: false,
-        shouldValidate: false,
-      });
-      form.setValue('counterId', sessionCounterId ?? '', {
-        shouldDirty: false,
-        shouldTouch: false,
-        shouldValidate: false,
-      });
-    }
-  }, [branchId, canOverrideWorkplace, form, sessionBranchId, sessionCounterId]);
+    form.setValue('branchSnapshot', {
+      id: branchProfile.id,
+      code: branchProfile.code,
+      name: branchProfile.name,
+      label: `${branchProfile.code} - ${branchProfile.name}`,
+    }, {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: false,
+    });
+  }, [branchProfile, form]);
 
   const handleCurrencySelect = (
     currencies: Array<{
@@ -498,33 +382,6 @@ const PurchaseFormBody = ({
   return (
     <>
       <CardSection heading={pageTitle}>
-        {canOverrideWorkplace ? (
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            <FormFieldSelect
-              name="branchId"
-              label="Branch"
-              loadOptions={branchLoadOptions}
-              defaultOptions={branchDefaultOptions}
-              disabled={isReadOnly || isBranchOptionsLoading}
-              cacheOptions={false}
-            />
-            <FormFieldSelect
-              key={`counter-${resolvedBranchId}-${counterSelectOptions.length}`}
-              name="counterId"
-              label="Counter"
-              loadOptions={counterLoadOptions}
-              defaultOptions={counterDefaultOptions}
-              disabled={
-                isReadOnly ||
-                !resolvedBranchId ||
-                isCounterOptionsLoading ||
-                isCounterOptionsFetching
-              }
-              cacheOptions={false}
-            />
-          </div>
-        ) : null}
-
         <div className="grid gap-4 lg:grid-cols-3">
           <PurchasePartyProfileField
             partyProfileTypes={partyProfileTypes}
@@ -549,7 +406,7 @@ const PurchaseFormBody = ({
         />
       </CardSection>
 
-        <PurchaseTransactionTable
+      <PurchaseTransactionTable
         branchId={resolvedBranchId}
         excludeTransactionId={savedTransaction?.id ?? undefined}
         pricingData={pricingData}

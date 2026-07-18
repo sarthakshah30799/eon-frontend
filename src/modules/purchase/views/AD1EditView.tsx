@@ -233,11 +233,9 @@ export const AD1EditView = () => {
 
       <AD1Form
         defaultValues={defaultValues}
-        user={user}
         submitLabel="Save"
         onSubmit={async (values) => {
           await transactionAd1Api.update(transaction.id, {
-            branchId: values.branchId as string,
             transactionType: values.transactionType as string,
             profileType: values.profileType as string,
             dealId: (values.dealId as string) || null,

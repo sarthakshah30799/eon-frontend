@@ -90,6 +90,7 @@ const AsyncSelectComponent = React.forwardRef<
       pageSize = 20,
       debounceDelay = 300,
       className = '',
+      defaultOptions,
       size,
       variant,
       isCreatable = false,
@@ -242,15 +243,10 @@ const AsyncSelectComponent = React.forwardRef<
 
     // Custom styles
 
-    const customStyles: StylesConfig<
-      AsyncSelectOption,
-      boolean
-    > = {
+    const customStyles: StylesConfig<AsyncSelectOption, boolean> = {
       control: (base, state) => ({
         ...base,
-        borderColor: error
-          ? 'var(--color-error-500)'
-          : '#94a3b8',
+        borderColor: error ? 'var(--color-error-500)' : '#94a3b8',
         '&:hover': {
           borderColor: error
             ? 'var(--color-error-500)'
@@ -277,7 +273,7 @@ const AsyncSelectComponent = React.forwardRef<
     };
 
     return (
-      <div className="space-y-1 max-w-[350px]">
+      <div className="space-y-1 w-full">
         {label && <Label htmlFor={props.id}>{label}</Label>}
         <div className={asyncSelectVariants({ size, variant, className })}>
           {isCreatable ? (
@@ -287,7 +283,7 @@ const AsyncSelectComponent = React.forwardRef<
               isSearchable={isSearchable}
               inputValue={inputValue}
               cacheOptions={!pagination}
-              defaultOptions
+              defaultOptions={defaultOptions ?? true}
               loadOptions={debouncedLoadOptions}
               onMenuScrollToBottom={handleMenuScrollToBottom}
               onInputChange={handleInputChange}
@@ -306,7 +302,7 @@ const AsyncSelectComponent = React.forwardRef<
               isSearchable={isSearchable}
               inputValue={inputValue}
               cacheOptions={!pagination}
-              defaultOptions
+              defaultOptions={defaultOptions ?? true}
               loadOptions={debouncedLoadOptions}
               onMenuScrollToBottom={handleMenuScrollToBottom}
               onInputChange={handleInputChange}
@@ -316,7 +312,7 @@ const AsyncSelectComponent = React.forwardRef<
                 inputValue ? 'No options found' : 'Start typing to search...'
               }
               isDisabled={props.disabled}
-              menuPosition='fixed'
+              menuPosition="fixed"
               {...props}
             />
           )}

@@ -129,9 +129,7 @@ export interface IPurchaseSubmitPayload {
   transaction: {
     number?: string | null;
     slug: string;
-    branchId: string;
     branchSnapshot: ITransactionReferenceSnapshot | null;
-    counterId: string;
     requiresApproval: boolean;
     partyProfileId: string;
     agentProfileId?: string | null;

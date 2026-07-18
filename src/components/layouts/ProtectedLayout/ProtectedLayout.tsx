@@ -12,6 +12,7 @@ export const ProtectedLayout: React.FC<ProtectedLayoutProps> = ({
   children,
 }) => {
   const { isLoading, isAuthenticated, user, activeBranchId, activeCounterId } = useAuth();
+  const canSkipWorkplace = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
 
   if (isLoading) {
     return <Loader />;
@@ -21,7 +22,7 @@ export const ProtectedLayout: React.FC<ProtectedLayoutProps> = ({
     return <Navigate to="/login" replace />;
   }
 
-  if (user && (!activeBranchId || !activeCounterId)) {
+  if (user && !canSkipWorkplace && (!activeBranchId || !activeCounterId)) {
     return <Navigate to="/choose-workplace" replace />;
   }
 

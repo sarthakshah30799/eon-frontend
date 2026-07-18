@@ -4,7 +4,6 @@ import { useCreatePartyProfile, usePartyProfileTypes } from '../hooks';
 import { PartyProfileForm } from '../forms/PartyProfileForm';
 import type { ICreatePartyProfile } from '../types';
 import { toPartyProfileApiType, toPartyProfileRouteType } from '../constants';
-import { useAuth } from '@/lib';
 import { buildPartyProfileDocumentsPath } from '@/modules/partyProfileDocuments/utils/partyProfileDocumentRoutes';
 import { NotFoundState } from '@/components/ui/not-found-state';
 import { usePermission } from '@/hooks';
@@ -79,7 +78,6 @@ const createEmptyPartyProfileValues = (): Omit<ICreatePartyProfile, 'type'> => {
 export const PartyProfileCreateView = () => {
   const navigate = useNavigate();
   const { type: routeType } = useParams<{ type?: string }>();
-  const { activeBranchId } = useAuth();
 
   const { data: typeOptions = [], isLoading: isTypesLoading } = usePartyProfileTypes();
   const routeOptions = useMemo(
@@ -112,14 +110,6 @@ export const PartyProfileCreateView = () => {
   }, [navigate, routeOptions, routeType]);
 
   const defaultValues = useMemo(() => createEmptyPartyProfileValues(), []);
-
-  const formDefaultValues = useMemo(
-    () => ({
-      ...defaultValues,
-      branchId: activeBranchId || '',
-    }),
-    [activeBranchId, defaultValues]
-  );
 
   if (isTypesLoading) {
     return (
@@ -171,13 +161,14 @@ export const PartyProfileCreateView = () => {
     <div className="space-y-6">
       <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
         <PartyProfileForm
-          defaultValues={formDefaultValues}
+          defaultValues={defaultValues}
           onSubmit={handleSubmit}
           onCancel={handleCancel}
           isSubmitting={isPending}
           submitLabel="Create Party Profile"
           profileType={selectedApiType}
           currentId={undefined}
+          allowBranchSelection
         />
       </section>
     </div>

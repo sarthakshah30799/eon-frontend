@@ -26,11 +26,12 @@ import type {
   IPurchaseTransactionDocument,
 } from '../types/purchaseTypes';
 import type { ITransactionEntity } from '@/modules/transactions';
-import { purchaseFormSchema } from '../schema/purchaseSchema';
+import { createPurchaseFormSchema } from '../schema/purchaseSchema';
 import { PurchaseAgentProfileField } from '../components/PurchaseAgentProfileField';
 import { PurchaseBookReferenceField } from '../components/PurchaseBookReferenceField';
 import { PurchasePartyProfileField } from '../components/PurchasePartyProfileField';
 import { PurchaseReferenceNumberField } from '../components/PurchaseReferenceNumberField';
+import { PurchaseWorkplaceFields } from '../components/PurchaseWorkplaceFields';
 import { PurchaseTransactionTable } from '../components/PurchaseTransactionTable';
 import {
   calculatePurchasePayableTotal,
@@ -49,6 +50,7 @@ interface PurchaseFormProps {
   pricingData: IPurchasePricingData;
   partyProfileTypes: PartyProfileType[];
   requiresApproval: boolean;
+  cashControlAccountId?: string;
   branchId?: string;
   branchCode?: string;
   sacCode?: string | null;
@@ -70,6 +72,7 @@ interface PurchaseFormBodyProps {
   pricingData: IPurchasePricingData;
   partyProfileTypes: PartyProfileType[];
   requiresApproval: boolean;
+  cashControlAccountId?: string;
   branchId: string;
   branchCode: string;
   sacCode: string;
@@ -88,6 +91,7 @@ const PurchaseFormBody = ({
   pricingData,
   partyProfileTypes,
   requiresApproval,
+  cashControlAccountId,
   branchId,
   sacCode,
   savedTransaction,
@@ -121,7 +125,11 @@ const PurchaseFormBody = ({
     control: form.control,
     name: 'cashierUserId',
   });
-  const resolvedBranchId = branchId;
+  const watchedBranchId = useWatch({
+    control: form.control,
+    name: 'branchId',
+  });
+  const resolvedBranchId = watchedBranchId || branchId;
   const additionalChargeAccountQuery = useMemo(
     () => ({
       page: 1,
@@ -381,6 +389,13 @@ const PurchaseFormBody = ({
 
   return (
     <>
+      <CardSection heading="Workplace">
+        <p className="mb-4 text-sm text-text-secondary">
+          Select the branch and counter for this transaction. Admin and HO can choose these before saving.
+        </p>
+        <PurchaseWorkplaceFields readOnly={isReadOnly} />
+      </CardSection>
+
       <CardSection heading={pageTitle}>
         <div className="grid gap-4 lg:grid-cols-3">
           <PurchasePartyProfileField
@@ -428,10 +443,12 @@ const PurchaseFormBody = ({
       <TransactionPaymentDetailsFieldArray
         name="paymentDetails"
         maxAmount={totalPayableAmount}
+        syncPrimaryRowAmount={!savedTransaction}
         accountQuery={paymentAccountQuery}
         transactionType={transactionType}
         branchId={resolvedBranchId}
         selectablePagesUserId={cashierUserId || undefined}
+        cashControlAccountId={cashControlAccountId}
         disabled={isReadOnly}
         title="Payment Details"
         description="Store how this transaction will be settled. Payment accounts are filtered by ledger type and purchase/sale mode."
@@ -522,6 +539,7 @@ export const PurchaseForm = ({
   pricingData,
   partyProfileTypes,
   requiresApproval,
+  cashControlAccountId,
   branchId = '',
   branchCode = '',
   sacCode = '',
@@ -567,7 +585,9 @@ export const PurchaseForm = ({
     <Form<IPurchaseFormValues>
       id="purchase-form"
       onSubmit={values => onSubmit(values, draftDocumentAttachments)}
-      resolver={yupResolver(purchaseFormSchema) as Resolver<IPurchaseFormValues>}
+      resolver={yupResolver(
+        createPurchaseFormSchema(defaultValues.transactionType),
+      ) as unknown as Resolver<IPurchaseFormValues>}
       defaultValues={defaultValues}
       className="space-y-6"
       footer={{
@@ -583,6 +603,7 @@ export const PurchaseForm = ({
         pricingData={pricingData}
         partyProfileTypes={partyProfileTypes}
         requiresApproval={requiresApproval}
+        cashControlAccountId={cashControlAccountId}
         branchId={branchId}
         branchCode={branchCode}
         sacCode={sacCode ?? ''}

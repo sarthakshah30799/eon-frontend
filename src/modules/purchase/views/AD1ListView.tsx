@@ -3,9 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { PencilSquareIcon } from '@heroicons/react/24/outline';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button1';
+import { AsyncSelect, type AsyncSelectOption, type AsyncSelectResponse } from '@/components/ui';
 import { Table, type TableColumnDef } from '@/components/ui/table';
 import { NotFoundState } from '@/components/ui/not-found-state';
 import { usePermission } from '@/hooks/usePermission';
+import { useAuth } from '@/lib/AuthContext';
+import { useListBranchProfiles } from '@/modules/branchProfile/hooks';
 import { transactionAd1Api } from '@/api/transactionAd1/transactionAd1.api';
 import { formatDateTime } from '@/utils';
 
@@ -22,12 +25,46 @@ interface Ad1Row {
 
 export const AD1ListView = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { hasAnyPermission } = usePermission('/ad1');
   const [search, setSearch] = useState('');
+  const [branchFilter, setBranchFilter] = useState('');
+  const canSeeAllBranches = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
+
+  const { data: branches = [] } = useListBranchProfiles({ activeOnly: true });
+  const branchOptions = useMemo<AsyncSelectOption[]>(
+    () =>
+      branches.map(branch => ({
+        value: branch.id,
+        label: `${branch.code} - ${branch.name}`,
+      })),
+    [branches]
+  );
+  const selectedBranchOption = useMemo<AsyncSelectOption | null>(
+    () => branchOptions.find(option => option.value === branchFilter) ?? null,
+    [branchFilter, branchOptions]
+  );
+  const loadBranchOptions = useMemo(
+    () => async (inputValue: string): Promise<AsyncSelectResponse> => {
+      const normalizedInput = inputValue.trim().toLowerCase();
+      const filteredOptions = normalizedInput
+        ? branchOptions.filter(option =>
+            option.label.toLowerCase().includes(normalizedInput)
+          )
+        : branchOptions;
+
+      return { options: filteredOptions };
+    },
+    [branchOptions]
+  );
 
   const { data = [], isLoading, isFetching, error } = useQuery({
-    queryKey: ['transactions-ad1', search],
-    queryFn: () => transactionAd1Api.getAll({ search: search.trim() || undefined }),
+    queryKey: ['transactions-ad1', search, branchFilter],
+    queryFn: () =>
+      transactionAd1Api.getAll({
+        search: search.trim() || undefined,
+        branchId: canSeeAllBranches ? branchFilter || undefined : undefined,
+      }),
   });
 
   const rows = useMemo<Ad1Row[]>(
@@ -111,6 +148,27 @@ export const AD1ListView = () => {
           Create AD1
         </Button>
       </div>
+
+      {canSeeAllBranches && (
+        <div className="flex flex-wrap items-end gap-4">
+          <div className="min-w-[240px] flex-1">
+            <AsyncSelect
+              label="Branch Filter"
+              placeholder="All Branches"
+              value={selectedBranchOption}
+              loadOptions={loadBranchOptions}
+              defaultOptions={branchOptions}
+              isClearable
+              onChange={option => {
+                const selectedOption = Array.isArray(option)
+                  ? (option[0] ?? null)
+                  : option;
+                setBranchFilter(selectedOption?.value ? String(selectedOption.value) : '');
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
         <Table

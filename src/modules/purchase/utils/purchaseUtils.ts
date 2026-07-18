@@ -122,6 +122,34 @@ export const createEmptyPurchaseFormValues = (
   paymentDetails: [],
 });
 
+export const createEmptyPurchasePaymentRow = (
+  overrides: Partial<{
+    paymentMethod: string;
+    accountId: string;
+    accountName: string;
+    chequePageId: string;
+    chequePageSnapshot: Record<string, unknown> | null;
+    chequeNumber: string;
+    chequeDate: string;
+    branchName: string;
+    drawnOn: string;
+    amount: string;
+    remarks: string;
+  }> = {}
+) => ({
+  paymentMethod: overrides.paymentMethod ?? '',
+  accountId: overrides.accountId ?? '',
+  accountName: overrides.accountName ?? '',
+  chequePageId: overrides.chequePageId ?? '',
+  chequePageSnapshot: overrides.chequePageSnapshot ?? null,
+  chequeNumber: overrides.chequeNumber ?? '',
+  chequeDate: overrides.chequeDate ?? '',
+  branchName: overrides.branchName ?? '',
+  drawnOn: overrides.drawnOn ?? '',
+  amount: overrides.amount ?? '',
+  remarks: overrides.remarks ?? '',
+});
+
 export const mapPurchaseFormValuesToSubmitPayload = (
   values: IPurchaseFormValues,
   attachments: IPurchaseDocumentAttachment[],
@@ -168,13 +196,22 @@ export const mapPurchaseFormValuesToSubmitPayload = (
       })),
       payments: values.paymentDetails.map(row => ({
         accountId: row.accountId,
-        paymentMethod: TransactionPaymentMethodEnum.CHEQUE,
+        paymentMethod:
+          row.paymentMethod === TransactionPaymentMethodEnum.CASH
+            ? TransactionPaymentMethodEnum.CASH
+            : TransactionPaymentMethodEnum.CHEQUE,
         referenceNumber: row.chequeNumber,
         referenceDate: row.chequeDate,
         branchName: row.branchName,
         drawnOn: row.drawnOn || null,
-        chequePageId: row.chequePageId ?? null,
-        chequePageSnapshot: row.chequePageSnapshot ?? null,
+        chequePageId:
+          row.paymentMethod === TransactionPaymentMethodEnum.CHEQUE
+            ? row.chequePageId ?? null
+            : null,
+        chequePageSnapshot:
+          row.paymentMethod === TransactionPaymentMethodEnum.CHEQUE
+            ? row.chequePageSnapshot ?? null
+            : null,
         amount: row.amount,
         remarks: null,
       })),
@@ -283,6 +320,7 @@ export const mapPurchaseTransactionToFormValues = (
     remarks: charge.remarks ?? '',
   })),
   paymentDetails: (transaction.payments ?? []).map(payment => ({
+    paymentMethod: payment.paymentMethod,
     accountId: payment.accountId,
     accountName: payment.accountSnapshot?.label ?? payment.accountSnapshot?.name ?? payment.accountSnapshot?.code ?? '',
     amount: payment.amount ?? '',
@@ -441,18 +479,13 @@ export const calculateTransactionTotal = (
 
   const qty = Number(quantity);
   const parsedRate = Number(rate);
-  const parsedPer = Number(per ?? 1) || 1;
-
-  if (
-    !Number.isFinite(qty) ||
-    !Number.isFinite(parsedRate) ||
-    !Number.isFinite(parsedPer) ||
-    parsedPer === 0
-  ) {
+  if (!Number.isFinite(qty) || !Number.isFinite(parsedRate)) {
     return '';
   }
 
-  return (qty * (parsedRate / parsedPer)).toFixed(PURCHASE_MONEY_DECIMALS);
+  void per;
+
+  return (qty * parsedRate).toFixed(PURCHASE_MONEY_DECIMALS);
 };
 
 export const calculateRoundedTransactionAmount = (value?: string | null) => {

@@ -2,6 +2,7 @@ export interface IAd1FormValues {
   transactionType: string;
   profileType: string;
   branchId: string;
+  counterId: string;
   dealId: string;
   docNo: string;
   transactionDate: string;
@@ -53,6 +54,7 @@ export const createEmptyAd1FormValues = (
   transactionType: '',
   profileType: '',
   branchId: '',
+  counterId: '',
   dealId: '',
   docNo: '',
   transactionDate: '',

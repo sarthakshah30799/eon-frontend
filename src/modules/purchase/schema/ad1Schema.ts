@@ -21,6 +21,7 @@ export const ad1Schema = yup.object({
   transactionType: yup.string().trim().required('Type is required'),
   profileType: yup.string().trim().required('Profile Type is required'),
   branchId: yup.string().trim().required('Branch is required'),
+  counterId: yup.string().trim().required('Counter is required'),
   dealId: yup.string().trim().default(''),
   docNo: yup.string().trim().required('Doc No. is required'),
   transactionDate: yup.string().trim().required('Transaction Date is required'),

@@ -3,7 +3,11 @@ import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { TrashIcon, PlusIcon } from '@heroicons/react/24/outline';
 import type { AsyncSelectResponse } from '@/components/ui';
 import { Button, CardSection } from '@/components/ui';
-import { FormFieldDatePicker, FormFieldInput, FormFieldSelect } from '@/components/forms';
+import {
+  FormFieldDatePicker,
+  FormFieldInput,
+  FormFieldSelect,
+} from '@/components/forms';
 import { accountProfileApi } from '@/api/accountProfile';
 import { chequebookApi, type IChequeBookPageTracking } from '@/api';
 import {
@@ -11,12 +15,17 @@ import {
   type IAccountProfileListQuery,
 } from '@/modules/accountProfile';
 import {
+  TransactionPaymentMethodEnum,
   TransactionTypeEnum,
   type TransactionType,
 } from '@/modules/transactions';
 import { useAuth } from '@/lib/AuthContext';
 import type { ITransactionPaymentDetailFormRow } from './transactionPaymentDetailsTypes';
-import { getPurchaseTransactionAccountFilter } from '@/modules/purchase/utils/purchaseUtils';
+import {
+  createEmptyPurchasePaymentRow,
+  formatPurchaseEntityLabel,
+  getPurchaseTransactionAccountFilter,
+} from '@/modules/purchase/utils/purchaseUtils';
 
 const ACCOUNT_PROFILE_OPTION_PAGE_SIZE = 30;
 
@@ -25,10 +34,12 @@ interface TransactionPaymentDetailsFieldArrayProps {
   title?: string;
   description?: string;
   maxAmount?: string | number;
+  syncPrimaryRowAmount?: boolean;
   accountQuery?: IAccountProfileListQuery;
   transactionType?: TransactionType;
   branchId?: string;
   selectablePagesUserId?: string;
+  cashControlAccountId?: string;
   disabled?: boolean;
 }
 
@@ -38,7 +49,17 @@ const formatAmount = (value?: string | number | null) => {
   }
 
   const numericValue = Number(value);
-  return Number.isFinite(numericValue) ? numericValue.toFixed(2) : String(value);
+  return Number.isFinite(numericValue)
+    ? numericValue.toFixed(2)
+    : String(value);
+};
+
+const normalizeAmount = (value?: string | number | null) => {
+  if (value === undefined || value === null || value === '') {
+    return '';
+  }
+
+  return String(value);
 };
 
 const PaymentDetailRow = ({
@@ -49,6 +70,7 @@ const PaymentDetailRow = ({
   transactionType,
   branchId,
   selectablePagesUserId,
+  cashControlAccountId,
   disabled = false,
   onRemove,
   canRemove,
@@ -60,6 +82,7 @@ const PaymentDetailRow = ({
   transactionType?: TransactionType;
   branchId?: string;
   selectablePagesUserId?: string;
+  cashControlAccountId?: string;
   disabled?: boolean;
   onRemove: (index: number) => void;
   canRemove: boolean;
@@ -68,6 +91,11 @@ const PaymentDetailRow = ({
   const { activeBranchId } = useAuth();
   const resolvedBranchId = branchId?.trim() || activeBranchId || undefined;
   const isSale = transactionType === TransactionTypeEnum.SALE;
+  const isPurchase = transactionType !== TransactionTypeEnum.SALE;
+  const paymentMethod = useWatch({
+    control: form.control,
+    name: `${arrayName}.${index}.paymentMethod`,
+  }) as string | undefined;
   const paymentRows = useWatch({
     control: form.control,
     name: arrayName,
@@ -91,7 +119,10 @@ const PaymentDetailRow = ({
   });
 
   const [pageOptions, setPageOptions] = useState<IChequeBookPageTracking[]>([]);
+  const [cashAccountLabel, setCashAccountLabel] = useState<string>('');
   const [isLoadingPages, setIsLoadingPages] = useState(false);
+  const [isLoadingCashAccount, setIsLoadingCashAccount] = useState(false);
+  const previousPaymentMethodRef = useRef<string | undefined>(paymentMethod);
   const previousSelectionKeyRef = useRef<string | null>(null);
 
   const priorAmount = useMemo(() => {
@@ -153,8 +184,178 @@ const PaymentDetailRow = ({
   useEffect(() => {
     let isActive = true;
 
+    const loadCashAccount = async () => {
+      if (
+        !cashControlAccountId ||
+        paymentMethod !== TransactionPaymentMethodEnum.CASH
+      ) {
+        setCashAccountLabel('');
+        return;
+      }
+
+      try {
+        setIsLoadingCashAccount(true);
+        const account =
+          await accountProfileApi.getAccountProfileById(cashControlAccountId);
+        if (!isActive || !account) {
+          return;
+        }
+
+        const label = formatPurchaseEntityLabel(
+          account.accountCode,
+          account.accountName
+        );
+        setCashAccountLabel(label);
+
+        if (
+          paymentMethod === TransactionPaymentMethodEnum.CASH &&
+          String(accountId || '') === String(cashControlAccountId)
+        ) {
+          form.setValue(`${arrayName}.${index}.accountName`, label, {
+            shouldDirty: true,
+            shouldTouch: true,
+            shouldValidate: false,
+          });
+        }
+      } catch (error) {
+        if (isActive) {
+          setCashAccountLabel('');
+        }
+        console.error('Failed to load cash control account:', error);
+      } finally {
+        if (isActive) {
+          setIsLoadingCashAccount(false);
+        }
+      }
+    };
+
+    void loadCashAccount();
+
+    return () => {
+      isActive = false;
+    };
+  }, [accountId, arrayName, cashControlAccountId, form, index, paymentMethod]);
+
+  useEffect(() => {
+    if (!paymentMethod) {
+      return;
+    }
+
+    if (previousPaymentMethodRef.current === paymentMethod) {
+      return;
+    }
+
+    const previousPaymentMethod = previousPaymentMethodRef.current;
+    previousPaymentMethodRef.current = paymentMethod;
+
+    if (paymentMethod === TransactionPaymentMethodEnum.CASH) {
+      if (cashControlAccountId) {
+        form.setValue(`${arrayName}.${index}.accountId`, cashControlAccountId, {
+          shouldDirty: true,
+          shouldTouch: true,
+          shouldValidate: true,
+        });
+        if (cashAccountLabel) {
+          form.setValue(`${arrayName}.${index}.accountName`, cashAccountLabel, {
+            shouldDirty: true,
+            shouldTouch: true,
+            shouldValidate: false,
+          });
+        }
+      }
+
+      form.setValue(`${arrayName}.${index}.chequePageId`, '', {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: true,
+      });
+      form.setValue(`${arrayName}.${index}.chequePageSnapshot`, null, {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: false,
+      });
+      form.setValue(`${arrayName}.${index}.chequeNumber`, '', {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: false,
+      });
+      form.setValue(`${arrayName}.${index}.chequeDate`, '', {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: false,
+      });
+      form.setValue(`${arrayName}.${index}.branchName`, '', {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: false,
+      });
+      form.setValue(`${arrayName}.${index}.drawnOn`, '', {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: false,
+      });
+      return;
+    }
+
+    if (previousPaymentMethod === TransactionPaymentMethodEnum.CASH) {
+      form.setValue(`${arrayName}.${index}.accountId`, '', {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: true,
+      });
+      form.setValue(`${arrayName}.${index}.accountName`, '', {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: false,
+      });
+      form.setValue(`${arrayName}.${index}.chequePageId`, '', {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: true,
+      });
+      form.setValue(`${arrayName}.${index}.chequePageSnapshot`, null, {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: false,
+      });
+      form.setValue(`${arrayName}.${index}.chequeNumber`, '', {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: false,
+      });
+      form.setValue(`${arrayName}.${index}.chequeDate`, '', {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: false,
+      });
+      form.setValue(`${arrayName}.${index}.branchName`, '', {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: false,
+      });
+      form.setValue(`${arrayName}.${index}.drawnOn`, '', {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: false,
+      });
+    }
+  }, [
+    arrayName,
+    cashAccountLabel,
+    cashControlAccountId,
+    form,
+    index,
+    paymentMethod,
+  ]);
+
+  useEffect(() => {
     const loadPages = async () => {
-      if (!accountId || !resolvedBranchId) {
+      if (
+        paymentMethod !== TransactionPaymentMethodEnum.CHEQUE ||
+        !isPurchase ||
+        !accountId ||
+        !resolvedBranchId
+      ) {
         setPageOptions([]);
         return;
       }
@@ -166,30 +367,26 @@ const PaymentDetailRow = ({
           userId: selectablePagesUserId || undefined,
         });
 
-        if (isActive) {
-          setPageOptions(pages);
-        }
+        setPageOptions(pages);
       } catch (error) {
-        if (isActive) {
-          setPageOptions([]);
-        }
+        setPageOptions([]);
         console.error('Failed to load selectable cheque pages:', error);
       } finally {
-        if (isActive) {
-          setIsLoadingPages(false);
-        }
+        setIsLoadingPages(false);
       }
     };
 
     void loadPages();
-
-    return () => {
-      isActive = false;
-    };
-  }, [accountId, resolvedBranchId, selectablePagesUserId]);
+  }, [
+    accountId,
+    isPurchase,
+    paymentMethod,
+    resolvedBranchId,
+    selectablePagesUserId,
+  ]);
 
   useEffect(() => {
-    const nextSelectionKey = `${resolvedBranchId || ''}:${accountId || ''}:${selectablePagesUserId || ''}`;
+    const nextSelectionKey = `${resolvedBranchId || ''}:${accountId || ''}:${selectablePagesUserId || ''}:${paymentMethod || ''}`;
 
     if (previousSelectionKeyRef.current === null) {
       previousSelectionKeyRef.current = nextSelectionKey;
@@ -202,7 +399,7 @@ const PaymentDetailRow = ({
 
     previousSelectionKeyRef.current = nextSelectionKey;
 
-    if (!accountId) {
+    if (!accountId || paymentMethod !== TransactionPaymentMethodEnum.CHEQUE) {
       return;
     }
 
@@ -221,30 +418,65 @@ const PaymentDetailRow = ({
       shouldTouch: true,
       shouldValidate: false,
     });
-  }, [accountId, arrayName, form, index, resolvedBranchId, selectablePagesUserId]);
+  }, [
+    accountId,
+    arrayName,
+    form,
+    index,
+    paymentMethod,
+    resolvedBranchId,
+    selectablePagesUserId,
+  ]);
 
   useEffect(() => {
-    const selectedPage = pageOptions.find(page => page.id === String(chequePageId || ''));
+    const selectedPage = pageOptions.find(
+      page => page.id === String(chequePageId || '')
+    );
     if (!selectedPage) {
       return;
     }
 
-    form.setValue(`${arrayName}.${index}.chequeNumber`, String(selectedPage.pageNo), {
-      shouldDirty: true,
-      shouldTouch: true,
-      shouldValidate: false,
-    });
-    form.setValue(`${arrayName}.${index}.chequePageSnapshot`, {
-      ...selectedPage,
-    }, {
-      shouldDirty: true,
-      shouldTouch: true,
-      shouldValidate: false,
-    });
+    form.setValue(
+      `${arrayName}.${index}.chequeNumber`,
+      String(selectedPage.pageNo),
+      {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: false,
+      }
+    );
+    form.setValue(
+      `${arrayName}.${index}.chequePageSnapshot`,
+      {
+        ...selectedPage,
+      },
+      {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: false,
+      }
+    );
   }, [accountId, arrayName, chequePageId, form, index, pageOptions]);
 
   const loadAccountOptions = useCallback(
     async (inputValue: string, page = 1): Promise<AsyncSelectResponse> => {
+      if (
+        paymentMethod === TransactionPaymentMethodEnum.CASH &&
+        cashControlAccountId
+      ) {
+        return {
+          options: cashAccountLabel
+            ? [
+                {
+                  value: cashControlAccountId,
+                  label: cashAccountLabel,
+                },
+              ]
+            : [],
+          hasMore: false,
+        };
+      }
+
       const response = await accountProfileApi.getAccountProfiles({
         ...accountQuery,
         page,
@@ -252,7 +484,9 @@ const PaymentDetailRow = ({
         search: inputValue,
         active: true,
         accountType: AccountProfileLedgerLabelEnum.BankLedger,
-        ...getPurchaseTransactionAccountFilter(transactionType ?? TransactionTypeEnum.PURCHASE),
+        ...getPurchaseTransactionAccountFilter(
+          transactionType ?? TransactionTypeEnum.PURCHASE
+        ),
       });
 
       const accounts = response.data || [];
@@ -265,97 +499,131 @@ const PaymentDetailRow = ({
         hasMore: accounts.length === ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
       };
     },
-    [accountQuery, isSale]
+    [
+      accountQuery,
+      cashAccountLabel,
+      cashControlAccountId,
+      paymentMethod,
+      transactionType,
+    ]
   );
+
+  const isCash = paymentMethod === TransactionPaymentMethodEnum.CASH;
+  const isCheque = paymentMethod === TransactionPaymentMethodEnum.CHEQUE;
 
   return (
     <div className="grid gap-4 rounded-sm border border-border-secondary bg-surface-primary p-4 md:grid-cols-2 xl:grid-cols-[1.3fr_1fr_1fr_1fr_1fr_1fr_1fr_auto]">
       <div className="md:col-span-2 xl:col-span-1">
         <FormFieldSelect
+          key={`account-${paymentMethod}-${cashControlAccountId || 'none'}-${accountId || 'empty'}`}
           name={`${arrayName}.${index}.accountId`}
           label="Account"
           placeholder={
-            isSale
-              ? 'Select bulk sale bank account'
-              : 'Select bulk purchase bank account'
+            isCash
+              ? 'Cash control account'
+              : isSale
+                ? 'Select sale bank account'
+                : 'Select purchase bank account'
           }
           loadOptions={loadAccountOptions}
-          pagination
+          pagination={!isCash}
           pageSize={ACCOUNT_PROFILE_OPTION_PAGE_SIZE}
-          disabled={disabled}
+          disabled={disabled || isCash}
           isSearchable
           cacheOptions={false}
+        />
+      </div>
+
+      {isCheque && isPurchase ? (
+        <div className="md:col-span-2 xl:col-span-1">
+          <FormFieldSelect
+            key={`cheque-page-${accountId || 'empty'}-${pageOptions.length}`}
+            name={`${arrayName}.${index}.chequePageId`}
+            label="Cheque Page"
+            placeholder="Select cheque page"
+            loadOptions={async (
+              inputValue: string
+            ): Promise<AsyncSelectResponse> => {
+              const normalized = inputValue.trim().toLowerCase();
+              const options = pageOptions
+                .filter(page => {
+                  if (!normalized) {
+                    return true;
+                  }
+
+                  return [
+                    String(page.pageNo),
+                    page.checkBook?.no,
+                    page.checkBook?.bankAccountCode,
+                  ]
+                    .filter(Boolean)
+                    .some(value =>
+                      String(value).toLowerCase().includes(normalized)
+                    );
+                })
+                .map(page => ({
+                  value: page.id,
+                  label: `${page.checkBook?.no || 'Book'} | Page ${page.pageNo}`,
+                }));
+
+              return { options, hasMore: false };
+            }}
+            disabled={disabled || !accountId || isLoadingPages}
+            isSearchable
+            cacheOptions={false}
+          />
+        </div>
+      ) : null}
+
+      <div className="md:col-span-2 xl:col-span-1">
+        <FormFieldInput
+          name={`${arrayName}.${index}.chequeNumber`}
+          label="Cheque / Ref No"
+          placeholder={
+            isCash
+              ? 'Not required'
+              : isSale
+                ? 'Enter customer cheque number'
+                : 'Page no will fill here'
+          }
+          disabled={disabled || isCash}
         />
       </div>
 
       <div className="md:col-span-2 xl:col-span-1">
-        <FormFieldSelect
-          key={`cheque-page-${accountId || 'empty'}-${pageOptions.length}`}
-          name={`${arrayName}.${index}.chequePageId`}
-          label="Cheque Page"
-          placeholder="Select cheque page"
-          loadOptions={async (inputValue: string): Promise<AsyncSelectResponse> => {
-            const normalized = inputValue.trim().toLowerCase();
-            const options = pageOptions
-              .filter(page => {
-                if (!normalized) {
-                  return true;
-                }
-
-                return [
-                  String(page.pageNo),
-                  page.checkBook?.no,
-                  page.checkBook?.bankAccountCode,
-                ]
-                  .filter(Boolean)
-                  .some(value => String(value).toLowerCase().includes(normalized));
-              })
-              .map(page => ({
-                value: page.id,
-                label: `${page.checkBook?.no || 'Book'} | Page ${page.pageNo}`,
-              }));
-
-            return { options, hasMore: false };
-          }}
-          disabled={disabled || !accountId || isLoadingPages}
-          isSearchable
-          cacheOptions={false}
+        <FormFieldDatePicker
+          name={`${arrayName}.${index}.chequeDate`}
+          label="Cheque Date"
+          disabled={disabled || !isCheque}
         />
       </div>
 
-      <FormFieldInput
-        name={`${arrayName}.${index}.chequeNumber`}
-        label="Cheque / Book Ref"
-        placeholder="Page no will fill here"
-        disabled={disabled}
-      />
+      <div className="md:col-span-2 xl:col-span-1">
+        <FormFieldInput
+          name={`${arrayName}.${index}.branchName`}
+          label="Branch Name"
+          placeholder="Branch name"
+          disabled={disabled || !isCheque}
+        />
+      </div>
 
-      <FormFieldDatePicker
-        name={`${arrayName}.${index}.chequeDate`}
-        label="Cheque Date"
-        disabled={disabled}
-      />
+      <div className="md:col-span-2 xl:col-span-1">
+        <FormFieldInput
+          name={`${arrayName}.${index}.drawnOn`}
+          label="Drawn On"
+          placeholder="Drawn on"
+          disabled={disabled || !isCheque}
+        />
+      </div>
 
-      <FormFieldInput
-        name={`${arrayName}.${index}.branchName`}
-        label="Branch Name"
-        placeholder="Branch name"
-        disabled={disabled}
-      />
-
-      <FormFieldInput
-        name={`${arrayName}.${index}.drawnOn`}
-        label="Drawn On"
-        placeholder="Drawn on"
-        disabled={disabled}
-      />
-
-      <FormFieldInput
-        name={`${arrayName}.${index}.amount`}
-        label="Amount"
-        type="number"
-        disabled={disabled}
-      />
+      <div className="md:col-span-2 xl:col-span-1">
+        <FormFieldInput
+          name={`${arrayName}.${index}.amount`}
+          label="Amount"
+          type="number"
+          disabled={disabled}
+        />
+      </div>
 
       <div className="flex items-start justify-end pt-7">
         <Button
@@ -373,13 +641,29 @@ const PaymentDetailRow = ({
       <div className="md:col-span-2 xl:col-span-7">
         <p className="text-xs text-text-secondary">
           Available amount for this row: {formatAmount(availableAmount)}
-          {maxAmount !== undefined ? ` | Remaining after this row: ${formatAmount(remainingAfterCurrent)}` : ''}
+          {maxAmount !== undefined
+            ? ` | Remaining after this row: ${formatAmount(remainingAfterCurrent)}`
+            : ''}
         </p>
-        {chequeNumber ? null : (
+        {paymentMethod === TransactionPaymentMethodEnum.CASH ? (
           <p className="mt-1 text-xs text-text-tertiary">
-            Select the cheque page from the list; the reference number will be filled automatically.
+            Cash mode uses the configured cash control account.
+          </p>
+        ) : isSale ? (
+          <p className="mt-1 text-xs text-text-tertiary">
+            Enter the customer-provided cheque number directly.
+          </p>
+        ) : chequeNumber ? null : (
+          <p className="mt-1 text-xs text-text-tertiary">
+            Select the cheque page from the list; the reference number will be
+            filled automatically.
           </p>
         )}
+        {isLoadingCashAccount ? (
+          <p className="mt-1 text-xs text-text-tertiary">
+            Loading cash control account...
+          </p>
+        ) : null}
       </div>
     </div>
   );
@@ -390,10 +674,12 @@ export const TransactionPaymentDetailsFieldArray = ({
   title = 'Payment Details',
   description = 'Store payment records before final submission.',
   maxAmount,
+  syncPrimaryRowAmount = false,
   accountQuery,
   transactionType = TransactionTypeEnum.PURCHASE,
   branchId,
   selectablePagesUserId,
+  cashControlAccountId,
   disabled = false,
 }: TransactionPaymentDetailsFieldArrayProps) => {
   const form = useFormContext();
@@ -408,7 +694,10 @@ export const TransactionPaymentDetailsFieldArray = ({
   }) as ITransactionPaymentDetailFormRow[] | undefined;
 
   const totalApplied = useMemo(() => {
-    return (paymentRows ?? []).reduce((sum, row) => sum + Number(row?.amount || 0), 0);
+    return (paymentRows ?? []).reduce(
+      (sum, row) => sum + Number(row?.amount || 0),
+      0
+    );
   }, [paymentRows]);
 
   const remainingAmount = useMemo(() => {
@@ -420,12 +709,195 @@ export const TransactionPaymentDetailsFieldArray = ({
     return Math.max(total - totalApplied, 0);
   }, [maxAmount, totalApplied]);
 
-  const canRemove = fields.length > 0;
+  const syncedPayableTotalRef = useRef<string>('');
+
+  const activePaymentMethod = useMemo(() => {
+    return (
+      (paymentRows ?? []).find(row => Boolean(row?.paymentMethod?.trim()))
+        ?.paymentMethod || TransactionPaymentMethodEnum.CHEQUE
+    );
+  }, [paymentRows]);
+
+  useEffect(() => {
+    const total = Number(maxAmount || 0);
+    if (
+      disabled ||
+      !Number.isFinite(total) ||
+      total <= 0 ||
+      fields.length > 0
+    ) {
+      return;
+    }
+
+    append(
+      createEmptyPurchasePaymentRow({
+        paymentMethod: TransactionPaymentMethodEnum.CHEQUE,
+        amount: normalizeAmount(maxAmount),
+      }),
+      { shouldFocus: false }
+    );
+  }, [append, disabled, fields.length, maxAmount]);
+
+  useEffect(() => {
+    if (!syncPrimaryRowAmount) {
+      return;
+    }
+
+    const total = Number(maxAmount || 0);
+    if (!Number.isFinite(total)) {
+      return;
+    }
+
+    const normalizedTotal = normalizeAmount(maxAmount);
+    if (syncedPayableTotalRef.current === normalizedTotal) {
+      return;
+    }
+
+    syncedPayableTotalRef.current = normalizedTotal;
+
+    const currentRows = (form.getValues(name) ??
+      []) as ITransactionPaymentDetailFormRow[];
+    if (!currentRows.length) {
+      return;
+    }
+
+    const otherRowsTotal = currentRows
+      .slice(1)
+      .reduce((sum, row) => sum + Number(row?.amount || 0), 0);
+    const nextPrimaryAmount = Math.max(total - otherRowsTotal, 0);
+    const currentPrimaryAmount = Number(currentRows[0]?.amount || 0);
+
+    if (currentPrimaryAmount === nextPrimaryAmount) {
+      return;
+    }
+
+    form.setValue(`${name}.0.amount`, nextPrimaryAmount.toFixed(2), {
+      shouldDirty: false,
+      shouldTouch: false,
+      shouldValidate: false,
+    });
+  }, [form, maxAmount, name, syncPrimaryRowAmount]);
+
+  const applyPaymentMethod = useCallback(
+    (method: string) => {
+      const currentRows = (form.getValues(name) ??
+        []) as ITransactionPaymentDetailFormRow[];
+      if (!currentRows.length) {
+        append(
+          createEmptyPurchasePaymentRow({
+            paymentMethod: method,
+            amount: normalizeAmount(maxAmount),
+          }),
+          { shouldFocus: false }
+        );
+        return;
+      }
+
+      currentRows.forEach((row, index) => {
+        form.setValue(`${name}.${index}.paymentMethod`, method, {
+          shouldDirty: true,
+          shouldTouch: true,
+          shouldValidate: true,
+        });
+
+        if (method === TransactionPaymentMethodEnum.CASH) {
+          if (cashControlAccountId) {
+            form.setValue(`${name}.${index}.accountId`, cashControlAccountId, {
+              shouldDirty: true,
+              shouldTouch: true,
+              shouldValidate: true,
+            });
+          }
+          form.setValue(`${name}.${index}.chequePageId`, '', {
+            shouldDirty: true,
+            shouldTouch: true,
+            shouldValidate: true,
+          });
+          form.setValue(`${name}.${index}.chequePageSnapshot`, null, {
+            shouldDirty: true,
+            shouldTouch: true,
+            shouldValidate: false,
+          });
+          form.setValue(`${name}.${index}.chequeNumber`, '', {
+            shouldDirty: true,
+            shouldTouch: true,
+            shouldValidate: false,
+          });
+          form.setValue(`${name}.${index}.chequeDate`, '', {
+            shouldDirty: true,
+            shouldTouch: true,
+            shouldValidate: false,
+          });
+          form.setValue(`${name}.${index}.branchName`, '', {
+            shouldDirty: true,
+            shouldTouch: true,
+            shouldValidate: false,
+          });
+          form.setValue(`${name}.${index}.drawnOn`, '', {
+            shouldDirty: true,
+            shouldTouch: true,
+            shouldValidate: false,
+          });
+          return;
+        }
+
+        if (row.accountId === cashControlAccountId) {
+          form.setValue(`${name}.${index}.accountId`, '', {
+            shouldDirty: true,
+            shouldTouch: true,
+            shouldValidate: true,
+          });
+        }
+      });
+    },
+    [append, cashControlAccountId, form, maxAmount, name]
+  );
 
   return (
     <CardSection heading={title}>
       <div className="space-y-4">
         <p className="text-sm text-text-secondary">{description}</p>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs font-semibold uppercase tracking-wider text-text-tertiary">
+            Payment Mode
+          </span>
+          <Button
+            type="button"
+            size="sm"
+            variant={
+              activePaymentMethod === TransactionPaymentMethodEnum.CASH
+                ? 'default'
+                : 'outline'
+            }
+            disabled={disabled || !cashControlAccountId}
+            onClick={() =>
+              applyPaymentMethod(TransactionPaymentMethodEnum.CASH)
+            }
+          >
+            Cash
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant={
+              activePaymentMethod === TransactionPaymentMethodEnum.CHEQUE
+                ? 'default'
+                : 'outline'
+            }
+            disabled={disabled}
+            onClick={() =>
+              applyPaymentMethod(TransactionPaymentMethodEnum.CHEQUE)
+            }
+          >
+            Cheque
+          </Button>
+          {!cashControlAccountId ? (
+            <span className="text-xs text-error-600">
+              Cash control account is not configured.
+            </span>
+          ) : null}
+        </div>
 
         {fields.length === 0 ? (
           <div className="rounded-sm border border-dashed border-border-secondary bg-surface-secondary/30 px-4 py-6 text-center text-sm text-text-secondary">
@@ -433,19 +905,8 @@ export const TransactionPaymentDetailsFieldArray = ({
           </div>
         ) : (
           <div className="space-y-3">
-            <div className="hidden xl:grid xl:grid-cols-[1.3fr_1fr_1fr_1fr_1fr_1fr_1fr_auto] gap-4 px-2 text-xs font-semibold uppercase tracking-wider text-text-tertiary">
-              <div>Account</div>
-              <div>Cheque Page</div>
-              <div>Cheque / Book Ref</div>
-              <div>Cheque Date</div>
-              <div>Branch Name</div>
-              <div>Drawn On</div>
-              <div>Amount</div>
-              <div></div>
-            </div>
-
             {fields.map((field, index) => (
-        <PaymentDetailRow
+              <PaymentDetailRow
                 key={field.id}
                 arrayName={name}
                 index={index}
@@ -454,9 +915,10 @@ export const TransactionPaymentDetailsFieldArray = ({
                 transactionType={transactionType}
                 branchId={branchId}
                 selectablePagesUserId={selectablePagesUserId}
+                cashControlAccountId={cashControlAccountId}
                 disabled={disabled}
                 onRemove={remove}
-                canRemove={canRemove}
+                canRemove={fields.length > 0}
               />
             ))}
           </div>
@@ -465,7 +927,9 @@ export const TransactionPaymentDetailsFieldArray = ({
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border-secondary pt-4">
           <div className="text-sm text-text-secondary">
             Total payment amount: {formatAmount(totalApplied)}
-            {maxAmount !== undefined ? ` | Remaining amount: ${formatAmount(remainingAmount)}` : ''}
+            {maxAmount !== undefined
+              ? ` | Remaining amount: ${formatAmount(remainingAmount)}`
+              : ''}
           </div>
 
           <Button
@@ -474,17 +938,14 @@ export const TransactionPaymentDetailsFieldArray = ({
             size="sm"
             disabled={disabled}
             onClick={() =>
-              append({
-                accountId: '',
-                accountName: '',
-                chequePageId: '',
-                chequePageSnapshot: null,
-                chequeNumber: '',
-                chequeDate: '',
-                branchName: '',
-                drawnOn: '',
-                amount: '',
-              } satisfies ITransactionPaymentDetailFormRow)
+              append(
+                createEmptyPurchasePaymentRow({
+                  paymentMethod:
+                    activePaymentMethod || TransactionPaymentMethodEnum.CHEQUE,
+                  amount: normalizeAmount(remainingAmount || maxAmount),
+                }),
+                { shouldFocus: false }
+              )
             }
           >
             <PlusIcon className="h-4 w-4" />

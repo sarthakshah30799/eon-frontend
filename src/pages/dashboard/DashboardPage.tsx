@@ -17,13 +17,7 @@ import {
   getPurchasePageSlugFromType,
   type PurchasePageType,
 } from '@/pages/purchase/[slug]/purchasePage.enum';
-
-const formatDateTime = (value?: string) => {
-  if (!value) return '-';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '-';
-  return date.toLocaleDateString();
-};
+import { formatDateTime } from '@/utils';
 
 const DashboardPage: React.FC = () => {
   const navigate = useNavigate();

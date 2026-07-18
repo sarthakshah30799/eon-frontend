@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
-import { manualBillBookApi } from '@/api';
+import { manualBillBookApi, type IManualBookAllocation, type IManualBookAssignmentPayload } from '@/api';
 import { categoryOptionsApi } from '@/api/categoryOptions/categoryOptions.api';
 import {
   AsyncSelect,
@@ -12,6 +12,7 @@ import {
   type AsyncSelectOption,
   type AsyncSelectResponse,
 } from '@/components/ui';
+import { formatDateTime } from '@/utils';
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import type { MultiValue, SingleValue } from 'react-select';
 import toast from 'react-hot-toast';
@@ -89,7 +90,7 @@ export const ManagerToCashierAllocationPage = () => {
 
   // Table rows
   const [rows, setRows] = useState<IAllocationRow[]>([]);
-  const [existingAllocations, setExistingAllocations] = useState<any[]>([]);
+  const [existingAllocations, setExistingAllocations] = useState<IManualBookAllocation[]>([]);
   const [hasProcessed, setHasProcessed] = useState(false);
   const [allocatedWarning, setAllocatedWarning] = useState<string>('');
 
@@ -160,7 +161,6 @@ export const ManagerToCashierAllocationPage = () => {
       }
     };
     prefillFromBook();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookId, activeBranchId]);
 
   const handleProcess = async () => {
@@ -231,7 +231,7 @@ export const ManagerToCashierAllocationPage = () => {
             id: `${book.id}_${from}`,
             bookId: book.id,
             requestNo: book.no,
-            requestDate: new Date(book.dispatchDate).toLocaleDateString() + ' 00:00:00',
+            requestDate: formatDateTime(book.dispatchDate) + ' 00:00:00',
             transactionType: book.transactionTypeLabel || book.transactionType,
             bookNoFrom: from,
             bookNoTo: to,
@@ -324,7 +324,7 @@ export const ManagerToCashierAllocationPage = () => {
 
     try {
       setIsSaving(true);
-      const payload: any[] = [];
+      const payload: IManualBookAssignmentPayload[] = [];
       for (const r of checkedRows) {
         for (let i = r.bookNoFrom; i <= r.bookNoTo; i++) {
           const alreadyAssigned = existingAllocations.some(

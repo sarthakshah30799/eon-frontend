@@ -1,5 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { chequebookApi, type IChequeBook } from '@/api';
+import { formatDateTime } from '@/utils';
 import { ChequeBookStatusEnum } from '../types';
 
 export interface IAllocationRow {
@@ -58,7 +59,7 @@ const buildAllocationRows = (
         id: `${book.id}-${i}`,
         bookId: book.id,
         requestNo: book.no,
-        requestDate: new Date(book.dispatchDate).toLocaleDateString() + ' 00:00:00',
+        requestDate: formatDateTime(book.dispatchDate) + ' 00:00:00',
         bankAccountCode: book.bankAccountCode,
         bankAccountCodeName: book.bankAccountCodeName,
         bankAccountCodeLabel: book.bankAccountCodeLabel,

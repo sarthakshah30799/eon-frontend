@@ -30,3 +30,4 @@ export * from './manual-bill-books/manualBillBook.api';
 export * from './chequebooks/chequebook.api';
 export * from './transactions';
 export * from './reports';
+export * from './dashboard/dashboard.api';

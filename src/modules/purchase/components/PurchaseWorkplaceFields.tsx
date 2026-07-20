@@ -27,8 +27,8 @@ export const PurchaseWorkplaceFields = ({
 
   const { data: branches = [] } = useListBranchProfiles({ activeOnly: true });
   const { data: counters = [] } = useListCounterProfiles(
-    { activeOnly: true, branchId: branchId || undefined },
-    Boolean(branchId)
+    { activeOnly: true },
+    canEditWorkplace
   );
 
   const previousBranchIdRef = useRef<string>('');
@@ -50,13 +50,29 @@ export const PurchaseWorkplaceFields = ({
     [branches]
   );
 
+  const selectedBranch = useMemo(
+    () => branches.find(branch => branch.id === branchId) ?? null,
+    [branchId, branches]
+  );
+
+  const connectedCounterIds = useMemo(
+    () => selectedBranch?.connectCounterIds ?? [],
+    [selectedBranch]
+  );
+
   const counterOptions = useMemo<AsyncSelectOption[]>(
     () =>
-      counters.map(counter => ({
-        value: counter.id,
-        label: `${counter.counterNo} - ${counter.name}`,
-      })),
-    [counters]
+      counters
+        .filter(counter =>
+          connectedCounterIds.length === 0
+            ? false
+            : connectedCounterIds.includes(counter.id)
+        )
+        .map(counter => ({
+          value: counter.id,
+          label: `${counter.counterNo} - ${counter.name}`,
+        })),
+    [connectedCounterIds, counters]
   );
 
   const loadBranchOptions = useCallback(
@@ -96,6 +112,7 @@ export const PurchaseWorkplaceFields = ({
   );
 
   const disableSelection = readOnly || !canEditWorkplace;
+  const canSelectCounter = Boolean(branchId && connectedCounterIds.length > 0);
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
@@ -114,7 +131,7 @@ export const PurchaseWorkplaceFields = ({
         placeholder={branchId ? 'Select counter' : 'Select branch first'}
         loadOptions={loadCounterOptions}
         defaultOptions={counterOptions}
-        disabled={disableSelection || !branchId}
+        disabled={disableSelection || !canSelectCounter}
       />
     </div>
   );

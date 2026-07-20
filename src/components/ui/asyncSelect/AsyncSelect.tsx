@@ -273,7 +273,7 @@ const AsyncSelectComponent = React.forwardRef<
     };
 
     return (
-      <div className="space-y-1 w-full">
+      <div className="space-y-1">
         {label && <Label htmlFor={props.id}>{label}</Label>}
         <div className={asyncSelectVariants({ size, variant, className })}>
           {isCreatable ? (
@@ -312,7 +312,7 @@ const AsyncSelectComponent = React.forwardRef<
                 inputValue ? 'No options found' : 'Start typing to search...'
               }
               isDisabled={props.disabled}
-              menuPosition="fixed"
+              menuPosition="absolute"
               {...props}
             />
           )}

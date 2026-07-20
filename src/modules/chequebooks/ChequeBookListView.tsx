@@ -29,6 +29,7 @@ const resolveAssignedToLabel = (assignedTo: IChequeBook['assignedTo']) => {
 export const ChequeBookListView = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const canSeeBranchFilter = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
   const isCashierOrDelivery = !!(user?.isCashier || user?.isDeliveryBoy);
   const isHoStaff = !!(user?.isHo || user?.isHoStaff) && !user?.isAdmin;
   const isBranchManager = !user?.isAdmin && !isHoStaff && !isCashierOrDelivery;
@@ -180,16 +181,6 @@ export const ChequeBookListView = () => {
     }
   }, [error]);
 
-  useEffect(() => {
-    if (reviewId && books.length > 0) {
-      const book = books.find(b => b.id === reviewId);
-      if (book) {
-        setSelectedBook(book);
-        setIsReviewOpen(true);
-      }
-    }
-  }, [reviewId, books]);
-
   const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!reviewBook) return;
@@ -240,7 +231,7 @@ export const ChequeBookListView = () => {
       <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
         {/* Filters */}
         <div className="flex flex-wrap gap-4 items-center mb-2">
-          {!isBranchManager && (
+          {canSeeBranchFilter && (
             <div className="flex-1 min-w-50">
               <AsyncSelect
                 label="Filter by Branch"

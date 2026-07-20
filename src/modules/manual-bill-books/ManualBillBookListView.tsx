@@ -48,9 +48,9 @@ const getStatusBadgeClass = (status: string) => {
 export const ManualBillBookListView = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const canSeeBranchFilter = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
   const isUserHo = (user?.isHo || user?.isHoStaff) && !user?.isAdmin;
   const isCashierOrDelivery = !!(user?.isCashier || user?.isDeliveryBoy);
-  const isBranchManager = !user?.isAdmin && !isUserHo && !isCashierOrDelivery;
   const { hasAnyPermission: canAllocate } = usePermission('/manual-bill-books/allocation');
   const { hasAnyPermission: canMap } = usePermission('/manual-bill-books/dp-mapping');
   const { hasAnyPermission: canUnmap } = usePermission('/manual-bill-books/dp-unmapping');
@@ -390,7 +390,7 @@ export const ManualBillBookListView = () => {
       <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
         {/* Filters */}
         <div className="flex flex-wrap gap-4 items-center mb-2">
-          {!isBranchManager && (
+          {canSeeBranchFilter && (
             <div className="flex-1 min-w-50">
               <AsyncSelect
                 label="Filter by Branch"

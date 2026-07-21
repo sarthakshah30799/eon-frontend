@@ -9,7 +9,7 @@ import {
   DatePicker,
   type AsyncSelectOption,
 } from '@/components/ui';
-import { formatDateTime } from '@/utils';
+import { formatDateTime, formatDateInput, parseDateInput } from '@/utils';
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import type { MultiValue, SingleValue } from 'react-select';
 import toast from 'react-hot-toast';
@@ -45,14 +45,13 @@ export const ManualBillBookAcknowledgementPage = () => {
     fetchTxnTypes();
   }, []);
 
-  // Default dates: From 30 days ago to Today
-  const getPastDateStr = (daysAgo: number) => {
+  const getPastDate = (daysAgo: number) => {
     const d = new Date();
     d.setDate(d.getDate() - daysAgo);
-    return d.toISOString().slice(0, 10);
+    return d;
   };
-  const [fromDate, setFromDate] = useState(getPastDateStr(30));
-  const [toDate, setToDate] = useState(getPastDateStr(0));
+  const [fromDate, setFromDate] = useState(formatDateInput(getPastDate(30)));
+  const [toDate, setToDate] = useState(formatDateInput(getPastDate(0)));
 
   // Checklist table results
   const [queryResults, setQueryResults] = useState<IManualBook[]>([]);
@@ -198,8 +197,8 @@ export const ManualBillBookAcknowledgementPage = () => {
     const toD = new Date(dispatchDate);
     toD.setDate(toD.getDate() + 15);
 
-    setFromDate(fromD.toISOString().slice(0, 10));
-    setToDate(toD.toISOString().slice(0, 10));
+    setFromDate(formatDateInput(fromD));
+    setToDate(formatDateInput(toD));
 
     setSelectedBookId(book.id);
     setView('detail');
@@ -412,16 +411,9 @@ export const ManualBillBookAcknowledgementPage = () => {
               <div>
                 <DatePicker
                   label="From Date *"
-                  selected={fromDate ? new Date(fromDate + 'T00:00:00') : null}
+                  selected={fromDate ? parseDateInput(fromDate) : null}
                   onChange={date => {
-                    if (date) {
-                      const y = date.getFullYear();
-                      const m = String(date.getMonth() + 1).padStart(2, '0');
-                      const d = String(date.getDate()).padStart(2, '0');
-                      setFromDate(`${y}-${m}-${d}`);
-                    } else {
-                      setFromDate('');
-                    }
+                    setFromDate(date ? formatDateInput(date) : '');
                     setSelectedBookId(null);
                   }}
                 />
@@ -430,16 +422,9 @@ export const ManualBillBookAcknowledgementPage = () => {
               <div>
                 <DatePicker
                   label="To Date *"
-                  selected={toDate ? new Date(toDate + 'T00:00:00') : null}
+                  selected={toDate ? parseDateInput(toDate) : null}
                   onChange={date => {
-                    if (date) {
-                      const y = date.getFullYear();
-                      const m = String(date.getMonth() + 1).padStart(2, '0');
-                      const d = String(date.getDate()).padStart(2, '0');
-                      setToDate(`${y}-${m}-${d}`);
-                    } else {
-                      setToDate('');
-                    }
+                    setToDate(date ? formatDateInput(date) : '');
                     setSelectedBookId(null);
                   }}
                 />

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useFormContext, useFormState, useWatch } from 'react-hook-form';
 import { FormFieldSelect } from '../../../components/forms';
 import { Button } from '../../../components/ui';
@@ -60,7 +60,9 @@ export const WorkplaceFormFields = ({
     );
   }, [assignmentsByBranch, branchProfiles, canSelectAllBranches]);
 
+  const canSelectBranch = canSelectAllBranches || visibleBranches.length > 1;
   const effectiveSelectedBranchId = branchId || visibleBranches[0]?.value?.toString() || '';
+  const previousBranchIdRef = useRef<string>('');
 
   const visibleCounters = useMemo(() => {
     if (!effectiveSelectedBranchId) {
@@ -100,12 +102,16 @@ export const WorkplaceFormFields = ({
   ]);
 
   useEffect(() => {
-    if (!canSelectAllBranches) {
+    if (!canSelectBranch) {
       return;
     }
 
-    form.setValue('counterId', '');
-  }, [branchId, canSelectAllBranches, form]);
+    if (previousBranchIdRef.current && previousBranchIdRef.current !== branchId) {
+      form.setValue('counterId', '');
+    }
+
+    previousBranchIdRef.current = branchId || '';
+  }, [branchId, canSelectBranch, form]);
 
   useEffect(() => {
     if (!canSelectAllBranches && !branchId && visibleBranches[0]?.value) {
@@ -143,7 +149,7 @@ export const WorkplaceFormFields = ({
         name="branchId"
         label="Branch"
         loadOptions={loadBranchOptions}
-        disabled={!canSelectAllBranches}
+        disabled={!canSelectBranch}
         isSearchable
         menuPosition="absolute"
       />

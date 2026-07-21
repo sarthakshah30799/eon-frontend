@@ -7,6 +7,9 @@ export interface DashboardStats {
   yesterdayTransactionCount: number;
   pendingApprovals: number;
   pendingPartyProfileReviews: number;
+  pendingTransactions: number;
+  pendingChequeBooks: number;
+  pendingManualBooks: number;
   activeAlerts: number;
 }
 
@@ -46,9 +49,11 @@ export interface RecentTransaction {
 
 export interface PendingApproval {
   id: string;
+  entityType: string;
   code: string;
   name: string;
   type: string;
+  subType?: string;
   createdAt: string;
 }
 
@@ -63,6 +68,9 @@ export const dashboardApi = {
       yesterdayTransactionCount: 0,
       pendingApprovals: 0,
       pendingPartyProfileReviews: 0,
+      pendingTransactions: 0,
+      pendingChequeBooks: 0,
+      pendingManualBooks: 0,
       activeAlerts: 0,
     };
   },

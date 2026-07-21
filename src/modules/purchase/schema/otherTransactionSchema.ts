@@ -17,7 +17,7 @@ const decimalPlaces = (maxDecimals: number) => {
   };
 };
 
-export const ad1Schema = yup.object({
+export const otherTransactionSchema = yup.object({
   transactionType: yup.string().trim().required('Type is required'),
   profileType: yup.string().trim().required('Profile Type is required'),
   branchId: yup.string().trim().required('Branch is required'),
@@ -60,16 +60,14 @@ export const ad1Schema = yup.object({
   swiftCode: yup.string().trim().required('Swift Code is required'),
   relationshipId: yup.string().trim().required('Relationship is required'),
   currencyId: yup.string().trim().required('Currency Code is required'),
-  
-  // 7 Decimals
+
   fcVolume: decimalStringSchema
     .required('FC Volume is required')
     .test('decimals', 'Must have up to 7 decimal places', decimalPlaces(7)),
   saleRate: decimalStringSchema
     .required('Sale Rate is required')
     .test('decimals', 'Must have up to 7 decimal places', decimalPlaces(7)),
-    
-  // 2 Decimals
+
   totalInrAmt: decimalStringSchema
     .required('Total INR Amt is required')
     .test('decimals', 'Must have up to 2 decimal places', decimalPlaces(2)),
@@ -91,7 +89,7 @@ export const ad1Schema = yup.object({
   settlementRate: decimalStringSchema
     .required('Settlement Rate is required')
     .test('decimals', 'Must have up to 2 decimal places', decimalPlaces(2)),
-    
+
   grossRevenue: decimalStringSchema.default('0'),
   revenueReceivable: decimalStringSchema.default('0'),
   agentId: yup.string().trim().default(''),

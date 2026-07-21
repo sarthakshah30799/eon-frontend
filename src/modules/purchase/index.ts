@@ -8,9 +8,9 @@ export * from './forms/PurchaseForm';
 export * from './types/purchaseTypes';
 export * from './utils/purchaseUtils';
 export * from './views/PurchaseCreateView';
-export * from './views/AD1CreateView';
-export * from './views/AD1ListView';
-export * from './views/AD1EditView';
-export * from './forms/AD1Form';
-export * from './schema/ad1Schema';
+export * from './views/OtherTransactionCreateView';
+export * from './views/OtherTransactionListView';
+export * from './views/OtherTransactionEditView';
+export * from './forms/OtherTransactionForm';
+export * from './schema/otherTransactionSchema';
 

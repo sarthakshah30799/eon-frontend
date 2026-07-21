@@ -1,15 +1,15 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
-import { transactionAd1Api } from '@/api/transactionAd1/transactionAd1.api';
+import { otherTransactionApi } from '@/api/otherTransaction/otherTransaction.api';
 import { TransactionTypeEnum } from '@/modules/transactions';
-import { TransactionProfileType } from '../forms/ad1ProfileType';
-import { AD1Form } from '../forms/AD1Form';
+import { TransactionProfileType } from '../forms/otherTransactionProfileType';
+import { OtherTransactionForm } from '../forms/OtherTransactionForm';
 import { useListAdditionalSettings } from '@/modules/additionalSettings/hooks';
 import { getAdditionalSettingBooleanValue } from '@/modules/additionalSettings/utils';
 import { AdditionalSettingsCodeEnum } from '@/modules/additionalSettings/constants';
 
-export const AD1CreateView = () => {
+export const OtherTransactionCreateView = () => {
   const navigate = useNavigate();
   const { user, activeBranchId, activeCounterId, setWorkplace } = useAuth();
   const canSelectWorkplace = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
@@ -21,7 +21,7 @@ export const AD1CreateView = () => {
       getAdditionalSettingBooleanValue(
         additionalSettings,
         AdditionalSettingsCodeEnum.TransactionApprovalPolicy,
-        AdditionalSettingsCodeEnum.PurchaseAd1,
+        AdditionalSettingsCodeEnum.PurchaseOtherTransaction,
         false,
       ),
     [additionalSettings],
@@ -82,19 +82,19 @@ export const AD1CreateView = () => {
   return (
     <div className="space-y-6">
       <div className="space-y-1">
-        <h1 className="text-2xl font-semibold text-text-primary">Create AD1 Transaction</h1>
+        <h1 className="text-2xl font-semibold text-text-primary">Create Transaction</h1>
         <p className="text-sm text-text-secondary">
           Capture all remitter, beneficiary, settlement and commission details.
         </p>
       </div>
 
-      <AD1Form
+      <OtherTransactionForm
         defaultValues={defaultValues}
         allowWorkplaceSelection={canSelectWorkplace}
         submitLabel={requiresApproval ? 'Submit for Approval' : 'Create'}
         onSubmit={async (values) => {
           await setWorkplace(values.branchId, values.counterId);
-          await transactionAd1Api.create({
+          await otherTransactionApi.create({
             transactionType: values.transactionType as string,
             profileType: values.profileType as string,
             requiresApproval,
@@ -140,12 +140,12 @@ export const AD1CreateView = () => {
             rtgsImpsNeftRefNo: (values.rtgsImpsNeftRefNo as string) || null,
             remarks: (values.remarks as string) || null,
           });
-          navigate('/ad1');
+          navigate('/other-transactions');
         }}
-        onCancel={() => navigate('/ad1')}
+        onCancel={() => navigate('/other-transactions')}
       />
     </div>
   );
 };
 
-export default AD1CreateView;
+export default OtherTransactionCreateView;

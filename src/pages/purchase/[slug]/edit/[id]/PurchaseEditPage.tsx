@@ -8,7 +8,7 @@ import { useCurrencyRatesViewData } from '@/modules/currencyRates/hooks/useCurre
 import { useListAdditionalSettings } from '@/modules/additionalSettings/hooks';
 import { useGetBranchProfile } from '@/modules/branchProfile/hooks/useGetBranchProfile';
 import { transactionsApi } from '@/api/transactions';
-import { PurchaseForm, AD1EditView } from '@/modules/purchase';
+import { PurchaseForm, OtherTransactionEditView } from '@/modules/purchase';
 import {
   getAdditionalSettingBooleanValue,
   getAdditionalSettingTextValue,
@@ -135,7 +135,7 @@ const PurchaseEditPage = () => {
     isAdditionalSettingsLoading;
 
   if (isAd1) {
-    return <AD1EditView />;
+    return <OtherTransactionEditView />;
   }
 
   if (!purchasePageType) {

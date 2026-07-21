@@ -231,7 +231,7 @@ export const ManagerToCashierAllocationPage = () => {
             id: `${book.id}_${from}`,
             bookId: book.id,
             requestNo: book.no,
-            requestDate: formatDateTime(book.dispatchDate) + ' 00:00:00',
+            requestDate: formatDateTime(book.dispatchDate),
             transactionType: book.transactionTypeLabel || book.transactionType,
             bookNoFrom: from,
             bookNoTo: to,

@@ -8,6 +8,7 @@ import {
   TransactionPaymentMethodEnum,
   TradeModeEnum,
   TransactionTypeEnum,
+  TransactionTypeProfileEnum,
 } from '@/modules/transactions';
 import type { TradeMode, TransactionType } from '@/modules/transactions';
 import {
@@ -16,8 +17,16 @@ import {
   getLatestRateForCurrency,
 } from '@/modules/currencyRates/utils/currencyRatesUtils';
 import type { ITransactionReferenceSnapshot } from '@/modules/transactions';
-import type { PurchasePageType } from '@/pages/purchase/[slug]/purchasePage.enum';
+import {
+  getPurchasePageEntityType,
+  type PurchasePageType,
+} from '@/pages/purchase/[slug]/purchasePage.enum';
 import type { IPartyProfileCommissionRule } from '@/modules/partyProfiles/types';
+import {
+  PassengerNationalityTypeEnum,
+  PassengerPanHolderRelationTypeEnum,
+  PassengerResidentStatusEnum,
+} from '@/modules/passengers/types/passengerTypes';
 import type {
   IPurchaseDocumentAttachment,
   IPurchaseFormValues,
@@ -102,9 +111,52 @@ export const createEmptyPurchaseFormValues = (
   partyProfileStateName: '',
   partyProfileContactName: '',
   partyProfileApplyTax: false,
+  purposeId: '',
   agentProfileId: '',
   agentProfileCode: '',
   agentProfileName: '',
+  entityType: getPurchasePageEntityType(purchasePageType) ?? '',
+  passengerInfoCaptured: false,
+  panNumber: '',
+  panHolderName: '',
+  panDob: '',
+  passportNumber: '',
+  passportIssueAt: '',
+  passportIssueDate: '',
+  passportExpiryDate: '',
+  nationalityType: PassengerNationalityTypeEnum.INDIAN,
+  residentStatus: PassengerResidentStatusEnum.RESIDENT,
+  countryId: '',
+  stateId: '',
+  locationId: '',
+  city: '',
+  address1: '',
+  address2: '',
+  email: '',
+  contactNo: '',
+  panHolderRelationType: PassengerPanHolderRelationTypeEnum.COMPANY,
+  corporatePanNumber: '',
+  corporatePanHolderName: '',
+  corporatePanDob: '',
+  corporatePanHolderRelationType: PassengerPanHolderRelationTypeEnum.COMPANY,
+  paidByPanNumber: '',
+  paidByPanHolderName: '',
+  paidByPanDob: '',
+  gstNumber: '',
+  gstStateId: '',
+  isPep: false,
+  arrivalDate: '',
+  otherDocuments: [
+    {
+      documentType: '',
+      documentNumber: '',
+      validTill: '',
+      issueAt: '',
+      issueDate: '',
+      expiryDate: '',
+      documentFile: '',
+    },
+  ],
   manualBookReferenceType: 'CASHIER',
   manualBookId: '',
   manualBookNo: '',
@@ -165,7 +217,51 @@ export const mapPurchaseFormValuesToSubmitPayload = (
       requiresApproval,
       slug: values.purchasePageType,
       partyProfileId: values.partyProfileId,
+      purposeId: values.purposeId || null,
       agentProfileId: values.agentProfileId || null,
+      passenger: values.passengerInfoCaptured
+        ? {
+            entityType: values.entityType || '',
+            nationalityType: values.nationalityType || PassengerNationalityTypeEnum.INDIAN,
+            residentStatus: values.residentStatus || PassengerResidentStatusEnum.RESIDENT,
+            countryId: values.countryId,
+            stateId: values.stateId || null,
+            locationId: values.locationId || null,
+            city: values.city || null,
+            address1: values.address1 || null,
+            address2: values.address2 || null,
+            email: values.email || null,
+            contactNo: values.contactNo || null,
+            panNumber: values.panNumber || null,
+            panHolderName: values.panHolderName || null,
+            panDob: values.panDob || null,
+            panHolderRelationType: values.panHolderRelationType || null,
+            corporatePanNumber: values.corporatePanNumber || null,
+            corporatePanHolderName: values.corporatePanHolderName || null,
+            corporatePanDob: values.corporatePanDob || null,
+            corporatePanHolderRelationType: values.corporatePanHolderRelationType || null,
+            paidByPanNumber: values.paidByPanNumber || null,
+            paidByPanHolderName: values.paidByPanHolderName || null,
+            paidByPanDob: values.paidByPanDob || null,
+            gstNumber: values.gstNumber || null,
+            gstStateId: values.gstStateId || null,
+            passportNumber: values.passportNumber || null,
+            passportIssueAt: values.passportIssueAt || null,
+            passportIssueDate: values.passportIssueDate || null,
+            passportExpiryDate: values.passportExpiryDate || null,
+            arrivalDate: values.arrivalDate || null,
+            isPep: values.isPep,
+            otherDocuments: values.otherDocuments.map(document => ({
+              documentType: document.documentType,
+              documentNumber: document.documentNumber,
+              validTill: document.validTill || null,
+              issueAt: document.issueAt || null,
+              issueDate: document.issueDate || null,
+              expiryDate: document.expiryDate || null,
+              remarks: null,
+            })),
+          }
+        : null,
       manualBookPageId: values.manualBookPageId || null,
       manualBookPageSnapshot: values.manualBookPageSnapshot ?? null,
       transactionType: values.transactionType,
@@ -261,6 +357,49 @@ export const mapPurchaseTransactionToFormValues = (
   agentProfileId: transaction.agentProfileId ?? '',
   agentProfileCode: transaction.agentProfileSnapshot?.code ?? '',
   agentProfileName: transaction.agentProfileSnapshot?.name ?? '',
+  purposeId: transaction.purposeId ?? '',
+  entityType: transaction.passengerSnapshot?.entityType ? String(transaction.passengerSnapshot.entityType) : '',
+  passengerInfoCaptured: Boolean(transaction.passengerId),
+  panNumber: '',
+  panHolderName: '',
+  panDob: '',
+  passportNumber: '',
+  passportIssueAt: '',
+  passportIssueDate: '',
+  passportExpiryDate: '',
+  nationalityType: PassengerNationalityTypeEnum.INDIAN,
+  residentStatus: PassengerResidentStatusEnum.RESIDENT,
+  countryId: '',
+  stateId: '',
+  locationId: '',
+  city: '',
+  address1: '',
+  address2: '',
+  email: '',
+  contactNo: '',
+  panHolderRelationType: PassengerPanHolderRelationTypeEnum.COMPANY,
+  corporatePanNumber: '',
+  corporatePanHolderName: '',
+  corporatePanDob: '',
+  corporatePanHolderRelationType: PassengerPanHolderRelationTypeEnum.COMPANY,
+  paidByPanNumber: '',
+  paidByPanHolderName: '',
+  paidByPanDob: '',
+  gstNumber: '',
+  gstStateId: '',
+  isPep: false,
+  arrivalDate: '',
+  otherDocuments: [
+    {
+      documentType: '',
+      documentNumber: '',
+      validTill: '',
+      issueAt: '',
+      issueDate: '',
+      expiryDate: '',
+      documentFile: '',
+    },
+  ],
   manualBookReferenceType: 'CASHIER',
   manualBookId: (transaction.manualBookPageSnapshot as Record<string, unknown> | null | undefined)?.manualBookId
     ? String((transaction.manualBookPageSnapshot as Record<string, unknown>).manualBookId)
@@ -360,11 +499,16 @@ export const getPurchaseTransactionAccountFilter = (
     : ({ bulkPurchase: true } as const);
 
 export const getPurchaseTransactionPartyProfileFilter = (
-  transactionType: TransactionType
+  transactionType: TransactionType,
+  purchasePageType: PurchasePageType | null = null
 ) =>
   transactionType === TransactionTypeEnum.SALE
     ? ({ sale: true } as const)
-    : ({ purchase: true } as const);
+    : purchasePageType === TransactionTypeProfileEnum.PURCHASE_INDIVIDUAL
+      ? ({ purchase: true, isIndividual: true } as const)
+      : purchasePageType === TransactionTypeProfileEnum.PURCHASE_CORPORATE
+        ? ({ purchase: true, isIndividual: false } as const)
+        : ({ purchase: true } as const);
 
 export const getPurchaseTransactionPricingSide = (
   transactionType: TransactionType | null | undefined

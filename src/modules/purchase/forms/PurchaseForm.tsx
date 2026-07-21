@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { Button, CardSection } from '@/components/ui';
 import { Form } from '@/components/forms';
+import { FormFieldCategoryOption } from '@/components/forms';
 import { TransactionAdditionalChargesFieldArray } from '@/components/forms';
 import { TransactionPaymentDetailsFieldArray } from '@/components/forms';
 import { documentProfileApi } from '@/api/documentProfile';
@@ -17,8 +18,11 @@ import { useGetBranchProfile } from '@/modules/branchProfile/hooks/useGetBranchP
 import { useListCompanyProfiles } from '@/modules/companyProfile/hooks';
 import { useGetPartyProfile } from '@/modules/partyProfiles/hooks';
 import type { PartyProfileType } from '@/modules/partyProfiles/types';
-import type { PurchasePageType } from '@/pages/purchase/[slug]/purchasePage.enum';
-import { getPurchasePageTitle } from '@/pages/purchase/[slug]/purchasePage.enum';
+import {
+  getPurchasePageEntityType,
+  getPurchasePageTitle,
+  type PurchasePageType,
+} from '@/pages/purchase/[slug]/purchasePage.enum';
 import type {
   IPurchaseDraftDocumentAttachment,
   IPurchaseFormValues,
@@ -33,14 +37,14 @@ import { PurchasePartyProfileField } from '../components/PurchasePartyProfileFie
 import { PurchaseReferenceNumberField } from '../components/PurchaseReferenceNumberField';
 import { PurchaseWorkplaceFields } from '../components/PurchaseWorkplaceFields';
 import { PurchaseTransactionTable } from '../components/PurchaseTransactionTable';
-import {
-  calculatePurchasePayableTotal,
-} from '../utils/purchaseUtils';
+import { calculatePurchasePayableTotal } from '../utils/purchaseUtils';
 import {
   buildPurchasePrintHtml,
   getPurchasePrintCopyLabel,
 } from '../utils/purchasePrintUtils';
 import { TransactionLogActionEnum } from '@/modules/transactions';
+import { PassengerAmlVerificationModal } from '@/modules/passengers/components';
+import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 
 const ACCOUNT_PROFILE_OPTION_PAGE_SIZE = 30;
 
@@ -110,12 +114,17 @@ const PurchaseFormBody = ({
   const [currencyPickerRowIndex, setCurrencyPickerRowIndex] = useState<
     number | null
   >(null);
+  const [isPassengerAmlModalOpen, setIsPassengerAmlModalOpen] = useState(false);
   const [hasPrintedOnce, setHasPrintedOnce] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
   const isReadOnly = isSubmitting || readOnly;
   const partyProfileApplyTax = useWatch({
     control: form.control,
     name: 'partyProfileApplyTax',
+  });
+  const partyProfileId = useWatch({
+    control: form.control,
+    name: 'partyProfileId',
   });
   const agentProfileId = useWatch({
     control: form.control,
@@ -159,6 +168,11 @@ const PurchaseFormBody = ({
     String(agentProfileId || ''),
     'AGENT',
     Boolean(agentProfileId)
+  );
+  const { data: selectedPartyProfile } = useGetPartyProfile(
+    String(partyProfileId || ''),
+    undefined,
+    Boolean(partyProfileId)
   );
   const { data: branchProfile } = useGetBranchProfile(resolvedBranchId);
   const { data: companies = [] } = useListCompanyProfiles();
@@ -397,10 +411,25 @@ const PurchaseFormBody = ({
       </CardSection>
 
       <CardSection heading={pageTitle}>
+        <div className="mb-4 grid gap-4 lg:grid-cols-2">
+          <FormFieldCategoryOption
+            name="purposeId"
+            code={CategoryOptionCodeEnum.Purpose}
+            label="Purpose"
+            placeholder="Select purpose"
+            disabled={isReadOnly}
+          />
+        </div>
+
         <div className="grid gap-4 lg:grid-cols-3">
           <PurchasePartyProfileField
             partyProfileTypes={partyProfileTypes}
+            purchasePageType={purchasePageType}
             disabled={isReadOnly}
+            showPassengerAction
+            onAddPassengerInfo={() => {
+              setIsPassengerAmlModalOpen(true);
+            }}
           />
 
           <PurchaseAgentProfileField disabled={isReadOnly} />
@@ -520,6 +549,29 @@ const PurchaseFormBody = ({
         </CardSection>
       ) : null}
 
+      <PassengerAmlVerificationModal
+        open={isPassengerAmlModalOpen}
+        onOpenChange={setIsPassengerAmlModalOpen}
+        entityType={getPurchasePageEntityType(purchasePageType) ?? undefined}
+        selectedPartyProfile={
+          selectedPartyProfile
+            ? {
+                id: selectedPartyProfile.id,
+                code: selectedPartyProfile.code,
+                name: selectedPartyProfile.name,
+                type: selectedPartyProfile.type,
+                isIndividual: selectedPartyProfile.isIndividual,
+                panNo: selectedPartyProfile.panNo,
+                panName: selectedPartyProfile.panName,
+                panDob: selectedPartyProfile.panDob,
+              }
+            : null
+        }
+        onVerified={() => {
+          toast.success('AML verified successfully');
+        }}
+      />
+
       <SelectCurrencyProfiles
         open={currencyPickerRowIndex !== null}
         selectable
@@ -589,6 +641,7 @@ export const PurchaseForm = ({
         createPurchaseFormSchema(defaultValues.transactionType),
       ) as unknown as Resolver<IPurchaseFormValues>}
       defaultValues={defaultValues}
+      mode="onBlur"
       className="space-y-6"
       footer={{
         submitLabel,

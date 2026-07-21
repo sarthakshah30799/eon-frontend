@@ -2,7 +2,10 @@ import { useMemo, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { Button, CardSection, Checkbox, Input } from '@/components/ui';
-import migrationsApi from '@/api/migrations/migrations.api';
+import migrationsApi, {
+  type MigrationConnectionPayload,
+  type MigrationPayload,
+} from '@/api/migrations/migrations.api';
 
 type MigrationTableGroup = {
   title: string;
@@ -14,6 +17,21 @@ type MigrationTable = {
   id: string;
   name: string;
   note: string;
+};
+
+type ConnectionMode = 'string' | 'options';
+type ConnectionSlot = 'currentMaster' | 'currentTransaction' | 'oldMaster' | 'oldTransaction';
+
+type ConnectionProfileState = {
+  connectionMode: ConnectionMode;
+  connectionString: string;
+  host: string;
+  port: string;
+  username: string;
+  password: string;
+  database: string;
+  ssl: boolean;
+  verified: boolean;
 };
 
 const MIGRATION_TABLE_GROUPS: MigrationTableGroup[] = [
@@ -47,39 +65,149 @@ const MIGRATION_TABLE_GROUPS: MigrationTableGroup[] = [
 
 const ALL_TABLES = MIGRATION_TABLE_GROUPS.flatMap(group => group.tables);
 
-const emptyOptions = {
+const CONNECTION_SLOTS: ConnectionSlot[] = [
+  'currentMaster',
+  'currentTransaction',
+  'oldMaster',
+  'oldTransaction',
+];
+
+const CONNECTION_GROUPS: Array<{
+  title: string;
+  slots: ConnectionSlot[];
+}> = [
+  {
+    title: 'Current Databases',
+    slots: ['currentMaster', 'currentTransaction'],
+  },
+  {
+    title: 'Old Databases',
+    slots: ['oldMaster', 'oldTransaction'],
+  },
+];
+
+const CONNECTION_LABELS: Record<ConnectionSlot, { title: string; description: string }> = {
+  currentMaster: {
+    title: 'Current master connection',
+    description: 'Optional override for the new master database.',
+  },
+  currentTransaction: {
+    title: 'Current transaction connection',
+    description: 'Optional override for the new transaction database.',
+  },
+  oldMaster: {
+    title: 'Old master connection',
+    description: 'Source master database that holds company-level data.',
+  },
+  oldTransaction: {
+    title: 'Old transaction / branch connection',
+    description: 'Source branch database used for branch, counter, and user relations.',
+  },
+};
+
+const isCurrentConnectionSlot = (slot: ConnectionSlot) =>
+  slot === 'currentMaster' || slot === 'currentTransaction';
+
+const createEmptyConnectionProfile = (): ConnectionProfileState => ({
+  connectionMode: 'string',
+  connectionString: '',
   host: '',
   port: '',
   username: '',
   password: '',
   database: '',
   ssl: false,
-};
+  verified: false,
+});
 
-const toMigrationPayload = (
-  connectionMode: 'string' | 'options',
-  connectionString: string,
-  connectionOptions: typeof emptyOptions,
-  selectedTables: string[]
-) => {
-  if (connectionMode === 'string') {
+const createInitialProfiles = (): Record<ConnectionSlot, ConnectionProfileState> => ({
+  currentMaster: createEmptyConnectionProfile(),
+  currentTransaction: createEmptyConnectionProfile(),
+  oldMaster: createEmptyConnectionProfile(),
+  oldTransaction: createEmptyConnectionProfile(),
+});
+
+const hasConnectionValues = (profile: ConnectionProfileState) =>
+  profile.connectionMode === 'string'
+    ? profile.connectionString.trim().length > 0
+    : [
+        profile.host.trim(),
+        profile.port.trim(),
+        profile.username.trim(),
+        profile.password.trim(),
+        profile.database.trim(),
+      ].some(value => value.length > 0);
+
+const buildConnectionPayload = (
+  profile: ConnectionProfileState
+): MigrationConnectionPayload | undefined => {
+  if (!hasConnectionValues(profile)) {
+    return undefined;
+  }
+
+  if (profile.connectionMode === 'string') {
     return {
-      connectionMode,
-      connectionString: connectionString.trim(),
-      selectedTables,
+      connectionMode: 'string',
+      connectionString: profile.connectionString.trim(),
     };
   }
 
   return {
-    connectionMode,
-    host: connectionOptions.host.trim(),
-    port: Number(connectionOptions.port),
-    username: connectionOptions.username.trim(),
-    password: connectionOptions.password,
-    database: connectionOptions.database.trim(),
-    ssl: connectionOptions.ssl,
-    selectedTables,
+    connectionMode: 'options',
+    host: profile.host.trim(),
+    port: Number(profile.port),
+    username: profile.username.trim(),
+    password: profile.password,
+    database: profile.database.trim(),
+    ssl: profile.ssl,
   };
+};
+
+const buildMigrationPayload = (
+  profiles: Record<ConnectionSlot, ConnectionProfileState>,
+  selectedTables: string[] = []
+): MigrationPayload => {
+  const currentMasterConnection = buildConnectionPayload(profiles.currentMaster);
+  const currentTransactionConnection = buildConnectionPayload(profiles.currentTransaction);
+  const oldMasterConnection = buildConnectionPayload(profiles.oldMaster);
+  const oldTransactionConnection = buildConnectionPayload(profiles.oldTransaction);
+
+  const payload: MigrationPayload = {
+    currentMasterConnection,
+    currentTransactionConnection,
+    oldMasterConnection,
+    oldTransactionConnection,
+  };
+
+  if (selectedTables.length > 0) {
+    payload.selectedTables = selectedTables;
+  }
+
+  return payload;
+};
+
+const validateConnectionProfile = (profile: ConnectionProfileState, label: string) => {
+  if (!hasConnectionValues(profile)) {
+    return;
+  }
+
+  if (profile.connectionMode === 'string') {
+    if (!profile.connectionString.trim()) {
+      throw new Error(`Please enter the ${label} connection string.`);
+    }
+    return;
+  }
+
+  if (!profile.host.trim()) throw new Error(`Please enter the ${label} host.`);
+  if (!profile.port.trim()) throw new Error(`Please enter the ${label} port.`);
+  if (!profile.username.trim()) throw new Error(`Please enter the ${label} username.`);
+  if (!profile.password.trim()) throw new Error(`Please enter the ${label} password.`);
+  if (!profile.database.trim()) throw new Error(`Please enter the ${label} database.`);
+
+  const port = Number(profile.port);
+  if (!Number.isInteger(port) || port < 1 || port > 65535) {
+    throw new Error(`Please enter a valid ${label} port.`);
+  }
 };
 
 const downloadBlob = (blob: Blob, filename: string) => {
@@ -93,11 +221,12 @@ const downloadBlob = (blob: Blob, filename: string) => {
 
 export const MigrationsView = () => {
   const { user, isLoading } = useAuth();
-  const [connectionMode, setConnectionMode] = useState<'string' | 'options'>('string');
-  const [connectionString, setConnectionString] = useState('');
-  const [connectionOptions, setConnectionOptions] = useState(emptyOptions);
+  const [profiles, setProfiles] = useState<Record<ConnectionSlot, ConnectionProfileState>>(
+    createInitialProfiles
+  );
   const [selectedTableIds, setSelectedTableIds] = useState<string[]>([]);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [isRunningSchema, setIsRunningSchema] = useState(false);
   const [isRunningMock, setIsRunningMock] = useState(false);
   const [isRunningReal, setIsRunningReal] = useState(false);
   const [isConnectionVerified, setIsConnectionVerified] = useState(false);
@@ -108,24 +237,40 @@ export const MigrationsView = () => {
     [selectedTableIds]
   );
 
-  const payload = useMemo(
-    () =>
-      toMigrationPayload(
-        connectionMode,
-        connectionString,
-        connectionOptions,
-        selectedTableIds
-      ),
-    [connectionMode, connectionOptions, connectionString, selectedTableIds]
+  const configuredSlots = useMemo(
+    () => CONNECTION_SLOTS.filter(slot => hasConnectionValues(profiles[slot])),
+    [profiles]
   );
 
   const setMessage = (message: string) => {
     setStatusMessage(message);
   };
 
+  const updateProfile = (
+    slot: ConnectionSlot,
+    next: Partial<ConnectionProfileState> | ((current: ConnectionProfileState) => ConnectionProfileState)
+  ) => {
+    setProfiles(prev => {
+      const current = prev[slot];
+      const resolved = typeof next === 'function' ? next(current) : { ...current, ...next };
+      return {
+        ...prev,
+        [slot]: {
+          ...resolved,
+          verified: false,
+        },
+      };
+    });
+    setIsConnectionVerified(false);
+  };
+
   const toggleTable = (tableId: string, checked: boolean) => {
     setSelectedTableIds(prev =>
-      checked ? (prev.includes(tableId) ? prev : [...prev, tableId]) : prev.filter(id => id !== tableId)
+      checked
+        ? prev.includes(tableId)
+          ? prev
+          : [...prev, tableId]
+        : prev.filter(id => id !== tableId)
     );
   };
 
@@ -143,41 +288,53 @@ export const MigrationsView = () => {
     });
   };
 
-  const validateConnection = () => {
-    if (connectionMode === 'string') {
-      if (!connectionString.trim()) {
-        throw new Error('Please enter the old DB connection string.');
-      }
-      return;
+  const validateConfiguredConnections = () => {
+    if (configuredSlots.length === 0) {
+      throw new Error('Please enter at least one database connection before verifying.');
     }
 
-    if (!connectionOptions.host.trim()) throw new Error('Please enter the host.');
-    if (!connectionOptions.port.trim()) throw new Error('Please enter the port.');
-    if (!connectionOptions.username.trim()) throw new Error('Please enter the username.');
-    if (!connectionOptions.password.trim()) throw new Error('Please enter the password.');
-    if (!connectionOptions.database.trim()) throw new Error('Please enter the database.');
+    configuredSlots.forEach(slot => {
+      validateConnectionProfile(profiles[slot], CONNECTION_LABELS[slot].title);
+    });
   };
 
-  const handleVerifyConnection = async () => {
+  const verifyConnectionSet = async () => {
     try {
-      validateConnection();
+      validateConfiguredConnections();
       setIsVerifying(true);
       setStatusMessage('');
-      const result = await migrationsApi.verifyConnection(payload);
+      const result = await migrationsApi.verifyConnection(buildMigrationPayload(profiles));
       setIsConnectionVerified(result.verified);
+      setProfiles(prev => {
+        const next = { ...prev };
+        CONNECTION_SLOTS.forEach(slot => {
+          if (hasConnectionValues(next[slot])) {
+            next[slot] = {
+              ...next[slot],
+              verified: result.verified,
+            };
+          }
+        });
+        return next;
+      });
       setMessage(result.message);
     } catch (error) {
       setIsConnectionVerified(false);
-      setMessage(error instanceof Error ? error.message : 'Failed to verify connection.');
+      setMessage(error instanceof Error ? error.message : 'Failed to verify connections.');
     } finally {
       setIsVerifying(false);
     }
   };
 
   const ensureReady = () => {
-    if (!isConnectionVerified) {
-      throw new Error('Please verify the old DB connection first.');
+    if (!configuredSlots.some(slot => slot === 'oldMaster' || slot === 'oldTransaction')) {
+      throw new Error('Please enter at least one old source connection first.');
     }
+
+    if (!isConnectionVerified) {
+      throw new Error('Please verify the configured connections first.');
+    }
+
     if (selectedTableIds.length === 0) {
       throw new Error('Please select at least one table to continue.');
     }
@@ -188,13 +345,48 @@ export const MigrationsView = () => {
       ensureReady();
       setIsRunningMock(true);
       setStatusMessage('');
-      const result = await migrationsApi.runMock(payload);
+      const result = await migrationsApi.runMock(buildMigrationPayload(profiles, selectedTableIds));
       downloadBlob(result.blob, result.filename || 'migration-soft-run.xlsx');
-      setMessage(`Soft run completed for ${selectedTableIds.length} table(s). Review the XLSX before real migration.`);
+      setMessage(
+        `Soft run completed for ${selectedTableIds.length} table(s). Review the XLSX before real migration.`
+      );
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Soft run failed.');
     } finally {
       setIsRunningMock(false);
+    }
+  };
+
+  const handleApplyCurrentSchema = async (slot: ConnectionSlot) => {
+    try {
+      if (!isCurrentConnectionSlot(slot)) {
+        throw new Error('Schema migration can only be run for current databases.');
+      }
+      if (!isConnectionVerified) {
+        throw new Error('Please verify the configured connections first.');
+      }
+
+      const profile = profiles[slot];
+      validateConnectionProfile(profile, CONNECTION_LABELS[slot].title);
+
+      setIsRunningSchema(true);
+      setStatusMessage('');
+      const connection = buildConnectionPayload(profile);
+      const payload: MigrationPayload =
+        slot === 'currentMaster'
+          ? { currentMasterConnection: connection }
+          : { currentTransactionConnection: connection };
+      const result = await migrationsApi.applyCurrentSchema({
+        ...payload,
+        schemaTarget: slot,
+      });
+      setMessage(
+        `${result.message}. Current DB setup completed for ${CONNECTION_LABELS[slot].title.toLowerCase()}.`
+      );
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Current DB schema migration failed.');
+    } finally {
+      setIsRunningSchema(false);
     }
   };
 
@@ -203,7 +395,9 @@ export const MigrationsView = () => {
       ensureReady();
       setIsRunningReal(true);
       setStatusMessage('');
-      const result = await migrationsApi.runMigration(payload);
+      const result = await migrationsApi.runMigration(
+        buildMigrationPayload(profiles, selectedTableIds)
+      );
       downloadBlob(result.blob, result.filename || 'migration-real.xlsx');
       setMessage(`Migration completed for ${selectedTableIds.length} table(s).`);
     } catch (error) {
@@ -211,6 +405,155 @@ export const MigrationsView = () => {
     } finally {
       setIsRunningReal(false);
     }
+  };
+
+  const renderConnectionCard = (slot: ConnectionSlot) => {
+    const profile = profiles[slot];
+    const label = CONNECTION_LABELS[slot];
+    const allowSchemaMigration = isCurrentConnectionSlot(slot);
+
+    return (
+      <div key={slot} className="rounded-sm border border-border-secondary bg-surface-secondary/40 p-4">
+        <div className="mb-4 flex items-start justify-between gap-4">
+          <div>
+            <h3 className="text-sm font-semibold text-text-primary">{label.title}</h3>
+            <p className="text-xs text-text-secondary">{label.description}</p>
+          </div>
+          <div
+            className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+              profile.verified
+                ? 'bg-success-50 text-success-700'
+                : 'bg-warning-50 text-warning-700'
+            }`}
+          >
+            {profile.verified ? 'Verified' : 'Pending'}
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="flex flex-wrap gap-4">
+            <label className="flex items-center gap-2 text-sm text-text-secondary">
+              <input
+                type="radio"
+                name={`${slot}-connection-mode`}
+                checked={profile.connectionMode === 'string'}
+                onChange={() => updateProfile(slot, { connectionMode: 'string' })}
+              />
+              Connection string
+            </label>
+            <label className="flex items-center gap-2 text-sm text-text-secondary">
+              <input
+                type="radio"
+                name={`${slot}-connection-mode`}
+                checked={profile.connectionMode === 'options'}
+                onChange={() => updateProfile(slot, { connectionMode: 'options' })}
+              />
+              Host / Port / Username / Password / SSL
+            </label>
+          </div>
+
+          {profile.connectionMode === 'string' ? (
+            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+              <Input
+                id={`${slot}-connection-string`}
+                label="Connection string"
+                placeholder="Server=...;Database=...;User Id=...;Password=...;TrustServerCertificate=True;"
+                value={profile.connectionString}
+                valueTransform="none"
+                classes={{ container: 'max-w-none' }}
+                onChange={event => updateProfile(slot, { connectionString: event.target.value })}
+              />
+              <div className="space-y-2">
+                <Button onClick={verifyConnectionSet} loading={isVerifying} className="lg:min-w-40">
+                  Verify Connections
+                </Button>
+                {allowSchemaMigration ? (
+                  <Button
+                    onClick={() => handleApplyCurrentSchema(slot)}
+                    loading={isRunningSchema}
+                    variant="outline"
+                    disabled={!isConnectionVerified}
+                    className="lg:min-w-40"
+                  >
+                    Run Schema Migrations
+                  </Button>
+                ) : null}
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                <Input
+                  label="Host"
+                  value={profile.host}
+                  valueTransform="none"
+                  classes={{ container: 'max-w-none' }}
+                  onChange={event => updateProfile(slot, { host: event.target.value })}
+                />
+                <Input
+                  label="Port"
+                  inputMode="numeric"
+                  value={profile.port}
+                  valueTransform="none"
+                  classes={{ container: 'max-w-none' }}
+                  onChange={event => updateProfile(slot, { port: event.target.value })}
+                />
+                <Input
+                  label="Database"
+                  value={profile.database}
+                  valueTransform="none"
+                  classes={{ container: 'max-w-none' }}
+                  onChange={event => updateProfile(slot, { database: event.target.value })}
+                />
+                <Input
+                  label="Username"
+                  value={profile.username}
+                  valueTransform="none"
+                  classes={{ container: 'max-w-none' }}
+                  onChange={event => updateProfile(slot, { username: event.target.value })}
+                />
+                <Input
+                  label="Password"
+                  type="password"
+                  value={profile.password}
+                  valueTransform="none"
+                  classes={{ container: 'max-w-none' }}
+                  onChange={event => updateProfile(slot, { password: event.target.value })}
+                />
+                <div className="flex items-end">
+                  <label className="flex items-center gap-2 text-sm text-text-secondary">
+                    <Checkbox
+                      checked={profile.ssl}
+                      onChange={checked => updateProfile(slot, { ssl: checked })}
+                    />
+                    SSL / Trust server certificate
+                  </label>
+                </div>
+              </div>
+
+              <div className="flex justify-end">
+                <div className="space-y-2">
+                  <Button onClick={verifyConnectionSet} loading={isVerifying} className="min-w-40">
+                    Verify Connections
+                  </Button>
+                  {allowSchemaMigration ? (
+                    <Button
+                      onClick={() => handleApplyCurrentSchema(slot)}
+                      loading={isRunningSchema}
+                      variant="outline"
+                      disabled={!isConnectionVerified}
+                      className="min-w-40"
+                    >
+                      Run Schema Migrations
+                    </Button>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
   };
 
   if (isLoading) {
@@ -227,120 +570,26 @@ export const MigrationsView = () => {
 
   return (
     <section className="space-y-6">
-      <CardSection heading="Old DB Connection" className="border-border-primary bg-surface-primary">
+      <CardSection heading="Database Connections" className="border-border-primary bg-surface-primary">
         <div className="space-y-5">
-          <div className="flex flex-wrap gap-4">
-            <label className="flex items-center gap-2 text-sm text-text-secondary">
-              <input
-                type="radio"
-                name="connection-mode"
-                checked={connectionMode === 'string'}
-                onChange={() => {
-                  setConnectionMode('string');
-                  setIsConnectionVerified(false);
-                }}
-              />
-              Connection string
-            </label>
-            <label className="flex items-center gap-2 text-sm text-text-secondary">
-              <input
-                type="radio"
-                name="connection-mode"
-                checked={connectionMode === 'options'}
-                onChange={() => {
-                  setConnectionMode('options');
-                  setIsConnectionVerified(false);
-                }}
-              />
-              Host / Port / Username / Password / SSL
-            </label>
-          </div>
+          <p className="text-sm text-text-secondary">
+            Fill the current and old database profiles you want to use. Current master and current
+            transaction are optional overrides. Old master and old transaction are the source
+            connections used for migration.
+          </p>
 
-          {connectionMode === 'string' ? (
-            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
-              <Input
-                id="old-db-connection"
-                label="Old DB connection string"
-                placeholder="Server=...;Database=...;User Id=...;Password=...;TrustServerCertificate=True;"
-                value={connectionString}
-                onChange={event => {
-                  setConnectionString(event.target.value);
-                  setIsConnectionVerified(false);
-                }}
-              />
-              <Button onClick={handleVerifyConnection} loading={isVerifying} className="lg:min-w-40">
-                Verify Connection
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                <Input
-                  label="Host"
-                  value={connectionOptions.host}
-                  onChange={event => {
-                    setConnectionOptions(prev => ({ ...prev, host: event.target.value }));
-                    setIsConnectionVerified(false);
-                  }}
-                />
-                <Input
-                  label="Port"
-                  inputMode="numeric"
-                  value={connectionOptions.port}
-                  onChange={event => {
-                    setConnectionOptions(prev => ({ ...prev, port: event.target.value }));
-                    setIsConnectionVerified(false);
-                  }}
-                />
-                <Input
-                  label="Database"
-                  value={connectionOptions.database}
-                  onChange={event => {
-                    setConnectionOptions(prev => ({ ...prev, database: event.target.value }));
-                    setIsConnectionVerified(false);
-                  }}
-                />
-                <Input
-                  label="Username"
-                  value={connectionOptions.username}
-                  onChange={event => {
-                    setConnectionOptions(prev => ({ ...prev, username: event.target.value }));
-                    setIsConnectionVerified(false);
-                  }}
-                />
-                <Input
-                  label="Password"
-                  type="password"
-                  value={connectionOptions.password}
-                  onChange={event => {
-                    setConnectionOptions(prev => ({ ...prev, password: event.target.value }));
-                    setIsConnectionVerified(false);
-                  }}
-                />
-                <div className="flex items-end">
-                  <label className="flex items-center gap-2 text-sm text-text-secondary">
-                    <Checkbox
-                      checked={connectionOptions.ssl}
-                      onChange={checked => {
-                        setConnectionOptions(prev => ({
-                          ...prev,
-                          ssl: checked,
-                        }));
-                        setIsConnectionVerified(false);
-                      }}
-                    />
-                    SSL / Trust server certificate
-                  </label>
+          <div className="grid gap-4 lg:grid-cols-2">
+            {CONNECTION_GROUPS.map(group => (
+              <div key={group.title} className="space-y-4">
+                <div className="rounded-sm border border-border-secondary bg-surface-secondary/30 px-4 py-3">
+                  <h3 className="text-sm font-semibold text-text-primary">{group.title}</h3>
+                </div>
+                <div className="space-y-4">
+                  {group.slots.map(slot => renderConnectionCard(slot))}
                 </div>
               </div>
-
-              <div className="flex justify-end">
-                <Button onClick={handleVerifyConnection} loading={isVerifying} className="min-w-40">
-                  Verify Connection
-                </Button>
-              </div>
-            </div>
-          )}
+            ))}
+          </div>
         </div>
       </CardSection>
 
@@ -350,7 +599,10 @@ export const MigrationsView = () => {
             const groupChecked = group.tables.every(table => selectedTableIds.includes(table.id));
 
             return (
-              <div key={group.title} className="rounded-sm border border-border-secondary bg-surface-secondary/40 p-4">
+              <div
+                key={group.title}
+                className="rounded-sm border border-border-secondary bg-surface-secondary/40 p-4"
+              >
                 <div className="mb-3 flex items-start justify-between gap-4">
                   <div>
                     <h3 className="text-sm font-semibold text-text-primary">{group.title}</h3>
@@ -391,8 +643,9 @@ export const MigrationsView = () => {
       <CardSection heading="Run Migration" className="border-border-primary bg-surface-primary">
         <div className="space-y-4">
           <p className="text-sm text-text-secondary">
-            Soft run downloads the XLSX review sheet first. Real migration uses the same selection and
-            writes to the new database only after you confirm the source data.
+            First apply the schema migration from the current database card you want to target,
+            then run the soft test to download the XLSX review sheet, and only after review run
+            the real migration.
           </p>
           <div className="flex flex-wrap gap-3">
             <Button onClick={handleMockTest} loading={isRunningMock}>
@@ -402,11 +655,14 @@ export const MigrationsView = () => {
               Run Migration
             </Button>
           </div>
-          {selectedTables.length > 0 ? (
-            <p className="text-xs text-text-muted">
-              Selected tables: {selectedTables.map(table => table.name).join(', ')}
+          <div className="space-y-1 text-xs text-text-muted">
+            <p>
+              Configured connections: {configuredSlots.length > 0 ? configuredSlots.join(', ') : 'none'}
             </p>
-          ) : null}
+            {selectedTables.length > 0 ? (
+              <p>Selected tables: {selectedTables.map(table => table.name).join(', ')}</p>
+            ) : null}
+          </div>
         </div>
       </CardSection>
 
@@ -418,3 +674,5 @@ export const MigrationsView = () => {
     </section>
   );
 };
+
+export default MigrationsView;

@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
+import { Button } from '@/components/ui';
 import { SelectPartyProfiles } from '@/modules/partyProfiles/components';
 import type { PartyProfileType } from '@/modules/partyProfiles/types';
 import type { IPartyProfileListQuery } from '@/modules/partyProfiles/types';
 import type { IPurchaseFormValues } from '../types/purchaseTypes';
+import type { PurchasePageType } from '@/pages/purchase/[slug]/purchasePage.enum';
+import { PassengerEntityTypeEnum } from '@/modules/passengers/types/passengerTypes';
 import {
   formatPurchaseEntityLabel,
   getPurchaseTransactionPartyProfileFilter,
@@ -12,37 +15,106 @@ import { EntityPickerField } from './EntityPickerField';
 
 interface PurchasePartyProfileFieldProps {
   partyProfileTypes: PartyProfileType[];
+  purchasePageType?: PurchasePageType | null;
   disabled?: boolean;
+  showPassengerAction?: boolean;
+  onAddPassengerInfo?: () => void;
 }
 
 export const PurchasePartyProfileField = ({
   partyProfileTypes,
+  purchasePageType = null,
   disabled = false,
+  showPassengerAction = false,
+  onAddPassengerInfo,
 }: PurchasePartyProfileFieldProps) => {
   const form = useFormContext<IPurchaseFormValues>();
   const [open, setOpen] = useState(false);
 
   const partyProfileCode = form.watch('partyProfileCode');
   const partyProfileName = form.watch('partyProfileName');
+  const partyProfileId = useWatch({
+    control: form.control,
+    name: 'partyProfileId',
+  });
+  const entityType = useWatch({
+    control: form.control,
+    name: 'entityType',
+  });
+  const passengerInfoCaptured = useWatch({
+    control: form.control,
+    name: 'passengerInfoCaptured',
+  });
+  const nationalityType = useWatch({
+    control: form.control,
+    name: 'nationalityType',
+  });
+  const panNumber = useWatch({
+    control: form.control,
+    name: 'panNumber',
+  });
+  const panHolderName = useWatch({
+    control: form.control,
+    name: 'panHolderName',
+  });
+  const passportNumber = useWatch({
+    control: form.control,
+    name: 'passportNumber',
+  });
   const transactionType = useWatch({
     control: form.control,
     name: 'transactionType',
   });
   const profileQueryParams = {
-    ...getPurchaseTransactionPartyProfileFilter(transactionType),
+    ...getPurchaseTransactionPartyProfileFilter(transactionType, purchasePageType),
     activeOnly: true,
-  } satisfies Pick<IPartyProfileListQuery, 'sale' | 'purchase' | 'activeOnly'>;
+  } satisfies Pick<IPartyProfileListQuery, 'sale' | 'purchase' | 'activeOnly' | 'isIndividual'>;
 
   return (
     <>
-      <EntityPickerField
-        label="Party Profile"
-        value={formatPurchaseEntityLabel(partyProfileCode, partyProfileName)}
-        placeholder="Select party profile"
-        onClick={() => setOpen(true)}
-        disabled={disabled}
-        helperText="Choose a party profile for this transaction."
-      />
+      <div className="space-y-2">
+        <EntityPickerField
+          label="Party Profile"
+          value={formatPurchaseEntityLabel(partyProfileCode, partyProfileName)}
+          placeholder="Select party profile"
+          onClick={() => setOpen(true)}
+          disabled={disabled}
+          helperText="Choose a party profile for this transaction."
+        />
+
+        {showPassengerAction ? (
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            disabled={disabled || !partyProfileId || !entityType}
+            onClick={() => {
+              onAddPassengerInfo?.();
+            }}
+          >
+            Add Passenger Info
+          </Button>
+        ) : null}
+
+        {passengerInfoCaptured ? (
+          <div className="rounded-sm border border-border-primary bg-surface-secondary px-4 py-3 text-sm text-text-secondary">
+            <div className="font-medium text-text-primary">Passenger Captured</div>
+            <div className="mt-1">
+              {entityType === PassengerEntityTypeEnum.CORPORATE
+                ? 'Corporate passenger'
+                : 'Individual passenger'}
+            </div>
+            <div className="mt-1">
+              {nationalityType === 'INDIAN'
+                ? `PAN: ${panNumber || '-'}`
+                : `Passport: ${passportNumber || '-'}`}
+            </div>
+            {panHolderName ? (
+              <div className="mt-1">{panHolderName}</div>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
 
       <SelectPartyProfiles
         open={open}

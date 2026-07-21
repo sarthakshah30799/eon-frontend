@@ -1,4 +1,4 @@
-export interface IAd1FormValues {
+export interface IOtherTransactionFormValues {
   transactionType: string;
   profileType: string;
   branchId: string;
@@ -37,8 +37,8 @@ export interface IAd1FormValues {
   grossRevenue: string;
   revenueReceivable: string;
   agentId: string;
-  commGiven: string;       // display only — not saved to DB
-  commPercentOnFe: string; // used for agentComm calculation only
+  commGiven: string;
+  commPercentOnFe: string;
   agentComm: string;
   tds: string;
   commissionPayable: string;
@@ -48,9 +48,9 @@ export interface IAd1FormValues {
   remarks: string;
 }
 
-export const createEmptyAd1FormValues = (
-  overrides: Partial<IAd1FormValues> = {}
-): IAd1FormValues => ({
+export const createEmptyOtherTransactionFormValues = (
+  overrides: Partial<IOtherTransactionFormValues> = {}
+): IOtherTransactionFormValues => ({
   transactionType: '',
   profileType: '',
   branchId: '',

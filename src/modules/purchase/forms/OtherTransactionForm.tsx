@@ -15,8 +15,8 @@ import {
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import { AccountProfileLedgerLabelEnum } from '@/modules/accountProfile/utils/accountProfileLedgerLabels';
 import type { IAccountProfileListQuery } from '@/modules/accountProfile/types/accountProfileTypes';
-import { ad1Schema } from '../schema/ad1Schema';
-import { TransactionProfileType } from './ad1ProfileType';
+import { otherTransactionSchema } from '../schema/otherTransactionSchema';
+import { TransactionProfileType } from './otherTransactionProfileType';
 import { currencyProfileApi } from '@/api/currencyProfile';
 import { currencyRatesApi } from '@/api/currencyRates/currencyRates.api';
 import { partyProfileApi } from '@/api/partyProfile';
@@ -27,37 +27,37 @@ import type { ICurrencyProfile } from '@/modules/currencyProfile/types';
 import { TransactionTypeEnum } from '@/modules/transactions';
 import type { AsyncSelectResponse } from '@/components/ui';
 import type { DefaultValues } from 'react-hook-form';
-import type { IAd1FormValues } from '../types';
+import type { IOtherTransactionFormValues } from '../types';
 import type { TransactionType } from '@/modules/transactions';
 import {
   getPurchaseTransactionAccountFilter,
   getPurchaseTransactionProductFilter,
 } from '../utils/purchaseUtils';
 import { PurchaseWorkplaceFields } from '../components/PurchaseWorkplaceFields';
-export { TransactionProfileType } from './ad1ProfileType';
+export { TransactionProfileType } from './otherTransactionProfileType';
 
-interface AD1FormProps {
-  defaultValues: DefaultValues<IAd1FormValues>;
-  onSubmit: (values: IAd1FormValues) => Promise<void> | void;
+interface OtherTransactionFormProps {
+  defaultValues: DefaultValues<IOtherTransactionFormValues>;
+  onSubmit: (values: IOtherTransactionFormValues) => Promise<void> | void;
   onCancel: () => void;
   readOnly?: boolean;
   allowWorkplaceSelection?: boolean;
   submitLabel?: string;
 }
 
-export const AD1Form = ({
+export const OtherTransactionForm = ({
   defaultValues,
   onSubmit,
   onCancel,
   readOnly = false,
   allowWorkplaceSelection = true,
   submitLabel = 'Save',
-}: AD1FormProps) => {
+}: OtherTransactionFormProps) => {
   return (
-    <Form<IAd1FormValues>
-      id="ad1-form"
+    <Form<IOtherTransactionFormValues>
+      id="other-transaction-form"
       onSubmit={onSubmit}
-      resolver={yupResolver(ad1Schema)}
+      resolver={yupResolver(otherTransactionSchema)}
       defaultValues={defaultValues}
       className="space-y-6"
       footer={{
@@ -68,18 +68,18 @@ export const AD1Form = ({
         showSubmit: !readOnly,
       }}
     >
-      <AD1FormBody readOnly={readOnly} allowWorkplaceSelection={allowWorkplaceSelection} />
+      <OtherTransactionFormBody readOnly={readOnly} allowWorkplaceSelection={allowWorkplaceSelection} />
     </Form>
   );
 };
 
-interface AD1FormBodyProps {
+interface OtherTransactionFormBodyProps {
   readOnly: boolean;
   allowWorkplaceSelection: boolean;
 }
 
-const AD1FormBody = ({ readOnly, allowWorkplaceSelection }: AD1FormBodyProps) => {
-  const form = useFormContext<IAd1FormValues>();
+const OtherTransactionFormBody = ({ readOnly, allowWorkplaceSelection }: OtherTransactionFormBodyProps) => {
+  const form = useFormContext<IOtherTransactionFormValues>();
   const { control, setValue } = form;
 
   const transactionType = useWatch({
@@ -103,33 +103,25 @@ const AD1FormBody = ({ readOnly, allowWorkplaceSelection }: AD1FormBodyProps) =>
   const [productProfiles, setProductProfiles] = useState<import('@/modules/productProfile/types').IProductProfile[]>([]);
   const [currencies, setCurrencies] = useState<ICurrencyProfile[]>([]);
   const agentRuleRef = useRef<{ type: PartyProfileCommissionType; value: number } | null>(null);
-  // Cache of full agent data (with commissionRules) keyed by agent ID
   const agentCacheRef = useRef<Map<string, import('@/modules/partyProfiles/types/partyProfileTypes').IPartyProfile>>(new Map());
 
-  // Load product profiles and currencies on mount
   useEffect(() => {
     productProfileApi.getProductProfiles().then(setProductProfiles).catch(console.error);
     currencyProfileApi.getCurrencyProfiles().then(res => setCurrencies(res.filter(c => c.active))).catch(console.error);
   }, []);
 
-  // Fetch and apply agent's commission rule
   useEffect(() => {
     if (readOnly) return;
     if (!agentId) {
       agentRuleRef.current = null;
       return;
     }
-    // Need product and currency to match commission rules
     if (!productId || !currencyId || currencies.length === 0) {
-      // Don't clear agentRuleRef — wait until product+currency are selected
       return;
     }
 
     const fetchAgentRule = async () => {
       try {
-        // Only use cache if commissionRules was actually loaded (property exists).
-        // The agents list endpoint omits commissionRules, so always fall back to
-        // the full party profile fetch which includes them via relations.
         const cached = agentCacheRef.current.get(agentId);
         const agent = cached?.commissionRules !== undefined
           ? cached
@@ -139,7 +131,6 @@ const AD1FormBody = ({ readOnly, allowWorkplaceSelection }: AD1FormBodyProps) =>
           return;
         }
 
-        // productId is now a product profile UUID — get productCode directly
         const productProfile = productProfiles.find(p => p.id === productId);
         const productVal = productProfile?.productCode;
         const currencyVal = currencies.find(c => c.id === currencyId)?.currencyCode;
@@ -170,7 +161,6 @@ const AD1FormBody = ({ readOnly, allowWorkplaceSelection }: AD1FormBodyProps) =>
             setValue('agentComm', ((ruleVal / 100) * fc).toFixed(2), { shouldValidate: false });
           }
         } else {
-          // No matching rule — default to PAISA
           agentRuleRef.current = null;
           setValue('commGiven', PartyProfileCommissionTypeEnum.PAISA, { shouldValidate: false });
           setValue('commPercentOnFe', '0', { shouldValidate: false });
@@ -185,7 +175,6 @@ const AD1FormBody = ({ readOnly, allowWorkplaceSelection }: AD1FormBodyProps) =>
     void fetchAgentRule();
   }, [agentId, productId, currencyId, productProfiles, currencies, setValue, readOnly, fcVolume]);
 
-  // Auto-calculate Total INR Amt = FC Volume × Sale Rate
   useEffect(() => {
     const fc = parseFloat(String(fcVolume)) || 0;
     const rate = parseFloat(String(saleRate)) || 0;
@@ -193,7 +182,6 @@ const AD1FormBody = ({ readOnly, allowWorkplaceSelection }: AD1FormBodyProps) =>
     setValue('totalInrAmt', total === 0 ? '' : total.toFixed(2), { shouldValidate: false });
   }, [fcVolume, saleRate, setValue]);
 
-  // Auto-fill sale rate from currency's latest rate when currency changes
   useEffect(() => {
     if (!currencyId || readOnly) return;
     const fetchRate = async () => {
@@ -215,7 +203,6 @@ const AD1FormBody = ({ readOnly, allowWorkplaceSelection }: AD1FormBodyProps) =>
     void fetchRate();
   }, [currencyId, currencies, setValue, readOnly]);
 
-  // Auto-calculate Final Amount based on transaction type (includes TCS)
   useEffect(() => {
     const fc = parseFloat(String(fcVolume)) || 0;
     const rate = parseFloat(String(saleRate)) || 0;
@@ -232,7 +219,6 @@ const AD1FormBody = ({ readOnly, allowWorkplaceSelection }: AD1FormBodyProps) =>
     setValue('finalAmount', final === 0 ? '' : final.toFixed(2), { shouldValidate: false });
   }, [fcVolume, saleRate, bankCharges, otherIncome, tcs, transactionType, setValue]);
 
-  // Auto-calculate Agent Comm = Final Amount × Comm% / 100 (PERCENTAGE type only)
   useEffect(() => {
     if (readOnly) return;
     if (agentRuleRef.current?.type !== PartyProfileCommissionTypeEnum.PERCENTAGE) return;
@@ -242,7 +228,6 @@ const AD1FormBody = ({ readOnly, allowWorkplaceSelection }: AD1FormBodyProps) =>
     setValue('agentComm', comm === 0 ? '0' : comm.toFixed(2), { shouldValidate: false });
   }, [watchedFinalAmount, commPercentOnFe, readOnly, setValue]);
 
-  // Auto-calculate Commission Payable = Agent Comm − TDS
   useEffect(() => {
     if (readOnly) return;
     const comm = parseFloat(String(watchedAgentComm)) || 0;
@@ -251,7 +236,6 @@ const AD1FormBody = ({ readOnly, allowWorkplaceSelection }: AD1FormBodyProps) =>
     setValue('commissionPayable', payable === 0 ? '0' : payable.toFixed(2), { shouldValidate: false });
   }, [watchedAgentComm, tds, readOnly, setValue]);
 
-  // Reset Bank field if Type changes
   const prevTypeRef = useRef(transactionType);
   useEffect(() => {
     if (prevTypeRef.current !== transactionType) {
@@ -260,7 +244,6 @@ const AD1FormBody = ({ readOnly, allowWorkplaceSelection }: AD1FormBodyProps) =>
     }
   }, [transactionType, setValue]);
 
-  // Reset Agent if Branch changes
   const prevBranchRef = useRef(branchId);
   useEffect(() => {
     if (prevBranchRef.current !== branchId) {
@@ -283,11 +266,10 @@ const AD1FormBody = ({ readOnly, allowWorkplaceSelection }: AD1FormBodyProps) =>
 
   const loadAgents = useCallback(async (search: string): Promise<AsyncSelectResponse> => {
     if (!branchId) return { options: [] };
-    const res = await partyProfileApi.getAd1Agents({
+    const res = await partyProfileApi.getOtherTransactionAgents({
       search: search || undefined,
       branchId,
     });
-    // Cache full agent data (including commissionRules) for use when agent is selected
     res.forEach(a => agentCacheRef.current.set(a.id, a));
     return {
       options: res.map(a => ({
@@ -326,7 +308,6 @@ const AD1FormBody = ({ readOnly, allowWorkplaceSelection }: AD1FormBodyProps) =>
     Object.assign(params, getPurchaseTransactionAccountFilter(transactionType));
 
     const res = await accountProfileApi.getAccountProfiles(params);
-    // Filter only Bank Ledger accounts
     const filtered = res.data.filter(
       b => b.accountType?.value === AccountProfileLedgerLabelEnum.BankLedger
     );
@@ -360,8 +341,7 @@ const AD1FormBody = ({ readOnly, allowWorkplaceSelection }: AD1FormBodyProps) =>
         <PurchaseWorkplaceFields readOnly={readOnly || !allowWorkplaceSelection} />
       </CardSection>
 
-      {/* Header section */}
-      <CardSection heading="AD1 Header Details">
+      <CardSection heading="Transaction Header Details">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <FormFieldSelect
             name="transactionType"
@@ -389,7 +369,6 @@ const AD1FormBody = ({ readOnly, allowWorkplaceSelection }: AD1FormBodyProps) =>
         </div>
       </CardSection>
 
-      {/* Remitter section */}
       <CardSection heading="Remitter Details">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <FormFieldInput name="remitterName" label="Remitter Name" placeholder="Remitter Name" disabled={readOnly} />
@@ -403,7 +382,6 @@ const AD1FormBody = ({ readOnly, allowWorkplaceSelection }: AD1FormBodyProps) =>
         </div>
       </CardSection>
 
-      {/* Beneficiary section */}
       <CardSection heading="Beneficiary & Product Details">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <FormFieldSelect key={`product-${transactionType}`} name="productId" label="Product" loadOptions={loadProducts} disabled={readOnly} />
@@ -419,7 +397,6 @@ const AD1FormBody = ({ readOnly, allowWorkplaceSelection }: AD1FormBodyProps) =>
         </div>
       </CardSection>
 
-      {/* Pricing calculations section */}
       <CardSection heading="Pricing & Calculations">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <FormFieldInput name="fcVolume" label="Quantity" type="number" step="any" placeholder="0.0000000" valueTransform="none" disabled={readOnly} />
@@ -436,7 +413,6 @@ const AD1FormBody = ({ readOnly, allowWorkplaceSelection }: AD1FormBodyProps) =>
         </div>
       </CardSection>
 
-      {/* Agent Commissions section */}
       <CardSection heading="Agent Commissions">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <FormFieldSelect key={`agent-${branchId || ''}`} name="agentId" label="Agent" loadOptions={loadAgents} disabled={readOnly} />
@@ -449,7 +425,6 @@ const AD1FormBody = ({ readOnly, allowWorkplaceSelection }: AD1FormBodyProps) =>
         </div>
       </CardSection>
 
-      {/* Settlement section */}
       <CardSection heading="Bank & Settlement Reference">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <FormFieldSelect name="bankNameId" label="Bank Name" loadOptions={loadBanks} disabled={readOnly} />

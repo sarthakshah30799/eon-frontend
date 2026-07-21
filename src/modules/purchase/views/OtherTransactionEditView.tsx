@@ -3,10 +3,10 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Loader } from '@/components/ui/loader';
 import { useAuth } from '@/lib/AuthContext';
-import { transactionAd1Api } from '@/api/transactionAd1/transactionAd1.api';
+import { otherTransactionApi } from '@/api/otherTransaction/otherTransaction.api';
 import { TransactionTypeEnum } from '@/modules/transactions';
-import { TransactionProfileType } from '../forms/ad1ProfileType';
-import { AD1Form } from '../forms/AD1Form';
+import { TransactionProfileType } from '../forms/otherTransactionProfileType';
+import { OtherTransactionForm } from '../forms/OtherTransactionForm';
 
 const STATUS_LABEL: Record<string, string> = {
   DRAFT: 'Pending Approval',
@@ -20,7 +20,7 @@ const STATUS_CLASS: Record<string, string> = {
   REJECTED: 'bg-red-100 text-red-800',
 };
 
-export const AD1EditView = () => {
+export const OtherTransactionEditView = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -31,8 +31,8 @@ export const AD1EditView = () => {
   const [approvalRemarks, setApprovalRemarks] = useState('');
 
   const { data: transaction, isLoading, error } = useQuery({
-    queryKey: ['ad1', id],
-    queryFn: () => transactionAd1Api.getById(id!),
+    queryKey: ['other-transaction', id],
+    queryFn: () => otherTransactionApi.getById(id!),
     enabled: Boolean(id),
   });
 
@@ -41,19 +41,19 @@ export const AD1EditView = () => {
 
   const approveMutation = useMutation({
     mutationFn: () =>
-      transactionAd1Api.approve(id!, { approvalRemarks: approvalRemarks || undefined }),
+      otherTransactionApi.approve(id!, { approvalRemarks: approvalRemarks || undefined }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['ad1', id] });
-      queryClient.invalidateQueries({ queryKey: ['ad1'] });
+      queryClient.invalidateQueries({ queryKey: ['other-transaction', id] });
+      queryClient.invalidateQueries({ queryKey: ['other-transactions'] });
     },
   });
 
   const rejectMutation = useMutation({
     mutationFn: () =>
-      transactionAd1Api.reject(id!, { rejectionReason: rejectionReason || undefined }),
+      otherTransactionApi.reject(id!, { rejectionReason: rejectionReason || undefined }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['ad1', id] });
-      queryClient.invalidateQueries({ queryKey: ['ad1'] });
+      queryClient.invalidateQueries({ queryKey: ['other-transaction', id] });
+      queryClient.invalidateQueries({ queryKey: ['other-transactions'] });
       setShowRejectInput(false);
     },
   });
@@ -121,7 +121,7 @@ export const AD1EditView = () => {
   if (error || !transaction) {
     return (
       <div className="py-8 text-center text-error-600">
-        Failed to load AD1 transaction. Please try again.
+        Failed to load transaction. Please try again.
       </div>
     );
   }
@@ -133,10 +133,10 @@ export const AD1EditView = () => {
       <div className="flex items-start justify-between">
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold text-text-primary">
-            AD1 Transaction — {transaction.number}
+            Transaction — {transaction.number}
           </h1>
           <p className="text-sm text-text-secondary">
-            View or edit this AD1 transaction.
+            View or edit this transaction.
           </p>
         </div>
         <span
@@ -146,7 +146,6 @@ export const AD1EditView = () => {
         </span>
       </div>
 
-      {/* Rejection note */}
       {status === 'REJECTED' && transaction.rejectionReason && (
         <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           <span className="font-medium">Rejected: </span>
@@ -154,7 +153,6 @@ export const AD1EditView = () => {
         </div>
       )}
 
-      {/* Approval remarks note */}
       {status === 'APPROVED' && transaction.approvalRemarks && (
         <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
           <span className="font-medium">Approval remarks: </span>
@@ -162,7 +160,6 @@ export const AD1EditView = () => {
         </div>
       )}
 
-      {/* Reviewer action panel */}
       {canReview && (
         <div className="rounded-lg border border-border bg-surface-secondary p-4 space-y-3">
           <p className="text-sm font-medium text-text-primary">Review this transaction</p>
@@ -232,12 +229,12 @@ export const AD1EditView = () => {
         </div>
       )}
 
-      <AD1Form
+      <OtherTransactionForm
         defaultValues={defaultValues}
         allowWorkplaceSelection={false}
         submitLabel="Save"
         onSubmit={async (values) => {
-          await transactionAd1Api.update(transaction.id, {
+          await otherTransactionApi.update(transaction.id, {
             transactionType: values.transactionType as string,
             profileType: values.profileType as string,
             dealId: (values.dealId as string) || null,
@@ -282,12 +279,12 @@ export const AD1EditView = () => {
             rtgsImpsNeftRefNo: (values.rtgsImpsNeftRefNo as string) || null,
             remarks: (values.remarks as string) || null,
           });
-          navigate('/ad1');
+          navigate('/other-transactions');
         }}
-        onCancel={() => navigate('/ad1')}
+        onCancel={() => navigate('/other-transactions')}
       />
     </div>
   );
 };
 
-export default AD1EditView;
+export default OtherTransactionEditView;

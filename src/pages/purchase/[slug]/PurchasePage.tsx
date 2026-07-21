@@ -6,7 +6,7 @@ import { NotFoundState } from '@/components/ui/not-found-state';
 import { useAuth } from '@/lib/AuthContext';
 import { transactionsApi } from '@/api/transactions';
 import type { ITransactionEntity } from '@/modules/transactions';
-import { AD1ListView } from '@/modules/purchase';
+import { OtherTransactionListView } from '@/modules/purchase';
 import { useListBranchProfiles } from '@/modules/branchProfile/hooks';
 import {
   TransactionListTable,
@@ -210,7 +210,7 @@ const PurchasePage = () => {
   const purchasePageType = getPurchasePageTypeFromPath(location.pathname, slug);
 
   if (slug === 'ad1') {
-    return <AD1ListView />;
+    return <OtherTransactionListView />;
   }
 
   if (!purchasePageType) {

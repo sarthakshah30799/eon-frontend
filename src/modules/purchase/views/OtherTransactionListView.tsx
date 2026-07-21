@@ -9,10 +9,10 @@ import { NotFoundState } from '@/components/ui/not-found-state';
 import { usePermission } from '@/hooks/usePermission';
 import { useAuth } from '@/lib/AuthContext';
 import { useListBranchProfiles } from '@/modules/branchProfile/hooks';
-import { transactionAd1Api } from '@/api/transactionAd1/transactionAd1.api';
+import { otherTransactionApi } from '@/api/otherTransaction/otherTransaction.api';
 import { formatDateTime } from '@/utils';
 
-interface Ad1Row {
+interface OtherTransactionRow {
   id: string;
   number: string;
   docNo: string;
@@ -23,10 +23,10 @@ interface Ad1Row {
   createdAt: string;
 }
 
-export const AD1ListView = () => {
+export const OtherTransactionListView = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { hasAnyPermission } = usePermission('/ad1');
+  const { hasAnyPermission } = usePermission('/other-transactions');
   const [search, setSearch] = useState('');
   const [branchFilter, setBranchFilter] = useState('');
   const canSeeAllBranches = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
@@ -59,15 +59,15 @@ export const AD1ListView = () => {
   );
 
   const { data = [], isLoading, isFetching, error } = useQuery({
-    queryKey: ['transactions-ad1', search, branchFilter],
+    queryKey: ['other-transactions', search, branchFilter],
     queryFn: () =>
-      transactionAd1Api.getAll({
+      otherTransactionApi.getAll({
         search: search.trim() || undefined,
         branchId: canSeeAllBranches ? branchFilter || undefined : undefined,
       }),
   });
 
-  const rows = useMemo<Ad1Row[]>(
+  const rows = useMemo<OtherTransactionRow[]>(
     () =>
       data.map(t => ({
         id: t.id,
@@ -82,7 +82,7 @@ export const AD1ListView = () => {
     [data]
   );
 
-  const columns: TableColumnDef<Ad1Row>[] = useMemo(
+  const columns: TableColumnDef<OtherTransactionRow>[] = useMemo(
     () => [
       { accessorKey: 'docNo', header: 'Doc No.' },
       { accessorKey: 'remitterName', header: 'Remitter Name' },
@@ -100,13 +100,13 @@ export const AD1ListView = () => {
           <div className="flex items-center gap-2">
             <Button
               type="button"
-              aria-label="Edit AD1 transaction"
+              aria-label="Edit transaction"
               variant="ghost"
               size="icon"
               className="rounded-sm bg-transparent text-black! hover:bg-surface-secondary hover:text-text-primary"
               onClick={e => {
                 e.stopPropagation();
-                navigate(`/ad1/edit/${row.original.id}`);
+                navigate(`/other-transactions/edit/${row.original.id}`);
               }}
             >
               <PencilSquareIcon className="h-5 w-5" />
@@ -126,7 +126,7 @@ export const AD1ListView = () => {
   if (error) {
     return (
       <div className="py-8 text-center text-error-600">
-        Failed to load AD1 transactions. Please try again.
+        Failed to load transactions. Please try again.
       </div>
     );
   }
@@ -135,17 +135,17 @@ export const AD1ListView = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-2xl font-semibold text-text-primary">AD1 Transactions</h1>
+          <h1 className="text-2xl font-semibold text-text-primary">Other Transactions</h1>
           <p className="text-sm text-text-secondary">
-            Browse and manage AD1 outward remittance transactions.
+            Browse and manage other outward remittance transactions.
           </p>
         </div>
         <Button
           type="button"
           className="rounded-sm"
-          onClick={() => navigate('/ad1/create')}
+          onClick={() => navigate('/other-transactions/create')}
         >
-          Create AD1
+          Create Transaction
         </Button>
       </div>
 
@@ -183,8 +183,8 @@ export const AD1ListView = () => {
           onSearch={setSearch}
           searchValue={search}
           searchPlaceholder="Search by number"
-          onRowClick={row => navigate(`/ad1/edit/${row.id}`)}
-          emptyMessage="No AD1 transactions found."
+          onRowClick={row => navigate(`/other-transactions/edit/${row.id}`)}
+          emptyMessage="No transactions found."
         />
       </section>
     </div>

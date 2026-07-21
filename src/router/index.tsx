@@ -198,9 +198,9 @@ const PurchaseCreatePage = lazy(
 const PurchaseEditPage = lazy(
   () => import('../pages/purchase/[slug]/edit/[id]')
 );
-const AD1ListPage = lazy(() => import('../modules/purchase/views/AD1ListView').then(m => ({ default: m.AD1ListView })));
-const AD1CreatePage = lazy(() => import('../modules/purchase/views/AD1CreateView').then(m => ({ default: m.AD1CreateView })));
-const AD1EditPage = lazy(() => import('../modules/purchase/views/AD1EditView').then(m => ({ default: m.AD1EditView })));
+const OtherTransactionListPage = lazy(() => import('../modules/purchase/views/OtherTransactionListView').then(m => ({ default: m.OtherTransactionListView })));
+const OtherTransactionCreatePage = lazy(() => import('../modules/purchase/views/OtherTransactionCreateView').then(m => ({ default: m.OtherTransactionCreateView })));
+const OtherTransactionEditPage = lazy(() => import('../modules/purchase/views/OtherTransactionEditView').then(m => ({ default: m.OtherTransactionEditView })));
 
 const MasterPagesPage = lazy(
   () => import('../pages/master/system-setups/master-pages/MasterPagesPage')
@@ -748,26 +748,26 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/ad1',
+    path: '/other-transactions',
     element: (
       <ProtectedLayout>
-        <AD1ListPage />
+        <OtherTransactionListPage />
       </ProtectedLayout>
     ),
   },
   {
-    path: '/ad1/create',
+    path: '/other-transactions/create',
     element: (
       <ProtectedLayout>
-        <AD1CreatePage />
+        <OtherTransactionCreatePage />
       </ProtectedLayout>
     ),
   },
   {
-    path: '/ad1/edit/:id',
+    path: '/other-transactions/edit/:id',
     element: (
       <ProtectedLayout>
-        <AD1EditPage />
+        <OtherTransactionEditPage />
       </ProtectedLayout>
     ),
   },

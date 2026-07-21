@@ -2,7 +2,7 @@ import { useMemo, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { dashboardApi } from '@/api/dashboard/dashboard.api';
-import type { RecentTransaction } from '@/api/dashboard/dashboard.api';
+import type { RecentTransaction, PendingApproval } from '@/api/dashboard/dashboard.api';
 import { currencyRatesApi } from '@/api/currencyRates';
 
 export type Trend = 'up' | 'down';
@@ -86,8 +86,23 @@ export const useDashboard = () => {
     navigate(`/transactions/${txn.id}`);
   }, [navigate]);
 
-  const handlePartyProfileClick = useCallback((id: string, type: string) => {
-    navigate(`/party-profiles/${type.toLowerCase()}/edit/${id}`);
+  const handleApprovalClick = useCallback((item: PendingApproval) => {
+    switch (item.entityType) {
+      case 'party-profile':
+        navigate(`/party-profiles/${item.subType?.toLowerCase() ?? item.type.toLowerCase()}/edit/${item.id}`);
+        break;
+      case 'transaction':
+        navigate(`/transactions/${item.id}`);
+        break;
+      case 'chequebook':
+        navigate(`/chequebooks/${item.id}`);
+        break;
+      case 'manual-book':
+        navigate(`/manual-bill-books/${item.id}`);
+        break;
+      default:
+        break;
+    }
   }, [navigate]);
 
   const refreshChart = useCallback(() => {
@@ -110,6 +125,6 @@ export const useDashboard = () => {
     volumeTrend,
     txnTrend,
     handleTxnClick,
-    handlePartyProfileClick,
+    handleApprovalClick,
   };
 };

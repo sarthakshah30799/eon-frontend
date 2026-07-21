@@ -5,8 +5,15 @@ import type { PendingApproval } from '@/api/dashboard/dashboard.api';
 interface PendingApprovalsProps {
   approvals: PendingApproval[];
   loading?: boolean;
-  onItemClick: (id: string, type: string) => void;
+  onItemClick: (item: PendingApproval) => void;
 }
+
+const entityLabels: Record<string, string> = {
+  'party-profile': 'Party Profile',
+  transaction: 'Transaction',
+  chequebook: 'Cheque Book',
+  'manual-book': 'Manual Bill',
+};
 
 const PendingApprovals = ({ approvals, loading = false, onItemClick }: PendingApprovalsProps) => (
   <section className="rounded-lg border border-border-primary bg-surface-primary p-4 shadow-sm">
@@ -22,21 +29,24 @@ const PendingApprovals = ({ approvals, loading = false, onItemClick }: PendingAp
       <div className="py-6 text-center text-xs text-text-tertiary">No pending approvals</div>
     ) : (
       <div className="max-h-[280px] space-y-2.5 overflow-y-auto">
-        {approvals.slice(0, 5).map((profile) => (
+        {approvals.slice(0, 5).map((item) => (
           <div
-            key={profile.id}
+            key={`${item.entityType}-${item.id}`}
             className="cursor-pointer rounded-md border border-border-primary p-3 transition-colors hover:bg-surface-secondary"
-            onClick={() => onItemClick(profile.id, profile.type)}
+            onClick={() => onItemClick(item)}
           >
             <div className="mb-1 flex items-start justify-between">
-              <span className="font-mono text-xs text-primary">{profile.code}</span>
+              <span className="font-mono text-xs text-primary">{item.code}</span>
               <span className="inline-flex items-center rounded border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
                 Pending
               </span>
             </div>
-            <p className="text-xs font-medium text-text-primary">{profile.name}</p>
+            <p className="text-xs font-medium text-text-primary">{item.name || entityLabels[item.entityType] || item.entityType}</p>
             <p className="mt-0.5 text-xs text-text-tertiary">
-              {profile.type} · {formatDateTime(profile.createdAt)}
+              {entityLabels[item.entityType] || item.entityType}
+              {item.subType ? ` · ${item.subType}` : ''}
+              {' · '}
+              {formatDateTime(item.createdAt)}
             </p>
           </div>
         ))}

@@ -1,15 +1,15 @@
-interface SegmentedControlOption {
-  value: string | number;
+interface SegmentedControlOption<T extends string | number> {
+  value: T;
   label: string;
 }
 
-interface SegmentedControlProps {
-  options: SegmentedControlOption[];
-  value: string | number;
-  onChange: (value: string | number) => void;
+interface SegmentedControlProps<T extends string | number> {
+  options: SegmentedControlOption<T>[];
+  value: T;
+  onChange: (value: T) => void;
 }
 
-const SegmentedControl = ({ options, value, onChange }: SegmentedControlProps) => (
+const SegmentedControl = <T extends string | number>({ options, value, onChange }: SegmentedControlProps<T>) => (
   <div className="flex gap-1 rounded-md border border-border-primary bg-surface-secondary p-0.5">
     {options.map((opt) => (
       <button

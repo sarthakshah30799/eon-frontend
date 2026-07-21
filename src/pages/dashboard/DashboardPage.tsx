@@ -29,7 +29,7 @@ const DashboardPage = () => {
     volumeTrend,
     txnTrend,
     handleTxnClick,
-    handlePartyProfileClick,
+    handleApprovalClick,
   } = useDashboard();
 
   return (
@@ -94,7 +94,7 @@ const DashboardPage = () => {
           <PendingApprovals
             approvals={pendingApprovals}
             loading={pendingLoading}
-            onItemClick={handlePartyProfileClick}
+            onItemClick={handleApprovalClick}
           />
           <LiveRates rates={latestRates} />
         </div>

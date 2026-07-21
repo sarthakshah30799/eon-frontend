@@ -18,6 +18,8 @@ export type TransactionType =
 
 export const TransactionTypeProfileEnum = {
   PURCHASE_FFMC: 'PURCHASE_FFMC',
+  PURCHASE_CORPORATE: 'PURCHASE_CORPORATE',
+  PURCHASE_INDIVIDUAL: 'PURCHASE_INDIVIDUAL',
   SALE_FFMC: 'SALE_FFMC',
   SALE_RMC: 'SALE_RMC',
   SALE_FOREX: 'SALE_FOREX',
@@ -36,6 +38,8 @@ export type TransactionTypeProfile =
 
 export const TRANSACTION_TYPE_PROFILE_ORDER = [
   TransactionTypeProfileEnum.PURCHASE_FFMC,
+  TransactionTypeProfileEnum.PURCHASE_CORPORATE,
+  TransactionTypeProfileEnum.PURCHASE_INDIVIDUAL,
   TransactionTypeProfileEnum.SALE_FFMC,
   TransactionTypeProfileEnum.SALE_RMC,
   TransactionTypeProfileEnum.SALE_FOREX,
@@ -145,8 +149,12 @@ export interface ITransactionEntity {
   sacCode: string | null;
   partyProfileId: string;
   partyProfileSnapshot?: ITransactionReferenceSnapshot | null;
+  purposeId: string | null;
+  purposeSnapshot?: ITransactionReferenceSnapshot | null;
   agentProfileId: string | null;
   agentProfileSnapshot?: ITransactionReferenceSnapshot | null;
+  passengerId: string | null;
+  passengerSnapshot?: Record<string, unknown> | null;
   manualBookPageId: string | null;
   manualBookPageSnapshot?: Record<string, unknown> | null;
   transactionType: TransactionType;
@@ -172,7 +180,30 @@ export interface ITransactionEntity {
   documents?: ITransactionDocumentEntity[];
   additionalCharges?: ITransactionAdditionalChargeEntity[];
   payments?: ITransactionPaymentEntity[];
+  passengerOtherDocuments?: ITransactionPassengerOtherDocumentEntity[];
   logs?: ITransactionLogEntity[];
+}
+
+export interface ITransactionPassengerOtherDocumentEntity {
+  id: string;
+  transactionId: string;
+  lineNo: number;
+  documentType: string;
+  documentNumber: string;
+  validTill: string | null;
+  issueAt: string | null;
+  issueDate: string | null;
+  expiryDate: string | null;
+  fileName: string | null;
+  originalFileName: string | null;
+  mimeType: string | null;
+  fileSize: string | null;
+  storageKey: string | null;
+  storagePath: string | null;
+  storageUrl: string | null;
+  remarks: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ITransactionItemEntity {
@@ -313,6 +344,50 @@ export interface ICreateTransactionAdditionalChargePayload {
   remarks?: string | null;
 }
 
+export interface ICreateTransactionPassengerOtherDocumentPayload {
+  documentType: string;
+  documentNumber: string;
+  validTill?: string | null;
+  issueAt?: string | null;
+  issueDate?: string | null;
+  expiryDate?: string | null;
+  remarks?: string | null;
+}
+
+export interface ICreateTransactionPassengerPayload {
+  entityType: string;
+  nationalityType: string;
+  residentStatus: string;
+  countryId: string;
+  stateId?: string | null;
+  locationId?: string | null;
+  city?: string | null;
+  address1?: string | null;
+  address2?: string | null;
+  email?: string | null;
+  contactNo?: string | null;
+  panNumber?: string | null;
+  panHolderName?: string | null;
+  panDob?: string | null;
+  panHolderRelationType?: string | null;
+  corporatePanNumber?: string | null;
+  corporatePanHolderName?: string | null;
+  corporatePanDob?: string | null;
+  corporatePanHolderRelationType?: string | null;
+  paidByPanNumber?: string | null;
+  paidByPanHolderName?: string | null;
+  paidByPanDob?: string | null;
+  gstNumber?: string | null;
+  gstStateId?: string | null;
+  passportNumber?: string | null;
+  passportIssueAt?: string | null;
+  passportIssueDate?: string | null;
+  passportExpiryDate?: string | null;
+  arrivalDate?: string | null;
+  isPep?: boolean;
+  otherDocuments: ICreateTransactionPassengerOtherDocumentPayload[];
+}
+
 export interface ICreateTransactionPaymentPayload {
   accountId: string;
   paymentMethod: TransactionPaymentMethod;
@@ -335,7 +410,9 @@ export interface ICreateTransactionPayload {
   branchSnapshot?: ITransactionReferenceSnapshot | null;
   requiresApproval?: boolean;
   partyProfileId: string;
+  purposeId?: string | null;
   agentProfileId?: string | null;
+  passenger?: ICreateTransactionPassengerPayload | null;
   manualBookPageId?: string | null;
   manualBookPageSnapshot?: Record<string, unknown> | null;
   transactionType: TransactionType;

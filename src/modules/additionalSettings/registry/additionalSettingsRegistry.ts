@@ -178,6 +178,20 @@ const TRANSACTION_NUMBERING_SUBCATEGORY_CONFIG: Record<
     required: true,
     placeholder: 'Enter starting sequence number',
   },
+  [TransactionTypeProfileEnum.PURCHASE_CORPORATE]: {
+    code: AdditionalSettingsCodeEnum.PurchaseCorporateNumberSeries,
+    label: 'PURCHASE CORPORATE',
+    valueType: 'number',
+    required: true,
+    placeholder: 'Enter starting sequence number',
+  },
+  [TransactionTypeProfileEnum.PURCHASE_INDIVIDUAL]: {
+    code: AdditionalSettingsCodeEnum.PurchaseIndividualNumberSeries,
+    label: 'PURCHASE INDIVIDUAL',
+    valueType: 'number',
+    required: true,
+    placeholder: 'Enter starting sequence number',
+  },
   [TransactionTypeProfileEnum.SALE_FFMC]: {
     code: AdditionalSettingsCodeEnum.SaleFfmcNumberSeries,
     label: 'SALE FFMC/ADS',

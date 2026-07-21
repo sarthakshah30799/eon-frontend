@@ -23,6 +23,8 @@ export const AdditionalSettingsCodeEnum = {
   RoundOffAccount: 'ROUND_OFF_ACCOUNT',
   TransactionNumbering: 'TRANSACTION_NUMBERING',
   PurchaseFfmcNumberSeries: 'PURCHASE_FFMC',
+  PurchaseCorporateNumberSeries: 'PURCHASE_CORPORATE',
+  PurchaseIndividualNumberSeries: 'PURCHASE_INDIVIDUAL',
   SaleFfmcNumberSeries: 'SALE_FFMC',
   SaleRmcNumberSeries: 'SALE_RMC',
   SaleForexNumberSeries: 'SALE_FOREX',

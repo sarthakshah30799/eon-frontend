@@ -173,6 +173,7 @@ export interface IPartyProfileListQuery {
   name?: string;
   active?: boolean;
   activeOnly?: boolean;
+  isIndividual?: boolean;
   sale?: boolean;
   purchase?: boolean;
   type?: string | string[];

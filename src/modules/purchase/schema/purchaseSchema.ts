@@ -7,6 +7,13 @@ import {
 import type { TransactionType } from '@/modules/transactions';
 import type { PurchasePageType } from '@/pages/purchase/[slug]/purchasePage.enum';
 import { TradeModeEnum } from '@/modules/transactions';
+import {
+  PassengerEntityTypeEnum,
+  PassengerNationalityTypeEnum,
+  PassengerPanHolderRelationTypeEnum,
+  PassengerOtherIdProofTypeEnum,
+  PassengerResidentStatusEnum,
+} from '@/modules/passengers/types/passengerTypes';
 
 const decimalStringSchema = yup
   .string()
@@ -108,6 +115,19 @@ const manualBookReferenceTypeSchema = yup
   .oneOf(['CASHIER', 'DELIVERY_BOY'])
   .default('CASHIER');
 
+const passengerOtherDocumentSchema = yup.object({
+  documentType: yup
+    .mixed<(typeof PassengerOtherIdProofTypeEnum)[keyof typeof PassengerOtherIdProofTypeEnum] | ''>()
+    .oneOf([...Object.values(PassengerOtherIdProofTypeEnum), ''] as const)
+    .required('Document type is required'),
+  documentNumber: yup.string().trim().default(''),
+  validTill: yup.string().trim().default(''),
+  issueAt: yup.string().trim().default(''),
+  issueDate: yup.string().trim().default(''),
+  expiryDate: yup.string().trim().default(''),
+  documentFile: yup.string().trim().default(''),
+});
+
 export const createPurchaseFormSchema = (transactionType: TransactionType) =>
   yup.object({
     purchasePageType: yup
@@ -142,9 +162,167 @@ export const createPurchaseFormSchema = (transactionType: TransactionType) =>
     partyProfileStateName: yup.string().trim().default(''),
     partyProfileContactName: yup.string().trim().default(''),
     partyProfileApplyTax: yup.boolean().default(false),
+    purposeId: yup.string().trim().required('Purpose is required'),
     agentProfileId: yup.string().trim().default(''),
     agentProfileCode: yup.string().trim().default(''),
     agentProfileName: yup.string().trim().default(''),
+    entityType: yup
+      .mixed<(typeof PassengerEntityTypeEnum)[keyof typeof PassengerEntityTypeEnum] | ''>()
+      .oneOf([...Object.values(PassengerEntityTypeEnum), ''] as const)
+      .required('Passenger entity type is required'),
+    passengerInfoCaptured: yup
+      .boolean()
+      .default(false)
+      .oneOf([true], 'Passenger details are required'),
+    nationalityType: yup
+      .mixed<(typeof PassengerNationalityTypeEnum)[keyof typeof PassengerNationalityTypeEnum] | ''>()
+      .oneOf([...Object.values(PassengerNationalityTypeEnum), ''] as const)
+      .required('Nationality is required'),
+    residentStatus: yup
+      .mixed<(typeof PassengerResidentStatusEnum)[keyof typeof PassengerResidentStatusEnum] | ''>()
+      .oneOf([...Object.values(PassengerResidentStatusEnum), ''] as const)
+      .required('Resident status is required'),
+    countryId: yup.string().trim().required('Country is required'),
+    stateId: yup.string().trim().default(''),
+    locationId: yup.string().trim().default(''),
+    city: yup.string().trim().default(''),
+    address1: yup.string().trim().default(''),
+    address2: yup.string().trim().default(''),
+    email: yup.string().trim().default(''),
+    contactNo: yup.string().trim().default(''),
+    panNumber: yup
+      .string()
+      .trim()
+      .when(['entityType', 'nationalityType'], {
+        is: (entityType: string, nationalityType: string) =>
+          entityType === PassengerEntityTypeEnum.CORPORATE ||
+          nationalityType === PassengerNationalityTypeEnum.INDIAN,
+        then: schema => schema.required('PAN number is required'),
+        otherwise: schema => schema.default(''),
+      }),
+    panHolderName: yup
+      .string()
+      .trim()
+      .when(['entityType', 'nationalityType'], {
+        is: (entityType: string, nationalityType: string) =>
+          entityType === PassengerEntityTypeEnum.CORPORATE ||
+          nationalityType === PassengerNationalityTypeEnum.INDIAN,
+        then: schema => schema.required('PAN holder name is required'),
+        otherwise: schema => schema.default(''),
+      }),
+    panDob: yup
+      .string()
+      .trim()
+      .when(['entityType', 'nationalityType'], {
+        is: (entityType: string, nationalityType: string) =>
+          entityType === PassengerEntityTypeEnum.CORPORATE ||
+          nationalityType === PassengerNationalityTypeEnum.INDIAN,
+        then: schema => schema.required('PAN holder DOB is required'),
+        otherwise: schema => schema.default(''),
+      }),
+    panHolderRelationType: yup
+      .mixed<(typeof PassengerPanHolderRelationTypeEnum)[keyof typeof PassengerPanHolderRelationTypeEnum] | ''>()
+      .oneOf([...Object.values(PassengerPanHolderRelationTypeEnum), ''] as const)
+      .required('PAN holder relation is required'),
+    corporatePanNumber: yup
+      .string()
+      .trim()
+      .when('entityType', {
+        is: PassengerEntityTypeEnum.CORPORATE,
+        then: schema => schema.required('Corporate PAN number is required'),
+        otherwise: schema => schema.default(''),
+      }),
+    corporatePanHolderName: yup
+      .string()
+      .trim()
+      .when('entityType', {
+        is: PassengerEntityTypeEnum.CORPORATE,
+        then: schema => schema.required('Corporate PAN holder name is required'),
+        otherwise: schema => schema.default(''),
+      }),
+    corporatePanDob: yup
+      .string()
+      .trim()
+      .when('entityType', {
+        is: PassengerEntityTypeEnum.CORPORATE,
+        then: schema => schema.required('Corporate PAN holder DOB is required'),
+        otherwise: schema => schema.default(''),
+      }),
+    corporatePanHolderRelationType: yup
+      .mixed<(typeof PassengerPanHolderRelationTypeEnum)[keyof typeof PassengerPanHolderRelationTypeEnum] | ''>()
+      .oneOf([...Object.values(PassengerPanHolderRelationTypeEnum), ''] as const)
+      .when('entityType', {
+        is: PassengerEntityTypeEnum.CORPORATE,
+        then: schema => schema.required('Corporate PAN holder relation is required'),
+        otherwise: schema => schema.default(''),
+      }),
+    paidByPanNumber: yup.string().trim().default(''),
+    paidByPanHolderName: yup.string().trim().default(''),
+    paidByPanDob: yup.string().trim().default(''),
+    gstNumber: yup.string().trim().default(''),
+    gstStateId: yup.string().trim().default(''),
+    isPep: yup.boolean().default(false),
+    passportNumber: yup
+      .string()
+      .trim()
+      .when(['entityType', 'nationalityType'], {
+        is: (entityType: string, nationalityType: string) =>
+          entityType === PassengerEntityTypeEnum.INDIVIDUAL &&
+          nationalityType !== PassengerNationalityTypeEnum.INDIAN,
+        then: schema => schema.required('Passport number is required'),
+        otherwise: schema => schema.default(''),
+      }),
+    passportIssueAt: yup
+      .string()
+      .trim()
+      .when(['entityType', 'nationalityType'], {
+        is: (entityType: string, nationalityType: string) =>
+          entityType === PassengerEntityTypeEnum.INDIVIDUAL &&
+          nationalityType !== PassengerNationalityTypeEnum.INDIAN,
+        then: schema => schema.required('Passport issue place is required'),
+        otherwise: schema => schema.default(''),
+      }),
+    passportIssueDate: yup
+      .string()
+      .trim()
+      .when(['entityType', 'nationalityType'], {
+        is: (entityType: string, nationalityType: string) =>
+          entityType === PassengerEntityTypeEnum.INDIVIDUAL &&
+          nationalityType !== PassengerNationalityTypeEnum.INDIAN,
+        then: schema => schema.required('Passport issue date is required'),
+        otherwise: schema => schema.default(''),
+      }),
+    passportExpiryDate: yup
+      .string()
+      .trim()
+      .when(['entityType', 'nationalityType'], {
+        is: (entityType: string, nationalityType: string) =>
+          entityType === PassengerEntityTypeEnum.INDIVIDUAL &&
+          nationalityType !== PassengerNationalityTypeEnum.INDIAN,
+        then: schema => schema.required('Passport expiry date is required'),
+        otherwise: schema => schema.default(''),
+      }),
+    arrivalDate: yup
+      .string()
+      .trim()
+      .when(['entityType', 'nationalityType'], {
+        is: (entityType: string, nationalityType: string) =>
+          entityType === PassengerEntityTypeEnum.INDIVIDUAL &&
+          nationalityType !== PassengerNationalityTypeEnum.INDIAN,
+        then: schema => schema.required('Arrival date is required'),
+        otherwise: schema => schema.default(''),
+      }),
+    otherDocuments: yup
+      .array()
+      .of(passengerOtherDocumentSchema)
+      .default([])
+      .when(['passengerInfoCaptured', 'nationalityType'], {
+        is: (passengerInfoCaptured: boolean, nationalityType: string) =>
+          passengerInfoCaptured &&
+          nationalityType === PassengerNationalityTypeEnum.INDIAN,
+        then: schema => schema.min(1, 'At least one other document is required'),
+        otherwise: schema => schema.default([]),
+      }),
     manualBookReferenceType: manualBookReferenceTypeSchema,
     manualBookId: yup.string().trim().required('Manual book reference is required'),
     manualBookNo: yup.string().trim().default(''),

@@ -15,11 +15,6 @@ import {
   type IPassengerPassengerDetailsValues,
 } from '../types/passengerTypes';
 
-const MOCK_INVALID_TOKEN = /test/i;
-
-export const containsMockInvalidToken = (value?: string | null) =>
-  MOCK_INVALID_TOKEN.test(String(value ?? '').trim());
-
 export const createStaticPassengerSelectOptions = <
   T extends string,
 >(options: ReadonlyArray<{ value: T; label: string }>) =>
@@ -125,6 +120,9 @@ export const createPassengerDetailsDefaultValues = (
         documentType: '',
         documentNumber: '',
         validTill: '',
+        issueAt: '',
+        issueDate: '',
+        expiryDate: '',
         documentFile: '',
       },
     ],
@@ -146,23 +144,10 @@ const isPassportValidationRequired = (values: {
   values.entityType === PassengerEntityTypeEnum.INDIVIDUAL &&
   values.isIndianNationality === false;
 
-const requiredText = (message: string, invalidMessage?: string) =>
-  yup
-    .string()
-    .trim()
-    .required(message)
-    .test(
-      'mock-invalid-token',
-      invalidMessage ?? `${message} is not valid`,
-      value => !containsMockInvalidToken(value)
-    );
+const requiredText = (message: string) => yup.string().trim().required(message);
 
 const optionalText = () =>
-  yup
-    .string()
-    .trim()
-    .default('')
-    .test('mock-invalid-token', 'Value is not valid', value => !containsMockInvalidToken(value));
+  yup.string().trim().default('');
 
 export const createPassengerAmlVerificationSchema = () =>
   yup.object({
@@ -174,14 +159,13 @@ export const createPassengerAmlVerificationSchema = () =>
     panNumber: optionalText().when(['entityType', 'isIndianNationality'], {
       is: (entityType: string, isIndianNationality: boolean) =>
         isPanValidationRequired({ entityType, isIndianNationality }),
-      then: () => requiredText('PAN number is required', 'PAN number is not valid'),
+      then: () => requiredText('PAN number is required'),
       otherwise: schema => schema.default(''),
     }),
     panHolderName: optionalText().when(['entityType', 'isIndianNationality'], {
       is: (entityType: string, isIndianNationality: boolean) =>
         isPanValidationRequired({ entityType, isIndianNationality }),
-      then: () =>
-        requiredText('PAN holder name is required', 'PAN holder name is not valid'),
+      then: () => requiredText('PAN holder name is required'),
       otherwise: schema => schema.default(''),
     }),
     panDob: yup.string().trim().when(['entityType', 'isIndianNationality'], {
@@ -193,27 +177,13 @@ export const createPassengerAmlVerificationSchema = () =>
     passportNumber: optionalText().when(['entityType', 'isIndianNationality'], {
       is: (entityType: string, isIndianNationality: boolean) =>
         isPassportValidationRequired({ entityType, isIndianNationality }),
-      then: schema =>
-        schema
-          .required('Passport number is required')
-          .test(
-            'mock-invalid-token',
-            'Passport number is not valid',
-            value => !containsMockInvalidToken(value)
-          ),
+      then: schema => schema.required('Passport number is required'),
       otherwise: schema => schema.default(''),
     }),
     passportIssueAt: optionalText().when(['entityType', 'isIndianNationality'], {
       is: (entityType: string, isIndianNationality: boolean) =>
         isPassportValidationRequired({ entityType, isIndianNationality }),
-      then: schema =>
-        schema
-          .required('Passport issue place is required')
-          .test(
-            'mock-invalid-token',
-            'Passport issue place is not valid',
-            value => !containsMockInvalidToken(value)
-          ),
+      then: schema => schema.required('Passport issue place is required'),
       otherwise: schema => schema.default(''),
     }),
     passportIssueDate: yup.string().trim().when(['entityType', 'isIndianNationality'], {
@@ -264,12 +234,7 @@ const passengerOtherDocumentSchema = yup
       .required('Document type is required'),
     documentNumber: optionalText().when('documentType', {
       is: (documentType: string) => Boolean(documentType),
-      then: schema =>
-        schema.required('Document number is required').test(
-          'mock-invalid-token',
-          'Document number is not valid',
-          value => !containsMockInvalidToken(value)
-        ),
+      then: schema => schema.required('Document number is required'),
       otherwise: schema => schema.default(''),
     }),
     validTill: yup.string().trim().default('').when('documentType', {
@@ -306,23 +271,14 @@ export const createPassengerDetailsSchema = () =>
     panNumber: optionalText().when(['entityType', 'nationalityType'], {
       is: (entityType: string, nationalityType: string) =>
         isPassengerPanValidationRequired({ entityType, nationalityType }),
-      then: () => requiredText('PAN number is required', 'PAN number is not valid'),
-      otherwise: schema => schema.default('').test(
-        'mock-invalid-token',
-        'PAN number is not valid',
-        value => !containsMockInvalidToken(value)
-      ),
+      then: () => requiredText('PAN number is required'),
+      otherwise: schema => schema.default(''),
     }),
     panHolderName: optionalText().when(['entityType', 'nationalityType'], {
       is: (entityType: string, nationalityType: string) =>
         isPassengerPanValidationRequired({ entityType, nationalityType }),
-      then: () =>
-        requiredText('PAN holder name is required', 'PAN holder name is not valid'),
-      otherwise: schema => schema.default('').test(
-        'mock-invalid-token',
-        'PAN holder name is not valid',
-        value => !containsMockInvalidToken(value)
-      ),
+      then: () => requiredText('PAN holder name is required'),
+      otherwise: schema => schema.default(''),
     }),
     panDob: yup.string().trim().when(['entityType', 'nationalityType'], {
       is: (entityType: string, nationalityType: string) =>
@@ -343,27 +299,13 @@ export const createPassengerDetailsSchema = () =>
     passportNumber: optionalText().when('nationalityType', {
       is: (nationalityType: string) =>
         isPassengerPassportValidationRequired({ nationalityType }),
-      then: schema =>
-        schema
-          .required('Passport number is required')
-          .test(
-            'mock-invalid-token',
-            'Passport number is not valid',
-            value => !containsMockInvalidToken(value)
-          ),
+      then: schema => schema.required('Passport number is required'),
       otherwise: schema => schema.default(''),
     }),
     passportIssueAt: optionalText().when('nationalityType', {
       is: (nationalityType: string) =>
         isPassengerPassportValidationRequired({ nationalityType }),
-      then: schema =>
-        schema
-          .required('Passport issue place is required')
-          .test(
-            'mock-invalid-token',
-            'Passport issue place is not valid',
-            value => !containsMockInvalidToken(value)
-          ),
+      then: schema => schema.required('Passport issue place is required'),
       otherwise: schema => schema.default(''),
     }),
     passportIssueDate: yup.string().trim().when('nationalityType', {

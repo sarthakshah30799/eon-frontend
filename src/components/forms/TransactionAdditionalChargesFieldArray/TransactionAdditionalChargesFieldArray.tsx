@@ -160,7 +160,7 @@ const AdditionalChargeRow = ({
         hasMore: accounts.length === ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
       };
     },
-    [accountQuery, isSale]
+    [accountQuery, transactionType]
   );
 
   return (

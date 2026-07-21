@@ -550,23 +550,11 @@ const PurchaseFormBody = ({
       ) : null}
 
       <PassengerAmlVerificationModal
+        key={`${isPassengerAmlModalOpen ? 'open' : 'closed'}-${selectedPartyProfile?.id ?? 'none'}`}
         open={isPassengerAmlModalOpen}
         onOpenChange={setIsPassengerAmlModalOpen}
         entityType={getPurchasePageEntityType(purchasePageType) ?? undefined}
-        selectedPartyProfile={
-          selectedPartyProfile
-            ? {
-                id: selectedPartyProfile.id,
-                code: selectedPartyProfile.code,
-                name: selectedPartyProfile.name,
-                type: selectedPartyProfile.type,
-                isIndividual: selectedPartyProfile.isIndividual,
-                panNo: selectedPartyProfile.panNo,
-                panName: selectedPartyProfile.panName,
-                panDob: selectedPartyProfile.panDob,
-              }
-            : null
-        }
+        selectedPartyProfile={selectedPartyProfile ?? null}
         onVerified={() => {
           toast.success('AML verified successfully');
         }}

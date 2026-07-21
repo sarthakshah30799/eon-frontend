@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import type { Resolver } from 'react-hook-form';
@@ -122,19 +122,28 @@ const SubcategoryRowFields = ({
     };
   }, []);
 
-  const loadSelectValueOptions = async (inputValue: string, page = 1) => {
-    if (subcategoryDefinition?.optionsSource === 'account-profile') {
-      return loadAccountProfileOptions(inputValue, page);
-    }
-
-    return {
-      options: (subcategoryDefinition?.options ?? []).map(option => ({
+  const selectValueOptions = useMemo(
+    () =>
+      (subcategoryDefinition?.options ?? []).map(option => ({
         value: option.value,
         label: option.label,
       })),
-      hasMore: false,
-    };
-  };
+    [subcategoryDefinition?.options]
+  );
+
+  const loadSelectValueOptions = useCallback(
+    async (inputValue = '', page = 1) => {
+      if (subcategoryDefinition?.optionsSource === 'account-profile') {
+        return loadAccountProfileOptions(inputValue, page);
+      }
+
+      return {
+        options: selectValueOptions,
+        hasMore: false,
+      };
+    },
+    [loadAccountProfileOptions, selectValueOptions, subcategoryDefinition?.optionsSource]
+  );
 
   const loadCodeOptions = async () => {
     const currentCode = String(subcategoryCode ?? '').trim().toUpperCase();

@@ -266,8 +266,7 @@ export const createPurchaseFormSchema = (transactionType: TransactionType) =>
       .string()
       .trim()
       .when(['entityType', 'nationalityType'], {
-        is: (entityType: string, nationalityType: string) =>
-          entityType === PassengerEntityTypeEnum.INDIVIDUAL &&
+        is: (_entityType: string, nationalityType: string) =>
           nationalityType !== PassengerNationalityTypeEnum.INDIAN,
         then: schema => schema.required('Passport number is required'),
         otherwise: schema => schema.default(''),
@@ -276,8 +275,7 @@ export const createPurchaseFormSchema = (transactionType: TransactionType) =>
       .string()
       .trim()
       .when(['entityType', 'nationalityType'], {
-        is: (entityType: string, nationalityType: string) =>
-          entityType === PassengerEntityTypeEnum.INDIVIDUAL &&
+        is: (_entityType: string, nationalityType: string) =>
           nationalityType !== PassengerNationalityTypeEnum.INDIAN,
         then: schema => schema.required('Passport issue place is required'),
         otherwise: schema => schema.default(''),
@@ -286,8 +284,7 @@ export const createPurchaseFormSchema = (transactionType: TransactionType) =>
       .string()
       .trim()
       .when(['entityType', 'nationalityType'], {
-        is: (entityType: string, nationalityType: string) =>
-          entityType === PassengerEntityTypeEnum.INDIVIDUAL &&
+        is: (_entityType: string, nationalityType: string) =>
           nationalityType !== PassengerNationalityTypeEnum.INDIAN,
         then: schema => schema.required('Passport issue date is required'),
         otherwise: schema => schema.default(''),
@@ -296,8 +293,7 @@ export const createPurchaseFormSchema = (transactionType: TransactionType) =>
       .string()
       .trim()
       .when(['entityType', 'nationalityType'], {
-        is: (entityType: string, nationalityType: string) =>
-          entityType === PassengerEntityTypeEnum.INDIVIDUAL &&
+        is: (_entityType: string, nationalityType: string) =>
           nationalityType !== PassengerNationalityTypeEnum.INDIAN,
         then: schema => schema.required('Passport expiry date is required'),
         otherwise: schema => schema.default(''),
@@ -306,8 +302,7 @@ export const createPurchaseFormSchema = (transactionType: TransactionType) =>
       .string()
       .trim()
       .when(['entityType', 'nationalityType'], {
-        is: (entityType: string, nationalityType: string) =>
-          entityType === PassengerEntityTypeEnum.INDIVIDUAL &&
+        is: (_entityType: string, nationalityType: string) =>
           nationalityType !== PassengerNationalityTypeEnum.INDIAN,
         then: schema => schema.required('Arrival date is required'),
         otherwise: schema => schema.default(''),

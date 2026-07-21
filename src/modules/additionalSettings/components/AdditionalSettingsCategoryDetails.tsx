@@ -121,10 +121,14 @@ const EditSubcategoryForm = ({
   const isNumberType = categoryType.toLowerCase() === 'number' || categoryType.toLowerCase() === 'decimal';
   const isDateType = categoryType.toLowerCase() === 'date';
   const isSelectType = categoryType.toLowerCase() === 'select';
-  const selectValueOptions = (subcategoryDefinition?.options ?? []).map(option => ({
-    value: option.value,
-    label: option.label,
-  }));
+  const selectValueOptions = useMemo(
+    () =>
+      (subcategoryDefinition?.options ?? []).map(option => ({
+        value: option.value,
+        label: option.label,
+      })),
+    [subcategoryDefinition?.options]
+  );
   const { data: selectedAccountOption } = useQuery({
     queryKey: ['additional-settings-account-option', value],
     queryFn: async () => {
@@ -144,32 +148,38 @@ const EditSubcategoryForm = ({
   });
   const selectedValueOption =
     selectedAccountOption ?? selectValueOptions.find(option => option.value === value) ?? null;
-  const loadAccountProfileOptions = useCallback(async (inputValue: string, page = 1) => {
-    const response = await accountProfileApi.getAccountProfiles({
-      page,
-      limit: 30,
-      search: inputValue,
-      active: true,
-    });
+  const loadAccountProfileOptions = useCallback(
+    async (inputValue: string, page = 1) => {
+      const response = await accountProfileApi.getAccountProfiles({
+        page,
+        limit: 30,
+        search: inputValue,
+        active: true,
+      });
 
-    return {
-      options: (response.data || []).map(account => ({
-        value: account.id,
-        label: `${account.accountCode} - ${account.accountName}`,
-      })),
-      hasMore: (response.data || []).length === 30,
-    };
-  }, []);
-  const loadSelectValueOptions = async (inputValue = '') => {
-    if (subcategoryDefinition?.optionsSource === 'account-profile') {
-      return loadAccountProfileOptions(inputValue);
-    }
+      return {
+        options: (response.data || []).map(account => ({
+          value: account.id,
+          label: `${account.accountCode} - ${account.accountName}`,
+        })),
+        hasMore: (response.data || []).length === 30,
+      };
+    },
+    []
+  );
+  const loadSelectValueOptions = useCallback(
+    async (inputValue = '', page = 1) => {
+      if (subcategoryDefinition?.optionsSource === 'account-profile') {
+        return loadAccountProfileOptions(inputValue, page);
+      }
 
-    return {
-      options: selectValueOptions,
-      hasMore: false,
-    };
-  };
+      return {
+        options: selectValueOptions,
+        hasMore: false,
+      };
+    },
+    [loadAccountProfileOptions, subcategoryDefinition?.optionsSource, selectValueOptions]
+  );
 
   const handleNumberingValueChange = (nextValue: string) => {
     setValueError('');

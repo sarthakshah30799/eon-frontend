@@ -13,6 +13,7 @@ interface FormFieldDatePickerProps {
   minDate?: Date;
   maxDate?: Date;
   onValueChange?: (value: string) => void;
+  onBlur?: () => void;
 }
 
 const toDateString = (date: Date | null): string => {
@@ -37,6 +38,7 @@ export const FormFieldDatePicker = ({
   minDate,
   maxDate,
   onValueChange,
+  onBlur,
 }: FormFieldDatePickerProps) => {
   const form = useFormContext();
 
@@ -67,6 +69,7 @@ export const FormFieldDatePicker = ({
       minDate={minDate}
       maxDate={maxDate}
       id={name}
+      onBlur={onBlur}
     />
   );
 };

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useFormContext, useWatch } from 'react-hook-form';
@@ -12,14 +12,14 @@ import {
     FormFieldCategoryOption,
 } from '@/components/forms';
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
-import { manualBillBookApi } from '@/api';
+import { counterProfileApi, manualBillBookApi } from '@/api';
 import { useAuth } from '@/lib/AuthContext';
 import type { Resolver } from 'react-hook-form';
 import {
     useCreateManualBillBook,
     useListManualBillBookManagers,
 } from '../hooks';
-import { useGetBranchProfile } from '@/modules/branchProfile/hooks';
+import { useListBranchProfiles } from '@/modules/branchProfile/hooks';
 import type { IBulkDispatchFormValues } from '../types';
 import { debouncePromise } from '@/hooks';
 
@@ -125,8 +125,10 @@ interface BulkDispatchFormFieldsProps {
 
 const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => {
     const form = useFormContext<IBulkDispatchFormValues>();
-    const { activeBranchId } = useAuth();
+    const { user, activeBranchId } = useAuth();
+    const canSelectBranch = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
     const branchId = useWatch({ name: 'branchId', control: form.control });
+    const { data: branches = [] } = useListBranchProfiles({ activeOnly: true });
 
     // Pre-fill form with rejected book data in reassign mode
     useEffect(() => {
@@ -139,7 +141,7 @@ const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => 
                 form.reset({
                     dispatchDate: book.dispatchDate,
                     no: book.no,
-                    branchId: activeBranchId || '',
+                    branchId: book.branchId || activeBranchId || '',
                     transactionType: book.transactionType,
                     bookNoFrom: String(book.bookNoFrom),
                     bookNoTo: String(book.bookNoTo),
@@ -219,16 +221,36 @@ const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => 
         return () => clearTimeout(timer);
     }, [bookNoFrom, bookNoTo, form]);
 
-    const { data: activeBranch } = useGetBranchProfile(activeBranchId || '');
     const { data: branchManagers = [] } = useListManualBillBookManagers(branchId);
 
-    const loadBranches = async () => ({
-        options: activeBranchId && activeBranch ? [{
-            value: activeBranch.id,
-            label: `${activeBranch.code} - ${activeBranch.name}`,
-        }] : [],
-        hasMore: false,
-    });
+    const branchOptions = useMemo(
+        () =>
+            branches.map(branch => ({
+                value: branch.id,
+                label: `${branch.code} - ${branch.name}`,
+            })),
+        [branches]
+    );
+
+    const visibleBranchOptions = useMemo(
+        () =>
+            canSelectBranch
+                ? branchOptions
+                : branchOptions.filter(option => option.value === activeBranchId),
+        [activeBranchId, branchOptions, canSelectBranch]
+    );
+
+    const loadBranches = useCallback(
+        async (inputValue: string) => ({
+            options: inputValue
+                ? visibleBranchOptions.filter(option =>
+                    option.label.toLowerCase().includes(inputValue.toLowerCase())
+                )
+                : visibleBranchOptions,
+            hasMore: false,
+        }),
+        [visibleBranchOptions]
+    );
     const loadAssignedTo = async () => ({
         options: branchManagers.map(manager => ({
             value: manager.id,
@@ -250,7 +272,8 @@ const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => 
                 name="branchId"
                 label="Branch"
                 loadOptions={loadBranches}
-                disabled
+                defaultOptions={visibleBranchOptions}
+                disabled={reassignId ? true : !canSelectBranch}
             />
             <FormFieldCategoryOption
                 name="transactionType"
@@ -285,7 +308,8 @@ const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => 
 
 export const BulkDispatchForm = ({ onSuccess, reassignId }: BulkDispatchFormProps) => {
     const navigate = useNavigate();
-    const { activeBranchId } = useAuth();
+    const { user, activeBranchId, activeCounterId, setWorkplace } = useAuth();
+    const canSelectBranch = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
     const { submitManualBillBook } = useCreateManualBillBook();
     const isReassign = !!reassignId;
 
@@ -309,6 +333,23 @@ export const BulkDispatchForm = ({ onSuccess, reassignId }: BulkDispatchFormProp
             toast.success('Dispatch reassigned and reset to Pending.');
             onSuccess();
         } else {
+            if (canSelectBranch) {
+                const counters = await counterProfileApi.getCounterProfiles({
+                    activeOnly: true,
+                    branchId: values.branchId,
+                });
+                const selectedCounterId =
+                    counters.find(counter => counter.isActive !== false)?.id ||
+                    activeCounterId ||
+                    '';
+
+                if (!selectedCounterId) {
+                    toast.error('Please select a branch with an active counter.');
+                    return;
+                }
+
+                await setWorkplace(values.branchId, selectedCounterId);
+            }
             await submitManualBillBook(values);
             onSuccess();
         }
@@ -317,7 +358,7 @@ export const BulkDispatchForm = ({ onSuccess, reassignId }: BulkDispatchFormProp
     const defaultValues = {
         dispatchDate: new Date().toISOString().slice(0, 10),
         no: '',
-        branchId: activeBranchId || '',
+        branchId: canSelectBranch ? '' : activeBranchId || '',
         transactionType: '',
         bookNoFrom: '',
         bookNoTo: '',

@@ -1,3 +1,9 @@
+const PARTY_PROFILE_ROUTE_TYPE_MAP: Record<string, string> = {
+  FOREIGN_CORRESPONDENT: 'foreign-correspondent',
+  FOREX_CORRESPONDENT: 'forex-correspondent',
+  MISC_PROFILE: 'misc-supplier-profile',
+};
+
 const normalizeDelimitedValue = (value: string) =>
   value
     .trim()
@@ -12,11 +18,13 @@ export const toPartyProfileRouteType = (value?: string | null): string => {
     return '';
   }
 
-  if (value.trim().toUpperCase() === 'MISC_PROFILE') {
-    return 'misc-supplier-profile';
+  const normalizedValue = value.trim();
+  const mappedRouteType = PARTY_PROFILE_ROUTE_TYPE_MAP[normalizedValue.toUpperCase()];
+  if (mappedRouteType) {
+    return mappedRouteType;
   }
 
-  return normalizeDelimitedValue(value);
+  return normalizeDelimitedValue(normalizedValue);
 };
 
 export const toPartyProfileApiType = (value?: string | null): string => {
@@ -24,8 +32,13 @@ export const toPartyProfileApiType = (value?: string | null): string => {
     return '';
   }
 
-  if (value.trim().toLowerCase() === 'misc-supplier-profile') {
-    return 'MISC_PROFILE';
+  const normalizedValue = value.trim().toLowerCase();
+  const mappedApiType = Object.entries(PARTY_PROFILE_ROUTE_TYPE_MAP).find(
+    ([, routeType]) => routeType === normalizedValue
+  )?.[0];
+
+  if (mappedApiType) {
+    return mappedApiType;
   }
 
   return value

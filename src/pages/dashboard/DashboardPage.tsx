@@ -4,7 +4,8 @@ import {
   ClockIcon,
   ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
-import { useDashboard, formatCompact } from './hooks/useDashboard';
+import { useDashboard } from './hooks/useDashboard';
+import { formatCompact } from '@/utils';
 import StatCard from './components/StatCard';
 import VolumeChart from './components/VolumeChart';
 import VolumeSlider from './components/VolumeSlider';

@@ -9,7 +9,9 @@ import {
 } from 'recharts';
 import { ArrowPathIcon } from '@heroicons/react/24/outline';
 import { Loader } from '@/components/ui/loader';
-import { formatCompact, formatCurrency } from '../hooks/useDashboard';
+import { Button } from '@/components/ui/button1';
+import { formatCompact, formatCurrency } from '@/utils';
+import SegmentedControl from './SegmentedControl';
 
 interface ChartDataPoint {
   date: string;
@@ -42,7 +44,10 @@ const ChartTooltip = ({ active, payload, label }: { active?: boolean; payload?: 
   );
 };
 
-const DAY_OPTIONS = [7, 30];
+const DAY_OPTIONS = [
+  { value: 7, label: '7d' },
+  { value: 30, label: '30d' },
+];
 
 const VolumeChart = ({
   data,
@@ -60,32 +65,21 @@ const VolumeChart = ({
         Transaction Volume — Last {days} Days
       </h2>
       <div className="flex items-center gap-2">
-        <div className="flex gap-1 rounded-md border border-border-primary bg-surface-secondary p-0.5">
-          {DAY_OPTIONS.map((d) => (
-            <button
-              key={d}
-              type="button"
-              onClick={() => onDaysChange(d)}
-              className={
-                'rounded-sm px-2 py-1 text-xs font-medium transition-colors ' +
-                (days === d
-                  ? 'bg-primary-500 text-text-inverse'
-                  : 'text-text-secondary hover:text-text-primary')
-              }
-            >
-              {d}d
-            </button>
-          ))}
-        </div>
+        <SegmentedControl
+          options={DAY_OPTIONS}
+          value={days}
+          onChange={onDaysChange}
+        />
         {showRefresh && onRefresh && (
-          <button
-            type="button"
-            className="cursor-pointer rounded px-2 py-1 text-xs text-text-secondary transition-colors hover:bg-surface-secondary hover:text-text-primary"
+          <Button
+            variant="outline"
+            size="sm"
             onClick={onRefresh}
             title="Refresh"
+            className="px-2 py-1"
           >
             <ArrowPathIcon className="w-3 h-3" />
-          </button>
+          </Button>
         )}
       </div>
     </div>

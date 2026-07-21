@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { VolumeByCurrency } from '@/api/dashboard/dashboard.api';
-import { formatCompact } from '../hooks/useDashboard';
+import { formatCompact } from '@/utils';
 
 interface VolumeSliderProps {
   data: VolumeByCurrency[];

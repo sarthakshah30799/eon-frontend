@@ -1,9 +1,10 @@
+import { useMemo } from 'react';
 import { EyeIcon } from '@heroicons/react/24/outline';
 import { useNavigate } from 'react-router-dom';
-import { Loader } from '@/components/ui/loader';
 import { Button } from '@/components/ui/button1';
+import { Table, type TableColumnDef } from '@/components/ui/table/Table';
 import type { RecentTransaction } from '@/api/dashboard/dashboard.api';
-import { formatCurrency } from '../hooks/useDashboard';
+import { formatCurrency } from '@/utils';
 
 interface RecentTransactionsTableProps {
   transactions: RecentTransaction[];
@@ -11,20 +12,71 @@ interface RecentTransactionsTableProps {
   onRowClick: (txn: RecentTransaction) => void;
 }
 
-const statusColors: Record<string, string> = {
-  APPROVED: 'bg-success-50 text-success-700 border-success-200',
-  PENDING: 'bg-amber-50 text-amber-700 border-amber-200',
-  DRAFT: 'bg-blue-50 text-blue-700 border-blue-200',
-  REJECTED: 'bg-error-50 text-error-700 border-error-200',
-};
-
-const typeColors: Record<string, string> = {
-  SALE: 'text-emerald-600',
-  PURCHASE: 'text-red-600',
+const statusLabel: Record<string, string> = {
+  APPROVED: 'Completed',
+  PENDING: 'Under Review',
+  DRAFT: 'DRAFT',
+  REJECTED: 'REJECTED',
 };
 
 const RecentTransactionsTable = ({ transactions, loading = false, onRowClick }: RecentTransactionsTableProps) => {
   const navigate = useNavigate();
+
+  const columns: TableColumnDef<RecentTransaction>[] = useMemo(() => [
+    {
+      accessorKey: 'number',
+      header: 'Txn ID',
+      cell: (info) => <span className="font-mono text-primary">{info.getValue() as string || '\u2014'}</span>,
+    },
+    {
+      accessorKey: 'partyName',
+      header: 'Customer',
+      cell: (info) => info.getValue() as string || '\u2014',
+    },
+    {
+      id: 'pair',
+      header: 'Pair',
+      accessorFn: (row) => `${row.currencyCode}/${row.productCode}`,
+      cell: (info) => <span className="font-mono font-medium">{info.getValue() as string}</span>,
+    },
+    {
+      accessorKey: 'transactionType',
+      header: 'Type',
+      cell: (info) => {
+        const val = info.getValue() as string;
+        const color = val === 'SALE' ? 'text-emerald-600' : 'text-red-600';
+        return <span className={`font-medium ${color}`}>{val === 'SALE' ? 'Buy' : 'Sell'}</span>;
+      },
+    },
+    {
+      accessorKey: 'fcyAmount',
+      header: 'FCY Amt',
+      cell: (info) => <span className="font-mono">{formatCurrency(info.getValue() as string)}</span>,
+    },
+    {
+      accessorKey: 'lcyAmount',
+      header: 'LCY Amt',
+      cell: (info) => <span className="font-mono">MYR {formatCurrency(info.getValue() as string)}</span>,
+    },
+    {
+      accessorKey: 'status',
+      header: 'Status',
+      cell: (info) => {
+        const val = info.getValue() as string;
+        const colors: Record<string, string> = {
+          APPROVED: 'bg-success-50 text-success-700 border-success-200',
+          PENDING: 'bg-amber-50 text-amber-700 border-amber-200',
+          DRAFT: 'bg-blue-50 text-blue-700 border-blue-200',
+          REJECTED: 'bg-error-50 text-error-700 border-error-200',
+        };
+        return (
+          <span className={`inline-flex items-center rounded border px-2 py-0.5 text-xs font-medium ${colors[val] || colors.DRAFT}`}>
+            {statusLabel[val] || val}
+          </span>
+        );
+      },
+    },
+  ], []);
 
   return (
     <section className="rounded-lg border border-border-primary bg-surface-primary shadow-sm">
@@ -41,58 +93,17 @@ const RecentTransactionsTable = ({ transactions, loading = false, onRowClick }: 
           </Button>
         )}
       </div>
-      {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader variant="inline" size="sm" />
-        </div>
-      ) : transactions.length === 0 ? (
-        <div className="flex items-center justify-center py-12 text-sm text-text-tertiary">
-          No transactions yet
-        </div>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="border-b border-border-primary">
-                <th className="px-4 py-2.5 text-left font-medium text-text-tertiary">Txn ID</th>
-                <th className="px-4 py-2.5 text-left font-medium text-text-tertiary">Customer</th>
-                <th className="px-4 py-2.5 text-left font-medium text-text-tertiary">Pair</th>
-                <th className="px-4 py-2.5 text-left font-medium text-text-tertiary">Type</th>
-                <th className="px-4 py-2.5 text-left font-medium text-text-tertiary">FCY Amt</th>
-                <th className="px-4 py-2.5 text-left font-medium text-text-tertiary">LCY Amt</th>
-                <th className="px-4 py-2.5 text-left font-medium text-text-tertiary">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {transactions.map((txn) => (
-                <tr
-                  key={txn.id}
-                  className="cursor-pointer border-b border-border-primary transition-colors last:border-b-0 hover:bg-surface-secondary"
-                  onClick={() => onRowClick(txn)}
-                >
-                  <td className="px-4 py-2.5 font-mono text-primary">{txn.number || '\u2014'}</td>
-                  <td className="px-4 py-2.5 text-text-primary">{txn.partyName || '\u2014'}</td>
-                  <td className="px-4 py-2.5 font-mono font-medium text-text-primary">
-                    {txn.currencyCode}/{txn.productCode}
-                  </td>
-                  <td className="px-4 py-2.5">
-                    <span className={'font-medium ' + (typeColors[txn.transactionType] || '')}>
-                      {txn.transactionType === 'SALE' ? 'Buy' : 'Sell'}
-                    </span>
-                  </td>
-                  <td className="px-4 py-2.5 font-mono text-text-primary">{formatCurrency(txn.fcyAmount)}</td>
-                  <td className="px-4 py-2.5 font-mono text-text-primary">MYR {formatCurrency(txn.lcyAmount)}</td>
-                  <td className="px-4 py-2.5">
-                    <span className={'inline-flex items-center rounded border px-2 py-0.5 text-xs font-medium ' + (statusColors[txn.status] || statusColors.DRAFT)}>
-                      {txn.status === 'APPROVED' ? 'Completed' : txn.status === 'PENDING' ? 'Under Review' : txn.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <Table<RecentTransaction>
+        columns={columns}
+        data={transactions}
+        enableSorting={false}
+        enableFiltering={false}
+        enablePagination={false}
+        loading={loading}
+        onRowClick={onRowClick}
+        emptyMessage="No transactions yet"
+        className="text-xs"
+      />
     </section>
   );
 };

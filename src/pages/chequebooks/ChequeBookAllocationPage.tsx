@@ -88,7 +88,7 @@ const buildRows = (
         id: `${book.id}_${from}`,
         bookId: book.id,
         requestNo: book.no,
-        requestDate: formatDateTime(book.dispatchDate, 'DD/MM/YYYY HH:mm:ss'),
+        requestDate: formatDateTime(book.dispatchDate),
         bankAccountCodeLabel: book.bankAccountCodeLabel || book.bankAccountCodeName || book.bankAccountCode || '-',
         bookNoFrom: from,
         bookNoTo: to,

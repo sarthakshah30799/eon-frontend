@@ -135,7 +135,7 @@ export interface ITransactionPricingRuleSnapshot {
 }
 
 export interface ITransactionTaxSummary {
-  gstRatePercent: string;
+  taxRatePercent: string;
   taxableAmount: string;
   itemBaseAmount: string;
   itemTaxAmount: string;
@@ -368,6 +368,7 @@ export interface ITransactionTaxPreviewRequest {
   partyProfileId?: string | null;
   partyProfileSnapshot?: ITransactionReferenceSnapshot | null;
   partyProfileApplyTax?: boolean;
+  taxRatePercent: string;
   items: Array<{
     quantity?: string | number | null;
     rate?: string | number | null;
@@ -379,7 +380,7 @@ export interface ITransactionTaxPreviewRequest {
 }
 
 export interface ITransactionTaxPreviewResponse {
-  gstRatePercent: string;
+  taxRatePercent: string;
   taxableAmount: string;
   itemBaseAmount: string;
   itemTaxAmount: string;
@@ -396,7 +397,7 @@ export interface ITransactionTaxPreviewResponse {
   additionalChargeRows: Array<{
     lineNo: number;
     amount: string;
-    gstRatePercent: string;
+    taxRatePercent: string;
     gstAmount: string;
     totalAmount: string;
   }>;

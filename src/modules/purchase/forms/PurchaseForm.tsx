@@ -221,7 +221,7 @@ const PurchaseFormBody = ({
       branchId: resolvedBranchId,
       partyProfileId: String(partyProfileId || ''),
       partyProfileApplyTax: Boolean(partyProfileApplyTax),
-      gstRatePercent,
+      taxRatePercent: gstRatePercent,
       branchStateName: branchProfile?.gstState ?? '',
       partyStateName:
         selectedPartyProfile?.gstStateName ?? selectedPartyProfile?.stateName ?? '',
@@ -340,13 +340,13 @@ const PurchaseFormBody = ({
       return;
     }
 
-    for (const row of taxPreview.additionalChargeRows) {
+      for (const row of taxPreview.additionalChargeRows) {
       const rowIndex = row.lineNo - 1;
       if (rowIndex < 0) {
         continue;
       }
 
-      form.setValue(`additionalCharges.${rowIndex}.gstRate`, row.gstRatePercent, {
+      form.setValue(`additionalCharges.${rowIndex}.gstRate`, row.taxRatePercent, {
         shouldDirty: false,
         shouldTouch: false,
         shouldValidate: false,
@@ -531,7 +531,7 @@ const PurchaseFormBody = ({
       {resolvedTaxSummary ? (
         <CardSection heading="GST Summary" className="space-y-4">
           {(() => {
-            const gstRateValue = Number(resolvedTaxSummary.gstRatePercent || 0);
+            const gstRateValue = Number(resolvedTaxSummary.taxRatePercent || 0);
             const splitRate = (gstRateValue / 2).toFixed(2);
 
             return (

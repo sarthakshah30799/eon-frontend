@@ -52,15 +52,15 @@ export interface AsyncSelectResponse {
 
 export interface AsyncSelectProps<IsMulti extends boolean = false>
   extends
-    Omit<
-      AsyncCreatableProps<
-        AsyncSelectOption,
-        IsMulti,
-        GroupBase<AsyncSelectOption>
-      >,
-      'loadOptions'
+  Omit<
+    AsyncCreatableProps<
+      AsyncSelectOption,
+      IsMulti,
+      GroupBase<AsyncSelectOption>
     >,
-    VariantProps<typeof asyncSelectVariants> {
+    'loadOptions'
+  >,
+  VariantProps<typeof asyncSelectVariants> {
   label?: string;
   error?: string;
   loadOptions: (

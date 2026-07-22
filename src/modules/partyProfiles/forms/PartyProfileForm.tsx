@@ -252,7 +252,7 @@ const PartyProfileFormFields = ({
       </CardSection>
 
       <CardSection heading="Credit Policy">
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-2">
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           {!shouldHideCreditLimitFields && (
             <FormFieldInput
               name="temporaryCreditLimit"
@@ -290,8 +290,8 @@ const PartyProfileFormFields = ({
         </div>
       </CardSection>
 
-      <CardSection heading="Address Details">
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+      <CardSection heading="Address, KYC & Contact">
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           <FormFieldInput
             name="address1"
             label="Address Line 1"
@@ -336,11 +336,6 @@ const PartyProfileFormFields = ({
             disabled={isSubmitting}
             isCreatable={true}
           />
-        </div>
-      </CardSection>
-
-      <CardSection heading="KYC & Default Controls">
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
           <FormFieldInput
             name="kycApprovalNumber"
             label="KYC Approval Number"
@@ -385,34 +380,6 @@ const PartyProfileFormFields = ({
             label="Establishment Date"
             disabled={isSubmitting}
           />
-        </div>
-        <div className="grid md:grid-cols-2 lg:grid-cols-2 mt-2 gap-2">
-          <FormFieldInput
-            name="email"
-            label="Email"
-            placeholder="Enter email address"
-            type="email"
-            disabled={isSubmitting}
-          />
-          <FormFieldInput
-            name="webSite"
-            label="Web Site"
-            placeholder="Enter website URL"
-            disabled={isSubmitting}
-          />
-        </div>
-        <div className="md:col-span-4 mt-2">
-          <FormFieldTextarea
-            name="remarks"
-            label="Remarks"
-            placeholder="Enter any additional remarks..."
-            disabled={isSubmitting}
-          />
-        </div>
-      </CardSection>
-
-      <CardSection heading="Contact Person & Grouping">
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           <FormFieldInput
             name="contactName"
             label="Contact Name"
@@ -448,6 +415,29 @@ const PartyProfileFormFields = ({
             placeholder="Select Business Nature"
             disabled={isSubmitting}
             isCreatable={true}
+          />
+        </div>
+        <div className="grid md:grid-cols-2 lg:grid-cols-2 mt-2 gap-2">
+          <FormFieldInput
+            name="email"
+            label="Email"
+            placeholder="Enter email address"
+            type="email"
+            disabled={isSubmitting}
+          />
+          <FormFieldInput
+            name="webSite"
+            label="Web Site"
+            placeholder="Enter website URL"
+            disabled={isSubmitting}
+          />
+        </div>
+        <div className="mt-2">
+          <FormFieldTextarea
+            name="remarks"
+            label="Remarks"
+            placeholder="Enter any additional remarks..."
+            disabled={isSubmitting}
           />
         </div>
       </CardSection>

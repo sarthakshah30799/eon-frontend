@@ -77,6 +77,7 @@ export const AccountProfileEditView = () => {
         isSubmitting={isPending}
         readOnly={!canModify}
         currentId={id}
+        submitLabel="Save Changes"
       />
     </section>
   );

@@ -134,6 +134,22 @@ export interface ITransactionPricingRuleSnapshot {
   [key: string]: unknown;
 }
 
+export interface ITransactionTaxSummary {
+  gstRatePercent: string;
+  taxableAmount: string;
+  itemBaseAmount: string;
+  itemTaxAmount: string;
+  additionalChargeBaseAmount: string;
+  additionalChargeTaxAmount: string;
+  igstAmount: string;
+  cgstAmount: string;
+  sgstAmount: string;
+  finalAmount: string;
+  splitMode: 'IGST' | 'CGST_SGST';
+  branchStateName?: string | null;
+  partyStateName?: string | null;
+}
+
 export interface ITransactionEntity {
   id: string;
   rootTransactionId: string | null;
@@ -176,6 +192,7 @@ export interface ITransactionEntity {
   byOther: string | null;
   createdAt: string;
   updatedAt: string;
+  taxSummary?: ITransactionTaxSummary | null;
   items?: ITransactionItemEntity[];
   documents?: ITransactionDocumentEntity[];
   additionalCharges?: ITransactionAdditionalChargeEntity[];
@@ -342,6 +359,47 @@ export interface ICreateTransactionAdditionalChargePayload {
   gstAmount?: string | null;
   applyTax?: boolean;
   remarks?: string | null;
+}
+
+export interface ITransactionTaxPreviewRequest {
+  transactionType: TransactionType;
+  branchId?: string | null;
+  branchSnapshot?: ITransactionReferenceSnapshot | null;
+  partyProfileId?: string | null;
+  partyProfileSnapshot?: ITransactionReferenceSnapshot | null;
+  partyProfileApplyTax?: boolean;
+  items: Array<{
+    quantity?: string | number | null;
+    rate?: string | number | null;
+  }>;
+  additionalCharges: Array<{
+    amount?: string | number | null;
+    applyTax?: boolean | null;
+  }>;
+}
+
+export interface ITransactionTaxPreviewResponse {
+  gstRatePercent: string;
+  taxableAmount: string;
+  itemBaseAmount: string;
+  itemTaxAmount: string;
+  additionalChargeBaseAmount: string;
+  additionalChargeTaxAmount: string;
+  totalTaxAmount: string;
+  finalAmount: string;
+  igstAmount: string;
+  cgstAmount: string;
+  sgstAmount: string;
+  splitMode: 'IGST' | 'CGST_SGST' | 'NONE';
+  branchStateName: string | null;
+  partyStateName: string | null;
+  additionalChargeRows: Array<{
+    lineNo: number;
+    amount: string;
+    gstRatePercent: string;
+    gstAmount: string;
+    totalAmount: string;
+  }>;
 }
 
 export interface ICreateTransactionPassengerOtherDocumentPayload {

@@ -84,6 +84,16 @@ export const PurchaseCreateView = ({
       ),
     [additionalSettings]
   );
+  const gstRatePercent = useMemo(
+    () =>
+      getAdditionalSettingTextValue(
+        additionalSettings,
+        AdditionalSettingsCodeEnum.TaxConfiguration,
+        AdditionalSettingsCodeEnum.TaxRate,
+        '0'
+      ),
+    [additionalSettings]
+  );
   const cashControlAccountId = useMemo(
     () =>
       getAdditionalSettingTextValue(
@@ -178,6 +188,7 @@ export const PurchaseCreateView = ({
         branchId={canSelectWorkplace ? '' : activeBranchId ?? ''}
         branchCode={canSelectWorkplace ? '' : branchProfile?.code ?? ''}
         sacCode={sacCode}
+        gstRatePercent={gstRatePercent}
         isSubmitting={isSaving}
         submitLabel={requiresApproval ? 'Submit for Approval' : 'Save'}
         onSubmit={async (values, attachments) => {

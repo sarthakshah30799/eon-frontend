@@ -37,7 +37,6 @@ import { PurchasePartyProfileField } from '../components/PurchasePartyProfileFie
 import { PurchaseReferenceNumberField } from '../components/PurchaseReferenceNumberField';
 import { PurchaseWorkplaceFields } from '../components/PurchaseWorkplaceFields';
 import { PurchaseTransactionTable } from '../components/PurchaseTransactionTable';
-import { calculatePurchasePayableTotal } from '../utils/purchaseUtils';
 import {
   buildPurchasePrintHtml,
   getPurchasePrintCopyLabel,
@@ -45,6 +44,7 @@ import {
 import { TransactionLogActionEnum } from '@/modules/transactions';
 import { PassengerAmlVerificationModal } from '@/modules/passengers/components';
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
+import type { ITransactionTaxPreviewResponse } from '@/modules/transactions';
 
 const ACCOUNT_PROFILE_OPTION_PAGE_SIZE = 30;
 
@@ -58,7 +58,8 @@ interface PurchaseFormProps {
   branchId?: string;
   branchCode?: string;
   sacCode?: string | null;
-  savedTransaction?: Pick<ITransactionEntity, 'id' | 'number' | 'logs'> | null;
+  savedTransaction?: Pick<ITransactionEntity, 'id' | 'number' | 'logs' | 'taxSummary'> | null;
+  gstRatePercent: string;
   isFreshlyCreated?: boolean;
   readOnly?: boolean;
   isSubmitting?: boolean;
@@ -80,7 +81,8 @@ interface PurchaseFormBodyProps {
   branchId: string;
   branchCode: string;
   sacCode: string;
-  savedTransaction: Pick<ITransactionEntity, 'id' | 'number' | 'logs'> | null;
+  savedTransaction: Pick<ITransactionEntity, 'id' | 'number' | 'logs' | 'taxSummary'> | null;
+  gstRatePercent: string;
   isFreshlyCreated: boolean;
   isSubmitting: boolean;
   readOnly: boolean;
@@ -99,6 +101,7 @@ const PurchaseFormBody = ({
   branchId,
   sacCode,
   savedTransaction,
+  gstRatePercent,
   branchCode: _branchCode,
   isFreshlyCreated: _isFreshlyCreated,
   isSubmitting,
@@ -212,16 +215,53 @@ const PurchaseFormBody = ({
     control: form.control,
     name: 'transactionType',
   });
+  const taxPreviewRequest = useMemo(
+    () => ({
+      transactionType,
+      branchId: resolvedBranchId,
+      partyProfileId: String(partyProfileId || ''),
+      partyProfileApplyTax: Boolean(partyProfileApplyTax),
+      gstRatePercent,
+      branchStateName: branchProfile?.gstState ?? '',
+      partyStateName:
+        selectedPartyProfile?.gstStateName ?? selectedPartyProfile?.stateName ?? '',
+      items: (transactions ?? []).map(transaction => ({
+        quantity: transaction.quantity,
+        rate: transaction.rate,
+        per: transaction.per,
+      })),
+      additionalCharges: (additionalCharges ?? []).map(charge => ({
+        amount: charge.amount,
+        applyTax: Boolean(partyProfileApplyTax),
+      })),
+    }),
+    [
+      additionalCharges,
+      branchProfile?.gstState,
+      gstRatePercent,
+      partyProfileApplyTax,
+      partyProfileId,
+      resolvedBranchId,
+      selectedPartyProfile?.gstStateName,
+      selectedPartyProfile?.stateName,
+      transactionType,
+      transactions,
+    ]
+  );
+  const { data: taxPreview } = useQuery<ITransactionTaxPreviewResponse, Error>({
+    queryKey: ['purchase-tax-preview', taxPreviewRequest],
+    queryFn: () => transactionsApi.previewTax(taxPreviewRequest),
+    enabled: Boolean(
+      resolvedBranchId &&
+        partyProfileId &&
+        transactionType &&
+        !savedTransaction?.id
+    ),
+  });
+  const resolvedTaxSummary = savedTransaction?.taxSummary ?? taxPreview ?? null;
   const totalPayableAmount = useMemo(
-    () =>
-      calculatePurchasePayableTotal(
-        (transactions ?? []) as Array<{ total?: string | null; finalAmount?: string | null }>,
-        (additionalCharges ?? []) as Array<{
-          totalAmount?: string | null;
-          amount?: string | null;
-        }>
-      ),
-    [additionalCharges, transactions]
+    () => resolvedTaxSummary?.finalAmount ?? '0.00',
+    [resolvedTaxSummary?.finalAmount]
   );
   const getDocumentLabel = (document: IPurchaseTransactionDocument) => {
     const snapshot = document.documentProfileSnapshot as
@@ -293,7 +333,36 @@ const PurchaseFormBody = ({
       shouldTouch: true,
       shouldValidate: false,
     });
-  }, [branchProfile, form]);
+    }, [branchProfile, form]);
+
+  useEffect(() => {
+    if (!taxPreview) {
+      return;
+    }
+
+    for (const row of taxPreview.additionalChargeRows) {
+      const rowIndex = row.lineNo - 1;
+      if (rowIndex < 0) {
+        continue;
+      }
+
+      form.setValue(`additionalCharges.${rowIndex}.gstRate`, row.gstRatePercent, {
+        shouldDirty: false,
+        shouldTouch: false,
+        shouldValidate: false,
+      });
+      form.setValue(`additionalCharges.${rowIndex}.gstAmount`, row.gstAmount, {
+        shouldDirty: false,
+        shouldTouch: false,
+        shouldValidate: false,
+      });
+      form.setValue(`additionalCharges.${rowIndex}.totalAmount`, row.totalAmount, {
+        shouldDirty: false,
+        shouldTouch: false,
+        shouldValidate: false,
+      });
+    }
+  }, [form, taxPreview]);
 
   const handleCurrencySelect = (
     currencies: Array<{
@@ -459,6 +528,57 @@ const PurchaseFormBody = ({
         agentCommissionRules={agentCommissionRules}
       />
 
+      {resolvedTaxSummary ? (
+        <CardSection heading="GST Summary" className="space-y-4">
+          {(() => {
+            const gstRateValue = Number(resolvedTaxSummary.gstRatePercent || 0);
+            const splitRate = (gstRateValue / 2).toFixed(2);
+
+            return (
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="rounded-lg border border-border-secondary bg-surface-secondary/40 p-4">
+              <div className="text-xs uppercase tracking-wide text-text-tertiary">
+                GST Split
+              </div>
+              <div className="mt-1 text-base font-semibold text-text-primary">
+                {resolvedTaxSummary.splitMode === 'IGST'
+                  ? `IGST ${gstRateValue.toFixed(2)}%`
+                  : `CGST ${splitRate}% + SGST ${splitRate}%`}
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-border-secondary bg-surface-secondary/40 p-4">
+              <div className="text-xs uppercase tracking-wide text-text-tertiary">
+                Item GST
+              </div>
+              <div className="mt-1 text-base font-semibold text-text-primary">
+                {resolvedTaxSummary.itemTaxAmount}
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-border-secondary bg-surface-secondary/40 p-4">
+              <div className="text-xs uppercase tracking-wide text-text-tertiary">
+                Additional Charge GST
+              </div>
+              <div className="mt-1 text-base font-semibold text-text-primary">
+                {resolvedTaxSummary.additionalChargeTaxAmount}
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-border-secondary bg-surface-secondary/40 p-4">
+              <div className="text-xs uppercase tracking-wide text-text-tertiary">
+                Final Amount
+              </div>
+              <div className="mt-1 text-base font-semibold text-text-primary">
+                {resolvedTaxSummary.finalAmount}
+              </div>
+            </div>
+          </div>
+            );
+          })()}
+        </CardSection>
+      ) : null}
+
       <TransactionAdditionalChargesFieldArray
         name="additionalCharges"
         applyTax={Boolean(partyProfileApplyTax)}
@@ -584,6 +704,7 @@ export const PurchaseForm = ({
   branchCode = '',
   sacCode = '',
   savedTransaction = null,
+  gstRatePercent,
   isFreshlyCreated = false,
   readOnly = false,
   isSubmitting = false,
@@ -649,6 +770,7 @@ export const PurchaseForm = ({
         branchCode={branchCode}
         sacCode={sacCode ?? ''}
         savedTransaction={savedTransaction}
+        gstRatePercent={gstRatePercent}
         isFreshlyCreated={isFreshlyCreated}
         isSubmitting={isSubmitting || readOnly}
         readOnly={readOnly}

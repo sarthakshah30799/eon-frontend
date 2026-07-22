@@ -119,6 +119,16 @@ const TRANSACTION_APPROVAL_POLICY_SUBCATEGORIES: readonly AdditionalSettingSubca
   },
 ];
 
+const TAX_CONFIGURATION_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] = [
+  {
+    code: AdditionalSettingsCodeEnum.TaxRate,
+    label: 'GST RATE (%)',
+    valueType: 'decimal',
+    required: true,
+    placeholder: 'Enter GST rate',
+  },
+];
+
 const TRANSACTION_SAC_CODE_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] = [
   {
     code: AdditionalSettingsCodeEnum.TransactionPrintSacCode,
@@ -152,6 +162,38 @@ const TRANSACTION_ACCOUNTING_SUBCATEGORIES: readonly AdditionalSettingSubcategor
     valueType: 'select',
     required: true,
     placeholder: 'Select round off account',
+    optionsSource: 'account-profile',
+  },
+  {
+    code: AdditionalSettingsCodeEnum.IgstControlAccount,
+    label: 'IGST CONTROL ACCOUNT',
+    valueType: 'select',
+    required: true,
+    placeholder: 'Select IGST control account',
+    optionsSource: 'account-profile',
+  },
+  {
+    code: AdditionalSettingsCodeEnum.CgstControlAccount,
+    label: 'CGST CONTROL ACCOUNT',
+    valueType: 'select',
+    required: true,
+    placeholder: 'Select CGST control account',
+    optionsSource: 'account-profile',
+  },
+  {
+    code: AdditionalSettingsCodeEnum.SgstControlAccount,
+    label: 'SGST CONTROL ACCOUNT',
+    valueType: 'select',
+    required: true,
+    placeholder: 'Select SGST control account',
+    optionsSource: 'account-profile',
+  },
+  {
+    code: AdditionalSettingsCodeEnum.HandlingChargeAccount,
+    label: 'HANDLING CHARGE ACCOUNT',
+    valueType: 'select',
+    required: true,
+    placeholder: 'Select handling charge account',
     optionsSource: 'account-profile',
   },
   {
@@ -304,6 +346,13 @@ export const ADDITIONAL_SETTING_DEFINITIONS: readonly AdditionalSettingCategoryD
     rendererKey: 'default',
     titleLocked: true,
     subcategories: TRANSACTION_SAC_CODE_SUBCATEGORIES,
+  },
+  {
+    code: AdditionalSettingsCodeEnum.TaxConfiguration,
+    label: 'TAX CONFIGURATION',
+    rendererKey: 'default',
+    titleLocked: true,
+    subcategories: TAX_CONFIGURATION_SUBCATEGORIES,
   },
   {
     code: AdditionalSettingsCodeEnum.TransactionAccounting,

@@ -246,6 +246,7 @@ export const PartyProfileEditView = () => {
           showSubmit={!showReviewControls && canEditPartyProfile}
           submitLabel="Save Changes"
           currentId={id}
+          allowBranchSelection={isReviewer}
         />
       </section>
     </div>

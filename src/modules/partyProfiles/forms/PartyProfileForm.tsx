@@ -571,7 +571,7 @@ const PartyProfileFormFields = ({
             label="Current Branch"
             placeholder="Select current branch"
             loadOptions={branchLoadOptions}
-            disabled={isSubmitting || !canEditBranch || Boolean(currentId)}
+            disabled={isSubmitting || !canEditBranch}
           />
         </div>
       </CardSection>

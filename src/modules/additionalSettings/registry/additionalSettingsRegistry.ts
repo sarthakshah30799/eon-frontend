@@ -190,10 +190,10 @@ const TRANSACTION_ACCOUNTING_SUBCATEGORIES: readonly AdditionalSettingSubcategor
   },
   {
     code: AdditionalSettingsCodeEnum.HandlingChargeAccount,
-    label: 'HANDLING CHARGE ACCOUNT',
+    label: 'HANDLING FEE CONTROL ACCOUNT',
     valueType: 'select',
     required: true,
-    placeholder: 'Select handling charge account',
+    placeholder: 'Select handling fee control account',
     optionsSource: 'account-profile',
   },
   {
@@ -206,13 +206,13 @@ const TRANSACTION_ACCOUNTING_SUBCATEGORIES: readonly AdditionalSettingSubcategor
   },
 ];
 
-const TRANSACTION_NUMBERING_SUBCATEGORY_CONFIG: Record<
+const TRANSACTION_NUMBERING_SUBCATEGORY_CONFIG: Partial<Record<
   TransactionTypeProfile,
   Pick<
     AdditionalSettingSubcategoryDefinition,
     'code' | 'label' | 'valueType' | 'required' | 'placeholder'
   >
-> = {
+>> = {
   [TransactionTypeProfileEnum.PURCHASE_FFMC]: {
     code: AdditionalSettingsCodeEnum.PurchaseFfmcNumberSeries,
     label: 'PURCHASE FFMC/ADS',
@@ -222,14 +222,7 @@ const TRANSACTION_NUMBERING_SUBCATEGORY_CONFIG: Record<
   },
   [TransactionTypeProfileEnum.PURCHASE_CORPORATE]: {
     code: AdditionalSettingsCodeEnum.PurchaseCorporateNumberSeries,
-    label: 'PURCHASE CORPORATE',
-    valueType: 'number',
-    required: true,
-    placeholder: 'Enter starting sequence number',
-  },
-  [TransactionTypeProfileEnum.PURCHASE_INDIVIDUAL]: {
-    code: AdditionalSettingsCodeEnum.PurchaseIndividualNumberSeries,
-    label: 'PURCHASE INDIVIDUAL',
+    label: 'PURCHASE CORPORATE / INDIVIDUAL',
     valueType: 'number',
     required: true,
     placeholder: 'Enter starting sequence number',
@@ -314,9 +307,10 @@ const TRANSACTION_NUMBERING_SUBCATEGORY_CONFIG: Record<
 };
 
 const TRANSACTION_NUMBERING_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] =
-  TRANSACTION_TYPE_PROFILE_ORDER.map(profileType => ({
-    ...TRANSACTION_NUMBERING_SUBCATEGORY_CONFIG[profileType],
-  }));
+  TRANSACTION_TYPE_PROFILE_ORDER.flatMap(profileType => {
+    const definition = TRANSACTION_NUMBERING_SUBCATEGORY_CONFIG[profileType];
+    return definition ? [{ ...definition }] : [];
+  });
 
 export const ADDITIONAL_SETTING_DEFINITIONS: readonly AdditionalSettingCategoryDefinition[] = [
   {

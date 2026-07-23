@@ -26,6 +26,7 @@ interface TransactionAdditionalChargesFieldArrayProps {
   accountQuery?: IAccountProfileListQuery;
   disabled?: boolean;
   transactionType?: TransactionType;
+  defaultAccountId?: string;
 }
 
 const formatAmount = (value?: string | null) => {
@@ -150,6 +151,7 @@ export const TransactionAdditionalChargesFieldArray = ({
   accountQuery,
   disabled = false,
   transactionType = TransactionTypeEnum.PURCHASE,
+  defaultAccountId = '',
 }: TransactionAdditionalChargesFieldArrayProps) => {
   const form = useFormContext();
   const { fields, append, remove } = useFieldArray({
@@ -216,7 +218,7 @@ export const TransactionAdditionalChargesFieldArray = ({
             disabled={disabled}
             onClick={() =>
               append({
-                accountId: '',
+                accountId: defaultAccountId,
                 accountName: '',
                 amount: '',
                 gstRate: applyTax ? '' : '0',

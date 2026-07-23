@@ -10,6 +10,7 @@ import {
   getAdditionalSettingCategoryDefinition,
   getAdditionalSettingSubcategoryDefinition,
 } from '../registry/additionalSettingsRegistry';
+import { formatAccountProfileLabel } from '../utils/additionalSettingsUtils';
 import { accountProfileApi } from '@/api/accountProfile';
 
 interface AdditionalSettingsCategoryDetailsProps {
@@ -61,18 +62,41 @@ const CategoryTitleEditor = ({
 
 const SubcategoryRow = ({
   subcategory,
+  categoryCode,
   onEdit,
 }: {
   subcategory: IAdditionalSettingSubcategory;
+  categoryCode?: string;
   onEdit: (sub: IAdditionalSettingSubcategory) => void;
 }) => {
+  const subcategoryDefinition = getAdditionalSettingSubcategoryDefinition(
+    categoryCode,
+    subcategory.code
+  );
+  const isAccountProfileValue = subcategoryDefinition?.optionsSource === 'account-profile';
+  const { data: accountLabel, isFetching } = useQuery({
+    queryKey: ['additional-settings-account-label', subcategory.value],
+    queryFn: async () => {
+      if (!isAccountProfileValue || !subcategory.value) {
+        return '';
+      }
+
+      const account = await accountProfileApi.getAccountProfileById(subcategory.value);
+      return formatAccountProfileLabel(account);
+    },
+    enabled: isAccountProfileValue && Boolean(subcategory.value),
+  });
+  const displayValue = isAccountProfileValue
+    ? accountLabel || subcategory.value
+    : subcategory.value;
+
   return (
     <tr className="border-t border-border-primary/80 hover:bg-surface-secondary/50">
       <td className="px-4 py-4 text-xs leading-5 text-text-primary">
         {subcategory.description || subcategory.title}
       </td>
       <td className="px-4 py-4 text-xs font-medium leading-5 text-text-primary">
-        {subcategory.value}
+        {isFetching && isAccountProfileValue ? 'Loading...' : displayValue}
       </td>
       <td className="px-4 py-4">
         <Button
@@ -140,7 +164,7 @@ const EditSubcategoryForm = ({
       return account
         ? {
             value: account.id,
-            label: `${account.accountCode} - ${account.accountName}`,
+            label: formatAccountProfileLabel(account),
           }
         : null;
     },
@@ -160,7 +184,7 @@ const EditSubcategoryForm = ({
       return {
         options: (response.data || []).map(account => ({
           value: account.id,
-          label: `${account.accountCode} - ${account.accountName}`,
+          label: formatAccountProfileLabel(account),
         })),
         hasMore: (response.data || []).length === 30,
       };
@@ -466,6 +490,7 @@ export const AdditionalSettingsCategoryDetails = ({
                       <SubcategoryRow
                         key={subcategory.id}
                         subcategory={subcategory}
+                        categoryCode={category.code}
                         onEdit={setEditingSubcategory}
                       />
                     ))}

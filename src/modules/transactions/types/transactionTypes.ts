@@ -134,22 +134,6 @@ export interface ITransactionPricingRuleSnapshot {
   [key: string]: unknown;
 }
 
-export interface ITransactionTaxSummary {
-  taxRatePercent: string;
-  taxableAmount: string;
-  itemBaseAmount: string;
-  itemTaxAmount: string;
-  additionalChargeBaseAmount: string;
-  additionalChargeTaxAmount: string;
-  igstAmount: string;
-  cgstAmount: string;
-  sgstAmount: string;
-  finalAmount: string;
-  splitMode: 'IGST' | 'CGST_SGST';
-  branchStateName?: string | null;
-  partyStateName?: string | null;
-}
-
 export interface ITransactionEntity {
   id: string;
   rootTransactionId: string | null;
@@ -192,7 +176,18 @@ export interface ITransactionEntity {
   byOther: string | null;
   createdAt: string;
   updatedAt: string;
-  taxSummary?: ITransactionTaxSummary | null;
+  taxRatePercent: string | null;
+  taxableAmount: string;
+  itemBaseAmount: string;
+  itemTaxableAmount: string;
+  itemTaxAmount: string;
+  additionalChargeBaseAmount: string;
+  additionalChargeTaxAmount: string;
+  igstAmount: string;
+  cgstAmount: string;
+  sgstAmount: string;
+  finalAmount: string;
+  splitMode: 'IGST' | 'CGST_SGST' | null;
   items?: ITransactionItemEntity[];
   documents?: ITransactionDocumentEntity[];
   additionalCharges?: ITransactionAdditionalChargeEntity[];
@@ -236,6 +231,16 @@ export interface ITransactionItemEntity {
   quantity: string;
   per: string | null;
   rate: string;
+  taxableAmount: string;
+  taxRatePercent: string;
+  gstAmount: string;
+  igstRatePercent: string;
+  cgstRatePercent: string;
+  sgstRatePercent: string;
+  igstAmount: string;
+  cgstAmount: string;
+  sgstAmount: string;
+  splitMode: 'IGST' | 'CGST_SGST' | null;
   commission: string | null;
   holdCost: string | null;
   profit: string | null;
@@ -279,6 +284,14 @@ export interface ITransactionAdditionalChargeEntity {
   amount: string;
   gstRate: string | null;
   gstAmount: string | null;
+  taxRatePercent: string;
+  igstRatePercent: string;
+  cgstRatePercent: string;
+  sgstRatePercent: string;
+  igstAmount: string;
+  cgstAmount: string;
+  sgstAmount: string;
+  splitMode: 'IGST' | 'CGST_SGST' | null;
   applyTax: boolean;
   remarks: string | null;
   createdAt: string;
@@ -383,7 +396,14 @@ export interface ITransactionTaxPreviewResponse {
   taxRatePercent: string;
   taxableAmount: string;
   itemBaseAmount: string;
+  itemTaxableAmount: string;
   itemTaxAmount: string;
+  itemIgstAmount: string;
+  itemCgstAmount: string;
+  itemSgstAmount: string;
+  itemIgstRatePercent: string;
+  itemCgstRatePercent: string;
+  itemSgstRatePercent: string;
   additionalChargeBaseAmount: string;
   additionalChargeTaxAmount: string;
   totalTaxAmount: string;
@@ -391,14 +411,35 @@ export interface ITransactionTaxPreviewResponse {
   igstAmount: string;
   cgstAmount: string;
   sgstAmount: string;
-  splitMode: 'IGST' | 'CGST_SGST' | 'NONE';
+  splitMode: 'IGST' | 'CGST_SGST' | null;
   branchStateName: string | null;
   partyStateName: string | null;
+  itemRows: Array<{
+    lineNo: number;
+    taxableAmount: string;
+    taxRatePercent: string;
+    gstAmount: string;
+    igstRatePercent: string;
+    cgstRatePercent: string;
+    sgstRatePercent: string;
+    igstAmount: string;
+    cgstAmount: string;
+    sgstAmount: string;
+    splitMode: 'IGST' | 'CGST_SGST' | null;
+  }>;
   additionalChargeRows: Array<{
     lineNo: number;
     amount: string;
-    taxRatePercent: string;
+    taxRatePercent?: string;
+    gstRatePercent?: string;
     gstAmount: string;
+    igstAmount?: string;
+    cgstAmount?: string;
+    sgstAmount?: string;
+    igstRatePercent?: string;
+    cgstRatePercent?: string;
+    sgstRatePercent?: string;
+    splitMode?: 'IGST' | 'CGST_SGST' | null;
     totalAmount: string;
   }>;
 }

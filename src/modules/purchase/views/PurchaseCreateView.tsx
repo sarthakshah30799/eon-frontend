@@ -37,11 +37,7 @@ export const PurchaseCreateView = ({
   const canSelectWorkplace = Boolean(
     user?.isAdmin || user?.isHo || user?.isHoStaff
   );
-  const [savedTransaction, setSavedTransaction] = useState<{
-    id: string;
-    number: string | null;
-    logs?: ITransactionEntity['logs'];
-  } | null>(null);
+  const [savedTransaction, setSavedTransaction] = useState<ITransactionEntity | null>(null);
   const {
     data: branchProfile,
     isLoading: isBranchLoading,
@@ -100,6 +96,16 @@ export const PurchaseCreateView = ({
         additionalSettings,
         AdditionalSettingsCodeEnum.TransactionAccounting,
         AdditionalSettingsCodeEnum.CashControlAccount,
+        ''
+      ),
+    [additionalSettings]
+  );
+  const handlingFeeControlAccountId = useMemo(
+    () =>
+      getAdditionalSettingTextValue(
+        additionalSettings,
+        AdditionalSettingsCodeEnum.TransactionAccounting,
+        AdditionalSettingsCodeEnum.HandlingChargeAccount,
         ''
       ),
     [additionalSettings]
@@ -185,6 +191,7 @@ export const PurchaseCreateView = ({
         partyProfileTypes={partyProfileTypes}
         requiresApproval={requiresApproval}
         cashControlAccountId={cashControlAccountId}
+        handlingFeeControlAccountId={handlingFeeControlAccountId}
         branchId={canSelectWorkplace ? '' : activeBranchId ?? ''}
         branchCode={canSelectWorkplace ? '' : branchProfile?.code ?? ''}
         sacCode={sacCode}
@@ -199,11 +206,7 @@ export const PurchaseCreateView = ({
             requiresApproval
           );
           const created = await createPurchaseTransaction(payload);
-          setSavedTransaction({
-            id: created.id,
-            number: created.number,
-            logs: created.logs ?? [],
-          });
+          setSavedTransaction(created);
         }}
         onCancel={() => navigate(-1)}
         savedTransaction={savedTransaction}

@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { TrashIcon, PlusIcon } from '@heroicons/react/24/outline';
 import type { AsyncSelectResponse } from '@/components/ui';
@@ -27,6 +27,12 @@ interface TransactionAdditionalChargesFieldArrayProps {
   disabled?: boolean;
   transactionType?: TransactionType;
   defaultAccountId?: string;
+  lockedRow?: {
+    key: string;
+    accountId: string;
+    accountName: string;
+    amount: string;
+  } | null;
 }
 
 const formatAmount = (value?: string | null) => {
@@ -44,6 +50,7 @@ const AdditionalChargeRow = ({
   accountQuery,
   transactionType,
   disabled = false,
+  isLocked = false,
   onRemove,
 }: {
   arrayName: string;
@@ -51,6 +58,7 @@ const AdditionalChargeRow = ({
   accountQuery?: IAccountProfileListQuery;
   transactionType?: TransactionType;
   disabled?: boolean;
+  isLocked?: boolean;
   onRemove: (index: number) => void;
 }) => {
   const isSale = transactionType === TransactionTypeEnum.SALE;
@@ -89,24 +97,24 @@ const AdditionalChargeRow = ({
       <div className="md:col-span-2 xl:col-span-1">
         <FormFieldSelect
           name={`${arrayName}.${index}.accountId`}
-          label="Account"
-          placeholder={
-            isSale ? 'Select bulk sale account' : 'Select bulk purchase account'
-          }
+        label="Account"
+        placeholder={
+          isSale ? 'Select bulk sale account' : 'Select bulk purchase account'
+        }
           loadOptions={loadAccountOptions}
           pagination
-          pageSize={ACCOUNT_PROFILE_OPTION_PAGE_SIZE}
-          disabled={disabled}
-          isSearchable
-        />
-      </div>
-
-      <FormFieldInput
-        name={`${arrayName}.${index}.amount`}
-        label="Amount"
-        type="number"
-        disabled={disabled}
+        pageSize={ACCOUNT_PROFILE_OPTION_PAGE_SIZE}
+        disabled={disabled || isLocked}
+        isSearchable
       />
+    </div>
+
+    <FormFieldInput
+      name={`${arrayName}.${index}.amount`}
+      label="Amount"
+      type="number"
+      disabled={disabled || isLocked}
+    />
 
       <FormFieldInput
         name={`${arrayName}.${index}.gstRate`}
@@ -128,16 +136,22 @@ const AdditionalChargeRow = ({
       />
 
       <div className="flex items-start justify-end pt-7">
-        <Button
-          type="button"
-          variant="destructive"
-          size="icon"
-          disabled={disabled}
-          onClick={() => onRemove(index)}
-          aria-label="Remove additional charge"
-        >
-          <TrashIcon className="h-4 w-4" aria-hidden="true" />
-        </Button>
+        {isLocked ? (
+          <div className="rounded-full border border-border-secondary px-3 py-1 text-xs font-medium text-text-secondary">
+            Locked
+          </div>
+        ) : (
+          <Button
+            type="button"
+            variant="destructive"
+            size="icon"
+            disabled={disabled}
+            onClick={() => onRemove(index)}
+            aria-label="Remove additional charge"
+          >
+            <TrashIcon className="h-4 w-4" aria-hidden="true" />
+          </Button>
+        )}
       </div>
     </div>
   );
@@ -152,9 +166,10 @@ export const TransactionAdditionalChargesFieldArray = ({
   disabled = false,
   transactionType = TransactionTypeEnum.PURCHASE,
   defaultAccountId = '',
+  lockedRow = null,
 }: TransactionAdditionalChargesFieldArrayProps) => {
   const form = useFormContext();
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, replace } = useFieldArray({
     control: form.control,
     name,
   });
@@ -163,6 +178,82 @@ export const TransactionAdditionalChargesFieldArray = ({
     control: form.control,
     name,
   }) as ITransactionAdditionalChargeFormRow[] | undefined;
+
+  useEffect(() => {
+    const currentRows = Array.isArray(charges) ? charges : [];
+    const autoRowIndex = currentRows.findIndex(
+      row => row?.chargeSource === 'CORPORATE_HANDLING_FEE'
+    );
+
+    const hasAutoRow = autoRowIndex >= 0;
+    const nextRows = currentRows.filter(
+      row => row?.chargeSource !== 'CORPORATE_HANDLING_FEE'
+    );
+
+    if (!lockedRow) {
+      if (hasAutoRow) {
+        replace(nextRows);
+      }
+      return;
+    }
+
+    const nextAutoRow: ITransactionAdditionalChargeFormRow = {
+      accountId: lockedRow.accountId,
+      accountName: lockedRow.accountName,
+      amount: lockedRow.amount,
+      gstRate: '0',
+      gstAmount: '0',
+      totalAmount: lockedRow.amount,
+      chargeSource: 'CORPORATE_HANDLING_FEE',
+    };
+
+    if (hasAutoRow) {
+      const existingAutoRow = currentRows[autoRowIndex];
+      const isSameAutoRow =
+        String(existingAutoRow?.accountId ?? '') === String(nextAutoRow.accountId ?? '') &&
+        String(existingAutoRow?.amount ?? '') === String(nextAutoRow.amount ?? '') &&
+        String(existingAutoRow?.chargeSource ?? '') === String(nextAutoRow.chargeSource ?? '');
+
+      if (isSameAutoRow) {
+        return;
+      }
+
+      nextRows.splice(autoRowIndex, 0, nextAutoRow);
+      replace(nextRows);
+      return;
+    }
+
+    const matchingExistingIndex = nextRows.findIndex(row => {
+      const rowAmount = Number(row?.amount ?? 0);
+      const lockedAmount = Number(lockedRow.amount ?? 0);
+      return (
+        String(row?.accountId ?? '') === String(lockedRow.accountId ?? '') &&
+        Number.isFinite(rowAmount) &&
+        Number.isFinite(lockedAmount) &&
+        rowAmount === lockedAmount
+      );
+    });
+
+    if (matchingExistingIndex >= 0) {
+      nextRows[matchingExistingIndex] = {
+        ...nextRows[matchingExistingIndex],
+        accountId: lockedRow.accountId,
+        accountName: lockedRow.accountName,
+        amount: lockedRow.amount,
+        gstRate: '0',
+        gstAmount: '0',
+        totalAmount: lockedRow.amount,
+        chargeSource: 'CORPORATE_HANDLING_FEE',
+      };
+      replace(nextRows);
+      return;
+    }
+
+    replace([
+      nextAutoRow,
+      ...nextRows,
+    ]);
+  }, [charges, lockedRow, replace]);
 
   const totalAmount = useMemo(() => {
     return (charges ?? []).reduce((sum, charge) => {
@@ -200,6 +291,7 @@ export const TransactionAdditionalChargesFieldArray = ({
                 accountQuery={accountQuery}
                 transactionType={transactionType}
                 disabled={disabled}
+                isLocked={String((charges?.[index] as ITransactionAdditionalChargeFormRow | undefined)?.chargeSource ?? '') === 'CORPORATE_HANDLING_FEE'}
                 onRemove={remove}
               />
             ))}
@@ -224,6 +316,7 @@ export const TransactionAdditionalChargesFieldArray = ({
                 gstRate: applyTax ? '' : '0',
                 gstAmount: '',
                 totalAmount: '',
+                chargeSource: '',
               } satisfies ITransactionAdditionalChargeFormRow)
             }
           >

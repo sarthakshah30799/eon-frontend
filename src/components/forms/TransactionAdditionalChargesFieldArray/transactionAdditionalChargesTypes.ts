@@ -5,4 +5,5 @@ export interface ITransactionAdditionalChargeFormRow {
   gstRate: string;
   gstAmount: string;
   totalAmount: string;
+  chargeSource?: string;
 }

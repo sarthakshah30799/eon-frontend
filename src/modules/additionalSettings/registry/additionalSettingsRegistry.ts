@@ -206,6 +206,44 @@ const TRANSACTION_ACCOUNTING_SUBCATEGORIES: readonly AdditionalSettingSubcategor
   },
 ];
 
+const PURCHASE_PASSENGER_RULE_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] = [
+  {
+    code: AdditionalSettingsCodeEnum.PurchasePassengerRuleReferenceCurrencyCode,
+    label: 'REFERENCE CURRENCY CODE',
+    valueType: 'text',
+    required: true,
+    placeholder: 'Enter reference currency code (USD)',
+  },
+  {
+    code: AdditionalSettingsCodeEnum.PurchasePassengerRuleCdfThresholdAmount,
+    label: 'CDF THRESHOLD AMOUNT',
+    valueType: 'decimal',
+    required: true,
+    placeholder: 'Enter CDF threshold amount',
+  },
+  {
+    code: AdditionalSettingsCodeEnum.PurchasePassengerRuleIndianCashLimitAmount,
+    label: 'INDIAN CASH LIMIT AMOUNT',
+    valueType: 'decimal',
+    required: true,
+    placeholder: 'Enter Indian cash limit amount',
+  },
+  {
+    code: AdditionalSettingsCodeEnum.PurchasePassengerRuleNriCashLimitAmount,
+    label: 'NRI / FOREIGNER CASH LIMIT AMOUNT',
+    valueType: 'decimal',
+    required: true,
+    placeholder: 'Enter NRI / FOREIGNER cash limit amount',
+  },
+  {
+    code: AdditionalSettingsCodeEnum.PurchasePassengerRuleWindowDays,
+    label: 'HISTORY WINDOW DAYS',
+    valueType: 'number',
+    required: true,
+    placeholder: 'Enter history window days',
+  },
+];
+
 const TRANSACTION_NUMBERING_SUBCATEGORY_CONFIG: Partial<Record<
   TransactionTypeProfile,
   Pick<
@@ -354,6 +392,13 @@ export const ADDITIONAL_SETTING_DEFINITIONS: readonly AdditionalSettingCategoryD
     rendererKey: 'default',
     titleLocked: true,
     subcategories: TRANSACTION_ACCOUNTING_SUBCATEGORIES,
+  },
+  {
+    code: AdditionalSettingsCodeEnum.PurchasePassengerRule,
+    label: 'PURCHASE PASSENGER RULE',
+    rendererKey: 'default',
+    titleLocked: true,
+    subcategories: PURCHASE_PASSENGER_RULE_SUBCATEGORIES,
   },
   {
     code: AdditionalSettingsCodeEnum.TransactionNumbering,

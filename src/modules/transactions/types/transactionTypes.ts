@@ -444,6 +444,38 @@ export interface ITransactionTaxPreviewResponse {
   }>;
 }
 
+export interface IPurchaseRulePreviewRequest {
+  transaction: ICreateTransactionPayload;
+}
+
+export interface IPurchaseRulePreviewResponse {
+  allowed: boolean;
+  ruleType:
+    | 'OK'
+    | 'CORPORATE_CHEQUE_ONLY'
+    | 'CDF_REQUIRED'
+    | 'CASH_LIMIT_EXCEEDED'
+    | 'CHEQUE_NOT_ALLOWED'
+    | 'HISTORY_LIMIT_EXCEEDED'
+    | 'MISSING_PASSENGER'
+    | 'MISSING_PAYMENT';
+  blockingReason: string | null;
+  requiresCdf: boolean;
+  cdfThresholdAmount: string;
+  referenceCurrencyCode: string;
+  transactionAmount: string;
+  transactionAmountInReferenceCurrency: string;
+  cumulativeAmountInReferenceCurrency: string;
+  cashLimitAmount: string;
+  cashTotalAmount: string;
+  chequeTotalAmount: string;
+  passengerMatchTier: number | null;
+  passengerId: string | null;
+  isCorporate: boolean;
+  nationalityType: string | null;
+  paymentMethodsAllowed: Array<'CASH' | 'CHEQUE'>;
+}
+
 export interface ICreateTransactionPassengerOtherDocumentPayload {
   documentType: string;
   documentNumber: string;

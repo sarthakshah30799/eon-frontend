@@ -52,15 +52,15 @@ export interface AsyncSelectResponse {
 
 export interface AsyncSelectProps<IsMulti extends boolean = false>
   extends
-    Omit<
-      AsyncCreatableProps<
-        AsyncSelectOption,
-        IsMulti,
-        GroupBase<AsyncSelectOption>
-      >,
-      'loadOptions'
+  Omit<
+    AsyncCreatableProps<
+      AsyncSelectOption,
+      IsMulti,
+      GroupBase<AsyncSelectOption>
     >,
-    VariantProps<typeof asyncSelectVariants> {
+    'loadOptions'
+  >,
+  VariantProps<typeof asyncSelectVariants> {
   label?: string;
   error?: string;
   loadOptions: (
@@ -268,7 +268,16 @@ const AsyncSelectComponent = React.forwardRef<
       }),
       menu: base => ({
         ...base,
-        zIndex: 50,
+        zIndex: 9999,
+        maxHeight: 250,
+      }),
+      menuList: base => ({
+        ...base,
+        maxHeight: 250,
+      }),
+      menuPortal: base => ({
+        ...base,
+        zIndex: 9999,
       }),
     };
 
@@ -293,6 +302,9 @@ const AsyncSelectComponent = React.forwardRef<
                 inputValue ? 'No options found' : 'Start typing to search...'
               }
               isDisabled={props.disabled}
+              menuPortalTarget={document.body}
+              menuPosition="fixed"
+              menuPlacement="auto"
               {...props}
             />
           ) : (
@@ -312,7 +324,9 @@ const AsyncSelectComponent = React.forwardRef<
                 inputValue ? 'No options found' : 'Start typing to search...'
               }
               isDisabled={props.disabled}
-              menuPosition="absolute"
+              menuPortalTarget={document.body}
+              menuPosition="fixed"
+              menuPlacement="auto"
               {...props}
             />
           )}

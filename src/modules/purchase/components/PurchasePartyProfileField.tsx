@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { Button } from '@/components/ui';
 import { SelectPartyProfiles } from '@/modules/partyProfiles/components';
+import { HighRiskPartyProfileWarningModal } from './HighRiskPartyProfileWarningModal';
 import type { PartyProfileType } from '@/modules/partyProfiles/types';
 import type { IPartyProfileListQuery } from '@/modules/partyProfiles/types';
 import type { IPurchaseFormValues } from '../types/purchaseTypes';
 import type { PurchasePageType } from '@/pages/purchase/[slug]/purchasePage.enum';
+import type { IPartyProfile } from '@/modules/partyProfiles/types';
 import { PassengerEntityTypeEnum } from '@/modules/passengers/types/passengerTypes';
 import {
   formatPurchaseEntityLabel,
@@ -30,6 +32,8 @@ export const PurchasePartyProfileField = ({
 }: PurchasePartyProfileFieldProps) => {
   const form = useFormContext<IPurchaseFormValues>();
   const [open, setOpen] = useState(false);
+  const [warningModalOpen, setWarningModalOpen] = useState(false);
+  const [selectedProfileForWarning, setSelectedProfileForWarning] = useState<IPartyProfile | null>(null);
 
   const partyProfileCode = form.watch('partyProfileCode');
   const partyProfileName = form.watch('partyProfileName');
@@ -69,6 +73,107 @@ export const PurchasePartyProfileField = ({
     ...getPurchaseTransactionPartyProfileFilter(transactionType, purchasePageType),
     activeOnly: true,
   } satisfies Pick<IPartyProfileListQuery, 'sale' | 'purchase' | 'activeOnly' | 'isIndividual'>;
+
+  const proceedWithProfileSelection = (selectedProfile: IPartyProfile) => {
+    form.setValue('partyProfileId', selectedProfile.id, {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
+    form.setValue('partyProfileCode', selectedProfile.code, {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: false,
+    });
+    form.setValue('partyProfileName', selectedProfile.name, {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: false,
+    });
+    form.setValue('partyProfileEmail', selectedProfile.email || '', {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: false,
+    });
+    form.setValue('partyProfilePhoneNo', selectedProfile.phoneNo || '', {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: false,
+    });
+    form.setValue('partyProfileAddress1', selectedProfile.address1 || '', {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: false,
+    });
+    form.setValue('partyProfileAddress2', selectedProfile.address2 || '', {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: false,
+    });
+    form.setValue('partyProfileAddress3', selectedProfile.address3 || '', {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: false,
+    });
+    form.setValue('partyProfileCity', selectedProfile.city || '', {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: false,
+    });
+    form.setValue('partyProfilePinCode', selectedProfile.pinCode || '', {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: false,
+    });
+    form.setValue('partyProfilePanNo', selectedProfile.panNo || '', {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: false,
+    });
+    form.setValue('partyProfileGstNo', selectedProfile.gstNo || '', {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: false,
+    });
+    form.setValue(
+      'partyProfileGstStateName',
+      selectedProfile.gstStateName || '',
+      {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: false,
+      }
+    );
+    form.setValue('partyProfileStateName', selectedProfile.stateName || '', {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: false,
+    });
+    form.setValue('partyProfileContactName', selectedProfile.contactName || '', {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: false,
+    });
+    form.setValue('partyProfileApplyTax', selectedProfile.applyTax, {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: false,
+    });
+    setOpen(false);
+  };
+
+  const handleWarningProceed = () => {
+    if (selectedProfileForWarning) {
+      proceedWithProfileSelection(selectedProfileForWarning);
+    }
+    setWarningModalOpen(false);
+    setSelectedProfileForWarning(null);
+  };
+
+  const handleWarningCancel = () => {
+    setWarningModalOpen(false);
+    setSelectedProfileForWarning(null);
+  };
 
   return (
     <>
@@ -130,93 +235,25 @@ export const PurchasePartyProfileField = ({
             return;
           }
 
-          form.setValue('partyProfileId', selectedProfile.id, {
-            shouldDirty: true,
-            shouldTouch: true,
-            shouldValidate: true,
-          });
-          form.setValue('partyProfileCode', selectedProfile.code, {
-            shouldDirty: true,
-            shouldTouch: true,
-            shouldValidate: false,
-          });
-          form.setValue('partyProfileName', selectedProfile.name, {
-            shouldDirty: true,
-            shouldTouch: true,
-            shouldValidate: false,
-          });
-          form.setValue('partyProfileEmail', selectedProfile.email || '', {
-            shouldDirty: true,
-            shouldTouch: true,
-            shouldValidate: false,
-          });
-          form.setValue('partyProfilePhoneNo', selectedProfile.phoneNo || '', {
-            shouldDirty: true,
-            shouldTouch: true,
-            shouldValidate: false,
-          });
-          form.setValue('partyProfileAddress1', selectedProfile.address1 || '', {
-            shouldDirty: true,
-            shouldTouch: true,
-            shouldValidate: false,
-          });
-          form.setValue('partyProfileAddress2', selectedProfile.address2 || '', {
-            shouldDirty: true,
-            shouldTouch: true,
-            shouldValidate: false,
-          });
-          form.setValue('partyProfileAddress3', selectedProfile.address3 || '', {
-            shouldDirty: true,
-            shouldTouch: true,
-            shouldValidate: false,
-          });
-          form.setValue('partyProfileCity', selectedProfile.city || '', {
-            shouldDirty: true,
-            shouldTouch: true,
-            shouldValidate: false,
-          });
-          form.setValue('partyProfilePinCode', selectedProfile.pinCode || '', {
-            shouldDirty: true,
-            shouldTouch: true,
-            shouldValidate: false,
-          });
-          form.setValue('partyProfilePanNo', selectedProfile.panNo || '', {
-            shouldDirty: true,
-            shouldTouch: true,
-            shouldValidate: false,
-          });
-          form.setValue('partyProfileGstNo', selectedProfile.gstNo || '', {
-            shouldDirty: true,
-            shouldTouch: true,
-            shouldValidate: false,
-          });
-          form.setValue(
-            'partyProfileGstStateName',
-            selectedProfile.gstStateName || '',
-            {
-              shouldDirty: true,
-              shouldTouch: true,
-              shouldValidate: false,
-            }
-          );
-          form.setValue('partyProfileStateName', selectedProfile.stateName || '', {
-            shouldDirty: true,
-            shouldTouch: true,
-            shouldValidate: false,
-          });
-          form.setValue('partyProfileContactName', selectedProfile.contactName || '', {
-            shouldDirty: true,
-            shouldTouch: true,
-            shouldValidate: false,
-          });
-          form.setValue('partyProfileApplyTax', selectedProfile.applyTax, {
-            shouldDirty: true,
-            shouldTouch: true,
-            shouldValidate: false,
-          });
-          setOpen(false);
+          // Check if the selected profile has high risk category
+          if (selectedProfile.kycRiskCategory?.value === 'HIGH_RISK') {
+            setSelectedProfileForWarning(selectedProfile);
+            setWarningModalOpen(true);
+            return;
+          }
+
+          // If not high risk, proceed with normal flow
+          proceedWithProfileSelection(selectedProfile);
         }}
         onClose={() => setOpen(false)}
+      />
+
+      <HighRiskPartyProfileWarningModal
+        isOpen={warningModalOpen}
+        partyProfileName={selectedProfileForWarning?.name || ''}
+        onConfirm={handleWarningProceed}
+        onCancel={handleWarningCancel}
+        onClose={handleWarningCancel}
       />
     </>
   );

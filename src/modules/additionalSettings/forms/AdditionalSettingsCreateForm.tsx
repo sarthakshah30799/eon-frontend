@@ -391,25 +391,11 @@ const SubcategoryFields = ({
             Add linked subcategory definitions for this category.
           </p>
         </div>
-
-        {!isFixedCategory ? (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={isSubmitting}
-            onClick={() => append(createEmptyAdditionalSettingSubcategoryFormValues())}
-          >
-            {fields.length === 0
-              ? ADDITIONAL_SETTINGS_TEXTS.ADD_SUBCATEGORY
-              : ADDITIONAL_SETTINGS_TEXTS.ADD_MORE}
-          </Button>
-        ) : null}
       </div>
 
       {fields.length === 0 ? (
         <div className="rounded-sm border border-dashed border-border-primary bg-surface-primary p-4 text-sm text-text-tertiary">
-          No subcategories yet. Use the button above to add the first one.
+          No subcategories yet.
         </div>
       ) : (
         <div className="space-y-4">
@@ -428,6 +414,20 @@ const SubcategoryFields = ({
           ))}
         </div>
       )}
+
+      {!isFixedCategory ? (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={isSubmitting}
+          onClick={() => append(createEmptyAdditionalSettingSubcategoryFormValues())}
+        >
+          {fields.length === 0
+            ? ADDITIONAL_SETTINGS_TEXTS.ADD_SUBCATEGORY
+            : ADDITIONAL_SETTINGS_TEXTS.ADD_MORE}
+        </Button>
+      ) : null}
     </div>
   );
 };

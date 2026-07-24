@@ -11,4 +11,5 @@ export {
   getPurchasePageSlugFromType,
   getPurchasePageCreateTitle,
   getPurchasePageBasePath,
+  getPurchasePurposePartyProfileType,
 } from './purchasePage.enum';

@@ -20,6 +20,8 @@ export const TransactionTypeProfileEnum = {
   PURCHASE_FFMC: 'PURCHASE_FFMC',
   PURCHASE_CORPORATE: 'PURCHASE_CORPORATE',
   PURCHASE_INDIVIDUAL: 'PURCHASE_INDIVIDUAL',
+  SALE_CORPORATE: 'SALE_CORPORATE',
+  SALE_INDIVIDUAL: 'SALE_INDIVIDUAL',
   SALE_FFMC: 'SALE_FFMC',
   SALE_RMC: 'SALE_RMC',
   SALE_FOREX: 'SALE_FOREX',
@@ -40,6 +42,8 @@ export const TRANSACTION_TYPE_PROFILE_ORDER = [
   TransactionTypeProfileEnum.PURCHASE_FFMC,
   TransactionTypeProfileEnum.PURCHASE_CORPORATE,
   TransactionTypeProfileEnum.PURCHASE_INDIVIDUAL,
+  TransactionTypeProfileEnum.SALE_CORPORATE,
+  TransactionTypeProfileEnum.SALE_INDIVIDUAL,
   TransactionTypeProfileEnum.SALE_FFMC,
   TransactionTypeProfileEnum.SALE_RMC,
   TransactionTypeProfileEnum.SALE_FOREX,
@@ -155,6 +159,8 @@ export interface ITransactionEntity {
   agentProfileSnapshot?: ITransactionReferenceSnapshot | null;
   passengerId: string | null;
   passengerSnapshot?: Record<string, unknown> | null;
+  passengerTravelId: string | null;
+  passengerTravelSnapshot?: Record<string, unknown> | null;
   manualBookPageId: string | null;
   manualBookPageSnapshot?: Record<string, unknown> | null;
   transactionType: TransactionType;
@@ -177,6 +183,10 @@ export interface ITransactionEntity {
   createdAt: string;
   updatedAt: string;
   taxRatePercent: string | null;
+  preTcsFinalAmount: string;
+  tcsRatePercent: string;
+  tcsRateType: 'PERCENT' | 'RUPEES' | null;
+  tcsAmount: string;
   taxableAmount: string;
   itemBaseAmount: string;
   itemTaxableAmount: string;
@@ -188,12 +198,32 @@ export interface ITransactionEntity {
   sgstAmount: string;
   finalAmount: string;
   splitMode: 'IGST' | 'CGST_SGST' | null;
+  loanAmount: string | null;
+  declaredAmount: string | null;
+  itrFiled: boolean | null;
+  tcsDeclarationAccepted: boolean | null;
+  isProprietorship: boolean | null;
   items?: ITransactionItemEntity[];
   documents?: ITransactionDocumentEntity[];
   additionalCharges?: ITransactionAdditionalChargeEntity[];
+  tcsBreakdowns?: ITransactionTcsBreakdownEntity[];
   payments?: ITransactionPaymentEntity[];
   passengerOtherDocuments?: ITransactionPassengerOtherDocumentEntity[];
   logs?: ITransactionLogEntity[];
+}
+
+export interface ITransactionTcsBreakdownEntity {
+  id: string;
+  transactionId: string;
+  lineNo: number;
+  purposeId: string | null;
+  purposeSlabId: string | null;
+  baseAmount: string;
+  ratePercent: string;
+  rateType: 'PERCENT' | 'RUPEES';
+  tcsAmount: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ITransactionPassengerOtherDocumentEntity {

@@ -5,6 +5,14 @@ export const PurposeRateTypeEnum = {
 
 export type PurposeRateType = (typeof PurposeRateTypeEnum)[keyof typeof PurposeRateTypeEnum];
 
+export const PurposePartyProfileTypeEnum = {
+  CORPORATE: 'CORPORATE',
+  INDIVIDUAL: 'INDIVIDUAL',
+} as const;
+
+export type PurposePartyProfileType =
+  (typeof PurposePartyProfileTypeEnum)[keyof typeof PurposePartyProfileTypeEnum];
+
 export interface IPurposeSlab {
   id: string;
   purposeId: string;
@@ -24,7 +32,10 @@ export interface IPurpose {
   threshold: number;
   rate: number;
   rateType: PurposeRateType;
-  transactionType: import('@/modules/transactions').TransactionType;
+  corporate: boolean;
+  individual: boolean;
+  sell: boolean;
+  purchase: boolean;
   slabs: IPurposeSlab[];
   createdAt: string;
   updatedAt: string;
@@ -52,6 +63,8 @@ export type IUpdatePurpose = Partial<ICreatePurpose>;
 
 export interface IPurposeListQuery {
   search?: string;
+  transactionType?: import('@/modules/transactions').TransactionType;
+  partyProfileType?: PurposePartyProfileType;
 }
 
 export interface IPurposeListResponse {

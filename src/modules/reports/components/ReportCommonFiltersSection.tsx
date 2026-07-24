@@ -146,7 +146,7 @@ export const ReportCommonFiltersSection = ({
                 }
                 id="transaction-type-sale"
               />
-              Sale
+              Sell
             </div>
             <button
               type="button"

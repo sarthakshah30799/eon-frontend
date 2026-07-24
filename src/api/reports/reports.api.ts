@@ -101,7 +101,7 @@ export const reportsApi = {
     }
 
     if (!res.data) {
-      throw new Error('Failed to download sale and purchase report');
+      throw new Error('Failed to download sell and purchase report');
     }
 
     return {

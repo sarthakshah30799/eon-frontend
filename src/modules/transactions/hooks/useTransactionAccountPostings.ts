@@ -22,7 +22,7 @@ export interface TransactionAccountPostingOption {
 
 const transactionTypeOptions: TransactionAccountPostingOption[] = [
   { value: TransactionTypeEnum.PURCHASE, label: 'Purchase' },
-  { value: TransactionTypeEnum.SALE, label: 'Sale' },
+  { value: TransactionTypeEnum.SALE, label: 'Sell' },
 ];
 
 export const useTransactionAccountPostings = (enabled = true) => {

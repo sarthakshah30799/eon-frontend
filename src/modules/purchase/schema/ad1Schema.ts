@@ -66,7 +66,7 @@ export const ad1Schema = yup.object({
     .required('FC Volume is required')
     .test('decimals', 'Must have up to 7 decimal places', decimalPlaces(7)),
   saleRate: decimalStringSchema
-    .required('Sale Rate is required')
+    .required('Sell Rate is required')
     .test('decimals', 'Must have up to 7 decimal places', decimalPlaces(7)),
     
   // 2 Decimals

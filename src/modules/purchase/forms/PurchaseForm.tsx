@@ -21,6 +21,7 @@ import type { PartyProfileType } from '@/modules/partyProfiles/types';
 import {
   getPurchasePageEntityType,
   getPurchasePageTitle,
+  getPurchasePurposePartyProfileType,
   type PurchasePageType,
 } from '@/pages/purchase/[slug]/purchasePage.enum';
 import type {
@@ -733,6 +734,7 @@ const PurchaseFormBody = ({
             label="Purpose"
             placeholder="Select purpose"
             transactionType={transactionType}
+            partyProfileType={getPurchasePurposePartyProfileType(purchasePageType)}
             disabled={isReadOnly}
           />
         </div>

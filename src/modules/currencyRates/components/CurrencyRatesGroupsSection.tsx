@@ -47,7 +47,7 @@ export const CurrencyRatesGroupsSection = ({
     },
     {
       id: 'saleMargin',
-      header: 'Sale Margin',
+      header: 'Sell Margin',
       cell: ({ row }) => (
         <div className="space-y-1">
           <div className="text-text-primary">

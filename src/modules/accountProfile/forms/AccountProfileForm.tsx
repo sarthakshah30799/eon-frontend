@@ -373,13 +373,13 @@ export const AccountProfileForm = ({
       <CardSection heading="Transaction Permissions">
         <div className="grid gap-3 grid-cols-2 md:grid-cols-4 lg:grid-cols-4">
           <div className="rounded-sm border border-border-primary bg-surface-primary p-3 hover:border-border-secondary transition-all">
-            <FormFieldCheckbox name="bulkSale" label="Bulk Sale" disabled={isDisabled} />
+            <FormFieldCheckbox name="bulkSale" label="Bulk Sell" disabled={isDisabled} />
           </div>
           <div className="rounded-sm border border-border-primary bg-surface-primary p-3 hover:border-border-secondary transition-all">
             <FormFieldCheckbox name="bulkPurchase" label="Bulk Purchase" disabled={isDisabled} />
           </div>
           <div className="rounded-sm border border-border-primary bg-surface-primary p-3 hover:border-border-secondary transition-all">
-            <FormFieldCheckbox name="retailSale" label="Retail Sale" disabled={isDisabled} />
+            <FormFieldCheckbox name="retailSale" label="Retail Sell" disabled={isDisabled} />
           </div>
           <div className="rounded-sm border border-border-primary bg-surface-primary p-3 hover:border-border-secondary transition-all">
             <FormFieldCheckbox name="retailPurchase" label="Retail Purchase" disabled={isDisabled} />

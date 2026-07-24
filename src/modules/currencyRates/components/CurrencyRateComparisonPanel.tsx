@@ -60,7 +60,7 @@ export const CurrencyRateComparisonPanel = ({
   if (!preview) {
     return (
       <div className="rounded-sm border border-border-primary bg-surface-secondary/20 p-4 text-sm text-text-secondary">
-        Select a product and currency to see the calculated final buy and sale prices.
+        Select a product and currency to see the calculated final buy and sell prices.
       </div>
     );
   }
@@ -72,7 +72,7 @@ export const CurrencyRateComparisonPanel = ({
         side={preview.buy}
       />
       <SidePreview
-        label="Sale"
+        label="Sell"
         side={preview.sale}
       />
     </div>

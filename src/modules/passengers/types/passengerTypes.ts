@@ -36,13 +36,7 @@ export const PassengerOtherIdProofTypeEnum = {
 export type PassengerOtherIdProofType =
   (typeof PassengerOtherIdProofTypeEnum)[keyof typeof PassengerOtherIdProofTypeEnum];
 
-export const PassengerPanHolderRelationTypeEnum = {
-  COMPANY: 'COMPANY',
-  INDIVIDUAL: 'INDIVIDUAL',
-} as const;
-
-export type PassengerPanHolderRelationType =
-  (typeof PassengerPanHolderRelationTypeEnum)[keyof typeof PassengerPanHolderRelationTypeEnum];
+export type PassengerPanHolderRelationType = string;
 
 export type PassengerAmlPartyProfile = Pick<
   IPartyProfile,
@@ -84,7 +78,7 @@ export interface IPassengerPanVerificationRequest {
   panNumber?: string;
   panHolderName?: string;
   panDob?: string;
-  panHolderRelationType?: PassengerPanHolderRelationType;
+  panHolderRelationType?: string;
 }
 
 export interface IPassengerPassportVerificationRequest {
@@ -148,7 +142,7 @@ export interface IPassengerPassengerDetailsValues {
   panNumber: string;
   panHolderName: string;
   panDob: string;
-  panHolderRelationType: PassengerPanHolderRelationType | '';
+  panHolderRelationType: string;
   paidByPanNumber: string;
   paidByPanHolderName: string;
   paidByPanDob: string;

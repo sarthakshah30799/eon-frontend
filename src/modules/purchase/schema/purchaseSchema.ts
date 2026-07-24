@@ -10,7 +10,6 @@ import { TradeModeEnum } from '@/modules/transactions';
 import {
   PassengerEntityTypeEnum,
   PassengerNationalityTypeEnum,
-  PassengerPanHolderRelationTypeEnum,
   PassengerOtherIdProofTypeEnum,
   PassengerResidentStatusEnum,
 } from '@/modules/passengers/types/passengerTypes';
@@ -220,10 +219,7 @@ export const createPurchaseFormSchema = (transactionType: TransactionType) =>
         then: schema => schema.required('PAN holder DOB is required'),
         otherwise: schema => schema.default(''),
       }),
-    panHolderRelationType: yup
-      .mixed<(typeof PassengerPanHolderRelationTypeEnum)[keyof typeof PassengerPanHolderRelationTypeEnum] | ''>()
-      .oneOf([...Object.values(PassengerPanHolderRelationTypeEnum), ''] as const)
-      .required('PAN holder relation is required'),
+    panHolderRelationType: yup.string().trim().required('PAN holder relation is required'),
     corporatePanNumber: yup
       .string()
       .trim()
@@ -248,10 +244,7 @@ export const createPurchaseFormSchema = (transactionType: TransactionType) =>
         then: schema => schema.required('Corporate PAN holder DOB is required'),
         otherwise: schema => schema.default(''),
       }),
-    corporatePanHolderRelationType: yup
-      .mixed<(typeof PassengerPanHolderRelationTypeEnum)[keyof typeof PassengerPanHolderRelationTypeEnum] | ''>()
-      .oneOf([...Object.values(PassengerPanHolderRelationTypeEnum), ''] as const)
-      .when('entityType', {
+    corporatePanHolderRelationType: yup.string().trim().when('entityType', {
         is: PassengerEntityTypeEnum.CORPORATE,
         then: schema => schema.required('Corporate PAN holder relation is required'),
         otherwise: schema => schema.default(''),

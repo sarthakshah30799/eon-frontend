@@ -3,7 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button1';
 import { Table, type TableColumnDef } from '@/components/ui/table';
-import { formatPurposeRateLabel } from '../utils/purposeUtils';
+import {
+  formatPurposeRateLabel,
+  formatPurposeScopeLabel,
+  formatPurposeTransactionScopeLabel,
+} from '../utils/purposeUtils';
 import type { IPurpose } from '../types/purposeTypes';
 
 interface PurposeTableProps {
@@ -23,6 +27,8 @@ interface PurposeTableRow {
   threshold: string;
   rate: string;
   rateType: string;
+  partyScope: string;
+  transactionScope: string;
   slabCount: number;
 }
 
@@ -46,6 +52,8 @@ export const PurposeTable = ({
         threshold: Number(purpose.threshold || 0).toFixed(2),
         rate: Number(purpose.rate || 0).toFixed(2),
         rateType: purpose.rateType,
+        partyScope: formatPurposeScopeLabel(purpose.corporate, purpose.individual),
+        transactionScope: formatPurposeTransactionScopeLabel(purpose.sell, purpose.purchase),
         slabCount: purpose.slabs?.length ?? 0,
       })),
     [purposes]
@@ -54,6 +62,8 @@ export const PurposeTable = ({
   const columns: TableColumnDef<PurposeTableRow>[] = [
     { accessorKey: 'code', header: 'Code' },
     { accessorKey: 'description', header: 'Description' },
+    { accessorKey: 'partyScope', header: 'Profile Type' },
+    { accessorKey: 'transactionScope', header: 'Transaction Type' },
     { accessorKey: 'threshold', header: 'Threshold' },
     {
       accessorKey: 'rate',

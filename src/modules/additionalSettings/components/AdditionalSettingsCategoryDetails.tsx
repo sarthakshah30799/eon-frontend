@@ -10,6 +10,7 @@ import {
   getAdditionalSettingCategoryDefinition,
   getAdditionalSettingSubcategoryDefinition,
 } from '../registry/additionalSettingsRegistry';
+import { formatAccountProfileLabel } from '../utils/additionalSettingsUtils';
 import { accountProfileApi } from '@/api/accountProfile';
 
 interface AdditionalSettingsCategoryDetailsProps {
@@ -61,18 +62,41 @@ const CategoryTitleEditor = ({
 
 const SubcategoryRow = ({
   subcategory,
+  categoryCode,
   onEdit,
 }: {
   subcategory: IAdditionalSettingSubcategory;
+  categoryCode?: string;
   onEdit: (sub: IAdditionalSettingSubcategory) => void;
 }) => {
+  const subcategoryDefinition = getAdditionalSettingSubcategoryDefinition(
+    categoryCode,
+    subcategory.code
+  );
+  const isAccountProfileValue = subcategoryDefinition?.optionsSource === 'account-profile';
+  const { data: accountLabel, isFetching } = useQuery({
+    queryKey: ['additional-settings-account-label', subcategory.value],
+    queryFn: async () => {
+      if (!isAccountProfileValue || !subcategory.value) {
+        return '';
+      }
+
+      const account = await accountProfileApi.getAccountProfileById(subcategory.value);
+      return formatAccountProfileLabel(account);
+    },
+    enabled: isAccountProfileValue && Boolean(subcategory.value),
+  });
+  const displayValue = isAccountProfileValue
+    ? accountLabel || subcategory.value
+    : subcategory.value;
+
   return (
     <tr className="border-t border-border-primary/80 hover:bg-surface-secondary/50">
       <td className="px-4 py-4 text-xs leading-5 text-text-primary">
         {subcategory.description || subcategory.title}
       </td>
       <td className="px-4 py-4 text-xs font-medium leading-5 text-text-primary">
-        {subcategory.value}
+        {isFetching && isAccountProfileValue ? 'Loading...' : displayValue}
       </td>
       <td className="px-4 py-4">
         <Button
@@ -121,10 +145,14 @@ const EditSubcategoryForm = ({
   const isNumberType = categoryType.toLowerCase() === 'number' || categoryType.toLowerCase() === 'decimal';
   const isDateType = categoryType.toLowerCase() === 'date';
   const isSelectType = categoryType.toLowerCase() === 'select';
-  const selectValueOptions = (subcategoryDefinition?.options ?? []).map(option => ({
-    value: option.value,
-    label: option.label,
-  }));
+  const selectValueOptions = useMemo(
+    () =>
+      (subcategoryDefinition?.options ?? []).map(option => ({
+        value: option.value,
+        label: option.label,
+      })),
+    [subcategoryDefinition?.options]
+  );
   const { data: selectedAccountOption } = useQuery({
     queryKey: ['additional-settings-account-option', value],
     queryFn: async () => {
@@ -136,7 +164,7 @@ const EditSubcategoryForm = ({
       return account
         ? {
             value: account.id,
-            label: `${account.accountCode} - ${account.accountName}`,
+            label: formatAccountProfileLabel(account),
           }
         : null;
     },
@@ -144,32 +172,38 @@ const EditSubcategoryForm = ({
   });
   const selectedValueOption =
     selectedAccountOption ?? selectValueOptions.find(option => option.value === value) ?? null;
-  const loadAccountProfileOptions = useCallback(async (inputValue: string, page = 1) => {
-    const response = await accountProfileApi.getAccountProfiles({
-      page,
-      limit: 30,
-      search: inputValue,
-      active: true,
-    });
+  const loadAccountProfileOptions = useCallback(
+    async (inputValue: string, page = 1) => {
+      const response = await accountProfileApi.getAccountProfiles({
+        page,
+        limit: 30,
+        search: inputValue,
+        active: true,
+      });
 
-    return {
-      options: (response.data || []).map(account => ({
-        value: account.id,
-        label: `${account.accountCode} - ${account.accountName}`,
-      })),
-      hasMore: (response.data || []).length === 30,
-    };
-  }, []);
-  const loadSelectValueOptions = async (inputValue = '') => {
-    if (subcategoryDefinition?.optionsSource === 'account-profile') {
-      return loadAccountProfileOptions(inputValue);
-    }
+      return {
+        options: (response.data || []).map(account => ({
+          value: account.id,
+          label: formatAccountProfileLabel(account),
+        })),
+        hasMore: (response.data || []).length === 30,
+      };
+    },
+    []
+  );
+  const loadSelectValueOptions = useCallback(
+    async (inputValue = '', page = 1) => {
+      if (subcategoryDefinition?.optionsSource === 'account-profile') {
+        return loadAccountProfileOptions(inputValue, page);
+      }
 
-    return {
-      options: selectValueOptions,
-      hasMore: false,
-    };
-  };
+      return {
+        options: selectValueOptions,
+        hasMore: false,
+      };
+    },
+    [loadAccountProfileOptions, subcategoryDefinition?.optionsSource, selectValueOptions]
+  );
 
   const handleNumberingValueChange = (nextValue: string) => {
     setValueError('');
@@ -456,6 +490,7 @@ export const AdditionalSettingsCategoryDetails = ({
                       <SubcategoryRow
                         key={subcategory.id}
                         subcategory={subcategory}
+                        categoryCode={category.code}
                         onEdit={setEditingSubcategory}
                       />
                     ))}

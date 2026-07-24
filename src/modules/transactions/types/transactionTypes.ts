@@ -176,6 +176,18 @@ export interface ITransactionEntity {
   byOther: string | null;
   createdAt: string;
   updatedAt: string;
+  taxRatePercent: string | null;
+  taxableAmount: string;
+  itemBaseAmount: string;
+  itemTaxableAmount: string;
+  itemTaxAmount: string;
+  additionalChargeBaseAmount: string;
+  additionalChargeTaxAmount: string;
+  igstAmount: string;
+  cgstAmount: string;
+  sgstAmount: string;
+  finalAmount: string;
+  splitMode: 'IGST' | 'CGST_SGST' | null;
   items?: ITransactionItemEntity[];
   documents?: ITransactionDocumentEntity[];
   additionalCharges?: ITransactionAdditionalChargeEntity[];
@@ -219,6 +231,16 @@ export interface ITransactionItemEntity {
   quantity: string;
   per: string | null;
   rate: string;
+  taxableAmount: string;
+  taxRatePercent: string;
+  gstAmount: string;
+  igstRatePercent: string;
+  cgstRatePercent: string;
+  sgstRatePercent: string;
+  igstAmount: string;
+  cgstAmount: string;
+  sgstAmount: string;
+  splitMode: 'IGST' | 'CGST_SGST' | null;
   commission: string | null;
   holdCost: string | null;
   profit: string | null;
@@ -262,6 +284,14 @@ export interface ITransactionAdditionalChargeEntity {
   amount: string;
   gstRate: string | null;
   gstAmount: string | null;
+  taxRatePercent: string;
+  igstRatePercent: string;
+  cgstRatePercent: string;
+  sgstRatePercent: string;
+  igstAmount: string;
+  cgstAmount: string;
+  sgstAmount: string;
+  splitMode: 'IGST' | 'CGST_SGST' | null;
   applyTax: boolean;
   remarks: string | null;
   createdAt: string;
@@ -342,6 +372,108 @@ export interface ICreateTransactionAdditionalChargePayload {
   gstAmount?: string | null;
   applyTax?: boolean;
   remarks?: string | null;
+}
+
+export interface ITransactionTaxPreviewRequest {
+  transactionType: TransactionType;
+  branchId?: string | null;
+  branchSnapshot?: ITransactionReferenceSnapshot | null;
+  partyProfileId?: string | null;
+  partyProfileSnapshot?: ITransactionReferenceSnapshot | null;
+  partyProfileApplyTax?: boolean;
+  taxRatePercent: string;
+  items: Array<{
+    quantity?: string | number | null;
+    rate?: string | number | null;
+  }>;
+  additionalCharges: Array<{
+    amount?: string | number | null;
+    applyTax?: boolean | null;
+  }>;
+}
+
+export interface ITransactionTaxPreviewResponse {
+  taxRatePercent: string;
+  taxableAmount: string;
+  itemBaseAmount: string;
+  itemTaxableAmount: string;
+  itemTaxAmount: string;
+  itemIgstAmount: string;
+  itemCgstAmount: string;
+  itemSgstAmount: string;
+  itemIgstRatePercent: string;
+  itemCgstRatePercent: string;
+  itemSgstRatePercent: string;
+  additionalChargeBaseAmount: string;
+  additionalChargeTaxAmount: string;
+  totalTaxAmount: string;
+  finalAmount: string;
+  igstAmount: string;
+  cgstAmount: string;
+  sgstAmount: string;
+  splitMode: 'IGST' | 'CGST_SGST' | null;
+  branchStateName: string | null;
+  partyStateName: string | null;
+  itemRows: Array<{
+    lineNo: number;
+    taxableAmount: string;
+    taxRatePercent: string;
+    gstAmount: string;
+    igstRatePercent: string;
+    cgstRatePercent: string;
+    sgstRatePercent: string;
+    igstAmount: string;
+    cgstAmount: string;
+    sgstAmount: string;
+    splitMode: 'IGST' | 'CGST_SGST' | null;
+  }>;
+  additionalChargeRows: Array<{
+    lineNo: number;
+    amount: string;
+    taxRatePercent?: string;
+    gstRatePercent?: string;
+    gstAmount: string;
+    igstAmount?: string;
+    cgstAmount?: string;
+    sgstAmount?: string;
+    igstRatePercent?: string;
+    cgstRatePercent?: string;
+    sgstRatePercent?: string;
+    splitMode?: 'IGST' | 'CGST_SGST' | null;
+    totalAmount: string;
+  }>;
+}
+
+export interface IPurchaseRulePreviewRequest {
+  transaction: ICreateTransactionPayload;
+}
+
+export interface IPurchaseRulePreviewResponse {
+  allowed: boolean;
+  ruleType:
+    | 'OK'
+    | 'CORPORATE_CHEQUE_ONLY'
+    | 'CDF_REQUIRED'
+    | 'CASH_LIMIT_EXCEEDED'
+    | 'CHEQUE_NOT_ALLOWED'
+    | 'HISTORY_LIMIT_EXCEEDED'
+    | 'MISSING_PASSENGER'
+    | 'MISSING_PAYMENT';
+  blockingReason: string | null;
+  requiresCdf: boolean;
+  cdfThresholdAmount: string;
+  referenceCurrencyCode: string;
+  transactionAmount: string;
+  transactionAmountInReferenceCurrency: string;
+  cumulativeAmountInReferenceCurrency: string;
+  cashLimitAmount: string;
+  cashTotalAmount: string;
+  chequeTotalAmount: string;
+  passengerMatchTier: number | null;
+  passengerId: string | null;
+  isCorporate: boolean;
+  nationalityType: string | null;
+  paymentMethodsAllowed: Array<'CASH' | 'CHEQUE'>;
 }
 
 export interface ICreateTransactionPassengerOtherDocumentPayload {

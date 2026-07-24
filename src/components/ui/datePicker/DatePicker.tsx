@@ -15,6 +15,7 @@ export interface DatePickerProps {
   error?: string;
   selected?: Date | null;
   onChange?: (date: Date | null) => void;
+  onBlur?: () => void;
   placeholder?: string;
   disabled?: boolean;
   className?: string;
@@ -76,6 +77,7 @@ export const DatePicker = ({
   error,
   selected,
   onChange,
+  onBlur,
   placeholder = 'Select date',
   disabled = false,
   className = '',
@@ -86,6 +88,7 @@ export const DatePicker = ({
 }: DatePickerProps) => {
   const generatedId = useId();
   const inputId = id ?? generatedId;
+  const selectedKey = selected ? formatDateDisplayInput(selected) : 'empty';
   const [inputValue, setInputValue] = useState(
     () => (selected ? formatDateDisplayInput(selected) : '')
   );
@@ -103,11 +106,13 @@ export const DatePicker = ({
         minDate={minDate}
         maxDate={maxDate}
         className={className}
+        key={`${inputId}-${selectedKey}`}
         customInput={
           <DatePickerInput
             inputValue={inputValue}
             onInputValueChange={setInputValue}
             onParsedDateChange={onChange}
+            onBlur={onBlur}
           />
         }
         showYearDropdown

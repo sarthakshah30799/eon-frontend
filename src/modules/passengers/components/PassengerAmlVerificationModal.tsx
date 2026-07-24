@@ -1,37 +1,22 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useRef } from 'react';
-import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useFormContext, useWatch } from 'react-hook-form';
 import { Button, Modal } from '@/components/ui';
-import {
-  FormFieldCategoryOption,
-  FormFieldCountryDropdown,
-  FormFieldDatePicker,
-  FormFieldFileUploader,
-  FormFieldInput,
-  FormFieldSelect,
-  FormFieldStateDropdown,
-  FormFieldYesNoToggle,
-} from '@/components/forms';
-import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import { useListCountryProfiles } from '@/modules/countryProfile/hooks';
 import type { IPurchaseFormValues } from '@/modules/purchase/types/purchaseTypes';
-import type { PassengerAmlPartyProfile } from '../types/passengerTypes';
-import {
-  PassengerEntityTypeEnum,
-  PassengerNationalityTypeEnum,
-  PassengerPanHolderRelationTypeEnum,
-  type PassengerEntityType,
-  type IPassengerAmlVerifiedPayload,
+import type {
+  PassengerAmlPartyProfile,
+  PassengerEntityType,
+  PassengerNationalityType,
+  PassengerPanHolderRelationType,
+  IPassengerAmlVerifiedPayload,
+  IPassengerPanVerificationRequest,
+  IPassengerPassportVerificationRequest,
 } from '../types/passengerTypes';
-import {
-  PASSENGER_NATIONALITY_OPTIONS,
-  PASSENGER_OTHER_ID_PROOF_OPTIONS,
-  PASSENGER_PAN_HOLDER_RELATION_OPTIONS,
-  PASSENGER_RESIDENT_STATUS_OPTIONS,
-  createPassengerAmlDefaultValues,
-  createPassengerDetailsDefaultValues,
-  createStaticPassengerSelectOptions,
-} from '../utils/passengerAmlUtils';
+import { PassengerEntityTypeEnum, PassengerNationalityTypeEnum } from '../types/passengerTypes';
+import { createPassengerAmlDefaultValues, createPassengerDetailsDefaultValues, PASSENGER_PAN_VERIFICATION_FIELDS, PASSENGER_PASSPORT_VERIFICATION_FIELDS } from '../schema/passengerAmlSchema';
+import { usePassengerAmlVerification } from '../hooks';
+import { PassengerAmlVerificationStepForm } from '../forms/PassengerAmlVerificationStepForm';
+import { PassengerAmlDetailsStepForm } from '../forms/PassengerAmlDetailsStepForm';
 
 interface PassengerAmlVerificationModalProps {
   open: boolean;
@@ -42,347 +27,101 @@ interface PassengerAmlVerificationModalProps {
 }
 
 type PassengerModalStep = 'verification' | 'details';
+type VerificationMode = 'pan' | 'passport';
 
-const toProfileLabel = (profile?: PassengerAmlPartyProfile | null) =>
-  profile
-    ? `${profile.name}${profile.type ? ` (${profile.type})` : ''}`
-    : 'No party profile selected yet';
+const getVerificationMode = (
+  entityType: PassengerEntityType,
+  nationalityType?: PassengerNationalityType | string | null
+): VerificationMode =>
+  entityType === PassengerEntityTypeEnum.CORPORATE ||
+  nationalityType === PassengerNationalityTypeEnum.INDIAN
+    ? 'pan'
+    : 'passport';
 
-const PassengerOtherDocumentsSection = ({
-  nationalityType,
-}: {
-  nationalityType: IPurchaseFormValues['nationalityType'];
-}) => {
-  const form = useFormContext<IPurchaseFormValues>();
-  const { fields, append, remove } = useFieldArray({
-    control: form.control,
-    name: 'otherDocuments',
+const getPanSnapshot = (values: IPurchaseFormValues) =>
+  ({
+    panNumber: values.panNumber,
+    panHolderName: values.panHolderName,
+    panDob: values.panDob,
   });
-  const isIndianNationality =
-    nationalityType === PassengerNationalityTypeEnum.INDIAN;
 
-  return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h3 className="text-base font-semibold text-text-primary">
-            Other Documents
-          </h3>
-          <p className="text-sm text-text-secondary">
-            {isIndianNationality
-              ? 'At least one other document is mandatory for Indian passengers.'
-              : 'Add any supporting documents you want to capture now.'}
-          </p>
-        </div>
+const getPassportSnapshot = (values: IPurchaseFormValues) =>
+  ({
+    passportNumber: values.passportNumber,
+    passportIssueAt: values.passportIssueAt,
+    passportIssueDate: values.passportIssueDate,
+    passportExpiryDate: values.passportExpiryDate,
+    arrivalDate: values.arrivalDate,
+  });
 
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() =>
-            append({
-              documentType: '',
-              documentNumber: '',
-              validTill: '',
-              issueAt: '',
-              issueDate: '',
-              expiryDate: '',
-              documentFile: '',
-            })
-          }
-        >
-          Add Document
-        </Button>
-      </div>
+const getVerificationSnapshot = (values: IPurchaseFormValues, mode: VerificationMode) =>
+  mode === 'pan'
+    ? getPanSnapshot(values)
+    : getPassportSnapshot(values);
 
-      <div className="space-y-4">
-        {fields.map((field, index) => (
-          <div
-            key={field.id}
-            className="rounded-sm border border-border-primary bg-surface-secondary p-4"
-          >
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <div className="text-sm font-medium text-text-primary">
-                Document {index + 1}
-              </div>
-              {fields.length > 1 ? (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => remove(index)}
-                >
-                  Remove
-                </Button>
-              ) : null}
-            </div>
+const isSameSnapshot = (left: Record<string, unknown> | null, right: Record<string, unknown>) =>
+  Boolean(left) && JSON.stringify(left) === JSON.stringify(right);
 
-            <div className="grid gap-4 md:grid-cols-2">
-              <FormFieldSelect
-                name={`otherDocuments.${index}.documentType`}
-                label="Type of ID"
-                placeholder="Select document type"
-                loadOptions={createStaticPassengerSelectOptions(
-                  PASSENGER_OTHER_ID_PROOF_OPTIONS
-                )}
-              />
-              <FormFieldInput
-                name={`otherDocuments.${index}.documentNumber`}
-                label="ID Number"
-                placeholder="Enter ID number"
-              />
-              <FormFieldDatePicker
-                name={`otherDocuments.${index}.validTill`}
-                label="Valid Till"
-                placeholder="Select expiry date"
-              />
-              <FormFieldFileUploader
-                name={`otherDocuments.${index}.documentFile`}
-                label="Upload Document"
-                placeholder="Choose file"
-              />
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
+const getVerificationFields = (mode: VerificationMode) =>
+  mode === 'pan' ? PASSENGER_PAN_VERIFICATION_FIELDS : PASSENGER_PASSPORT_VERIFICATION_FIELDS;
+
+const hasCompletePanValues = (values: IPurchaseFormValues) =>
+  Boolean(values.panNumber && values.panHolderName && values.panDob);
+
+const hasCompletePassportValues = (values: IPurchaseFormValues) =>
+  Boolean(
+    values.passportNumber &&
+      values.passportIssueAt &&
+      values.passportIssueDate &&
+      values.passportExpiryDate &&
+      values.arrivalDate
   );
-};
 
-const PassengerDetailsSection = ({
-  entityType,
-  selectedPartyProfile,
-}: {
-  entityType: PassengerEntityType;
-  selectedPartyProfile?: PassengerAmlPartyProfile | null;
-}) => {
-  const form = useFormContext<IPurchaseFormValues>();
-  const nationalityType = useWatch({
-    control: form.control,
-    name: 'nationalityType',
-  });
-  const countryId = useWatch({
-    control: form.control,
-    name: 'countryId',
-  });
-  const corporatePanVisible = entityType === PassengerEntityTypeEnum.CORPORATE;
+const getDetailsFieldNames = (mode: VerificationMode) => {
+  const baseFields = [
+    'entityType',
+    'nationalityType',
+    'residentStatus',
+    'countryId',
+    'stateId',
+    'panHolderRelationType',
+    'paidByPanNumber',
+    'paidByPanHolderName',
+    'paidByPanDob',
+    'email',
+    'contactNo',
+    'gstNumber',
+    'gstStateId',
+    'locationId',
+    'city',
+    'address1',
+    'address2',
+    'isPep',
+    'passportNumber',
+    'passportIssueAt',
+    'passportIssueDate',
+    'passportExpiryDate',
+    'arrivalDate',
+    'otherDocuments.0.documentType',
+    'otherDocuments.0.documentNumber',
+    'otherDocuments.0.validTill',
+  ] as const;
 
-  const isPassportRequired =
-    nationalityType === PassengerNationalityTypeEnum.NRI ||
-    nationalityType === PassengerNationalityTypeEnum.FOREIGNER;
-
-  return (
-    <div className="space-y-6">
-      <div className="rounded-sm border border-border-primary bg-surface-secondary px-4 py-3">
-        <div className="text-sm font-medium text-text-primary">
-          Passenger Context
-        </div>
-        <div className="mt-1 text-sm text-text-secondary">
-          {corporatePanVisible
-            ? `Corporate passenger bound to ${toProfileLabel(selectedPartyProfile)}`
-            : 'Individual passenger details captured after AML verification.'}
-        </div>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-3">
-        <FormFieldSelect
-          name="nationalityType"
-          label="Nationality"
-          placeholder="Select nationality"
-          loadOptions={createStaticPassengerSelectOptions(
-            PASSENGER_NATIONALITY_OPTIONS
-          )}
-        />
-        <FormFieldSelect
-          name="residentStatus"
-          label="Resident Status"
-          placeholder="Select resident status"
-          loadOptions={createStaticPassengerSelectOptions(
-            PASSENGER_RESIDENT_STATUS_OPTIONS
-          )}
-        />
-        <FormFieldCountryDropdown
-          name="countryId"
-          label="Country"
-          placeholder={
-            nationalityType === PassengerNationalityTypeEnum.INDIAN && !countryId
-              ? 'India will be auto-selected'
-              : 'Select country'
-          }
-        />
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-3">
-        <FormFieldInput
-          name="panNumber"
-          label="PAN Number"
-          placeholder="Enter PAN number"
-          valueTransform="uppercase"
-        />
-        <FormFieldInput
-          name="panHolderName"
-          label="PAN Holder Name"
-          placeholder="Enter PAN holder name"
-        />
-        <FormFieldDatePicker
-          name="panDob"
-          label="PAN Holder DOB"
-          placeholder="Select DOB"
-        />
-      </div>
-
-      {corporatePanVisible ? (
-        <div className="rounded-sm border border-dashed border-border-secondary bg-surface-secondary px-4 py-4">
-          <div className="mb-4 text-sm font-semibold text-text-primary">
-            Corporate PAN Details
-          </div>
-          <div className="grid gap-4 md:grid-cols-3">
-            <FormFieldInput
-              name="corporatePanNumber"
-              label="Corporate PAN Number"
-              placeholder="Enter corporate PAN number"
-              valueTransform="uppercase"
-            />
-            <FormFieldInput
-              name="corporatePanHolderName"
-              label="Corporate PAN Holder Name"
-              placeholder="Enter corporate PAN holder name"
-            />
-            <FormFieldDatePicker
-              name="corporatePanDob"
-              label="Corporate PAN Holder DOB"
-              placeholder="Select DOB"
-            />
-          </div>
-          <div className="mt-4">
-            <FormFieldSelect
-              name="corporatePanHolderRelationType"
-              label="Corporate PAN Holder Relation"
-              placeholder="Select relation"
-              loadOptions={createStaticPassengerSelectOptions(
-                PASSENGER_PAN_HOLDER_RELATION_OPTIONS
-              )}
-            />
-          </div>
-        </div>
-      ) : null}
-
-      {isPassportRequired ? (
-        <div className="grid gap-4 md:grid-cols-2">
-          <FormFieldInput
-            name="passportNumber"
-            label="Passport Number"
-            placeholder="Enter passport number"
-            valueTransform="uppercase"
-          />
-          <FormFieldInput
-            name="passportIssueAt"
-            label="Issue At"
-            placeholder="Enter issue place"
-          />
-          <FormFieldDatePicker
-            name="passportIssueDate"
-            label="Issue Date"
-            placeholder="Select issue date"
-          />
-          <FormFieldDatePicker
-            name="passportExpiryDate"
-            label="Expiry Date"
-            placeholder="Select expiry date"
-          />
-          <FormFieldDatePicker
-            name="arrivalDate"
-            label="Arrival Date"
-            placeholder="Select arrival date"
-          />
-        </div>
-      ) : null}
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <FormFieldInput
-          name="paidByPanNumber"
-          label="Paid By PAN Number"
-          placeholder="Enter paid by PAN number"
-          valueTransform="uppercase"
-        />
-        <FormFieldInput
-          name="paidByPanHolderName"
-          label="Paid By PAN Holder Name"
-          placeholder="Enter paid by PAN holder name"
-        />
-        <FormFieldDatePicker
-          name="paidByPanDob"
-          label="Paid By PAN Holder DOB"
-          placeholder="Select DOB"
-        />
-        <FormFieldInput
-          name="email"
-          label="Email"
-          placeholder="Enter email address"
-          type="email"
-          valueTransform="none"
-        />
-        <FormFieldInput
-          name="contactNo"
-          label="Contact Number"
-          placeholder="Enter contact number"
-          valueTransform="none"
-        />
-        <FormFieldInput
-          name="gstNumber"
-          label="GST Number"
-          placeholder="Enter GST number"
-          valueTransform="uppercase"
-        />
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-3">
-        <FormFieldStateDropdown
-          name="gstStateId"
-          label="GST State"
-          placeholder="Select GST state"
-          countryId={countryId || undefined}
-        />
-        <FormFieldStateDropdown
-          name="stateId"
-          label="State"
-          placeholder="Select state"
-          countryId={countryId || undefined}
-        />
-        <FormFieldInput name="city" label="City" placeholder="Enter city" />
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <FormFieldInput
-          name="address1"
-          label="Address Line 1"
-          placeholder="Enter address line 1"
-          valueTransform="none"
-        />
-        <FormFieldInput
-          name="address2"
-          label="Address Line 2"
-          placeholder="Enter address line 2"
-          valueTransform="none"
-        />
-        <FormFieldCategoryOption
-          name="locationId"
-          label="Location"
-          placeholder="Select location"
-          code={CategoryOptionCodeEnum.LocationType}
-          useValueAsId
-        />
-        <FormFieldYesNoToggle
-          name="isPep"
-          label="Is PEP"
-          yesLabel="Yes"
-          noLabel="No"
-        />
-      </div>
-
-      <PassengerOtherDocumentsSection nationalityType={nationalityType} />
-    </div>
-  );
+  return mode === 'pan'
+    ? [
+        ...baseFields,
+        'panNumber',
+        'panHolderName',
+        'panDob',
+      ]
+    : [
+        ...baseFields,
+        'passportNumber',
+        'passportIssueAt',
+        'passportIssueDate',
+        'passportExpiryDate',
+        'arrivalDate',
+      ];
 };
 
 export const PassengerAmlVerificationModal = ({
@@ -397,8 +136,22 @@ export const PassengerAmlVerificationModal = ({
   const [verificationStatus, setVerificationStatus] = useState<
     'idle' | 'checking' | 'valid' | 'invalid'
   >('idle');
+  const [verificationMessage, setVerificationMessage] = useState<string | null>(null);
+  const [verifiedPanSnapshot, setVerifiedPanSnapshot] = useState<Record<string, unknown> | null>(null);
+  const [verifiedPassportSnapshot, setVerifiedPassportSnapshot] = useState<Record<string, unknown> | null>(null);
   const hasInitializedRef = useRef(false);
-  const verificationValidationRunIdRef = useRef(0);
+  const verificationRunIdRef = useRef(0);
+  const { verifyPan, verifyPassport } = usePassengerAmlVerification();
+  const { data: countryProfilesResponse } = useListCountryProfiles({
+    page: 1,
+    limit: 100,
+    search: 'India',
+  });
+  const countryProfiles = useMemo(
+    () => countryProfilesResponse?.data ?? [],
+    [countryProfilesResponse]
+  );
+
   const watchedEntityType = useWatch({
     control: form.control,
     name: 'entityType',
@@ -407,127 +160,24 @@ export const PassengerAmlVerificationModal = ({
     control: form.control,
     name: 'nationalityType',
   });
-  const { data: countryProfilesResponse } = useListCountryProfiles({
-    page: 1,
-    limit: 100,
-    search: 'India',
-  });
-  const countryProfiles = countryProfilesResponse?.data ?? [];
-  const verificationWatchedValues = useWatch({
+  const watchedPanValues = useWatch({
     control: form.control,
-    name: [
-      'entityType',
-      'nationalityType',
-      'panNumber',
-      'panHolderName',
-      'panDob',
-      'passportNumber',
-      'passportIssueAt',
-      'passportIssueDate',
-      'passportExpiryDate',
-    ] as const,
+    name: ['panNumber', 'panHolderName', 'panDob'] as const,
+  });
+  const watchedPassportValues = useWatch({
+    control: form.control,
+    name: ['passportNumber', 'passportIssueAt', 'passportIssueDate', 'passportExpiryDate', 'arrivalDate'] as const,
   });
 
   const isCorporate = (watchedEntityType || entityType) === PassengerEntityTypeEnum.CORPORATE;
-  const isIndianNationality =
-    watchedNationalityType === PassengerNationalityTypeEnum.INDIAN;
-
-  const initializeValues = useCallback(() => {
-    const amlDefaults = createPassengerAmlDefaultValues(
-      entityType,
-      selectedPartyProfile
-    );
-    const detailsDefaults = createPassengerDetailsDefaultValues(
-      entityType,
-      amlDefaults
-    );
-    const currentValues = form.getValues();
-
-    form.reset({
-      ...currentValues,
-      ...amlDefaults,
-      ...detailsDefaults,
-      entityType: entityType,
-      passengerInfoCaptured: false,
-      purposeId: currentValues.purposeId || '',
-      arrivalDate: '',
-      corporatePanNumber:
-        entityType === PassengerEntityTypeEnum.CORPORATE
-          ? selectedPartyProfile?.panNo ?? currentValues.corporatePanNumber ?? amlDefaults.panNumber
-          : currentValues.corporatePanNumber || '',
-      corporatePanHolderName:
-        entityType === PassengerEntityTypeEnum.CORPORATE
-          ? selectedPartyProfile?.panName ?? selectedPartyProfile?.name ?? currentValues.corporatePanHolderName ?? amlDefaults.panHolderName
-          : currentValues.corporatePanHolderName || '',
-      corporatePanDob:
-        entityType === PassengerEntityTypeEnum.CORPORATE
-          ? selectedPartyProfile?.panDob ?? currentValues.corporatePanDob ?? amlDefaults.panDob
-          : currentValues.corporatePanDob || '',
-      corporatePanHolderRelationType:
-        entityType === PassengerEntityTypeEnum.CORPORATE
-          ? PassengerPanHolderRelationTypeEnum.COMPANY
-          : currentValues.corporatePanHolderRelationType || '',
-    });
-  }, [entityType, form, selectedPartyProfile]);
-
-  useEffect(() => {
-    if (!open) {
-      hasInitializedRef.current = false;
-      return;
-    }
-
-    if (hasInitializedRef.current) {
-      return;
-    }
-
-    const hasExistingPassengerValues =
-      Boolean(form.getValues('panNumber')) ||
-      Boolean(form.getValues('panHolderName')) ||
-      Boolean(form.getValues('passportNumber')) ||
-      Boolean(form.getValues('passportIssueAt')) ||
-      Boolean(form.getValues('otherDocuments')?.length);
-
-    if (hasExistingPassengerValues) {
-      hasInitializedRef.current = true;
-      form.setValue('entityType', entityType, {
-        shouldDirty: false,
-        shouldTouch: false,
-        shouldValidate: false,
-      });
-      return;
-    }
-
-    initializeValues();
-    hasInitializedRef.current = true;
-  }, [entityType, form, open, selectedPartyProfile]);
-
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-
-    if (isCorporate) {
-      form.setValue('nationalityType', PassengerNationalityTypeEnum.INDIAN, {
-        shouldDirty: false,
-        shouldTouch: false,
-        shouldValidate: false,
-      });
-      form.setValue('residentStatus', form.getValues('residentStatus') || 'RESIDENT', {
-        shouldDirty: false,
-        shouldTouch: false,
-        shouldValidate: false,
-      });
-    }
-  }, [form, isCorporate, open]);
-
-  useEffect(() => {
-    if (!open || watchedNationalityType !== PassengerNationalityTypeEnum.INDIAN) {
-      return;
-    }
-
+  const verificationMode = getVerificationMode(
+    (watchedEntityType || entityType) as PassengerEntityType,
+    (watchedNationalityType || PassengerNationalityTypeEnum.INDIAN) as PassengerNationalityType
+  );
+  const syncIndiaCountry = useCallback(() => {
     const indiaCountry =
       countryProfiles.find(
-        (country: { code?: string; name?: string; id: string }) =>
+        country =>
           country.code?.toUpperCase?.() === 'IN' ||
           country.name?.toLowerCase?.() === 'india'
       ) ?? null;
@@ -541,130 +191,297 @@ export const PassengerAmlVerificationModal = ({
       shouldTouch: true,
       shouldValidate: true,
     });
-  }, [countryProfiles, form, open, watchedNationalityType]);
+  }, [countryProfiles, form]);
+  const initializeValues = useCallback(() => {
+    const amlDefaults = createPassengerAmlDefaultValues(entityType, selectedPartyProfile);
+    const detailsDefaults = createPassengerDetailsDefaultValues(
+      entityType,
+      amlDefaults,
+      selectedPartyProfile
+    );
+    const currentValues = form.getValues();
 
-  const selectedPartyProfileLabel = toProfileLabel(selectedPartyProfile);
+    form.reset({
+      ...currentValues,
+      ...amlDefaults,
+      ...detailsDefaults,
+      entityType,
+      passengerInfoCaptured: false,
+      purposeId: currentValues.purposeId || '',
+      arrivalDate: '',
+    });
 
-  const step1FieldNames = useMemo(() => {
-    if (isCorporate) {
-      return ['panNumber', 'panHolderName', 'panDob'] as const;
-    }
-
-    if (isIndianNationality) {
-      return ['panNumber', 'panHolderName', 'panDob'] as const;
-    }
-
-    return ['passportNumber', 'passportIssueAt', 'passportIssueDate', 'passportExpiryDate'] as const;
-  }, [isCorporate, isIndianNationality]);
-
-  useEffect(() => {
-    if (!open || currentStep !== 'verification') {
-      return;
-    }
-
-    const runId = ++verificationValidationRunIdRef.current;
-
-    const validateVerificationStep = async () => {
-      const isValid = await form.trigger(step1FieldNames as never, {
-        shouldFocus: false,
+    if (entityType === PassengerEntityTypeEnum.CORPORATE) {
+      form.setValue('panNumber', amlDefaults.panNumber, {
+        shouldDirty: false,
+        shouldTouch: false,
+        shouldValidate: false,
       });
+      form.setValue('panHolderName', amlDefaults.panHolderName, {
+        shouldDirty: false,
+        shouldTouch: false,
+        shouldValidate: false,
+      });
+      form.setValue('panDob', amlDefaults.panDob, {
+        shouldDirty: false,
+        shouldTouch: false,
+        shouldValidate: false,
+      });
+    }
 
-      if (runId !== verificationValidationRunIdRef.current) {
-        return;
+    syncIndiaCountry();
+  }, [entityType, form, selectedPartyProfile, syncIndiaCountry]);
+
+  const clearVerificationState = useCallback(() => {
+    setVerifiedPanSnapshot(null);
+    setVerifiedPassportSnapshot(null);
+    verificationRunIdRef.current += 1;
+    setVerificationStatus('idle');
+    setVerificationMessage(null);
+  }, []);
+
+  const verifyIdentity = useCallback(
+    async (
+      mode: VerificationMode,
+      shouldFocus = false,
+      notifyOnSuccess = false,
+      validateFields = true
+    ) => {
+      const runId = ++verificationRunIdRef.current;
+      const currentValues = form.getValues() as IPurchaseFormValues;
+      const fieldsToValidate = getVerificationFields(mode);
+
+      setVerificationStatus('checking');
+      setVerificationMessage(null);
+
+      if (validateFields) {
+        const schemaValid = await form.trigger(fieldsToValidate as never, {
+          shouldFocus,
+        });
+        if (runId !== verificationRunIdRef.current) {
+          return false;
+        }
+
+        if (!schemaValid) {
+          setVerificationStatus('invalid');
+          setVerificationMessage('Please complete the required fields before verifying.');
+          return false;
+        }
       }
 
-      setVerificationStatus(isValid ? 'valid' : 'invalid');
-    };
+      try {
+        const verificationResult =
+          mode === 'pan'
+            ? await verifyPan({
+                entityType: (currentValues.entityType || entityType) as PassengerEntityType,
+                nationalityType: (currentValues.nationalityType || PassengerNationalityTypeEnum.INDIAN) as PassengerNationalityType,
+                panNumber: currentValues.panNumber,
+                panHolderName: currentValues.panHolderName,
+                panDob: currentValues.panDob,
+                panHolderRelationType: currentValues.panHolderRelationType as PassengerPanHolderRelationType,
+              } satisfies IPassengerPanVerificationRequest)
+            : await verifyPassport({
+                nationalityType: (currentValues.nationalityType || PassengerNationalityTypeEnum.NRI) as PassengerNationalityType,
+                passportNumber: currentValues.passportNumber,
+                passportIssueAt: currentValues.passportIssueAt,
+                passportIssueDate: currentValues.passportIssueDate,
+                passportExpiryDate: currentValues.passportExpiryDate,
+                arrivalDate: currentValues.arrivalDate,
+                isIndianNationality: false,
+              } satisfies IPassengerPassportVerificationRequest);
 
-    void validateVerificationStep();
-  }, [currentStep, form, open, step1FieldNames, verificationWatchedValues]);
+        if (runId !== verificationRunIdRef.current) {
+          return false;
+        }
 
-  const step2FieldNames = useMemo(() => {
-    const fields = [
-      'entityType',
-      'nationalityType',
-      'residentStatus',
-      'countryId',
-      'panNumber',
-      'panHolderName',
-      'panDob',
-      'panHolderRelationType',
-      'paidByPanNumber',
-      'paidByPanHolderName',
-      'paidByPanDob',
-      'email',
-      'contactNo',
-      'gstNumber',
-      'gstStateId',
-      'stateId',
-      'locationId',
-      'city',
-      'address1',
-      'address2',
-      'isPep',
-    ] as const;
+        if (!verificationResult.verified) {
+          setVerificationStatus('invalid');
+          setVerificationMessage(verificationResult.message || 'Verification failed.');
+          return false;
+        }
 
-    const corporateFields = isCorporate
-      ? ([
-          'corporatePanNumber',
-          'corporatePanHolderName',
-          'corporatePanDob',
-          'corporatePanHolderRelationType',
-        ] as const)
-      : ([] as const);
+        if (mode === 'pan') {
+          setVerifiedPanSnapshot(getPanSnapshot(currentValues));
+        } else {
+          setVerifiedPassportSnapshot(getPassportSnapshot(currentValues));
+        }
+        setVerificationStatus('valid');
+        setVerificationMessage(
+          verificationResult.message || 'Passenger AML details verified successfully'
+        );
 
-    const passportFields = isIndianNationality
-      ? ([] as const)
-      : ([
-          'passportNumber',
-          'passportIssueAt',
-          'passportIssueDate',
-          'passportExpiryDate',
-          'arrivalDate',
-        ] as const);
+        if (notifyOnSuccess) {
+          onVerified({
+            entityType: (currentValues.entityType || entityType) as PassengerEntityType,
+            isIndianNationality:
+              (currentValues.nationalityType || PassengerNationalityTypeEnum.INDIAN) ===
+              PassengerNationalityTypeEnum.INDIAN,
+            panNumber: currentValues.panNumber || '',
+            panHolderName: currentValues.panHolderName || '',
+            panDob: currentValues.panDob || '',
+            passportNumber: currentValues.passportNumber || '',
+            passportIssueAt: currentValues.passportIssueAt || '',
+            passportIssueDate: currentValues.passportIssueDate || '',
+            passportExpiryDate: currentValues.passportExpiryDate || '',
+          });
+        }
+        return true;
+      } catch (error) {
+        if (runId !== verificationRunIdRef.current) {
+          return false;
+        }
 
-    const docFields = isIndianNationality
-      ? ([
-          'otherDocuments.0.documentType',
-          'otherDocuments.0.documentNumber',
-        ] as const)
-      : ([] as const);
+        setVerificationStatus('invalid');
+        setVerificationMessage(
+          error instanceof Error ? error.message : 'Unable to verify passenger details.'
+        );
+        return false;
+      }
+    },
+    [entityType, form, onVerified, verifyPan, verifyPassport]
+  );
 
-    return [...fields, ...corporateFields, ...passportFields, ...docFields] as const;
-  }, [isCorporate, isIndianNationality]);
+  const verifyIdentityOnBlur = useCallback(async (mode: VerificationMode) => {
+    if (verificationStatus === 'checking') {
+      return false;
+    }
 
-  const handleVerification = async () => {
-    const isValid = await form.trigger(step1FieldNames as never, {
-      shouldFocus: true,
-    });
-    if (!isValid) {
-      setVerificationStatus('invalid');
+    const currentValues = form.getValues() as IPurchaseFormValues;
+    if (mode === 'pan' && !hasCompletePanValues(currentValues)) {
+      return false;
+    }
+    if (mode === 'passport' && !hasCompletePassportValues(currentValues)) {
+      return false;
+    }
+
+    const currentSnapshot = getVerificationSnapshot(currentValues, mode);
+    const verifiedSnapshot =
+      mode === 'pan' ? verifiedPanSnapshot : verifiedPassportSnapshot;
+    if (
+      verificationStatus === 'valid' &&
+      isSameSnapshot(verifiedSnapshot, currentSnapshot)
+    ) {
+      return true;
+    }
+
+    return verifyIdentity(mode, false, false, false);
+  }, [form, verifiedPanSnapshot, verifiedPassportSnapshot, verifyIdentity, verificationStatus]);
+
+  useEffect(() => {
+    if (!open) {
       return;
     }
 
-    setVerificationStatus('valid');
+    if (hasInitializedRef.current) {
+      return;
+    }
 
-    onVerified({
-      entityType: (form.getValues('entityType') || entityType) as PassengerEntityType,
-      isIndianNationality: form.getValues('nationalityType') === PassengerNationalityTypeEnum.INDIAN,
-      panNumber: form.getValues('panNumber') || '',
-      panHolderName: form.getValues('panHolderName') || '',
-      panDob: form.getValues('panDob') || '',
-      passportNumber: form.getValues('passportNumber') || '',
-      passportIssueAt: form.getValues('passportIssueAt') || '',
-      passportIssueDate: form.getValues('passportIssueDate') || '',
-      passportExpiryDate: form.getValues('passportExpiryDate') || '',
-    });
+    initializeValues();
+    hasInitializedRef.current = true;
+    if (isCorporate) {
+      queueMicrotask(() => {
+        void verifyIdentityOnBlur('pan');
+      });
+    }
+  }, [initializeValues, isCorporate, open, verifyIdentityOnBlur]);
 
-    setCurrentStep('details');
+  const currentPanSnapshot = {
+    panNumber: watchedPanValues[0] ?? '',
+    panHolderName: watchedPanValues[1] ?? '',
+    panDob: watchedPanValues[2] ?? '',
+  };
+  const currentPassportSnapshot = {
+    passportNumber: watchedPassportValues[0] ?? '',
+    passportIssueAt: watchedPassportValues[1] ?? '',
+    passportIssueDate: watchedPassportValues[2] ?? '',
+    passportExpiryDate: watchedPassportValues[3] ?? '',
+    arrivalDate: watchedPassportValues[4] ?? '',
+  };
+  const panVerificationChanged =
+    verificationStatus === 'valid' &&
+    Boolean(verifiedPanSnapshot) &&
+    !isSameSnapshot(verifiedPanSnapshot, currentPanSnapshot);
+  const passportVerificationChanged =
+    verificationStatus === 'valid' &&
+    Boolean(verifiedPassportSnapshot) &&
+    !isSameSnapshot(verifiedPassportSnapshot, currentPassportSnapshot);
+  const verificationIsStale = panVerificationChanged || passportVerificationChanged;
+  const displayedVerificationStatus: 'idle' | 'checking' | 'valid' | 'invalid' =
+    verificationIsStale ? 'invalid' : verificationStatus;
+  const displayedVerificationMessage =
+    panVerificationChanged
+      ? 'PAN details changed. Please verify again before continuing.'
+      : passportVerificationChanged
+        ? 'Passport details changed. Please verify again before continuing.'
+        : verificationMessage;
+  const canProceed = displayedVerificationStatus === 'valid';
+
+  const handleNationalityChange = useCallback(
+    (value: string | null) => {
+      form.setValue('passengerInfoCaptured', false, {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: false,
+      });
+      clearVerificationState();
+
+      if (value === PassengerNationalityTypeEnum.INDIAN) {
+        syncIndiaCountry();
+      }
+    },
+    [clearVerificationState, form, syncIndiaCountry]
+  );
+
+  const handleModalOpenChange = useCallback(
+    (nextOpen: boolean) => {
+      if (!nextOpen) {
+        verificationRunIdRef.current += 1;
+        setVerifiedPanSnapshot(null);
+        setVerifiedPassportSnapshot(null);
+        hasInitializedRef.current = false;
+        setCurrentStep('verification');
+        setVerificationMessage(null);
+        setVerificationStatus('idle');
+      }
+
+      onOpenChange(nextOpen);
+    },
+    [onOpenChange]
+  );
+
+  const handleVerification = () => {
+    if (canProceed) {
+      setCurrentStep('details');
+    }
   };
 
   const handleDetailsDone = async () => {
-    const isValid = await form.trigger(step2FieldNames as never, {
+    const isValid = await form.trigger(getDetailsFieldNames(verificationMode) as never, {
       shouldFocus: true,
     });
     if (!isValid) {
       return;
+    }
+
+    const currentValues = form.getValues() as IPurchaseFormValues;
+    if (
+      hasCompletePanValues(currentValues) &&
+      !isSameSnapshot(verifiedPanSnapshot, getPanSnapshot(currentValues))
+    ) {
+      const reverifiedPan = await verifyIdentity('pan', true, false, false);
+      if (!reverifiedPan) {
+        return;
+      }
+    }
+
+    if (
+      hasCompletePassportValues(currentValues) &&
+      !isSameSnapshot(verifiedPassportSnapshot, getPassportSnapshot(currentValues))
+    ) {
+      const reverifiedPassport = await verifyIdentity('passport', true, false, false);
+      if (!reverifiedPassport) {
+        return;
+      }
     }
 
     form.setValue('passengerInfoCaptured', true, {
@@ -672,188 +489,79 @@ export const PassengerAmlVerificationModal = ({
       shouldTouch: true,
       shouldValidate: true,
     });
-    onOpenChange(false);
+    handleModalOpenChange(false);
   };
+
+  const verificationFooter = (
+    <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+      <Button type="button" variant="outline" onClick={() => handleModalOpenChange(false)}>
+        Cancel
+      </Button>
+      <Button
+        type="button"
+        onClick={handleVerification}
+        disabled={!canProceed}
+      >
+        Next
+      </Button>
+    </div>
+  );
+
+  const detailsFooter = (
+    <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+      <Button type="button" variant="outline" onClick={() => setCurrentStep('verification')}>
+        Back
+      </Button>
+      <Button
+        type="button"
+        onClick={() => void handleDetailsDone()}
+        disabled={!canProceed}
+      >
+        Done
+      </Button>
+    </div>
+  );
 
   return (
     <Modal
       open={open}
-      onOpenChange={nextOpen => {
-        if (!nextOpen) {
-          setCurrentStep('verification');
-          setVerificationStatus('idle');
-          hasInitializedRef.current = false;
-        }
-        onOpenChange(nextOpen);
-      }}
+      onOpenChange={handleModalOpenChange}
       title={currentStep === 'verification' ? 'AML Verification' : 'Passenger Details'}
       description={
         currentStep === 'verification'
           ? 'Verify identity details before moving to the passenger information step.'
           : 'Capture the passenger details that will be stored on the transaction.'
       }
-      size="xl"
-      footer={
-        currentStep === 'verification' ? (
-          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              onClick={() => void handleVerification()}
-              disabled={verificationStatus !== 'valid'}
-            >
-              Verify & Continue
-            </Button>
-          </div>
-        ) : (
-          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setCurrentStep('verification')}
-            >
-              Back
-            </Button>
-            <Button type="button" onClick={() => void handleDetailsDone()}>
-              Done
-            </Button>
-          </div>
-        )
-      }
+      size="2xl"
+      footer={currentStep === 'verification' ? verificationFooter : detailsFooter}
     >
-      <div className="space-y-5">
-        {currentStep === 'verification' ? (
-          <>
-            {isCorporate ? (
-              <div className="rounded-sm border border-border-primary bg-surface-secondary px-4 py-3 text-sm text-text-secondary">
-                <div className="font-medium text-text-primary">
-                  Selected Party Profile
-                </div>
-                <div>{selectedPartyProfileLabel}</div>
-              </div>
-            ) : (
-              <div className="rounded-sm border border-border-primary bg-surface-secondary px-4 py-3 text-sm text-text-secondary">
-                <div className="font-medium text-text-primary">
-                  Individual Passenger
-                </div>
-                <div>Choose Indian or NRI / Foreigner before AML verification.</div>
-              </div>
-            )}
-
-            {!isCorporate ? (
-              <div className="space-y-3">
-                <div className="text-sm font-medium text-text-primary">
-                  Nationality
-                </div>
-                <div className="inline-flex rounded-sm border border-border-secondary bg-surface-primary p-1">
-                  <Button
-                    type="button"
-                    variant={isIndianNationality ? 'default' : 'ghost'}
-                    onClick={() =>
-                      form.setValue('nationalityType', PassengerNationalityTypeEnum.INDIAN, {
-                        shouldDirty: true,
-                        shouldTouch: true,
-                        shouldValidate: true,
-                      })
-                    }
-                  >
-                    Indian
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={!isIndianNationality ? 'default' : 'ghost'}
-                    onClick={() =>
-                      form.setValue('nationalityType', PassengerNationalityTypeEnum.NRI, {
-                        shouldDirty: true,
-                        shouldTouch: true,
-                        shouldValidate: true,
-                      })
-                    }
-                  >
-                    NRI / Foreigner
-                  </Button>
-                </div>
-              </div>
-            ) : null}
-
-            <div className="grid gap-4 md:grid-cols-3">
-              <FormFieldInput
-                name="panNumber"
-                label="PAN Number"
-                placeholder="Enter PAN number"
-                valueTransform="uppercase"
-              />
-              <FormFieldInput
-                name="panHolderName"
-                label="PAN Holder Name"
-                placeholder="Enter PAN holder name"
-              />
-              <FormFieldDatePicker
-                name="panDob"
-                label="PAN Holder DOB"
-                placeholder="Select DOB"
-              />
-            </div>
-
-            {!isCorporate && !isIndianNationality ? (
-              <div className="grid gap-4 md:grid-cols-2">
-                <FormFieldInput
-                  name="passportNumber"
-                  label="Passport Number"
-                  placeholder="Enter passport number"
-                  valueTransform="uppercase"
-                />
-                <FormFieldInput
-                  name="passportIssueAt"
-                  label="Issue At"
-                  placeholder="Enter issue place"
-                />
-                <FormFieldDatePicker
-                  name="passportIssueDate"
-                  label="Issue Date"
-                  placeholder="Select issue date"
-                />
-                <FormFieldDatePicker
-                  name="passportExpiryDate"
-                  label="Expiry Date"
-                  placeholder="Select expiry date"
-                />
-              </div>
-            ) : null}
-
-            <div className="rounded-sm border border-dashed border-border-secondary bg-surface-secondary px-4 py-3 text-xs text-text-secondary">
-              Validation is mocked for now. Any PAN or passport field containing
-              <span className="font-semibold text-text-primary"> test</span> will
-              be rejected until the third-party verification is wired.
-            </div>
-          </>
-        ) : (
-          <>
-            {isCorporate ? (
-              <div className="rounded-sm border border-border-primary bg-surface-secondary px-4 py-3 text-sm text-text-secondary">
-                <div className="font-medium text-text-primary">
-                  Selected Party Profile
-                </div>
-                <div>{selectedPartyProfileLabel}</div>
-              </div>
-            ) : (
-              <div className="rounded-sm border border-border-primary bg-surface-secondary px-4 py-3 text-sm text-text-secondary">
-                <div className="font-medium text-text-primary">
-                  Captured Passenger
-                </div>
-                <div>Review and adjust the passenger details before saving.</div>
-              </div>
-            )}
-
-            <PassengerDetailsSection
-              entityType={isCorporate ? PassengerEntityTypeEnum.CORPORATE : PassengerEntityTypeEnum.INDIVIDUAL}
-              selectedPartyProfile={selectedPartyProfile}
-            />
-          </>
-        )}
-      </div>
+      {currentStep === 'verification' ? (
+        <PassengerAmlVerificationStepForm
+          entityType={(watchedEntityType || entityType) as PassengerEntityType}
+          isCorporate={isCorporate}
+          selectedPartyProfile={selectedPartyProfile}
+          verificationStatus={displayedVerificationStatus}
+          verificationMessage={displayedVerificationMessage}
+          onPanFieldBlur={() => {
+            void verifyIdentityOnBlur(verificationMode);
+          }}
+          onPassportFieldBlur={() => {
+            void verifyIdentityOnBlur('passport');
+          }}
+          onNationalityChange={handleNationalityChange}
+        />
+      ) : (
+        <PassengerAmlDetailsStepForm
+          entityType={(watchedEntityType || entityType) as PassengerEntityType}
+          onPanFieldBlur={() => {
+            void verifyIdentityOnBlur('pan');
+          }}
+          onPassportFieldBlur={() => {
+            void verifyIdentityOnBlur('passport');
+          }}
+          onNationalityChange={handleNationalityChange}
+        />
+      )}
     </Modal>
   );
 };

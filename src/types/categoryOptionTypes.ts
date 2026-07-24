@@ -26,6 +26,9 @@ export const CategoryOptionCodeEnum = {
   ServicedBy: 'SERVICEDBY',
   Product: 'PRODUCT',
   Marketing: 'MARKETING',
+  PassengerNationality: 'NATIONALITY',
+  PassengerResidentStatus: 'RESIDENT',
+  PassengerPanHolderRelation: 'RELATION',
 } as const;
 
 export type CategoryOptionCode =

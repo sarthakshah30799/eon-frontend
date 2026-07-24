@@ -119,6 +119,16 @@ const TRANSACTION_APPROVAL_POLICY_SUBCATEGORIES: readonly AdditionalSettingSubca
   },
 ];
 
+const TAX_CONFIGURATION_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] = [
+  {
+    code: AdditionalSettingsCodeEnum.TaxRate,
+    label: 'GST RATE (%)',
+    valueType: 'decimal',
+    required: true,
+    placeholder: 'Enter GST rate',
+  },
+];
+
 const TRANSACTION_SAC_CODE_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] = [
   {
     code: AdditionalSettingsCodeEnum.TransactionPrintSacCode,
@@ -155,6 +165,38 @@ const TRANSACTION_ACCOUNTING_SUBCATEGORIES: readonly AdditionalSettingSubcategor
     optionsSource: 'account-profile',
   },
   {
+    code: AdditionalSettingsCodeEnum.IgstControlAccount,
+    label: 'IGST CONTROL ACCOUNT',
+    valueType: 'select',
+    required: true,
+    placeholder: 'Select IGST control account',
+    optionsSource: 'account-profile',
+  },
+  {
+    code: AdditionalSettingsCodeEnum.CgstControlAccount,
+    label: 'CGST CONTROL ACCOUNT',
+    valueType: 'select',
+    required: true,
+    placeholder: 'Select CGST control account',
+    optionsSource: 'account-profile',
+  },
+  {
+    code: AdditionalSettingsCodeEnum.SgstControlAccount,
+    label: 'SGST CONTROL ACCOUNT',
+    valueType: 'select',
+    required: true,
+    placeholder: 'Select SGST control account',
+    optionsSource: 'account-profile',
+  },
+  {
+    code: AdditionalSettingsCodeEnum.HandlingChargeAccount,
+    label: 'HANDLING FEE CONTROL ACCOUNT',
+    valueType: 'select',
+    required: true,
+    placeholder: 'Select handling fee control account',
+    optionsSource: 'account-profile',
+  },
+  {
     code: AdditionalSettingsCodeEnum.CashControlAccount,
     label: 'CASH CONTROL ACCOUNT',
     valueType: 'select',
@@ -164,13 +206,51 @@ const TRANSACTION_ACCOUNTING_SUBCATEGORIES: readonly AdditionalSettingSubcategor
   },
 ];
 
-const TRANSACTION_NUMBERING_SUBCATEGORY_CONFIG: Record<
+const PURCHASE_PASSENGER_RULE_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] = [
+  {
+    code: AdditionalSettingsCodeEnum.PurchasePassengerRuleReferenceCurrencyCode,
+    label: 'REFERENCE CURRENCY CODE',
+    valueType: 'text',
+    required: true,
+    placeholder: 'Enter reference currency code (USD)',
+  },
+  {
+    code: AdditionalSettingsCodeEnum.PurchasePassengerRuleCdfThresholdAmount,
+    label: 'CDF THRESHOLD AMOUNT',
+    valueType: 'decimal',
+    required: true,
+    placeholder: 'Enter CDF threshold amount',
+  },
+  {
+    code: AdditionalSettingsCodeEnum.PurchasePassengerRuleIndianCashLimitAmount,
+    label: 'INDIAN CASH LIMIT AMOUNT',
+    valueType: 'decimal',
+    required: true,
+    placeholder: 'Enter Indian cash limit amount',
+  },
+  {
+    code: AdditionalSettingsCodeEnum.PurchasePassengerRuleNriCashLimitAmount,
+    label: 'NRI / FOREIGNER CASH LIMIT AMOUNT',
+    valueType: 'decimal',
+    required: true,
+    placeholder: 'Enter NRI / FOREIGNER cash limit amount',
+  },
+  {
+    code: AdditionalSettingsCodeEnum.PurchasePassengerRuleWindowDays,
+    label: 'HISTORY WINDOW DAYS',
+    valueType: 'number',
+    required: true,
+    placeholder: 'Enter history window days',
+  },
+];
+
+const TRANSACTION_NUMBERING_SUBCATEGORY_CONFIG: Partial<Record<
   TransactionTypeProfile,
   Pick<
     AdditionalSettingSubcategoryDefinition,
     'code' | 'label' | 'valueType' | 'required' | 'placeholder'
   >
-> = {
+>> = {
   [TransactionTypeProfileEnum.PURCHASE_FFMC]: {
     code: AdditionalSettingsCodeEnum.PurchaseFfmcNumberSeries,
     label: 'PURCHASE FFMC/ADS',
@@ -180,14 +260,7 @@ const TRANSACTION_NUMBERING_SUBCATEGORY_CONFIG: Record<
   },
   [TransactionTypeProfileEnum.PURCHASE_CORPORATE]: {
     code: AdditionalSettingsCodeEnum.PurchaseCorporateNumberSeries,
-    label: 'PURCHASE CORPORATE',
-    valueType: 'number',
-    required: true,
-    placeholder: 'Enter starting sequence number',
-  },
-  [TransactionTypeProfileEnum.PURCHASE_INDIVIDUAL]: {
-    code: AdditionalSettingsCodeEnum.PurchaseIndividualNumberSeries,
-    label: 'PURCHASE INDIVIDUAL',
+    label: 'PURCHASE CORPORATE / INDIVIDUAL',
     valueType: 'number',
     required: true,
     placeholder: 'Enter starting sequence number',
@@ -272,9 +345,10 @@ const TRANSACTION_NUMBERING_SUBCATEGORY_CONFIG: Record<
 };
 
 const TRANSACTION_NUMBERING_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] =
-  TRANSACTION_TYPE_PROFILE_ORDER.map(profileType => ({
-    ...TRANSACTION_NUMBERING_SUBCATEGORY_CONFIG[profileType],
-  }));
+  TRANSACTION_TYPE_PROFILE_ORDER.flatMap(profileType => {
+    const definition = TRANSACTION_NUMBERING_SUBCATEGORY_CONFIG[profileType];
+    return definition ? [{ ...definition }] : [];
+  });
 
 export const ADDITIONAL_SETTING_DEFINITIONS: readonly AdditionalSettingCategoryDefinition[] = [
   {
@@ -306,11 +380,25 @@ export const ADDITIONAL_SETTING_DEFINITIONS: readonly AdditionalSettingCategoryD
     subcategories: TRANSACTION_SAC_CODE_SUBCATEGORIES,
   },
   {
+    code: AdditionalSettingsCodeEnum.TaxConfiguration,
+    label: 'TAX CONFIGURATION',
+    rendererKey: 'default',
+    titleLocked: true,
+    subcategories: TAX_CONFIGURATION_SUBCATEGORIES,
+  },
+  {
     code: AdditionalSettingsCodeEnum.TransactionAccounting,
     label: 'TRANSACTION ACCOUNTING',
     rendererKey: 'default',
     titleLocked: true,
     subcategories: TRANSACTION_ACCOUNTING_SUBCATEGORIES,
+  },
+  {
+    code: AdditionalSettingsCodeEnum.PurchasePassengerRule,
+    label: 'PURCHASE PASSENGER RULE',
+    rendererKey: 'default',
+    titleLocked: true,
+    subcategories: PURCHASE_PASSENGER_RULE_SUBCATEGORIES,
   },
   {
     code: AdditionalSettingsCodeEnum.TransactionNumbering,

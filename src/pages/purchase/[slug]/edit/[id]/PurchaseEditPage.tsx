@@ -89,6 +89,16 @@ const PurchaseEditPage = () => {
       ),
     [additionalSettings]
   );
+  const gstRatePercent = useMemo(
+    () =>
+      getAdditionalSettingTextValue(
+        additionalSettings,
+        AdditionalSettingsCodeEnum.TaxConfiguration,
+        AdditionalSettingsCodeEnum.TaxRate,
+        '0'
+      ),
+    [additionalSettings]
+  );
 
   const pricingData = useMemo(
     () => ({
@@ -179,6 +189,7 @@ const PurchaseEditPage = () => {
         branchId={transaction.branchId}
         branchCode={branchProfile?.code ?? ''}
         sacCode={sacCode}
+        gstRatePercent={gstRatePercent}
         savedTransaction={transaction}
         isFreshlyCreated={false}
         readOnly

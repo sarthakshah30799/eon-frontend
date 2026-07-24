@@ -3,6 +3,10 @@ import type {
   IApproveTransactionPayload,
   ICreateTransactionDraftPayload,
   IRecordTransactionPrintPayload,
+  IPurchaseRulePreviewRequest,
+  IPurchaseRulePreviewResponse,
+  ITransactionTaxPreviewRequest,
+  ITransactionTaxPreviewResponse,
   ITransactionEntity,
   ITransactionQuantityAvailability,
   TransactionStatus,
@@ -131,6 +135,44 @@ export const transactionsApi = {
 
     if (!res.data) {
       throw new Error('Failed to fetch next transaction number');
+    }
+
+    return res.data;
+  },
+
+  previewTax: async (
+    payload: ITransactionTaxPreviewRequest
+  ): Promise<ITransactionTaxPreviewResponse> => {
+    const res = await apiClient.post<ITransactionTaxPreviewResponse>(
+      '/transactions/tax-preview',
+      payload
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      throw new Error('Failed to preview transaction tax');
+    }
+
+    return res.data;
+  },
+
+  previewPurchaseRule: async (
+    payload: IPurchaseRulePreviewRequest
+  ): Promise<IPurchaseRulePreviewResponse> => {
+    const res = await apiClient.post<IPurchaseRulePreviewResponse>(
+      '/transactions/purchase-rule-preview',
+      payload
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      throw new Error('Failed to preview purchase rules');
     }
 
     return res.data;

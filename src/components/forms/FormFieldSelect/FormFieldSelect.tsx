@@ -21,6 +21,7 @@ interface FormFieldSelectProps extends Omit<
   disabled?: boolean;
   className?: string;
   isMulti?: boolean;
+  onValueChange?: (value: string | string[] | null) => void;
   onCreateOption?: (
     inputValue: string
   ) =>
@@ -72,6 +73,7 @@ export const FormFieldSelect = ({
   size,
   variant,
   isMulti = false,
+  onValueChange,
   onCreateOption,
   isCreatable = false,
   isSearchable = true,
@@ -260,21 +262,24 @@ export const FormFieldSelect = ({
           if (isMulti) {
             const nextOptions = Array.isArray(option) ? option : [];
             setSelectedOption(nextOptions);
-            field.onChange(
-              nextOptions.map(selectedOptionItem => selectedOptionItem.value)
-            );
+            const nextValues = nextOptions.map(selectedOptionItem => selectedOptionItem.value);
+            field.onChange(nextValues);
+            onValueChange?.(nextValues.map(String));
             return;
           }
 
           if (Array.isArray(option) || option === null) {
             setSelectedOption(null);
             field.onChange(null);
+            onValueChange?.(null);
             return;
           }
 
           const nextOption = option;
           setSelectedOption(nextOption);
-          field.onChange((nextOption as AsyncSelectOption).value);
+          const nextValue = (nextOption as AsyncSelectOption).value;
+          field.onChange(nextValue);
+          onValueChange?.(String(nextValue));
         }}
         onCreateOption={handleCreateOption}
         error={error?.message}

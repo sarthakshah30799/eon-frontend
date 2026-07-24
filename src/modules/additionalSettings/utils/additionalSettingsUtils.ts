@@ -180,3 +180,26 @@ export const getAdditionalSettingTextValue = (
   const value = subcategory.value.trim();
   return value || fallback;
 };
+
+export const formatAccountProfileLabel = (
+  account:
+    | {
+        accountCode?: string | null;
+        accountName?: string | null;
+      }
+    | null
+    | undefined
+): string => {
+  if (!account) {
+    return '';
+  }
+
+  const accountCode = account.accountCode?.trim() || '';
+  const accountName = account.accountName?.trim() || '';
+
+  if (accountCode && accountName) {
+    return `${accountCode} - ${accountName}`;
+  }
+
+  return accountName || accountCode;
+};

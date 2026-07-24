@@ -26,6 +26,13 @@ interface TransactionAdditionalChargesFieldArrayProps {
   accountQuery?: IAccountProfileListQuery;
   disabled?: boolean;
   transactionType?: TransactionType;
+  defaultAccountId?: string;
+  lockedRow?: {
+    key: string;
+    accountId: string;
+    accountName: string;
+    amount: string;
+  } | null;
 }
 
 const formatAmount = (value?: string | null) => {
@@ -37,102 +44,24 @@ const formatAmount = (value?: string | null) => {
   return Number.isFinite(numericValue) ? numericValue.toFixed(2) : value;
 };
 
-const formatNegativeAmount = (value?: string | null) => {
-  const formattedValue = formatAmount(value);
-  if (!formattedValue) {
-    return '0.00';
-  }
-
-  return formattedValue.startsWith('-') ? formattedValue : `-${formattedValue}`;
-};
-
 const AdditionalChargeRow = ({
   arrayName,
   index,
-  applyTax,
   accountQuery,
   transactionType,
   disabled = false,
+  isLocked = false,
   onRemove,
 }: {
   arrayName: string;
   index: number;
-  applyTax?: boolean;
   accountQuery?: IAccountProfileListQuery;
   transactionType?: TransactionType;
   disabled?: boolean;
+  isLocked?: boolean;
   onRemove: (index: number) => void;
 }) => {
   const isSale = transactionType === TransactionTypeEnum.SALE;
-  const chargeMultiplier = isSale ? 1 : -1;
-  const form = useFormContext();
-  const amount = useWatch({
-    control: form.control,
-    name: `${arrayName}.${index}.amount`,
-  });
-  const gstRate = useWatch({
-    control: form.control,
-    name: `${arrayName}.${index}.gstRate`,
-  });
-
-  const gstAmount = useMemo(() => {
-    const amountValue = Number(amount || '');
-    const rateValue = Number(gstRate || '');
-
-    if (!Number.isFinite(amountValue)) {
-      return '';
-    }
-
-    if (!applyTax) {
-      return '0.00';
-    }
-
-    if (!Number.isFinite(rateValue)) {
-      return '';
-    }
-
-    return ((amountValue * rateValue) / 100).toFixed(2);
-  }, [amount, applyTax, gstRate]);
-
-  const totalAmount = useMemo(() => {
-    const amountValue = Number(amount || '');
-    const gstAmountValue = Number(gstAmount || '');
-
-    if (!Number.isFinite(amountValue)) {
-      return '';
-    }
-
-    if (!Number.isFinite(gstAmountValue)) {
-      return (amountValue * chargeMultiplier).toFixed(2);
-    }
-
-    return ((amountValue + gstAmountValue) * chargeMultiplier).toFixed(2);
-  }, [amount, chargeMultiplier, gstAmount]);
-
-  useEffect(() => {
-    const gstRateField = `${arrayName}.${index}.gstRate` as const;
-    const gstAmountField = `${arrayName}.${index}.gstAmount` as const;
-    const totalAmountField = `${arrayName}.${index}.totalAmount` as const;
-
-    if (!applyTax) {
-      form.setValue(gstRateField, '0', {
-        shouldDirty: false,
-        shouldTouch: false,
-        shouldValidate: false,
-      });
-    }
-
-    form.setValue(gstAmountField, gstAmount, {
-      shouldDirty: false,
-      shouldTouch: false,
-      shouldValidate: false,
-    });
-    form.setValue(totalAmountField, totalAmount, {
-      shouldDirty: false,
-      shouldTouch: false,
-      shouldValidate: false,
-    });
-  }, [applyTax, arrayName, form, gstAmount, index, totalAmount]);
 
   const loadAccountOptions = useCallback(
     async (inputValue: string, page = 1): Promise<AsyncSelectResponse> => {
@@ -160,7 +89,7 @@ const AdditionalChargeRow = ({
         hasMore: accounts.length === ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
       };
     },
-    [accountQuery, isSale]
+    [accountQuery, transactionType]
   );
 
   return (
@@ -168,30 +97,30 @@ const AdditionalChargeRow = ({
       <div className="md:col-span-2 xl:col-span-1">
         <FormFieldSelect
           name={`${arrayName}.${index}.accountId`}
-          label="Account"
-          placeholder={
-            isSale ? 'Select bulk sale account' : 'Select bulk purchase account'
-          }
+        label="Account"
+        placeholder={
+          isSale ? 'Select bulk sale account' : 'Select bulk purchase account'
+        }
           loadOptions={loadAccountOptions}
           pagination
-          pageSize={ACCOUNT_PROFILE_OPTION_PAGE_SIZE}
-          disabled={disabled}
-          isSearchable
-        />
-      </div>
-
-      <FormFieldInput
-        name={`${arrayName}.${index}.amount`}
-        label="Amount"
-        type="number"
-        disabled={disabled}
+        pageSize={ACCOUNT_PROFILE_OPTION_PAGE_SIZE}
+        disabled={disabled || isLocked}
+        isSearchable
       />
+    </div>
+
+    <FormFieldInput
+      name={`${arrayName}.${index}.amount`}
+      label="Amount"
+      type="number"
+      disabled={disabled || isLocked}
+    />
 
       <FormFieldInput
         name={`${arrayName}.${index}.gstRate`}
         label="GST Rate"
         type="number"
-        disabled={disabled || !applyTax}
+        disabled
       />
 
       <FormFieldInput
@@ -207,16 +136,22 @@ const AdditionalChargeRow = ({
       />
 
       <div className="flex items-start justify-end pt-7">
-        <Button
-          type="button"
-          variant="destructive"
-          size="icon"
-          disabled={disabled}
-          onClick={() => onRemove(index)}
-          aria-label="Remove additional charge"
-        >
-          <TrashIcon className="h-4 w-4" aria-hidden="true" />
-        </Button>
+        {isLocked ? (
+          <div className="rounded-full border border-border-secondary px-3 py-1 text-xs font-medium text-text-secondary">
+            Locked
+          </div>
+        ) : (
+          <Button
+            type="button"
+            variant="destructive"
+            size="icon"
+            disabled={disabled}
+            onClick={() => onRemove(index)}
+            aria-label="Remove additional charge"
+          >
+            <TrashIcon className="h-4 w-4" aria-hidden="true" />
+          </Button>
+        )}
       </div>
     </div>
   );
@@ -230,9 +165,11 @@ export const TransactionAdditionalChargesFieldArray = ({
   accountQuery,
   disabled = false,
   transactionType = TransactionTypeEnum.PURCHASE,
+  defaultAccountId = '',
+  lockedRow = null,
 }: TransactionAdditionalChargesFieldArrayProps) => {
   const form = useFormContext();
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, replace } = useFieldArray({
     control: form.control,
     name,
   });
@@ -242,6 +179,82 @@ export const TransactionAdditionalChargesFieldArray = ({
     name,
   }) as ITransactionAdditionalChargeFormRow[] | undefined;
 
+  useEffect(() => {
+    const currentRows = Array.isArray(charges) ? charges : [];
+    const autoRowIndex = currentRows.findIndex(
+      row => row?.chargeSource === 'CORPORATE_HANDLING_FEE'
+    );
+
+    const hasAutoRow = autoRowIndex >= 0;
+    const nextRows = currentRows.filter(
+      row => row?.chargeSource !== 'CORPORATE_HANDLING_FEE'
+    );
+
+    if (!lockedRow) {
+      if (hasAutoRow) {
+        replace(nextRows);
+      }
+      return;
+    }
+
+    const nextAutoRow: ITransactionAdditionalChargeFormRow = {
+      accountId: lockedRow.accountId,
+      accountName: lockedRow.accountName,
+      amount: lockedRow.amount,
+      gstRate: '0',
+      gstAmount: '0',
+      totalAmount: lockedRow.amount,
+      chargeSource: 'CORPORATE_HANDLING_FEE',
+    };
+
+    if (hasAutoRow) {
+      const existingAutoRow = currentRows[autoRowIndex];
+      const isSameAutoRow =
+        String(existingAutoRow?.accountId ?? '') === String(nextAutoRow.accountId ?? '') &&
+        String(existingAutoRow?.amount ?? '') === String(nextAutoRow.amount ?? '') &&
+        String(existingAutoRow?.chargeSource ?? '') === String(nextAutoRow.chargeSource ?? '');
+
+      if (isSameAutoRow) {
+        return;
+      }
+
+      nextRows.splice(autoRowIndex, 0, nextAutoRow);
+      replace(nextRows);
+      return;
+    }
+
+    const matchingExistingIndex = nextRows.findIndex(row => {
+      const rowAmount = Number(row?.amount ?? 0);
+      const lockedAmount = Number(lockedRow.amount ?? 0);
+      return (
+        String(row?.accountId ?? '') === String(lockedRow.accountId ?? '') &&
+        Number.isFinite(rowAmount) &&
+        Number.isFinite(lockedAmount) &&
+        rowAmount === lockedAmount
+      );
+    });
+
+    if (matchingExistingIndex >= 0) {
+      nextRows[matchingExistingIndex] = {
+        ...nextRows[matchingExistingIndex],
+        accountId: lockedRow.accountId,
+        accountName: lockedRow.accountName,
+        amount: lockedRow.amount,
+        gstRate: '0',
+        gstAmount: '0',
+        totalAmount: lockedRow.amount,
+        chargeSource: 'CORPORATE_HANDLING_FEE',
+      };
+      replace(nextRows);
+      return;
+    }
+
+    replace([
+      nextAutoRow,
+      ...nextRows,
+    ]);
+  }, [charges, lockedRow, replace]);
+
   const totalAmount = useMemo(() => {
     return (charges ?? []).reduce((sum, charge) => {
       const amountValue = Number(charge?.amount || 0);
@@ -249,8 +262,6 @@ export const TransactionAdditionalChargesFieldArray = ({
       return sum + (Number.isFinite(totalValue) ? totalValue : amountValue);
     }, 0);
   }, [charges]);
-
-  const isSale = transactionType === TransactionTypeEnum.SALE;
 
   return (
     <CardSection heading={title}>
@@ -277,10 +288,10 @@ export const TransactionAdditionalChargesFieldArray = ({
                 key={field.id}
                 arrayName={name}
                 index={index}
-                applyTax={applyTax}
                 accountQuery={accountQuery}
                 transactionType={transactionType}
                 disabled={disabled}
+                isLocked={String((charges?.[index] as ITransactionAdditionalChargeFormRow | undefined)?.chargeSource ?? '') === 'CORPORATE_HANDLING_FEE'}
                 onRemove={remove}
               />
             ))}
@@ -289,10 +300,7 @@ export const TransactionAdditionalChargesFieldArray = ({
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border-secondary pt-4">
           <div className="text-sm text-text-secondary">
-            Total additional charges:{' '}
-            {isSale
-              ? formatAmount(String(totalAmount))
-              : formatNegativeAmount(String(Math.abs(totalAmount)))}
+            Total additional charges: {formatAmount(String(totalAmount))}
           </div>
 
           <Button
@@ -302,12 +310,13 @@ export const TransactionAdditionalChargesFieldArray = ({
             disabled={disabled}
             onClick={() =>
               append({
-                accountId: '',
+                accountId: defaultAccountId,
                 accountName: '',
                 amount: '',
                 gstRate: applyTax ? '' : '0',
                 gstAmount: '',
                 totalAmount: '',
+                chargeSource: '',
               } satisfies ITransactionAdditionalChargeFormRow)
             }
           >

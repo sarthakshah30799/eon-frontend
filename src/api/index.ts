@@ -23,6 +23,7 @@ export * from './accountProfile';
 export * from './countryGroup';
 export * from './partyProfile';
 export * from './partyProfileDocuments';
+export * from './passengers';
 export * from './mail/mail.api';
 export * from './tdsProfile';
 export * from './expenseIncomeBooking/expenseIncomeBooking.api';

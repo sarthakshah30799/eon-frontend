@@ -26,6 +26,7 @@ interface FormProps<TFieldValues extends FieldValues = FieldValues> {
     accentColor?: string;
     actions?: React.ReactNode;
     showSubmit?: boolean;
+    isSubmitDisabled?: boolean;
   };
 }
 
@@ -65,6 +66,7 @@ export const Form = <TFieldValues extends FieldValues = FieldValues>({
           onBackClick={footer.onBackClick}
           onCancel={footer.onCancel}
           isSubmitting={form.formState.isSubmitting}
+          isSubmitDisabled={footer.isSubmitDisabled}
           showSubmit={footer.showSubmit}
           actions={footer.actions}
         />

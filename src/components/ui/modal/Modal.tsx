@@ -16,7 +16,7 @@ interface ModalProps extends HTMLAttributes<HTMLDivElement> {
   description?: string;
   children: ReactNode;
   footer?: ReactNode;
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
 }
 
 const cn = (...classes: Array<string | false | null | undefined>) =>
@@ -27,6 +27,7 @@ const sizeClasses: Record<NonNullable<ModalProps['size']>, string> = {
   md: 'max-w-lg',
   lg: 'max-w-2xl',
   xl: 'max-w-4xl',
+  '2xl': 'max-w-6xl',
 };
 
 export const Modal = ({

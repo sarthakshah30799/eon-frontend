@@ -46,7 +46,24 @@ export type PassengerPanHolderRelationType =
 
 export type PassengerAmlPartyProfile = Pick<
   IPartyProfile,
-  'id' | 'code' | 'name' | 'type' | 'isIndividual' | 'panNo' | 'panName' | 'panDob'
+  | 'id'
+  | 'code'
+  | 'name'
+  | 'type'
+  | 'isIndividual'
+  | 'panNo'
+  | 'panName'
+  | 'panDob'
+  | 'phoneNo'
+  | 'email'
+  | 'address1'
+  | 'address2'
+  | 'address3'
+  | 'city'
+  | 'pinCode'
+  | 'gstNo'
+  | 'gstStateId'
+  | 'stateId'
 >;
 
 export interface IPassengerAmlVerificationValues {
@@ -59,6 +76,39 @@ export interface IPassengerAmlVerificationValues {
   passportIssueAt: string;
   passportIssueDate: string;
   passportExpiryDate: string;
+}
+
+export interface IPassengerPanVerificationRequest {
+  entityType: PassengerEntityType;
+  nationalityType: PassengerNationalityType;
+  panNumber?: string;
+  panHolderName?: string;
+  panDob?: string;
+  panHolderRelationType?: PassengerPanHolderRelationType;
+}
+
+export interface IPassengerPassportVerificationRequest {
+  nationalityType: PassengerNationalityType;
+  passportNumber?: string;
+  passportIssueAt?: string;
+  passportIssueDate?: string;
+  passportExpiryDate?: string;
+  arrivalDate?: string;
+  isIndianNationality?: boolean;
+}
+
+export interface IPassengerOtherDocumentVerificationRequest {
+  documentType: PassengerOtherIdProofType;
+  documentNumber?: string;
+  validTill?: string;
+  issueAt?: string;
+  issueDate?: string;
+  expiryDate?: string;
+}
+
+export interface IPassengerAmlVerificationResponse {
+  verified: boolean;
+  message: string;
 }
 
 export interface IPassengerAmlVerifiedPayload {
@@ -77,6 +127,9 @@ export interface IPassengerOtherDocumentDraft {
   documentType: PassengerOtherIdProofType | '';
   documentNumber: string;
   validTill: string;
+  issueAt: string;
+  issueDate: string;
+  expiryDate: string;
   documentFile: string;
 }
 

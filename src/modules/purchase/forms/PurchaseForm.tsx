@@ -37,16 +37,34 @@ import { PurchasePartyProfileField } from '../components/PurchasePartyProfileFie
 import { PurchaseReferenceNumberField } from '../components/PurchaseReferenceNumberField';
 import { PurchaseWorkplaceFields } from '../components/PurchaseWorkplaceFields';
 import { PurchaseTransactionTable } from '../components/PurchaseTransactionTable';
-import { calculatePurchasePayableTotal } from '../utils/purchaseUtils';
 import {
   buildPurchasePrintHtml,
   getPurchasePrintCopyLabel,
 } from '../utils/purchasePrintUtils';
+import {
+  formatPurchaseDecimal,
+  mapPurchaseFormValuesToSubmitPayload,
+} from '../utils/purchaseUtils';
 import { TransactionLogActionEnum } from '@/modules/transactions';
 import { PassengerAmlVerificationModal } from '@/modules/passengers/components';
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
+import type {
+  IPurchaseRulePreviewRequest,
+  IPurchaseRulePreviewResponse,
+  ITransactionTaxPreviewResponse,
+} from '@/modules/transactions';
 
 const ACCOUNT_PROFILE_OPTION_PAGE_SIZE = 30;
+
+const hasNumericPreviewValue = (value: unknown) => {
+  const normalized = String(value ?? '').trim();
+  return normalized !== '' && Number.isFinite(Number(normalized));
+};
+
+const buildPreviewNumericValue = (value: unknown) => {
+  const normalized = String(value ?? '').trim();
+  return hasNumericPreviewValue(normalized) ? normalized : null;
+};
 
 interface PurchaseFormProps {
   purchasePageType: PurchasePageType | null;
@@ -55,10 +73,12 @@ interface PurchaseFormProps {
   partyProfileTypes: PartyProfileType[];
   requiresApproval: boolean;
   cashControlAccountId?: string;
+  handlingFeeControlAccountId?: string;
   branchId?: string;
   branchCode?: string;
   sacCode?: string | null;
-  savedTransaction?: Pick<ITransactionEntity, 'id' | 'number' | 'logs'> | null;
+  savedTransaction?: ITransactionEntity | null;
+  gstRatePercent: string;
   isFreshlyCreated?: boolean;
   readOnly?: boolean;
   isSubmitting?: boolean;
@@ -77,10 +97,12 @@ interface PurchaseFormBodyProps {
   partyProfileTypes: PartyProfileType[];
   requiresApproval: boolean;
   cashControlAccountId?: string;
+  handlingFeeControlAccountId?: string;
   branchId: string;
   branchCode: string;
   sacCode: string;
-  savedTransaction: Pick<ITransactionEntity, 'id' | 'number' | 'logs'> | null;
+  savedTransaction: ITransactionEntity | null;
+  gstRatePercent: string;
   isFreshlyCreated: boolean;
   isSubmitting: boolean;
   readOnly: boolean;
@@ -88,6 +110,7 @@ interface PurchaseFormBodyProps {
   existingDocuments: IPurchaseTransactionDocument[];
   onSelectDraftDocument: (documentProfileId: string, file: File) => void | Promise<void>;
   onClearDraftDocument: (documentProfileId: string) => void | Promise<void>;
+  onPurchaseRuleBlockChange: (isBlocked: boolean) => void;
 }
 
 const PurchaseFormBody = ({
@@ -96,9 +119,11 @@ const PurchaseFormBody = ({
   partyProfileTypes,
   requiresApproval,
   cashControlAccountId,
+  handlingFeeControlAccountId,
   branchId,
   sacCode,
   savedTransaction,
+  gstRatePercent,
   branchCode: _branchCode,
   isFreshlyCreated: _isFreshlyCreated,
   isSubmitting,
@@ -107,6 +132,7 @@ const PurchaseFormBody = ({
   existingDocuments,
   onSelectDraftDocument,
   onClearDraftDocument,
+  onPurchaseRuleBlockChange,
 }: PurchaseFormBodyProps) => {
   void _branchCode;
   void _isFreshlyCreated;
@@ -133,6 +159,14 @@ const PurchaseFormBody = ({
   const cashierUserId = useWatch({
     control: form.control,
     name: 'cashierUserId',
+  });
+  const passengerInfoCaptured = useWatch({
+    control: form.control,
+    name: 'passengerInfoCaptured',
+  });
+  const paymentDetails = useWatch({
+    control: form.control,
+    name: 'paymentDetails',
   });
   const watchedBranchId = useWatch({
     control: form.control,
@@ -212,16 +246,260 @@ const PurchaseFormBody = ({
     control: form.control,
     name: 'transactionType',
   });
-  const totalPayableAmount = useMemo(
+  const hasCompleteItemPreviewRows = useMemo(
     () =>
-      calculatePurchasePayableTotal(
-        (transactions ?? []) as Array<{ total?: string | null; finalAmount?: string | null }>,
-        (additionalCharges ?? []) as Array<{
-          totalAmount?: string | null;
-          amount?: string | null;
-        }>
+      (transactions ?? []).every(
+        transaction =>
+          hasNumericPreviewValue(transaction.quantity) &&
+          hasNumericPreviewValue(transaction.rate) &&
+          hasNumericPreviewValue(transaction.per)
       ),
-    [additionalCharges, transactions]
+    [transactions]
+  );
+  const hasCompleteAdditionalChargePreviewRows = useMemo(
+    () =>
+      (additionalCharges ?? []).every(charge =>
+        hasNumericPreviewValue(charge.amount)
+      ),
+    [additionalCharges]
+  );
+  const hasCompletePaymentPreviewRows = useMemo(
+    () =>
+      Array.isArray(paymentDetails) &&
+      paymentDetails.length > 0 &&
+      paymentDetails.every(
+        payment =>
+          Boolean(String(payment.paymentMethod || '').trim()) &&
+          hasNumericPreviewValue(payment.amount)
+      ),
+    [paymentDetails]
+  );
+  const purchaseRulePreviewPayload = useMemo(() => {
+    if (!purchasePageType) {
+      return null;
+    }
+
+    try {
+      return mapPurchaseFormValuesToSubmitPayload(
+        form.getValues(),
+        [],
+        requiresApproval
+      );
+    } catch {
+      return null;
+    }
+  }, [
+    form,
+    purchasePageType,
+    requiresApproval,
+  ]);
+  const purchaseRulePreviewRequest: IPurchaseRulePreviewRequest | null =
+    purchaseRulePreviewPayload?.transaction
+      ? { transaction: purchaseRulePreviewPayload.transaction }
+      : null;
+  const canPreviewTax = Boolean(
+    resolvedBranchId &&
+      partyProfileId &&
+      transactionType &&
+      branchProfile &&
+      selectedPartyProfile &&
+      hasCompleteItemPreviewRows &&
+      hasCompleteAdditionalChargePreviewRows &&
+      !savedTransaction?.id
+  );
+  const canPreviewPurchaseRule = Boolean(
+    purchaseRulePreviewRequest &&
+      resolvedBranchId &&
+      partyProfileId &&
+      passengerInfoCaptured &&
+      branchProfile &&
+      selectedPartyProfile &&
+      hasCompleteItemPreviewRows &&
+      hasCompleteAdditionalChargePreviewRows &&
+      hasCompletePaymentPreviewRows &&
+      !savedTransaction?.id
+  );
+  const { data: purchaseRulePreview } = useQuery<IPurchaseRulePreviewResponse, Error>({
+    queryKey: ['purchase-rule-preview', purchaseRulePreviewRequest],
+    queryFn: () => {
+      if (!purchaseRulePreviewRequest) {
+        throw new Error('Purchase rule preview request is missing');
+      }
+
+      return transactionsApi.previewPurchaseRule(purchaseRulePreviewRequest);
+    },
+    enabled: canPreviewPurchaseRule,
+  });
+  const resolvedPurchaseRulePreview = useMemo<IPurchaseRulePreviewResponse | null>(
+    () => purchaseRulePreview ?? null,
+    [purchaseRulePreview]
+  );
+
+  const lockedHandlingFeeRow = useMemo(() => {
+    const defaultHandlingCharges = Number(
+      selectedPartyProfile?.defaultHandlingCharges ?? 0
+    );
+
+    if (
+      !selectedPartyProfile ||
+      selectedPartyProfile.isIndividual ||
+      !handlingFeeControlAccountId ||
+      !Number.isFinite(defaultHandlingCharges) ||
+      defaultHandlingCharges <= 0
+    ) {
+      return null;
+    }
+
+    return {
+      key: `${selectedPartyProfile.id}:${handlingFeeControlAccountId}:${defaultHandlingCharges.toFixed(2)}`,
+      accountId: handlingFeeControlAccountId,
+      accountName: '',
+      amount: formatPurchaseDecimal(defaultHandlingCharges),
+    };
+  }, [
+    handlingFeeControlAccountId,
+    selectedPartyProfile,
+  ]);
+
+  useEffect(() => {
+    onPurchaseRuleBlockChange(
+      Boolean(resolvedPurchaseRulePreview && !resolvedPurchaseRulePreview.allowed)
+    );
+  }, [onPurchaseRuleBlockChange, resolvedPurchaseRulePreview]);
+
+  const taxPreviewRequest = useMemo(
+    () => ({
+      transactionType,
+      branchId: resolvedBranchId,
+      partyProfileId: String(partyProfileId || ''),
+      partyProfileApplyTax: Boolean(partyProfileApplyTax),
+      taxRatePercent: gstRatePercent,
+      branchStateName: branchProfile?.gstState ?? '',
+      partyStateName:
+        selectedPartyProfile?.gstStateName ?? selectedPartyProfile?.stateName ?? '',
+      items: (transactions ?? []).map(transaction => ({
+        quantity: buildPreviewNumericValue(transaction.quantity),
+        rate: buildPreviewNumericValue(transaction.rate),
+        per: buildPreviewNumericValue(transaction.per),
+      })),
+      additionalCharges: (additionalCharges ?? []).map(charge => ({
+        amount: buildPreviewNumericValue(charge.amount),
+        applyTax: Boolean(partyProfileApplyTax),
+      })),
+    }),
+    [
+      additionalCharges,
+      branchProfile?.gstState,
+      gstRatePercent,
+      partyProfileApplyTax,
+      partyProfileId,
+      resolvedBranchId,
+      selectedPartyProfile?.gstStateName,
+      selectedPartyProfile?.stateName,
+      transactionType,
+      transactions,
+    ]
+  );
+  const { data: taxPreview } = useQuery<ITransactionTaxPreviewResponse, Error>({
+    queryKey: ['purchase-tax-preview', taxPreviewRequest],
+    queryFn: () => transactionsApi.previewTax(taxPreviewRequest),
+    enabled: canPreviewTax,
+  });
+  const resolvedTaxSummary = useMemo<ITransactionTaxPreviewResponse | null>(() => {
+    if (taxPreview) {
+      return taxPreview;
+    }
+
+    if (!savedTransaction) {
+      return null;
+    }
+
+    const savedBranchStateName =
+      String(
+        savedTransaction.branchSnapshot?.stateName ??
+          savedTransaction.branchSnapshot?.gstStateName ??
+          savedTransaction.branchSnapshot?.state ??
+          savedTransaction.branchSnapshot?.gstState ??
+          ''
+      ).trim() || null;
+    const savedPartyStateName =
+      String(
+        savedTransaction.partyProfileSnapshot?.stateName ??
+          savedTransaction.partyProfileSnapshot?.gstStateName ??
+          savedTransaction.partyProfileSnapshot?.state ??
+          savedTransaction.partyProfileSnapshot?.gstState ??
+          ''
+      ).trim() || null;
+
+    return {
+      taxRatePercent: savedTransaction.taxRatePercent ?? '0.00',
+      taxableAmount: savedTransaction.taxableAmount ?? '0.00',
+      itemBaseAmount: savedTransaction.itemBaseAmount ?? '0.00',
+      itemTaxableAmount: savedTransaction.itemTaxableAmount ?? '0.00',
+      itemTaxAmount: savedTransaction.itemTaxAmount ?? '0.00',
+      itemIgstAmount: savedTransaction.splitMode === 'IGST'
+        ? savedTransaction.itemTaxAmount ?? '0.00'
+        : '0.00',
+      itemCgstAmount: savedTransaction.splitMode === 'CGST_SGST'
+        ? savedTransaction.itemTaxAmount ?? '0.00'
+        : '0.00',
+      itemSgstAmount: '0.00',
+      itemIgstRatePercent: savedTransaction.splitMode === 'IGST'
+        ? savedTransaction.taxRatePercent ?? '0.00'
+        : '0.00',
+      itemCgstRatePercent: savedTransaction.splitMode === 'CGST_SGST'
+        ? savedTransaction.taxRatePercent ?? '0.00'
+        : '0.00',
+      itemSgstRatePercent: savedTransaction.splitMode === 'CGST_SGST'
+        ? savedTransaction.taxRatePercent ?? '0.00'
+        : '0.00',
+      additionalChargeBaseAmount: savedTransaction.additionalChargeBaseAmount ?? '0.00',
+      additionalChargeTaxAmount: savedTransaction.additionalChargeTaxAmount ?? '0.00',
+      totalTaxAmount: Number(savedTransaction.itemTaxAmount ?? 0) + Number(savedTransaction.additionalChargeTaxAmount ?? 0) > 0
+        ? String(Number(savedTransaction.itemTaxAmount ?? 0) + Number(savedTransaction.additionalChargeTaxAmount ?? 0))
+        : '0.00',
+      finalAmount: savedTransaction.finalAmount ?? '0.00',
+      igstAmount: savedTransaction.igstAmount ?? '0.00',
+      cgstAmount: savedTransaction.cgstAmount ?? '0.00',
+      sgstAmount: savedTransaction.sgstAmount ?? '0.00',
+      splitMode: savedTransaction.splitMode ?? null,
+      branchStateName: savedBranchStateName,
+      partyStateName: savedPartyStateName,
+      itemRows: (savedTransaction.items ?? []).map(item => ({
+        lineNo: item.lineNo,
+        taxableAmount: item.taxableAmount ?? '0.00',
+        taxRatePercent: item.taxRatePercent ?? '0.00',
+        gstAmount: item.gstAmount ?? '0.00',
+        igstRatePercent: item.igstRatePercent ?? '0.00',
+        cgstRatePercent: item.cgstRatePercent ?? '0.00',
+        sgstRatePercent: item.sgstRatePercent ?? '0.00',
+        igstAmount: item.igstAmount ?? '0.00',
+        cgstAmount: item.cgstAmount ?? '0.00',
+        sgstAmount: item.sgstAmount ?? '0.00',
+        splitMode: item.splitMode ?? null,
+      })),
+      additionalChargeRows: (savedTransaction.additionalCharges ?? []).map(charge => ({
+        lineNo: charge.lineNo,
+        amount: charge.amount ?? '0.00',
+        taxRatePercent: charge.taxRatePercent ?? charge.gstRate ?? '0.00',
+        gstRatePercent: charge.taxRatePercent ?? charge.gstRate ?? '0.00',
+        gstAmount: charge.gstAmount ?? '0.00',
+        igstAmount: charge.igstAmount ?? '0.00',
+        cgstAmount: charge.cgstAmount ?? '0.00',
+        sgstAmount: charge.sgstAmount ?? '0.00',
+        igstRatePercent: charge.igstRatePercent ?? '0.00',
+        cgstRatePercent: charge.cgstRatePercent ?? '0.00',
+        sgstRatePercent: charge.sgstRatePercent ?? '0.00',
+        splitMode: charge.splitMode ?? null,
+        totalAmount: String(
+          Number(charge.amount ?? 0) + Number(charge.gstAmount ?? 0)
+        ),
+      })),
+    };
+  }, [savedTransaction, taxPreview]);
+  const totalPayableAmount = useMemo(
+    () => resolvedTaxSummary?.finalAmount ?? '0.00',
+    [resolvedTaxSummary?.finalAmount]
   );
   const getDocumentLabel = (document: IPurchaseTransactionDocument) => {
     const snapshot = document.documentProfileSnapshot as
@@ -293,7 +571,42 @@ const PurchaseFormBody = ({
       shouldTouch: true,
       shouldValidate: false,
     });
-  }, [branchProfile, form]);
+    }, [branchProfile, form]);
+
+  useEffect(() => {
+    if (!taxPreview) {
+      return;
+    }
+
+    const additionalChargeRows = Array.isArray(taxPreview.additionalChargeRows)
+      ? taxPreview.additionalChargeRows
+      : [];
+
+    for (const row of additionalChargeRows) {
+      const rowIndex = row.lineNo - 1;
+      if (rowIndex < 0) {
+        continue;
+      }
+
+      const resolvedTaxRate = row.taxRatePercent ?? row.gstRatePercent ?? '0';
+
+      form.setValue(`additionalCharges.${rowIndex}.gstRate`, resolvedTaxRate, {
+        shouldDirty: false,
+        shouldTouch: false,
+        shouldValidate: false,
+      });
+      form.setValue(`additionalCharges.${rowIndex}.gstAmount`, row.gstAmount, {
+        shouldDirty: false,
+        shouldTouch: false,
+        shouldValidate: false,
+      });
+      form.setValue(`additionalCharges.${rowIndex}.totalAmount`, row.totalAmount, {
+        shouldDirty: false,
+        shouldTouch: false,
+        shouldValidate: false,
+      });
+    }
+  }, [form, taxPreview]);
 
   const handleCurrencySelect = (
     currencies: Array<{
@@ -465,9 +778,196 @@ const PurchaseFormBody = ({
         accountQuery={additionalChargeAccountQuery}
         disabled={isReadOnly}
         transactionType={transactionType}
+        defaultAccountId={handlingFeeControlAccountId}
+        lockedRow={lockedHandlingFeeRow}
         title="Additional Charges"
         description="Add optional charges for this transaction. The account list is filtered by ledger type and purchase/sale mode."
       />
+
+      {resolvedPurchaseRulePreview ? (
+        <CardSection heading="Purchase Rule" className="space-y-4">
+          <div
+            className={`rounded-xl border px-4 py-4 shadow-sm ${
+              resolvedPurchaseRulePreview.allowed
+                ? 'border-emerald-200 bg-emerald-50'
+                : 'border-amber-200 bg-amber-50'
+            }`}
+          >
+            <div className="text-sm font-semibold text-text-primary">
+              {resolvedPurchaseRulePreview.allowed
+                ? 'Purchase rule check passed'
+                : resolvedPurchaseRulePreview.blockingReason || 'Purchase rule check failed'}
+            </div>
+            <div className="mt-2 grid gap-2 text-sm text-text-secondary sm:grid-cols-2">
+              <div>
+                <span className="font-medium text-text-primary">Converted amount:</span>{' '}
+                {resolvedPurchaseRulePreview.transactionAmountInReferenceCurrency}{' '}
+                {resolvedPurchaseRulePreview.referenceCurrencyCode}
+              </div>
+              <div>
+                <span className="font-medium text-text-primary">Cash total:</span>{' '}
+                {resolvedPurchaseRulePreview.cashTotalAmount}
+              </div>
+              <div>
+                <span className="font-medium text-text-primary">Cheque total:</span>{' '}
+                {resolvedPurchaseRulePreview.chequeTotalAmount}
+              </div>
+              <div>
+                <span className="font-medium text-text-primary">Cash limit:</span>{' '}
+                {resolvedPurchaseRulePreview.cashLimitAmount}{' '}
+                {resolvedPurchaseRulePreview.referenceCurrencyCode}
+              </div>
+              <div>
+                <span className="font-medium text-text-primary">CDF threshold:</span>{' '}
+                {resolvedPurchaseRulePreview.cdfThresholdAmount}{' '}
+                {resolvedPurchaseRulePreview.referenceCurrencyCode}
+              </div>
+              <div>
+                <span className="font-medium text-text-primary">History amount:</span>{' '}
+                {resolvedPurchaseRulePreview.cumulativeAmountInReferenceCurrency}{' '}
+                {resolvedPurchaseRulePreview.referenceCurrencyCode}
+              </div>
+            </div>
+          </div>
+        </CardSection>
+      ) : null}
+
+      {resolvedTaxSummary ? (
+        <CardSection heading="GST Summary" className="space-y-4">
+          <div className="space-y-4 rounded-xl border border-border-primary bg-surface-primary px-4 py-4 shadow-sm">
+            <div className="space-y-3">
+              <div className="text-sm font-semibold text-text-primary">
+                Item Tax Breakdown
+              </div>
+              <div className="flex items-start justify-between gap-4">
+                <div className="text-sm font-medium text-text-secondary">
+                  Taxable amount
+                </div>
+                <div className="text-sm font-semibold text-text-primary text-right">
+                  {formatPurchaseDecimal(resolvedTaxSummary.itemTaxableAmount)}
+                </div>
+              </div>
+              {resolvedTaxSummary.splitMode === 'IGST' ? (
+                <>
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="text-sm font-medium text-text-secondary">
+                      IGST ({formatPurchaseDecimal(resolvedTaxSummary.itemIgstRatePercent)}%)
+                    </div>
+                    <div className="text-sm font-semibold text-text-primary text-right">
+                      {formatPurchaseDecimal(resolvedTaxSummary.itemIgstAmount)}
+                    </div>
+                  </div>
+                </>
+              ) : resolvedTaxSummary.splitMode === 'CGST_SGST' ? (
+                <>
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="text-sm font-medium text-text-secondary">
+                      CGST ({formatPurchaseDecimal(resolvedTaxSummary.itemCgstRatePercent)}%)
+                    </div>
+                    <div className="text-sm font-semibold text-text-primary text-right">
+                      {formatPurchaseDecimal(resolvedTaxSummary.itemCgstAmount)}
+                    </div>
+                  </div>
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="text-sm font-medium text-text-secondary">
+                      SGST ({formatPurchaseDecimal(resolvedTaxSummary.itemSgstRatePercent)}%)
+                    </div>
+                    <div className="text-sm font-semibold text-text-primary text-right">
+                      {formatPurchaseDecimal(resolvedTaxSummary.itemSgstAmount)}
+                    </div>
+                  </div>
+                </>
+              ) : null}
+              <div className="flex items-start justify-between gap-4">
+                <div className="text-sm font-medium text-text-secondary">
+                  Final item tax amount
+                </div>
+                <div className="text-sm font-semibold text-text-primary text-right">
+                  {formatPurchaseDecimal(resolvedTaxSummary.itemTaxAmount)}
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="text-sm font-semibold text-text-primary">
+                Additional Charges
+              </div>
+              {resolvedTaxSummary.additionalChargeRows.length > 0 ? (
+                resolvedTaxSummary.additionalChargeRows.map((row, index) => (
+                  <div
+                    key={`${row.lineNo}-${index}`}
+                    className="rounded-lg border border-border-secondary bg-surface-secondary/30 px-4 py-3"
+                  >
+                    <div className="mb-3 text-sm font-semibold text-text-primary">
+                      Additional Charge {index + 1}
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="text-sm font-medium text-text-secondary">
+                          Taxable amount
+                        </div>
+                        <div className="text-sm font-semibold text-text-primary text-right">
+                          {formatPurchaseDecimal(row.amount)}
+                        </div>
+                      </div>
+                      {row.splitMode === 'IGST' ? (
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="text-sm font-medium text-text-secondary">
+                            IGST ({formatPurchaseDecimal(row.igstRatePercent)}%)
+                          </div>
+                          <div className="text-sm font-semibold text-text-primary text-right">
+                            {formatPurchaseDecimal(row.igstAmount)}
+                          </div>
+                        </div>
+                      ) : row.splitMode === 'CGST_SGST' ? (
+                        <>
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="text-sm font-medium text-text-secondary">
+                              CGST ({formatPurchaseDecimal(row.cgstRatePercent)}%)
+                            </div>
+                            <div className="text-sm font-semibold text-text-primary text-right">
+                              {formatPurchaseDecimal(row.cgstAmount)}
+                            </div>
+                          </div>
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="text-sm font-medium text-text-secondary">
+                              SGST ({formatPurchaseDecimal(row.sgstRatePercent)}%)
+                            </div>
+                            <div className="text-sm font-semibold text-text-primary text-right">
+                              {formatPurchaseDecimal(row.sgstAmount)}
+                            </div>
+                          </div>
+                        </>
+                      ) : null}
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="text-sm font-medium text-text-secondary">
+                          Final charge amount
+                        </div>
+                        <div className="text-sm font-semibold text-text-primary text-right">
+                          {formatPurchaseDecimal(row.totalAmount)}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-sm text-text-secondary">
+                  No additional charges added.
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between gap-4 border-t border-border-secondary pt-3">
+              <div className="text-sm font-medium text-text-secondary">
+                Final total amount
+              </div>
+              <div className="text-lg font-semibold text-text-primary text-right">
+                {formatPurchaseDecimal(resolvedTaxSummary.finalAmount)}
+              </div>
+            </div>
+          </div>
+        </CardSection>
+      ) : null}
 
       <TransactionPaymentDetailsFieldArray
         name="paymentDetails"
@@ -550,23 +1050,11 @@ const PurchaseFormBody = ({
       ) : null}
 
       <PassengerAmlVerificationModal
+        key={`${isPassengerAmlModalOpen ? 'open' : 'closed'}-${selectedPartyProfile?.id ?? 'none'}`}
         open={isPassengerAmlModalOpen}
         onOpenChange={setIsPassengerAmlModalOpen}
         entityType={getPurchasePageEntityType(purchasePageType) ?? undefined}
-        selectedPartyProfile={
-          selectedPartyProfile
-            ? {
-                id: selectedPartyProfile.id,
-                code: selectedPartyProfile.code,
-                name: selectedPartyProfile.name,
-                type: selectedPartyProfile.type,
-                isIndividual: selectedPartyProfile.isIndividual,
-                panNo: selectedPartyProfile.panNo,
-                panName: selectedPartyProfile.panName,
-                panDob: selectedPartyProfile.panDob,
-              }
-            : null
-        }
+        selectedPartyProfile={selectedPartyProfile ?? null}
         onVerified={() => {
           toast.success('AML verified successfully');
         }}
@@ -596,6 +1084,7 @@ export const PurchaseForm = ({
   branchCode = '',
   sacCode = '',
   savedTransaction = null,
+  gstRatePercent,
   isFreshlyCreated = false,
   readOnly = false,
   isSubmitting = false,
@@ -605,6 +1094,7 @@ export const PurchaseForm = ({
   submitLabel = 'Save Draft',
 }: PurchaseFormProps) => {
   const [draftDocuments, setDraftDocuments] = useState<Record<string, File | null>>({});
+  const [isPurchaseRuleBlocked, setIsPurchaseRuleBlocked] = useState(false);
 
   const handleSelectDraftDocument = async (documentProfileId: string, file: File) => {
     setDraftDocuments(prev => ({
@@ -634,7 +1124,7 @@ export const PurchaseForm = ({
   );
 
   return (
-    <Form<IPurchaseFormValues>
+      <Form<IPurchaseFormValues>
       id="purchase-form"
       onSubmit={values => onSubmit(values, draftDocumentAttachments)}
       resolver={yupResolver(
@@ -649,6 +1139,7 @@ export const PurchaseForm = ({
         onBackClick: onCancel,
         onCancel,
         showSubmit: !readOnly,
+        isSubmitDisabled: isPurchaseRuleBlocked,
       }}
     >
       <PurchaseFormBody
@@ -661,6 +1152,7 @@ export const PurchaseForm = ({
         branchCode={branchCode}
         sacCode={sacCode ?? ''}
         savedTransaction={savedTransaction}
+        gstRatePercent={gstRatePercent}
         isFreshlyCreated={isFreshlyCreated}
         isSubmitting={isSubmitting || readOnly}
         readOnly={readOnly}
@@ -668,6 +1160,7 @@ export const PurchaseForm = ({
         existingDocuments={existingDocuments ?? []}
         onSelectDraftDocument={handleSelectDraftDocument}
         onClearDraftDocument={handleClearDraftDocument}
+        onPurchaseRuleBlockChange={setIsPurchaseRuleBlocked}
       />
     </Form>
   );

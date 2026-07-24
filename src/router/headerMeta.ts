@@ -366,6 +366,24 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
       title: 'Edit TDS Profile',
     },
   },
+  {
+    path: '/admin/purpose',
+    meta: {
+      title: 'Purpose Master',
+    },
+  },
+  {
+    path: '/admin/purpose/create',
+    meta: {
+      title: 'Create Purpose',
+    },
+  },
+  {
+    path: '/admin/purpose/edit/:id',
+    meta: {
+      title: 'Edit Purpose',
+    },
+  },
 ];
 
 const findMenuName = (nodes: IMenu[], pathname: string): string | null => {

@@ -95,10 +95,6 @@ export const CATEGORY_OPTION_CODE_OPTIONS: CategoryOptionCodeOption[] = [
     label: 'SEGMENT',
   },
   {
-    value: CategoryOptionCodeEnum.Purpose,
-    label: 'PURPOSE',
-  },
-  {
     value: CategoryOptionCodeEnum.Relationship,
     label: 'RELATIONSHIP',
   },
@@ -165,7 +161,6 @@ export const CATEGORY_OPTION_CODE_LABELS = {
   [CategoryOptionCodeEnum.Master]: 'MASTER',
   [CategoryOptionCodeEnum.Transaction]: 'TRANSACTION',
   [CategoryOptionCodeEnum.Segment]: 'SEGMENT',
-  [CategoryOptionCodeEnum.Purpose]: 'PURPOSE',
   [CategoryOptionCodeEnum.Relationship]: 'RELATIONSHIP',
   [CategoryOptionCodeEnum.CommissionGiven]: 'COMMISSION GIVEN',
   [CategoryOptionCodeEnum.ServicedBy]: 'SERVICED BY',

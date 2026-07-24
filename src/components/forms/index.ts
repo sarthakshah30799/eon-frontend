@@ -6,6 +6,7 @@ export * from './FormFieldSelect';
 export * from './FormFieldAsyncSelect';
 export * from './FormFieldTextarea';
 export * from './FormFieldCategoryOption';
+export * from './FormFieldPurposeSelect';
 export * from './FormFieldDatePicker';
 export * from './FormFieldPhoneInput';
 export * from './FormFieldFileUploader';

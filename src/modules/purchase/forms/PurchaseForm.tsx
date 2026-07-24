@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { Button, CardSection } from '@/components/ui';
 import { Form } from '@/components/forms';
-import { FormFieldCategoryOption } from '@/components/forms';
+import { FormFieldPurposeSelect } from '@/components/forms';
 import { TransactionAdditionalChargesFieldArray } from '@/components/forms';
 import { TransactionPaymentDetailsFieldArray } from '@/components/forms';
 import { documentProfileApi } from '@/api/documentProfile';
@@ -47,7 +47,6 @@ import {
 } from '../utils/purchaseUtils';
 import { TransactionLogActionEnum } from '@/modules/transactions';
 import { PassengerAmlVerificationModal } from '@/modules/passengers/components';
-import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import type {
   IPurchaseRulePreviewRequest,
   IPurchaseRulePreviewResponse,
@@ -203,7 +202,11 @@ const PurchaseFormBody = ({
     'AGENT',
     Boolean(agentProfileId)
   );
-  const { data: selectedPartyProfile } = useGetPartyProfile(
+  const {
+    data: selectedPartyProfile,
+    isLoading: isSelectedPartyProfileLoading,
+    isFetching: isSelectedPartyProfileFetching,
+  } = useGetPartyProfile(
     String(partyProfileId || ''),
     undefined,
     Boolean(partyProfileId)
@@ -725,11 +728,11 @@ const PurchaseFormBody = ({
 
       <CardSection heading={pageTitle}>
         <div className="mb-4 grid gap-4 lg:grid-cols-2">
-          <FormFieldCategoryOption
+          <FormFieldPurposeSelect
             name="purposeId"
-            code={CategoryOptionCodeEnum.Purpose}
             label="Purpose"
             placeholder="Select purpose"
+            transactionType={transactionType}
             disabled={isReadOnly}
           />
         </div>
@@ -1055,6 +1058,10 @@ const PurchaseFormBody = ({
         onOpenChange={setIsPassengerAmlModalOpen}
         entityType={getPurchasePageEntityType(purchasePageType) ?? undefined}
         selectedPartyProfile={selectedPartyProfile ?? null}
+        selectedPartyProfileLoading={
+          Boolean(partyProfileId) &&
+          (isSelectedPartyProfileLoading || isSelectedPartyProfileFetching)
+        }
         onVerified={() => {
           toast.success('AML verified successfully');
         }}

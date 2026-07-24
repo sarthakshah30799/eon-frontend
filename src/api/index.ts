@@ -32,3 +32,4 @@ export * from './chequebooks/chequebook.api';
 export * from './transactions';
 export * from './reports';
 export * from './dashboard/dashboard.api';
+export * from './purpose';

@@ -9,6 +9,7 @@ import {
   FormFieldInput,
   FormFieldDatePicker,
   FormFieldTextarea,
+  FormFieldPurposeSelect,
   FormFieldCategoryOption,
   FormFieldSelect,
 } from '@/components/forms';
@@ -385,7 +386,12 @@ const AD1FormBody = ({ readOnly, allowWorkplaceSelection }: AD1FormBodyProps) =>
           <FormFieldCategoryOption name="marketingId" code={CategoryOptionCodeEnum.Marketing} label="Marketing" disabled={readOnly} />
           <FormFieldCategoryOption name="segmentId" code={CategoryOptionCodeEnum.Segment} label="Segment" disabled={readOnly} />
           <FormFieldInput name="servicedBy" label="Serviced By" placeholder="Serviced By" disabled={readOnly} />
-          <FormFieldCategoryOption name="purposeId" code={CategoryOptionCodeEnum.Purpose} label="Purpose" disabled={readOnly} />
+          <FormFieldPurposeSelect
+            name="purposeId"
+            label="Purpose"
+            transactionType={transactionType}
+            disabled={readOnly}
+          />
         </div>
       </CardSection>
 

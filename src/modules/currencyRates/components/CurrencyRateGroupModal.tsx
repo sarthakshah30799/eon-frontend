@@ -125,7 +125,7 @@ export const CurrencyRateGroupModal = ({
             />
           </div>
           <div>
-            <label className={labelClass}>Sale Margin Type</label>
+            <label className={labelClass}>Sell Margin Type</label>
             <AsyncSelect
               value={
                 CURRENCY_RATE_MARGIN_TYPE_OPTIONS.find(
@@ -147,7 +147,7 @@ export const CurrencyRateGroupModal = ({
             />
           </div>
           <div>
-            <label className={labelClass}>Sale Margin Value</label>
+            <label className={labelClass}>Sell Margin Value</label>
             <Input
               value={form.saleMarginValue}
               onChange={event => setForm(next => ({ ...next, saleMarginValue: event.target.value }))}
@@ -177,7 +177,7 @@ export const CurrencyRateGroupModal = ({
         <div className="rounded-sm border border-border-primary bg-surface-secondary/20 p-4 text-xs text-text-secondary">
           Buy preview: {form.buyMarginType || 'EMPTY'} {formatMarginValue(form.buyMarginType, form.buyMarginValue)}
           <br />
-          Sale preview: {form.saleMarginType || 'EMPTY'} {formatMarginValue(form.saleMarginType, form.saleMarginValue)}
+          Sell preview: {form.saleMarginType || 'EMPTY'} {formatMarginValue(form.saleMarginType, form.saleMarginValue)}
         </div>
       </div>
     </Modal>

@@ -79,7 +79,7 @@ export const getStoredBaseRateLabel = (rate: ICurrencyRate | null) => {
   }
 
   if (rate.provider === 'TICKER') {
-    return `Buy ${rate.baseBuyRate} | Sale ${rate.baseSaleRate}`;
+    return `Buy ${rate.baseBuyRate} | Sell ${rate.baseSaleRate}`;
   }
 
   const baseRate = rate.baseRate || rate.baseBuyRate || rate.baseSaleRate;

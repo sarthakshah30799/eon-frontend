@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { purposeApi } from '@/api/purpose';
 import type { AsyncSelectOption, AsyncSelectResponse } from '@/components/ui';
 import type { TransactionType } from '@/modules/transactions';
+import type { PurposePartyProfileType } from '@/modules/purpose/types';
 
 const PURPOSE_OPTIONS_STALE_TIME = 5 * 60 * 1000;
 
@@ -29,23 +30,37 @@ const filterOptions = (options: AsyncSelectOption[], inputValue: string): AsyncS
   });
 };
 
-const createQueryKey = (transactionType: TransactionType | null | undefined, search: string) => [
+const createQueryKey = (
+  transactionType: TransactionType | null | undefined,
+  partyProfileType: PurposePartyProfileType | null | undefined,
+  search: string
+) => [
   'purposes',
   transactionType ?? '',
+  partyProfileType ?? '',
   search,
 ];
 
-export const usePurposeOptions = (transactionType?: TransactionType | null) => {
+export const usePurposeOptions = (
+  transactionType?: TransactionType | null,
+  partyProfileType?: PurposePartyProfileType | null
+) => {
   const normalizedTransactionType = transactionType ?? null;
+  const normalizedPartyProfileType = partyProfileType ?? null;
   const queryClient = useQueryClient();
   const queryKey = useMemo(
-    () => createQueryKey(normalizedTransactionType, ''),
-    [normalizedTransactionType]
+    () => createQueryKey(normalizedTransactionType, normalizedPartyProfileType, ''),
+    [normalizedPartyProfileType, normalizedTransactionType]
   );
 
   const query = useQuery({
     queryKey,
-    queryFn: () => purposeApi.getPurposes('', normalizedTransactionType ?? undefined),
+    queryFn: () =>
+      purposeApi.getPurposes(
+        '',
+        normalizedTransactionType ?? undefined,
+        normalizedPartyProfileType ?? undefined
+      ),
     staleTime: PURPOSE_OPTIONS_STALE_TIME,
     enabled: true,
   });
@@ -53,10 +68,15 @@ export const usePurposeOptions = (transactionType?: TransactionType | null) => {
   const loadOptions = useCallback(
     async (inputValue: string): Promise<AsyncSelectResponse> => {
       const search = inputValue.trim();
-      const cacheKey = createQueryKey(normalizedTransactionType, search);
+      const cacheKey = createQueryKey(normalizedTransactionType, normalizedPartyProfileType, search);
       const purposes = await queryClient.fetchQuery({
         queryKey: cacheKey,
-        queryFn: () => purposeApi.getPurposes(search, normalizedTransactionType ?? undefined),
+        queryFn: () =>
+          purposeApi.getPurposes(
+            search,
+            normalizedTransactionType ?? undefined,
+            normalizedPartyProfileType ?? undefined
+          ),
         staleTime: PURPOSE_OPTIONS_STALE_TIME,
       });
 
@@ -65,7 +85,7 @@ export const usePurposeOptions = (transactionType?: TransactionType | null) => {
         options: filterOptions(options, inputValue),
       };
     },
-    [normalizedTransactionType, queryClient]
+    [normalizedPartyProfileType, normalizedTransactionType, queryClient]
   );
 
   return {

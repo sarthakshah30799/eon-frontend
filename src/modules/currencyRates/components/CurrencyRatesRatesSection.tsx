@@ -49,7 +49,7 @@ export const CurrencyRatesRatesSection = ({
     },
     {
       id: 'saleRate',
-      header: 'Sale',
+      header: 'Sell',
       cell: ({ row }) => (
         <div className="text-text-primary">
           {getSideBaseRate(row.original, 'sale') || getStoredBaseRateLabel(row.original)}

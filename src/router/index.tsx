@@ -789,7 +789,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/sale/:slug',
+    path: '/sell/:slug',
     element: (
       <ProtectedLayout>
         <PurchasePage />
@@ -805,7 +805,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/sale/:slug/create',
+    path: '/sell/:slug/create',
     element: (
       <ProtectedLayout>
         <PurchaseCreatePage />
@@ -821,7 +821,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/sale/:slug/edit/:id',
+    path: '/sell/:slug/edit/:id',
     element: (
       <ProtectedLayout>
         <PurchaseEditPage />

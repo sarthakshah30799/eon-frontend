@@ -3,6 +3,7 @@ import { useFormContext, useWatch } from 'react-hook-form';
 import { FormFieldSelect } from '../FormFieldSelect';
 import { usePurposeOptions } from '@/hooks';
 import type { TransactionType } from '@/modules/transactions';
+import type { PurposePartyProfileType } from '@/modules/purpose/types';
 
 interface FormFieldPurposeSelectProps {
   name: string;
@@ -11,6 +12,7 @@ interface FormFieldPurposeSelectProps {
   disabled?: boolean;
   className?: string;
   transactionType?: TransactionType | null;
+  partyProfileType?: PurposePartyProfileType | null;
 }
 
 export const FormFieldPurposeSelect = ({
@@ -20,13 +22,14 @@ export const FormFieldPurposeSelect = ({
   disabled = false,
   className,
   transactionType,
+  partyProfileType,
 }: FormFieldPurposeSelectProps) => {
   const form = useFormContext();
   const purposeId = useWatch({
     control: form.control,
     name,
   });
-  const { defaultOptions, loadOptions, isLoading } = usePurposeOptions(transactionType);
+  const { defaultOptions, loadOptions, isLoading } = usePurposeOptions(transactionType, partyProfileType);
 
   useEffect(() => {
     if (!purposeId || isLoading) {

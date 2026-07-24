@@ -269,24 +269,24 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
     meta: { title: 'Purchase' },
   },
   {
-    path: '/sale/:slug',
-    meta: { title: 'Sale' },
+    path: '/sell/:slug',
+    meta: { title: 'Sell' },
   },
   {
     path: '/purchase/:slug/create',
     meta: { title: 'Purchase' },
   },
   {
-    path: '/sale/:slug/create',
-    meta: { title: 'Sale' },
+    path: '/sell/:slug/create',
+    meta: { title: 'Sell' },
   },
   {
     path: '/purchase/:slug/edit/:id',
     meta: { title: 'Purchase' },
   },
   {
-    path: '/sale/:slug/edit/:id',
-    meta: { title: 'Sale' },
+    path: '/sell/:slug/edit/:id',
+    meta: { title: 'Sell' },
   },
   {
     path: '/party-profiles/:type/documents/:id',
@@ -458,9 +458,9 @@ export const resolveHeaderMeta = (
     { path: '/purchase/:slug/edit/:id', action: 'edit' as const },
     { path: '/purchase/:slug/create', action: 'create' as const },
     { path: '/purchase/:slug', action: 'view' as const },
-    { path: '/sale/:slug/edit/:id', action: 'edit' as const },
-    { path: '/sale/:slug/create', action: 'create' as const },
-    { path: '/sale/:slug', action: 'view' as const },
+    { path: '/sell/:slug/edit/:id', action: 'edit' as const },
+    { path: '/sell/:slug/create', action: 'create' as const },
+    { path: '/sell/:slug', action: 'view' as const },
   ];
 
   for (const route of purchaseRouteMatches) {

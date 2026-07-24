@@ -3,13 +3,11 @@ import {
   PassengerEntityTypeEnum,
   PassengerNationalityTypeEnum,
   PassengerOtherIdProofTypeEnum,
-  PassengerPanHolderRelationTypeEnum,
   PassengerResidentStatusEnum,
   type PassengerEntityType,
   type PassengerAmlPartyProfile,
   type PassengerNationalityType,
   type PassengerOtherIdProofType,
-  type PassengerPanHolderRelationType,
   type PassengerResidentStatus,
   type IPassengerAmlVerificationValues,
   type IPassengerPassengerDetailsValues,
@@ -38,11 +36,6 @@ export const PASSENGER_OTHER_ID_PROOF_OPTIONS = [
   { value: PassengerOtherIdProofTypeEnum.PAN, label: 'PAN' },
   { value: PassengerOtherIdProofTypeEnum.VOTER_ID, label: 'Voter ID' },
 ] as const satisfies ReadonlyArray<{ value: PassengerOtherIdProofType; label: string }>;
-
-export const PASSENGER_PAN_HOLDER_RELATION_OPTIONS = [
-  { value: PassengerPanHolderRelationTypeEnum.COMPANY, label: 'Company' },
-  { value: PassengerPanHolderRelationTypeEnum.INDIVIDUAL, label: 'Individual' },
-] as const satisfies ReadonlyArray<{ value: PassengerPanHolderRelationType; label: string }>;
 
 export const createPassengerAmlDefaultValues = (
   entityType: PassengerEntityType = PassengerEntityTypeEnum.CORPORATE,
@@ -100,10 +93,7 @@ export const createPassengerDetailsDefaultValues = (
     panNumber: verifiedAmlValues?.panNumber ?? '',
     panHolderName: verifiedAmlValues?.panHolderName ?? '',
     panDob: verifiedAmlValues?.panDob ?? '',
-    panHolderRelationType:
-      resolvedEntityType === PassengerEntityTypeEnum.CORPORATE
-        ? PassengerPanHolderRelationTypeEnum.COMPANY
-        : PassengerPanHolderRelationTypeEnum.INDIVIDUAL,
+    panHolderRelationType: '',
     paidByPanNumber: '',
     paidByPanHolderName: '',
     paidByPanDob: '',
@@ -286,10 +276,7 @@ export const createPassengerDetailsSchema = () =>
       then: schema => schema.required('PAN holder DOB is required'),
       otherwise: schema => schema.default(''),
     }),
-    panHolderRelationType: yup
-      .mixed<PassengerPanHolderRelationType | ''>()
-      .oneOf([...Object.values(PassengerPanHolderRelationTypeEnum), ''] as const)
-      .required('PAN holder relation is required'),
+    panHolderRelationType: yup.string().trim().required('PAN holder relation is required'),
     paidByPanNumber: optionalText(),
     paidByPanHolderName: optionalText(),
     paidByPanDob: yup.string().trim().default(''),

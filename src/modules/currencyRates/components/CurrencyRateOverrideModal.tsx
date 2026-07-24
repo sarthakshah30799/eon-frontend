@@ -119,7 +119,7 @@ export const CurrencyRateOverrideModal = ({
                 )}
               </div>
               <div>
-                Sale: {selectedRule.sale.marginType || 'EMPTY'}{' '}
+                Sell: {selectedRule.sale.marginType || 'EMPTY'}{' '}
                 {formatMarginValue(
                   selectedRule.sale.marginType,
                   selectedRule.sale.marginValue,
@@ -163,7 +163,7 @@ export const CurrencyRateOverrideModal = ({
                   )}
                 </div>
                 <div>
-                  Sale Margin: {currencyPricingGroup.saleMarginType || 'EMPTY'}{' '}
+                  Sell Margin: {currencyPricingGroup.saleMarginType || 'EMPTY'}{' '}
                   {formatMarginValue(
                     currencyPricingGroup.saleMarginType,
                     currencyPricingGroup.saleMarginValue,
@@ -185,7 +185,7 @@ export const CurrencyRateOverrideModal = ({
           <div className="mt-2 text-sm text-text-secondary">
             {selectedProduct
               ? `Previewing ${selectedProduct.productCode} against ${selectedCurrency?.currencyCode || 'selected currency'}`
-              : 'Select a product and currency to see the calculated final buy and sale prices.'}
+              : 'Select a product and currency to see the calculated final buy and sell prices.'}
           </div>
           <div className="mt-4">
             <CurrencyRateComparisonPanel preview={preview} />
@@ -302,7 +302,7 @@ export const CurrencyRateOverrideModal = ({
               />
             </div>
           <div>
-            <label className={labelClass}>Sale Margin Type</label>
+            <label className={labelClass}>Sell Margin Type</label>
             <AsyncSelect
               value={
                 CURRENCY_RATE_MARGIN_TYPE_OPTIONS.find(
@@ -327,7 +327,7 @@ export const CurrencyRateOverrideModal = ({
             />
           </div>
             <div>
-              <label className={labelClass}>Sale Margin Value</label>
+              <label className={labelClass}>Sell Margin Value</label>
               <Input
                 value={form.sale.marginValue ?? ''}
                 onChange={event =>
@@ -341,7 +341,7 @@ export const CurrencyRateOverrideModal = ({
               />
             </div>
             <div>
-              <label className={labelClass}>Sale Min Rate</label>
+              <label className={labelClass}>Sell Min Rate</label>
               <Input
                 value={form.sale.minRate ?? ''}
                 onChange={event =>
@@ -355,7 +355,7 @@ export const CurrencyRateOverrideModal = ({
               />
             </div>
             <div>
-              <label className={labelClass}>Sale Max Rate</label>
+              <label className={labelClass}>Sell Max Rate</label>
               <Input
                 value={form.sale.maxRate ?? ''}
                 onChange={event =>

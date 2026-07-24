@@ -519,7 +519,7 @@ const PartyProfileFormFields = ({
             label="EEFC Client"
             disabled={isSubmitting}
           />
-          <FormFieldCheckbox name="sale" label="Sale" disabled={isSubmitting} />
+          <FormFieldCheckbox name="sale" label="Sell" disabled={isSubmitting} />
           <FormFieldCheckbox
             name="purchase"
             label="Purchase"

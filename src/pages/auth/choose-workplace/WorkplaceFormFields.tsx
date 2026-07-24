@@ -148,6 +148,7 @@ export const WorkplaceFormFields = ({
       <FormFieldSelect
         name="branchId"
         label="Branch"
+        className="!max-w-none"
         loadOptions={loadBranchOptions}
         disabled={!canSelectBranch}
         isSearchable
@@ -157,6 +158,7 @@ export const WorkplaceFormFields = ({
         key={`counter-${effectiveSelectedBranchId || 'empty'}`}
         name="counterId"
         label="Counter"
+        className="!max-w-none"
         loadOptions={loadCounterOptions}
         placeholder={effectiveSelectedBranchId ? 'Select Counter' : 'Select Branch first'}
         defaultOptions

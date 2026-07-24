@@ -1,6 +1,7 @@
 /* React Select Custom Styles */
 .react-select-container {
   width: 100%;
+  max-width: 350px;
 }
 
 .react-select-container .react-select__control {

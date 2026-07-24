@@ -5,6 +5,7 @@ interface PassengerAmlVerificationStepFormProps {
   entityType: PassengerEntityType;
   isCorporate: boolean;
   selectedPartyProfile?: PassengerAmlPartyProfile | null;
+  isSelectedPartyProfileLoading?: boolean;
   verificationStatus: 'idle' | 'checking' | 'valid' | 'invalid';
   verificationMessage: string | null;
   onPanFieldBlur?: () => void;
@@ -21,6 +22,7 @@ export const PassengerAmlVerificationStepForm = ({
   entityType,
   isCorporate,
   selectedPartyProfile,
+  isSelectedPartyProfileLoading = false,
   verificationStatus,
   verificationMessage,
   onPanFieldBlur,
@@ -31,6 +33,7 @@ export const PassengerAmlVerificationStepForm = ({
     entityType={entityType}
     isCorporate={isCorporate}
     selectedPartyProfileLabel={toProfileLabel(selectedPartyProfile)}
+    isSelectedPartyProfileLoading={isSelectedPartyProfileLoading}
     verificationStatus={verificationStatus}
     verificationMessage={verificationMessage}
     onPanFieldBlur={onPanFieldBlur}

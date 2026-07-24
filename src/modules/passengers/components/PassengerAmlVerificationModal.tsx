@@ -23,6 +23,7 @@ interface PassengerAmlVerificationModalProps {
   onOpenChange: (open: boolean) => void;
   entityType?: PassengerEntityType;
   selectedPartyProfile?: PassengerAmlPartyProfile | null;
+  selectedPartyProfileLoading?: boolean;
   onVerified: (value: IPassengerAmlVerifiedPayload) => void;
 }
 
@@ -129,6 +130,7 @@ export const PassengerAmlVerificationModal = ({
   onOpenChange,
   entityType = PassengerEntityTypeEnum.CORPORATE,
   selectedPartyProfile,
+  selectedPartyProfileLoading = false,
   onVerified,
 }: PassengerAmlVerificationModalProps) => {
   const form = useFormContext<IPurchaseFormValues>();
@@ -372,6 +374,10 @@ export const PassengerAmlVerificationModal = ({
       return;
     }
 
+    if (isCorporate && selectedPartyProfileLoading) {
+      return;
+    }
+
     if (hasInitializedRef.current) {
       return;
     }
@@ -383,7 +389,7 @@ export const PassengerAmlVerificationModal = ({
         void verifyIdentityOnBlur('pan');
       });
     }
-  }, [initializeValues, isCorporate, open, verifyIdentityOnBlur]);
+  }, [initializeValues, isCorporate, open, selectedPartyProfileLoading, verifyIdentityOnBlur]);
 
   const currentPanSnapshot = {
     panNumber: watchedPanValues[0] ?? '',
@@ -536,20 +542,35 @@ export const PassengerAmlVerificationModal = ({
       footer={currentStep === 'verification' ? verificationFooter : detailsFooter}
     >
       {currentStep === 'verification' ? (
-        <PassengerAmlVerificationStepForm
-          entityType={(watchedEntityType || entityType) as PassengerEntityType}
-          isCorporate={isCorporate}
-          selectedPartyProfile={selectedPartyProfile}
-          verificationStatus={displayedVerificationStatus}
-          verificationMessage={displayedVerificationMessage}
-          onPanFieldBlur={() => {
-            void verifyIdentityOnBlur(verificationMode);
-          }}
-          onPassportFieldBlur={() => {
-            void verifyIdentityOnBlur('passport');
-          }}
-          onNationalityChange={handleNationalityChange}
-        />
+        isCorporate && selectedPartyProfileLoading ? (
+          <div className="rounded-xl border border-border-primary bg-surface-secondary px-4 py-10">
+            <div className="flex flex-col items-center justify-center gap-3 text-text-secondary">
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary-200 border-t-primary-600" />
+              <div className="text-sm font-medium text-text-primary">
+                Loading selected party profile...
+              </div>
+              <div className="text-xs text-text-secondary">
+                Please wait while we prefill AML details.
+              </div>
+            </div>
+          </div>
+        ) : (
+          <PassengerAmlVerificationStepForm
+            entityType={(watchedEntityType || entityType) as PassengerEntityType}
+            isCorporate={isCorporate}
+            selectedPartyProfile={selectedPartyProfile}
+            isSelectedPartyProfileLoading={selectedPartyProfileLoading}
+            verificationStatus={displayedVerificationStatus}
+            verificationMessage={displayedVerificationMessage}
+            onPanFieldBlur={() => {
+              void verifyIdentityOnBlur(verificationMode);
+            }}
+            onPassportFieldBlur={() => {
+              void verifyIdentityOnBlur('passport');
+            }}
+            onNationalityChange={handleNationalityChange}
+          />
+        )
       ) : (
         <PassengerAmlDetailsStepForm
           entityType={(watchedEntityType || entityType) as PassengerEntityType}

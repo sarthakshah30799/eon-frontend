@@ -257,6 +257,15 @@ const TdsProfileEditPage = lazy(
   () =>
     import('../pages/master/system-setups/tds-profile/edit/[id]/TdsProfileEditPage')
 );
+const PurposeListPage = lazy(
+  () => import('../pages/admin/purpose/list/PurposeListPage')
+);
+const PurposeCreatePage = lazy(
+  () => import('../pages/admin/purpose/create/PurposeCreatePage')
+);
+const PurposeEditPage = lazy(
+  () => import('../pages/admin/purpose/edit/[id]/PurposeEditPage')
+);
 
 const ExpenseBookingListPage = lazy(
   () =>
@@ -984,6 +993,30 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <TdsProfileEditPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/purpose',
+    element: (
+      <ProtectedLayout>
+        <PurposeListPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/purpose/create',
+    element: (
+      <ProtectedLayout>
+        <PurposeCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/purpose/edit/:id',
+    element: (
+      <ProtectedLayout>
+        <PurposeEditPage />
       </ProtectedLayout>
     ),
   },

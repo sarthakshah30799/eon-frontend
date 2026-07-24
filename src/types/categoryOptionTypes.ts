@@ -20,7 +20,6 @@ export const CategoryOptionCodeEnum = {
   Master: 'MASTER',
   Transaction: 'TRANSACTION',
   Segment: 'SEGMENT',
-  Purpose: 'PURPOSE',
   Relationship: 'RELATIONSHIP',
   CommissionGiven: 'COMMISSIONGIVEN',
   ServicedBy: 'SERVICEDBY',

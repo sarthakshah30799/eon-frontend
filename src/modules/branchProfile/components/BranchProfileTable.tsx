@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { PencilSquareIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button1';
 import { Table, type TableColumnDef } from '@/components/ui/table';
+import { Filter } from '@/components/ui/filter';
 import type { IBranchProfile } from '../types';
 
 interface BranchProfileTableProps {
@@ -13,6 +14,7 @@ interface BranchProfileTableProps {
   onSearch?: (value: string) => void;
   searchValue?: string;
   searchPlaceholder?: string;
+  onFiltersChange?: (filters: Array<{ id: string; value: string }>) => void;
 }
 
 interface BranchProfileTableRow {
@@ -36,6 +38,7 @@ export const BranchProfileTable = ({
   onSearch,
   searchValue,
   searchPlaceholder,
+  onFiltersChange,
 }: BranchProfileTableProps) => {
   const navigate = useNavigate();
 
@@ -76,8 +79,18 @@ export const BranchProfileTable = ({
   );
 
   const columns: TableColumnDef<BranchProfileTableRow>[] = [
-    { accessorKey: 'code', header: 'Branch Code' },
-    { accessorKey: 'name', header: 'Branch Name' },
+    { 
+      accessorKey: 'code', 
+      header: 'Branch Code',
+      searchable: true,
+      filterable: true
+    },
+    { 
+      accessorKey: 'name', 
+      header: 'Branch Name',
+      searchable: true,
+      filterable: true
+    },
     { accessorKey: 'branchNumber', header: 'Branch Number' },
     { accessorKey: 'country', header: 'Country' },
     { accessorKey: 'state', header: 'State' },
@@ -120,21 +133,30 @@ export const BranchProfileTable = ({
   ];
 
   return (
-    <Table
-      columns={columns}
-      data={rows}
-      enableFiltering={false}
-      enablePagination={false}
-      enableRowSelection={false}
-      enableColumnVisibility={false}
-      loading={loading}
-      onSearch={onSearch}
-      searchValue={searchValue}
-      searchPlaceholder={searchPlaceholder}
-      onRowClick={row => {
-        navigate(`/admin/branch-profile/edit/${row.id}`);
-      }}
-      emptyMessage="No company branches found. Create your first company branch."
-    />
+    <div className="space-y-6">
+      {/* Filter Section */}
+      <Filter
+        onFiltersChange={onFiltersChange || (() => {})}
+        columns={columns.filter(col => col.id).map(col => ({ id: col.id!, header: (col.header as string) || '' }))}
+      />
+      
+      {/* Table Section */}
+      <Table
+        columns={columns}
+        data={rows}
+        enableFiltering={true}
+        enablePagination={true}
+        enableRowSelection={false}
+        enableColumnVisibility={true}
+        loading={loading}
+        onSearch={onSearch}
+        searchValue={searchValue}
+        searchPlaceholder={searchPlaceholder}
+        onRowClick={row => {
+          navigate(`/admin/branch-profile/edit/${row.id}`);
+        }}
+        emptyMessage="No company branches found. Create your first company branch."
+      />
+    </div>
   );
 };

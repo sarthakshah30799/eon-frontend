@@ -94,7 +94,6 @@ const DocumentProfileFields = ({ isSubmitting }: { isSubmitting: boolean }) => {
         loadOptions={loadDocumentTypeOptions}
         defaultOptions={getDocumentTypeOptionItems()}
         disabled={isSubmitting}
-        isSearchable={false}
         isMulti
       />
       <FormFieldSelect
@@ -102,7 +101,6 @@ const DocumentProfileFields = ({ isSubmitting }: { isSubmitting: boolean }) => {
         label="Specification Type"
         placeholder="Select specification type"
         disabled={isSubmitting}
-        isSearchable={false}
         defaultOptions={specificationTypeOptions}
         loadOptions={loadSpecificationTypeOptions}
       />
@@ -113,7 +111,6 @@ const DocumentProfileFields = ({ isSubmitting }: { isSubmitting: boolean }) => {
         code={selectedSpecificationTypeCode}
         disabled={isSubmitting || !selectedSpecificationType}
         isCreatable={false}
-        isSearchable={false}
       />
       <FormFieldCategoryOption
         name="groupSelection"

@@ -111,7 +111,6 @@ export const CurrencyRateEntryModal = ({
               loadOptions={loadCurrencyOptions}
               placeholder="Select currency"
               isDisabled={isDetailView}
-              isSearchable={false}
             />
           </div>
 
@@ -134,7 +133,6 @@ export const CurrencyRateEntryModal = ({
               loadOptions={loadProviderOptions}
               placeholder="Select provider"
               isDisabled={isDetailView}
-              isSearchable={false}
             />
           </div>
 

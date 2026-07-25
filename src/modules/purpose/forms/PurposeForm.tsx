@@ -121,7 +121,6 @@ const PurposeSlabsSection = ({
                 label="Rate Type"
                 loadOptions={loadRateTypeOptions}
                 defaultOptions={rateTypeOptions}
-                isSearchable={false}
                 isCreatable={false}
                 disabled={isSubmitting}
               />
@@ -209,7 +208,6 @@ export const PurposeForm = ({
             label="Rate Type"
             loadOptions={loadRateTypeOptions}
             defaultOptions={rateTypeOptions}
-            isSearchable={false}
             isCreatable={false}
             disabled={isSubmitting}
           />

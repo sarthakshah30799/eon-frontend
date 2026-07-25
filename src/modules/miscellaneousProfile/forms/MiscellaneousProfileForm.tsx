@@ -173,7 +173,6 @@ const CategoryOptionRows = ({
                       loadOptions={filteredOptions.loadOptions}
                       defaultOptions={filteredOptions.defaultOptions}
                       disabled={isSubmitting}
-                      isSearchable={false}
                       isCreatable={false}
                     />
                   );
@@ -273,7 +272,6 @@ export const MiscellaneousProfileForm = ({
             loadOptions={loadCodes}
             defaultOptions={codeOptions}
             disabled={isSubmitting}
-            isSearchable={false}
           />
         )}
 

@@ -414,7 +414,6 @@ export const ChequeBookListView = () => {
                       value={selectedReviewStatusOption}
                       loadOptions={loadReviewStatusOptions}
                       defaultOptions={reviewStatusOptions}
-                      isSearchable={false}
                       onChange={option => {
                         const selectedOption = Array.isArray(option)
                           ? (option[0] ?? null)

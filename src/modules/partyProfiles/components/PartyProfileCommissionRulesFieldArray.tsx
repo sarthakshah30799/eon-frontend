@@ -101,7 +101,6 @@ const CommissionRuleRow = ({
         placeholder="Select type"
         loadOptions={loadCommissionTypeOptions}
         disabled={disabled}
-        isSearchable={false}
         isCreatable={false}
       />
       <FormFieldInput

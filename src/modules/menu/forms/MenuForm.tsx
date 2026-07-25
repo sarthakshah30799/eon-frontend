@@ -101,7 +101,6 @@ export const MenuForm = ({
             loadOptions={loadParentOptions}
             defaultOptions={parentOptions}
             disabled={isSubmitting}
-            isSearchable={false}
             isClearable
           />
           <FormFieldCheckbox

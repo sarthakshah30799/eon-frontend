@@ -105,7 +105,6 @@ export const ChequeBookAllocationTable = ({
             }}
             loadOptions={loadCashierOptions}
             placeholder="Select User"
-            isSearchable={false}
             isClearable
             className="w-32"
           />

@@ -195,7 +195,6 @@ export const CurrencyProfileForm = ({
             placeholder="Select calculation method"
             disabled={isDisabled}
             size="sm"
-            isSearchable={false}
           />
           <FormFieldAsyncSelect
             name="group"
@@ -204,7 +203,6 @@ export const CurrencyProfileForm = ({
             placeholder="Select group"
             disabled={isDisabled}
             size="sm"
-            isSearchable={false}
           />
           <FormFieldAsyncSelect
             name="pricingGroupId"
@@ -213,7 +211,6 @@ export const CurrencyProfileForm = ({
             placeholder="Select pricing group"
             disabled={isDisabled}
             size="sm"
-            isSearchable={false}
           />
         </div>
       </CardSection>
@@ -275,7 +272,6 @@ const CurrencyProfileProductAllowedField = ({
         placeholder="Select product allowed"
         disabled={isDisabled}
         size="sm"
-        isSearchable={false}
       />
     </div>
   );

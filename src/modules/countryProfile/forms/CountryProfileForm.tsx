@@ -198,7 +198,6 @@ export const CountryProfileForm = ({
           placeholder="Select risk category"
           disabled={isDisabled}
           isClearable
-          isSearchable={false}
         />
         <CountryGroupField isDisabled={isDisabled} />
       </div>

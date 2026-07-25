@@ -369,7 +369,6 @@ const AD1FormBody = ({ readOnly, allowWorkplaceSelection }: AD1FormBodyProps) =>
             label="Type"
             defaultOptions={typeOptions}
             loadOptions={async () => ({ options: typeOptions })}
-            isSearchable={false}
             disabled={readOnly}
           />
           <FormFieldSelect
@@ -377,7 +376,6 @@ const AD1FormBody = ({ readOnly, allowWorkplaceSelection }: AD1FormBodyProps) =>
             label="Profile Type"
             defaultOptions={profileTypeOptions}
             loadOptions={async () => ({ options: profileTypeOptions })}
-            isSearchable={false}
             disabled={readOnly}
           />
           <FormFieldInput name="dealId" label="Deal ID" placeholder="Deal ID" disabled={readOnly} />

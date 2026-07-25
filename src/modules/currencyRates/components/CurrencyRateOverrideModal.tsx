@@ -209,7 +209,6 @@ export const CurrencyRateOverrideModal = ({
               }}
               loadOptions={loadProductOptions}
               placeholder="Select product"
-              isSearchable={false}
             />
           </div>
 
@@ -229,7 +228,6 @@ export const CurrencyRateOverrideModal = ({
               }}
               loadOptions={loadCurrencyOptions}
               placeholder="Select currency"
-              isSearchable={false}
             />
           </div>
 

@@ -491,7 +491,6 @@ export const ManagerToCashierAllocationPage = () => {
                     }}
                     loadOptions={loadCashierOptions}
                     placeholder="Select User"
-                    isSearchable={false}
                     className="w-40"
                   />
                 )}

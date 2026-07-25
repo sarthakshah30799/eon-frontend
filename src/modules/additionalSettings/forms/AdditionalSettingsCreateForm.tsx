@@ -204,7 +204,6 @@ const SubcategoryRowFields = ({
           placeholder="Select subcategory code"
           disabled={isSubmitting || !categoryCode}
           loadOptions={loadCodeOptions}
-          isSearchable={false}
         />
         <FormFieldSelect
           name={`subcategories.${index}.categoryType`}
@@ -212,7 +211,6 @@ const SubcategoryRowFields = ({
           placeholder="Select type"
           disabled={isSubmitting || Boolean(subcategoryDefinition)}
           loadOptions={loadTypeOptions}
-          isSearchable={false}
         />
 
         {isBooleanType ? (
@@ -489,7 +487,6 @@ export const AdditionalSettingsCreateForm = ({
             placeholder="Select category code"
             disabled={isSubmitting || Boolean(currentId)}
             loadOptions={loadCategoryCodeOptions}
-            isSearchable={false}
           />
         </div>
       </CardSection>

@@ -49,7 +49,7 @@ const SubcategoryRowFields = ({
   index: number;
   categoryCode?: string;
   isSubmitting: boolean;
-  loadTypeOptions: () => Promise<{ options: { value: string; label: string }[]; hasMore: boolean }>;
+  loadTypeOptions: (inputValue?: string) => Promise<{ options: { value: string; label: string }[]; hasMore: boolean }>;
   remove: (index: number) => void;
   fieldsLength: number;
   isFixed?: boolean;
@@ -378,7 +378,7 @@ const SubcategoryFields = ({
     });
   }, [categoryCode, setValue, subcategories]);
 
-  const loadTypeOptions = async (inputValue: string) => {
+  const loadTypeOptions = async (inputValue = '') => {
     const opts = valueTypes.map(t => ({ value: t, label: t.toUpperCase() }));
     return {
       options: inputValue

@@ -176,6 +176,13 @@ class AuthAPI {
     });
   }
 
+  async checkAuth(): Promise<{ authenticated: boolean; userId: string | null; email: string | null; isAdmin: boolean }> {
+    return this.request<{ authenticated: boolean; userId: string | null; email: string | null; isAdmin: boolean }>('/auth/check', {
+      method: 'GET',
+      credentials: 'include',
+    });
+  }
+
   async forgotPassword(email: string): Promise<{ message: string }> {
     return this.request<{ message: string }>('/auth/forgot-password', {
       method: 'POST',

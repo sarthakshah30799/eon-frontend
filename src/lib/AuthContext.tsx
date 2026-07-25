@@ -138,6 +138,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     checkAuth();
   }, []);
 
+  // Session health checker - periodically verifies session is still valid
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const intervalMs = 60_000;
+
+    const checkSession = async () => {
+      try {
+        const { authenticated } = await authApi.checkAuth();
+        if (!authenticated) {
+          handleSessionExpired(AUTH_CONSTANTS.MESSAGES.SESSION_EXPIRED);
+        }
+      } catch {
+        handleSessionExpired(AUTH_CONSTANTS.MESSAGES.SESSION_EXPIRED);
+      }
+    };
+
+    const intervalId = setInterval(checkSession, intervalMs);
+
+    return () => clearInterval(intervalId);
+  }, [isAuthenticated, handleSessionExpired]);
+
   useEffect(() => {
     const onSessionExpired = (event: Event) => {
       const customEvent = event as CustomEvent<{ message?: string; status?: number }>;

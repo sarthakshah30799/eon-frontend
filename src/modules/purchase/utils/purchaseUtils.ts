@@ -28,6 +28,10 @@ import {
   PassengerResidentStatusEnum,
 } from '@/modules/passengers/types/passengerTypes';
 import type {
+  PassengerNationalityType,
+  PassengerResidentStatus,
+} from '@/modules/passengers/types/passengerTypes';
+import type {
   IPurchaseDocumentAttachment,
   IPurchaseFormValues,
   IPurchasePricingData,
@@ -413,10 +417,10 @@ export const mapPurchaseTransactionToFormValues = (
   passportExpiryDate:
     (passengerSnapshot?.passportExpiryDate as string | undefined) ?? '',
   nationalityType:
-    (passengerSnapshot?.nationalityType as PassengerNationalityTypeEnum) ??
+    (passengerSnapshot?.nationalityType as PassengerNationalityType) ??
     PassengerNationalityTypeEnum.INDIAN,
   residentStatus:
-    (passengerSnapshot?.residentStatus as PassengerResidentStatusEnum) ??
+    (passengerSnapshot?.residentStatus as PassengerResidentStatus) ??
     PassengerResidentStatusEnum.RESIDENT,
   countryId:
     (passengerSnapshot?.countryId as string | undefined) ??

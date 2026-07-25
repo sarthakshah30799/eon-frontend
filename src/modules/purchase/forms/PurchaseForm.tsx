@@ -166,6 +166,8 @@ const PurchaseFormBody = ({
     control: form.control,
     name: 'transactionPartyProfileType',
   });
+  const resolvedTransactionPartyProfileType =
+    transactionPartyProfileType || null;
   const passengerEntityType = useWatch({
     control: form.control,
     name: 'entityType',
@@ -806,7 +808,7 @@ const PurchaseFormBody = ({
             transactionType={transactionType}
             partyProfileType={getPurchasePurposePartyProfileType(
               purchasePageType,
-              transactionPartyProfileType
+              resolvedTransactionPartyProfileType
             )}
             disabled={isReadOnly}
           />

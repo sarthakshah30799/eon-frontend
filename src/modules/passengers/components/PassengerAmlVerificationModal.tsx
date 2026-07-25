@@ -160,6 +160,10 @@ export const PassengerAmlVerificationModal = ({
     control: form.control,
     name: 'nationalityType',
   });
+  const watchedPassengerInfoCaptured = useWatch({
+    control: form.control,
+    name: 'passengerInfoCaptured',
+  });
   const watchedPanValues = useWatch({
     control: form.control,
     name: ['panNumber', 'panHolderName', 'panDob'] as const,
@@ -192,6 +196,34 @@ export const PassengerAmlVerificationModal = ({
       shouldValidate: true,
     });
   }, [countryProfiles, form]);
+  const primeVerificationStateFromCurrentValues = useCallback(() => {
+    const currentValues = form.getValues() as IPurchaseFormValues;
+    const hasCompleteValues =
+      verificationMode === 'pan'
+        ? hasCompletePanValues(currentValues)
+        : hasCompletePassportValues(currentValues);
+
+    if (!hasCompleteValues) {
+      return false;
+    }
+
+    const currentSnapshot = getVerificationSnapshot(currentValues, verificationMode);
+    setCurrentStep('details');
+    setVerificationStatus('valid');
+    setVerificationMessage('Passenger AML details verified successfully');
+
+    if (verificationMode === 'pan') {
+      setVerifiedPanSnapshot(currentSnapshot);
+      detailsPanAutoVerifySnapshotRef.current = JSON.stringify(currentSnapshot);
+      setVerifiedPassportSnapshot(null);
+    } else {
+      setVerifiedPassportSnapshot(currentSnapshot);
+      setVerifiedPanSnapshot(null);
+      detailsPanAutoVerifySnapshotRef.current = null;
+    }
+
+    return true;
+  }, [form, verificationMode]);
   const initializeValues = useCallback(() => {
     const amlDefaults = createPassengerAmlDefaultValues(entityType, selectedPartyProfile);
     const detailsDefaults = createPassengerDetailsDefaultValues(
@@ -375,6 +407,15 @@ export const PassengerAmlVerificationModal = ({
       return;
     }
 
+    if (watchedPassengerInfoCaptured) {
+      queueMicrotask(() => {
+        if (primeVerificationStateFromCurrentValues()) {
+          hasInitializedRef.current = true;
+        }
+      });
+      return;
+    }
+
     if (hasInitializedRef.current) {
       return;
     }
@@ -386,7 +427,15 @@ export const PassengerAmlVerificationModal = ({
         void verifyIdentityOnBlur('pan');
       });
     }
-  }, [initializeValues, isCorporate, open, selectedPartyProfileLoading, verifyIdentityOnBlur]);
+  }, [
+    initializeValues,
+    isCorporate,
+    open,
+    primeVerificationStateFromCurrentValues,
+    selectedPartyProfileLoading,
+    verifyIdentityOnBlur,
+    watchedPassengerInfoCaptured,
+  ]);
 
   const currentPanSnapshot = {
     panNumber: watchedPanValues[0] ?? '',

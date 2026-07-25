@@ -5,7 +5,35 @@ import type {
 } from '@/modules/additionalSettings/types';
 import type { IPasswordPolicy } from '@/modules/auth/types/authTypes';
 
+export interface ISessionPolicy {
+  allowMultipleLogin: boolean;
+  idleTimeoutSeconds: number | null;
+}
+
 export const additionalSettingsApi = {
+  getSessionPolicy: async (): Promise<ISessionPolicy> => {
+    const res = await apiClient.get<IAdditionalSettingCategory[]>('/additional-settings');
+    if (res.error) {
+      throw new Error(res.error);
+    }
+    const categories = res.data ?? [];
+    const sessionCategory = categories.find(
+      c => c.code.trim().toUpperCase() === 'SESSION_POLICY'
+    );
+    const allowSub = sessionCategory?.subcategories.find(
+      s => s.code.trim().toUpperCase() === 'ALLOW_MULTIPLE_LOGIN'
+    );
+    const timeoutSub = sessionCategory?.subcategories.find(
+      s => s.code.trim().toUpperCase() === 'IDLE_TIMEOUT_SECONDS'
+    );
+    const rawValue = allowSub?.value?.trim().toUpperCase() ?? '';
+    const allowMultipleLogin = rawValue === 'YES' || rawValue === 'TRUE' || rawValue === '1';
+    const idleTimeoutSeconds = timeoutSub?.value
+      ? Number.parseInt(timeoutSub.value.trim(), 10) || null
+      : null;
+    return { allowMultipleLogin, idleTimeoutSeconds };
+  },
+
   getAdditionalSettings: async (): Promise<IAdditionalSettingCategory[]> => {
     const res = await apiClient.get<IAdditionalSettingCategory[]>('/additional-settings');
     if (res.error) {

@@ -7,6 +7,7 @@ import React, {
 } from 'react';
 import type { ReactNode } from 'react';
 import { authApi } from '../api/auth';
+import { additionalSettingsApi } from '../api/additionalSettings';
 import type { IUser } from '../modules/auth/types';
 import { toast } from 'react-hot-toast';
 import { AUTH_SESSION_EXPIRED_EVENT } from './authSessionEvents';
@@ -139,25 +140,41 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   // Session health checker - periodically verifies session is still valid
+  // Only runs when session policy disallows multiple login (sessions can be invalidated remotely)
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    const intervalMs = 60_000;
+    const intervalRef = { current: 0 };
 
-    const checkSession = async () => {
+    const startPolling = async () => {
       try {
-        const { authenticated } = await authApi.checkAuth();
-        if (!authenticated) {
-          handleSessionExpired(AUTH_CONSTANTS.MESSAGES.SESSION_EXPIRED);
-        }
+        const policy = await additionalSettingsApi.getSessionPolicy();
+        if (policy.allowMultipleLogin) return;
+
+        const checkSession = async () => {
+          try {
+            const { authenticated } = await authApi.checkAuth();
+            if (!authenticated) {
+              handleSessionExpired(AUTH_CONSTANTS.MESSAGES.SESSION_EXPIRED);
+            }
+          } catch {
+            handleSessionExpired(AUTH_CONSTANTS.MESSAGES.SESSION_EXPIRED);
+          }
+        };
+
+        intervalRef.current = window.setInterval(checkSession, 60_000);
       } catch {
-        handleSessionExpired(AUTH_CONSTANTS.MESSAGES.SESSION_EXPIRED);
+        // If we can't fetch policy, default to not polling
       }
     };
 
-    const intervalId = setInterval(checkSession, intervalMs);
+    void startPolling();
 
-    return () => clearInterval(intervalId);
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
   }, [isAuthenticated, handleSessionExpired]);
 
   useEffect(() => {

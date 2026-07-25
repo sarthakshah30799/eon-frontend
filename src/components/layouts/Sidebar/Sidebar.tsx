@@ -62,7 +62,7 @@ const isPathActive = (currentPath: string, targetPath?: string) => {
 
   return (
     matchPath(
-      { path: normalizedTargetPath, end: false },
+      { path: normalizedTargetPath, end: true },
       normalizedCurrentPath
     ) !== null
   );
@@ -74,11 +74,10 @@ const isMenuItemActive = (item: SidebarItem, currentPath: string): boolean => {
   }
 
   if (!item.path) return false;
-  
-  // Check if current path starts with the item path (for nested routes)
+
   const normalizedCurrentPath = normalizePath(currentPath);
   const normalizedTargetPath = normalizePath(item.path);
-  
+
   return (
     matchPath(
       { path: normalizedTargetPath, end: false },

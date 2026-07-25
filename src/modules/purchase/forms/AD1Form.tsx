@@ -186,7 +186,7 @@ const AD1FormBody = ({ readOnly, allowWorkplaceSelection }: AD1FormBodyProps) =>
     void fetchAgentRule();
   }, [agentId, productId, currencyId, productProfiles, currencies, setValue, readOnly, fcVolume]);
 
-  // Auto-calculate Total INR Amt = FC Volume × Sale Rate
+  // Auto-calculate Total INR Amt = FC Volume × Sell Rate
   useEffect(() => {
     const fc = parseFloat(String(fcVolume)) || 0;
     const rate = parseFloat(String(saleRate)) || 0;
@@ -342,7 +342,7 @@ const AD1FormBody = ({ readOnly, allowWorkplaceSelection }: AD1FormBodyProps) =>
 
   const typeOptions = Object.values(TransactionTypeEnum).map(val => ({
     value: val,
-    label: val === TransactionTypeEnum.SALE ? 'Sale' : 'Purchase',
+    label: val === TransactionTypeEnum.SALE ? 'Sell' : 'Purchase',
   }));
 
   const profileTypeOptions = Object.values(TransactionProfileType).map(val => ({
@@ -429,7 +429,7 @@ const AD1FormBody = ({ readOnly, allowWorkplaceSelection }: AD1FormBodyProps) =>
       <CardSection heading="Pricing & Calculations">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <FormFieldInput name="fcVolume" label="Quantity" type="number" step="any" placeholder="0.0000000" valueTransform="none" disabled={readOnly} />
-          <FormFieldInput name="saleRate" label="Sale Rate" type="number" step="any" placeholder="0.0000000" valueTransform="none" disabled={readOnly} />
+          <FormFieldInput name="saleRate" label="Sell Rate" type="number" step="any" placeholder="0.0000000" valueTransform="none" disabled={readOnly} />
           <FormFieldInput name="totalInrAmt" label="Total INR Amt." type="number" step="any" valueTransform="none" disabled placeholder="0.00" />
           <FormFieldInput name="gst" label="GST" type="number" step="any" placeholder="0.00" valueTransform="none" disabled />
           <FormFieldInput name="bankCharges" label="Bank Charges" type="number" step="any" placeholder="0.00" valueTransform="none" disabled={readOnly} />

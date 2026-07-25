@@ -1,6 +1,5 @@
 import type { ICreatePurpose, IPurpose } from '../types/purposeTypes';
 import { PurposeRateTypeEnum } from '../types/purposeTypes';
-import { TransactionTypeEnum } from '@/modules/transactions';
 
 const formatDateForInput = (value?: string | Date | null): string => {
   if (!value) {
@@ -21,7 +20,10 @@ export const createEmptyPurposeFormValues = (): ICreatePurpose => ({
   threshold: 0,
   rate: 0,
   rateType: PurposeRateTypeEnum.PERCENT,
-  transactionType: TransactionTypeEnum.PURCHASE,
+  corporate: true,
+  individual: false,
+  sell: false,
+  purchase: true,
   slabs: [],
 });
 
@@ -31,7 +33,10 @@ export const mapPurposeToFormValues = (purpose: IPurpose): ICreatePurpose => ({
   threshold: purpose.threshold,
   rate: purpose.rate,
   rateType: purpose.rateType,
-  transactionType: purpose.transactionType,
+  corporate: purpose.corporate,
+  individual: purpose.individual,
+  sell: purpose.sell,
+  purchase: purpose.purchase,
   slabs: (purpose.slabs ?? []).map(slab => ({
     id: slab.id,
     sortOrder: slab.sortOrder,
@@ -48,7 +53,10 @@ export const sanitizePurposeFormValues = (values: ICreatePurpose): ICreatePurpos
   description: values.description.trim(),
   threshold: Number(values.threshold || 0),
   rate: Number(values.rate || 0),
-  transactionType: values.transactionType,
+  corporate: Boolean(values.corporate),
+  individual: Boolean(values.individual),
+  sell: Boolean(values.sell),
+  purchase: Boolean(values.purchase),
   slabs: (values.slabs ?? []).map(slab => ({
     ...slab,
     sortOrder: Number(slab.sortOrder || 0),
@@ -64,5 +72,19 @@ export const sanitizePurposeFormValues = (values: ICreatePurpose): ICreatePurpos
 
 export const formatPurposeRateLabel = (rate: number, rateType: string) =>
   `${Number(rate).toFixed(2)} ${rateType === PurposeRateTypeEnum.RUPEES ? 'Rupees' : '%'}`;
+
+export const formatPurposeScopeLabel = (corporate: boolean, individual: boolean) => {
+  const values: string[] = [];
+  if (corporate) values.push('Corporate');
+  if (individual) values.push('Individual');
+  return values.length > 0 ? values.join(' / ') : '-';
+};
+
+export const formatPurposeTransactionScopeLabel = (sell: boolean, purchase: boolean) => {
+  const values: string[] = [];
+  if (sell) values.push('Sell');
+  if (purchase) values.push('Purchase');
+  return values.length > 0 ? values.join(' / ') : '-';
+};
 
 export const formatPurposeDateForInput = formatDateForInput;

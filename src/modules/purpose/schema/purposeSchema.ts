@@ -1,5 +1,4 @@
 import * as yup from 'yup';
-import { TransactionTypeEnum } from '@/modules/transactions';
 import { PurposeRateTypeEnum } from '../types/purposeTypes';
 
 const purposeSlabSchema = yup.object({
@@ -54,9 +53,13 @@ export const purposeSchema = yup.object({
     .mixed<(typeof PurposeRateTypeEnum)[keyof typeof PurposeRateTypeEnum]>()
     .oneOf(Object.values(PurposeRateTypeEnum))
     .required('Rate type is required'),
-  transactionType: yup
-    .mixed<(typeof TransactionTypeEnum)[keyof typeof TransactionTypeEnum]>()
-    .oneOf(Object.values(TransactionTypeEnum))
-    .required('Transaction type is required'),
+  corporate: yup.boolean().default(true),
+  individual: yup.boolean().default(false),
+  sell: yup.boolean().default(false),
+  purchase: yup.boolean().default(true),
   slabs: yup.array().of(purposeSlabSchema).default([]),
-});
+}).test(
+  'purpose-scope',
+  'Purpose must apply to at least one party profile type and one transaction type',
+  value => Boolean(value?.corporate || value?.individual) && Boolean(value?.sell || value?.purchase),
+);

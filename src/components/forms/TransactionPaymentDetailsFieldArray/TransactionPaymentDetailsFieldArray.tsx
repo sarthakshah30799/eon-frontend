@@ -522,7 +522,7 @@ const PaymentDetailRow = ({
             isCash
               ? 'Cash control account'
               : isSale
-                ? 'Select sale bank account'
+              ? 'Select sell bank account'
                 : 'Select purchase bank account'
           }
           loadOptions={loadAccountOptions}

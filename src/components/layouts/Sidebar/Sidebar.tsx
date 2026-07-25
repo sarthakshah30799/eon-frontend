@@ -62,7 +62,7 @@ const isPathActive = (currentPath: string, targetPath?: string) => {
 
   return (
     matchPath(
-      { path: normalizedTargetPath, end: true },
+      { path: normalizedTargetPath, end: false },
       normalizedCurrentPath
     ) !== null
   );

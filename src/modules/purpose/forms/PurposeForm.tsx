@@ -4,12 +4,11 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { PlusIcon } from '@heroicons/react/24/outline';
 import { useNavigate } from 'react-router-dom';
 import { Button, CardSection } from '@/components/ui';
-import { Form, FormFieldInput, FormFieldSelect } from '@/components/forms';
+import { Form, FormFieldCheckbox, FormFieldInput, FormFieldSelect } from '@/components/forms';
 import type { AsyncSelectOption, AsyncSelectResponse } from '@/components/ui';
-import { TransactionTypeEnum } from '@/modules/transactions';
 import { purposeSchema } from '../schema/purposeSchema';
 import { PURPOSE_RATE_TYPE_OPTIONS, PURPOSE_TEXTS } from '../constants/purposeConstants';
-import type { ICreatePurpose } from '../types/purposeTypes';
+import { type ICreatePurpose } from '../types/purposeTypes';
 import { createEmptyPurposeFormValues } from '../utils/purposeUtils';
 
 const createStaticLoadOptions = (options: AsyncSelectOption[]) => async (): Promise<AsyncSelectResponse> => ({
@@ -21,13 +20,7 @@ const rateTypeOptions: AsyncSelectOption[] = PURPOSE_RATE_TYPE_OPTIONS.map(optio
   label: option.label,
 }));
 
-const transactionTypeOptions: AsyncSelectOption[] = Object.values(TransactionTypeEnum).map(value => ({
-  value,
-  label: value === TransactionTypeEnum.SALE ? 'Sale' : 'Purchase',
-}));
-
 const loadRateTypeOptions = createStaticLoadOptions(rateTypeOptions);
-const loadTransactionTypeOptions = createStaticLoadOptions(transactionTypeOptions);
 
 const PurposeSlabsSection = ({
   isSubmitting,
@@ -47,7 +40,7 @@ const PurposeSlabsSection = ({
           <p className="text-sm font-semibold text-text-primary">{PURPOSE_TEXTS.SLABS_TITLE}</p>
           <p className="text-xs text-text-tertiary">{PURPOSE_TEXTS.SLABS_SUBTITLE}</p>
         </div>
-          <Button
+        <Button
           type="button"
           variant="outline"
           size="sm"
@@ -220,15 +213,21 @@ export const PurposeForm = ({
             isCreatable={false}
             disabled={isSubmitting}
           />
-          <FormFieldSelect
-            name="transactionType"
-            label="Transaction Type"
-            loadOptions={loadTransactionTypeOptions}
-            defaultOptions={transactionTypeOptions}
-            isSearchable={false}
-            isCreatable={false}
-            disabled={isSubmitting}
-          />
+        </div>
+      </CardSection>
+
+      <CardSection heading="Purpose Scope">
+        <div className="grid gap-6 md:grid-cols-2">
+          <div className="space-y-3">
+            <p className="text-sm font-semibold text-text-primary">Party Profile Type</p>
+            <FormFieldCheckbox name="corporate" label="Corporate" disabled={isSubmitting} />
+            <FormFieldCheckbox name="individual" label="Individual" disabled={isSubmitting} />
+          </div>
+          <div className="space-y-3">
+            <p className="text-sm font-semibold text-text-primary">Transaction Type</p>
+            <FormFieldCheckbox name="sell" label="Sell" disabled={isSubmitting} />
+            <FormFieldCheckbox name="purchase" label="Purchase" disabled={isSubmitting} />
+          </div>
         </div>
       </CardSection>
 

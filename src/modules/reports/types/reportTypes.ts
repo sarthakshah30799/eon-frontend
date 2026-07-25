@@ -54,7 +54,7 @@ export const getReportPageCanonicalSlug = (
 };
 
 const REPORT_PAGE_TITLE_BY_TYPE: Record<ReportPageType, string> = {
-  [ReportPageTypeEnum.SALE_PURCHASE]: 'Sale & Purchase Reports',
+  [ReportPageTypeEnum.SALE_PURCHASE]: 'Sell & Purchase Reports',
   [ReportPageTypeEnum.PRODUCT_PROFIT]: 'Product Profit Reports',
   [ReportPageTypeEnum.SPECIAL]: 'Special Reports',
 };

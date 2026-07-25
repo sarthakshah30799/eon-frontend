@@ -146,7 +146,7 @@ export const CurrencyRateOverridesSection = ({
     },
     {
       id: 'sale',
-      header: 'Sale',
+      header: 'Sell',
       cell: ({ row }) => {
         const latestRate = getLatestRateForCurrency(
           rates,

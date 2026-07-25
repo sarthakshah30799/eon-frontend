@@ -3,13 +3,11 @@ import {
   PassengerEntityTypeEnum,
   PassengerNationalityTypeEnum,
   PassengerOtherIdProofTypeEnum,
-  PassengerPanHolderRelationTypeEnum,
   PassengerResidentStatusEnum,
   type PassengerEntityType,
   type PassengerAmlPartyProfile,
   type PassengerNationalityType,
   type PassengerOtherIdProofType,
-  type PassengerPanHolderRelationType,
   type IPassengerAmlVerificationValues,
   type IPassengerPassengerDetailsValues,
 } from '../types/passengerTypes';
@@ -107,17 +105,11 @@ export const createPassengerPanVerificationSchema = () =>
       then: schema => schema.required('PAN holder DOB is required'),
       otherwise: schema => schema.default(''),
     }),
-    panHolderRelationType: yup
-      .mixed<PassengerPanHolderRelationType | ''>()
-      .oneOf([...Object.values(PassengerPanHolderRelationTypeEnum), ''] as const)
-      .default(''),
+    panHolderRelationType: yup.string().trim().default(''),
     corporatePanNumber: optionalText(),
     corporatePanHolderName: optionalText(),
     corporatePanDob: yup.string().trim().default(''),
-    corporatePanHolderRelationType: yup
-      .mixed<PassengerPanHolderRelationType | ''>()
-      .oneOf([...Object.values(PassengerPanHolderRelationTypeEnum), ''] as const)
-      .default(''),
+    corporatePanHolderRelationType: yup.string().trim().default(''),
   });
 
 export const createPassengerPassportVerificationSchema = () =>
@@ -239,10 +231,7 @@ export const createPassengerDetailsDefaultValues = (
     panNumber: verifiedAmlValues?.panNumber ?? '',
     panHolderName: verifiedAmlValues?.panHolderName ?? '',
     panDob: verifiedAmlValues?.panDob ?? '',
-    panHolderRelationType:
-      resolvedEntityType === PassengerEntityTypeEnum.CORPORATE
-        ? PassengerPanHolderRelationTypeEnum.COMPANY
-        : PassengerPanHolderRelationTypeEnum.INDIVIDUAL,
+    panHolderRelationType: '',
     paidByPanNumber: shouldPrefillFromPartyProfile ? selectedPartyProfile?.panNo ?? '' : '',
     paidByPanHolderName: shouldPrefillFromPartyProfile
       ? selectedPartyProfile?.panName ?? selectedPartyProfile?.name ?? ''

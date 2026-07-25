@@ -315,7 +315,7 @@ export const PurchaseBookReferenceField = ({
         })
         .map(page => ({
           value: page.id,
-          label: `${page.manualBook?.no || 'Book'} | Page ${page.pageNo}${page.manualBook?.transactionType ? ` (${page.manualBook.transactionType})` : isSale ? ' (SALE)' : ' (PURCHASE)'}`,
+          label: `${page.manualBook?.no || 'Book'} | Page ${page.pageNo}${page.manualBook?.transactionType ? ` (${page.manualBook.transactionType})` : isSale ? ' (SELL)' : ' (PURCHASE)'}`,
         }));
 
       return { options, hasMore: false };

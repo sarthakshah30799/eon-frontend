@@ -1,6 +1,7 @@
 import { apiClient } from '../api';
 import type { ICreatePurpose, IPurpose } from '@/modules/purpose/types';
 import type { TransactionType } from '@/modules/transactions';
+import type { PurposePartyProfileType } from '@/modules/purpose/types';
 
 interface BackendPurposeSlab {
   id: string;
@@ -41,7 +42,10 @@ const preparePayload = (values: ICreatePurpose): ICreatePurpose => ({
   threshold: Number(values.threshold || 0),
   rate: Number(values.rate || 0),
   rateType: values.rateType,
-  transactionType: values.transactionType,
+  corporate: values.corporate,
+  individual: values.individual,
+  sell: values.sell,
+  purchase: values.purchase,
   slabs: (values.slabs ?? []).map(slab => ({
     sortOrder: Number(slab.sortOrder || 0),
     fromAmount: Number(slab.fromAmount || 0),
@@ -55,13 +59,20 @@ const preparePayload = (values: ICreatePurpose): ICreatePurpose => ({
 });
 
 export const purposeApi = {
-  getPurposes: async (search?: string, transactionType?: TransactionType): Promise<IPurpose[]> => {
+  getPurposes: async (
+    search?: string,
+    transactionType?: TransactionType,
+    partyProfileType?: PurposePartyProfileType
+  ): Promise<IPurpose[]> => {
     const params = new URLSearchParams();
     if (search?.trim()) {
       params.set('search', search.trim());
     }
     if (transactionType) {
       params.set('transactionType', transactionType);
+    }
+    if (partyProfileType) {
+      params.set('partyProfileType', partyProfileType);
     }
     const query = params.toString() ? `?${params.toString()}` : '';
     const res = await apiClient.get<BackendPurpose[]>(`/purposes${query}`);

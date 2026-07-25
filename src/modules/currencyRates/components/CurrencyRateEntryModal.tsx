@@ -85,7 +85,7 @@ export const CurrencyRateEntryModal = ({
           {selectedRate ? (
             <div className="mt-2 grid gap-1">
               <div>Buy: {selectedRate.baseBuyRate || '-'}</div>
-              <div>Sale: {selectedRate.baseSaleRate || '-'}</div>
+              <div>Sell: {selectedRate.baseSaleRate || '-'}</div>
               <div>Base Rate: {selectedRate.baseRate || '-'}</div>
             </div>
           ) : (
@@ -153,7 +153,7 @@ export const CurrencyRateEntryModal = ({
                 />
               </div>
               <div>
-                <label className={labelClass}>Base Sale Rate</label>
+                <label className={labelClass}>Base Sell Rate</label>
                 <Input
                   type="number"
                   step={rateStep}

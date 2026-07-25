@@ -24,7 +24,6 @@ import {
 import type { IPartyProfileCommissionRule } from '@/modules/partyProfiles/types';
 import {
   PassengerNationalityTypeEnum,
-  PassengerPanHolderRelationTypeEnum,
   PassengerResidentStatusEnum,
 } from '@/modules/passengers/types/passengerTypes';
 import type {
@@ -134,11 +133,11 @@ export const createEmptyPurchaseFormValues = (
   address2: '',
   email: '',
   contactNo: '',
-  panHolderRelationType: PassengerPanHolderRelationTypeEnum.COMPANY,
+  panHolderRelationType: '',
   corporatePanNumber: '',
   corporatePanHolderName: '',
   corporatePanDob: '',
-  corporatePanHolderRelationType: PassengerPanHolderRelationTypeEnum.COMPANY,
+  corporatePanHolderRelationType: '',
   paidByPanNumber: '',
   paidByPanHolderName: '',
   paidByPanDob: '',
@@ -377,11 +376,11 @@ export const mapPurchaseTransactionToFormValues = (
   address2: '',
   email: '',
   contactNo: '',
-  panHolderRelationType: PassengerPanHolderRelationTypeEnum.COMPANY,
+  panHolderRelationType: '',
   corporatePanNumber: '',
   corporatePanHolderName: '',
   corporatePanDob: '',
-  corporatePanHolderRelationType: PassengerPanHolderRelationTypeEnum.COMPANY,
+  corporatePanHolderRelationType: '',
   paidByPanNumber: '',
   paidByPanHolderName: '',
   paidByPanDob: '',
@@ -503,7 +502,11 @@ export const getPurchaseTransactionPartyProfileFilter = (
   purchasePageType: PurchasePageType | null = null
 ) =>
   transactionType === TransactionTypeEnum.SALE
-    ? ({ sale: true } as const)
+    ? purchasePageType === TransactionTypeProfileEnum.SALE_INDIVIDUAL
+      ? ({ sale: true, isIndividual: true } as const)
+      : purchasePageType === TransactionTypeProfileEnum.SALE_CORPORATE
+        ? ({ sale: true, isIndividual: false } as const)
+        : ({ sale: true } as const)
     : purchasePageType === TransactionTypeProfileEnum.PURCHASE_INDIVIDUAL
       ? ({ purchase: true, isIndividual: true } as const)
       : purchasePageType === TransactionTypeProfileEnum.PURCHASE_CORPORATE
@@ -517,8 +520,8 @@ export const getPurchaseTransactionPricingSide = (
 
 export const getPurchaseTransactionPricingSideLabel = (
   transactionType: TransactionType | null | undefined
-): 'Sale' | 'Buy' =>
-  transactionType === TransactionTypeEnum.SALE ? 'Sale' : 'Buy';
+): 'Sell' | 'Buy' =>
+  transactionType === TransactionTypeEnum.SALE ? 'Sell' : 'Buy';
 
 export const resolveAgentCommissionRule = (
   rules: IPartyProfileCommissionRule[] = [],

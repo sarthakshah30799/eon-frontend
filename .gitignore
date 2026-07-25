@@ -30,4 +30,5 @@ dist-ssr
 .eslintcache
 
 .opencode
-.claudeAGENTS.md
+.claude
+AGENTS.md

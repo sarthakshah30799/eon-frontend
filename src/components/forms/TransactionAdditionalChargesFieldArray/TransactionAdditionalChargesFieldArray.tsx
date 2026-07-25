@@ -99,7 +99,7 @@ const AdditionalChargeRow = ({
           name={`${arrayName}.${index}.accountId`}
         label="Account"
         placeholder={
-          isSale ? 'Select bulk sale account' : 'Select bulk purchase account'
+          isSale ? 'Select bulk sell account' : 'Select bulk purchase account'
         }
           loadOptions={loadAccountOptions}
           pagination

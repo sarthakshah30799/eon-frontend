@@ -20,7 +20,7 @@ export const ReportSalePurchaseView = () => {
       report.filters.partyTypeOptions,
     );
     const txnTypeLabels = report.filters.transactionTypes.map(type =>
-      type === ReportTransactionTypeEnum.PURCHASE ? 'Purchase' : 'Sale',
+      type === ReportTransactionTypeEnum.PURCHASE ? 'Purchase' : 'Sell',
     );
     const sortLabel =
       report.filters.sortBy === ReportSortByEnum.DATE_DESC ? 'Date Desc' : 'Date Asc';
@@ -58,7 +58,7 @@ export const ReportSalePurchaseView = () => {
     <div className="space-y-3">
       <div className="space-y-1">
         <h1 className="text-lg font-semibold tracking-tight text-text-primary">
-          Sale & Purchase Reports
+          Sell & Purchase Reports
         </h1>
       <p className="max-w-3xl text-[11px] text-text-secondary">
           Grouped report for review, flat export for CSV/XLSX downloads.

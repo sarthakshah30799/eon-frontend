@@ -62,7 +62,7 @@ const isPathActive = (currentPath: string, targetPath?: string) => {
 
   return (
     matchPath(
-      { path: normalizedTargetPath, end: true },
+      { path: normalizedTargetPath, end: false },
       normalizedCurrentPath
     ) !== null
   );
@@ -73,7 +73,18 @@ const isMenuItemActive = (item: SidebarItem, currentPath: string): boolean => {
     return item.children.some(child => isMenuItemActive(child, currentPath));
   }
 
-  return isPathActive(currentPath, item.path);
+  if (!item.path) return false;
+  
+  // Check if current path starts with the item path (for nested routes)
+  const normalizedCurrentPath = normalizePath(currentPath);
+  const normalizedTargetPath = normalizePath(item.path);
+  
+  return (
+    matchPath(
+      { path: normalizedTargetPath, end: false },
+      normalizedCurrentPath
+    ) !== null
+  );
 };
 
 const mapMasterPageNodeToItem = (page: IMasterPageTreeNode): SidebarItem => {

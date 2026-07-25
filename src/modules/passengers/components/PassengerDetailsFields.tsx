@@ -8,6 +8,7 @@ import { PassengerOtherDocumentsSection } from './PassengerOtherDocumentsSection
 
 interface PassengerDetailsFieldsProps {
   entityType: string;
+  showPanRelation?: boolean;
   onPanFieldBlur?: () => void;
   onPassportFieldBlur?: () => void;
   onNationalityChange?: (value: string | null) => void;
@@ -15,6 +16,7 @@ interface PassengerDetailsFieldsProps {
 
 export const PassengerDetailsFields = ({
   entityType,
+  showPanRelation = false,
   onPanFieldBlur,
   onPassportFieldBlur,
   onNationalityChange,
@@ -74,13 +76,15 @@ export const PassengerDetailsFields = ({
               placeholder="Select state"
               countryId={countryId || undefined}
             />
-            <FormFieldCategoryOption
-              name="panHolderRelationType"
-              label="PAN Holder Relation"
-              placeholder="Select relation"
-              code={CategoryOptionCodeEnum.PassengerPanHolderRelation}
-              useValueAsId
-            />
+            {showPanRelation ? (
+              <FormFieldCategoryOption
+                name="panHolderRelationType"
+                label="PAN Holder Relation"
+                placeholder="Select relation"
+                code={CategoryOptionCodeEnum.PassengerPanHolderRelation}
+                useValueAsId
+              />
+            ) : null}
           </div>
 
           <PassengerIdentityFields
@@ -150,7 +154,6 @@ export const PassengerDetailsFields = ({
               label="Location"
               placeholder="Select location"
               code={CategoryOptionCodeEnum.LocationType}
-              useValueAsId
             />
             <FormFieldInput name="city" label="City" placeholder="Enter city" />
           </div>

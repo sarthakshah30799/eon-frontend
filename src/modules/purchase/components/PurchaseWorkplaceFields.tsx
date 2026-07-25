@@ -19,8 +19,9 @@ export const PurchaseWorkplaceFields = ({
   readOnly = false,
 }: PurchaseWorkplaceFieldsProps) => {
   const form = useFormContext<WorkplaceFormValues>();
-  const { user } = useAuth();
+  const { user, activeCounterId } = useAuth();
   const branchId = useWatch({ name: 'branchId', control: form.control });
+  const counterId = useWatch({ name: 'counterId', control: form.control });
   const canEditWorkplace = Boolean(
     user?.isAdmin || user?.isHo || user?.isHoStaff
   );
@@ -40,6 +41,22 @@ export const PurchaseWorkplaceFields = ({
 
     previousBranchIdRef.current = branchId || '';
   }, [branchId, form]);
+
+  useEffect(() => {
+    if (canEditWorkplace) {
+      return;
+    }
+
+    if (!branchId || counterId || !activeCounterId) {
+      return;
+    }
+
+    form.setValue('counterId', activeCounterId, {
+      shouldDirty: false,
+      shouldTouch: false,
+      shouldValidate: true,
+    });
+  }, [activeCounterId, branchId, canEditWorkplace, counterId, form]);
 
   const branchOptions = useMemo<AsyncSelectOption[]>(
     () =>

@@ -5,10 +5,13 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { Button, CardSection } from '@/components/ui';
-import { Form } from '@/components/forms';
-import { FormFieldPurposeSelect } from '@/components/forms';
-import { TransactionAdditionalChargesFieldArray } from '@/components/forms';
-import { TransactionPaymentDetailsFieldArray } from '@/components/forms';
+import {
+  Form,
+  FormFieldPurposeSelect,
+  FormFieldSelect,
+  TransactionAdditionalChargesFieldArray,
+  TransactionPaymentDetailsFieldArray,
+} from '@/components/forms';
 import { documentProfileApi } from '@/api/documentProfile';
 import { transactionsApi } from '@/api/transactions';
 import { DocumentRequirementCard } from '@/modules/documentProfiles/components/DocumentRequirementCard';
@@ -46,8 +49,16 @@ import {
   formatPurchaseDecimal,
   mapPurchaseFormValuesToSubmitPayload,
 } from '../utils/purchaseUtils';
-import { TransactionLogActionEnum } from '@/modules/transactions';
+import {
+  TransactionLogActionEnum,
+  TransactionPartyProfileTypeEnum,
+  TransactionTypeProfileEnum,
+} from '@/modules/transactions';
 import { PassengerAmlVerificationModal } from '@/modules/passengers/components';
+import {
+  PassengerEntityTypeEnum,
+  type PassengerEntityType,
+} from '@/modules/passengers/types/passengerTypes';
 import type {
   IPurchaseRulePreviewRequest,
   IPurchaseRulePreviewResponse,
@@ -144,9 +155,20 @@ const PurchaseFormBody = ({
   const [hasPrintedOnce, setHasPrintedOnce] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
   const isReadOnly = isSubmitting || readOnly;
+  const isCombinedPartyProfilePage =
+    purchasePageType === TransactionTypeProfileEnum.PURCHASE_CORPORATE_INDIVIDUAL ||
+    purchasePageType === TransactionTypeProfileEnum.SALE_CORPORATE_INDIVIDUAL;
   const partyProfileApplyTax = useWatch({
     control: form.control,
     name: 'partyProfileApplyTax',
+  });
+  const transactionPartyProfileType = useWatch({
+    control: form.control,
+    name: 'transactionPartyProfileType',
+  });
+  const passengerEntityType = useWatch({
+    control: form.control,
+    name: 'entityType',
   });
   const partyProfileId = useWatch({
     control: form.control,
@@ -173,6 +195,13 @@ const PurchaseFormBody = ({
     name: 'branchId',
   });
   const resolvedBranchId = watchedBranchId || branchId;
+  const resolvedPassengerEntityType =
+    isCombinedPartyProfilePage &&
+    transactionPartyProfileType === TransactionPartyProfileTypeEnum.INDIVIDUAL
+      ? PassengerEntityTypeEnum.INDIVIDUAL
+      : isCombinedPartyProfilePage
+        ? PassengerEntityTypeEnum.CORPORATE
+        : (passengerEntityType as PassengerEntityType | '' | null) || null;
   const additionalChargeAccountQuery = useMemo(
     () => ({
       page: 1,
@@ -250,6 +279,47 @@ const PurchaseFormBody = ({
     control: form.control,
     name: 'transactionType',
   });
+  const purchaseRuleWatchValues = useWatch({
+    control: form.control,
+    name: [
+      'passengerInfoCaptured',
+      'entityType',
+      'nationalityType',
+      'residentStatus',
+      'countryId',
+      'stateId',
+      'locationId',
+      'city',
+      'address1',
+      'address2',
+      'email',
+      'contactNo',
+      'panNumber',
+      'panHolderName',
+      'panDob',
+      'panHolderRelationType',
+      'paidByPanNumber',
+      'paidByPanHolderName',
+      'paidByPanDob',
+      'gstNumber',
+      'gstStateId',
+      'passportNumber',
+      'passportIssueAt',
+      'passportIssueDate',
+      'passportExpiryDate',
+      'arrivalDate',
+      'isPep',
+      'otherDocuments',
+      'transactions',
+      'additionalCharges',
+      'paymentDetails',
+    ] as const,
+  });
+  const passengerInfoCapturedForRule = Boolean(purchaseRuleWatchValues[0]);
+  const purchaseRulePreviewSignature = useMemo(
+    () => JSON.stringify(purchaseRuleWatchValues),
+    [purchaseRuleWatchValues]
+  );
   const hasCompleteItemPreviewRows = useMemo(
     () =>
       (transactions ?? []).every(
@@ -279,23 +349,23 @@ const PurchaseFormBody = ({
     [paymentDetails]
   );
   const purchaseRulePreviewPayload = useMemo(() => {
-    if (!purchasePageType) {
+    void purchaseRulePreviewSignature;
+
+    if (!purchasePageType || !passengerInfoCapturedForRule) {
       return null;
     }
 
-    try {
-      return mapPurchaseFormValuesToSubmitPayload(
-        form.getValues(),
-        [],
-        requiresApproval
-      );
-    } catch {
-      return null;
-    }
+    return mapPurchaseFormValuesToSubmitPayload(
+      form.getValues(),
+      [],
+      requiresApproval
+    );
   }, [
     form,
+    passengerInfoCapturedForRule,
     purchasePageType,
     requiresApproval,
+    purchaseRulePreviewSignature,
   ]);
   const purchaseRulePreviewRequest: IPurchaseRulePreviewRequest | null =
     purchaseRulePreviewPayload?.transaction
@@ -734,10 +804,74 @@ const PurchaseFormBody = ({
             label="Purpose"
             placeholder="Select purpose"
             transactionType={transactionType}
-            partyProfileType={getPurchasePurposePartyProfileType(purchasePageType)}
+            partyProfileType={getPurchasePurposePartyProfileType(
+              purchasePageType,
+              transactionPartyProfileType
+            )}
             disabled={isReadOnly}
           />
         </div>
+
+        {isCombinedPartyProfilePage ? (
+          <div className="mb-4 grid gap-4 lg:grid-cols-2">
+            <FormFieldSelect
+              name="transactionPartyProfileType"
+              label="Entity Type"
+              placeholder="Select entity type"
+              disabled={isReadOnly}
+              loadOptions={async () => ({
+                options: [
+                  {
+                    value: TransactionPartyProfileTypeEnum.CORPORATE,
+                    label: 'Corporate',
+                  },
+                  {
+                    value: TransactionPartyProfileTypeEnum.INDIVIDUAL,
+                    label: 'Individual',
+                  },
+                ],
+                hasMore: false,
+              })}
+              onValueChange={value => {
+                const nextValue = Array.isArray(value) ? value[0] ?? '' : value ?? '';
+                if (nextValue === transactionPartyProfileType) {
+                  return;
+                }
+
+                form.setValue('partyProfileId', '', {
+                  shouldDirty: true,
+                  shouldTouch: true,
+                  shouldValidate: true,
+                });
+                form.setValue('partyProfileCode', '', {
+                  shouldDirty: true,
+                  shouldTouch: true,
+                  shouldValidate: false,
+                });
+                form.setValue('partyProfileName', '', {
+                  shouldDirty: true,
+                  shouldTouch: true,
+                  shouldValidate: false,
+                });
+                form.setValue('partyProfileEmail', '', {
+                  shouldDirty: true,
+                  shouldTouch: true,
+                  shouldValidate: false,
+                });
+                form.setValue('partyProfilePhoneNo', '', {
+                  shouldDirty: true,
+                  shouldTouch: true,
+                  shouldValidate: false,
+                });
+                form.setValue('purposeId', '', {
+                  shouldDirty: true,
+                  shouldTouch: true,
+                  shouldValidate: true,
+                });
+              }}
+            />
+          </div>
+        ) : null}
 
         <div className="grid gap-4 lg:grid-cols-3">
           <PurchasePartyProfileField
@@ -1055,13 +1189,22 @@ const PurchaseFormBody = ({
       ) : null}
 
       <PassengerAmlVerificationModal
-        key={`${isPassengerAmlModalOpen ? 'open' : 'closed'}-${selectedPartyProfile?.id ?? 'none'}`}
+        key={`${isPassengerAmlModalOpen ? 'open' : 'closed'}-${selectedPartyProfile?.id ?? 'none'}-${resolvedPassengerEntityType ?? 'none'}-${transactionPartyProfileType || 'none'}`}
         open={isPassengerAmlModalOpen}
         onOpenChange={setIsPassengerAmlModalOpen}
-        entityType={getPurchasePageEntityType(purchasePageType) ?? undefined}
-        selectedPartyProfile={selectedPartyProfile ?? null}
+        entityType={
+          resolvedPassengerEntityType ||
+          getPurchasePageEntityType(purchasePageType) ||
+          undefined
+        }
+        selectedPartyProfile={
+          resolvedPassengerEntityType === PassengerEntityTypeEnum.CORPORATE
+            ? (selectedPartyProfile ?? null)
+            : null
+        }
         selectedPartyProfileLoading={
           Boolean(partyProfileId) &&
+          resolvedPassengerEntityType === PassengerEntityTypeEnum.CORPORATE &&
           (isSelectedPartyProfileLoading || isSelectedPartyProfileFetching)
         }
         onVerified={() => {
@@ -1136,6 +1279,9 @@ export const PurchaseForm = ({
       <Form<IPurchaseFormValues>
       id="purchase-form"
       onSubmit={values => onSubmit(values, draftDocumentAttachments)}
+      onError={errors => {
+        console.warn('[PurchaseForm] submit validation failed', errors);
+      }}
       resolver={yupResolver(
         createPurchaseFormSchema(defaultValues.transactionType),
       ) as unknown as Resolver<IPurchaseFormValues>}

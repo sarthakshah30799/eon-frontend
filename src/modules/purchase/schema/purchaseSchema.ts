@@ -3,6 +3,7 @@ import {
   TransactionPaymentMethodEnum,
   TransactionTypeEnum,
   TransactionTypeProfileEnum,
+  TransactionPartyProfileTypeEnum,
 } from '@/modules/transactions';
 import type { TransactionType } from '@/modules/transactions';
 import type { PurchasePageType } from '@/pages/purchase/[slug]/purchasePage.enum';
@@ -127,6 +128,30 @@ const passengerOtherDocumentSchema = yup.object({
   documentFile: yup.string().trim().default(''),
 });
 
+const isPassengerOtherDocumentFilled = (
+  row: Partial<{
+    documentType: string;
+    documentNumber: string;
+    validTill: string;
+    issueAt: string;
+    issueDate: string;
+    expiryDate: string;
+    documentFile: string;
+  }> | null | undefined
+) =>
+  Boolean(
+    row &&
+      [
+        row.documentType,
+        row.documentNumber,
+        row.validTill,
+        row.issueAt,
+        row.issueDate,
+        row.expiryDate,
+        row.documentFile,
+      ].some(value => String(value ?? '').trim() !== '')
+  );
+
 export const createPurchaseFormSchema = (transactionType: TransactionType) =>
   yup.object({
     purchasePageType: yup
@@ -161,6 +186,16 @@ export const createPurchaseFormSchema = (transactionType: TransactionType) =>
     partyProfileStateName: yup.string().trim().default(''),
     partyProfileContactName: yup.string().trim().default(''),
     partyProfileApplyTax: yup.boolean().default(false),
+    transactionPartyProfileType: yup
+      .mixed<(typeof TransactionPartyProfileTypeEnum)[keyof typeof TransactionPartyProfileTypeEnum] | ''>()
+      .oneOf([...Object.values(TransactionPartyProfileTypeEnum), ''] as const)
+      .when('purchasePageType', {
+        is: (value: PurchasePageType | null) =>
+          value === TransactionTypeProfileEnum.PURCHASE_CORPORATE_INDIVIDUAL ||
+          value === TransactionTypeProfileEnum.SALE_CORPORATE_INDIVIDUAL,
+        then: schema => schema.required('Entity selection is required'),
+        otherwise: schema => schema.default(''),
+      }),
     purposeId: yup.string().trim().required('Purpose is required'),
     agentProfileId: yup.string().trim().default(''),
     agentProfileCode: yup.string().trim().default(''),
@@ -220,35 +255,6 @@ export const createPurchaseFormSchema = (transactionType: TransactionType) =>
         otherwise: schema => schema.default(''),
       }),
     panHolderRelationType: yup.string().trim().required('PAN holder relation is required'),
-    corporatePanNumber: yup
-      .string()
-      .trim()
-      .when('entityType', {
-        is: PassengerEntityTypeEnum.CORPORATE,
-        then: schema => schema.required('Corporate PAN number is required'),
-        otherwise: schema => schema.default(''),
-      }),
-    corporatePanHolderName: yup
-      .string()
-      .trim()
-      .when('entityType', {
-        is: PassengerEntityTypeEnum.CORPORATE,
-        then: schema => schema.required('Corporate PAN holder name is required'),
-        otherwise: schema => schema.default(''),
-      }),
-    corporatePanDob: yup
-      .string()
-      .trim()
-      .when('entityType', {
-        is: PassengerEntityTypeEnum.CORPORATE,
-        then: schema => schema.required('Corporate PAN holder DOB is required'),
-        otherwise: schema => schema.default(''),
-      }),
-    corporatePanHolderRelationType: yup.string().trim().when('entityType', {
-        is: PassengerEntityTypeEnum.CORPORATE,
-        then: schema => schema.required('Corporate PAN holder relation is required'),
-        otherwise: schema => schema.default(''),
-      }),
     paidByPanNumber: yup.string().trim().default(''),
     paidByPanHolderName: yup.string().trim().default(''),
     paidByPanDob: yup.string().trim().default(''),
@@ -304,13 +310,9 @@ export const createPurchaseFormSchema = (transactionType: TransactionType) =>
       .array()
       .of(passengerOtherDocumentSchema)
       .default([])
-      .when(['passengerInfoCaptured', 'nationalityType'], {
-        is: (passengerInfoCaptured: boolean, nationalityType: string) =>
-          passengerInfoCaptured &&
-          nationalityType === PassengerNationalityTypeEnum.INDIAN,
-        then: schema => schema.min(1, 'At least one other document is required'),
-        otherwise: schema => schema.default([]),
-      }),
+      .transform(rows =>
+        Array.isArray(rows) ? rows.filter(row => isPassengerOtherDocumentFilled(row)) : []
+      ),
     manualBookReferenceType: manualBookReferenceTypeSchema,
     manualBookId: yup.string().trim().required('Manual book reference is required'),
     manualBookNo: yup.string().trim().default(''),

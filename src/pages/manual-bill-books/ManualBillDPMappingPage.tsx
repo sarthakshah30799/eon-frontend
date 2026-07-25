@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { manualBillBookApi, type IManualBookDPMappingGroup } from '@/api';
-import { categoryOptionsApi } from '@/api/categoryOptions/categoryOptions.api';
 import {
   AsyncSelect,
   Button,
@@ -10,11 +9,12 @@ import {
   Input,
   type AsyncSelectOption,
 } from '@/components/ui';
-import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import { CashierBillBookListView, CashierDPUnmapView, type ICashierBookRow } from '@/modules/manual-bill-books/components';
 import type { MultiValue, SingleValue } from 'react-select';
 import toast from 'react-hot-toast';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
+import { useCategoryOptions } from '@/hooks';
 
 interface IDPMappingRow {
   manualBookId: string;
@@ -54,7 +54,10 @@ const ManualBillDPMappingPageContent = () => {
 
   // Options & table state
   const [deliveryPersons, setDeliveryPersons] = useState<Array<{ id: string; name: string }>>([]);
-  const [txnTypes, setTxnTypes] = useState<Array<{ id: string; label: string }>>([]);
+  const {
+    defaultOptions: txnTypes,
+    loadOptions: loadTxnTypeOptions,
+  } = useCategoryOptions(CategoryOptionCodeEnum.Transaction, true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingDP, setIsLoadingDP] = useState(true);
@@ -63,13 +66,6 @@ const ManualBillDPMappingPageContent = () => {
 
   const getErrorMessage = (error: unknown, fallback: string) =>
     error instanceof Error ? error.message : fallback;
-
-  useEffect(() => {
-    categoryOptionsApi
-      .getCategoryOptionsByCode(CategoryOptionCodeEnum.Transaction)
-      .then(options => setTxnTypes(options.map(o => ({ id: o.value, label: o.label }))))
-      .catch(err => console.error('Failed to load transaction types', err));
-  }, []);
 
   useEffect(() => {
     if (!activeBranchId) return;
@@ -87,7 +83,7 @@ const ManualBillDPMappingPageContent = () => {
   // When cashier selects a row, pre-fill the form
   const handleCashierRowSelect = useCallback((row: ICashierBookRow) => {
     setCashierRow(row);
-    setTxnType(row.txnType);
+    setTxnType(String(row.txnType));
     // Default: first book in their assigned range, MV pre-filled for that book
     const firstBookNo = row.assignedBookNoFrom;
     const mvFrom = row.book.mvNoFrom + (firstBookNo - row.book.bookNoFrom) * row.book.vouchersPerBook;
@@ -282,7 +278,7 @@ const ManualBillDPMappingPageContent = () => {
   }
 
   const allChecked = rows.length > 0 && rows.every(r => r.isCheck);
-  const selectedTxnType = txnTypes.find(t => t.id === txnType);
+  const selectedTxnType = txnTypes.find(t => t.value === txnType);
 
   return (
     <div className="space-y-6">
@@ -330,13 +326,13 @@ const ManualBillDPMappingPageContent = () => {
                 const sel = Array.isArray(option) ? option[0] ?? null : option;
                 setTxnType(sel?.value ? String(sel.value) : 'ALL');
               }}
-              loadOptions={async () => ({
-                options: [
-                  { value: 'ALL', label: 'ALL' },
-                  ...txnTypes.map(t => ({ value: t.id, label: t.label })),
-                ],
-                hasMore: false,
-              })}
+              loadOptions={async (inputValue: string) => {
+                const response = await loadTxnTypeOptions(inputValue);
+                return {
+                  options: [{ value: 'ALL', label: 'ALL' }, ...response.options],
+                  hasMore: false,
+                };
+              }}
               isClearable={false}
             />
           </div>

@@ -245,6 +245,18 @@ const CurrencyProfileEditPage = lazy(
   () =>
     import('../pages/master/system-setups/currency-profile/edit/[id]/CurrencyProfileEditPage')
 );
+const CountryGroupListPage = lazy(
+  () =>
+    import('../pages/master/system-setups/country-group/list/CountryGroupListPage')
+);
+const CountryGroupCreatePage = lazy(
+  () =>
+    import('../pages/master/system-setups/country-group/create/CountryGroupCreatePage')
+);
+const CountryGroupEditPage = lazy(
+  () =>
+    import('../pages/master/system-setups/country-group/edit/[id]/CountryGroupEditPage')
+);
 const TdsProfileListPage = lazy(
   () =>
     import('../pages/master/system-setups/tds-profile/list/TdsProfileListPage')
@@ -849,6 +861,30 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <CountryProfileEditPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/country-group',
+    element: (
+      <ProtectedLayout>
+        <CountryGroupListPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/country-group/create',
+    element: (
+      <ProtectedLayout>
+        <CountryGroupCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/country-group/edit/:id',
+    element: (
+      <ProtectedLayout>
+        <CountryGroupEditPage />
       </ProtectedLayout>
     ),
   },

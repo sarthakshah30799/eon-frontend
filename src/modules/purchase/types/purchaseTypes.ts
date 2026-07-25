@@ -9,6 +9,7 @@ import type {
   ICreateTransactionDocumentPayload,
   ICreateTransactionItemPayload,
   ICreateTransactionPaymentPayload,
+  TransactionPartyProfileType,
   TradeMode,
   TransactionType,
 } from '@/modules/transactions';
@@ -55,6 +56,7 @@ export interface IPurchaseFormValues {
   partyProfileStateName: string;
   partyProfileContactName: string;
   partyProfileApplyTax: boolean;
+  transactionPartyProfileType: TransactionPartyProfileType | '';
   purposeId: string;
   agentProfileId: string;
   agentProfileCode: string;
@@ -79,10 +81,6 @@ export interface IPurchaseFormValues {
   email: string;
   contactNo: string;
   panHolderRelationType: string;
-  corporatePanNumber: string;
-  corporatePanHolderName: string;
-  corporatePanDob: string;
-  corporatePanHolderRelationType: string;
   paidByPanNumber: string;
   paidByPanHolderName: string;
   paidByPanDob: string;
@@ -173,6 +171,7 @@ export interface IPurchaseSubmitPayload {
     branchSnapshot: ITransactionReferenceSnapshot | null;
     requiresApproval: boolean;
     partyProfileId: string;
+    transactionPartyProfileType?: TransactionPartyProfileType | null;
     purposeId?: string | null;
     agentProfileId?: string | null;
     passenger?: import('@/modules/transactions').ICreateTransactionPassengerPayload | null;

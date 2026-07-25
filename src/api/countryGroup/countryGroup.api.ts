@@ -1,17 +1,51 @@
 import { apiClient } from '../api';
+import type { ICurrencyProfile } from '@/modules/currencyProfile/types';
+
+export interface ICountryGroupCurrency {
+  id: string;
+  currencyCode: string;
+  currencyName: string;
+}
 
 export interface ICountryGroup {
   id: string;
   name: string;
   code: string;
+  sellLimitAmount: string | null;
+  sellLimitCurrencyId: string | null;
+  sellLimitCurrency?: ICountryGroupCurrency | null;
+  minTravelDays: number | null;
+  maxTravelDays: number | null;
   createdAt: string;
   updatedAt: string;
+  createdBy?: string;
+  updatedBy?: string;
 }
 
 export interface ICreateCountryGroup {
   name: string;
-  code?: string;
+  code: string;
+  sellLimitAmount: number | null;
+  sellLimitCurrencyId: string | null;
+  minTravelDays: number | null;
+  maxTravelDays: number | null;
 }
+
+export type IUpdateCountryGroup = Partial<ICreateCountryGroup>;
+
+export interface ICountryGroupFormValues {
+  name: string;
+  code: string;
+  sellLimitAmount: string;
+  sellLimitCurrencyId: string;
+  minTravelDays: string;
+  maxTravelDays: string;
+}
+
+export type ICountryGroupCurrencyProfile = Pick<
+  ICurrencyProfile,
+  'id' | 'currencyCode' | 'currencyName'
+>;
 
 export const countryGroupApi = {
   getCountryGroups: async (): Promise<ICountryGroup[]> => {
@@ -33,7 +67,7 @@ export const countryGroupApi = {
     return res.data;
   },
 
-  updateCountryGroup: async (id: string, values: Partial<ICreateCountryGroup>): Promise<ICountryGroup | undefined> => {
+  updateCountryGroup: async (id: string, values: IUpdateCountryGroup): Promise<ICountryGroup | undefined> => {
     const res = await apiClient.put<ICountryGroup>(`/country-groups/${id}`, values);
     if (res.error) throw new Error(res.error);
     return res.data;

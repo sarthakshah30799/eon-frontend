@@ -1,6 +1,7 @@
 import { useWatch, useFormContext } from 'react-hook-form';
 import {
   FormFieldCategoryOption,
+  FormFieldCountryDropdown,
   FormFieldDatePicker,
   FormFieldInput,
 } from '@/components/forms';
@@ -41,29 +42,47 @@ export const PassengerIdentityFields = ({
     nationalityType === PassengerNationalityTypeEnum.INDIAN;
   const isPassportRequired = showPassport || (!isCorporate && !isIndianNationality);
   const isPanRequired = showPan && (isCorporate || isIndianNationality);
+  const showCountry = showNationality && !isIndianNationality;
 
   return (
     <div className="space-y-4">
       {showNationality ? (
-        <div className="grid gap-4 md:grid-cols-2">
-          <FormFieldCategoryOption
-            name="nationalityType"
-            label="Nationality"
-            placeholder="Select nationality"
-            code={CategoryOptionCodeEnum.PassengerNationality}
-            useValueAsId
-            onValueChange={value => onNationalityChange?.(Array.isArray(value) ? null : value)}
-          />
-          {showResident ? (
+        <>
+          <div
+            className={`grid gap-4 ${
+              showResident ? 'md:grid-cols-2' : 'md:grid-cols-1'
+            }`}
+          >
             <FormFieldCategoryOption
-              name="residentStatus"
-              label="Resident Status"
-              placeholder="Select resident status"
-              code={CategoryOptionCodeEnum.PassengerResidentStatus}
+              name="nationalityType"
+              label="Nationality"
+              placeholder="Select nationality"
+              code={CategoryOptionCodeEnum.PassengerNationality}
               useValueAsId
+              onValueChange={value =>
+                onNationalityChange?.(Array.isArray(value) ? null : value)
+              }
             />
+            {showResident ? (
+              <FormFieldCategoryOption
+                name="residentStatus"
+                label="Resident Status"
+                placeholder="Select resident status"
+                code={CategoryOptionCodeEnum.PassengerResidentStatus}
+                useValueAsId
+              />
+            ) : null}
+          </div>
+          {showCountry ? (
+            <div className="grid gap-4 md:grid-cols-2">
+              <FormFieldCountryDropdown
+                name="countryId"
+                label="Country"
+                placeholder="Select country"
+              />
+            </div>
           ) : null}
-        </div>
+        </>
       ) : null}
 
       {isPanRequired ? (

@@ -78,7 +78,7 @@ const hasCompletePassportValues = (values: IPurchaseFormValues) =>
   );
 
 const getDetailsFieldNames = (mode: VerificationMode) => {
-  const baseFields = [
+  const sharedFields = [
     'entityType',
     'nationalityType',
     'residentStatus',
@@ -97,25 +97,20 @@ const getDetailsFieldNames = (mode: VerificationMode) => {
     'address1',
     'address2',
     'isPep',
-    'passportNumber',
-    'passportIssueAt',
-    'passportIssueDate',
-    'passportExpiryDate',
-    'arrivalDate',
-    'otherDocuments.0.documentType',
-    'otherDocuments.0.documentNumber',
-    'otherDocuments.0.validTill',
   ] as const;
 
   return mode === 'pan'
     ? [
-        ...baseFields,
+        ...sharedFields,
         'panNumber',
         'panHolderName',
         'panDob',
+        'otherDocuments.0.documentType',
+        'otherDocuments.0.documentNumber',
+        'otherDocuments.0.validTill',
       ]
     : [
-        ...baseFields,
+        ...sharedFields,
         'passportNumber',
         'passportIssueAt',
         'passportIssueDate',
@@ -280,10 +275,9 @@ export const PassengerAmlVerificationModal = ({
             ? await verifyPan({
                 entityType: (currentValues.entityType || entityType) as PassengerEntityType,
                 nationalityType: (currentValues.nationalityType || PassengerNationalityTypeEnum.INDIAN) as PassengerNationalityType,
-                panNumber: currentValues.panNumber,
-                panHolderName: currentValues.panHolderName,
-                panDob: currentValues.panDob,
-                panHolderRelationType: currentValues.panHolderRelationType,
+              panNumber: currentValues.panNumber,
+              panHolderName: currentValues.panHolderName,
+              panDob: currentValues.panDob,
               } satisfies IPassengerPanVerificationRequest)
             : await verifyPassport({
                 nationalityType: (currentValues.nationalityType || PassengerNationalityTypeEnum.NRI) as PassengerNationalityType,
@@ -651,13 +645,14 @@ export const PassengerAmlVerificationModal = ({
           />
         )
       ) : (
-        <PassengerAmlDetailsStepForm
-          entityType={(watchedEntityType || entityType) as PassengerEntityType}
-          onPanFieldBlur={() => {
-            void verifyIdentityOnBlur('pan');
-          }}
-          onPassportFieldBlur={() => {
-            void verifyIdentityOnBlur('passport');
+      <PassengerAmlDetailsStepForm
+        entityType={(watchedEntityType || entityType) as PassengerEntityType}
+        showPanRelation={verificationMode === 'pan'}
+        onPanFieldBlur={() => {
+          void verifyIdentityOnBlur('pan');
+        }}
+        onPassportFieldBlur={() => {
+          void verifyIdentityOnBlur('passport');
           }}
           onNationalityChange={handleNationalityChange}
         />

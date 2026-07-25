@@ -15,7 +15,9 @@ interface PassengerAmlVerificationStepFormProps {
 
 const toProfileLabel = (profile?: PassengerAmlPartyProfile | null) =>
   profile
-    ? `${profile.name}${profile.type ? ` (${profile.type})` : ''}`
+    ? `${profile.isIndividual ? 'Individual Profile' : 'Corporate Profile'}${
+        profile.name ? ` (${profile.name})` : ''
+      }`
     : 'No party profile selected yet';
 
 export const PassengerAmlVerificationStepForm = ({

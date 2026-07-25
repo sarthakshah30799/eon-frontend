@@ -93,6 +93,18 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
     meta: { title: 'Edit Country Profile' },
   },
   {
+    path: '/admin/country-group',
+    meta: { title: 'Country Group Master' },
+  },
+  {
+    path: '/admin/country-group/create',
+    meta: { title: 'Create Country Group' },
+  },
+  {
+    path: '/admin/country-group/edit/:id',
+    meta: { title: 'Edit Country Group' },
+  },
+  {
     path: '/admin/state-profile',
     meta: { title: 'State Profile' },
   },

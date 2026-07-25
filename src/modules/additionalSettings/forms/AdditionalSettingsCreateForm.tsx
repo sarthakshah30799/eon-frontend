@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button1';
 import { CardSection, Checkbox } from '@/components/ui';
 import { Form, FormFieldInput, FormFieldSelect, FormFieldDatePicker, FormFieldTextarea } from '@/components/forms';
 import { accountProfileApi } from '@/api/accountProfile';
+import { currencyProfileApi } from '@/api/currencyProfile';
 import { additionalSettingsSchema } from '../schema';
 import {
   createEmptyAdditionalSettingCategoryFormValues,
@@ -122,6 +123,18 @@ const SubcategoryRowFields = ({
     };
   }, []);
 
+  const loadCurrencyProfileOptions = useCallback(async (inputValue: string, page = 1) => {
+    const response = await currencyProfileApi.getCurrencyProfiles(inputValue);
+
+    return {
+      options: response.map(currency => ({
+        value: currency.id,
+        label: `${currency.currencyCode} - ${currency.currencyName}`,
+      })),
+      hasMore: response.length === 30 && page === 1,
+    };
+  }, []);
+
   const selectValueOptions = useMemo(
     () =>
       (subcategoryDefinition?.options ?? []).map(option => ({
@@ -137,12 +150,21 @@ const SubcategoryRowFields = ({
         return loadAccountProfileOptions(inputValue, page);
       }
 
+      if (subcategoryDefinition?.optionsSource === 'currency-profile') {
+        return loadCurrencyProfileOptions(inputValue, page);
+      }
+
       return {
         options: selectValueOptions,
         hasMore: false,
       };
     },
-    [loadAccountProfileOptions, selectValueOptions, subcategoryDefinition?.optionsSource]
+    [
+      loadAccountProfileOptions,
+      loadCurrencyProfileOptions,
+      selectValueOptions,
+      subcategoryDefinition?.optionsSource,
+    ]
   );
 
   const loadCodeOptions = async () => {
@@ -242,14 +264,14 @@ const SubcategoryRowFields = ({
             disabled={isSubmitting}
           />
         ) : isSelectType ? (
-        <FormFieldSelect
-          name={`subcategories.${index}.value`}
-          label="Value"
-          placeholder="Select value"
-          disabled={isSubmitting}
-          loadOptions={loadSelectValueOptions}
-          isSearchable={subcategoryDefinition?.optionsSource === 'account-profile'}
-        />
+          <FormFieldSelect
+            name={`subcategories.${index}.value`}
+            label="Value"
+            placeholder="Select value"
+            disabled={isSubmitting}
+            loadOptions={loadSelectValueOptions}
+            isSearchable={subcategoryDefinition?.optionsSource !== undefined}
+          />
         ) : isJsonType ? (
           <FormFieldTextarea
             name={`subcategories.${index}.value`}

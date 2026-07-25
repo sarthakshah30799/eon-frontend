@@ -14,37 +14,43 @@ import { countryProfileSchema } from '../schema';
 import { COUNTRY_PROFILE_TEXTS, riskCategoryOptions } from '../constants';
 import type { ICreateCountryProfile } from '../types';
 import { useNavigate } from 'react-router-dom';
-import { countryGroupApi } from '@/api';
 import { CountryGroupModal } from '../components';
 import { countryProfileApi } from '@/api/countryProfile';
 import { normalizeCodeValue } from '@/utils';
+import { usePermission } from '@/hooks';
+import { useListCountryGroups } from '@/modules/countryGroup';
 
 const loadRiskCategoryOptions = async (): Promise<AsyncSelectResponse> => {
   return { options: riskCategoryOptions };
-};
-
-const loadCountryGroupOptions = async (
-  inputValue: string
-): Promise<AsyncSelectResponse> => {
-  try {
-    const groups = await countryGroupApi.getCountryGroups();
-    const options = groups
-      .filter(g => g.name.toLowerCase().includes(inputValue.toLowerCase()))
-      .map(g => ({
-        value: g.id,
-        label: g.name,
-      }));
-    return { options };
-  } catch (error) {
-    console.error('Failed to load country groups:', error);
-    return { options: [] };
-  }
 };
 
 const CountryGroupField = ({ isDisabled }: { isDisabled: boolean }) => {
   const { setValue } = useFormContext();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [pendingGroupName, setPendingGroupName] = useState('');
+  const { canAdd } = usePermission('/admin/country-group');
+  const { data: countryGroups = [] } = useListCountryGroups();
+
+  const loadCountryGroupOptions = useCallback(
+    async (inputValue: string): Promise<AsyncSelectResponse> => {
+      const normalizedSearch = inputValue.trim().toLowerCase();
+      const options = countryGroups
+        .filter(group =>
+          normalizedSearch
+            ? [group.code, group.name].some(value =>
+                value.toLowerCase().includes(normalizedSearch)
+              )
+            : true
+        )
+        .map(group => ({
+          value: group.id,
+          label: group.name,
+        }));
+
+      return { options };
+    },
+    [countryGroups]
+  );
 
   const handleSuccess = (newGroupId: string) => {
     setValue('countryGroupId', newGroupId, {
@@ -63,8 +69,11 @@ const CountryGroupField = ({ isDisabled }: { isDisabled: boolean }) => {
         disabled={isDisabled}
         isClearable
         isSearchable={true}
-        isCreatable={true}
+        isCreatable={canAdd}
         onCreateOption={inputValue => {
+          if (!canAdd) {
+            return;
+          }
           setPendingGroupName(inputValue);
           setIsModalOpen(true);
         }}
@@ -140,8 +149,8 @@ export const CountryProfileForm = ({
     navigate('/admin/country-profile');
   };
   return (
-    <Form
-      id={insideModal? "" : "country-profile-form"}
+      <Form
+      id={insideModal ? '' : 'country-profile-form'}
       onSubmit={onSubmit}
       onError={handleSubmitErrors}
       resolver={

@@ -18,10 +18,8 @@ export type TransactionType =
 
 export const TransactionTypeProfileEnum = {
   PURCHASE_FFMC: 'PURCHASE_FFMC',
-  PURCHASE_CORPORATE: 'PURCHASE_CORPORATE',
-  PURCHASE_INDIVIDUAL: 'PURCHASE_INDIVIDUAL',
-  SALE_CORPORATE: 'SALE_CORPORATE',
-  SALE_INDIVIDUAL: 'SALE_INDIVIDUAL',
+  PURCHASE_CORPORATE_INDIVIDUAL: 'PURCHASE_CORPORATE_INDIVIDUAL',
+  SALE_CORPORATE_INDIVIDUAL: 'SALE_CORPORATE_INDIVIDUAL',
   SALE_FFMC: 'SALE_FFMC',
   SALE_RMC: 'SALE_RMC',
   SALE_FOREX: 'SALE_FOREX',
@@ -38,12 +36,23 @@ export const TransactionTypeProfileEnum = {
 export type TransactionTypeProfile =
   (typeof TransactionTypeProfileEnum)[keyof typeof TransactionTypeProfileEnum];
 
+export const TransactionPartyProfileTypeEnum = {
+  FFMC: 'FFMC',
+  CORPORATE: 'CORPORATE',
+  INDIVIDUAL: 'INDIVIDUAL',
+  RMC: 'RMC',
+  FRANCHISE: 'FRANCHISE',
+  FOREX: 'FOREX',
+  MISC: 'MISC',
+} as const;
+
+export type TransactionPartyProfileType =
+  (typeof TransactionPartyProfileTypeEnum)[keyof typeof TransactionPartyProfileTypeEnum];
+
 export const TRANSACTION_TYPE_PROFILE_ORDER = [
   TransactionTypeProfileEnum.PURCHASE_FFMC,
-  TransactionTypeProfileEnum.PURCHASE_CORPORATE,
-  TransactionTypeProfileEnum.PURCHASE_INDIVIDUAL,
-  TransactionTypeProfileEnum.SALE_CORPORATE,
-  TransactionTypeProfileEnum.SALE_INDIVIDUAL,
+  TransactionTypeProfileEnum.PURCHASE_CORPORATE_INDIVIDUAL,
+  TransactionTypeProfileEnum.SALE_CORPORATE_INDIVIDUAL,
   TransactionTypeProfileEnum.SALE_FFMC,
   TransactionTypeProfileEnum.SALE_RMC,
   TransactionTypeProfileEnum.SALE_FOREX,
@@ -155,6 +164,7 @@ export interface ITransactionEntity {
   partyProfileSnapshot?: ITransactionReferenceSnapshot | null;
   purposeId: string | null;
   purposeSnapshot?: ITransactionReferenceSnapshot | null;
+  transactionPartyProfileType: TransactionPartyProfileType | null;
   agentProfileId: string | null;
   agentProfileSnapshot?: ITransactionReferenceSnapshot | null;
   passengerId: string | null;
@@ -532,10 +542,6 @@ export interface ICreateTransactionPassengerPayload {
   panHolderName?: string | null;
   panDob?: string | null;
   panHolderRelationType?: string | null;
-  corporatePanNumber?: string | null;
-  corporatePanHolderName?: string | null;
-  corporatePanDob?: string | null;
-  corporatePanHolderRelationType?: string | null;
   paidByPanNumber?: string | null;
   paidByPanHolderName?: string | null;
   paidByPanDob?: string | null;

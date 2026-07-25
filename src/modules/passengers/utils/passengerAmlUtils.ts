@@ -176,7 +176,7 @@ export const createPassengerAmlVerificationSchema = () =>
       then: schema => schema.required('Passport issue place is required'),
       otherwise: schema => schema.default(''),
     }),
-    passportIssueDate: yup.string().trim().when(['entityType', 'isIndianNationality'], {
+  passportIssueDate: yup.string().trim().when(['entityType', 'isIndianNationality'], {
       is: (entityType: string, isIndianNationality: boolean) =>
         isPassportValidationRequired({ entityType, isIndianNationality }),
       then: schema => schema.required('Passport issue date is required'),
@@ -196,6 +196,12 @@ export const createPassengerAmlVerificationSchema = () =>
 
             return new Date(value) >= new Date(issueDate);
           }),
+      otherwise: schema => schema.default(''),
+    }),
+    countryId: yup.string().trim().when(['entityType', 'isIndianNationality'], {
+      is: (entityType: string, isIndianNationality: boolean) =>
+        isPassportValidationRequired({ entityType, isIndianNationality }),
+      then: schema => schema.required('Country is required'),
       otherwise: schema => schema.default(''),
     }),
   });

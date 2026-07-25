@@ -5,6 +5,7 @@ import type {
 } from '@/modules/currencyRates/types/currencyRatesTypes';
 import {
   TransactionDocumentStatusEnum,
+  TransactionPartyProfileTypeEnum,
   TransactionPaymentMethodEnum,
   TradeModeEnum,
   TransactionTypeEnum,
@@ -54,7 +55,9 @@ export const formatPurchaseDecimal = (
   }
 
   const parsedValue = Number(value);
-  return Number.isFinite(parsedValue) ? parsedValue.toFixed(decimals) : String(value);
+  return Number.isFinite(parsedValue)
+    ? parsedValue.toFixed(decimals)
+    : String(value);
 };
 
 export const createStaticLoadOptions =
@@ -63,22 +66,23 @@ export const createStaticLoadOptions =
     hasMore: false,
   });
 
-export const createEmptyPurchaseTransactionRow = (): IPurchaseTransactionFormRow => ({
-  currencyId: '',
-  currencyCode: '',
-  currencyName: '',
-  productId: '',
-  productCode: '',
-  productDescription: '',
-  quantity: '',
-  per: '',
-  rate: '',
-  commission: '',
-  commissionSnapshot: null,
-  total: '',
-  roundOff: '',
-  finalAmount: '',
-});
+export const createEmptyPurchaseTransactionRow =
+  (): IPurchaseTransactionFormRow => ({
+    currencyId: '',
+    currencyCode: '',
+    currencyName: '',
+    productId: '',
+    productCode: '',
+    productDescription: '',
+    quantity: '',
+    per: '',
+    rate: '',
+    commission: '',
+    commissionSnapshot: null,
+    total: '',
+    roundOff: '',
+    finalAmount: '',
+  });
 
 export const createEmptyPurchaseFormValues = (
   transactionType: TransactionType = TransactionTypeEnum.PURCHASE,
@@ -94,6 +98,12 @@ export const createEmptyPurchaseFormValues = (
   counterId,
   transactionType,
   tradeMode,
+  transactionPartyProfileType:
+    purchasePageType ===
+      TransactionTypeProfileEnum.PURCHASE_CORPORATE_INDIVIDUAL ||
+    purchasePageType === TransactionTypeProfileEnum.SALE_CORPORATE_INDIVIDUAL
+      ? TransactionPartyProfileTypeEnum.CORPORATE
+      : '',
   partyProfileId: '',
   partyProfileCode: '',
   partyProfileName: '',
@@ -134,10 +144,6 @@ export const createEmptyPurchaseFormValues = (
   email: '',
   contactNo: '',
   panHolderRelationType: '',
-  corporatePanNumber: '',
-  corporatePanHolderName: '',
-  corporatePanDob: '',
-  corporatePanHolderRelationType: '',
   paidByPanNumber: '',
   paidByPanHolderName: '',
   paidByPanDob: '',
@@ -206,6 +212,12 @@ export const mapPurchaseFormValuesToSubmitPayload = (
   attachments: IPurchaseDocumentAttachment[],
   requiresApproval: boolean
 ): IPurchaseSubmitPayload => {
+  console.log(
+    'Mapping purchase form values to submit payload:',
+    values,
+    attachments,
+    requiresApproval
+  );
   if (!values.purchasePageType) {
     throw new Error('Transaction slug is required');
   }
@@ -216,13 +228,16 @@ export const mapPurchaseFormValuesToSubmitPayload = (
       requiresApproval,
       slug: values.purchasePageType,
       partyProfileId: values.partyProfileId,
+      transactionPartyProfileType: values.transactionPartyProfileType || null,
       purposeId: values.purposeId || null,
       agentProfileId: values.agentProfileId || null,
       passenger: values.passengerInfoCaptured
         ? {
             entityType: values.entityType || '',
-            nationalityType: values.nationalityType || PassengerNationalityTypeEnum.INDIAN,
-            residentStatus: values.residentStatus || PassengerResidentStatusEnum.RESIDENT,
+            nationalityType:
+              values.nationalityType || PassengerNationalityTypeEnum.INDIAN,
+            residentStatus:
+              values.residentStatus || PassengerResidentStatusEnum.RESIDENT,
             countryId: values.countryId,
             stateId: values.stateId || null,
             locationId: values.locationId || null,
@@ -235,10 +250,6 @@ export const mapPurchaseFormValuesToSubmitPayload = (
             panHolderName: values.panHolderName || null,
             panDob: values.panDob || null,
             panHolderRelationType: values.panHolderRelationType || null,
-            corporatePanNumber: values.corporatePanNumber || null,
-            corporatePanHolderName: values.corporatePanHolderName || null,
-            corporatePanDob: values.corporatePanDob || null,
-            corporatePanHolderRelationType: values.corporatePanHolderRelationType || null,
             paidByPanNumber: values.paidByPanNumber || null,
             paidByPanHolderName: values.paidByPanHolderName || null,
             paidByPanDob: values.paidByPanDob || null,
@@ -250,15 +261,23 @@ export const mapPurchaseFormValuesToSubmitPayload = (
             passportExpiryDate: values.passportExpiryDate || null,
             arrivalDate: values.arrivalDate || null,
             isPep: values.isPep,
-            otherDocuments: values.otherDocuments.map(document => ({
-              documentType: document.documentType,
-              documentNumber: document.documentNumber,
-              validTill: document.validTill || null,
-              issueAt: document.issueAt || null,
-              issueDate: document.issueDate || null,
-              expiryDate: document.expiryDate || null,
-              remarks: null,
-            })),
+            otherDocuments: values.otherDocuments
+              .filter(
+                document =>
+                  Boolean(document.documentType?.trim?.()) ||
+                  Boolean(document.documentNumber?.trim?.()) ||
+                  Boolean(document.validTill?.trim?.()) ||
+                  Boolean(document.documentFile?.trim?.())
+              )
+              .map(document => ({
+                documentType: document.documentType,
+                documentNumber: document.documentNumber,
+                validTill: document.validTill || null,
+                issueAt: document.issueAt || null,
+                issueDate: document.issueDate || null,
+                expiryDate: document.expiryDate || null,
+                remarks: null,
+              })),
           }
         : null,
       manualBookPageId: values.manualBookPageId || null,
@@ -301,11 +320,11 @@ export const mapPurchaseFormValuesToSubmitPayload = (
         drawnOn: row.drawnOn || null,
         chequePageId:
           row.paymentMethod === TransactionPaymentMethodEnum.CHEQUE
-            ? row.chequePageId ?? null
+            ? (row.chequePageId ?? null)
             : null,
         chequePageSnapshot:
           row.paymentMethod === TransactionPaymentMethodEnum.CHEQUE
-            ? row.chequePageSnapshot ?? null
+            ? (row.chequePageSnapshot ?? null)
             : null,
         amount: row.amount,
         remarks: null,
@@ -318,7 +337,24 @@ export const mapPurchaseFormValuesToSubmitPayload = (
 export const mapPurchaseTransactionToFormValues = (
   transaction: ITransactionEntity,
   purchasePageType: PurchasePageType | null
-): IPurchaseFormValues => ({
+): IPurchaseFormValues => {
+  const passengerSnapshot = transaction.passengerSnapshot as
+    | Record<string, unknown>
+    | null
+    | undefined;
+  const passengerOtherDocuments = passengerSnapshot?.otherDocuments as
+    | Array<{
+        documentType?: string | null;
+        documentNumber?: string | null;
+        validTill?: string | null;
+        issueAt?: string | null;
+        issueDate?: string | null;
+        expiryDate?: string | null;
+        documentFile?: string | null;
+      }>
+    | undefined;
+
+  return {
   purchasePageType,
   branchId: transaction.branchId ?? '',
   branchSnapshot: transaction.branchSnapshot ?? null,
@@ -347,7 +383,8 @@ export const mapPurchaseTransactionToFormValues = (
   partyProfileGstNo:
     (transaction.partyProfileSnapshot?.gstNo as string | undefined) ?? '',
   partyProfileGstStateName:
-    (transaction.partyProfileSnapshot?.gstStateName as string | undefined) ?? '',
+    (transaction.partyProfileSnapshot?.gstStateName as string | undefined) ??
+    '',
   partyProfileStateName:
     (transaction.partyProfileSnapshot?.stateName as string | undefined) ?? '',
   partyProfileContactName:
@@ -357,51 +394,98 @@ export const mapPurchaseTransactionToFormValues = (
   agentProfileCode: transaction.agentProfileSnapshot?.code ?? '',
   agentProfileName: transaction.agentProfileSnapshot?.name ?? '',
   purposeId: transaction.purposeId ?? '',
-  entityType: transaction.passengerSnapshot?.entityType ? String(transaction.passengerSnapshot.entityType) : '',
+  transactionPartyProfileType: transaction.transactionPartyProfileType ?? '',
+  entityType: passengerSnapshot?.entityType
+    ? String(passengerSnapshot.entityType)
+    : '',
   passengerInfoCaptured: Boolean(transaction.passengerId),
-  panNumber: '',
-  panHolderName: '',
-  panDob: '',
-  passportNumber: '',
-  passportIssueAt: '',
-  passportIssueDate: '',
-  passportExpiryDate: '',
-  nationalityType: PassengerNationalityTypeEnum.INDIAN,
-  residentStatus: PassengerResidentStatusEnum.RESIDENT,
-  countryId: '',
-  stateId: '',
-  locationId: '',
-  city: '',
-  address1: '',
-  address2: '',
-  email: '',
-  contactNo: '',
-  panHolderRelationType: '',
-  corporatePanNumber: '',
-  corporatePanHolderName: '',
-  corporatePanDob: '',
-  corporatePanHolderRelationType: '',
-  paidByPanNumber: '',
-  paidByPanHolderName: '',
-  paidByPanDob: '',
-  gstNumber: '',
-  gstStateId: '',
-  isPep: false,
-  arrivalDate: '',
-  otherDocuments: [
-    {
-      documentType: '',
-      documentNumber: '',
-      validTill: '',
-      issueAt: '',
-      issueDate: '',
-      expiryDate: '',
-      documentFile: '',
-    },
-  ],
+  panNumber:
+    (passengerSnapshot?.panNumber as string | undefined) ?? '',
+  panHolderName:
+    (passengerSnapshot?.panHolderName as string | undefined) ?? '',
+  panDob: (passengerSnapshot?.panDob as string | undefined) ?? '',
+  passportNumber:
+    (passengerSnapshot?.passportNumber as string | undefined) ?? '',
+  passportIssueAt:
+    (passengerSnapshot?.passportIssueAt as string | undefined) ?? '',
+  passportIssueDate:
+    (passengerSnapshot?.passportIssueDate as string | undefined) ?? '',
+  passportExpiryDate:
+    (passengerSnapshot?.passportExpiryDate as string | undefined) ?? '',
+  nationalityType:
+    (passengerSnapshot?.nationalityType as PassengerNationalityTypeEnum) ??
+    PassengerNationalityTypeEnum.INDIAN,
+  residentStatus:
+    (passengerSnapshot?.residentStatus as PassengerResidentStatusEnum) ??
+    PassengerResidentStatusEnum.RESIDENT,
+  countryId:
+    (passengerSnapshot?.countryId as string | undefined) ??
+    ((passengerSnapshot?.country as { id?: string } | null | undefined)?.id ??
+      ''),
+  stateId:
+    (passengerSnapshot?.stateId as string | undefined) ??
+    ((passengerSnapshot?.state as { id?: string } | null | undefined)?.id ??
+      ''),
+  locationId:
+    (passengerSnapshot?.locationId as string | undefined) ??
+    ((passengerSnapshot?.location as { id?: string } | null | undefined)?.id ??
+      ''),
+  city: (passengerSnapshot?.city as string | undefined) ?? '',
+  address1: (passengerSnapshot?.address1 as string | undefined) ?? '',
+  address2: (passengerSnapshot?.address2 as string | undefined) ?? '',
+  email: (passengerSnapshot?.email as string | undefined) ?? '',
+  contactNo:
+    (passengerSnapshot?.contactNo as string | undefined) ?? '',
+  panHolderRelationType:
+    (passengerSnapshot?.panHolderRelationType as string | undefined) ??
+    '',
+  paidByPanNumber:
+    (passengerSnapshot?.paidByPanNumber as string | undefined) ?? '',
+  paidByPanHolderName:
+    (passengerSnapshot?.paidByPanHolderName as string | undefined) ??
+    '',
+  paidByPanDob:
+    (passengerSnapshot?.paidByPanDob as string | undefined) ?? '',
+  gstNumber: (passengerSnapshot?.gstNumber as string | undefined) ?? '',
+  gstStateId:
+    (passengerSnapshot?.gstStateId as string | undefined) ??
+    ((passengerSnapshot?.gstState as { id?: string } | null | undefined)?.id ??
+      ''),
+  isPep: Boolean(passengerSnapshot?.isPep),
+  arrivalDate:
+    (passengerSnapshot?.arrivalDate as string | undefined) ?? '',
+  otherDocuments: Array.isArray(passengerOtherDocuments)
+    ? passengerOtherDocuments.map(document => ({
+        documentType: document.documentType ?? '',
+        documentNumber: document.documentNumber ?? '',
+        validTill: document.validTill ?? '',
+        issueAt: document.issueAt ?? '',
+        issueDate: document.issueDate ?? '',
+        expiryDate: document.expiryDate ?? '',
+        documentFile: document.documentFile ?? '',
+      }))
+    : [
+        {
+          documentType: '',
+          documentNumber: '',
+          validTill: '',
+          issueAt: '',
+          issueDate: '',
+          expiryDate: '',
+          documentFile: '',
+        },
+      ],
   manualBookReferenceType: 'CASHIER',
-  manualBookId: (transaction.manualBookPageSnapshot as Record<string, unknown> | null | undefined)?.manualBookId
-    ? String((transaction.manualBookPageSnapshot as Record<string, unknown>).manualBookId)
+  manualBookId: (
+    transaction.manualBookPageSnapshot as
+      | Record<string, unknown>
+      | null
+      | undefined
+  )?.manualBookId
+    ? String(
+        (transaction.manualBookPageSnapshot as Record<string, unknown>)
+          .manualBookId
+      )
     : '',
   manualBookNo: (() => {
     const snapshot = transaction.manualBookPageSnapshot as
@@ -421,10 +505,12 @@ export const mapPurchaseTransactionToFormValues = (
   number: transaction.number ?? '',
   transactions: (transaction.items ?? []).map(item => ({
     currencyId: item.currencyId,
-    currencyCode: item.currencySnapshot?.label ?? item.currencySnapshot?.code ?? '',
+    currencyCode:
+      item.currencySnapshot?.label ?? item.currencySnapshot?.code ?? '',
     currencyName: item.currencySnapshot?.name ?? '',
     productId: item.productId,
-    productCode: item.productSnapshot?.label ?? item.productSnapshot?.code ?? '',
+    productCode:
+      item.productSnapshot?.label ?? item.productSnapshot?.code ?? '',
     productDescription: item.productSnapshot?.name ?? '',
     quantity: item.quantity ?? '',
     per: item.per ?? '',
@@ -437,7 +523,11 @@ export const mapPurchaseTransactionToFormValues = (
   })),
   additionalCharges: (transaction.additionalCharges ?? []).map(charge => ({
     accountId: charge.accountId,
-    accountName: charge.accountSnapshot?.label ?? charge.accountSnapshot?.name ?? charge.accountSnapshot?.code ?? '',
+    accountName:
+      charge.accountSnapshot?.label ??
+      charge.accountSnapshot?.name ??
+      charge.accountSnapshot?.code ??
+      '',
     amount: charge.amount ?? '',
     gstRate: charge.gstRate ?? '',
     gstAmount: charge.gstAmount ?? '',
@@ -450,9 +540,13 @@ export const mapPurchaseTransactionToFormValues = (
         return '';
       }
       if (!Number.isFinite(gstValue)) {
-        return (amountValue * signedMultiplier).toFixed(PURCHASE_MONEY_DECIMALS);
+        return (amountValue * signedMultiplier).toFixed(
+          PURCHASE_MONEY_DECIMALS
+        );
       }
-      return ((amountValue + gstValue) * signedMultiplier).toFixed(PURCHASE_MONEY_DECIMALS);
+      return ((amountValue + gstValue) * signedMultiplier).toFixed(
+        PURCHASE_MONEY_DECIMALS
+      );
     })(),
     applyTax: Boolean(charge.applyTax),
     remarks: charge.remarks ?? '',
@@ -460,7 +554,11 @@ export const mapPurchaseTransactionToFormValues = (
   paymentDetails: (transaction.payments ?? []).map(payment => ({
     paymentMethod: payment.paymentMethod,
     accountId: payment.accountId,
-    accountName: payment.accountSnapshot?.label ?? payment.accountSnapshot?.name ?? payment.accountSnapshot?.code ?? '',
+    accountName:
+      payment.accountSnapshot?.label ??
+      payment.accountSnapshot?.name ??
+      payment.accountSnapshot?.code ??
+      '',
     amount: payment.amount ?? '',
     chequeNumber: payment.referenceNumber ?? '',
     chequeDate: payment.referenceDate ?? '',
@@ -470,9 +568,13 @@ export const mapPurchaseTransactionToFormValues = (
     chequePageSnapshot: payment.chequePageSnapshot ?? null,
     remarks: payment.remarks ?? '',
   })),
-});
+  };
+};
 
-export const formatPurchaseEntityLabel = (code?: string | null, name?: string | null) => {
+export const formatPurchaseEntityLabel = (
+  code?: string | null,
+  name?: string | null
+) => {
   const normalizedCode = code?.trim();
   const normalizedName = name?.trim();
 
@@ -499,19 +601,29 @@ export const getPurchaseTransactionAccountFilter = (
 
 export const getPurchaseTransactionPartyProfileFilter = (
   transactionType: TransactionType,
-  purchasePageType: PurchasePageType | null = null
+  purchasePageType: PurchasePageType | null = null,
+  transactionPartyProfileType: string | null = null
 ) =>
   transactionType === TransactionTypeEnum.SALE
-    ? purchasePageType === TransactionTypeProfileEnum.SALE_INDIVIDUAL
-      ? ({ sale: true, isIndividual: true } as const)
-      : purchasePageType === TransactionTypeProfileEnum.SALE_CORPORATE
-        ? ({ sale: true, isIndividual: false } as const)
-        : ({ sale: true } as const)
-    : purchasePageType === TransactionTypeProfileEnum.PURCHASE_INDIVIDUAL
-      ? ({ purchase: true, isIndividual: true } as const)
-      : purchasePageType === TransactionTypeProfileEnum.PURCHASE_CORPORATE
-        ? ({ purchase: true, isIndividual: false } as const)
-        : ({ purchase: true } as const);
+    ? purchasePageType === TransactionTypeProfileEnum.SALE_CORPORATE_INDIVIDUAL
+      ? transactionPartyProfileType ===
+        TransactionPartyProfileTypeEnum.INDIVIDUAL
+        ? ({ sale: true, isIndividual: true } as const)
+        : transactionPartyProfileType ===
+            TransactionPartyProfileTypeEnum.CORPORATE
+          ? ({ sale: true, isIndividual: false } as const)
+          : ({ sale: true } as const)
+      : ({ sale: true } as const)
+    : purchasePageType ===
+        TransactionTypeProfileEnum.PURCHASE_CORPORATE_INDIVIDUAL
+      ? transactionPartyProfileType ===
+        TransactionPartyProfileTypeEnum.INDIVIDUAL
+        ? ({ purchase: true, isIndividual: true } as const)
+        : transactionPartyProfileType ===
+            TransactionPartyProfileTypeEnum.CORPORATE
+          ? ({ purchase: true, isIndividual: false } as const)
+          : ({ purchase: true } as const)
+      : ({ purchase: true } as const);
 
 export const getPurchaseTransactionPricingSide = (
   transactionType: TransactionType | null | undefined
@@ -586,12 +698,18 @@ export const resolvePurchaseTransactionPreview = (
     return null;
   }
 
-  const latestRate = getLatestRateForCurrency(data.latestRates ?? [], currencyId);
+  const latestRate = getLatestRateForCurrency(
+    data.latestRates ?? [],
+    currencyId
+  );
   if (!latestRate) {
     return null;
   }
 
-  const pricingGroup = getCurrencyPricingGroup(data.currencies ?? [], currencyId);
+  const pricingGroup = getCurrencyPricingGroup(
+    data.currencies ?? [],
+    currencyId
+  );
   const productRules = data.productCurrencyRates ?? [];
   const productRule = productRules.find(
     rule => rule.currencyId === currencyId && rule.productId === productId

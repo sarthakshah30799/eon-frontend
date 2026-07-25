@@ -40,12 +40,17 @@ const DocumentProfileFields = ({ isSubmitting }: { isSubmitting: boolean }) => {
   );
 
   const loadSpecificationTypeOptions = useCallback(
-    async (): Promise<AsyncSelectResponse> => ({
-      options: specificationTypeOptions.map(option => ({
+    async (inputValue: string): Promise<AsyncSelectResponse> => {
+      const opts = specificationTypeOptions.map(option => ({
         value: option.value,
         label: option.label,
-      })),
-    }),
+      }));
+      return {
+        options: inputValue
+          ? opts.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+          : opts,
+      };
+    },
     [specificationTypeOptions]
   );
 

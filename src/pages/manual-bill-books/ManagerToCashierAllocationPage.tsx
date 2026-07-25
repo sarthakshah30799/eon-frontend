@@ -101,8 +101,10 @@ export const ManagerToCashierAllocationPage = () => {
     value: cashier.id,
     label: cashier.name,
   }));
-  const loadCashierOptions = async (): Promise<AsyncSelectResponse> => ({
-    options: cashierOptions,
+  const loadCashierOptions = async (inputValue: string): Promise<AsyncSelectResponse> => ({
+    options: inputValue
+      ? cashierOptions.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+      : cashierOptions,
     hasMore: false,
   });
 
@@ -407,13 +409,18 @@ export const ManagerToCashierAllocationPage = () => {
                     : 'ALL'
                 );
               }}
-              loadOptions={async () => ({
-                options: [
+              loadOptions={async (inputValue: string) => {
+                const opts = [
                   { value: 'ALL', label: 'ALL' },
                   ...txnTypes.map(t => ({ value: t.id, label: t.label }))
-                ],
-                hasMore: false
-              })}
+                ];
+                return {
+                  options: inputValue
+                    ? opts.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+                    : opts,
+                  hasMore: false
+                };
+              }}
               isClearable={false}
             />
           </div>

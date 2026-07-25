@@ -9,7 +9,7 @@ import {
   FormFieldInput,
 } from '@/components/forms';
 import { CardSection } from '@/components/ui';
-import type { AsyncSelectResponse } from '@/components/ui';
+import type { AsyncSelectOption, AsyncSelectResponse } from '@/components/ui';
 import {
   CURRENCY_CALCULATION_METHOD_OPTIONS,
   CURRENCY_GROUP_OPTIONS,
@@ -23,27 +23,31 @@ import { currencyProfileApi } from '@/api/currencyProfile';
 import { currencyRatesApi } from '@/api/currencyRates';
 import { normalizeCodeValue } from '@/utils';
 
+const filterOptions = (opts: AsyncSelectOption[], inputValue: string) =>
+  inputValue
+    ? opts.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+    : opts;
+
 const loadCalculationMethodOptions =
-  async (): Promise<AsyncSelectResponse> => ({
-    options: CURRENCY_CALCULATION_METHOD_OPTIONS,
+  async (inputValue: string): Promise<AsyncSelectResponse> => ({
+    options: filterOptions(CURRENCY_CALCULATION_METHOD_OPTIONS, inputValue),
   });
 
-const loadGroupOptions = async (): Promise<AsyncSelectResponse> => ({
-  options: CURRENCY_GROUP_OPTIONS,
+const loadGroupOptions = async (inputValue: string): Promise<AsyncSelectResponse> => ({
+  options: filterOptions(CURRENCY_GROUP_OPTIONS, inputValue),
 });
 
-const loadProductAllowedOptions = async (): Promise<AsyncSelectResponse> => ({
-  options: CURRENCY_PRODUCT_ALLOWED_OPTIONS,
+const loadProductAllowedOptions = async (inputValue: string): Promise<AsyncSelectResponse> => ({
+  options: filterOptions(CURRENCY_PRODUCT_ALLOWED_OPTIONS, inputValue),
 });
 
-const loadPricingGroupOptions = async (): Promise<AsyncSelectResponse> => {
+const loadPricingGroupOptions = async (inputValue: string): Promise<AsyncSelectResponse> => {
   const groups = await currencyRatesApi.getGroups();
-  return {
-    options: groups.map(group => ({
-      value: group.id,
-      label: `${group.code} - ${group.name}`,
-    })),
-  };
+  const opts = groups.map(group => ({
+    value: group.id,
+    label: `${group.code} - ${group.name}`,
+  }));
+  return { options: filterOptions(opts, inputValue) };
 };
 
 interface CurrencyProfileFormProps {

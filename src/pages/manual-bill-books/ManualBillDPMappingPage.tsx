@@ -330,13 +330,18 @@ const ManualBillDPMappingPageContent = () => {
                 const sel = Array.isArray(option) ? option[0] ?? null : option;
                 setTxnType(sel?.value ? String(sel.value) : 'ALL');
               }}
-              loadOptions={async () => ({
-                options: [
+              loadOptions={async (inputValue: string) => {
+                const opts = [
                   { value: 'ALL', label: 'ALL' },
                   ...txnTypes.map(t => ({ value: t.id, label: t.label })),
-                ],
-                hasMore: false,
-              })}
+                ];
+                return {
+                  options: inputValue
+                    ? opts.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+                    : opts,
+                  hasMore: false,
+                };
+              }}
               isClearable={false}
             />
           </div>

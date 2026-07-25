@@ -38,13 +38,18 @@ interface CurrencyRateOverrideModalProps {
 }
 
 const labelClass = 'mb-1 block text-xs font-semibold uppercase tracking-wider text-text-secondary';
-const loadMarginTypeOptions = async () => ({
-  options: CURRENCY_RATE_MARGIN_TYPE_OPTIONS.map(option => ({
+const loadMarginTypeOptions = async (inputValue: string) => {
+  const opts = CURRENCY_RATE_MARGIN_TYPE_OPTIONS.map(option => ({
     value: option.value,
     label: option.label,
-  })),
-  hasMore: false,
-});
+  }));
+  return {
+    options: inputValue
+      ? opts.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+      : opts,
+    hasMore: false,
+  };
+};
 
 export const CurrencyRateOverrideModal = ({
   open,
@@ -70,12 +75,16 @@ export const CurrencyRateOverrideModal = ({
     value: currency.id,
     label: `${currency.currencyCode} - ${currency.currencyName}`,
   }));
-  const loadProductOptions = async () => ({
-    options: productOptions,
+  const loadProductOptions = async (inputValue: string) => ({
+    options: inputValue
+      ? productOptions.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+      : productOptions,
     hasMore: false,
   });
-  const loadCurrencyOptions = async () => ({
-    options: currencyOptions,
+  const loadCurrencyOptions = async (inputValue: string) => ({
+    options: inputValue
+      ? currencyOptions.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+      : currencyOptions,
     hasMore: false,
   });
 

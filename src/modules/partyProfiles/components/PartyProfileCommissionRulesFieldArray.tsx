@@ -68,14 +68,20 @@ const CommissionRuleRow = ({
     };
   }, []);
 
-  const loadCommissionTypeOptions = useCallback(async (): Promise<AsyncSelectResponse> => {
-    return {
-      options: commissionTypeOptions.map(option => ({
+  const loadCommissionTypeOptions = useCallback(
+    async (inputValue: string): Promise<AsyncSelectResponse> => {
+      const opts = commissionTypeOptions.map(option => ({
         value: option.value,
         label: option.label,
-      })),
-    };
-  }, []);
+      }));
+      return {
+        options: inputValue
+          ? opts.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+          : opts,
+      };
+    },
+    []
+  );
 
   return (
     <div className="grid gap-3 rounded-sm border border-border-secondary bg-surface-secondary p-4 md:grid-cols-2 xl:grid-cols-[1.2fr_1.2fr_0.8fr_0.8fr_auto]">

@@ -23,8 +23,16 @@ import type { CategoryOptionCode } from '@/types/categoryOptionTypes';
 import { useNavigate } from 'react-router-dom';
 import { useStaticMiscellaneousProfileOptions } from '../hooks';
 
-const loadCodes = async (): Promise<AsyncSelectResponse> => {
-  return loadCategoryOptionCodeOptions();
+const loadCodes = async (inputValue: string): Promise<AsyncSelectResponse> => {
+  const result = await loadCategoryOptionCodeOptions();
+  return {
+    options: inputValue
+      ? result.options.filter(opt =>
+          opt.label.toLowerCase().includes(inputValue.toLowerCase())
+        )
+      : result.options,
+    hasMore: result.hasMore,
+  };
 };
 
 interface MiscellaneousProfileFormProps {

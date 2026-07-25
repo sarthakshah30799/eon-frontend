@@ -58,8 +58,10 @@ export const formatPurchaseDecimal = (
 };
 
 export const createStaticLoadOptions =
-  (options: { value: string; label: string }[]) => async () => ({
-    options,
+  (options: { value: string; label: string }[]) => async (inputValue: string) => ({
+    options: inputValue
+      ? options.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+      : options,
     hasMore: false,
   });
 

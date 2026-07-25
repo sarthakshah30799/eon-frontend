@@ -11,8 +11,10 @@ import { PURPOSE_RATE_TYPE_OPTIONS, PURPOSE_TEXTS } from '../constants/purposeCo
 import { type ICreatePurpose } from '../types/purposeTypes';
 import { createEmptyPurposeFormValues } from '../utils/purposeUtils';
 
-const createStaticLoadOptions = (options: AsyncSelectOption[]) => async (): Promise<AsyncSelectResponse> => ({
-  options,
+const createStaticLoadOptions = (options: AsyncSelectOption[]) => async (inputValue: string): Promise<AsyncSelectResponse> => ({
+  options: inputValue
+    ? options.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+    : options,
 });
 
 const rateTypeOptions: AsyncSelectOption[] = PURPOSE_RATE_TYPE_OPTIONS.map(option => ({

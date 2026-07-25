@@ -40,12 +40,17 @@ export const normalizeDocumentProfileValues = (
   financialYearSelection: values.financialYearSelection?.trim() || null,
 });
 
-export const loadDocumentTypeOptions = async () => ({
-  options: DOCUMENT_TYPE_OPTIONS.map(option => ({
+export const loadDocumentTypeOptions = async (inputValue: string) => {
+  const opts = DOCUMENT_TYPE_OPTIONS.map(option => ({
     value: option.value,
     label: option.label,
-  })),
-});
+  }));
+  return {
+    options: inputValue
+      ? opts.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+      : opts,
+  };
+};
 
 export const documentTypeToAccept = (documentType: string | string[]) => {
   const normalizedTypes = Array.isArray(documentType)

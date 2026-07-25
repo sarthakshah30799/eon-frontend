@@ -21,13 +21,18 @@ interface CurrencyRateGroupModalProps {
 
 const labelClass = 'mb-1 block text-xs font-semibold uppercase tracking-wider text-text-secondary';
 const inputClass = 'w-full rounded-sm border border-border-primary bg-surface-primary px-3 py-2 text-sm text-text-primary outline-none transition focus:border-primary-500';
-const loadMarginTypeOptions = async () => ({
-  options: CURRENCY_RATE_MARGIN_TYPE_OPTIONS.map(option => ({
+const loadMarginTypeOptions = async (inputValue: string) => {
+  const opts = CURRENCY_RATE_MARGIN_TYPE_OPTIONS.map(option => ({
     value: option.value,
     label: option.label,
-  })),
-  hasMore: false,
-});
+  }));
+  return {
+    options: inputValue
+      ? opts.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+      : opts,
+    hasMore: false,
+  };
+};
 
 export const CurrencyRateGroupModal = ({
   open,

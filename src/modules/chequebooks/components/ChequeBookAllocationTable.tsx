@@ -58,8 +58,10 @@ export const ChequeBookAllocationTable = ({
   );
 
   const loadCashierOptions = useCallback(
-    async (): Promise<AsyncSelectResponse> => ({
-      options: cashierOptions,
+    async (inputValue: string): Promise<AsyncSelectResponse> => ({
+      options: inputValue
+        ? cashierOptions.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+        : cashierOptions,
       hasMore: false,
     }),
     [cashierOptions]

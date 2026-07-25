@@ -51,17 +51,24 @@ export const CurrencyRateEntryModal = ({
     value: currency.id,
     label: `${currency.currencyCode} - ${currency.currencyName}`,
   }));
-  const loadCurrencyOptions = async (): Promise<AsyncSelectResponse> => ({
-    options: currencyOptions,
+  const loadCurrencyOptions = async (inputValue: string): Promise<AsyncSelectResponse> => ({
+    options: inputValue
+      ? currencyOptions.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+      : currencyOptions,
     hasMore: false,
   });
-  const loadProviderOptions = async (): Promise<AsyncSelectResponse> => ({
-    options: providerOptions.map(option => ({
+  const loadProviderOptions = async (inputValue: string): Promise<AsyncSelectResponse> => {
+    const opts = providerOptions.map(option => ({
       value: option.value,
       label: option.label,
-    })),
-    hasMore: false,
-  });
+    }));
+    return {
+      options: inputValue
+        ? opts.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+        : opts,
+      hasMore: false,
+    };
+  };
 
   return (
     <Modal

@@ -19,8 +19,14 @@ import { CountryGroupModal } from '../components';
 import { countryProfileApi } from '@/api/countryProfile';
 import { normalizeCodeValue } from '@/utils';
 
-const loadRiskCategoryOptions = async (): Promise<AsyncSelectResponse> => {
-  return { options: riskCategoryOptions };
+const loadRiskCategoryOptions = async (
+  inputValue: string
+): Promise<AsyncSelectResponse> => {
+  if (!inputValue) return { options: riskCategoryOptions };
+  const filtered = riskCategoryOptions.filter(opt =>
+    opt.label.toLowerCase().includes(inputValue.toLowerCase())
+  );
+  return { options: filtered };
 };
 
 const loadCountryGroupOptions = async (
@@ -198,7 +204,6 @@ export const CountryProfileForm = ({
           placeholder="Select risk category"
           disabled={isDisabled}
           isClearable
-          isSearchable={false}
         />
         <CountryGroupField isDisabled={isDisabled} />
       </div>

@@ -40,12 +40,17 @@ const DocumentProfileFields = ({ isSubmitting }: { isSubmitting: boolean }) => {
   );
 
   const loadSpecificationTypeOptions = useCallback(
-    async (): Promise<AsyncSelectResponse> => ({
-      options: specificationTypeOptions.map(option => ({
+    async (inputValue: string): Promise<AsyncSelectResponse> => {
+      const opts = specificationTypeOptions.map(option => ({
         value: option.value,
         label: option.label,
-      })),
-    }),
+      }));
+      return {
+        options: inputValue
+          ? opts.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+          : opts,
+      };
+    },
     [specificationTypeOptions]
   );
 
@@ -94,7 +99,6 @@ const DocumentProfileFields = ({ isSubmitting }: { isSubmitting: boolean }) => {
         loadOptions={loadDocumentTypeOptions}
         defaultOptions={getDocumentTypeOptionItems()}
         disabled={isSubmitting}
-        isSearchable={false}
         isMulti
       />
       <FormFieldSelect
@@ -102,7 +106,6 @@ const DocumentProfileFields = ({ isSubmitting }: { isSubmitting: boolean }) => {
         label="Specification Type"
         placeholder="Select specification type"
         disabled={isSubmitting}
-        isSearchable={false}
         defaultOptions={specificationTypeOptions}
         loadOptions={loadSpecificationTypeOptions}
       />
@@ -113,7 +116,6 @@ const DocumentProfileFields = ({ isSubmitting }: { isSubmitting: boolean }) => {
         code={selectedSpecificationTypeCode}
         disabled={isSubmitting || !selectedSpecificationType}
         isCreatable={false}
-        isSearchable={false}
       />
       <FormFieldCategoryOption
         name="groupSelection"

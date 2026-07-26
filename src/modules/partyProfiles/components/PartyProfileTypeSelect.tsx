@@ -52,7 +52,6 @@ export const PartyProfileTypeSelect = ({
         disabled={disabled}
         loadOptions={loadOptions}
         defaultOptions={options.map(toDisplayOption)}
-        isSearchable={false}
         onChange={selectedOption => {
           if (Array.isArray(selectedOption) || !selectedOption) {
             return;

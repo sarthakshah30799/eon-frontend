@@ -106,7 +106,6 @@ export const TransactionAccountPostingsView = () => {
             value={selectedTransactionType}
             loadOptions={loadTransactionTypeOptions}
             defaultOptions={true}
-            isSearchable={false}
             isClearable
             placeholder="All types"
             onChange={handleTransactionTypeChange}

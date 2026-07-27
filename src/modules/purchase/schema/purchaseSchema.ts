@@ -8,12 +8,17 @@ import {
 import type { TransactionType } from '@/modules/transactions';
 import type { PurchasePageType } from '@/pages/purchase/[slug]/purchasePage.enum';
 import { TradeModeEnum } from '@/modules/transactions';
+import { PurposeRateTypeEnum } from '@/modules/purpose/types/purposeTypes';
 import {
   PassengerEntityTypeEnum,
   PassengerNationalityTypeEnum,
   PassengerOtherIdProofTypeEnum,
   PassengerResidentStatusEnum,
 } from '@/modules/passengers/types/passengerTypes';
+import {
+  isPassengerOtherDocumentFilled,
+  shouldShowPassengerOtherDocumentValidityFields,
+} from '@/modules/passengers/utils/passengerOtherDocumentRules';
 
 const decimalStringSchema = yup
   .string()
@@ -99,7 +104,11 @@ const createPaymentDetailSchema = (transactionType: TransactionType) =>
       then: schema => schema.required('Cheque / book reference is required'),
       otherwise: schema => schema.default(''),
     }),
-    chequeDate: yup.string().trim().default(''),
+    chequeDate: yup.string().trim().when('paymentMethod', {
+      is: TransactionPaymentMethodEnum.CHEQUE,
+      then: schema => schema.required('Cheque date is required'),
+      otherwise: schema => schema.default(''),
+    }),
     branchName: yup.string().trim().when('paymentMethod', {
       is: TransactionPaymentMethodEnum.CHEQUE,
       then: schema => schema.required('Branch name is required'),
@@ -120,37 +129,22 @@ const passengerOtherDocumentSchema = yup.object({
     .mixed<(typeof PassengerOtherIdProofTypeEnum)[keyof typeof PassengerOtherIdProofTypeEnum] | ''>()
     .oneOf([...Object.values(PassengerOtherIdProofTypeEnum), ''] as const)
     .required('Document type is required'),
-  documentNumber: yup.string().trim().default(''),
-  validTill: yup.string().trim().default(''),
+  documentNumber: yup.string().trim().when('documentType', {
+    is: (documentType: string) => Boolean(documentType),
+    then: schema => schema.required('Document number is required'),
+    otherwise: schema => schema.default(''),
+  }),
+  validTill: yup.string().trim().when('documentType', {
+    is: (documentType: string) =>
+      shouldShowPassengerOtherDocumentValidityFields(documentType),
+    then: schema => schema.required('Valid till is required'),
+    otherwise: schema => schema.default(''),
+  }),
   issueAt: yup.string().trim().default(''),
   issueDate: yup.string().trim().default(''),
   expiryDate: yup.string().trim().default(''),
   documentFile: yup.string().trim().default(''),
 });
-
-const isPassengerOtherDocumentFilled = (
-  row: Partial<{
-    documentType: string;
-    documentNumber: string;
-    validTill: string;
-    issueAt: string;
-    issueDate: string;
-    expiryDate: string;
-    documentFile: string;
-  }> | null | undefined
-) =>
-  Boolean(
-    row &&
-      [
-        row.documentType,
-        row.documentNumber,
-        row.validTill,
-        row.issueAt,
-        row.issueDate,
-        row.expiryDate,
-        row.documentFile,
-      ].some(value => String(value ?? '').trim() !== '')
-  );
 
 export const createPurchaseFormSchema = (transactionType: TransactionType) =>
   yup.object({
@@ -162,6 +156,7 @@ export const createPurchaseFormSchema = (transactionType: TransactionType) =>
     branchId: yup.string().trim().required('Branch is required'),
     branchSnapshot: yup.mixed().nullable().default(null),
     counterId: yup.string().trim().required('Counter is required'),
+    transactionDate: yup.string().trim().required('Transaction date is required'),
     transactionType: yup
       .mixed<(typeof TransactionTypeEnum)[keyof typeof TransactionTypeEnum]>()
       .oneOf(Object.values(TransactionTypeEnum))
@@ -224,6 +219,18 @@ export const createPurchaseFormSchema = (transactionType: TransactionType) =>
     address2: yup.string().trim().default(''),
     email: yup.string().trim().default(''),
     contactNo: yup.string().trim().default(''),
+    loanAmount: decimalStringSchema.default(''),
+    declaredAmount: decimalStringSchema.default(''),
+    preTcsFinalAmount: decimalStringSchema.default(''),
+    tcsRatePercent: decimalStringSchema.default(''),
+    tcsRateType: yup
+      .mixed<(typeof PurposeRateTypeEnum)[keyof typeof PurposeRateTypeEnum] | ''>()
+      .oneOf([...Object.values(PurposeRateTypeEnum), ''] as const)
+      .default(''),
+    tcsAmount: decimalStringSchema.default(''),
+    itrFiled: yup.boolean().default(false),
+    tcsDeclarationAccepted: yup.boolean().default(false),
+    isProprietorship: yup.boolean().default(false),
     panNumber: yup
       .string()
       .trim()
@@ -306,6 +313,16 @@ export const createPurchaseFormSchema = (transactionType: TransactionType) =>
         then: schema => schema.required('Arrival date is required'),
         otherwise: schema => schema.default(''),
       }),
+    travelAirlineId: yup.string().trim().default(''),
+    travelTicketNo: yup.string().trim().default(''),
+    travelRoute: yup.string().trim().default(''),
+    travelCountryId: yup.string().trim().default(''),
+    travelNoOfDays: yup.string().trim().default(''),
+    travelNoOfPax: yup.string().trim().default(''),
+    travelDepartureDate: yup.string().trim().default(''),
+    travelPnr: yup.string().trim().default(''),
+    travelVisa: yup.boolean().default(false),
+    travelIsCisCountry: yup.boolean().default(false),
     otherDocuments: yup
       .array()
       .of(passengerOtherDocumentSchema)

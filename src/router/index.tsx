@@ -155,6 +155,12 @@ const ChequeBookReturnPage = lazy(
 const AdditionalSettingsPage = lazy(
   () => import('../pages/admin/additional-settings')
 );
+const DayEndStartProcessPage = lazy(
+  () => import('../pages/day-end-start-process')
+);
+const MonthwiseLockingPage = lazy(
+  () => import('../pages/admin/monthwise-locking')
+);
 const TransactionAccountPostingsPage = lazy(
   () => import('../pages/admin/transaction-account-postings/TransactionAccountPostingsPage')
 );
@@ -652,6 +658,22 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <AdditionalSettingsPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/day-end-start-process',
+    element: (
+      <ProtectedLayout>
+        <DayEndStartProcessPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/monthwise-locking',
+    element: (
+      <ProtectedLayout>
+        <MonthwiseLockingPage />
       </ProtectedLayout>
     ),
   },

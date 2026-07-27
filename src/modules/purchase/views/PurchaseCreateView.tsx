@@ -34,7 +34,7 @@ export const PurchaseCreateView = ({
   purchasePageType,
 }: PurchaseCreateViewProps) => {
   const navigate = useNavigate();
-  const { user, activeBranchId, activeCounterId } = useAuth();
+  const { user, activeBranchId, activeCounterId, policyContext } = useAuth();
   const canSelectWorkplace = Boolean(
     user?.isAdmin || user?.isHo || user?.isHoStaff
   );
@@ -128,7 +128,8 @@ export const PurchaseCreateView = ({
             } satisfies ITransactionReferenceSnapshot)
           : null,
         canSelectWorkplace ? '' : (activeBranchId ?? ''),
-        canSelectWorkplace ? '' : (activeCounterId ?? '')
+        canSelectWorkplace ? '' : (activeCounterId ?? ''),
+        policyContext?.transactionDate?.slice(0, 10) ?? new Date().toISOString().slice(0, 10)
       ),
     [
       activeBranchId,
@@ -136,6 +137,7 @@ export const PurchaseCreateView = ({
       branchProfile,
       canSelectWorkplace,
       purchasePageType,
+      policyContext?.transactionDate,
     ]
   );
   const pricingData = useMemo(

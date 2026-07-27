@@ -30,6 +30,7 @@ import type { AsyncSelectResponse } from '@/components/ui';
 import type { DefaultValues } from 'react-hook-form';
 import type { IAd1FormValues } from '../types';
 import type { TransactionType } from '@/modules/transactions';
+import { useAuth } from '@/lib/AuthContext';
 import {
   getPurchaseTransactionAccountFilter,
   getPurchaseTransactionProductFilter,
@@ -81,6 +82,7 @@ interface AD1FormBodyProps {
 
 const AD1FormBody = ({ readOnly, allowWorkplaceSelection }: AD1FormBodyProps) => {
   const form = useFormContext<IAd1FormValues>();
+  const { policyContext } = useAuth();
   const { control, setValue } = form;
 
   const transactionType = useWatch({
@@ -100,6 +102,25 @@ const AD1FormBody = ({ readOnly, allowWorkplaceSelection }: AD1FormBodyProps) =>
   const watchedAgentComm = useWatch({ name: 'agentComm', control });
   const tds = useWatch({ name: 'tds', control });
   const tcs = useWatch({ name: 'tcs', control });
+  const policyWindow = useMemo(() => {
+    if (!policyContext) {
+      return {
+        minDate: undefined as Date | undefined,
+        maxDate: undefined as Date | undefined,
+      };
+    }
+
+    const toDate = (value: string | null | undefined) =>
+      value ? new Date(`${value.slice(0, 10)}T00:00:00`) : undefined;
+
+    const activeLock = policyContext.activeMonthlyLock ?? policyContext.activeBackdateWindow;
+    return {
+      minDate: activeLock?.fromDate
+        ? toDate(activeLock.fromDate)
+        : undefined,
+      maxDate: toDate(activeLock?.toDate ?? policyContext.currentBusinessDate),
+    };
+  }, [policyContext]);
 
   const [productProfiles, setProductProfiles] = useState<import('@/modules/productProfile/types').IProductProfile[]>([]);
   const [currencies, setCurrencies] = useState<ICurrencyProfile[]>([]);
@@ -382,7 +403,13 @@ const AD1FormBody = ({ readOnly, allowWorkplaceSelection }: AD1FormBodyProps) =>
           />
           <FormFieldInput name="dealId" label="Deal ID" placeholder="Deal ID" disabled={readOnly} />
           <FormFieldInput name="docNo" label="Doc No." placeholder="Doc No." disabled={readOnly} />
-          <FormFieldDatePicker name="transactionDate" label="Transaction Date" disabled={readOnly} />
+          <FormFieldDatePicker
+            name="transactionDate"
+            label="Transaction Date"
+            disabled={readOnly}
+            minDate={policyWindow.minDate}
+            maxDate={policyWindow.maxDate}
+          />
           <FormFieldCategoryOption name="marketingId" code={CategoryOptionCodeEnum.Marketing} label="Marketing" disabled={readOnly} />
           <FormFieldCategoryOption name="segmentId" code={CategoryOptionCodeEnum.Segment} label="Segment" disabled={readOnly} />
           <FormFieldInput name="servicedBy" label="Serviced By" placeholder="Serviced By" disabled={readOnly} />

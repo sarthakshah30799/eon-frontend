@@ -10,6 +10,7 @@ interface FormFieldCountryDropdownProps {
   className?: string;
   createLabel?: string;
   size?: 'sm' | 'md' | 'lg';
+  onValueChange?: (value: string) => void;
 }
 
 export const FormFieldCountryDropdown = ({
@@ -20,6 +21,7 @@ export const FormFieldCountryDropdown = ({
   className = '',
   createLabel,
   size,
+  onValueChange,
 }: FormFieldCountryDropdownProps) => {
   const form = useFormContext();
 
@@ -42,6 +44,7 @@ export const FormFieldCountryDropdown = ({
       createLabel={createLabel}
       onChange={nextValue => {
         field.onChange(nextValue);
+        onValueChange?.(String(nextValue ?? ''));
       }}
       error={error?.message}
     />

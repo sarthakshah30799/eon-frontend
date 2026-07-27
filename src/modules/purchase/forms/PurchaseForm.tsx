@@ -8,6 +8,7 @@ import { Button, CardSection } from '@/components/ui';
 import {
   Form,
   FormFieldPurposeSelect,
+  FormFieldDatePicker,
   FormFieldSelect,
   TransactionAdditionalChargesFieldArray,
   TransactionPaymentDetailsFieldArray,
@@ -40,6 +41,7 @@ import { PurchaseBookReferenceField } from '../components/PurchaseBookReferenceF
 import { PurchasePartyProfileField } from '../components/PurchasePartyProfileField';
 import { PurchaseReferenceNumberField } from '../components/PurchaseReferenceNumberField';
 import { PurchaseWorkplaceFields } from '../components/PurchaseWorkplaceFields';
+import { PurchaseRulePreviewSection } from '../components/PurchaseRulePreviewSection';
 import { PurchaseTransactionTable } from '../components/PurchaseTransactionTable';
 import {
   buildPurchasePrintHtml,
@@ -52,6 +54,7 @@ import {
 import {
   TransactionLogActionEnum,
   TransactionPartyProfileTypeEnum,
+  TransactionTypeEnum,
   TransactionTypeProfileEnum,
 } from '@/modules/transactions';
 import { PassengerAmlVerificationModal } from '@/modules/passengers/components';
@@ -63,7 +66,10 @@ import type {
   IPurchaseRulePreviewRequest,
   IPurchaseRulePreviewResponse,
   ITransactionTaxPreviewResponse,
+  ITransactionTcsPreviewResponse,
 } from '@/modules/transactions';
+import { useTransactionTcsPreview } from '@/modules/transactions';
+import { useAuth } from '@/lib/AuthContext';
 
 const ACCOUNT_PROFILE_OPTION_PAGE_SIZE = 30;
 
@@ -148,6 +154,7 @@ const PurchaseFormBody = ({
   void _branchCode;
   void _isFreshlyCreated;
   const form = useFormContext<IPurchaseFormValues>();
+  const { policyContext } = useAuth();
   const [currencyPickerRowIndex, setCurrencyPickerRowIndex] = useState<
     number | null
   >(null);
@@ -258,6 +265,25 @@ const PurchaseFormBody = ({
     () => (agentProfileId ? agentProfile?.commissionRules ?? [] : []),
     [agentProfile?.commissionRules, agentProfileId]
   );
+  const policyWindow = useMemo(() => {
+    if (!policyContext) {
+      return {
+        minDate: undefined as Date | undefined,
+        maxDate: undefined as Date | undefined,
+      };
+    }
+
+    const toDate = (value: string | null | undefined) =>
+      value ? new Date(`${value.slice(0, 10)}T00:00:00`) : undefined;
+
+    const activeLock = policyContext.activeMonthlyLock ?? policyContext.activeBackdateWindow;
+    const maxDate = toDate(activeLock?.toDate ?? policyContext.currentBusinessDate);
+    const minDate = activeLock?.fromDate
+      ? toDate(activeLock.fromDate)
+      : undefined;
+
+    return { minDate, maxDate };
+  }, [policyContext]);
   const transactionDocumentProfiles = documentProfiles;
   const existingDocumentsByProfileId = useMemo(
     () =>
@@ -280,6 +306,31 @@ const PurchaseFormBody = ({
   const transactionType = useWatch({
     control: form.control,
     name: 'transactionType',
+  });
+  const isPurchaseTransaction = transactionType === TransactionTypeEnum.PURCHASE;
+  const purposeId = useWatch({
+    control: form.control,
+    name: 'purposeId',
+  });
+  const loanAmount = useWatch({
+    control: form.control,
+    name: 'loanAmount',
+  });
+  const declaredAmount = useWatch({
+    control: form.control,
+    name: 'declaredAmount',
+  });
+  const itrFiled = useWatch({
+    control: form.control,
+    name: 'itrFiled',
+  });
+  const tcsDeclarationAccepted = useWatch({
+    control: form.control,
+    name: 'tcsDeclarationAccepted',
+  });
+  const isProprietorship = useWatch({
+    control: form.control,
+    name: 'isProprietorship',
   });
   const purchaseRuleWatchValues = useWatch({
     control: form.control,
@@ -314,13 +365,121 @@ const PurchaseFormBody = ({
       'otherDocuments',
       'transactions',
       'additionalCharges',
-      'paymentDetails',
     ] as const,
   });
-  const passengerInfoCapturedForRule = Boolean(purchaseRuleWatchValues[0]);
+  const [
+    purchaseRulePassengerInfoCaptured,
+    purchaseRuleEntityType,
+    purchaseRuleNationalityType,
+    purchaseRuleResidentStatus,
+    purchaseRuleCountryId,
+    purchaseRuleStateId,
+    purchaseRuleLocationId,
+    purchaseRuleCity,
+    purchaseRuleAddress1,
+    purchaseRuleAddress2,
+    purchaseRuleEmail,
+    purchaseRuleContactNo,
+    purchaseRulePanNumber,
+    purchaseRulePanHolderName,
+    purchaseRulePanDob,
+    purchaseRulePanHolderRelationType,
+    purchaseRulePaidByPanNumber,
+    purchaseRulePaidByPanHolderName,
+    purchaseRulePaidByPanDob,
+    purchaseRuleGstNumber,
+    purchaseRuleGstStateId,
+    purchaseRulePassportNumber,
+    purchaseRulePassportIssueAt,
+    purchaseRulePassportIssueDate,
+    purchaseRulePassportExpiryDate,
+    purchaseRuleArrivalDate,
+    purchaseRuleIsPep,
+    purchaseRuleOtherDocuments,
+    purchaseRuleTransactions,
+    purchaseRuleAdditionalCharges,
+  ] = purchaseRuleWatchValues;
+  const purchaseRulePaymentSignature = useMemo(
+    () =>
+      (paymentDetails ?? [])
+        .map(payment => ({
+          paymentMethod: String(payment.paymentMethod ?? '').trim().toUpperCase(),
+          amount: String(payment.amount ?? '').trim(),
+        }))
+        .filter(payment => payment.paymentMethod || payment.amount)
+        .map(payment => `${payment.paymentMethod}:${payment.amount}`)
+        .join('|'),
+    [paymentDetails]
+  );
+  const passengerInfoCapturedForRule = Boolean(purchaseRulePassengerInfoCaptured);
   const purchaseRulePreviewSignature = useMemo(
-    () => JSON.stringify(purchaseRuleWatchValues),
-    [purchaseRuleWatchValues]
+    () =>
+      JSON.stringify({
+        passengerInfoCapturedForRule,
+        entityType: purchaseRuleEntityType ?? '',
+        nationalityType: purchaseRuleNationalityType ?? '',
+        residentStatus: purchaseRuleResidentStatus ?? '',
+        countryId: purchaseRuleCountryId ?? '',
+        stateId: purchaseRuleStateId ?? '',
+        locationId: purchaseRuleLocationId ?? '',
+        city: purchaseRuleCity ?? '',
+        address1: purchaseRuleAddress1 ?? '',
+        address2: purchaseRuleAddress2 ?? '',
+        email: purchaseRuleEmail ?? '',
+        contactNo: purchaseRuleContactNo ?? '',
+        panNumber: purchaseRulePanNumber ?? '',
+        panHolderName: purchaseRulePanHolderName ?? '',
+        panDob: purchaseRulePanDob ?? '',
+        panHolderRelationType: purchaseRulePanHolderRelationType ?? '',
+        paidByPanNumber: purchaseRulePaidByPanNumber ?? '',
+        paidByPanHolderName: purchaseRulePaidByPanHolderName ?? '',
+        paidByPanDob: purchaseRulePaidByPanDob ?? '',
+        gstNumber: purchaseRuleGstNumber ?? '',
+        gstStateId: purchaseRuleGstStateId ?? '',
+        passportNumber: purchaseRulePassportNumber ?? '',
+        passportIssueAt: purchaseRulePassportIssueAt ?? '',
+        passportIssueDate: purchaseRulePassportIssueDate ?? '',
+        passportExpiryDate: purchaseRulePassportExpiryDate ?? '',
+        arrivalDate: purchaseRuleArrivalDate ?? '',
+        isPep: purchaseRuleIsPep ?? false,
+        otherDocuments: purchaseRuleOtherDocuments ?? [],
+        transactions: purchaseRuleTransactions ?? [],
+        additionalCharges: purchaseRuleAdditionalCharges ?? [],
+        paymentDetails: purchaseRulePaymentSignature,
+      }),
+    [
+      passengerInfoCapturedForRule,
+      purchaseRuleAddress1,
+      purchaseRuleAddress2,
+      purchaseRuleAdditionalCharges,
+      purchaseRuleArrivalDate,
+      purchaseRuleCity,
+      purchaseRuleContactNo,
+      purchaseRuleCountryId,
+      purchaseRuleEmail,
+      purchaseRuleEntityType,
+      purchaseRuleGstNumber,
+      purchaseRuleGstStateId,
+      purchaseRuleIsPep,
+      purchaseRuleLocationId,
+      purchaseRuleNationalityType,
+      purchaseRuleOtherDocuments,
+      purchaseRulePaidByPanDob,
+      purchaseRulePaidByPanHolderName,
+      purchaseRulePaidByPanNumber,
+      purchaseRulePanDob,
+      purchaseRulePanHolderName,
+      purchaseRulePanHolderRelationType,
+      purchaseRulePanNumber,
+      purchaseRulePassportExpiryDate,
+      purchaseRulePassportIssueAt,
+      purchaseRulePassportIssueDate,
+      purchaseRulePassportNumber,
+      purchaseRulePaymentSignature,
+      purchaseRuleResidentStatus,
+      purchaseRuleStateId,
+      purchaseRuleTransactions,
+    ]
   );
   const hasCompleteItemPreviewRows = useMemo(
     () =>
@@ -353,7 +512,7 @@ const PurchaseFormBody = ({
   const purchaseRulePreviewPayload = useMemo(() => {
     void purchaseRulePreviewSignature;
 
-    if (!purchasePageType || !passengerInfoCapturedForRule) {
+    if (!purchasePageType || !passengerInfoCapturedForRule || !isPurchaseTransaction) {
       return null;
     }
 
@@ -368,6 +527,7 @@ const PurchaseFormBody = ({
     purchasePageType,
     requiresApproval,
     purchaseRulePreviewSignature,
+    isPurchaseTransaction,
   ]);
   const purchaseRulePreviewRequest: IPurchaseRulePreviewRequest | null =
     purchaseRulePreviewPayload?.transaction
@@ -385,6 +545,7 @@ const PurchaseFormBody = ({
   );
   const canPreviewPurchaseRule = Boolean(
     purchaseRulePreviewRequest &&
+      isPurchaseTransaction &&
       resolvedBranchId &&
       partyProfileId &&
       passengerInfoCaptured &&
@@ -438,10 +599,19 @@ const PurchaseFormBody = ({
   ]);
 
   useEffect(() => {
+    if (!isPurchaseTransaction) {
+      onPurchaseRuleBlockChange(false);
+      return;
+    }
+
     onPurchaseRuleBlockChange(
       Boolean(resolvedPurchaseRulePreview && !resolvedPurchaseRulePreview.allowed)
     );
-  }, [onPurchaseRuleBlockChange, resolvedPurchaseRulePreview]);
+  }, [
+    isPurchaseTransaction,
+    onPurchaseRuleBlockChange,
+    resolvedPurchaseRulePreview,
+  ]);
 
   const taxPreviewRequest = useMemo(
     () => ({
@@ -534,7 +704,10 @@ const PurchaseFormBody = ({
       totalTaxAmount: Number(savedTransaction.itemTaxAmount ?? 0) + Number(savedTransaction.additionalChargeTaxAmount ?? 0) > 0
         ? String(Number(savedTransaction.itemTaxAmount ?? 0) + Number(savedTransaction.additionalChargeTaxAmount ?? 0))
         : '0.00',
-      finalAmount: savedTransaction.finalAmount ?? '0.00',
+      finalAmount:
+        savedTransaction.preTcsFinalAmount ??
+        savedTransaction.finalAmount ??
+        '0.00',
       igstAmount: savedTransaction.igstAmount ?? '0.00',
       cgstAmount: savedTransaction.cgstAmount ?? '0.00',
       sgstAmount: savedTransaction.sgstAmount ?? '0.00',
@@ -573,9 +746,127 @@ const PurchaseFormBody = ({
       })),
     };
   }, [savedTransaction, taxPreview]);
+  const tcsPreviewRequest = useMemo(
+    () => {
+      if (
+        transactionType !== TransactionTypeEnum.SALE ||
+        !purchasePageType ||
+        !resolvedTaxSummary ||
+        !purposeId ||
+        !passengerInfoCaptured
+      ) {
+        return null;
+      }
+
+      return {
+        transactionType,
+        purposeId,
+        slug: purchasePageType,
+        preTcsFinalAmount: resolvedTaxSummary.finalAmount,
+        itemBaseAmount: resolvedTaxSummary.itemBaseAmount,
+        itemTaxAmount: resolvedTaxSummary.itemTaxAmount,
+        additionalChargeBaseAmount: resolvedTaxSummary.additionalChargeBaseAmount,
+        additionalChargeTaxAmount: resolvedTaxSummary.additionalChargeTaxAmount,
+        loanAmount: loanAmount || null,
+        declaredAmount: declaredAmount || null,
+        itrFiled: Boolean(itrFiled),
+        tcsDeclarationAccepted: Boolean(tcsDeclarationAccepted),
+        isProprietorship: Boolean(isProprietorship),
+      };
+    },
+    [
+      declaredAmount,
+      isProprietorship,
+      itrFiled,
+      loanAmount,
+      passengerInfoCaptured,
+      purchasePageType,
+      purposeId,
+      resolvedTaxSummary,
+      tcsDeclarationAccepted,
+      transactionType,
+    ]
+  );
+  const canPreviewTcs = Boolean(tcsPreviewRequest);
+  const { data: tcsPreview } = useTransactionTcsPreview(
+    tcsPreviewRequest,
+    canPreviewTcs
+  );
+  const resolvedTcsSummary = useMemo<ITransactionTcsPreviewResponse | null>(() => {
+    if (tcsPreview) {
+      return tcsPreview;
+    }
+
+    if (savedTransaction?.tcsAmount === undefined && !savedTransaction?.id) {
+      return null;
+    }
+
+    const breakdowns = (savedTransaction?.tcsBreakdowns ?? []).map(breakdown => ({
+      lineNo: breakdown.lineNo,
+      purposeId: breakdown.purposeId,
+      purposeSlabId: breakdown.purposeSlabId,
+      baseAmount: breakdown.baseAmount ?? '0.00',
+      ratePercent: breakdown.ratePercent ?? '0.00',
+      rateType: breakdown.rateType ?? 'PERCENT',
+      tcsAmount: breakdown.tcsAmount ?? '0.00',
+    }));
+
+    return {
+      transactionType: savedTransaction?.transactionType ?? transactionType,
+      purposeId: savedTransaction?.purposeId ?? null,
+      preTcsFinalAmount: savedTransaction?.preTcsFinalAmount ?? '0.00',
+      effectiveAmount:
+        String(
+          Number(savedTransaction?.preTcsFinalAmount ?? 0) +
+            Number(savedTransaction?.declaredAmount ?? 0)
+        ) || '0.00',
+      threshold: '0.00',
+      effectiveThreshold: '0.00',
+      loanAmount: savedTransaction?.loanAmount ?? '0.00',
+      declaredAmount: savedTransaction?.declaredAmount ?? '0.00',
+      taxableAmount: savedTransaction?.taxableAmount ?? '0.00',
+      tcsRatePercent: savedTransaction?.tcsRatePercent ?? '0.00',
+      tcsRateType: savedTransaction?.tcsRateType ?? null,
+      tcsAmount: savedTransaction?.tcsAmount ?? '0.00',
+      finalAmount: savedTransaction?.finalAmount ?? '0.00',
+      tcsDeclarationAccepted: Boolean(savedTransaction?.tcsDeclarationAccepted),
+      itrFiled: Boolean(savedTransaction?.itrFiled),
+      isProprietorship: Boolean(savedTransaction?.isProprietorship),
+      breakdowns,
+    };
+  }, [savedTransaction, tcsPreview, transactionType]);
+  useEffect(() => {
+    if (!tcsPreview) {
+      return;
+    }
+
+    form.setValue('preTcsFinalAmount', tcsPreview.preTcsFinalAmount, {
+      shouldDirty: false,
+      shouldTouch: false,
+      shouldValidate: false,
+    });
+    form.setValue('tcsRatePercent', tcsPreview.tcsRatePercent, {
+      shouldDirty: false,
+      shouldTouch: false,
+      shouldValidate: false,
+    });
+    form.setValue('tcsRateType', tcsPreview.tcsRateType ?? '', {
+      shouldDirty: false,
+      shouldTouch: false,
+      shouldValidate: false,
+    });
+    form.setValue('tcsAmount', tcsPreview.tcsAmount, {
+      shouldDirty: false,
+      shouldTouch: false,
+      shouldValidate: false,
+    });
+  }, [form, tcsPreview]);
   const totalPayableAmount = useMemo(
-    () => resolvedTaxSummary?.finalAmount ?? '0.00',
-    [resolvedTaxSummary?.finalAmount]
+    () =>
+      transactionType === TransactionTypeEnum.SALE
+        ? resolvedTcsSummary?.finalAmount ?? resolvedTaxSummary?.finalAmount ?? '0.00'
+        : resolvedTaxSummary?.finalAmount ?? '0.00',
+    [resolvedTaxSummary?.finalAmount, resolvedTcsSummary?.finalAmount, transactionType]
   );
   const getDocumentLabel = (document: IPurchaseTransactionDocument) => {
     const snapshot = document.documentProfileSnapshot as
@@ -812,6 +1103,14 @@ const PurchaseFormBody = ({
             )}
             disabled={isReadOnly}
           />
+          <FormFieldDatePicker
+            name="transactionDate"
+            label="Transaction Date"
+            placeholder="Select transaction date"
+            disabled={isReadOnly}
+            minDate={policyWindow.minDate}
+            maxDate={policyWindow.maxDate}
+          />
         </div>
 
         {isCombinedPartyProfilePage ? (
@@ -925,52 +1224,8 @@ const PurchaseFormBody = ({
         description="Add optional charges for this transaction. The account list is filtered by ledger type and purchase/sale mode."
       />
 
-      {resolvedPurchaseRulePreview ? (
-        <CardSection heading="Purchase Rule" className="space-y-4">
-          <div
-            className={`rounded-xl border px-4 py-4 shadow-sm ${
-              resolvedPurchaseRulePreview.allowed
-                ? 'border-emerald-200 bg-emerald-50'
-                : 'border-amber-200 bg-amber-50'
-            }`}
-          >
-            <div className="text-sm font-semibold text-text-primary">
-              {resolvedPurchaseRulePreview.allowed
-                ? 'Purchase rule check passed'
-                : resolvedPurchaseRulePreview.blockingReason || 'Purchase rule check failed'}
-            </div>
-            <div className="mt-2 grid gap-2 text-sm text-text-secondary sm:grid-cols-2">
-              <div>
-                <span className="font-medium text-text-primary">Converted amount:</span>{' '}
-                {resolvedPurchaseRulePreview.transactionAmountInReferenceCurrency}{' '}
-                {resolvedPurchaseRulePreview.referenceCurrencyCode}
-              </div>
-              <div>
-                <span className="font-medium text-text-primary">Cash total:</span>{' '}
-                {resolvedPurchaseRulePreview.cashTotalAmount}
-              </div>
-              <div>
-                <span className="font-medium text-text-primary">Cheque total:</span>{' '}
-                {resolvedPurchaseRulePreview.chequeTotalAmount}
-              </div>
-              <div>
-                <span className="font-medium text-text-primary">Cash limit:</span>{' '}
-                {resolvedPurchaseRulePreview.cashLimitAmount}{' '}
-                {resolvedPurchaseRulePreview.referenceCurrencyCode}
-              </div>
-              <div>
-                <span className="font-medium text-text-primary">CDF threshold:</span>{' '}
-                {resolvedPurchaseRulePreview.cdfThresholdAmount}{' '}
-                {resolvedPurchaseRulePreview.referenceCurrencyCode}
-              </div>
-              <div>
-                <span className="font-medium text-text-primary">History amount:</span>{' '}
-                {resolvedPurchaseRulePreview.cumulativeAmountInReferenceCurrency}{' '}
-                {resolvedPurchaseRulePreview.referenceCurrencyCode}
-              </div>
-            </div>
-          </div>
-        </CardSection>
+      {isPurchaseTransaction && resolvedPurchaseRulePreview ? (
+        <PurchaseRulePreviewSection preview={resolvedPurchaseRulePreview} />
       ) : null}
 
       {resolvedTaxSummary ? (
@@ -1110,6 +1365,131 @@ const PurchaseFormBody = ({
         </CardSection>
       ) : null}
 
+      {transactionType === TransactionTypeEnum.SALE && resolvedTcsSummary ? (
+        <CardSection heading="TCS Summary" className="space-y-4">
+          <div className="space-y-4 rounded-xl border border-border-primary bg-surface-primary px-4 py-4 shadow-sm">
+            <div className="space-y-3">
+              <div className="text-sm font-semibold text-text-primary">
+                TCS Breakdown
+              </div>
+              <div className="flex items-start justify-between gap-4">
+                <div className="text-sm font-medium text-text-secondary">
+                  Pre-TCS final amount
+                </div>
+                <div className="text-sm font-semibold text-text-primary text-right">
+                  {formatPurchaseDecimal(resolvedTcsSummary.preTcsFinalAmount)}
+                </div>
+              </div>
+              <div className="flex items-start justify-between gap-4">
+                <div className="text-sm font-medium text-text-secondary">
+                  Loan amount
+                </div>
+                <div className="text-sm font-semibold text-text-primary text-right">
+                  {formatPurchaseDecimal(resolvedTcsSummary.loanAmount)}
+                </div>
+              </div>
+              <div className="flex items-start justify-between gap-4">
+                <div className="text-sm font-medium text-text-secondary">
+                  Declared amount
+                </div>
+                <div className="text-sm font-semibold text-text-primary text-right">
+                  {formatPurchaseDecimal(resolvedTcsSummary.declaredAmount)}
+                </div>
+              </div>
+              <div className="flex items-start justify-between gap-4">
+                <div className="text-sm font-medium text-text-secondary">
+                  Taxable amount
+                </div>
+                <div className="text-sm font-semibold text-text-primary text-right">
+                  {formatPurchaseDecimal(resolvedTcsSummary.taxableAmount)}
+                </div>
+              </div>
+              <div className="flex items-start justify-between gap-4">
+                <div className="text-sm font-medium text-text-secondary">
+                  TCS Rate (
+                  {resolvedTcsSummary.tcsRateType === 'RUPEES'
+                    ? 'Rupees'
+                    : `${formatPurchaseDecimal(resolvedTcsSummary.tcsRatePercent)}%`}
+                  )
+                </div>
+                <div className="text-sm font-semibold text-text-primary text-right">
+                  {resolvedTcsSummary.tcsRateType === 'RUPEES'
+                    ? formatPurchaseDecimal(resolvedTcsSummary.tcsAmount)
+                    : formatPurchaseDecimal(resolvedTcsSummary.tcsRatePercent)}
+                </div>
+              </div>
+              <div className="flex items-start justify-between gap-4">
+                <div className="text-sm font-medium text-text-secondary">
+                  TCS amount
+                </div>
+                <div className="text-sm font-semibold text-text-primary text-right">
+                  {formatPurchaseDecimal(resolvedTcsSummary.tcsAmount)}
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="text-sm font-semibold text-text-primary">
+                TCS Breakdown Rows
+              </div>
+              {resolvedTcsSummary.breakdowns.length > 0 ? (
+                resolvedTcsSummary.breakdowns.map((row, index) => (
+                  <div
+                    key={`${row.lineNo}-${index}`}
+                    className="rounded-lg border border-border-secondary bg-surface-secondary/30 px-4 py-3"
+                  >
+                    <div className="mb-3 text-sm font-semibold text-text-primary">
+                      TCS Row {index + 1}
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="text-sm font-medium text-text-secondary">
+                          Base amount
+                        </div>
+                        <div className="text-sm font-semibold text-text-primary text-right">
+                          {formatPurchaseDecimal(row.baseAmount)}
+                        </div>
+                      </div>
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="text-sm font-medium text-text-secondary">
+                          Rate ({row.rateType === 'RUPEES' ? 'Rupees' : `${formatPurchaseDecimal(row.ratePercent)}%`})
+                        </div>
+                        <div className="text-sm font-semibold text-text-primary text-right">
+                          {row.rateType === 'RUPEES'
+                            ? formatPurchaseDecimal(row.tcsAmount)
+                            : formatPurchaseDecimal(row.ratePercent)}
+                        </div>
+                      </div>
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="text-sm font-medium text-text-secondary">
+                          TCS amount
+                        </div>
+                        <div className="text-sm font-semibold text-text-primary text-right">
+                          {formatPurchaseDecimal(row.tcsAmount)}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-sm text-text-secondary">
+                  No TCS breakdown rows available.
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between gap-4 border-t border-border-secondary pt-3">
+              <div className="text-sm font-medium text-text-secondary">
+                Final total amount
+              </div>
+              <div className="text-lg font-semibold text-text-primary text-right">
+                {formatPurchaseDecimal(resolvedTcsSummary.finalAmount)}
+              </div>
+            </div>
+          </div>
+        </CardSection>
+      ) : null}
+
       <TransactionPaymentDetailsFieldArray
         name="paymentDetails"
         maxAmount={totalPayableAmount}
@@ -1191,7 +1571,7 @@ const PurchaseFormBody = ({
       ) : null}
 
       <PassengerAmlVerificationModal
-        key={`${isPassengerAmlModalOpen ? 'open' : 'closed'}-${selectedPartyProfile?.id ?? 'none'}-${resolvedPassengerEntityType ?? 'none'}-${transactionPartyProfileType || 'none'}`}
+        key={`${selectedPartyProfile?.id ?? 'none'}-${resolvedPassengerEntityType ?? 'none'}-${transactionPartyProfileType || 'none'}`}
         open={isPassengerAmlModalOpen}
         onOpenChange={setIsPassengerAmlModalOpen}
         entityType={

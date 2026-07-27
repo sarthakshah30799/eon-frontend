@@ -233,7 +233,7 @@ export const getPurchaseTradeMode = (
 
 export const getPurchasePageBasePath = (
   pageType: PurchasePageType | null
-): 'purchase' | 'sale' => {
+): 'purchase' | 'sell' => {
   switch (pageType) {
     case TransactionTypeProfileEnum.SALE_CORPORATE_INDIVIDUAL:
     case TransactionTypeProfileEnum.SALE_FFMC:
@@ -242,7 +242,7 @@ export const getPurchasePageBasePath = (
     case TransactionTypeProfileEnum.SALE_FOREIGN:
     case TransactionTypeProfileEnum.SALE_MISC:
     case TransactionTypeProfileEnum.SALE_FRANCHISE:
-      return 'sale';
+      return 'sell';
     default:
       return 'purchase';
   }

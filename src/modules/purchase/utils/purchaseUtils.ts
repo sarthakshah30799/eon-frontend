@@ -23,6 +23,7 @@ import {
   type PurchasePageType,
 } from '@/pages/purchase/[slug]/purchasePage.enum';
 import type { IPartyProfileCommissionRule } from '@/modules/partyProfiles/types';
+import type { PurposeRateType } from '@/modules/purpose/types/purposeTypes';
 import {
   PassengerNationalityTypeEnum,
   PassengerResidentStatusEnum,
@@ -94,12 +95,14 @@ export const createEmptyPurchaseFormValues = (
   purchasePageType: PurchasePageType | null = null,
   branchSnapshot: ITransactionReferenceSnapshot | null = null,
   branchId = '',
-  counterId = ''
+  counterId = '',
+  transactionDate = ''
 ): IPurchaseFormValues => ({
   purchasePageType,
   branchId,
   branchSnapshot,
   counterId,
+  transactionDate,
   transactionType,
   tradeMode,
   transactionPartyProfileType:
@@ -147,6 +150,15 @@ export const createEmptyPurchaseFormValues = (
   address2: '',
   email: '',
   contactNo: '',
+  loanAmount: '',
+  declaredAmount: '',
+  preTcsFinalAmount: '',
+  tcsRatePercent: '',
+  tcsRateType: '',
+  tcsAmount: '',
+  itrFiled: false,
+  tcsDeclarationAccepted: false,
+  isProprietorship: false,
   panHolderRelationType: '',
   paidByPanNumber: '',
   paidByPanHolderName: '',
@@ -155,6 +167,16 @@ export const createEmptyPurchaseFormValues = (
   gstStateId: '',
   isPep: false,
   arrivalDate: '',
+  travelAirlineId: '',
+  travelTicketNo: '',
+  travelRoute: '',
+  travelCountryId: '',
+  travelNoOfDays: '',
+  travelNoOfPax: '',
+  travelDepartureDate: '',
+  travelPnr: '',
+  travelVisa: false,
+  travelIsCisCountry: false,
   otherDocuments: [
     {
       documentType: '',
@@ -231,10 +253,20 @@ export const mapPurchaseFormValuesToSubmitPayload = (
       branchSnapshot: values.branchSnapshot,
       requiresApproval,
       slug: values.purchasePageType,
+      transactionDate: values.transactionDate || null,
       partyProfileId: values.partyProfileId,
       transactionPartyProfileType: values.transactionPartyProfileType || null,
       purposeId: values.purposeId || null,
       agentProfileId: values.agentProfileId || null,
+      loanAmount: values.loanAmount || null,
+      declaredAmount: values.declaredAmount || null,
+      preTcsFinalAmount: values.preTcsFinalAmount || null,
+      tcsRatePercent: values.tcsRatePercent || null,
+      tcsRateType: values.tcsRateType || null,
+      tcsAmount: values.tcsAmount || null,
+      itrFiled: values.itrFiled,
+      tcsDeclarationAccepted: values.tcsDeclarationAccepted,
+      isProprietorship: values.isProprietorship,
       passenger: values.passengerInfoCaptured
         ? {
             entityType: values.entityType || '',
@@ -284,6 +316,24 @@ export const mapPurchaseFormValuesToSubmitPayload = (
               })),
           }
         : null,
+      passengerTravel:
+        values.transactionType === TransactionTypeEnum.SALE &&
+        values.passengerInfoCaptured
+          ? {
+              airlineTtId: values.travelAirlineId || null,
+              ticketNo: values.travelTicketNo || null,
+              route: values.travelRoute || null,
+              travellingCountryId: values.travelCountryId || null,
+              noOfDays: values.travelNoOfDays
+                ? Number(values.travelNoOfDays)
+                : null,
+              noOfPax: values.travelNoOfPax ? Number(values.travelNoOfPax) : null,
+              departureDate: values.travelDepartureDate || null,
+              travelPnr: values.travelPnr || null,
+              visa: values.travelVisa,
+              isCisCountry: values.travelIsCisCountry,
+            }
+          : null,
       manualBookPageId: values.manualBookPageId || null,
       manualBookPageSnapshot: values.manualBookPageSnapshot ?? null,
       transactionType: values.transactionType,
@@ -319,7 +369,10 @@ export const mapPurchaseFormValuesToSubmitPayload = (
             ? TransactionPaymentMethodEnum.CASH
             : TransactionPaymentMethodEnum.CHEQUE,
         referenceNumber: row.chequeNumber,
-        referenceDate: row.chequeDate,
+        referenceDate:
+          row.paymentMethod === TransactionPaymentMethodEnum.CHEQUE
+            ? (row.chequeDate || null)
+            : null,
         branchName: row.branchName,
         drawnOn: row.drawnOn || null,
         chequePageId:
@@ -346,6 +399,21 @@ export const mapPurchaseTransactionToFormValues = (
     | Record<string, unknown>
     | null
     | undefined;
+  const passengerTravelSnapshot = transaction.passengerTravelSnapshot as
+    | {
+        airlineTt?: { id?: string } | null;
+        ticketNo?: string | null;
+        route?: string | null;
+        travellingCountry?: { id?: string } | null;
+        noOfDays?: number | null;
+        noOfPax?: number | null;
+        departureDate?: string | null;
+        travelPnr?: string | null;
+        visa?: boolean | null;
+        isCisCountry?: boolean | null;
+      }
+    | null
+    | undefined;
   const passengerOtherDocuments = passengerSnapshot?.otherDocuments as
     | Array<{
         documentType?: string | null;
@@ -363,6 +431,9 @@ export const mapPurchaseTransactionToFormValues = (
   branchId: transaction.branchId ?? '',
   branchSnapshot: transaction.branchSnapshot ?? null,
   counterId: transaction.counterId ?? '',
+  transactionDate: transaction.transactionDate
+    ? String(transaction.transactionDate).slice(0, 10)
+    : '',
   transactionType: transaction.transactionType,
   tradeMode: transaction.tradeMode,
   partyProfileId: transaction.partyProfileId,
@@ -440,6 +511,20 @@ export const mapPurchaseTransactionToFormValues = (
   email: (passengerSnapshot?.email as string | undefined) ?? '',
   contactNo:
     (passengerSnapshot?.contactNo as string | undefined) ?? '',
+  loanAmount:
+    (transaction.loanAmount as string | undefined) ?? '',
+  declaredAmount:
+    (transaction.declaredAmount as string | undefined) ?? '',
+  preTcsFinalAmount:
+    (transaction.preTcsFinalAmount as string | undefined) ?? '',
+  tcsRatePercent:
+    (transaction.tcsRatePercent as string | undefined) ?? '',
+  tcsRateType:
+    (transaction.tcsRateType as PurposeRateType | undefined) ?? '',
+  tcsAmount: (transaction.tcsAmount as string | undefined) ?? '',
+  itrFiled: Boolean(transaction.itrFiled),
+  tcsDeclarationAccepted: Boolean(transaction.tcsDeclarationAccepted),
+  isProprietorship: Boolean(transaction.isProprietorship),
   panHolderRelationType:
     (passengerSnapshot?.panHolderRelationType as string | undefined) ??
     '',
@@ -458,6 +543,32 @@ export const mapPurchaseTransactionToFormValues = (
   isPep: Boolean(passengerSnapshot?.isPep),
   arrivalDate:
     (passengerSnapshot?.arrivalDate as string | undefined) ?? '',
+  travelAirlineId:
+    (passengerTravelSnapshot?.airlineTt?.id as string | undefined) ??
+    '',
+  travelTicketNo:
+    (passengerTravelSnapshot?.ticketNo as string | undefined) ?? '',
+  travelRoute:
+    (passengerTravelSnapshot?.route as string | undefined) ?? '',
+  travelCountryId:
+    (passengerTravelSnapshot?.travellingCountry?.id as string | undefined) ??
+    '',
+  travelNoOfDays:
+    passengerTravelSnapshot?.noOfDays !== undefined &&
+    passengerTravelSnapshot?.noOfDays !== null
+      ? String(passengerTravelSnapshot.noOfDays)
+      : '',
+  travelNoOfPax:
+    passengerTravelSnapshot?.noOfPax !== undefined &&
+    passengerTravelSnapshot?.noOfPax !== null
+      ? String(passengerTravelSnapshot.noOfPax)
+      : '',
+  travelDepartureDate:
+    (passengerTravelSnapshot?.departureDate as string | undefined) ?? '',
+  travelPnr:
+    (passengerTravelSnapshot?.travelPnr as string | undefined) ?? '',
+  travelVisa: Boolean(passengerTravelSnapshot?.visa),
+  travelIsCisCountry: Boolean(passengerTravelSnapshot?.isCisCountry),
   otherDocuments: Array.isArray(passengerOtherDocuments)
     ? passengerOtherDocuments.map(document => ({
         documentType: document.documentType ?? '',

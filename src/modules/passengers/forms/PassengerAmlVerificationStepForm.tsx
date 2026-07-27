@@ -6,9 +6,11 @@ interface PassengerAmlVerificationStepFormProps {
   isCorporate: boolean;
   selectedPartyProfile?: PassengerAmlPartyProfile | null;
   isSelectedPartyProfileLoading?: boolean;
+  showPanRelation?: boolean;
   verificationStatus: 'idle' | 'checking' | 'valid' | 'invalid';
   verificationMessage: string | null;
   onPanFieldBlur?: () => void;
+  onPassportNumberBlur?: () => void;
   onPassportFieldBlur?: () => void;
   onNationalityChange?: (value: string | null) => void;
 }
@@ -25,9 +27,11 @@ export const PassengerAmlVerificationStepForm = ({
   isCorporate,
   selectedPartyProfile,
   isSelectedPartyProfileLoading = false,
+  showPanRelation = false,
   verificationStatus,
   verificationMessage,
   onPanFieldBlur,
+  onPassportNumberBlur,
   onPassportFieldBlur,
   onNationalityChange,
 }: PassengerAmlVerificationStepFormProps) => (
@@ -36,9 +40,11 @@ export const PassengerAmlVerificationStepForm = ({
     isCorporate={isCorporate}
     selectedPartyProfileLabel={toProfileLabel(selectedPartyProfile)}
     isSelectedPartyProfileLoading={isSelectedPartyProfileLoading}
+    showPanRelation={showPanRelation}
     verificationStatus={verificationStatus}
     verificationMessage={verificationMessage}
     onPanFieldBlur={onPanFieldBlur}
+    onPassportNumberBlur={onPassportNumberBlur}
     onPassportFieldBlur={onPassportFieldBlur}
     onNationalityChange={onNationalityChange}
   />

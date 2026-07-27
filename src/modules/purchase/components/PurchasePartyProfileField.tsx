@@ -202,14 +202,14 @@ export const PurchasePartyProfileField = ({
         {showPassengerAction ? (
           <Button
             type="button"
-            variant="outline"
-            className="w-full"
+            variant={passengerInfoCaptured ? 'secondary' : 'default'}
+            className="w-full shadow-sm transition-transform duration-200 hover:-translate-y-0.5"
             disabled={disabled || !partyProfileId || !entityType || (isCombinedPartyProfilePage && !transactionPartyProfileType)}
             onClick={() => {
               onAddPassengerInfo?.();
             }}
           >
-            Add Passenger Info
+            {passengerInfoCaptured ? 'Edit Passenger Info' : 'Passenger Info'}
           </Button>
         ) : null}
 

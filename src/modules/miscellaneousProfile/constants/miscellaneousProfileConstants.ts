@@ -132,6 +132,10 @@ export const CATEGORY_OPTION_CODE_OPTIONS: CategoryOptionCodeOption[] = [
     label: 'TRANSACTION',
     type: 'DOCUMENT',
   },
+  {
+    value: CategoryOptionCodeEnum.Airline,
+    label: 'AIRLINE',
+  },
 ];
 
 export const STATIC_CATEGORY_OPTION_CODES = [
@@ -160,6 +164,7 @@ export const CATEGORY_OPTION_CODE_LABELS = {
   [CategoryOptionCodeEnum.FfmcGroup]: 'FFMC GROUP',
   [CategoryOptionCodeEnum.Master]: 'MASTER',
   [CategoryOptionCodeEnum.Transaction]: 'TRANSACTION',
+  [CategoryOptionCodeEnum.Airline]: 'AIRLINE',
   [CategoryOptionCodeEnum.Segment]: 'SEGMENT',
   [CategoryOptionCodeEnum.Relationship]: 'RELATIONSHIP',
   [CategoryOptionCodeEnum.CommissionGiven]: 'COMMISSION GIVEN',

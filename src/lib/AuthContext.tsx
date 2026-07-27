@@ -7,7 +7,7 @@ import React, {
 } from 'react';
 import type { ReactNode } from 'react';
 import { authApi } from '../api/auth';
-import type { IUser } from '../modules/auth/types';
+import type { IUser, IPolicyContext } from '../modules/auth/types';
 import { toast } from 'react-hot-toast';
 import { AUTH_SESSION_EXPIRED_EVENT } from './authSessionEvents';
 import { AUTH_CONSTANTS } from '../modules/auth/constants/authConstants';
@@ -19,6 +19,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   activeBranchId: string | null;
   activeCounterId: string | null;
+  policyContext: IPolicyContext | null;
   setWorkplace: (branchId: string, counterId: string) => Promise<void>;
   clearWorkplace: () => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
@@ -42,6 +43,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [activeBranchId, setActiveBranchId] = useState<string | null>(null);
   const [activeCounterId, setActiveCounterId] = useState<string | null>(null);
+  const [policyContext, setPolicyContext] = useState<IPolicyContext | null>(null);
 
   const isAuthenticated = !!user;
 
@@ -49,6 +51,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setUser(null);
     setActiveBranchId(null);
     setActiveCounterId(null);
+    setPolicyContext(null);
   }, []);
 
   const handleSessionExpired = useCallback((message?: string) => {
@@ -71,6 +74,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         activeBranchId: null,
         activeCounterId: null,
       }));
+      const nextPolicyContext = await authApi.getPolicyContext().catch(() => null);
       const nextUser = {
         ...currentUser,
         isHo: currentUser.isHo || currentUser.isHoStaff,
@@ -83,10 +87,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(nextUser);
       setActiveBranchId(workplace.activeBranchId);
       setActiveCounterId(workplace.activeCounterId);
+      setPolicyContext(nextPolicyContext);
     } catch {
       setUser(null);
       setActiveBranchId(null);
       setActiveCounterId(null);
+      setPolicyContext(null);
     } finally {
       setIsLoading(false);
     }
@@ -120,6 +126,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         ? { ...prev, permissions: {} }
         : prev
     );
+    setPolicyContext(null);
   };
 
   const logout = async () => {
@@ -157,6 +164,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isAuthenticated,
     activeBranchId,
     activeCounterId,
+    policyContext,
     setWorkplace,
     clearWorkplace,
     login,

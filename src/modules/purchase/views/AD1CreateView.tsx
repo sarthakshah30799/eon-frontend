@@ -11,7 +11,7 @@ import { AdditionalSettingsCodeEnum } from '@/modules/additionalSettings/constan
 
 export const AD1CreateView = () => {
   const navigate = useNavigate();
-  const { user, activeBranchId, activeCounterId, setWorkplace } = useAuth();
+  const { user, activeBranchId, activeCounterId, setWorkplace, policyContext } = useAuth();
   const canSelectWorkplace = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
 
   const { data: additionalSettings = [] } = useListAdditionalSettings();
@@ -28,7 +28,8 @@ export const AD1CreateView = () => {
   );
 
   const defaultValues = useMemo(() => {
-    const today = new Date().toISOString().split('T')[0];
+    const today =
+      policyContext?.transactionDate?.slice(0, 10) ?? new Date().toISOString().split('T')[0];
     return {
       transactionType: TransactionTypeEnum.PURCHASE,
       profileType: TransactionProfileType.AD1,
@@ -77,7 +78,7 @@ export const AD1CreateView = () => {
       rtgsImpsNeftRefNo: '',
       remarks: '',
     };
-  }, [activeBranchId, activeCounterId, canSelectWorkplace]);
+  }, [activeBranchId, activeCounterId, canSelectWorkplace, policyContext?.transactionDate]);
 
   return (
     <div className="space-y-6">

@@ -105,6 +105,12 @@ export interface IPassengerAmlVerificationResponse {
   message: string;
 }
 
+export interface IPassengerPassportLookupResponse {
+  found: boolean;
+  message: string;
+  passenger: Record<string, unknown> | null;
+}
+
 export interface IPassengerAmlVerifiedPayload {
   entityType: PassengerEntityType;
   isIndianNationality: boolean;

@@ -72,6 +72,18 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
     meta: { title: 'Additional Settings' },
   },
   {
+    path: '/admin/day-end-start-process',
+    meta: { title: 'Day End/Start Process' },
+  },
+  {
+    path: '/day-end-start-process',
+    meta: { title: 'Day End/Start Process' },
+  },
+  {
+    path: '/admin/monthwise-locking',
+    meta: { title: 'Monthwise Locking' },
+  },
+  {
     path: '/admin/transaction-account-postings',
     meta: { title: 'Transaction Account Postings' },
   },

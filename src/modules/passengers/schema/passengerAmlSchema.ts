@@ -11,6 +11,10 @@ import {
   type IPassengerAmlVerificationValues,
   type IPassengerPassengerDetailsValues,
 } from '../types/passengerTypes';
+import {
+  isPassengerOtherDocumentComplete,
+  shouldShowPassengerOtherDocumentValidityFields,
+} from '../utils/passengerOtherDocumentRules';
 
 export const PASSENGER_PAN_VERIFICATION_FIELDS = [
   'panNumber',
@@ -63,7 +67,8 @@ const passengerOtherDocumentSchema = yup
       otherwise: schema => schema.default(''),
     }),
     validTill: yup.string().trim().default('').when('documentType', {
-      is: (documentType: string) => Boolean(documentType),
+      is: (documentType: string) =>
+        shouldShowPassengerOtherDocumentValidityFields(documentType),
       then: schema => schema.required('Valid till is required'),
       otherwise: schema => schema.default(''),
     }),
@@ -162,13 +167,7 @@ export const createPassengerOtherDocumentVerificationSchema = () =>
       .test(
         'has-valid-other-document',
         'At least one document is required',
-        rows =>
-          (rows ?? []).some(
-            row =>
-              Boolean(row?.documentType?.trim?.()) &&
-              Boolean(row?.documentNumber?.trim?.()) &&
-              Boolean(row?.validTill?.trim?.())
-          )
+        rows => (rows ?? []).some(row => isPassengerOtherDocumentComplete(row))
       )
       .required(),
   });

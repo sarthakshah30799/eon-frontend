@@ -153,6 +153,7 @@ export interface ITransactionEntity {
   revisionNo: number;
   number: string | null;
   slug: string | null;
+  transactionDate: string | null;
   branchId: string;
   branchSnapshot?: ITransactionReferenceSnapshot | null;
   counterId: string;
@@ -484,6 +485,51 @@ export interface ITransactionTaxPreviewResponse {
   }>;
 }
 
+export interface ITransactionTcsPreviewRequest {
+  transactionType: TransactionType;
+  purposeId: string;
+  slug?: string | null;
+  preTcsFinalAmount?: string | number | null;
+  itemBaseAmount?: string | number | null;
+  itemTaxAmount?: string | number | null;
+  additionalChargeBaseAmount?: string | number | null;
+  additionalChargeTaxAmount?: string | number | null;
+  loanAmount?: string | number | null;
+  declaredAmount?: string | number | null;
+  itrFiled?: boolean | null;
+  tcsDeclarationAccepted?: boolean | null;
+  isProprietorship?: boolean | null;
+  maxTcsRatePercent?: string | number | null;
+}
+
+export interface ITransactionTcsPreviewResponse {
+  transactionType: TransactionType;
+  purposeId: string | null;
+  preTcsFinalAmount: string;
+  effectiveAmount: string;
+  threshold: string;
+  effectiveThreshold: string;
+  loanAmount: string;
+  declaredAmount: string;
+  taxableAmount: string;
+  tcsRatePercent: string;
+  tcsRateType: 'PERCENT' | 'RUPEES' | null;
+  tcsAmount: string;
+  finalAmount: string;
+  tcsDeclarationAccepted: boolean;
+  itrFiled: boolean;
+  isProprietorship: boolean;
+  breakdowns: Array<{
+    lineNo: number;
+    purposeId: string | null;
+    purposeSlabId: string | null;
+    baseAmount: string;
+    ratePercent: string;
+    rateType: 'PERCENT' | 'RUPEES';
+    tcsAmount: string;
+  }>;
+}
+
 export interface IPurchaseRulePreviewRequest {
   transaction: ICreateTransactionPayload;
 }
@@ -524,6 +570,19 @@ export interface ICreateTransactionPassengerOtherDocumentPayload {
   issueDate?: string | null;
   expiryDate?: string | null;
   remarks?: string | null;
+}
+
+export interface ICreateTransactionPassengerTravelPayload {
+  airlineTtId?: string | null;
+  ticketNo?: string | null;
+  route?: string | null;
+  travellingCountryId?: string | null;
+  noOfDays?: number | null;
+  noOfPax?: number | null;
+  departureDate?: string | null;
+  travelPnr?: string | null;
+  visa?: boolean | null;
+  isCisCountry?: boolean | null;
 }
 
 export interface ICreateTransactionPassengerPayload {
@@ -581,6 +640,7 @@ export interface ICreateTransactionPayload {
   purposeId?: string | null;
   agentProfileId?: string | null;
   passenger?: ICreateTransactionPassengerPayload | null;
+  passengerTravel?: ICreateTransactionPassengerTravelPayload | null;
   manualBookPageId?: string | null;
   manualBookPageSnapshot?: Record<string, unknown> | null;
   transactionType: TransactionType;

@@ -60,10 +60,12 @@ export const CountryDropdown = ({
     () =>
       (countryResponse?.data ?? []).map(country => ({
         value: country.id,
-        label: `${country.code} - ${country.name}`,
+        label: `${country.code} - ${country.name}${country.isBlocked ? ' (Blocked)' : ''}`,
         countryId: country.id,
         code: country.code,
         name: country.name,
+        isBlocked: Boolean(country.isBlocked),
+        isDisabled: Boolean(country.isBlocked),
       })),
     [countryResponse?.data]
   );
@@ -80,7 +82,7 @@ export const CountryDropdown = ({
     });
 
     return Array.from(map.values());
-  }, [createdOptions, defaultOptions, searchTerm]);
+  }, [createdOptions, defaultOptions]);
 
   const loadOptions = useCallback(
     async (inputValue: string): Promise<AsyncSelectResponse> => {
@@ -173,10 +175,12 @@ export const CountryDropdown = ({
 
     return {
       value: selectedCountry.id,
-      label: `${selectedCountry.code} - ${selectedCountry.name}`,
+      label: `${selectedCountry.code} - ${selectedCountry.name}${selectedCountry.isBlocked ? ' (Blocked)' : ''}`,
       countryId: selectedCountry.id,
       code: selectedCountry.code,
       name: selectedCountry.name,
+      isBlocked: Boolean(selectedCountry.isBlocked),
+      isDisabled: Boolean(selectedCountry.isBlocked),
     };
   }, [mergedDefaultOptions, selectedCountry, value]);
 
@@ -197,6 +201,8 @@ export const CountryDropdown = ({
       countryId: createdCountry.id,
       code: createdCountry.code,
       name: createdCountry.name,
+      isBlocked: Boolean(createdCountry.isBlocked),
+      isDisabled: Boolean(createdCountry.isBlocked),
     };
 
     setCreatedOptions(prevOptions => {

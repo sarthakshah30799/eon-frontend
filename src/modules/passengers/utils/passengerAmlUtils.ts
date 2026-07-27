@@ -12,6 +12,11 @@ import {
   type IPassengerAmlVerificationValues,
   type IPassengerPassengerDetailsValues,
 } from '../types/passengerTypes';
+import type { IPurchaseFormValues } from '@/modules/purchase/types/purchaseTypes';
+import {
+  isPassengerOtherDocumentComplete,
+  shouldShowPassengerOtherDocumentValidityFields,
+} from './passengerOtherDocumentRules';
 
 export const createStaticPassengerSelectOptions = <
   T extends string,
@@ -118,6 +123,106 @@ export const createPassengerDetailsDefaultValues = (
     ],
   };
 };
+
+const resolveSnapshotId = (value: unknown): string => {
+  if (!value || typeof value !== 'object') {
+    return '';
+  }
+
+  const snapshot = value as { id?: unknown };
+  return typeof snapshot.id === 'string' ? snapshot.id : '';
+};
+
+export const mapPassengerSnapshotToPurchaseFormValues = (
+  snapshot: Record<string, unknown>,
+): Partial<IPurchaseFormValues> => ({
+  entityType:
+    typeof snapshot.entityType === 'string' ? snapshot.entityType : '',
+  passengerInfoCaptured: false,
+  panNumber:
+    typeof snapshot.panNumber === 'string' ? snapshot.panNumber : '',
+  panHolderName:
+    typeof snapshot.panHolderName === 'string' ? snapshot.panHolderName : '',
+  panDob: typeof snapshot.panDob === 'string' ? snapshot.panDob : '',
+  passportNumber:
+    typeof snapshot.passportNumber === 'string' ? snapshot.passportNumber : '',
+  passportIssueAt:
+    typeof snapshot.passportIssueAt === 'string' ? snapshot.passportIssueAt : '',
+  passportIssueDate:
+    typeof snapshot.passportIssueDate === 'string' ? snapshot.passportIssueDate : '',
+  passportExpiryDate:
+    typeof snapshot.passportExpiryDate === 'string' ? snapshot.passportExpiryDate : '',
+  nationalityType:
+    typeof snapshot.nationalityType === 'string' ? snapshot.nationalityType : '',
+  residentStatus: resolveSnapshotId(snapshot.residentStatus),
+  countryId:
+    typeof snapshot.countryId === 'string'
+      ? snapshot.countryId
+      : resolveSnapshotId(snapshot.country),
+  stateId:
+    typeof snapshot.stateId === 'string' ? snapshot.stateId : resolveSnapshotId(snapshot.state),
+  locationId:
+    typeof snapshot.locationId === 'string'
+      ? snapshot.locationId
+      : resolveSnapshotId(snapshot.location),
+  city: typeof snapshot.city === 'string' ? snapshot.city : '',
+  address1: typeof snapshot.address1 === 'string' ? snapshot.address1 : '',
+  address2: typeof snapshot.address2 === 'string' ? snapshot.address2 : '',
+  email: typeof snapshot.email === 'string' ? snapshot.email : '',
+  contactNo: typeof snapshot.contactNo === 'string' ? snapshot.contactNo : '',
+  panHolderRelationType:
+    typeof snapshot.panHolderRelationType === 'string'
+      ? snapshot.panHolderRelationType
+      : '',
+  paidByPanNumber:
+    typeof snapshot.paidByPanNumber === 'string' ? snapshot.paidByPanNumber : '',
+  paidByPanHolderName:
+    typeof snapshot.paidByPanHolderName === 'string'
+      ? snapshot.paidByPanHolderName
+      : '',
+  paidByPanDob:
+    typeof snapshot.paidByPanDob === 'string' ? snapshot.paidByPanDob : '',
+  gstNumber: typeof snapshot.gstNumber === 'string' ? snapshot.gstNumber : '',
+  gstStateId:
+    typeof snapshot.gstStateId === 'string'
+      ? snapshot.gstStateId
+      : resolveSnapshotId(snapshot.gstState),
+  isPep: Boolean(snapshot.isPep),
+  arrivalDate:
+    typeof snapshot.arrivalDate === 'string' ? snapshot.arrivalDate : '',
+  otherDocuments: Array.isArray(snapshot.otherDocuments)
+    ? snapshot.otherDocuments.map(document => ({
+        documentType:
+          typeof (document as { documentType?: unknown }).documentType === 'string'
+            ? String((document as { documentType?: unknown }).documentType)
+            : '',
+        documentNumber:
+          typeof (document as { documentNumber?: unknown }).documentNumber === 'string'
+            ? String((document as { documentNumber?: unknown }).documentNumber)
+            : '',
+        validTill:
+          typeof (document as { validTill?: unknown }).validTill === 'string'
+            ? String((document as { validTill?: unknown }).validTill)
+            : '',
+        issueAt:
+          typeof (document as { issueAt?: unknown }).issueAt === 'string'
+            ? String((document as { issueAt?: unknown }).issueAt)
+            : '',
+        issueDate:
+          typeof (document as { issueDate?: unknown }).issueDate === 'string'
+            ? String((document as { issueDate?: unknown }).issueDate)
+            : '',
+        expiryDate:
+          typeof (document as { expiryDate?: unknown }).expiryDate === 'string'
+            ? String((document as { expiryDate?: unknown }).expiryDate)
+            : '',
+        documentFile:
+          typeof (document as { documentFile?: unknown }).documentFile === 'string'
+            ? String((document as { documentFile?: unknown }).documentFile)
+            : '',
+      }))
+    : undefined,
+});
 
 const isPanValidationRequired = (values: {
   entityType?: string;
@@ -234,7 +339,8 @@ const passengerOtherDocumentSchema = yup
       otherwise: schema => schema.default(''),
     }),
     validTill: yup.string().trim().default('').when('documentType', {
-      is: (documentType: string) => Boolean(documentType),
+      is: (documentType: string) =>
+        shouldShowPassengerOtherDocumentValidityFields(documentType),
       then: schema => schema.required('Valid till is required'),
       otherwise: schema => schema.default(''),
     }),
@@ -334,7 +440,14 @@ export const createPassengerDetailsSchema = () =>
       .of(passengerOtherDocumentSchema)
       .when('nationalityType', {
         is: (nationalityType: string) => isPassengerOtherDocumentsRequired(nationalityType),
-        then: schema => schema.min(1, 'At least one other document is required'),
+        then: schema =>
+          schema
+            .min(1, 'At least one other document is required')
+            .test(
+              'has-valid-other-document',
+              'At least one other document is required',
+              rows => (rows ?? []).some(row => isPassengerOtherDocumentComplete(row))
+            ),
         otherwise: schema => schema.default([]),
       }),
   });

@@ -7,6 +7,8 @@ import type {
   IPurchaseRulePreviewResponse,
   ITransactionTaxPreviewRequest,
   ITransactionTaxPreviewResponse,
+  ITransactionTcsPreviewRequest,
+  ITransactionTcsPreviewResponse,
   ITransactionEntity,
   ITransactionQuantityAvailability,
   TransactionStatus,
@@ -154,6 +156,25 @@ export const transactionsApi = {
 
     if (!res.data) {
       throw new Error('Failed to preview transaction tax');
+    }
+
+    return res.data;
+  },
+
+  previewTcs: async (
+    payload: ITransactionTcsPreviewRequest
+  ): Promise<ITransactionTcsPreviewResponse> => {
+    const res = await apiClient.post<ITransactionTcsPreviewResponse>(
+      '/transactions/tcs-preview',
+      payload
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      throw new Error('Failed to preview transaction TCS');
     }
 
     return res.data;

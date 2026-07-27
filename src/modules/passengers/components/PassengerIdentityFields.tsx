@@ -17,6 +17,7 @@ interface PassengerIdentityFieldsProps {
   showPan?: boolean;
   showPassport?: boolean;
   onPanFieldBlur?: () => void;
+  onPassportNumberBlur?: () => void;
   onPassportFieldBlur?: () => void;
   onNationalityChange?: (value: string | null) => void;
 }
@@ -29,6 +30,7 @@ export const PassengerIdentityFields = ({
   showPan = true,
   showPassport = false,
   onPanFieldBlur,
+  onPassportNumberBlur,
   onPassportFieldBlur,
   onNationalityChange,
 }: PassengerIdentityFieldsProps) => {
@@ -125,7 +127,7 @@ export const PassengerIdentityFields = ({
             label="Passport Number"
             placeholder="Enter passport number"
             valueTransform="uppercase"
-            onBlur={onPassportFieldBlur}
+            onBlur={onPassportNumberBlur}
           />
           <FormFieldInput
             name="passportIssueAt"

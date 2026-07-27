@@ -14,6 +14,7 @@ import type {
   TransactionType,
 } from '@/modules/transactions';
 import type { IPartyProfileCommissionRule } from '@/modules/partyProfiles/types';
+import type { PurposeRateType } from '@/modules/purpose/types/purposeTypes';
 import type { PurchasePageType } from '@/pages/purchase/[slug]/purchasePage.enum';
 
 export interface IPurchaseTransactionFormRow {
@@ -38,6 +39,7 @@ export interface IPurchaseFormValues {
   branchId: string;
   branchSnapshot: ITransactionReferenceSnapshot | null;
   counterId: string;
+  transactionDate: string;
   transactionType: TransactionType;
   tradeMode: TradeMode;
   partyProfileId: string;
@@ -80,6 +82,15 @@ export interface IPurchaseFormValues {
   address2: string;
   email: string;
   contactNo: string;
+  loanAmount: string;
+  declaredAmount: string;
+  preTcsFinalAmount: string;
+  tcsRatePercent: string;
+  tcsRateType: PurposeRateType | '';
+  tcsAmount: string;
+  itrFiled: boolean;
+  tcsDeclarationAccepted: boolean;
+  isProprietorship: boolean;
   panHolderRelationType: string;
   paidByPanNumber: string;
   paidByPanHolderName: string;
@@ -88,6 +99,16 @@ export interface IPurchaseFormValues {
   gstStateId: string;
   isPep: boolean;
   arrivalDate: string;
+  travelAirlineId: string;
+  travelTicketNo: string;
+  travelRoute: string;
+  travelCountryId: string;
+  travelNoOfDays: string;
+  travelNoOfPax: string;
+  travelDepartureDate: string;
+  travelPnr: string;
+  travelVisa: boolean;
+  travelIsCisCountry: boolean;
   otherDocuments: Array<{
     documentType: string;
     documentNumber: string;
@@ -170,13 +191,24 @@ export interface IPurchaseSubmitPayload {
     slug: string;
     branchSnapshot: ITransactionReferenceSnapshot | null;
     requiresApproval: boolean;
+    transactionDate?: string | null;
     partyProfileId: string;
     transactionPartyProfileType?: TransactionPartyProfileType | null;
     purposeId?: string | null;
-    agentProfileId?: string | null;
-    passenger?: import('@/modules/transactions').ICreateTransactionPassengerPayload | null;
-    manualBookPageId?: string | null;
-    manualBookPageSnapshot?: Record<string, unknown> | null;
+  agentProfileId?: string | null;
+  loanAmount?: string | null;
+  declaredAmount?: string | null;
+  preTcsFinalAmount?: string | null;
+  tcsRatePercent?: string | null;
+    tcsRateType?: PurposeRateType | null;
+    tcsAmount?: string | null;
+    itrFiled?: boolean | null;
+  tcsDeclarationAccepted?: boolean | null;
+  isProprietorship?: boolean | null;
+  passenger?: import('@/modules/transactions').ICreateTransactionPassengerPayload | null;
+  passengerTravel?: import('@/modules/transactions').ICreateTransactionPassengerTravelPayload | null;
+  manualBookPageId?: string | null;
+  manualBookPageSnapshot?: Record<string, unknown> | null;
     transactionType: TransactionType;
     tradeMode: TradeMode;
     remarks?: string | null;

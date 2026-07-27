@@ -14,11 +14,13 @@ export const MonthwiseLockingView = () => {
 
   const rows = useMemo(
     () =>
-      windows.map(window => ({
-        ...window,
-        branchName: window.branchName ?? window.branchId,
-        userName: window.userName ?? window.userId,
-      })),
+      windows
+        .filter(window => window.isActive)
+        .map(window => ({
+          ...window,
+          branchName: window.branchName ?? window.branchId,
+          userName: window.userName ?? window.userId,
+        })),
     [windows]
   );
 

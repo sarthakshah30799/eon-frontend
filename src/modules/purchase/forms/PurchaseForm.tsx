@@ -51,6 +51,7 @@ import {
   formatPurchaseDecimal,
   mapPurchaseFormValuesToSubmitPayload,
 } from '../utils/purchaseUtils';
+import { getTransactionDatePolicy } from '@/modules/transactionPolicies/utils/transactionDatePolicy';
 import {
   TransactionLogActionEnum,
   TransactionPartyProfileTypeEnum,
@@ -128,6 +129,7 @@ interface PurchaseFormBodyProps {
   onSelectDraftDocument: (documentProfileId: string, file: File) => void | Promise<void>;
   onClearDraftDocument: (documentProfileId: string) => void | Promise<void>;
   onPurchaseRuleBlockChange: (isBlocked: boolean) => void;
+  transactionDatePolicy: ReturnType<typeof getTransactionDatePolicy>;
 }
 
 const PurchaseFormBody = ({
@@ -150,11 +152,11 @@ const PurchaseFormBody = ({
   onSelectDraftDocument,
   onClearDraftDocument,
   onPurchaseRuleBlockChange,
+  transactionDatePolicy,
 }: PurchaseFormBodyProps) => {
   void _branchCode;
   void _isFreshlyCreated;
   const form = useFormContext<IPurchaseFormValues>();
-  const { policyContext } = useAuth();
   const [currencyPickerRowIndex, setCurrencyPickerRowIndex] = useState<
     number | null
   >(null);
@@ -265,25 +267,6 @@ const PurchaseFormBody = ({
     () => (agentProfileId ? agentProfile?.commissionRules ?? [] : []),
     [agentProfile?.commissionRules, agentProfileId]
   );
-  const policyWindow = useMemo(() => {
-    if (!policyContext) {
-      return {
-        minDate: undefined as Date | undefined,
-        maxDate: undefined as Date | undefined,
-      };
-    }
-
-    const toDate = (value: string | null | undefined) =>
-      value ? new Date(`${value.slice(0, 10)}T00:00:00`) : undefined;
-
-    const activeLock = policyContext.activeMonthlyLock ?? policyContext.activeBackdateWindow;
-    const maxDate = toDate(activeLock?.toDate ?? policyContext.currentBusinessDate);
-    const minDate = activeLock?.fromDate
-      ? toDate(activeLock.fromDate)
-      : undefined;
-
-    return { minDate, maxDate };
-  }, [policyContext]);
   const transactionDocumentProfiles = documentProfiles;
   const existingDocumentsByProfileId = useMemo(
     () =>
@@ -1107,10 +1090,13 @@ const PurchaseFormBody = ({
             name="transactionDate"
             label="Transaction Date"
             placeholder="Select transaction date"
-            disabled={isReadOnly}
-            minDate={policyWindow.minDate}
-            maxDate={policyWindow.maxDate}
+            disabled={isReadOnly || !transactionDatePolicy.canPunchTransactions}
+            minDate={transactionDatePolicy.minDate}
+            maxDate={transactionDatePolicy.maxDate}
           />
+          <p className="text-xs text-text-tertiary lg:col-span-2">
+            {transactionDatePolicy.helperText}
+          </p>
         </div>
 
         {isCombinedPartyProfilePage ? (
@@ -1627,8 +1613,13 @@ export const PurchaseForm = ({
   onCancel,
   submitLabel = 'Save Draft',
 }: PurchaseFormProps) => {
+  const { policyContext } = useAuth();
   const [draftDocuments, setDraftDocuments] = useState<Record<string, File | null>>({});
   const [isPurchaseRuleBlocked, setIsPurchaseRuleBlocked] = useState(false);
+  const transactionDatePolicy = useMemo(
+    () => getTransactionDatePolicy(policyContext),
+    [policyContext]
+  );
 
   const handleSelectDraftDocument = async (documentProfileId: string, file: File) => {
     setDraftDocuments(prev => ({
@@ -1670,14 +1661,14 @@ export const PurchaseForm = ({
       defaultValues={defaultValues}
       mode="onBlur"
       className="space-y-6"
-      footer={{
-        submitLabel,
-        backLabel: 'Back',
-        onBackClick: onCancel,
-        onCancel,
-        showSubmit: !readOnly,
-        isSubmitDisabled: isPurchaseRuleBlocked,
-      }}
+        footer={{
+          submitLabel,
+          backLabel: 'Back',
+          onBackClick: onCancel,
+          onCancel,
+          showSubmit: !readOnly,
+          isSubmitDisabled: isPurchaseRuleBlocked || !transactionDatePolicy.canPunchTransactions,
+        }}
     >
       <PurchaseFormBody
         purchasePageType={purchasePageType}
@@ -1698,6 +1689,7 @@ export const PurchaseForm = ({
         onSelectDraftDocument={handleSelectDraftDocument}
         onClearDraftDocument={handleClearDraftDocument}
         onPurchaseRuleBlockChange={setIsPurchaseRuleBlocked}
+        transactionDatePolicy={transactionDatePolicy}
       />
     </Form>
   );

@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useFieldArray, useFormContext, useFormState, useWatch } from 'react-hook-form';
 import { Button } from '@/components/ui';
 import {
@@ -42,38 +42,6 @@ export const PassengerOtherDocumentsSection = ({
     }),
     [documentTypes]
   );
-
-  useEffect(() => {
-    (watchedOtherDocuments ?? []).forEach((row, index) => {
-      if (shouldShowPassengerOtherDocumentValidityFields(row?.documentType)) {
-        return;
-      }
-
-      const fieldBase = `otherDocuments.${index}` as const;
-      const hiddenFieldNames = [
-        `${fieldBase}.validTill`,
-        `${fieldBase}.issueAt`,
-        `${fieldBase}.issueDate`,
-        `${fieldBase}.expiryDate`,
-      ] as const;
-
-        hiddenFieldNames.forEach(fieldName => {
-          if (form.getValues(fieldName) === '') {
-            return;
-          }
-
-        form.setValue(fieldName as never, '' as never, {
-          shouldDirty: true,
-          shouldTouch: true,
-          shouldValidate: false,
-        });
-      });
-
-      hiddenFieldNames.forEach(fieldName => {
-        form.clearErrors(fieldName as never);
-      });
-    });
-  }, [form, watchedOtherDocuments]);
 
   return (
     <div className="space-y-4">
@@ -147,30 +115,33 @@ export const PassengerOtherDocumentsSection = ({
                     return;
                   }
 
+                  const hiddenFieldNames = [
+                    `otherDocuments.${index}.validTill`,
+                    `otherDocuments.${index}.issueAt`,
+                    `otherDocuments.${index}.issueDate`,
+                    `otherDocuments.${index}.expiryDate`,
+                  ] as const;
+
                   if (shouldShowPassengerOtherDocumentValidityFields(value)) {
+                    hiddenFieldNames.forEach(fieldName => {
+                      form.clearErrors(fieldName as never);
+                    });
                     onDocumentChange?.();
                     return;
                   }
 
-                  form.setValue(`otherDocuments.${index}.validTill`, '', {
-                    shouldDirty: true,
-                    shouldTouch: true,
-                    shouldValidate: false,
-                  });
-                  form.setValue(`otherDocuments.${index}.issueAt`, '', {
-                    shouldDirty: true,
-                    shouldTouch: true,
-                    shouldValidate: false,
-                  });
-                  form.setValue(`otherDocuments.${index}.issueDate`, '', {
-                    shouldDirty: true,
-                    shouldTouch: true,
-                    shouldValidate: false,
-                  });
-                  form.setValue(`otherDocuments.${index}.expiryDate`, '', {
-                    shouldDirty: true,
-                    shouldTouch: true,
-                    shouldValidate: false,
+                  hiddenFieldNames.forEach(fieldName => {
+                    const currentValue = form.getValues(fieldName);
+                    if (currentValue === '') {
+                      return;
+                    }
+
+                    form.setValue(fieldName as never, '' as never, {
+                      shouldDirty: true,
+                      shouldTouch: true,
+                      shouldValidate: false,
+                    });
+                    form.clearErrors(fieldName as never);
                   });
 
                   onDocumentChange?.();

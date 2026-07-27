@@ -58,9 +58,18 @@ const DayEndStartProcessForm = ({
 
   const hasBodCompleted = Boolean(policyContext?.bodCompleted);
   const hasEodPending = Boolean(policyContext?.eodIncomplete);
+  const canStartDay = Boolean(policyContext?.canStartDay ?? !hasBodCompleted);
+  const canCompleteDayEnd = Boolean(policyContext?.canCompleteDayEnd ?? hasEodPending);
+  const workflowState = policyContext?.workflowState ?? (
+    hasEodPending ? 'PENDING_EOD' : hasBodCompleted ? 'READY_TO_START' : 'PENDING_BOD'
+  );
   const currentBusinessDate = policyContext?.currentBusinessDate ?? '';
   const transactionDate = policyContext?.transactionDate ?? '';
+  const openBusinessDate = policyContext?.openBusinessDate ?? currentBusinessDate;
   const activeMonthlyLock = policyContext?.activeMonthlyLock ?? null;
+  const isPendingBod = workflowState === 'PENDING_BOD';
+  const isPendingEod = workflowState === 'PENDING_EOD';
+  const isClosedToday = workflowState === 'CLOSED_TODAY';
 
   const validationErrors = useMemo(
     () =>
@@ -112,6 +121,26 @@ const DayEndStartProcessForm = ({
   const submitAction = async (action: DayEndAction) => {
     if (validationErrors.length > 0) {
       toast.error('Please complete all required checklist items.');
+      return;
+    }
+
+    if (action === 'start' && !canStartDay) {
+      toast.error(
+        isPendingEod
+          ? 'Complete the pending EOD before starting a new day.'
+          : isClosedToday
+            ? `Day end is already completed for ${openBusinessDate || currentBusinessDate || 'today'}.`
+          : 'Day start is already completed for the open business date.'
+      );
+      return;
+    }
+
+    if (action === 'end' && !canCompleteDayEnd) {
+      toast.error(
+        isPendingBod
+          ? 'Start the day before completing EOD.'
+          : 'No open day is available to complete.'
+      );
       return;
     }
 
@@ -190,17 +219,31 @@ const DayEndStartProcessForm = ({
 
       <div className="grid gap-4 lg:grid-cols-3">
         <CardSection heading="Current Status" className="space-y-3">
-          <div className={`rounded-lg border px-4 py-3 text-sm ${getStatusTone(hasBodCompleted)}`}>
+          <div className={`rounded-lg border px-4 py-3 text-sm ${getStatusTone(hasBodCompleted && !isPendingBod)}`}>
             <div className="font-semibold">BOD Status</div>
-            <div>{hasBodCompleted ? 'Day started' : 'Day start pending'}</div>
+            <div>
+              {isPendingBod
+                ? `Day start pending for ${openBusinessDate || 'the current business date'}`
+                : isClosedToday
+                  ? `Day closed for ${openBusinessDate || currentBusinessDate || 'today'}`
+                : hasBodCompleted
+                  ? 'Day started'
+                  : 'Day start pending'}
+            </div>
           </div>
-          <div className={`rounded-lg border px-4 py-3 text-sm ${getStatusTone(!hasEodPending)}`}>
+          <div className={`rounded-lg border px-4 py-3 text-sm ${getStatusTone(!hasEodPending && !isPendingEod)}`}>
             <div className="font-semibold">EOD Status</div>
-            <div>{hasEodPending ? 'Previous day is still open' : 'No pending EOD'}</div>
+            <div>
+              {isPendingEod
+                ? `Previous day ${openBusinessDate || 'the current business date'} is still open`
+                : hasEodPending
+                  ? 'Previous day is still open'
+                  : 'No pending EOD'}
+            </div>
           </div>
           <div className="rounded-lg border border-border-primary bg-surface-secondary px-4 py-3 text-sm text-text-secondary">
             <div className="font-semibold text-text-primary">Transaction Date</div>
-            <div>{transactionDate || currentBusinessDate || 'Not available'}</div>
+            <div>{transactionDate || openBusinessDate || currentBusinessDate || 'Not available'}</div>
           </div>
           {activeMonthlyLock ? (
             <div className="rounded-lg border border-warning-200 bg-warning-50 px-4 py-3 text-sm text-warning-800">
@@ -279,24 +322,46 @@ const DayEndStartProcessForm = ({
           ) : null}
 
           <div className="flex flex-wrap gap-3">
-            <Button
-              type="button"
-              onClick={() => void submitAction('start')}
-              loading={isSubmitting}
-              disabled={isSubmitting || hasBodCompleted}
-            >
-              {hasBodCompleted ? 'Day Already Started' : 'Start Day'}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => void submitAction('end')}
-              loading={isSubmitting}
-              disabled={isSubmitting || !hasBodCompleted}
-            >
-              {hasEodPending ? 'Complete Pending EOD' : 'Complete Day End'}
-            </Button>
-          </div>
+              <Button
+                type="button"
+                onClick={() => void submitAction('start')}
+                loading={isSubmitting}
+                disabled={isSubmitting || !canStartDay}
+              >
+              {isPendingBod
+                ? 'Start Pending Day'
+                : isClosedToday
+                  ? 'Day Already Completed'
+                  : hasBodCompleted
+                    ? 'Day Already Started'
+                    : 'Start Day'}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => void submitAction('end')}
+                loading={isSubmitting}
+                disabled={isSubmitting || !canCompleteDayEnd}
+              >
+              {isPendingEod ? 'Complete Pending EOD' : isClosedToday ? 'Day End Completed' : 'Complete Day End'}
+              </Button>
+            </div>
+          {(isPendingBod || isPendingEod) ? (
+            <div className="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-800">
+              {isPendingBod ? (
+                <p>Day start is pending for {openBusinessDate || 'the current business date'}. Please start the day before using transactions.</p>
+              ) : (
+                <p>EOD is pending for {openBusinessDate || 'the current business date'}. Please complete this day before starting the next day.</p>
+              )}
+            </div>
+          ) : isClosedToday ? (
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+              <p>
+                Day end is already completed for {openBusinessDate || currentBusinessDate || 'today'}.
+                You can start again on the next working day.
+              </p>
+            </div>
+          ) : null}
         </CardSection>
       </div>
     </section>

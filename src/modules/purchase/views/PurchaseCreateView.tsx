@@ -25,6 +25,7 @@ import type {
 } from '@/modules/transactions';
 import { AdditionalSettingsCodeEnum } from '@/modules/additionalSettings/constants';
 import { getAdditionalSettingTextValue } from '@/modules/additionalSettings/utils';
+import { getTransactionDatePolicy } from '@/modules/transactionPolicies/utils/transactionDatePolicy';
 
 interface PurchaseCreateViewProps {
   purchasePageType: PurchasePageType | null;
@@ -57,6 +58,10 @@ export const PurchaseCreateView = ({
   } = useListAdditionalSettings();
   const { createPurchaseTransaction, isPending: isSaving } =
     useCreatePurchaseTransaction();
+  const transactionDatePolicy = useMemo(
+    () => getTransactionDatePolicy(policyContext),
+    [policyContext]
+  );
 
   const partyProfileTypes = useMemo(
     () => getPurchasePartyProfileTypes(purchasePageType),
@@ -129,7 +134,8 @@ export const PurchaseCreateView = ({
           : null,
         canSelectWorkplace ? '' : (activeBranchId ?? ''),
         canSelectWorkplace ? '' : (activeCounterId ?? ''),
-        policyContext?.transactionDate?.slice(0, 10) ?? new Date().toISOString().slice(0, 10)
+        transactionDatePolicy.defaultTransactionDate ||
+          new Date().toISOString().slice(0, 10)
       ),
     [
       activeBranchId,
@@ -137,7 +143,7 @@ export const PurchaseCreateView = ({
       branchProfile,
       canSelectWorkplace,
       purchasePageType,
-      policyContext?.transactionDate,
+      transactionDatePolicy.defaultTransactionDate,
     ]
   );
   const pricingData = useMemo(

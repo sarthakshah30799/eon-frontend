@@ -106,6 +106,10 @@ export interface IPolicyContext {
   transactionDate: string;
   eodIncomplete: boolean;
   bodCompleted: boolean;
+  canStartDay: boolean;
+  canCompleteDayEnd: boolean;
+  openBusinessDate: string;
+  workflowState: string;
   activeMonthlyLock?: IMonthlyLockWindow | null;
   activeBackdateWindow?: ITransactionBackdateWindow | null;
   checklist: IPolicyChecklistItem[];

@@ -79,6 +79,50 @@ const hasCompletePassportValues = (values: IPurchaseFormValues) =>
       values.arrivalDate
   );
 
+const parseDateValue = (value?: string | null) => {
+  const normalized = String(value ?? '').trim();
+  if (!normalized) {
+    return null;
+  }
+
+  const date = new Date(normalized);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
+const addMonths = (date: Date, months: number) => {
+  const next = new Date(date);
+  next.setUTCMonth(next.getUTCMonth() + months);
+  return next;
+};
+
+const isPassportExpiryValidForTransactionDate = (
+  passportExpiryDate?: string | null,
+  transactionDate?: string | null
+) => {
+  const expiry = parseDateValue(passportExpiryDate);
+  const transaction = parseDateValue(transactionDate);
+
+  if (!expiry || !transaction) {
+    return true;
+  }
+
+  return expiry > addMonths(transaction, 3);
+};
+
+const isArrivalValidForTransactionDate = (
+  arrivalDate?: string | null,
+  transactionDate?: string | null
+) => {
+  const arrival = parseDateValue(arrivalDate);
+  const transaction = parseDateValue(transactionDate);
+
+  if (!arrival || !transaction) {
+    return true;
+  }
+
+  return arrival <= transaction;
+};
+
 const hasValidOtherDocuments = (values: IPurchaseFormValues) =>
   (values.otherDocuments ?? []).some(row => isPassengerOtherDocumentFilled(row));
 
@@ -167,6 +211,10 @@ export const PassengerAmlVerificationModal = ({
   const watchedPassportValues = useWatch({
     control: form.control,
     name: ['passportNumber', 'passportIssueAt', 'passportIssueDate', 'passportExpiryDate', 'arrivalDate'] as const,
+  });
+  const watchedTransactionDate = useWatch({
+    control: form.control,
+    name: 'transactionDate',
   });
   const passengerInfoCaptured = useWatch({
     control: form.control,
@@ -303,15 +351,41 @@ export const PassengerAmlVerificationModal = ({
         }
       }
 
+      if (mode === 'passport') {
+        if (
+          !isPassportExpiryValidForTransactionDate(
+            currentValues.passportExpiryDate,
+            watchedTransactionDate
+          )
+        ) {
+          setVerificationStatus('invalid');
+          setVerificationMessage(
+            'Passport expiry date must be more than 3 months after the transaction date'
+          );
+          return false;
+        }
+
+        if (
+          !isArrivalValidForTransactionDate(
+            currentValues.arrivalDate,
+            watchedTransactionDate
+          )
+        ) {
+          setVerificationStatus('invalid');
+          setVerificationMessage('Arrival date cannot be after the transaction date');
+          return false;
+        }
+      }
+
       try {
         const verificationResult =
           mode === 'pan'
             ? await verifyPan({
                 entityType: (currentValues.entityType || entityType) as PassengerEntityType,
                 nationalityType: (currentValues.nationalityType || PassengerNationalityTypeEnum.INDIAN) as PassengerNationalityType,
-              panNumber: currentValues.panNumber,
-              panHolderName: currentValues.panHolderName,
-              panDob: currentValues.panDob,
+                panNumber: currentValues.panNumber,
+                panHolderName: currentValues.panHolderName,
+                panDob: currentValues.panDob,
               } satisfies IPassengerPanVerificationRequest)
             : await verifyPassport({
                 nationalityType: (currentValues.nationalityType || PassengerNationalityTypeEnum.NRI) as PassengerNationalityType,
@@ -320,6 +394,7 @@ export const PassengerAmlVerificationModal = ({
                 passportIssueDate: currentValues.passportIssueDate,
                 passportExpiryDate: currentValues.passportExpiryDate,
                 arrivalDate: currentValues.arrivalDate,
+                transactionDate: watchedTransactionDate || undefined,
                 isIndianNationality: false,
               } satisfies IPassengerPassportVerificationRequest);
 
@@ -371,7 +446,7 @@ export const PassengerAmlVerificationModal = ({
         return false;
       }
     },
-    [entityType, form, onVerified, verifyPan, verifyPassport]
+    [entityType, form, onVerified, verifyPan, verifyPassport, watchedTransactionDate]
   );
 
   const verifyIdentityOnBlur = useCallback(async (mode: VerificationMode) => {

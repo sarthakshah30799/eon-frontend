@@ -27,4 +27,7 @@ export interface CountryDropdownProps {
   createLabel?: string;
   size?: 'sm' | 'md' | 'lg';
   onCreateCountry?: (inputValue: string) => void | Promise<void>;
+  hideBlockedCountry?: boolean;
+  hideRestrictedCountry?: boolean;
+  hideBaseCountry?: boolean;
 }

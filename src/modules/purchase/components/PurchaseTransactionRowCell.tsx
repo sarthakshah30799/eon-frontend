@@ -423,19 +423,27 @@ export const PurchaseTransactionRowCell = ({
     const availableQuantity = Number(
       String(quantityAvailability?.availableQuantity ?? '').trim() || 0
     );
+    const quantityFieldState = form.getFieldState(fieldName);
 
     if (
       !hasCurrencyProductSelection ||
       transactionType !== TransactionTypeEnum.SALE
     ) {
-      if (form.getFieldState(fieldName).error?.type === availabilityErrorType) {
+      if (quantityFieldState.error?.type === availabilityErrorType) {
+        form.clearErrors(fieldName);
+      }
+      return;
+    }
+
+    if (!quantityFieldState.isDirty) {
+      if (quantityFieldState.error?.type === availabilityErrorType) {
         form.clearErrors(fieldName);
       }
       return;
     }
 
     if (!Number.isFinite(currentQuantity) || currentQuantity <= 0) {
-      if (form.getFieldState(fieldName).error?.type === availabilityErrorType) {
+      if (quantityFieldState.error?.type === availabilityErrorType) {
         form.clearErrors(fieldName);
       }
       return;
@@ -452,7 +460,7 @@ export const PurchaseTransactionRowCell = ({
       return;
     }
 
-    if (form.getFieldState(fieldName).error?.type === availabilityErrorType) {
+    if (quantityFieldState.error?.type === availabilityErrorType) {
       form.clearErrors(fieldName);
     }
   }, [

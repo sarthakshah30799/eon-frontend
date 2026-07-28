@@ -49,6 +49,9 @@ export interface ICountryProfileListQuery {
   restrictedCountry?: boolean;
   greyListCountry?: boolean;
   baseCountry?: boolean;
+  hideBlockedCountry?: boolean;
+  hideRestrictedCountry?: boolean;
+  hideBaseCountry?: boolean;
 }
 
 export interface IBackendCountry {

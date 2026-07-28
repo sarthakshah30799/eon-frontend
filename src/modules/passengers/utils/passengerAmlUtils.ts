@@ -56,7 +56,8 @@ export const createPassengerAmlDefaultValues = (
 
   return {
     entityType: resolvedEntityType,
-    isIndianNationality: true,
+    isIndianNationality:
+      resolvedEntityType === PassengerEntityTypeEnum.CORPORATE,
     panNumber: shouldPrefillFromPartyProfile ? resolvedPartyProfile?.panNo ?? '' : '',
     panHolderName: shouldPrefillFromPartyProfile
       ? resolvedPartyProfile?.panName ?? resolvedPartyProfile?.name ?? ''

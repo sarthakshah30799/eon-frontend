@@ -66,13 +66,14 @@ export const PassengerIdentityFields = ({
               }
             />
             {showResident ? (
-              <FormFieldCategoryOption
-                name="residentStatus"
-                label="Resident Status"
-                placeholder="Select resident status"
-                code={CategoryOptionCodeEnum.PassengerResidentStatus}
-                useValueAsId
-              />
+            <FormFieldCategoryOption
+              name="residentStatus"
+              label="Resident Status"
+              placeholder="Select resident status"
+              code={CategoryOptionCodeEnum.PassengerResidentStatus}
+              useValueAsId
+              disabled={!isIndianNationality}
+            />
             ) : null}
           </div>
           {showCountry ? (
@@ -81,6 +82,9 @@ export const PassengerIdentityFields = ({
                 name="countryId"
                 label="Country"
                 placeholder="Select country"
+                hideBlockedCountry
+                hideRestrictedCountry
+                hideBaseCountry
               />
             </div>
           ) : null}

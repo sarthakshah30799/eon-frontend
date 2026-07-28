@@ -28,6 +28,9 @@ export const CountryDropdown = ({
   error,
   createLabel = 'Create',
   size,
+  hideBlockedCountry = false,
+  hideRestrictedCountry = false,
+  hideBaseCountry = false,
 }: CountryDropdownProps) => {
   const [createdOptions, setCreatedOptions] = useState<CountryDropdownOption[]>(
     []
@@ -49,6 +52,9 @@ export const CountryDropdown = ({
     page: 1,
     limit: 25,
     search: searchTerm.trim() || undefined,
+    hideBlockedCountry,
+    hideRestrictedCountry,
+    hideBaseCountry,
   });
 
   const { data: selectedCountry, isFetching: isResolvingSelectedOption } =

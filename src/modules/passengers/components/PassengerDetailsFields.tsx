@@ -87,6 +87,7 @@ export const PassengerDetailsFields = ({
     (entityType === PassengerEntityTypeEnum.CORPORATE ||
       entityType === PassengerEntityTypeEnum.INDIVIDUAL);
   const isCorporateEntity = entityType === PassengerEntityTypeEnum.CORPORATE;
+  const showPanSection = isCorporateEntity || isIndianNationality;
   const isIndiaCountry = useMemo(() => {
     const code = String(selectedCountryProfile?.code ?? '').trim().toUpperCase();
     const name = String(selectedCountryProfile?.name ?? '').trim().toLowerCase();
@@ -116,20 +117,66 @@ export const PassengerDetailsFields = ({
   }, [panHolderRelationType, selfRelationOption]);
 
   useEffect(() => {
-    if (!isIndiaCountry) {
+    if (!showPanSection || !isCorporateEntity) {
       return;
     }
 
-    if (residentStatus === PassengerResidentStatusEnum.RESIDENT) {
+    if (panHolderRelationType) {
       return;
     }
 
-    form.setValue('residentStatus', PassengerResidentStatusEnum.RESIDENT, {
-      shouldDirty: true,
-      shouldTouch: true,
+    const companyRelationOption =
+      panRelationOptions.find(option => {
+        const normalizedValue = String(option.value ?? '').trim().toLowerCase();
+        const normalizedLabel = String(option.label ?? '').trim().toLowerCase();
+
+        return normalizedValue === 'company' || normalizedLabel === 'company';
+      }) ?? null;
+
+    if (!companyRelationOption) {
+      return;
+    }
+
+    form.setValue('panHolderRelationType', String(companyRelationOption.value), {
+      shouldDirty: false,
+      shouldTouch: false,
       shouldValidate: false,
     });
-  }, [form, isIndiaCountry, residentStatus]);
+  }, [form, isCorporateEntity, panHolderRelationType, panRelationOptions, showPanSection]);
+
+  useEffect(() => {
+    if (isIndiaCountry) {
+      if (residentStatus !== PassengerResidentStatusEnum.RESIDENT) {
+        form.setValue('residentStatus', PassengerResidentStatusEnum.RESIDENT, {
+          shouldDirty: true,
+          shouldTouch: true,
+          shouldValidate: false,
+        });
+      }
+      return;
+    }
+
+    if (nationalityType === PassengerNationalityTypeEnum.NRI) {
+      if (residentStatus !== PassengerResidentStatusEnum.NON_RESIDENT) {
+        form.setValue('residentStatus', PassengerResidentStatusEnum.NON_RESIDENT, {
+          shouldDirty: true,
+          shouldTouch: true,
+          shouldValidate: false,
+        });
+      }
+      return;
+    }
+
+    if (nationalityType === PassengerNationalityTypeEnum.FOREIGNER) {
+      if (residentStatus !== PassengerResidentStatusEnum.FOREIGNER) {
+        form.setValue('residentStatus', PassengerResidentStatusEnum.FOREIGNER, {
+          shouldDirty: true,
+          shouldTouch: true,
+          shouldValidate: false,
+        });
+      }
+    }
+  }, [form, isIndiaCountry, nationalityType, residentStatus]);
 
   const clearCountrySelection = useCallback(() => {
     form.setValue('countryId', '', {
@@ -215,7 +262,15 @@ export const PassengerDetailsFields = ({
               placeholder="Select nationality"
               code={CategoryOptionCodeEnum.PassengerNationality}
               useValueAsId
-              onValueChange={value => onNationalityChange?.(Array.isArray(value) ? null : value)}
+              onValueChange={value => {
+                const nextNationalityType = Array.isArray(value) ? null : value;
+
+                if (nextNationalityType) {
+                  clearCountrySelection();
+                }
+
+                onNationalityChange?.(nextNationalityType);
+              }}
             />
             <FormFieldCategoryOption
               name="residentStatus"
@@ -223,13 +278,35 @@ export const PassengerDetailsFields = ({
               placeholder="Select resident status"
               code={CategoryOptionCodeEnum.PassengerResidentStatus}
               useValueAsId
+              disabled={!isIndianNationality}
               onValueChange={value => {
                 const nextResidentStatus = Array.isArray(value) ? null : value;
 
-                if (
-                  nextResidentStatus &&
-                  nextResidentStatus !== PassengerResidentStatusEnum.RESIDENT
-                ) {
+                if (nextResidentStatus === PassengerResidentStatusEnum.RESIDENT) {
+                  form.setValue('nationalityType', PassengerNationalityTypeEnum.INDIAN, {
+                    shouldDirty: true,
+                    shouldTouch: true,
+                    shouldValidate: false,
+                  });
+                  return;
+                }
+
+                if (nextResidentStatus === PassengerResidentStatusEnum.NON_RESIDENT) {
+                  form.setValue('nationalityType', PassengerNationalityTypeEnum.NRI, {
+                    shouldDirty: true,
+                    shouldTouch: true,
+                    shouldValidate: false,
+                  });
+                  clearCountrySelection();
+                  return;
+                }
+
+                if (nextResidentStatus === PassengerResidentStatusEnum.FOREIGNER) {
+                  form.setValue('nationalityType', PassengerNationalityTypeEnum.FOREIGNER, {
+                    shouldDirty: true,
+                    shouldTouch: true,
+                    shouldValidate: false,
+                  });
                   clearCountrySelection();
                 }
               }}
@@ -238,11 +315,19 @@ export const PassengerDetailsFields = ({
               name="countryId"
               label="Country"
               placeholder="Select country"
+              hideBlockedCountry
+              hideRestrictedCountry
+              hideBaseCountry
               onValueChange={() => {
                 // Country-driven resident synchronization happens in the effect above.
               }}
             />
           </div>
+          {!isIndianNationality ? (
+            <p className="text-xs text-text-secondary">
+              Resident status is locked for non-Indian nationality.
+            </p>
+          ) : null}
 
           <div className="grid gap-4 md:grid-cols-2">
             <FormFieldStateDropdown
@@ -280,7 +365,8 @@ export const PassengerDetailsFields = ({
             </p>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
+          {showPanSection ? (
+            <div className="grid gap-4 md:grid-cols-2">
             <FormFieldInput
               name="paidByPanNumber"
               label="Paid By PAN Number"
@@ -316,7 +402,8 @@ export const PassengerDetailsFields = ({
               placeholder="Enter GST number"
               valueTransform="uppercase"
             />
-          </div>
+            </div>
+          ) : null}
 
           <div className="grid gap-4 md:grid-cols-3">
             <FormFieldStateDropdown

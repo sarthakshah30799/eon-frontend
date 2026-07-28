@@ -88,6 +88,7 @@ export interface IPassengerPassportVerificationRequest {
   passportIssueDate?: string;
   passportExpiryDate?: string;
   arrivalDate?: string;
+  transactionDate?: string;
   isIndianNationality?: boolean;
 }
 

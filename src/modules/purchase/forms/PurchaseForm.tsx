@@ -291,6 +291,11 @@ const PurchaseFormBody = ({
     name: 'transactionType',
   });
   const isPurchaseTransaction = transactionType === TransactionTypeEnum.PURCHASE;
+  const allowCashPayment =
+    !(
+      transactionType === TransactionTypeEnum.PURCHASE &&
+      resolvedPassengerEntityType === PassengerEntityTypeEnum.CORPORATE
+    );
   const purposeId = useWatch({
     control: form.control,
     name: 'purposeId',
@@ -1485,6 +1490,7 @@ const PurchaseFormBody = ({
         branchId={resolvedBranchId}
         selectablePagesUserId={cashierUserId || undefined}
         cashControlAccountId={cashControlAccountId}
+        allowCashPayment={allowCashPayment}
         disabled={isReadOnly}
         title="Payment Details"
         description="Store how this transaction will be settled. Payment accounts are filtered by ledger type and purchase/sale mode."

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import type { Resolver } from 'react-hook-form';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -15,10 +15,10 @@ import {
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import { branchProfileSchema } from '../schema';
 import type { ICreateBranchProfile, IBranchProfileOption } from '../types';
-import { counterProfileApi } from '@/api/counterProfile/counterProfile.api';
 import { useGetStateProfile } from '@/modules/stateProfile/hooks';
 import { useListCompanyProfiles } from '@/modules/companyProfile/hooks';
-import { branchProfileApi } from '@/api/branchProfile/branchProfile.api';
+import { useValidateBranchCode } from '../hooks';
+import { useLoadCounterOptions } from '@/modules/counterProfile/hooks';
 import { normalizeCodeValue } from '@/utils';
 
 interface BranchProfileFormProps {
@@ -61,6 +61,9 @@ const BranchProfileFormFields = ({
   const { data: companies = [] } = useListCompanyProfiles();
   const companyPan = companies[0]?.panNo || '';
 
+  const validateBranchCode = useValidateBranchCode(currentId);
+  const loadCounterOptions = useLoadCounterOptions();
+
   useEffect(() => {
     if (previousCountryIdRef.current !== countryId) {
       form.setValue('stateId', '');
@@ -84,26 +87,6 @@ const BranchProfileFormFields = ({
       previousStateIdRef.current = '';
     }
   }, [stateId, selectedState, companyPan, form]);
-
-
-  const validateBranchCode = useCallback(
-    async (value: string) => {
-      const normalizedCode = normalizeCodeValue(value);
-      if (!normalizedCode) {
-        return false;
-      }
-
-      const branches = await branchProfileApi.getBranchProfiles({
-        activeOnly: true,
-      });
-      return branches.some(
-        branch =>
-          branch.code.trim().toUpperCase() === normalizedCode &&
-          branch.id !== currentId
-      );
-    },
-    [currentId]
-  );
   return (
     <div className="space-y-3 pb-24">
       <CardSection heading="Basic Details">
@@ -262,16 +245,7 @@ const BranchProfileFormFields = ({
           name="connectCounterIds"
           label="Connect Counters"
           placeholder="Select counters to link"
-          loadOptions={async (inputValue: string) => {
-            const counters = await counterProfileApi.getCounterProfiles({ search: inputValue });
-            return {
-              options: counters.map(counter => ({
-                value: counter.id,
-                label: `${counter.counterNo} - ${counter.name}`,
-              })),
-              hasMore: false,
-            };
-          }}
+          loadOptions={loadCounterOptions}
           pagination={false}
           defaultOptions={true}
           disabled={isSubmitting}

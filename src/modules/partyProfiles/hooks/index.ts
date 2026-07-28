@@ -47,15 +47,11 @@ export const useListPartyProfiles = (
 ) => {
   return useQuery({
     queryKey: ['party-profiles', normalizePartyProfileTypeKey(profileType), params, activeOnly],
-    queryFn: () => partyProfileApi.getPartyProfiles(params, profileType),
+    queryFn: () => partyProfileApi.getPartyProfiles({
+      ...params,
+      activeOnly: params?.activeOnly ?? activeOnly,
+    }, profileType),
     placeholderData: keepPreviousData,
-    select: response =>
-      activeOnly
-        ? {
-            ...response,
-            data: response.data.filter(profile => profile.active !== false),
-          }
-        : response,
     enabled,
   });
 };
@@ -243,5 +239,32 @@ export const useUploadAgentCommissionTemplate = (partyProfileId: string) => {
   return {
     ...mutation,
     uploadAgentCommissionTemplate: mutation.mutateAsync,
+  };
+};
+
+export const useDownloadAgentCommissionTemplate = (partyProfileId: string) => {
+  const mutation = useMutation({
+    mutationFn: async () => {
+      const csv = await partyProfileApi.getAgentCommissionTemplate(partyProfileId);
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'agent-commission-template.csv';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    },
+    onError: (error: unknown) => {
+      toast.error(
+        getErrorMessage(error, 'Failed to download template')
+      );
+    },
+  });
+
+  return {
+    ...mutation,
+    downloadTemplate: mutation.mutateAsync,
   };
 };

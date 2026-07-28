@@ -2,15 +2,21 @@ import { useState, useEffect, useRef } from 'react';
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
-import { manualBillBookApi, type IManualBookAllocation, type IManualBookAssignmentPayload } from '@/api';
-import { categoryOptionsApi } from '@/api/categoryOptions/categoryOptions.api';
+import { type IManualBookAllocation } from '@/api';
+import {
+  useListManualBillBookAuthorizedUsers,
+  useLoadCashierOptions,
+  useListApprovedManualBillBooks,
+  useGetManualBillBookAllocations,
+  useSaveManualBillBookAllocations,
+} from '@/modules/manual-bill-books/hooks';
+import { useCategoryOptions } from '@/hooks/useCategoryOptions';
 import {
   AsyncSelect,
   Button,
   Checkbox,
   Input,
   type AsyncSelectOption,
-  type AsyncSelectResponse,
 } from '@/components/ui';
 import { formatDateTime } from '@/utils';
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
@@ -23,34 +29,34 @@ const formatRanges = (nums: number[]): string => {
   const sorted = [...nums].sort((a, b) => a - b);
   const ranges: string[] = [];
   let start = sorted[0];
-  let prev = sorted[0];
+  let end = sorted[0];
 
   for (let i = 1; i < sorted.length; i++) {
-    if (sorted[i] === prev + 1) {
-      prev = sorted[i];
+    if (sorted[i] === end + 1) {
+      end = sorted[i];
     } else {
-      if (start === prev) {
+      if (start === end) {
         ranges.push(String(start));
       } else {
-        ranges.push(`${start} - ${prev}`);
+        ranges.push(`${start}-${end}`);
       }
       start = sorted[i];
-      prev = sorted[i];
+      end = sorted[i];
     }
   }
 
-  if (start === prev) {
+  if (start === end) {
     ranges.push(String(start));
   } else {
-    ranges.push(`${start} - ${prev}`);
+    ranges.push(`${start}-${end}`);
   }
 
   return ranges.join(', ');
 };
 
 interface IAllocationRow {
-  id: string; // generated unique id
-  bookId: string; // original manual book id
+  id: string;                  // bookId_segmentFrom
+  bookId: string;              // manualBillBook ID
   requestNo: string;
   requestDate: string;
   transactionType: string;
@@ -60,13 +66,11 @@ interface IAllocationRow {
   mvNoTo: number;
   qty: number;
   hoRemarks: string;
-  // Allocation state
-  allocatedCashierId: string; // holds the user id
+  allocatedCashierId: string;  // selected cashierId for this segment
   remarks: string;
-  isCheck: boolean;
-  // Already assigned info (from manual_book_page_tracking)
-  isAlreadyAssigned: boolean;
-  assignedToUserName: string;   // cashier / delivery boy receiving the books
+  isCheck: boolean;            // selected for bulk assignment
+  isAlreadyAssigned: boolean;  // whether this segment is already assigned to a cashier
+  assignedToUserName: string;   // cashier who has this segment
   assignedByUserName: string;   // manager who made the assignment
 }
 
@@ -81,12 +85,8 @@ export const ManagerToCashierAllocationPage = () => {
   const [bookNoFromStr, setBookNoFromStr] = useState('');
   const [bookNoToStr, setBookNoToStr] = useState('');
   
-  // Options
-  const [cashiers, setCashiers] = useState<Array<{ id: string; name: string }>>([]);
-  const [txnTypes, setTxnTypes] = useState<Array<{ id: string; label: string }>>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [isLoadingOptions, setIsLoadingOptions] = useState(true);
 
   // Table rows
   const [rows, setRows] = useState<IAllocationRow[]>([]);
@@ -97,45 +97,15 @@ export const ManagerToCashierAllocationPage = () => {
   // Bulk allocate user
   const [bulkCashierId, setBulkCashierId] = useState('');
 
-  const loadCashierOptions = async (inputValue: string): Promise<AsyncSelectResponse> => {
-    const data = await manualBillBookApi.getAuthorizedUsers(inputValue);
-    return {
-      options: data.map(c => ({ value: c.id, label: c.name })),
-      hasMore: false,
-    };
-  };
+  const loadCashierOptions = useLoadCashierOptions();
+  const { defaultOptions: categoryOptions } = useCategoryOptions(CategoryOptionCodeEnum.Transaction, true);
+  const txnTypes = categoryOptions ? categoryOptions.map(o => ({ id: String(o.value), label: o.label })) : [];
 
-  useEffect(() => {
-    const fetchTxnTypes = async () => {
-      try {
-        const options = await categoryOptionsApi.getCategoryOptionsByCode(CategoryOptionCodeEnum.Transaction);
-        setTxnTypes(options.map(o => ({ id: o.value, label: o.label })));
-      } catch (err) {
-        console.error('Failed to load transaction types', err);
-      }
-    };
-    fetchTxnTypes();
-  }, []);
+  const { data: cashiers = [], isLoading: isLoadingOptions } = useListManualBillBookAuthorizedUsers(activeBranchId || undefined);
 
-  useEffect(() => {
-    const fetchOptions = async () => {
-      if (!activeBranchId) return;
-      try {
-        setIsLoadingOptions(true);
-        console.log('[DEBUG] manual allocation fetch users', {
-          activeBranchId,
-        });
-        const data = await manualBillBookApi.getAuthorizedUsers();
-        console.log('[DEBUG] manual allocation users response', data);
-        setCashiers(data);
-      } catch (err: unknown) {
-        toast.error(err instanceof Error ? err.message : 'Failed to load user list.');
-      } finally {
-        setIsLoadingOptions(false);
-      }
-    };
-    fetchOptions();
-  }, [activeBranchId]);
+  const listApprovedManualBillBooks = useListApprovedManualBillBooks();
+  const getManualBillBookAllocations = useGetManualBillBookAllocations();
+  const { mutateAsync: saveManualBillBookAllocations } = useSaveManualBillBookAllocations();
 
   useEffect(() => {
     const prefillFromBook = async () => {
@@ -143,7 +113,7 @@ export const ManagerToCashierAllocationPage = () => {
         isAutoProcessedRef.current = true;
         try {
           setIsProcessing(true);
-          const data = await manualBillBookApi.findAll(activeBranchId, ManualBillBookStatusEnum.APPROVE);
+          const data = await listApprovedManualBillBooks(activeBranchId, ManualBillBookStatusEnum.APPROVE);
           const book = data.find(b => b.id === bookId);
           if (book) {
             // Only pre-fill the form fields — do NOT render the table yet.
@@ -160,7 +130,7 @@ export const ManagerToCashierAllocationPage = () => {
       }
     };
     prefillFromBook();
-  }, [bookId, activeBranchId]);
+  }, [bookId, activeBranchId, listApprovedManualBillBooks]);
 
   const handleProcess = async () => {
     if (!activeBranchId) return;
@@ -176,7 +146,7 @@ export const ManagerToCashierAllocationPage = () => {
       setIsProcessing(true);
       setAllocatedWarning('');
       // Fetch all dispatches for the branch (to query approved allocations)
-      const data = await manualBillBookApi.findAll(activeBranchId, ManualBillBookStatusEnum.APPROVE);
+      const data = await listApprovedManualBillBooks(activeBranchId, ManualBillBookStatusEnum.APPROVE);
       
       // Filter by range and txnType in memory
       const matched = data.filter(book => {
@@ -189,7 +159,7 @@ export const ManagerToCashierAllocationPage = () => {
 
       const matchedIds = matched.map(b => b.id);
       const allocations = matchedIds.length > 0 
-        ? await manualBillBookApi.getAllocations(matchedIds)
+        ? await getManualBillBookAllocations(matchedIds)
         : [];
       setExistingAllocations(allocations);
 
@@ -323,7 +293,7 @@ export const ManagerToCashierAllocationPage = () => {
 
     try {
       setIsSaving(true);
-      const payload: IManualBookAssignmentPayload[] = [];
+      const payload: Array<{ manualBookId: string; bookNo: number; userId: string; remarks?: string }> = [];
       for (const r of checkedRows) {
         for (let i = r.bookNoFrom; i <= r.bookNoTo; i++) {
           const alreadyAssigned = existingAllocations.some(
@@ -341,7 +311,7 @@ export const ManagerToCashierAllocationPage = () => {
         }
       }
 
-      await manualBillBookApi.saveAllocations(payload);
+      await saveManualBillBookAllocations(payload);
       toast.success('Manager to User page allocations saved successfully.');
       
       // Reload values

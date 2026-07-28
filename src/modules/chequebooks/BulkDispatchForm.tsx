@@ -8,8 +8,16 @@ import {
   FormFieldSelect,
   FormFieldTextarea,
 } from '@/components/forms';
-import { chequebookApi, counterProfileApi, branchProfileApi } from '@/api';
-import { accountProfileApi } from '@/api/accountProfile/accountProfile.api';
+import {
+  useGetChequeBook,
+  useGetNextChequeBookNumber,
+  useLoadChequeBookBranchManagers,
+  useLoadBankAccounts,
+  useReassignChequeBookDispatch,
+  useCreateChequeBook,
+  useLoadBranchOptions,
+  useLoadCounterProfilesForBranch,
+} from './hooks';
 import { useAuth } from '@/lib/AuthContext';
 import toast from 'react-hot-toast';
 import {
@@ -51,28 +59,30 @@ const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => 
   const bookNoTo = useWatch({ name: 'bookNoTo' });
   const vouchersPerBook = useWatch({ name: 'vouchersPerBook' });
   const mvNoFrom = useWatch({ name: 'mvNoFrom' });
+
+  const { data: book } = useGetChequeBook(reassignId);
+  const getNextNumber = useGetNextChequeBookNumber();
+  const loadAssignedToRaw = useLoadChequeBookBranchManagers();
+  const loadBankAccounts = useLoadBankAccounts();
+  const loadBranchesRaw = useLoadBranchOptions();
+
   // Pre-fill form when reassigning a rejected book
   useEffect(() => {
-    if (!reassignId) return;
-    chequebookApi.findById(reassignId).then(book => {
-      const assignedToId = book.assignedTo && typeof book.assignedTo === 'object'
-        ? book.assignedTo.id
-        : (book.assignedTo as string) ?? '';
-      form.setValue('dispatchDate', new Date().toISOString().slice(0, 10));
-      form.setValue('branchId', book.branchId || activeBranchId || '');
-      form.setValue('bankAccountCode', book.bankAccountCode ?? '');
-      form.setValue('bookNoFrom', book.bookNoFrom ?? '');
-      form.setValue('bookNoTo', book.bookNoTo ?? '');
-      form.setValue('vouchersPerBook', book.vouchersPerBook ?? 50);
-      form.setValue('mvNoFrom', book.mvNoFrom ?? '');
-      form.setValue('remarks', book.remarks ?? '');
-      // Set assignedTo after a tick so the reset-on-branchId effect has already fired
-      setTimeout(() => form.setValue('assignedTo', assignedToId), 0);
-    }).catch(err => {
-      console.error('Failed to pre-fill reassign data', err);
-    });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reassignId, activeBranchId]);
+    if (!book) return;
+    const assignedToId = book.assignedTo && typeof book.assignedTo === 'object'
+      ? book.assignedTo.id
+      : (book.assignedTo as string) ?? '';
+    form.setValue('dispatchDate', new Date().toISOString().slice(0, 10));
+    form.setValue('branchId', book.branchId || activeBranchId || '');
+    form.setValue('bankAccountCode', book.bankAccountCode ?? '');
+    form.setValue('bookNoFrom', book.bookNoFrom ?? '');
+    form.setValue('bookNoTo', book.bookNoTo ?? '');
+    form.setValue('vouchersPerBook', book.vouchersPerBook ?? 50);
+    form.setValue('mvNoFrom', book.mvNoFrom ?? '');
+    form.setValue('remarks', book.remarks ?? '');
+    // Set assignedTo after a tick so the reset-on-branchId effect has already fired
+    setTimeout(() => form.setValue('assignedTo', assignedToId), 0);
+  }, [book, activeBranchId, form]);
 
   // Reset assignedTo when branchId changes in create mode.
   useEffect(() => {
@@ -84,7 +94,7 @@ const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => 
     const fetchNextNumber = async () => {
       if (branchId && dispatchDate) {
         try {
-          const res = await chequebookApi.getNextNumber(branchId, dispatchDate);
+          const res = await getNextNumber(branchId, dispatchDate);
           form.setValue('no', res.nextNumber);
         } catch (err) {
           console.error('Failed to fetch next number', err);
@@ -95,7 +105,7 @@ const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => 
       }
     };
     fetchNextNumber();
-  }, [branchId, dispatchDate, form]);
+  }, [branchId, dispatchDate, form, getNextNumber]);
 
   useEffect(() => {
     const fromBook = parseInt(bookNoFrom, 10);
@@ -138,48 +148,15 @@ const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => 
 
   const loadBranches = useCallback(
     async (inputValue: string) => {
-      const branches = await branchProfileApi.getBranchProfiles({ search: inputValue, activeOnly: true });
-      let options = branches.map(branch => ({
-        value: branch.id,
-        label: `${branch.code} - ${branch.name}`,
-      }));
+      const res = await loadBranchesRaw(inputValue);
+      let options = res.options;
       if (!canSelectBranch) {
         options = options.filter(option => option.value === activeBranchId);
       }
       return { options, hasMore: false };
     },
-    [activeBranchId, canSelectBranch]
+    [activeBranchId, canSelectBranch, loadBranchesRaw]
   );
-
-  const loadBankAccounts = async (inputValue: string, page = 1) => {
-    try {
-      const response = await accountProfileApi.getAccountProfiles({
-        page,
-        limit: ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
-        search: inputValue,
-        active: true,
-      });
-      const bankAccounts = (response.data || []).filter(acc => {
-        return (
-          (acc.bankNature && acc.bankNature.value !== 'NONE') ||
-          (acc.accountType && acc.accountType.value === 'BANK LEDGER') ||
-          (acc.financialCode && acc.financialCode === 'BANKBL')
-        );
-      });
-      return {
-        options: bankAccounts.map(acc => ({
-          value: acc.id,
-          label: `${acc.accountCode} - ${acc.accountName}`,
-        })),
-        hasMore: (response.data || []).length === ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
-      };
-    } catch {
-      return {
-        options: [],
-        hasMore: false,
-      };
-    }
-  };
 
   const loadAssignedTo = useCallback(
     async (inputValue: string) => {
@@ -187,16 +164,12 @@ const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => 
         return { options: [], hasMore: false };
       }
       try {
-        const managers = await chequebookApi.getBranchManagers(branchId, inputValue);
-        return {
-          options: managers.map(m => ({ value: m.id, label: m.name })),
-          hasMore: false,
-        };
+        return await loadAssignedToRaw(branchId, inputValue);
       } catch {
         return { options: [], hasMore: false };
       }
     },
-    [branchId]
+    [branchId, loadAssignedToRaw]
   );
 
   return (
@@ -259,6 +232,10 @@ export const BulkDispatchForm = ({ onSuccess, reassignId }: BulkDispatchFormProp
     navigate('/cheque-books');
   };
 
+  const { mutateAsync: reassignDispatch } = useReassignChequeBookDispatch();
+  const { mutateAsync: createChequeBook } = useCreateChequeBook();
+  const loadCounterProfiles = useLoadCounterProfilesForBranch();
+
   const handleSubmit = async (values: IBulkDispatchFormValues) => {
     try {
       const { branchId, ...rest } = values;
@@ -271,23 +248,23 @@ export const BulkDispatchForm = ({ onSuccess, reassignId }: BulkDispatchFormProp
         mvNoFrom: Number(rest.mvNoFrom),
       };
       if (reassignId) {
-        await chequebookApi.reassignDispatch(reassignId, {
-          assignedTo: formatted.assignedTo,
-          dispatchDate: formatted.dispatchDate,
-          bankAccountCode: formatted.bankAccountCode,
-          bookNoFrom: formatted.bookNoFrom,
-          bookNoTo: formatted.bookNoTo,
-          vouchersPerBook: formatted.vouchersPerBook,
-          mvNoFrom: formatted.mvNoFrom,
-          remarks: formatted.remarks,
+        await reassignDispatch({
+          id: reassignId,
+          data: {
+            assignedTo: formatted.assignedTo,
+            dispatchDate: formatted.dispatchDate,
+            bankAccountCode: formatted.bankAccountCode,
+            bookNoFrom: formatted.bookNoFrom,
+            bookNoTo: formatted.bookNoTo,
+            vouchersPerBook: formatted.vouchersPerBook,
+            mvNoFrom: formatted.mvNoFrom,
+            remarks: formatted.remarks,
+          }
         });
         toast.success('ChequeBook dispatch reassigned successfully.');
       } else {
         if (canSelectBranch) {
-          const counters = await counterProfileApi.getCounterProfiles({
-            activeOnly: true,
-            branchId: values.branchId,
-          });
+          const counters = await loadCounterProfiles(values.branchId);
           const selectedCounterId =
             counters.find(counter => counter.isActive !== false)?.id ||
             activeCounterId ||
@@ -300,7 +277,7 @@ export const BulkDispatchForm = ({ onSuccess, reassignId }: BulkDispatchFormProp
 
           await setWorkplace(values.branchId, selectedCounterId);
         }
-        await chequebookApi.create(formatted);
+        await createChequeBook(formatted);
         toast.success('ChequeBook record saved successfully.');
       }
       onSuccess();

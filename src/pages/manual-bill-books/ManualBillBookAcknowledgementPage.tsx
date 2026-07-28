@@ -343,15 +343,20 @@ export const ManualBillBookAcknowledgementPage = () => {
                     );
                     setSelectedBookId(null);
                   }}
-                  loadOptions={async () => ({
-                    options: [
+                  loadOptions={async (inputValue: string) => {
+                    const opts = [
                       { value: ManualBillBookStatusEnum.PENDING, label: 'PENDING' },
                       { value: ManualBillBookStatusEnum.APPROVE, label: 'APPROVED' },
                       { value: ManualBillBookStatusEnum.REJECT, label: 'REJECTED' },
                       { value: '', label: 'All' },
-                    ],
-                    hasMore: false,
-                  })}
+                    ];
+                    return {
+                      options: inputValue
+                        ? opts.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+                        : opts,
+                      hasMore: false,
+                    };
+                  }}
                   isClearable={false}
                 />
               </div>

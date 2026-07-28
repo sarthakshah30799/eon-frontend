@@ -275,10 +275,14 @@ const BranchProfileFormFields = ({
           name="connectCounterIds"
           label="Connect Counters"
           placeholder="Select counters to link"
-          loadOptions={async () => ({
-            options: connectedCounterOptions,
-            hasMore: false,
-          })}
+          loadOptions={async (inputValue: string) => {
+            const filtered = !inputValue
+              ? connectedCounterOptions
+              : connectedCounterOptions.filter(opt =>
+                  opt.label.toLowerCase().includes(inputValue.toLowerCase())
+                );
+            return { options: filtered, hasMore: false };
+          }}
           pagination={false}
           isLoading={isCountersLoading || isCountersFetching}
           defaultOptions={connectedCounterOptions}

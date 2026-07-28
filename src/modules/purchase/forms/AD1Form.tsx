@@ -391,16 +391,22 @@ const AD1FormBody = ({
             name="transactionType"
             label="Type"
             defaultOptions={typeOptions}
-            loadOptions={async () => ({ options: typeOptions })}
-            isSearchable={false}
+            loadOptions={async (inputValue: string) => ({
+              options: inputValue
+                ? typeOptions.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+                : typeOptions,
+            })}
             disabled={readOnly}
           />
           <FormFieldSelect
             name="profileType"
             label="Profile Type"
             defaultOptions={profileTypeOptions}
-            loadOptions={async () => ({ options: profileTypeOptions })}
-            isSearchable={false}
+            loadOptions={async (inputValue: string) => ({
+              options: inputValue
+                ? profileTypeOptions.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+                : profileTypeOptions,
+            })}
             disabled={readOnly}
           />
           <FormFieldInput name="dealId" label="Deal ID" placeholder="Deal ID" disabled={readOnly} />

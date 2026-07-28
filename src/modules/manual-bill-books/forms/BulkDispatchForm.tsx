@@ -251,13 +251,18 @@ const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => 
         }),
         [visibleBranchOptions]
     );
-    const loadAssignedTo = async () => ({
-        options: branchManagers.map(manager => ({
+    const loadAssignedTo = async (inputValue: string) => {
+        const opts = branchManagers.map(manager => ({
             value: manager.id,
             label: manager.name,
-        })),
-        hasMore: false,
-    });
+        }));
+        return {
+            options: inputValue
+                ? opts.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+                : opts,
+            hasMore: false,
+        };
+    };
 
     return (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">

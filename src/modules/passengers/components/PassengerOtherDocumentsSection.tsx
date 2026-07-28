@@ -34,12 +34,17 @@ export const PassengerOtherDocumentsSection = ({
   });
   const { data: documentTypes = [] } = usePassengerOtherDocumentTypes();
   const loadOptions = useMemo(
-    () => async () => ({
-      options: documentTypes.map(option => ({
+    () => async (inputValue: string) => {
+      const opts = documentTypes.map(option => ({
         value: option.value,
         label: option.label,
-      })),
-    }),
+      }));
+      return {
+        options: inputValue
+          ? opts.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+          : opts,
+      };
+    },
     [documentTypes]
   );
 

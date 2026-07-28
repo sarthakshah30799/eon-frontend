@@ -242,7 +242,11 @@ const EditSubcategoryForm = ({
       }
 
       return {
-        options: selectValueOptions,
+        options: inputValue
+          ? selectValueOptions.filter(opt =>
+              opt.label.toLowerCase().includes(inputValue.toLowerCase())
+            )
+          : selectValueOptions,
         hasMore: false,
       };
     },

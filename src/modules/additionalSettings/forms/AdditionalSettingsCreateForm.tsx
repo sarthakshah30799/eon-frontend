@@ -50,7 +50,7 @@ const SubcategoryRowFields = ({
   index: number;
   categoryCode?: string;
   isSubmitting: boolean;
-  loadTypeOptions: () => Promise<{ options: { value: string; label: string }[]; hasMore: boolean }>;
+  loadTypeOptions: (inputValue?: string) => Promise<{ options: { value: string; label: string }[]; hasMore: boolean }>;
   remove: (index: number) => void;
   fieldsLength: number;
   isFixed?: boolean;
@@ -155,7 +155,11 @@ const SubcategoryRowFields = ({
       }
 
       return {
-        options: selectValueOptions,
+        options: inputValue
+          ? selectValueOptions.filter(opt =>
+              opt.label.toLowerCase().includes(inputValue.toLowerCase())
+            )
+          : selectValueOptions,
         hasMore: false,
       };
     },
@@ -167,19 +171,23 @@ const SubcategoryRowFields = ({
     ]
   );
 
-  const loadCodeOptions = async () => {
+  const loadCodeOptions = async (inputValue: string) => {
     const currentCode = String(subcategoryCode ?? '').trim().toUpperCase();
     const blockedCodes = new Set(
       usedCodes.filter(code => code && code !== currentCode)
     );
 
+    const opts = getAdditionalSettingSubcategoryCodeOptions(categoryCode)
+      .filter(option => !blockedCodes.has(String(option.value).trim().toUpperCase()))
+      .map(option => ({
+        value: option.value,
+        label: option.label,
+      }));
+
     return {
-      options: getAdditionalSettingSubcategoryCodeOptions(categoryCode)
-        .filter(option => !blockedCodes.has(String(option.value).trim().toUpperCase()))
-        .map(option => ({
-          value: option.value,
-          label: option.label,
-        })),
+      options: inputValue
+        ? opts.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+        : opts,
       hasMore: false,
     };
   };
@@ -226,7 +234,6 @@ const SubcategoryRowFields = ({
           placeholder="Select subcategory code"
           disabled={isSubmitting || !categoryCode}
           loadOptions={loadCodeOptions}
-          isSearchable={false}
         />
         <FormFieldSelect
           name={`subcategories.${index}.categoryType`}
@@ -234,7 +241,6 @@ const SubcategoryRowFields = ({
           placeholder="Select type"
           disabled={isSubmitting || Boolean(subcategoryDefinition)}
           loadOptions={loadTypeOptions}
-          isSearchable={false}
         />
 
         {isBooleanType ? (
@@ -394,10 +400,12 @@ const SubcategoryFields = ({
     });
   }, [categoryCode, setValue, subcategories]);
 
-  const loadTypeOptions = async () => {
-    const options = valueTypes.map(t => ({ value: t, label: t.toUpperCase() }));
+  const loadTypeOptions = async (inputValue = '') => {
+    const opts = valueTypes.map(t => ({ value: t, label: t.toUpperCase() }));
     return {
-      options,
+      options: inputValue
+        ? opts.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+        : opts,
       hasMore: false,
     };
   };
@@ -467,8 +475,8 @@ export const AdditionalSettingsCreateForm = ({
   const normalizedExistingCategoryCodes = new Set(
     existingCategoryCodes.map(code => String(code ?? '').trim().toUpperCase()).filter(Boolean)
   );
-  const loadCategoryCodeOptions = async () => ({
-    options: getAdditionalSettingCategoryCodeOptions()
+  const loadCategoryCodeOptions = async (inputValue: string) => {
+    const opts = getAdditionalSettingCategoryCodeOptions()
       .filter(option => {
         const code = String(option.value).trim().toUpperCase();
         if (!code) {
@@ -484,9 +492,15 @@ export const AdditionalSettingsCreateForm = ({
       .map(option => ({
         value: option.value,
         label: option.label,
-      })),
-    hasMore: false,
-  });
+      }));
+
+    return {
+      options: inputValue
+        ? opts.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+        : opts,
+      hasMore: false,
+    };
+  };
 
   return (
     <Form
@@ -511,7 +525,6 @@ export const AdditionalSettingsCreateForm = ({
             placeholder="Select category code"
             disabled={isSubmitting || Boolean(currentId)}
             loadOptions={loadCategoryCodeOptions}
-            isSearchable={false}
           />
         </div>
       </CardSection>

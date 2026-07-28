@@ -21,8 +21,14 @@ import { usePermission } from '@/hooks';
 import { useListCountryGroups } from '@/modules/countryGroup';
 import { CountryAccessRulesSection } from '../components';
 
-const loadRiskCategoryOptions = async (): Promise<AsyncSelectResponse> => {
-  return { options: riskCategoryOptions };
+const loadRiskCategoryOptions = async (
+  inputValue: string
+): Promise<AsyncSelectResponse> => {
+  if (!inputValue) return { options: riskCategoryOptions };
+  const filtered = riskCategoryOptions.filter(opt =>
+    opt.label.toLowerCase().includes(inputValue.toLowerCase())
+  );
+  return { options: filtered };
 };
 
 const CountryGroupField = ({ isDisabled }: { isDisabled: boolean }) => {
@@ -172,7 +178,6 @@ const CountryProfileFormFields = ({
           placeholder="Select risk category"
           disabled={isDisabled}
           isClearable
-          isSearchable={false}
         />
         <CountryGroupField isDisabled={isDisabled} />
       </div>

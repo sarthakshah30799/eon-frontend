@@ -20,8 +20,10 @@ interface MenuFormProps {
 }
 
 const createStaticLoadOptions =
-  (options: AsyncSelectOption[]) => async (): Promise<AsyncSelectResponse> => ({
-    options,
+  (options: AsyncSelectOption[]) => async (inputValue: string): Promise<AsyncSelectResponse> => ({
+    options: inputValue
+      ? options.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+      : options,
     hasMore: false,
   });
 
@@ -101,7 +103,6 @@ export const MenuForm = ({
             loadOptions={loadParentOptions}
             defaultOptions={parentOptions}
             disabled={isSubmitting}
-            isSearchable={false}
             isClearable
           />
           <FormFieldCheckbox

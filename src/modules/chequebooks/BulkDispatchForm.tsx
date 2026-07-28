@@ -198,29 +198,26 @@ const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => 
     }
   };
 
-  const loadAssignedTo = useCallback(async () => {
-    if (!branchId) {
-      return {
-        options: [],
-        hasMore: false,
-      };
-    }
-    try {
-      const managers = await chequebookApi.getBranchManagers(branchId);
-      return {
-        options: managers.map(m => ({
-          value: m.id,
-          label: m.name,
-        })),
-        hasMore: false,
-      };
-    } catch {
-      return {
-        options: [],
-        hasMore: false,
-      };
-    }
-  }, [branchId]);
+  const loadAssignedTo = useCallback(
+    async (inputValue: string) => {
+      if (!branchId) {
+        return { options: [], hasMore: false };
+      }
+      try {
+        const managers = await chequebookApi.getBranchManagers(branchId);
+        const opts = managers.map(m => ({ value: m.id, label: m.name }));
+        return {
+          options: inputValue
+            ? opts.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+            : opts,
+          hasMore: false,
+        };
+      } catch {
+        return { options: [], hasMore: false };
+      }
+    },
+    [branchId]
+  );
 
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">

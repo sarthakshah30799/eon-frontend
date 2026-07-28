@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { branchProfileApi, counterProfileApi, partyProfileApi } from '@/api';
 import { usePartyProfileTypes } from '@/modules/partyProfiles/hooks';
@@ -11,6 +12,16 @@ import {
   toggleId,
   uniqueOptions,
 } from '../utils';
+import {
+  buildSearchParams,
+  readDateRangeSearchParams,
+  readSearchParamBoolean,
+  readSearchParamList,
+  readSearchParamValue,
+  setSearchParamBoolean,
+  setSearchParamList,
+  setSearchParamValue,
+} from '../utils/reportSearchParams';
 import {
   ReportDatePresetEnum,
   ReportTransactionTypeEnum,
@@ -28,29 +39,70 @@ const PAGE_SIZE = 30;
 
 export const useSalePurchaseReportFilters = () => {
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const isRestrictedUser = !user?.isAdmin && !user?.isHo && !user?.isHoStaff;
   const userAssignments = useMemo(() => user?.assignments ?? [], [user?.assignments]);
-  const [partyProfileSearch, setPartyProfileSearch] = useState('');
+  const searchParamsKey = searchParams.toString();
+  const parsedSearchParams = useMemo(() => new URLSearchParams(searchParamsKey), [searchParamsKey]);
+
+  const hydratedRouteState = useMemo(() => {
+    const transactionTypes = readSearchParamList(
+      parsedSearchParams,
+      'transactionTypes',
+    ) as ReportTransactionType[];
+
+    return {
+      dateRange: readDateRangeSearchParams(parsedSearchParams, ReportDatePresetEnum.TODAY),
+      stateIds: readSearchParamList(parsedSearchParams, 'stateIds'),
+      branchIds: readSearchParamList(parsedSearchParams, 'branchIds'),
+      counterIds: readSearchParamList(parsedSearchParams, 'counterIds'),
+      partyTypeCodes: readSearchParamList(parsedSearchParams, 'partyTypeCodes'),
+      transactionTypes,
+      sortBy:
+        (readSearchParamValue(parsedSearchParams, 'sortBy') as ReportSortBy) ||
+        ReportSortByEnum.DATE_ASC,
+      partyProfileSearch: readSearchParamValue(parsedSearchParams, 'partyProfileSearch'),
+      partyProfileSelection: {
+        allSelected: readSearchParamBoolean(parsedSearchParams, 'partyProfileAllSelected'),
+        selectedIds: readSearchParamList(parsedSearchParams, 'partyProfileSelectedIds'),
+        excludedIds: readSearchParamList(parsedSearchParams, 'partyProfileExcludedIds'),
+      } as IReportPartyProfileSelection,
+    };
+  }, [parsedSearchParams]);
+
+  const [partyProfileSearch, setPartyProfileSearch] = useState(hydratedRouteState.partyProfileSearch);
   const debouncedPartyProfileSearch = useDebounce(partyProfileSearch, 350);
-  const [dateRange, setDateRange] = useState<IReportDateRange>(
-    buildReportDateRange(ReportDatePresetEnum.TODAY),
+  const [dateRange, setDateRange] = useState<IReportDateRange>(hydratedRouteState.dateRange);
+  const [stateIds, setStateIds] = useState<string[]>(hydratedRouteState.stateIds);
+  const [branchIds, setBranchIds] = useState<string[]>(hydratedRouteState.branchIds);
+  const [counterIds, setCounterIds] = useState<string[]>(hydratedRouteState.counterIds);
+  const [partyTypeCodes, setPartyTypeCodes] = useState<string[]>(hydratedRouteState.partyTypeCodes);
+  const [transactionTypes, setTransactionTypes] = useState<ReportTransactionType[]>(
+    hydratedRouteState.transactionTypes.length > 0
+      ? hydratedRouteState.transactionTypes
+      : [ReportTransactionTypeEnum.PURCHASE, ReportTransactionTypeEnum.SALE],
   );
-  const [stateIds, setStateIds] = useState<string[]>([]);
-  const [branchIds, setBranchIds] = useState<string[]>([]);
-  const [counterIds, setCounterIds] = useState<string[]>([]);
-  const [partyTypeCodes, setPartyTypeCodes] = useState<string[]>([]);
-  const [transactionTypes, setTransactionTypes] = useState<ReportTransactionType[]>([
-    ReportTransactionTypeEnum.PURCHASE,
-    ReportTransactionTypeEnum.SALE,
-  ]);
-  const [sortBy, setSortBy] = useState<ReportSortBy>(ReportSortByEnum.DATE_ASC);
+  const [sortBy, setSortBy] = useState<ReportSortBy>(hydratedRouteState.sortBy);
   const [partyProfileSelection, setPartyProfileSelection] =
-    useState<IReportPartyProfileSelection>({
-      allSelected: false,
-      selectedIds: [],
-      excludedIds: [],
-    });
-  const [appliedFilters, setAppliedFilters] = useState<IReportFiltersState | null>(null);
+    useState<IReportPartyProfileSelection>(hydratedRouteState.partyProfileSelection);
+  const [appliedFilters, setAppliedFilters] = useState<IReportFiltersState | null>(
+    searchParamsKey
+      ? {
+          dateRange: hydratedRouteState.dateRange,
+          stateIds: hydratedRouteState.stateIds,
+          branchIds: hydratedRouteState.branchIds,
+          counterIds: hydratedRouteState.counterIds,
+          partyTypeCodes: hydratedRouteState.partyTypeCodes,
+          partyProfileSearch: hydratedRouteState.partyProfileSearch,
+          partyProfileSelection: hydratedRouteState.partyProfileSelection,
+          transactionTypes:
+            hydratedRouteState.transactionTypes.length > 0
+              ? hydratedRouteState.transactionTypes
+              : [ReportTransactionTypeEnum.PURCHASE, ReportTransactionTypeEnum.SALE],
+          sortBy: hydratedRouteState.sortBy,
+        }
+      : null,
+  );
 
   const { data: branchProfiles = [] } = useQuery({
     queryKey: ['reports-branch-profiles'],
@@ -466,10 +518,16 @@ export const useSalePurchaseReportFilters = () => {
     });
     setPartyProfileSearch('');
     setAppliedFilters(null);
+    setSearchParams(new URLSearchParams(), { replace: true });
   };
 
   const handleView = () => {
-    setAppliedFilters({
+    const nextTransactionTypes =
+      transactionTypes.length > 0
+        ? transactionTypes
+        : [ReportTransactionTypeEnum.PURCHASE, ReportTransactionTypeEnum.SALE];
+
+    const nextAppliedFilters: IReportFiltersState = {
       dateRange,
       stateIds: selectedStateIds,
       branchIds: reportBranchIds,
@@ -477,9 +535,30 @@ export const useSalePurchaseReportFilters = () => {
       partyTypeCodes,
       partyProfileSearch,
       partyProfileSelection,
-      transactionTypes,
+      transactionTypes: nextTransactionTypes,
       sortBy,
+    };
+
+    const nextSearchParams = buildSearchParams(undefined, next => {
+      setSearchParamValue(next, 'datePreset', dateRange.preset);
+      if (dateRange.preset === ReportDatePresetEnum.CUSTOM) {
+        setSearchParamValue(next, 'startDate', dateRange.startDate);
+        setSearchParamValue(next, 'endDate', dateRange.endDate);
+      }
+      setSearchParamList(next, 'stateIds', selectedStateIds);
+      setSearchParamList(next, 'branchIds', reportBranchIds);
+      setSearchParamList(next, 'counterIds', visibleCounterIds);
+      setSearchParamList(next, 'partyTypeCodes', partyTypeCodes);
+      setSearchParamList(next, 'transactionTypes', nextTransactionTypes);
+      setSearchParamValue(next, 'sortBy', sortBy);
+      setSearchParamValue(next, 'partyProfileSearch', partyProfileSearch);
+      setSearchParamBoolean(next, 'partyProfileAllSelected', partyProfileSelection.allSelected);
+      setSearchParamList(next, 'partyProfileSelectedIds', partyProfileSelection.selectedIds);
+      setSearchParamList(next, 'partyProfileExcludedIds', partyProfileSelection.excludedIds);
     });
+
+    setAppliedFilters(nextAppliedFilters);
+    setSearchParams(nextSearchParams, { replace: true });
   };
 
   const appliedDateRangeLabel = useMemo(

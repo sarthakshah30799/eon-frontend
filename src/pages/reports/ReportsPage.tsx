@@ -1,7 +1,9 @@
-import { Navigate, useParams } from 'react-router-dom';
-import ReportSalePurchaseView from '@/modules/reports/views';
-import ProductProfitReportView from '@/modules/reports/views/ProductProfitReportView';
-import SpecialReportView from '@/modules/reports/views/SpecialReportView';
+import { Navigate, useLocation, useParams } from 'react-router-dom';
+import ReportSalePurchaseView, {
+  CurrencyBalanceReportView,
+  ProductProfitReportView,
+  SpecialReportView,
+} from '@/modules/reports/views';
 import {
   REPORT_PAGE_DEFAULT_TYPE,
   getReportPageCanonicalSlug,
@@ -11,30 +13,33 @@ import {
 
 const ReportsPage = () => {
   const { slug } = useParams<{ slug?: string }>();
+  const location = useLocation();
   const reportPageType = getReportPageTypeFromSlug(slug);
 
   if (!slug) {
-    return <Navigate replace to={`/reports/${REPORT_PAGE_DEFAULT_TYPE}`} />;
+    return <Navigate replace to={`/reports/${REPORT_PAGE_DEFAULT_TYPE}${location.search}`} />;
   }
 
   if (!reportPageType) {
-    return <Navigate replace to={`/reports/${REPORT_PAGE_DEFAULT_TYPE}`} />;
+    return <Navigate replace to={`/reports/${REPORT_PAGE_DEFAULT_TYPE}${location.search}`} />;
   }
 
   const canonicalSlug = getReportPageCanonicalSlug(slug);
 
   if (canonicalSlug && slug.trim().toLowerCase() !== canonicalSlug) {
-    return <Navigate replace to={`/reports/${canonicalSlug}`} />;
+    return <Navigate replace to={`/reports/${canonicalSlug}${location.search}`} />;
   }
 
   switch (reportPageType) {
     case ReportPageTypeEnum.SPECIAL:
-      return <SpecialReportView />;
+      return <SpecialReportView key={`${slug}${location.search}`} />;
+    case ReportPageTypeEnum.CURRENCY_BALANCE:
+      return <CurrencyBalanceReportView key={`${slug}${location.search}`} />;
     case ReportPageTypeEnum.PRODUCT_PROFIT:
-      return <ProductProfitReportView />;
+      return <ProductProfitReportView key={`${slug}${location.search}`} />;
     case ReportPageTypeEnum.SALE_PURCHASE:
     default:
-      return <ReportSalePurchaseView />;
+      return <ReportSalePurchaseView key={`${slug}${location.search}`} />;
   }
 };
 

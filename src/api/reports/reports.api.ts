@@ -1,6 +1,8 @@
 import { apiClient } from '../api';
 import { buildQueryString } from '@/utils';
 import type {
+  ICurrencyBalanceReportRequest,
+  ICurrencyBalanceReportResponse,
   IProductProfitReportRequest,
   IProductProfitReportResponse,
   ISpecialReportRequest,
@@ -65,6 +67,27 @@ export const reportsApi = {
   ): Promise<ISpecialReportResponse> => {
     const res = await apiClient.get<ISpecialReportResponse>(
       `/reports/special-report${buildQueryString(params)}`,
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      return {
+        columns: [],
+        rows: [],
+      };
+    }
+
+    return res.data;
+  },
+
+  getCurrencyBalanceReport: async (
+    params: ICurrencyBalanceReportRequest,
+  ): Promise<ICurrencyBalanceReportResponse> => {
+    const res = await apiClient.get<ICurrencyBalanceReportResponse>(
+      `/reports/currency-balance${buildQueryString(params)}`,
     );
 
     if (res.error) {
@@ -164,6 +187,33 @@ export const reportsApi = {
     };
   },
 
+  downloadCurrencyBalanceReport: async (
+    params: ICurrencyBalanceReportRequest,
+    format: ReportExportFormat,
+  ): Promise<{ blob: Blob; filename?: string }> => {
+    const query = buildQueryString({
+      ...params,
+      format,
+    });
+
+    const res = await apiClient.getDownload(
+      `/reports/currency-balance/export${query}`,
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      throw new Error('Failed to download currency balance report');
+    }
+
+    return {
+      blob: res.data.blob,
+      filename: res.data.filename || buildExportFilename('currency-balance-report', 'single', format),
+    };
+  },
+
   getProductProfitReportFileUrl: (
     params: IProductProfitReportRequest,
     format: ReportExportFormat,
@@ -200,6 +250,18 @@ export const reportsApi = {
     });
 
     return `${API_BASE_URL}/reports/special-report/export${query}`;
+  },
+
+  getCurrencyBalanceReportFileUrl: (
+    params: ICurrencyBalanceReportRequest,
+    format: ReportExportFormat,
+  ) => {
+    const query = buildQueryString({
+      ...params,
+      format,
+    });
+
+    return `${API_BASE_URL}/reports/currency-balance/export${query}`;
   },
 };
 

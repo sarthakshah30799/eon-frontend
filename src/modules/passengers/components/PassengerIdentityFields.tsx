@@ -1,6 +1,7 @@
 import { useWatch, useFormContext } from 'react-hook-form';
 import {
   FormFieldCategoryOption,
+  FormFieldCountryDropdown,
   FormFieldDatePicker,
   FormFieldInput,
 } from '@/components/forms';
@@ -16,6 +17,7 @@ interface PassengerIdentityFieldsProps {
   showPan?: boolean;
   showPassport?: boolean;
   onPanFieldBlur?: () => void;
+  onPassportNumberBlur?: () => void;
   onPassportFieldBlur?: () => void;
   onNationalityChange?: (value: string | null) => void;
 }
@@ -28,6 +30,7 @@ export const PassengerIdentityFields = ({
   showPan = true,
   showPassport = false,
   onPanFieldBlur,
+  onPassportNumberBlur,
   onPassportFieldBlur,
   onNationalityChange,
 }: PassengerIdentityFieldsProps) => {
@@ -41,29 +44,51 @@ export const PassengerIdentityFields = ({
     nationalityType === PassengerNationalityTypeEnum.INDIAN;
   const isPassportRequired = showPassport || (!isCorporate && !isIndianNationality);
   const isPanRequired = showPan && (isCorporate || isIndianNationality);
+  const showCountry = showNationality && !isIndianNationality;
 
   return (
     <div className="space-y-4">
       {showNationality ? (
-        <div className="grid gap-4 md:grid-cols-2">
-          <FormFieldCategoryOption
-            name="nationalityType"
-            label="Nationality"
-            placeholder="Select nationality"
-            code={CategoryOptionCodeEnum.PassengerNationality}
-            useValueAsId
-            onValueChange={value => onNationalityChange?.(Array.isArray(value) ? null : value)}
-          />
-          {showResident ? (
+        <>
+          <div
+            className={`grid gap-4 ${
+              showResident ? 'md:grid-cols-2' : 'md:grid-cols-1'
+            }`}
+          >
+            <FormFieldCategoryOption
+              name="nationalityType"
+              label="Nationality"
+              placeholder="Select nationality"
+              code={CategoryOptionCodeEnum.PassengerNationality}
+              useValueAsId
+              onValueChange={value =>
+                onNationalityChange?.(Array.isArray(value) ? null : value)
+              }
+            />
+            {showResident ? (
             <FormFieldCategoryOption
               name="residentStatus"
               label="Resident Status"
               placeholder="Select resident status"
               code={CategoryOptionCodeEnum.PassengerResidentStatus}
               useValueAsId
+              disabled={!isIndianNationality}
             />
+            ) : null}
+          </div>
+          {showCountry ? (
+            <div className="grid gap-4 md:grid-cols-2">
+              <FormFieldCountryDropdown
+                name="countryId"
+                label="Country"
+                placeholder="Select country"
+                hideBlockedCountry
+                hideRestrictedCountry
+                hideBaseCountry
+              />
+            </div>
           ) : null}
-        </div>
+        </>
       ) : null}
 
       {isPanRequired ? (
@@ -106,7 +131,7 @@ export const PassengerIdentityFields = ({
             label="Passport Number"
             placeholder="Enter passport number"
             valueTransform="uppercase"
-            onBlur={onPassportFieldBlur}
+            onBlur={onPassportNumberBlur}
           />
           <FormFieldInput
             name="passportIssueAt"

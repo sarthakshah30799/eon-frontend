@@ -10,6 +10,10 @@ interface FormFieldCountryDropdownProps {
   className?: string;
   createLabel?: string;
   size?: 'sm' | 'md' | 'lg';
+  onValueChange?: (value: string) => void;
+  hideBlockedCountry?: boolean;
+  hideRestrictedCountry?: boolean;
+  hideBaseCountry?: boolean;
 }
 
 export const FormFieldCountryDropdown = ({
@@ -20,6 +24,10 @@ export const FormFieldCountryDropdown = ({
   className = '',
   createLabel,
   size,
+  onValueChange,
+  hideBlockedCountry = false,
+  hideRestrictedCountry = false,
+  hideBaseCountry = false,
 }: FormFieldCountryDropdownProps) => {
   const form = useFormContext();
 
@@ -40,8 +48,12 @@ export const FormFieldCountryDropdown = ({
       size={size}
       value={String(field.value ?? '')}
       createLabel={createLabel}
+      hideBlockedCountry={hideBlockedCountry}
+      hideRestrictedCountry={hideRestrictedCountry}
+      hideBaseCountry={hideBaseCountry}
       onChange={nextValue => {
         field.onChange(nextValue);
+        onValueChange?.(String(nextValue ?? ''));
       }}
       error={error?.message}
     />

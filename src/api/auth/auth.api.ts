@@ -4,6 +4,7 @@ import type {
   IAuthError,
   IUser,
   IWorkplaceSession,
+  IPolicyContext,
 } from '../../modules/auth/types';
 import { dispatchSessionExpired } from '@/lib/authSessionEvents';
 import { API_BASE_URL } from '@/config/api';
@@ -15,6 +16,7 @@ const SESSION_PROTECTED_ENDPOINTS = new Set([
   '/auth/check',
   '/auth/sessions',
   '/auth/workplace',
+  '/auth/policy-context',
 ]);
 
 export class ApiError extends Error {
@@ -153,6 +155,13 @@ class AuthAPI {
 
   async getWorkplace(): Promise<IWorkplaceSession> {
     return this.request<IWorkplaceSession>('/auth/workplace', {
+      method: 'GET',
+      credentials: 'include',
+    });
+  }
+
+  async getPolicyContext(): Promise<IPolicyContext> {
+    return this.request<IPolicyContext>('/auth/policy-context', {
       method: 'GET',
       credentials: 'include',
     });

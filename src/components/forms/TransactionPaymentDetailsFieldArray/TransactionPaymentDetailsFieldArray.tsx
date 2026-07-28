@@ -40,6 +40,7 @@ interface TransactionPaymentDetailsFieldArrayProps {
   branchId?: string;
   selectablePagesUserId?: string;
   cashControlAccountId?: string;
+  allowCashPayment?: boolean;
   disabled?: boolean;
 }
 
@@ -71,6 +72,7 @@ const PaymentDetailRow = ({
   branchId,
   selectablePagesUserId,
   cashControlAccountId,
+  allowCashPayment = true,
   disabled = false,
   onRemove,
   canRemove,
@@ -83,6 +85,7 @@ const PaymentDetailRow = ({
   branchId?: string;
   selectablePagesUserId?: string;
   cashControlAccountId?: string;
+  allowCashPayment?: boolean;
   disabled?: boolean;
   onRemove: (index: number) => void;
   canRemove: boolean;
@@ -92,6 +95,7 @@ const PaymentDetailRow = ({
   const resolvedBranchId = branchId?.trim() || activeBranchId || undefined;
   const isSale = transactionType === TransactionTypeEnum.SALE;
   const isPurchase = transactionType !== TransactionTypeEnum.SALE;
+  const canUseCash = allowCashPayment !== false;
   const paymentMethod = useWatch({
     control: form.control,
     name: `${arrayName}.${index}.paymentMethod`,
@@ -241,6 +245,15 @@ const PaymentDetailRow = ({
       return;
     }
 
+    if (!canUseCash && paymentMethod === TransactionPaymentMethodEnum.CASH) {
+      form.setValue(`${arrayName}.${index}.paymentMethod`, TransactionPaymentMethodEnum.CHEQUE, {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: true,
+      });
+      return;
+    }
+
     if (previousPaymentMethodRef.current === paymentMethod) {
       return;
     }
@@ -343,6 +356,7 @@ const PaymentDetailRow = ({
     arrayName,
     cashAccountLabel,
     cashControlAccountId,
+    canUseCash,
     form,
     index,
     paymentMethod,
@@ -680,9 +694,11 @@ export const TransactionPaymentDetailsFieldArray = ({
   branchId,
   selectablePagesUserId,
   cashControlAccountId,
+  allowCashPayment = true,
   disabled = false,
 }: TransactionPaymentDetailsFieldArrayProps) => {
   const form = useFormContext();
+  const canUseCash = allowCashPayment !== false;
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name,
@@ -708,8 +724,6 @@ export const TransactionPaymentDetailsFieldArray = ({
 
     return Math.max(total - totalApplied, 0);
   }, [maxAmount, totalApplied]);
-
-  const syncedPayableTotalRef = useRef<string>('');
 
   const activePaymentMethod = useMemo(() => {
     return (
@@ -748,16 +762,14 @@ export const TransactionPaymentDetailsFieldArray = ({
       return;
     }
 
-    const normalizedTotal = normalizeAmount(maxAmount);
-    if (syncedPayableTotalRef.current === normalizedTotal) {
-      return;
-    }
-
-    syncedPayableTotalRef.current = normalizedTotal;
-
     const currentRows = (form.getValues(name) ??
       []) as ITransactionPaymentDetailFormRow[];
     if (!currentRows.length) {
+      return;
+    }
+
+    const primaryAmountField = `${name}.0.amount` as const;
+    if (form.getFieldState(primaryAmountField).isDirty) {
       return;
     }
 
@@ -771,7 +783,7 @@ export const TransactionPaymentDetailsFieldArray = ({
       return;
     }
 
-    form.setValue(`${name}.0.amount`, nextPrimaryAmount.toFixed(2), {
+    form.setValue(primaryAmountField, nextPrimaryAmount.toFixed(2), {
       shouldDirty: false,
       shouldTouch: false,
       shouldValidate: false,
@@ -870,9 +882,11 @@ export const TransactionPaymentDetailsFieldArray = ({
                 ? 'default'
                 : 'outline'
             }
-            disabled={disabled || !cashControlAccountId}
+            disabled={disabled || !cashControlAccountId || !canUseCash}
             onClick={() =>
-              applyPaymentMethod(TransactionPaymentMethodEnum.CASH)
+              canUseCash
+                ? applyPaymentMethod(TransactionPaymentMethodEnum.CASH)
+                : undefined
             }
           >
             Cash
@@ -896,6 +910,10 @@ export const TransactionPaymentDetailsFieldArray = ({
             <span className="text-xs text-error-600">
               Cash control account is not configured.
             </span>
+          ) : !canUseCash ? (
+            <span className="text-xs text-error-600">
+              Cash payment is not allowed for this transaction type.
+            </span>
           ) : null}
         </div>
 
@@ -916,6 +934,7 @@ export const TransactionPaymentDetailsFieldArray = ({
                 branchId={branchId}
                 selectablePagesUserId={selectablePagesUserId}
                 cashControlAccountId={cashControlAccountId}
+                allowCashPayment={allowCashPayment}
                 disabled={disabled}
                 onRemove={remove}
                 canRemove={fields.length > 0}

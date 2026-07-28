@@ -88,6 +88,7 @@ export interface IPassengerPassportVerificationRequest {
   passportIssueDate?: string;
   passportExpiryDate?: string;
   arrivalDate?: string;
+  transactionDate?: string;
   isIndianNationality?: boolean;
 }
 
@@ -103,6 +104,12 @@ export interface IPassengerOtherDocumentVerificationRequest {
 export interface IPassengerAmlVerificationResponse {
   verified: boolean;
   message: string;
+}
+
+export interface IPassengerPassportLookupResponse {
+  found: boolean;
+  message: string;
+  passenger: Record<string, unknown> | null;
 }
 
 export interface IPassengerAmlVerifiedPayload {

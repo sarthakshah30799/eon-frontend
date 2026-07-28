@@ -19,6 +19,7 @@ export const CategoryOptionCodeEnum = {
   FfmcGroup: 'FFMCGROUP',
   Master: 'MASTER',
   Transaction: 'TRANSACTION',
+  Airline: 'AIRLINE',
   Segment: 'SEGMENT',
   Relationship: 'RELATIONSHIP',
   CommissionGiven: 'COMMISSIONGIVEN',

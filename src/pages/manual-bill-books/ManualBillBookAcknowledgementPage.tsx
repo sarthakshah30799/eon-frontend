@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import { manualBillBookApi, type IManualBook } from '@/api';
-import { categoryOptionsApi } from '@/api/categoryOptions/categoryOptions.api';
 import { Loader } from '@/components/ui/loader';
 import {
   Button,
@@ -10,11 +9,12 @@ import {
   type AsyncSelectOption,
 } from '@/components/ui';
 import { formatDateTime, formatDateInput, parseDateInput } from '@/utils';
-import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import type { MultiValue, SingleValue } from 'react-select';
 import toast from 'react-hot-toast';
 import { ManualBillBookAcknowledgementChecklistTable } from '@/modules/manual-bill-books/components';
 import { ManualBillBookStatusEnum, type ManualBillBookReviewStatus } from '@/modules/manual-bill-books/types';
+import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
+import { useCategoryOptions } from '@/hooks';
 
 export const ManualBillBookAcknowledgementPage = () => {
   const { activeBranchId } = useAuth();
@@ -27,23 +27,10 @@ export const ManualBillBookAcknowledgementPage = () => {
   // Filter states for Detail View
   const [searchStatus, setSearchStatus] = useState('PENDING');
   const [searchTxnType, setSearchTxnType] = useState('ALL');
-  const [txnTypes, setTxnTypes] = useState<
-    Array<{ id: string; label: string }>
-  >([]);
-
-  useEffect(() => {
-    const fetchTxnTypes = async () => {
-      try {
-        const options = await categoryOptionsApi.getCategoryOptionsByCode(
-          CategoryOptionCodeEnum.Transaction
-        );
-        setTxnTypes(options.map(o => ({ id: o.value, label: o.label })));
-      } catch (err) {
-        console.error('Failed to load transaction types', err);
-      }
-    };
-    fetchTxnTypes();
-  }, []);
+  const {
+    defaultOptions: txnTypes,
+    loadOptions: loadTxnTypeOptions,
+  } = useCategoryOptions(CategoryOptionCodeEnum.Transaction, true);
 
   const getPastDate = (daysAgo: number) => {
     const d = new Date();
@@ -64,7 +51,7 @@ export const ManualBillBookAcknowledgementPage = () => {
   const [rowEdits, setRowEdits] = useState<
     Record<string, { status?: ManualBillBookReviewStatus; remarks: string }>
   >({});
-  const selectedTxnType = txnTypes.find(t => t.id === searchTxnType);
+  const selectedTxnType = txnTypes.find(t => t.value === searchTxnType);
 
   useEffect(() => {
     let cancelled = false;
@@ -189,7 +176,7 @@ export const ManualBillBookAcknowledgementPage = () => {
   const handleRowClick = (book: IManualBook) => {
     // Pre-populate filter parameters
     setSearchStatus(book.status);
-    setSearchTxnType(book.transactionType);
+    setSearchTxnType(String(book.transactionType));
 
     const dispatchDate = new Date(book.dispatchDate);
     const fromD = new Date(dispatchDate);
@@ -403,14 +390,9 @@ export const ManualBillBookAcknowledgementPage = () => {
                     setSelectedBookId(null);
                   }}
                   loadOptions={async (inputValue: string) => {
-                    const opts = [
-                      { value: 'ALL', label: 'ALL' },
-                      ...txnTypes.map(t => ({ value: t.id, label: t.label })),
-                    ];
+                    const response = await loadTxnTypeOptions(inputValue);
                     return {
-                      options: inputValue
-                        ? opts.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
-                        : opts,
+                      options: [{ value: 'ALL', label: 'ALL' }, ...response.options],
                       hasMore: false,
                     };
                   }}

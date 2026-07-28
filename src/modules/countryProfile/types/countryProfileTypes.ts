@@ -19,6 +19,11 @@ export interface ICountryProfile {
   restrictedCountry: boolean;
   greyListCountry: boolean;
   baseCountry: boolean;
+  isCisCountry?: boolean;
+  isBlocked?: boolean;
+  blockedAt?: string | null;
+  blockedById?: string | null;
+  blockedReason?: string | null;
   countryGroupId?: string;
   countryGroup?: ICountryGroup;
   createdAt: string;
@@ -44,6 +49,9 @@ export interface ICountryProfileListQuery {
   restrictedCountry?: boolean;
   greyListCountry?: boolean;
   baseCountry?: boolean;
+  hideBlockedCountry?: boolean;
+  hideRestrictedCountry?: boolean;
+  hideBaseCountry?: boolean;
 }
 
 export interface IBackendCountry {
@@ -56,6 +64,11 @@ export interface IBackendCountry {
   restrictedCountry: boolean;
   greyListCountry: boolean;
   baseCountry: boolean;
+  isCisCountry?: boolean;
+  isBlocked?: boolean;
+  blockedAt?: string | null;
+  blockedById?: string | null;
+  blockedReason?: string | null;
   createdAt: string;
   updatedAt: string;
 }

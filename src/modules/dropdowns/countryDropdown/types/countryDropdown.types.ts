@@ -4,6 +4,7 @@ export interface CountryRecord {
   id: string;
   code: string;
   name: string;
+  isBlocked?: boolean;
 }
 
 export interface CountryDropdownOption extends AsyncSelectOption {
@@ -12,6 +13,7 @@ export interface CountryDropdownOption extends AsyncSelectOption {
   countryId: string;
   code: string;
   name: string;
+  isBlocked?: boolean;
 }
 
 export interface CountryDropdownProps {
@@ -25,4 +27,7 @@ export interface CountryDropdownProps {
   createLabel?: string;
   size?: 'sm' | 'md' | 'lg';
   onCreateCountry?: (inputValue: string) => void | Promise<void>;
+  hideBlockedCountry?: boolean;
+  hideRestrictedCountry?: boolean;
+  hideBaseCountry?: boolean;
 }

@@ -4,10 +4,10 @@ import { Button } from '@/components/ui';
 import { SelectPartyProfiles } from '@/modules/partyProfiles/components';
 import { HighRiskPartyProfileWarningModal } from './HighRiskPartyProfileWarningModal';
 import type { PartyProfileType } from '@/modules/partyProfiles/types';
-import type { IPartyProfileListQuery } from '@/modules/partyProfiles/types';
+import type { IPartyProfileListQuery, IPartyProfile } from '@/modules/partyProfiles/types';
+import { TransactionTypeProfileEnum } from '@/modules/transactions';
 import type { IPurchaseFormValues } from '../types/purchaseTypes';
 import type { PurchasePageType } from '@/pages/purchase/[slug]/purchasePage.enum';
-import type { IPartyProfile } from '@/modules/partyProfiles/types';
 import { PassengerEntityTypeEnum } from '@/modules/passengers/types/passengerTypes';
 import {
   formatPurchaseEntityLabel,
@@ -69,10 +69,22 @@ export const PurchasePartyProfileField = ({
     control: form.control,
     name: 'transactionType',
   });
+  const transactionPartyProfileType = useWatch({
+    control: form.control,
+    name: 'transactionPartyProfileType',
+  });
   const profileQueryParams = {
-    ...getPurchaseTransactionPartyProfileFilter(transactionType, purchasePageType),
+    ...getPurchaseTransactionPartyProfileFilter(
+      transactionType,
+      purchasePageType,
+      transactionPartyProfileType
+    ),
     activeOnly: true,
   } satisfies Pick<IPartyProfileListQuery, 'sale' | 'purchase' | 'activeOnly' | 'isIndividual'>;
+
+  const isCombinedPartyProfilePage =
+    purchasePageType === TransactionTypeProfileEnum.PURCHASE_CORPORATE_INDIVIDUAL ||
+    purchasePageType === TransactionTypeProfileEnum.SALE_CORPORATE_INDIVIDUAL;
 
   const proceedWithProfileSelection = (selectedProfile: IPartyProfile) => {
     form.setValue('partyProfileId', selectedProfile.id, {
@@ -190,14 +202,14 @@ export const PurchasePartyProfileField = ({
         {showPassengerAction ? (
           <Button
             type="button"
-            variant="outline"
-            className="w-full"
-            disabled={disabled || !partyProfileId || !entityType}
+            variant={passengerInfoCaptured ? 'secondary' : 'default'}
+            className="w-full shadow-sm transition-transform duration-200 hover:-translate-y-0.5"
+            disabled={disabled || !partyProfileId || !entityType || (isCombinedPartyProfilePage && !transactionPartyProfileType)}
             onClick={() => {
               onAddPassengerInfo?.();
             }}
           >
-            Add Passenger Info
+            {passengerInfoCaptured ? 'Edit Passenger Info' : 'Passenger Info'}
           </Button>
         ) : null}
 

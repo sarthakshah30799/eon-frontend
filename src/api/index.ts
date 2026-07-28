@@ -18,6 +18,7 @@ export * from './currencyProfile';
 export * from './currencyRates';
 export * from './menu/menu.api';
 export * from './additionalSettings';
+export * from './transactionPolicies';
 export * from './financialCodes/financialCodes.api';
 export * from './accountProfile';
 export * from './countryGroup';

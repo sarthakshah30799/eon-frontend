@@ -77,3 +77,40 @@ export interface IWorkplaceSession {
   activeBranchId: string | null;
   activeCounterId: string | null;
 }
+
+export interface IPolicyChecklistItem {
+  code: string;
+  label: string;
+  valueType: string;
+  required: boolean;
+}
+
+export interface IMonthlyLockWindow {
+  id: string;
+  branchId: string;
+  userId: string;
+  fromDate: string;
+  toDate: string;
+  isActive: boolean;
+  revokedAt?: string | null;
+  revokedBy?: string | null;
+}
+
+export type ITransactionBackdateWindow = IMonthlyLockWindow;
+
+export interface IPolicyContext {
+  userId: string;
+  branchId: string;
+  counterId: string;
+  currentBusinessDate: string;
+  transactionDate: string;
+  eodIncomplete: boolean;
+  bodCompleted: boolean;
+  canStartDay: boolean;
+  canCompleteDayEnd: boolean;
+  openBusinessDate: string;
+  workflowState: string;
+  activeMonthlyLock?: IMonthlyLockWindow | null;
+  activeBackdateWindow?: ITransactionBackdateWindow | null;
+  checklist: IPolicyChecklistItem[];
+}

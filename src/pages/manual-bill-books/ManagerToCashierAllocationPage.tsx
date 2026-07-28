@@ -97,16 +97,13 @@ export const ManagerToCashierAllocationPage = () => {
   // Bulk allocate user
   const [bulkCashierId, setBulkCashierId] = useState('');
 
-  const cashierOptions = cashiers.map(cashier => ({
-    value: cashier.id,
-    label: cashier.name,
-  }));
-  const loadCashierOptions = async (inputValue: string): Promise<AsyncSelectResponse> => ({
-    options: inputValue
-      ? cashierOptions.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
-      : cashierOptions,
-    hasMore: false,
-  });
+  const loadCashierOptions = async (inputValue: string): Promise<AsyncSelectResponse> => {
+    const data = await manualBillBookApi.getAuthorizedUsers(inputValue);
+    return {
+      options: data.map(c => ({ value: c.id, label: c.name })),
+      hasMore: false,
+    };
+  };
 
   useEffect(() => {
     const fetchTxnTypes = async () => {
@@ -489,8 +486,10 @@ export const ManagerToCashierAllocationPage = () => {
                 ) : (
                   <AsyncSelect
                     value={
-                      cashierOptions.find(option => option.value === bulkCashierId) ??
-                      null
+                      (() => {
+                        const found = cashiers.find(c => c.id === bulkCashierId);
+                        return found ? { value: found.id, label: found.name } : null;
+                      })()
                     }
                     onChange={option => {
                       const nextOption = Array.isArray(option) ? option[0] : option;

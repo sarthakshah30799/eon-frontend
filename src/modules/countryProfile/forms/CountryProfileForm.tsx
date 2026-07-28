@@ -16,9 +16,9 @@ import type { ICreateCountryProfile } from '../types';
 import { useNavigate } from 'react-router-dom';
 import { CountryGroupModal } from '../components';
 import { countryProfileApi } from '@/api/countryProfile';
+import { countryGroupApi } from '@/api/countryGroup';
 import { normalizeCodeValue } from '@/utils';
 import { usePermission } from '@/hooks';
-import { useListCountryGroups } from '@/modules/countryGroup';
 import { CountryAccessRulesSection } from '../components';
 
 const loadRiskCategoryOptions = async (
@@ -36,27 +36,18 @@ const CountryGroupField = ({ isDisabled }: { isDisabled: boolean }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [pendingGroupName, setPendingGroupName] = useState('');
   const { canAdd } = usePermission('/admin/country-group');
-  const { data: countryGroups = [] } = useListCountryGroups();
 
   const loadCountryGroupOptions = useCallback(
     async (inputValue: string): Promise<AsyncSelectResponse> => {
-      const normalizedSearch = inputValue.trim().toLowerCase();
-      const options = countryGroups
-        .filter(group =>
-          normalizedSearch
-            ? [group.code, group.name].some(value =>
-                value.toLowerCase().includes(normalizedSearch)
-              )
-            : true
-        )
-        .map(group => ({
+      const groups = await countryGroupApi.getCountryGroups(inputValue);
+      return {
+        options: groups.map(group => ({
           value: group.id,
           label: group.name,
-        }));
-
-      return { options };
+        })),
+      };
     },
-    [countryGroups]
+    []
   );
 
   const handleSuccess = (newGroupId: string) => {

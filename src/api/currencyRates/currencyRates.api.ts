@@ -15,8 +15,9 @@ const omitEmptyFields = <T extends Record<string, unknown>>(payload: T) => {
 };
 
 export const currencyRatesApi = {
-  getGroups: async (): Promise<ICurrencyRateGroup[]> => {
-    const res = await apiClient.get<ICurrencyRateGroup[]>('/currency-rates/groups');
+  getGroups: async (search?: string): Promise<ICurrencyRateGroup[]> => {
+    const params = search ? `?search=${encodeURIComponent(search)}` : '';
+    const res = await apiClient.get<ICurrencyRateGroup[]>(`/currency-rates/groups${params}`);
     if (res.error) throw new Error(res.error);
     return res.data || [];
   },

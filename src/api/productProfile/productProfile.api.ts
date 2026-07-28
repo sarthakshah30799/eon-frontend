@@ -5,10 +5,11 @@ import type {
 } from '@/modules/productProfile/types';
 
 export const productProfileApi = {
-  getProductProfiles: async (filter?: { bulkBuying?: boolean; bulkSelling?: boolean }): Promise<IProductProfile[]> => {
+  getProductProfiles: async (filter?: { bulkBuying?: boolean; bulkSelling?: boolean; search?: string }): Promise<IProductProfile[]> => {
     const params = new URLSearchParams();
     if (filter?.bulkBuying) params.set('bulkBuying', 'true');
     if (filter?.bulkSelling) params.set('bulkSelling', 'true');
+    if (filter?.search?.trim()) params.set('search', filter.search.trim());
     const query = params.toString() ? `?${params.toString()}` : '';
     const res = await apiClient.get<IProductProfile[]>(`/products${query}`);
     if (res.error) {

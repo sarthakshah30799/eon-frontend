@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useFormContext, useWatch } from 'react-hook-form';
@@ -12,14 +12,12 @@ import {
     FormFieldCategoryOption,
 } from '@/components/forms';
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
-import { counterProfileApi, manualBillBookApi } from '@/api';
+import { branchProfileApi, counterProfileApi, manualBillBookApi } from '@/api';
 import { useAuth } from '@/lib/AuthContext';
 import type { Resolver } from 'react-hook-form';
 import {
     useCreateManualBillBook,
-    useListManualBillBookManagers,
 } from '../hooks';
-import { useListBranchProfiles } from '@/modules/branchProfile/hooks';
 import type { IBulkDispatchFormValues } from '../types';
 import { debouncePromise } from '@/hooks';
 
@@ -128,7 +126,6 @@ const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => 
     const { user, activeBranchId } = useAuth();
     const canSelectBranch = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
     const branchId = useWatch({ name: 'branchId', control: form.control });
-    const { data: branches = [] } = useListBranchProfiles({ activeOnly: true });
 
     // Pre-fill form with rejected book data in reassign mode
     useEffect(() => {
@@ -221,45 +218,30 @@ const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => 
         return () => clearTimeout(timer);
     }, [bookNoFrom, bookNoTo, form]);
 
-    const { data: branchManagers = [] } = useListManualBillBookManagers(branchId);
-
-    const branchOptions = useMemo(
-        () =>
-            branches.map(branch => ({
+    const loadBranches = useCallback(
+        async (inputValue: string) => {
+            const branches = await branchProfileApi.getBranchProfiles({ search: inputValue, activeOnly: true });
+            let options = branches.map(branch => ({
                 value: branch.id,
                 label: `${branch.code} - ${branch.name}`,
-            })),
-        [branches]
-    );
-
-    const visibleBranchOptions = useMemo(
-        () =>
-            canSelectBranch
-                ? branchOptions
-                : branchOptions.filter(option => option.value === activeBranchId),
-        [activeBranchId, branchOptions, canSelectBranch]
-    );
-
-    const loadBranches = useCallback(
-        async (inputValue: string) => ({
-            options: inputValue
-                ? visibleBranchOptions.filter(option =>
-                    option.label.toLowerCase().includes(inputValue.toLowerCase())
-                )
-                : visibleBranchOptions,
-            hasMore: false,
-        }),
-        [visibleBranchOptions]
+            }));
+            if (!canSelectBranch) {
+                options = options.filter(option => option.value === activeBranchId);
+            }
+            return { options, hasMore: false };
+        },
+        [activeBranchId, canSelectBranch]
     );
     const loadAssignedTo = async (inputValue: string) => {
-        const opts = branchManagers.map(manager => ({
-            value: manager.id,
-            label: manager.name,
-        }));
+        if (!branchId) {
+            return { options: [], hasMore: false };
+        }
+        const managers = await manualBillBookApi.getBranchManagers(branchId, inputValue);
         return {
-            options: inputValue
-                ? opts.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
-                : opts,
+            options: managers.map(manager => ({
+                value: manager.id,
+                label: manager.name,
+            })),
             hasMore: false,
         };
     };
@@ -277,7 +259,7 @@ const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => 
                 name="branchId"
                 label="Branch"
                 loadOptions={loadBranches}
-                defaultOptions={visibleBranchOptions}
+                defaultOptions={true}
                 disabled={reassignId ? true : !canSelectBranch}
             />
             <FormFieldCategoryOption

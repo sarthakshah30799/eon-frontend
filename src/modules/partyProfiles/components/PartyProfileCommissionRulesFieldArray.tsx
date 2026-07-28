@@ -53,15 +53,10 @@ const CommissionRuleRow = ({
   }, []);
 
   const loadProductOptions = useCallback(async (inputValue: string): Promise<AsyncSelectResponse> => {
-    const products = await productProfileApi.getProductProfiles();
-    const filteredProducts = inputValue
-      ? products.filter(product =>
-          `${product.productCode} ${product.productDescription}`.toLowerCase().includes(inputValue.toLowerCase())
-        )
-      : products;
+    const products = await productProfileApi.getProductProfiles({ search: inputValue });
 
     return {
-      options: filteredProducts.map(product => ({
+      options: products.map(product => ({
         value: product.productCode,
         label: `${product.productCode}${product.productDescription ? ` - ${product.productDescription}` : ''}`,
       })),

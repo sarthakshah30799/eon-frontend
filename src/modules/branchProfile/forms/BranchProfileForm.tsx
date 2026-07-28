@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import type { Resolver } from 'react-hook-form';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -15,7 +15,7 @@ import {
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import { branchProfileSchema } from '../schema';
 import type { ICreateBranchProfile, IBranchProfileOption } from '../types';
-import { useListCounterProfiles } from '@/modules/counterProfile/hooks';
+import { counterProfileApi } from '@/api/counterProfile/counterProfile.api';
 import { useGetStateProfile } from '@/modules/stateProfile/hooks';
 import { useListCompanyProfiles } from '@/modules/companyProfile/hooks';
 import { branchProfileApi } from '@/api/branchProfile/branchProfile.api';
@@ -57,12 +57,6 @@ const BranchProfileFormFields = ({
   const previousCountryIdRef = useRef<string>(countryId);
   const previousStateIdRef = useRef<string>(stateId);
 
-  const {
-    data: counterProfiles = [],
-    isLoading: isCountersLoading,
-    isFetching: isCountersFetching,
-  } = useListCounterProfiles({ activeOnly: true });
-
   const { data: selectedState } = useGetStateProfile(stateId);
   const { data: companies = [] } = useListCompanyProfiles();
   const companyPan = companies[0]?.panNo || '';
@@ -91,14 +85,7 @@ const BranchProfileFormFields = ({
     }
   }, [stateId, selectedState, companyPan, form]);
 
-  const connectedCounterOptions = useMemo(
-    () =>
-      counterProfiles.map(counter => ({
-        value: counter.id,
-        label: `${counter.counterNo} - ${counter.name}`,
-      })),
-    [counterProfiles]
-  );
+
   const validateBranchCode = useCallback(
     async (value: string) => {
       const normalizedCode = normalizeCodeValue(value);
@@ -276,16 +263,17 @@ const BranchProfileFormFields = ({
           label="Connect Counters"
           placeholder="Select counters to link"
           loadOptions={async (inputValue: string) => {
-            const filtered = !inputValue
-              ? connectedCounterOptions
-              : connectedCounterOptions.filter(opt =>
-                  opt.label.toLowerCase().includes(inputValue.toLowerCase())
-                );
-            return { options: filtered, hasMore: false };
+            const counters = await counterProfileApi.getCounterProfiles({ search: inputValue });
+            return {
+              options: counters.map(counter => ({
+                value: counter.id,
+                label: `${counter.counterNo} - ${counter.name}`,
+              })),
+              hasMore: false,
+            };
           }}
           pagination={false}
-          isLoading={isCountersLoading || isCountersFetching}
-          defaultOptions={connectedCounterOptions}
+          defaultOptions={true}
           disabled={isSubmitting}
           isMulti
           closeMenuOnSelect={false}

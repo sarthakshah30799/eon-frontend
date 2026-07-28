@@ -42,12 +42,13 @@ const loadProductAllowedOptions = async (inputValue: string): Promise<AsyncSelec
 });
 
 const loadPricingGroupOptions = async (inputValue: string): Promise<AsyncSelectResponse> => {
-  const groups = await currencyRatesApi.getGroups();
-  const opts = groups.map(group => ({
-    value: group.id,
-    label: `${group.code} - ${group.name}`,
-  }));
-  return { options: filterOptions(opts, inputValue) };
+  const groups = await currencyRatesApi.getGroups(inputValue);
+  return {
+    options: groups.map(group => ({
+      value: group.id,
+      label: `${group.code} - ${group.name}`,
+    })),
+  };
 };
 
 interface CurrencyProfileFormProps {

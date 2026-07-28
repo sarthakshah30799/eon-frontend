@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useMemo } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFormContext, useWatch, type Resolver } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -8,11 +8,10 @@ import {
   FormFieldSelect,
   FormFieldTextarea,
 } from '@/components/forms';
-import { chequebookApi, counterProfileApi } from '@/api';
+import { chequebookApi, counterProfileApi, branchProfileApi } from '@/api';
 import { accountProfileApi } from '@/api/accountProfile/accountProfile.api';
 import { useAuth } from '@/lib/AuthContext';
 import toast from 'react-hot-toast';
-import { useListBranchProfiles } from '@/modules/branchProfile/hooks';
 import {
   bulkDispatchSchema,
 } from './bulkDispatchSchema';
@@ -52,8 +51,6 @@ const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => 
   const bookNoTo = useWatch({ name: 'bookNoTo' });
   const vouchersPerBook = useWatch({ name: 'vouchersPerBook' });
   const mvNoFrom = useWatch({ name: 'mvNoFrom' });
-  const { data: branches = [] } = useListBranchProfiles({ activeOnly: true });
-
   // Pre-fill form when reassigning a rejected book
   useEffect(() => {
     if (!reassignId) return;
@@ -139,33 +136,19 @@ const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => 
     return () => clearTimeout(timer);
   }, [mvNoFrom, mvNoTo, form]);
 
-  const branchOptions = useMemo(
-    () =>
-      branches.map(branch => ({
+  const loadBranches = useCallback(
+    async (inputValue: string) => {
+      const branches = await branchProfileApi.getBranchProfiles({ search: inputValue, activeOnly: true });
+      let options = branches.map(branch => ({
         value: branch.id,
         label: `${branch.code} - ${branch.name}`,
-      })),
-    [branches]
-  );
-
-  const visibleBranchOptions = useMemo(
-    () =>
-      canSelectBranch
-        ? branchOptions
-        : branchOptions.filter(option => option.value === activeBranchId),
-    [activeBranchId, branchOptions, canSelectBranch]
-  );
-
-  const loadBranches = useCallback(
-    async (inputValue: string) => ({
-      options: inputValue
-        ? visibleBranchOptions.filter(option =>
-            option.label.toLowerCase().includes(inputValue.toLowerCase())
-          )
-        : visibleBranchOptions,
-      hasMore: false,
-    }),
-    [visibleBranchOptions]
+      }));
+      if (!canSelectBranch) {
+        options = options.filter(option => option.value === activeBranchId);
+      }
+      return { options, hasMore: false };
+    },
+    [activeBranchId, canSelectBranch]
   );
 
   const loadBankAccounts = async (inputValue: string, page = 1) => {
@@ -204,12 +187,9 @@ const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => 
         return { options: [], hasMore: false };
       }
       try {
-        const managers = await chequebookApi.getBranchManagers(branchId);
-        const opts = managers.map(m => ({ value: m.id, label: m.name }));
+        const managers = await chequebookApi.getBranchManagers(branchId, inputValue);
         return {
-          options: inputValue
-            ? opts.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
-            : opts,
+          options: managers.map(m => ({ value: m.id, label: m.name })),
           hasMore: false,
         };
       } catch {
@@ -232,7 +212,7 @@ const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => 
         name="branchId"
         label="Branch"
         loadOptions={loadBranches}
-        defaultOptions={visibleBranchOptions}
+        defaultOptions={true}
         disabled={reassignId ? true : !canSelectBranch}
       />
       <FormFieldSelect

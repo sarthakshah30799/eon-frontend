@@ -154,9 +154,10 @@ export const chequebookApi = {
     return res.data || { valid: true };
   },
 
-  getAuthorizedUsers: async (branchId: string, role?: AuthorizedUserRole): Promise<Array<{ id: string; name: string }>> => {
+  getAuthorizedUsers: async (branchId: string, role?: AuthorizedUserRole, search?: string): Promise<Array<{ id: string; name: string }>> => {
     const params = new URLSearchParams({ branchId });
     if (role) params.set('role', role);
+    if (search?.trim()) params.set('search', search.trim());
     const res = await apiClient.get<Array<{ id: string; name: string }>>(
       `/chequebooks/users?${params.toString()}`
     );
@@ -164,9 +165,11 @@ export const chequebookApi = {
     return res.data || [];
   },
 
-  getBranchManagers: async (branchId: string): Promise<Array<{ id: string; name: string }>> => {
+  getBranchManagers: async (branchId: string, search?: string): Promise<Array<{ id: string; name: string }>> => {
+    const params = new URLSearchParams({ branchId });
+    if (search?.trim()) params.set('search', search.trim());
     const res = await apiClient.get<Array<{ id: string; name: string }>>(
-      `/chequebooks/branch-managers?branchId=${encodeURIComponent(branchId)}`
+      `/chequebooks/branch-managers?${params.toString()}`
     );
     if (res.error) throw new Error(res.error);
     return res.data || [];

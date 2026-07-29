@@ -216,15 +216,16 @@ export const getPurchaseTradeMode = (
   pageType: PurchasePageType | null
 ): TradeMode => {
   switch (pageType) {
-    case TransactionTypeProfileEnum.SALE_FFMC:
+    case TransactionTypeProfileEnum.PURCHASE_CORPORATE_INDIVIDUAL:
     case TransactionTypeProfileEnum.SALE_CORPORATE_INDIVIDUAL:
+      return TradeModeEnum.RETAIL;
+    case TransactionTypeProfileEnum.SALE_FFMC:
     case TransactionTypeProfileEnum.SALE_RMC:
     case TransactionTypeProfileEnum.SALE_FOREX:
     case TransactionTypeProfileEnum.SALE_FOREIGN:
     case TransactionTypeProfileEnum.SALE_MISC:
     case TransactionTypeProfileEnum.SALE_FRANCHISE:
     case TransactionTypeProfileEnum.PURCHASE_FFMC:
-    case TransactionTypeProfileEnum.PURCHASE_CORPORATE_INDIVIDUAL:
       return TradeModeEnum.BULK;
     default:
       return TradeModeEnum.BULK;

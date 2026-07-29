@@ -31,6 +31,7 @@ export const ReportPageTypeEnum = {
   SALE_PURCHASE: 'sale-purchase-report',
   PRODUCT_PROFIT: 'product-profit-report',
   SPECIAL: 'special-reports',
+  CURRENCY_BALANCE: 'currency-balance-report',
 } as const;
 
 export type ReportPageType =
@@ -40,6 +41,7 @@ export const REPORT_PAGE_DEFAULT_TYPE = ReportPageTypeEnum.SALE_PURCHASE;
 
 const REPORT_PAGE_SLUG_ALIASES: Partial<Record<string, ReportPageType>> = {
   'special-report': ReportPageTypeEnum.SPECIAL,
+  'currency-balance': ReportPageTypeEnum.CURRENCY_BALANCE,
 };
 
 export const getReportPageCanonicalSlug = (
@@ -57,6 +59,7 @@ const REPORT_PAGE_TITLE_BY_TYPE: Record<ReportPageType, string> = {
   [ReportPageTypeEnum.SALE_PURCHASE]: 'Sell & Purchase Reports',
   [ReportPageTypeEnum.PRODUCT_PROFIT]: 'Product Profit Reports',
   [ReportPageTypeEnum.SPECIAL]: 'Special Reports',
+  [ReportPageTypeEnum.CURRENCY_BALANCE]: 'Currency Balance',
 };
 
 export const getReportPageTypeFromSlug = (
@@ -217,6 +220,36 @@ export interface ISpecialReportResponse {
   columns: ISalePurchaseReportColumn[];
   rows: ISpecialReportRow[];
   template?: SpecialReportTemplate;
+}
+
+export interface ICurrencyBalanceReportColumn {
+  key: string;
+  label: string;
+}
+
+export interface ICurrencyBalanceReportRow {
+  date: string;
+  branch: string;
+  counter: string;
+  opening: string;
+  purchaseBulk: string;
+  purchaseRetail: string;
+  sellBulk: string;
+  sellRetail: string;
+  closing: string;
+}
+
+export interface ICurrencyBalanceReportResponse {
+  columns: ICurrencyBalanceReportColumn[];
+  rows: ICurrencyBalanceReportRow[];
+}
+
+export interface ICurrencyBalanceReportRequest {
+  startDate?: string;
+  endDate?: string;
+  branchIds?: string[];
+  counterIds?: string[];
+  currencyIds?: string[];
 }
 
 export interface IReportTemplateOption {

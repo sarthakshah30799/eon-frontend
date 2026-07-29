@@ -5,3 +5,5 @@ export * from './useProductProfitReport';
 export * from './useResolvedPartyProfileIds';
 export * from './useSpecialReportFilters';
 export * from './useSpecialReport';
+export * from './useCurrencyBalanceReportFilters';
+export * from './useCurrencyBalanceReport';

@@ -1,5 +1,6 @@
 import type { IBranchProfile } from '@/modules/branchProfile/types';
 import type { ICompanyProfile } from '@/modules/companyProfile/types';
+import { TransactionTypeEnum } from '@/modules/transactions';
 import type { IPurchaseFormValues } from '../types/purchaseTypes';
 import { PURCHASE_RATE_DECIMALS } from './purchaseUtils';
 const PURCHASE_QUANTITY_DECIMALS = 7;
@@ -178,13 +179,19 @@ export const buildPurchasePrintHtml = ({
   transaction: IPurchaseFormValues;
   sacCode: string;
 }) => {
+  const isPurchase = transaction.transactionType === TransactionTypeEnum.PURCHASE;
   const totalAmount = transaction.transactions.reduce((sum, row) => {
     const rowTotal = Number(row.finalAmount || row.total || 0);
     return sum + (Number.isFinite(rowTotal) ? rowTotal : 0);
   }, 0);
   const additionalCharges = transaction.additionalCharges.reduce((sum, row) => {
     const rowTotal = Number(row.totalAmount || row.amount || 0);
-    return sum + (Number.isFinite(rowTotal) ? rowTotal : 0);
+    const normalizedTotal = Number.isFinite(rowTotal) ? rowTotal : 0;
+    return sum + (
+      isPurchase
+        ? -Math.abs(normalizedTotal)
+        : Math.abs(normalizedTotal)
+    );
   }, 0);
   const payableAmount = totalAmount + additionalCharges;
   const amountInWords = numberToWords(payableAmount);
@@ -207,11 +214,17 @@ export const buildPurchasePrintHtml = ({
   const chargeRows = transaction.additionalCharges
     .map(
       (row, index) => `
-        <tr>
+      <tr>
           <td>${index + 1}</td>
           <td>${escapeHtml(row.accountName || formatReferenceValue(row.accountId))}</td>
           <td class="right">${escapeHtml(formatAmount(row.gstAmount))}</td>
-          <td class="right">${escapeHtml(formatSignedAmount(row.totalAmount || row.amount))}</td>
+          <td class="right">${escapeHtml(formatSignedAmount(
+            String(
+              isPurchase
+                ? -Math.abs(Number(row.totalAmount || row.amount || 0))
+                : Number(row.totalAmount || row.amount || 0),
+            ),
+          ))}</td>
         </tr>`
     )
     .join('');

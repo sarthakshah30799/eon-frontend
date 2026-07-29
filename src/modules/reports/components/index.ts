@@ -5,3 +5,5 @@ export { default as ReportSortByFilter } from './ReportSortByFilter';
 export { default as ScrollablePartyProfileFilter } from './ScrollablePartyProfileFilter';
 export { default as SalePurchaseReportTable } from './SalePurchaseReportTable';
 export { default as SpecialReportFiltersSection } from './SpecialReportFiltersSection';
+export { default as CurrencyBalanceReportFiltersSection } from './CurrencyBalanceReportFiltersSection';
+export { default as CurrencyBalanceReportTable } from './CurrencyBalanceReportTable';

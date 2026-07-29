@@ -253,18 +253,16 @@ const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => 
     );
     const loadAssignedTo = useCallback(
         async (inputValue: string) => {
-            const opts = branchManagers.map(manager => ({
-                value: manager.id,
-                label: manager.name,
-            }));
+            const opts = await manualBillBookApi.getBranchManagers(branchId, inputValue || undefined);
             return {
-                options: inputValue
-                    ? opts.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
-                    : opts,
+                options: opts.map(manager => ({
+                    value: manager.id,
+                    label: manager.name,
+                })),
                 hasMore: false,
             };
         },
-        [branchManagers]
+        [branchId]
     );
 
     const assignedToOptions = useMemo(

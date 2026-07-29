@@ -363,7 +363,27 @@ export const createPurchaseFormSchema = (
       .of(purchaseTransactionSchema)
       .min(1, 'Add at least one transaction')
       .required(),
-    additionalCharges: yup.array().of(additionalChargeSchema).default([]),
+    additionalCharges: yup.array().of(additionalChargeSchema).default([])
+      .test(
+        'charge-amount-exceeds-total',
+        'Total additional charges cannot exceed the total transaction amount',
+        function (charges) {
+          const transactions = this.parent.transactions ?? [];
+
+          const totalTransactionAmount = transactions.reduce(
+            (sum: number, t: Record<string, unknown>) =>
+              sum + Number(t.finalAmount ?? t.total ?? 0),
+            0
+          );
+
+          const totalAdditionalCharges = (charges ?? []).reduce(
+            (sum, c) => sum + Number(c.amount ?? 0),
+            0
+          );
+
+          return totalAdditionalCharges <= totalTransactionAmount;
+        }
+      ),
     paymentDetails: yup
       .array()
       .of(createPaymentDetailSchema(transactionType))

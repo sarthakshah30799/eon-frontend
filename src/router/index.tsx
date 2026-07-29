@@ -205,8 +205,8 @@ const PurchaseEditPage = lazy(
   () => import('../pages/purchase/[slug]/edit/[id]')
 );
 const AD1ListPage = lazy(() => import('../modules/purchase/views/AD1ListView').then(m => ({ default: m.AD1ListView })));
-const AD1CreatePage = lazy(() => import('../modules/purchase/views/AD1CreateView').then(m => ({ default: m.AD1CreateView })));
-const AD1EditPage = lazy(() => import('../modules/purchase/views/AD1EditView').then(m => ({ default: m.AD1EditView })));
+const AD1CreatePage = lazy(() => import('../pages/ad1/create'));
+const AD1EditPage = lazy(() => import('../pages/ad1/edit/[id]'));
 
 const MasterPagesPage = lazy(
   () => import('../pages/master/system-setups/master-pages/MasterPagesPage')

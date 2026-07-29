@@ -41,6 +41,7 @@ interface TransactionPaymentDetailsFieldArrayProps {
   selectablePagesUserId?: string;
   cashControlAccountId?: string;
   allowCashPayment?: boolean;
+  allowedPaymentMethods?: Array<'CASH' | 'CHEQUE'>;
   disabled?: boolean;
 }
 
@@ -73,6 +74,7 @@ const PaymentDetailRow = ({
   selectablePagesUserId,
   cashControlAccountId,
   allowCashPayment = true,
+  canUseCheque = true,
   disabled = false,
   onRemove,
   canRemove,
@@ -86,6 +88,7 @@ const PaymentDetailRow = ({
   selectablePagesUserId?: string;
   cashControlAccountId?: string;
   allowCashPayment?: boolean;
+  canUseCheque?: boolean;
   disabled?: boolean;
   onRemove: (index: number) => void;
   canRemove: boolean;
@@ -238,7 +241,7 @@ const PaymentDetailRow = ({
     return () => {
       isActive = false;
     };
-  }, [accountId, arrayName, cashControlAccountId, form, index, paymentMethod]);
+  }, [accountId, arrayName, canUseCheque, cashControlAccountId, form, index, paymentMethod]);
 
   useEffect(() => {
     if (!paymentMethod) {
@@ -247,6 +250,15 @@ const PaymentDetailRow = ({
 
     if (!canUseCash && paymentMethod === TransactionPaymentMethodEnum.CASH) {
       form.setValue(`${arrayName}.${index}.paymentMethod`, TransactionPaymentMethodEnum.CHEQUE, {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: true,
+      });
+      return;
+    }
+
+    if (!canUseCheque && paymentMethod === TransactionPaymentMethodEnum.CHEQUE) {
+      form.setValue(`${arrayName}.${index}.paymentMethod`, TransactionPaymentMethodEnum.CASH, {
         shouldDirty: true,
         shouldTouch: true,
         shouldValidate: true,
@@ -357,6 +369,7 @@ const PaymentDetailRow = ({
     cashAccountLabel,
     cashControlAccountId,
     canUseCash,
+    canUseCheque,
     form,
     index,
     paymentMethod,
@@ -695,10 +708,14 @@ export const TransactionPaymentDetailsFieldArray = ({
   selectablePagesUserId,
   cashControlAccountId,
   allowCashPayment = true,
+  allowedPaymentMethods,
   disabled = false,
 }: TransactionPaymentDetailsFieldArrayProps) => {
   const form = useFormContext();
   const canUseCash = allowCashPayment !== false;
+  const canUseCheque =
+    !allowedPaymentMethods?.length ||
+    allowedPaymentMethods.includes(TransactionPaymentMethodEnum.CHEQUE);
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name,
@@ -899,9 +916,11 @@ export const TransactionPaymentDetailsFieldArray = ({
                 ? 'default'
                 : 'outline'
             }
-            disabled={disabled}
+            disabled={disabled || !canUseCheque}
             onClick={() =>
-              applyPaymentMethod(TransactionPaymentMethodEnum.CHEQUE)
+              canUseCheque
+                ? applyPaymentMethod(TransactionPaymentMethodEnum.CHEQUE)
+                : undefined
             }
           >
             Cheque
@@ -935,6 +954,7 @@ export const TransactionPaymentDetailsFieldArray = ({
                 selectablePagesUserId={selectablePagesUserId}
                 cashControlAccountId={cashControlAccountId}
                 allowCashPayment={allowCashPayment}
+                canUseCheque={canUseCheque}
                 disabled={disabled}
                 onRemove={remove}
                 canRemove={fields.length > 0}

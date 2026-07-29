@@ -182,6 +182,7 @@ export const PassengerAmlVerificationModal = ({
   const [verifiedPanSnapshot, setVerifiedPanSnapshot] = useState<Record<string, unknown> | null>(null);
   const [verifiedPassportSnapshot, setVerifiedPassportSnapshot] = useState<Record<string, unknown> | null>(null);
   const hasInitializedRef = useRef(false);
+  const hasAutoVerifiedRef = useRef(false);
   const verificationRunIdRef = useRef(0);
   const passportAutoFillInProgressRef = useRef(false);
   const { verifyPan, verifyPassport } = usePassengerAmlVerification();
@@ -481,6 +482,7 @@ export const PassengerAmlVerificationModal = ({
 
   useEffect(() => {
     if (!open) {
+      hasAutoVerifiedRef.current = false;
       return;
     }
 
@@ -496,6 +498,7 @@ export const PassengerAmlVerificationModal = ({
       hasInitializedRef.current = true;
       initializeValues();
       clearVerificationState();
+      hasAutoVerifiedRef.current = false;
     }
   }, [
     clearVerificationState,
@@ -509,6 +512,27 @@ export const PassengerAmlVerificationModal = ({
     passengerInfoCaptured,
     verifyIdentityOnBlur,
   ]);
+
+  useEffect(() => {
+    if (!open || passengerInfoCaptured || hasAutoVerifiedRef.current) {
+      return;
+    }
+
+    const currentValues = form.getValues() as IPurchaseFormValues;
+    const hasRequiredValues =
+      verificationMode === 'pan'
+        ? hasCompletePanValues(currentValues)
+        : hasCompletePassportValues(currentValues);
+
+    if (!hasRequiredValues) {
+      return;
+    }
+
+    hasAutoVerifiedRef.current = true;
+    queueMicrotask(() => {
+      void verifyIdentity(verificationMode, false, false, false);
+    });
+  }, [form, open, passengerInfoCaptured, verificationMode, verifyIdentity]);
 
   const currentStep: PassengerModalStep = passengerInfoCaptured
     ? 'details'
@@ -769,7 +793,7 @@ export const PassengerAmlVerificationModal = ({
       ) : (
       <PassengerAmlDetailsStepForm
         entityType={(watchedEntityType || entityType) as PassengerEntityType}
-        showPanRelation
+        showPanRelation={verificationMode === 'pan'}
         onPanFieldBlur={() => {
           void verifyIdentityOnBlur('pan');
         }}

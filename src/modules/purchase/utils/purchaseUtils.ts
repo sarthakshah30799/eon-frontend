@@ -161,6 +161,10 @@ export const createEmptyPurchaseFormValues = (
   itrFiled: false,
   tcsDeclarationAccepted: false,
   isProprietorship: false,
+  cdfNo: '',
+  cdfIssuingAuthority: '',
+  cdfApprovedUsd: '',
+  cdfArrivalDate: '',
   panHolderRelationType: '',
   paidByPanNumber: '',
   paidByPanHolderName: '',
@@ -269,6 +273,10 @@ export const mapPurchaseFormValuesToSubmitPayload = (
       itrFiled: values.itrFiled,
       tcsDeclarationAccepted: values.tcsDeclarationAccepted,
       isProprietorship: values.isProprietorship,
+      cdfNo: values.cdfNo || null,
+      cdfIssuingAuthority: values.cdfIssuingAuthority || null,
+      cdfApprovedUsd: values.cdfApprovedUsd || null,
+      cdfArrivalDate: values.cdfArrivalDate || null,
       passenger: values.passengerInfoCaptured
         ? {
             entityType: values.entityType || '',
@@ -397,6 +405,7 @@ export const mapPurchaseTransactionToFormValues = (
   transaction: ITransactionEntity,
   purchasePageType: PurchasePageType | null
 ): IPurchaseFormValues => {
+  const transactionSnapshot = transaction as unknown as Record<string, unknown>;
   const passengerSnapshot = transaction.passengerSnapshot as
     | Record<string, unknown>
     | null
@@ -527,6 +536,11 @@ export const mapPurchaseTransactionToFormValues = (
   itrFiled: Boolean(transaction.itrFiled),
   tcsDeclarationAccepted: Boolean(transaction.tcsDeclarationAccepted),
   isProprietorship: Boolean(transaction.isProprietorship),
+  cdfNo: (transactionSnapshot.cdfNo as string | undefined) ?? '',
+  cdfIssuingAuthority:
+    (transactionSnapshot.cdfIssuingAuthority as string | undefined) ?? '',
+  cdfApprovedUsd: (transactionSnapshot.cdfApprovedUsd as string | undefined) ?? '',
+  cdfArrivalDate: (transactionSnapshot.cdfArrivalDate as string | undefined) ?? '',
   panHolderRelationType:
     (passengerSnapshot?.panHolderRelationType as string | undefined) ??
     '',
@@ -861,13 +875,16 @@ export const calculateTransactionTotal = (
 
   const qty = Number(quantity);
   const parsedRate = Number(rate);
+  const parsedPer = Number(per || 1);
   if (!Number.isFinite(qty) || !Number.isFinite(parsedRate)) {
     return '';
   }
 
-  void per;
+  if (!Number.isFinite(parsedPer) || parsedPer <= 0) {
+    return '';
+  }
 
-  return (qty * parsedRate).toFixed(PURCHASE_MONEY_DECIMALS);
+  return (qty * parsedRate / parsedPer).toFixed(PURCHASE_MONEY_DECIMALS);
 };
 
 export const calculateRoundedTransactionAmount = (value?: string | null) => {

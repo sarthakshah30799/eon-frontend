@@ -389,7 +389,12 @@ export const createPassengerDetailsSchema = () =>
       then: schema => schema.required('PAN holder DOB is required'),
       otherwise: schema => schema.default(''),
     }),
-    panHolderRelationType: yup.string().trim().required('PAN holder relation is required'),
+    panHolderRelationType: yup.string().trim().when(['entityType', 'nationalityType'], {
+      is: (entityType: string, nationalityType: string) =>
+        isPassengerPanValidationRequired({ entityType, nationalityType }),
+      then: schema => schema.required('PAN holder relation is required'),
+      otherwise: schema => schema.default(''),
+    }),
     paidByPanNumber: optionalText(),
     paidByPanHolderName: optionalText(),
     paidByPanDob: yup.string().trim().default(''),

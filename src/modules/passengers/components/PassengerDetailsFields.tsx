@@ -94,6 +94,8 @@ export const PassengerDetailsFields = ({
 
     return code === 'IN' || name === 'india';
   }, [selectedCountryProfile?.code, selectedCountryProfile?.name]);
+  const showPanRelationField =
+    showPanRelation && (isCorporateEntity || isIndianNationality);
   const selfRelationOption = useMemo(
     () =>
       panRelationOptions.find(option => {
@@ -121,10 +123,6 @@ export const PassengerDetailsFields = ({
       return;
     }
 
-    if (panHolderRelationType) {
-      return;
-    }
-
     const companyRelationOption =
       panRelationOptions.find(option => {
         const normalizedValue = String(option.value ?? '').trim().toLowerCase();
@@ -134,6 +132,10 @@ export const PassengerDetailsFields = ({
       }) ?? null;
 
     if (!companyRelationOption) {
+      return;
+    }
+
+    if (String(panHolderRelationType ?? '') === String(companyRelationOption.value ?? '')) {
       return;
     }
 
@@ -336,13 +338,14 @@ export const PassengerDetailsFields = ({
               placeholder="Select state"
               countryId={countryId || undefined}
             />
-            {showPanRelation ? (
+            {showPanRelationField ? (
               <FormFieldCategoryOption
                 name="panHolderRelationType"
                 label="PAN Holder Relation"
                 placeholder="Select relation"
                 code={CategoryOptionCodeEnum.PassengerPanHolderRelation}
                 useValueAsId
+                disabled={isCorporateEntity}
               />
             ) : null}
           </div>
@@ -382,6 +385,7 @@ export const PassengerDetailsFields = ({
               name="paidByPanDob"
               label="Paid By PAN Holder DOB"
               placeholder="Select DOB"
+              onBlur={onPanFieldBlur}
             />
             <FormFieldInput
               name="email"

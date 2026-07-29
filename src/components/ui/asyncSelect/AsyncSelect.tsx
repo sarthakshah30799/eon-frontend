@@ -95,6 +95,7 @@ const AsyncSelectComponent = React.forwardRef<
       variant,
       isCreatable = false,
       isSearchable = true,
+      isClearable = true,
       onInputChange: externalOnInputChange,
       ...props
     },
@@ -302,6 +303,7 @@ const AsyncSelectComponent = React.forwardRef<
                 inputValue ? 'No options found' : 'Start typing to search...'
               }
               isDisabled={props.disabled}
+              isClearable={isClearable}
               menuPortalTarget={document.body}
               menuPosition="fixed"
               menuPlacement="auto"
@@ -312,6 +314,7 @@ const AsyncSelectComponent = React.forwardRef<
               ref={ref}
               classNamePrefix="react-select"
               isSearchable={isSearchable}
+              isClearable={isClearable}
               inputValue={inputValue}
               cacheOptions={!pagination}
               defaultOptions={defaultOptions ?? true}

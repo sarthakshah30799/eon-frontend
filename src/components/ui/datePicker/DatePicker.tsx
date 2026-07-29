@@ -29,16 +29,20 @@ const DatePickerInput = forwardRef<
   HTMLInputElement,
   React.InputHTMLAttributes<HTMLInputElement> & {
     placeholder?: string;
-    inputValue?: string;
-    onInputValueChange?: (value: string) => void;
     onParsedDateChange?: (date: Date | null) => void;
+    onDateBlur?: () => void;
   }
->((({ className = '', value, placeholder, inputValue, onInputValueChange, onParsedDateChange, ...props }, ref) => {
-  const displayValue = inputValue ?? String(value ?? '');
+>((({ className = '', value, placeholder, onParsedDateChange, ...props }, ref) => {
+  const [displayValue, setDisplayValue] = useState(() => String(value ?? ''));
+
+  const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
+    props.onBlur?.(event);
+    props.onDateBlur?.();
+  };
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const nextValue = maskDateInput(event.target.value);
-    onInputValueChange?.(nextValue);
+    setDisplayValue(nextValue);
 
     if (!nextValue) {
       onParsedDateChange?.(null);
@@ -62,6 +66,7 @@ const DatePickerInput = forwardRef<
         placeholder={placeholder}
         {...props}
         onChange={handleChange}
+        onBlur={handleBlur}
       />
       <span className="absolute right-3 flex items-center pointer-events-none text-slate-400">
         <CalendarIcon className="h-4 w-4" />
@@ -89,12 +94,10 @@ export const DatePicker = ({
   const generatedId = useId();
   const inputId = id ?? generatedId;
   const selectedKey = selected ? formatDateDisplayInput(selected) : 'empty';
-  const [inputValue, setInputValue] = useState(
-    () => (selected ? formatDateDisplayInput(selected) : '')
-  );
+
   const handleDateChange = (date: Date | null) => {
-    setInputValue(date ? formatDateDisplayInput(date) : '');
     onChange?.(date);
+    onBlur?.();
   };
 
   return (
@@ -114,10 +117,9 @@ export const DatePicker = ({
         customInput={
           <DatePickerInput
             key={selectedKey}
-            inputValue={inputValue}
-            onInputValueChange={setInputValue}
             onParsedDateChange={handleDateChange}
             onBlur={onBlur}
+            onDateBlur={onBlur}
           />
         }
         showYearDropdown

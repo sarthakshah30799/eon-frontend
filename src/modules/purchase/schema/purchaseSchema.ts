@@ -243,6 +243,10 @@ export const createPurchaseFormSchema = (
     itrFiled: yup.boolean().default(false),
     tcsDeclarationAccepted: yup.boolean().default(false),
     isProprietorship: yup.boolean().default(false),
+    cdfNo: yup.string().trim().default(''),
+    cdfIssuingAuthority: yup.string().trim().default(''),
+    cdfApprovedUsd: decimalStringSchema.default(''),
+    cdfArrivalDate: yup.string().trim().default(''),
     panNumber: yup
       .string()
       .trim()
@@ -273,7 +277,13 @@ export const createPurchaseFormSchema = (
         then: schema => schema.required('PAN holder DOB is required'),
         otherwise: schema => schema.default(''),
       }),
-    panHolderRelationType: yup.string().trim().required('PAN holder relation is required'),
+    panHolderRelationType: yup.string().trim().when(['entityType', 'nationalityType'], {
+      is: (entityType: string, nationalityType: string) =>
+        entityType === PassengerEntityTypeEnum.CORPORATE ||
+        nationalityType === PassengerNationalityTypeEnum.INDIAN,
+      then: schema => schema.required('PAN holder relation is required'),
+      otherwise: schema => schema.default(''),
+    }),
     paidByPanNumber: yup.string().trim().default(''),
     paidByPanHolderName: yup.string().trim().default(''),
     paidByPanDob: yup.string().trim().default(''),

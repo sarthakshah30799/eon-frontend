@@ -58,6 +58,7 @@ export interface IProductProfile {
   bulkBuyingSeriesApplicable: boolean;
   availableInBulkSelling: boolean;
   bulkSellingSeriesApplicable: boolean;
+  availableInOtherTransaction: boolean;
   allowProductCancellation: boolean;
   maintainBlankStockOfProduct: boolean;
   denominationApplicable: boolean;

@@ -34,7 +34,6 @@ import { useAuth } from '@/lib/AuthContext';
 import { getTransactionDatePolicy } from '@/modules/transactionPolicies/utils/transactionDatePolicy';
 import {
   getPurchaseTransactionAccountFilter,
-  getPurchaseTransactionProductFilter,
 } from '../utils/purchaseUtils';
 import { PurchaseWorkplaceFields } from '../components/PurchaseWorkplaceFields';
 export { TransactionProfileType } from './ad1ProfileType';
@@ -323,7 +322,7 @@ const AD1FormBody = ({
 
   const loadProducts = useCallback(async (search: string): Promise<AsyncSelectResponse> => {
     const products = await productProfileApi.getProductProfiles(
-      getPurchaseTransactionProductFilter(transactionType)
+      { otherTransaction: true }
     );
     const filtered = search
       ? products.filter(p =>

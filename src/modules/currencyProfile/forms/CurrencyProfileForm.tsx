@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import {
@@ -19,8 +19,8 @@ import {
 import { currencyProfileSchema } from '../schema';
 import type { ICreateCurrencyProfile } from '../types';
 import { useNavigate } from 'react-router-dom';
-import { currencyProfileApi } from '@/api/currencyProfile';
-import { currencyRatesApi } from '@/api/currencyRates';
+import { useValidateCurrencyCode } from '../hooks';
+import { useLoadPricingGroupOptions } from '@/modules/currencyRates/hooks';
 import { normalizeCodeValue } from '@/utils';
 
 const filterOptions = (opts: AsyncSelectOption[], inputValue: string) =>
@@ -40,15 +40,6 @@ const loadGroupOptions = async (inputValue: string): Promise<AsyncSelectResponse
 const loadProductAllowedOptions = async (inputValue: string): Promise<AsyncSelectResponse> => ({
   options: filterOptions(CURRENCY_PRODUCT_ALLOWED_OPTIONS, inputValue),
 });
-
-const loadPricingGroupOptions = async (inputValue: string): Promise<AsyncSelectResponse> => {
-  const groups = await currencyRatesApi.getGroups();
-  const opts = groups.map(group => ({
-    value: group.id,
-    label: `${group.code} - ${group.name}`,
-  }));
-  return { options: filterOptions(opts, inputValue) };
-};
 
 interface CurrencyProfileFormProps {
   defaultValues: ICreateCurrencyProfile;
@@ -76,24 +67,8 @@ export const CurrencyProfileForm = ({
 }: CurrencyProfileFormProps) => {
   const navigate = useNavigate();
   const isDisabled = isSubmitting || readOnly;
-  const validateCurrencyCode = useCallback(
-    async (value: string) => {
-      const normalizedCode = normalizeCodeValue(value);
-      if (!normalizedCode) {
-        return false;
-      }
-
-      const currencies = (await currencyProfileApi.getCurrencyProfiles()).filter(
-        currency => currency.active !== false
-      );
-      return currencies.some(
-        currency =>
-          normalizeCodeValue(currency.currencyCode) === normalizedCode &&
-          currency.id !== currentId
-      );
-    },
-    [currentId]
-  );
+  const validateCurrencyCode = useValidateCurrencyCode(currentId);
+  const loadPricingGroupOptions = useLoadPricingGroupOptions();
   const onCancel = () => {
     navigate('/currency-profile');
   };

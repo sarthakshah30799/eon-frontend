@@ -12,30 +12,25 @@ import {
     FormFieldCategoryOption,
 } from '@/components/forms';
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
-import { counterProfileApi, manualBillBookApi } from '@/api';
 import { useAuth } from '@/lib/AuthContext';
 import type { Resolver } from 'react-hook-form';
 import {
     useCreateManualBillBook,
-    useListManualBillBookManagers,
+    useGetManualBillBook,
+    useGetNextManualBillBookNumber,
+    useLoadManualBillBookBranchManagers,
+    useReassignManualBillBookDispatch,
+    useLoadManualBillBookBranchOptions,
+    useLoadManualBillBookCounterProfiles,
+    useValidateManualBillBookBookRange,
+    useValidateManualBillBookPageRange,
 } from '../hooks';
-import { useListBranchProfiles } from '@/modules/branchProfile/hooks';
 import type { IBulkDispatchFormValues } from '../types';
-import { debouncePromise } from '@/hooks';
 
-const debouncedValidateBookRange = debouncePromise(
-    manualBillBookApi.validateBookRange,
-    500,
-    { valid: true }
-);
-
-const debouncedValidatePageRange = debouncePromise(
-    manualBillBookApi.validatePageRange,
-    500,
-    { valid: true }
-);
-
-const bulkDispatchSchema = yup.object().shape({
+const getBulkDispatchSchema = (
+    validateBookRange: (bookNoFrom: number, bookNoTo: number) => Promise<{ valid: boolean; error?: string }>,
+    validatePageRange: (mvNoFrom: number, mvNoTo: number) => Promise<{ valid: boolean; error?: string }>
+) => yup.object().shape({
     dispatchDate: yup.string().required('Date is required'),
     branchId: yup.string().required('Branch is required'),
     transactionType: yup.string().required('Transaction Type is required'),
@@ -49,10 +44,7 @@ const bulkDispatchSchema = yup.object().shape({
             const { bookNoTo } = this.parent;
             if (value === undefined || value === null || isNaN(value) || bookNoTo === undefined || bookNoTo === null || isNaN(bookNoTo)) return true;
             try {
-                const res = await debouncedValidateBookRange({
-                    bookNoFrom: value,
-                    bookNoTo,
-                });
+                const res = await validateBookRange(value, bookNoTo);
                 if (!res.valid) {
                     throw this.createError({
                         path: 'bookNoFrom',
@@ -91,10 +83,7 @@ const bulkDispatchSchema = yup.object().shape({
             const { mvNoTo } = this.parent;
             if (value === undefined || value === null || isNaN(value) || !mvNoTo || isNaN(parseInt(mvNoTo, 10))) return true;
             try {
-                const res = await debouncedValidatePageRange({
-                    mvNoFrom: value,
-                    mvNoTo: parseInt(mvNoTo, 10),
-                });
+                const res = await validatePageRange(value, parseInt(mvNoTo, 10));
                 if (!res.valid) {
                     throw this.createError({
                         path: 'mvNoFrom',
@@ -128,33 +117,33 @@ const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => 
     const { user, activeBranchId } = useAuth();
     const canSelectBranch = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
     const branchId = useWatch({ name: 'branchId', control: form.control });
-    const { data: branches = [] } = useListBranchProfiles({ activeOnly: true });
+
+    const { data: book } = useGetManualBillBook(reassignId);
+    const getNextNumber = useGetNextManualBillBookNumber();
+    const loadBranchesRaw = useLoadManualBillBookBranchOptions();
+    const loadAssignedToRaw = useLoadManualBillBookBranchManagers();
 
     // Pre-fill form with rejected book data in reassign mode
     useEffect(() => {
-        if (!reassignId) return;
-        manualBillBookApi.findById(reassignId)
-            .then(book => {
-                const assignedToId = book.assignedTo && typeof book.assignedTo === 'object'
-                    ? book.assignedTo.id
-                    : book.assignedTo as string;
-                form.reset({
-                    dispatchDate: book.dispatchDate,
-                    no: book.no,
-                    branchId: book.branchId || activeBranchId || '',
-                    transactionType: book.transactionType,
-                    bookNoFrom: String(book.bookNoFrom),
-                    bookNoTo: String(book.bookNoTo),
-                    vouchersPerBook: book.vouchersPerBook,
-                    mvNoFrom: String(book.mvNoFrom),
-                    mvNoTo: String(book.mvNoTo),
-                    assignedTo: assignedToId,
-                    remarks: book.remarks || '',
-                });
-            })
-            .catch(console.error);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [reassignId, activeBranchId]);
+        if (!book) return;
+        const assignedToId = book.assignedTo && typeof book.assignedTo === 'object'
+            ? book.assignedTo.id
+            : book.assignedTo as string;
+        form.reset({
+            dispatchDate: book.dispatchDate,
+            no: book.no,
+            branchId: book.branchId || activeBranchId || '',
+            transactionType: book.transactionType,
+            bookNoFrom: String(book.bookNoFrom),
+            bookNoTo: String(book.bookNoTo),
+            vouchersPerBook: book.vouchersPerBook,
+            mvNoFrom: String(book.mvNoFrom),
+            mvNoTo: String(book.mvNoTo),
+            assignedTo: assignedToId,
+            remarks: book.remarks || '',
+        });
+    }, [book, activeBranchId, form]);
+
     const dispatchDate = useWatch({
         name: 'dispatchDate',
         control: form.control,
@@ -171,7 +160,7 @@ const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => 
         const fetchNextNumber = async () => {
             if (branchId && dispatchDate) {
                 try {
-                    const res = await manualBillBookApi.getNextNumber(
+                    const res = await getNextNumber(
                         branchId,
                         dispatchDate
                     );
@@ -185,7 +174,7 @@ const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => 
             }
         };
         fetchNextNumber();
-    }, [branchId, dispatchDate, form]);
+    }, [branchId, dispatchDate, form, getNextNumber]);
 
     useEffect(() => {
         const fromBook = parseInt(String(bookNoFrom), 10);
@@ -221,56 +210,26 @@ const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => 
         return () => clearTimeout(timer);
     }, [bookNoFrom, bookNoTo, form]);
 
-    const { data: branchManagers = [] } = useListManualBillBookManagers(branchId);
-
-    const branchOptions = useMemo(
-        () =>
-            branches.map(branch => ({
-                value: branch.id,
-                label: `${branch.code} - ${branch.name}`,
-            })),
-        [branches]
-    );
-
-    const visibleBranchOptions = useMemo(
-        () =>
-            canSelectBranch
-                ? branchOptions
-                : branchOptions.filter(option => option.value === activeBranchId),
-        [activeBranchId, branchOptions, canSelectBranch]
-    );
-
     const loadBranches = useCallback(
-        async (inputValue: string) => ({
-            options: inputValue
-                ? visibleBranchOptions.filter(option =>
-                    option.label.toLowerCase().includes(inputValue.toLowerCase())
-                )
-                : visibleBranchOptions,
-            hasMore: false,
-        }),
-        [visibleBranchOptions]
+        async (inputValue: string) => {
+            const res = await loadBranchesRaw(inputValue);
+            let options = res.options;
+            if (!canSelectBranch) {
+                options = options.filter(option => option.value === activeBranchId);
+            }
+            return { options, hasMore: false };
+        },
+        [activeBranchId, canSelectBranch, loadBranchesRaw]
     );
+
     const loadAssignedTo = useCallback(
         async (inputValue: string) => {
-            const opts = await manualBillBookApi.getBranchManagers(branchId, inputValue || undefined);
-            return {
-                options: opts.map(manager => ({
-                    value: manager.id,
-                    label: manager.name,
-                })),
-                hasMore: false,
-            };
+            if (!branchId) {
+                return { options: [], hasMore: false };
+            }
+            return await loadAssignedToRaw(branchId, inputValue);
         },
-        [branchId]
-    );
-
-    const assignedToOptions = useMemo(
-        () => branchManagers.map(manager => ({
-            value: manager.id,
-            label: manager.name,
-        })),
-        [branchManagers]
+        [branchId, loadAssignedToRaw]
     );
 
     return (
@@ -286,7 +245,7 @@ const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => 
                 name="branchId"
                 label="Branch"
                 loadOptions={loadBranches}
-                defaultOptions={visibleBranchOptions}
+                defaultOptions={true}
                 disabled={reassignId ? true : !canSelectBranch}
             />
             <FormFieldCategoryOption
@@ -313,7 +272,6 @@ const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => 
                     name="assignedTo"
                     label="Assigned To"
                     loadOptions={loadAssignedTo}
-                    defaultOptions={assignedToOptions}
                 />
             )}
             <FormFieldTextarea name="remarks" label="Remarks" rows={3} />
@@ -326,6 +284,16 @@ export const BulkDispatchForm = ({ onSuccess, reassignId }: BulkDispatchFormProp
     const { user, activeBranchId, activeCounterId, setWorkplace } = useAuth();
     const canSelectBranch = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
     const { submitManualBillBook } = useCreateManualBillBook();
+    const { mutateAsync: reassignDispatch } = useReassignManualBillBookDispatch();
+    const loadCounterProfiles = useLoadManualBillBookCounterProfiles();
+    
+    const validateBookRange = useValidateManualBillBookBookRange();
+    const validatePageRange = useValidateManualBillBookPageRange();
+
+    const schema = useMemo(() => {
+        return getBulkDispatchSchema(validateBookRange, validatePageRange);
+    }, [validateBookRange, validatePageRange]);
+
     const isReassign = !!reassignId;
 
     const onCancel = () => {
@@ -334,25 +302,25 @@ export const BulkDispatchForm = ({ onSuccess, reassignId }: BulkDispatchFormProp
 
     const handleSubmit = async (values: IBulkDispatchFormValues) => {
         if (isReassign && reassignId) {
-            await manualBillBookApi.reassignDispatch(reassignId, {
-                assignedTo: values.assignedTo,
-                remarks: values.remarks || undefined,
-                dispatchDate: values.dispatchDate,
-                transactionType: values.transactionType,
-                bookNoFrom: Number(values.bookNoFrom),
-                bookNoTo: Number(values.bookNoTo),
-                vouchersPerBook: Number(values.vouchersPerBook),
-                mvNoFrom: Number(values.mvNoFrom),
-                mvNoTo: values.mvNoTo ? Number(values.mvNoTo) : undefined,
+            await reassignDispatch({
+                id: reassignId,
+                data: {
+                    assignedTo: values.assignedTo,
+                    remarks: values.remarks || undefined,
+                    dispatchDate: values.dispatchDate,
+                    transactionType: values.transactionType,
+                    bookNoFrom: Number(values.bookNoFrom),
+                    bookNoTo: Number(values.bookNoTo),
+                    vouchersPerBook: Number(values.vouchersPerBook),
+                    mvNoFrom: Number(values.mvNoFrom),
+                    mvNoTo: values.mvNoTo ? Number(values.mvNoTo) : undefined,
+                }
             });
             toast.success('Dispatch reassigned and reset to Pending.');
             onSuccess();
         } else {
             if (canSelectBranch) {
-                const counters = await counterProfileApi.getCounterProfiles({
-                    activeOnly: true,
-                    branchId: values.branchId,
-                });
+                const counters = await loadCounterProfiles(values.branchId);
                 const selectedCounterId =
                     counters.find(counter => counter.isActive !== false)?.id ||
                     activeCounterId ||
@@ -389,7 +357,7 @@ export const BulkDispatchForm = ({ onSuccess, reassignId }: BulkDispatchFormProp
             id="bulk-dispatch-form"
             onSubmit={handleSubmit}
             resolver={
-                yupResolver(bulkDispatchSchema) as Resolver<IBulkDispatchFormValues>
+                yupResolver(schema) as Resolver<IBulkDispatchFormValues>
             }
             defaultValues={defaultValues}
             mode="all"

@@ -176,17 +176,18 @@ export const manualBillBookApi = {
     return res.data || { valid: true };
   },
 
-  getAuthorizedUsers: async (): Promise<Array<{ id: string; name: string }>> => {
+  getAuthorizedUsers: async (search?: string): Promise<Array<{ id: string; name: string }>> => {
+    const params = search?.trim() ? `?search=${encodeURIComponent(search.trim())}` : '';
     const res = await apiClient.get<Array<{ id: string; name: string }>>(
-      '/manual-bill-books/users'
+      `/manual-bill-books/users${params}`
     );
     if (res.error) throw new Error(res.error);
     return res.data || [];
   },
 
   getBranchManagers: async (branchId: string, search?: string): Promise<Array<{ id: string; name: string }>> => {
-    const params = new URLSearchParams({ branchId: encodeURIComponent(branchId) });
-    if (search) params.append('search', search);
+    const params = new URLSearchParams({ branchId });
+    if (search?.trim()) params.set('search', search.trim());
     const res = await apiClient.get<Array<{ id: string; name: string }>>(
       `/manual-bill-books/branch-managers?${params.toString()}`
     );

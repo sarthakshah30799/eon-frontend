@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import type { SubmitErrorHandler, Resolver } from 'react-hook-form';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -15,10 +15,10 @@ import { COUNTRY_PROFILE_TEXTS, riskCategoryOptions } from '../constants';
 import type { ICreateCountryProfile } from '../types';
 import { useNavigate } from 'react-router-dom';
 import { CountryGroupModal } from '../components';
-import { countryProfileApi } from '@/api/countryProfile';
+import { useValidateCountryCode } from '../hooks';
+import { useLoadCountryGroupOptions } from '@/modules/countryGroup/hooks';
 import { normalizeCodeValue } from '@/utils';
 import { usePermission } from '@/hooks';
-import { useListCountryGroups } from '@/modules/countryGroup';
 import { CountryAccessRulesSection } from '../components';
 
 const loadRiskCategoryOptions = async (
@@ -36,28 +36,7 @@ const CountryGroupField = ({ isDisabled }: { isDisabled: boolean }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [pendingGroupName, setPendingGroupName] = useState('');
   const { canAdd } = usePermission('/admin/country-group');
-  const { data: countryGroups = [] } = useListCountryGroups();
-
-  const loadCountryGroupOptions = useCallback(
-    async (inputValue: string): Promise<AsyncSelectResponse> => {
-      const normalizedSearch = inputValue.trim().toLowerCase();
-      const options = countryGroups
-        .filter(group =>
-          normalizedSearch
-            ? [group.code, group.name].some(value =>
-                value.toLowerCase().includes(normalizedSearch)
-              )
-            : true
-        )
-        .map(group => ({
-          value: group.id,
-          label: group.name,
-        }));
-
-      return { options };
-    },
-    [countryGroups]
-  );
+  const loadCountryGroupOptions = useLoadCountryGroupOptions();
 
   const handleSuccess = (newGroupId: string) => {
     setValue('countryGroupId', newGroupId, {
@@ -118,6 +97,8 @@ const CountryProfileFormFields = ({
     name: 'isBlocked',
   }) as boolean | undefined;
 
+  const validateCountryCode = useValidateCountryCode(currentId);
+
   return (
     <>
       <div className="grid gap-4 md:grid-cols-2">
@@ -127,24 +108,7 @@ const CountryProfileFormFields = ({
           disabled={isDisabled || Boolean(currentId)}
           asyncValidation={{
             enabled: !isDisabled,
-            check: async value => {
-              const normalizedCode = normalizeCodeValue(value);
-              if (!normalizedCode) {
-                return false;
-              }
-
-              const res = await countryProfileApi.getCountryProfiles({
-                page: 1,
-                limit: 20,
-                code: normalizedCode,
-              });
-
-              return (res.data ?? []).some(
-                country =>
-                  normalizeCodeValue(country.code) === normalizedCode &&
-                  country.id !== currentId
-              );
-            },
+            check: validateCountryCode,
             message: 'Country code already exists',
             normalize: normalizeCodeValue,
           }}

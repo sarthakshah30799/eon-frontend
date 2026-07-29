@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useMemo } from 'react';
 import {
   AsyncSelect,
   Checkbox,
@@ -7,6 +7,7 @@ import {
   type AsyncSelectResponse,
   type TableColumnDef,
 } from '@/components/ui';
+import { chequebookApi, AuthorizedUserRole } from '@/api';
 import type { IChequeBookCashier } from '@/modules/chequebooks/hooks';
 
 export interface IAllocationRow {
@@ -57,15 +58,13 @@ export const ChequeBookAllocationTable = ({
     [cashiers]
   );
 
-  const loadCashierOptions = useCallback(
-    async (inputValue: string): Promise<AsyncSelectResponse> => ({
-      options: inputValue
-        ? cashierOptions.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
-        : cashierOptions,
+  const loadCashierOptions = async (inputValue: string): Promise<AsyncSelectResponse> => {
+    const data = await chequebookApi.getAuthorizedUsers('', AuthorizedUserRole.CASHIER, inputValue);
+    return {
+      options: data.map(c => ({ value: c.id, label: c.name })),
       hasMore: false,
-    }),
-    [cashierOptions]
-  );
+    };
+  };
 
   const columns = useMemo<TableColumnDef<IAllocationRow>[]>(
     () => [
@@ -177,7 +176,6 @@ export const ChequeBookAllocationTable = ({
     [
       allChecked,
       cashierOptions,
-      loadCashierOptions,
       onHeaderCheckboxChange,
       onRowCashierChange,
       onRowCheckboxChange,

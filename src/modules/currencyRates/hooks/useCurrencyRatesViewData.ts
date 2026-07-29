@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { currencyProfileApi } from '@/api/currencyProfile';
 import { currencyRatesApi } from '@/api/currencyRates';
 import { productProfileApi } from '@/api/productProfile';
@@ -8,6 +8,8 @@ import type {
   ICurrencyRateGroup,
   IProductCurrencyRate,
 } from '../types/currencyRatesTypes';
+import { useCallback } from 'react';
+import type { AsyncSelectResponse } from '@/components/ui';
 
 interface CurrencyRatesViewData {
   groups: ICurrencyRateGroup[];
@@ -59,4 +61,23 @@ export const useCurrencyRatesViewData = () => {
     queryKey: ['currency-rates-view'],
     queryFn: loadCurrencyRatesViewData,
   });
+};
+
+export const useLoadPricingGroupOptions = () => {
+  const queryClient = useQueryClient();
+  return useCallback(
+    async (inputValue: string): Promise<AsyncSelectResponse> => {
+      const groups = await queryClient.fetchQuery({
+        queryKey: ['currency-pricing-groups', inputValue || undefined],
+        queryFn: () => currencyRatesApi.getGroups(inputValue || undefined),
+      });
+      return {
+        options: groups.map(group => ({
+          value: group.id,
+          label: `${group.code} - ${group.name}`,
+        })),
+      };
+    },
+    [queryClient]
+  );
 };

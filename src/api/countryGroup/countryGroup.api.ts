@@ -48,8 +48,9 @@ export type ICountryGroupCurrencyProfile = Pick<
 >;
 
 export const countryGroupApi = {
-  getCountryGroups: async (): Promise<ICountryGroup[]> => {
-    const res = await apiClient.get<ICountryGroup[]>('/country-groups');
+  getCountryGroups: async (search?: string): Promise<ICountryGroup[]> => {
+    const params = search?.trim() ? `?search=${encodeURIComponent(search.trim())}` : '';
+    const res = await apiClient.get<ICountryGroup[]>(`/country-groups${params}`);
     if (res.error) throw new Error(res.error);
     return res.data || [];
   },

@@ -28,7 +28,7 @@ export const AccountProfileListView = () => {
     isLoading,
     isFetching,
     error,
-  } = useListAccountProfiles(query, false);
+  } = useListAccountProfiles(query);
   const accounts = accountResponse?.data ?? [];
 
   if (error) {

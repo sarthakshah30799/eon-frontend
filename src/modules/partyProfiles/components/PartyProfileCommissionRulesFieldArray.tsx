@@ -1,13 +1,11 @@
-import { useCallback, useState, useRef, type ChangeEvent } from 'react';
-import toast from 'react-hot-toast';
+import { useCallback, useRef, type ChangeEvent } from 'react';
 import { useFieldArray, useFormContext } from 'react-hook-form';
 import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { Button, CardSection, type AsyncSelectResponse } from '@/components/ui';
 import { FormFieldInput, FormFieldSelect } from '@/components/forms';
-import { currencyProfileApi } from '@/api/currencyProfile/currencyProfile.api';
-import { productProfileApi } from '@/api/productProfile/productProfile.api';
-import { partyProfileApi } from '@/api/partyProfile';
-import { useUploadAgentCommissionTemplate } from '../hooks';
+import { useLoadCurrencyOptions } from '@/modules/currencyProfile/hooks';
+import { useLoadProductOptions } from '@/modules/productProfile/hooks';
+import { useUploadAgentCommissionTemplate, useDownloadAgentCommissionTemplate } from '../hooks';
 import type {
   ICreatePartyProfile,
   IPartyProfileCommissionRule,
@@ -40,33 +38,8 @@ const CommissionRuleRow = ({
   onRemove: (index: number) => void;
   canRemove: boolean;
 }) => {
-  const loadCurrencyOptions = useCallback(async (inputValue: string): Promise<AsyncSelectResponse> => {
-    const currencies = (await currencyProfileApi.getCurrencyProfiles(inputValue)).filter(
-      currency => currency.active !== false
-    );
-    return {
-      options: currencies.map(currency => ({
-        value: currency.currencyCode,
-        label: `${currency.currencyCode}${currency.currencyName ? ` - ${currency.currencyName}` : ''}`,
-      })),
-    };
-  }, []);
-
-  const loadProductOptions = useCallback(async (inputValue: string): Promise<AsyncSelectResponse> => {
-    const products = await productProfileApi.getProductProfiles();
-    const filteredProducts = inputValue
-      ? products.filter(product =>
-          `${product.productCode} ${product.productDescription}`.toLowerCase().includes(inputValue.toLowerCase())
-        )
-      : products;
-
-    return {
-      options: filteredProducts.map(product => ({
-        value: product.productCode,
-        label: `${product.productCode}${product.productDescription ? ` - ${product.productDescription}` : ''}`,
-      })),
-    };
-  }, []);
+  const loadCurrencyOptions = useLoadCurrencyOptions();
+  const loadProductOptions = useLoadProductOptions();
 
   const loadCommissionTypeOptions = useCallback(
     async (inputValue: string): Promise<AsyncSelectResponse> => {
@@ -147,9 +120,10 @@ export const PartyProfileCommissionRulesFieldArray = ({
 }) => {
   const form = useFormContext<ICreatePartyProfile>();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [isDownloadingTemplate, setIsDownloadingTemplate] = useState(false);
   const { uploadAgentCommissionTemplate, isPending } =
     useUploadAgentCommissionTemplate(partyProfileId || '');
+  const { downloadTemplate, isPending: isDownloadingTemplate } =
+    useDownloadAgentCommissionTemplate(partyProfileId || '');
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name,
@@ -161,26 +135,7 @@ export const PartyProfileCommissionRulesFieldArray = ({
     if (!partyProfileId) {
       return;
     }
-
-    try {
-      setIsDownloadingTemplate(true);
-      const csv = await partyProfileApi.getAgentCommissionTemplate(partyProfileId);
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'agent-commission-template.csv';
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : 'Failed to download template'
-      );
-    } finally {
-      setIsDownloadingTemplate(false);
-    }
+    await downloadTemplate();
   };
 
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {

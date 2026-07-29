@@ -251,18 +251,27 @@ const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => 
         }),
         [visibleBranchOptions]
     );
-    const loadAssignedTo = async (inputValue: string) => {
-        const opts = branchManagers.map(manager => ({
+    const loadAssignedTo = useCallback(
+        async (inputValue: string) => {
+            const opts = await manualBillBookApi.getBranchManagers(branchId, inputValue || undefined);
+            return {
+                options: opts.map(manager => ({
+                    value: manager.id,
+                    label: manager.name,
+                })),
+                hasMore: false,
+            };
+        },
+        [branchId]
+    );
+
+    const assignedToOptions = useMemo(
+        () => branchManagers.map(manager => ({
             value: manager.id,
             label: manager.name,
-        }));
-        return {
-            options: inputValue
-                ? opts.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
-                : opts,
-            hasMore: false,
-        };
-    };
+        })),
+        [branchManagers]
+    );
 
     return (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -304,6 +313,7 @@ const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => 
                     name="assignedTo"
                     label="Assigned To"
                     loadOptions={loadAssignedTo}
+                    defaultOptions={assignedToOptions}
                 />
             )}
             <FormFieldTextarea name="remarks" label="Remarks" rows={3} />

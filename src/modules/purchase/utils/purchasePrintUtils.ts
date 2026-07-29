@@ -214,14 +214,16 @@ export const buildPurchasePrintHtml = ({
   const chargeRows = transaction.additionalCharges
     .map(
       (row, index) => `
-        <tr>
+      <tr>
           <td>${index + 1}</td>
           <td>${escapeHtml(row.accountName || formatReferenceValue(row.accountId))}</td>
           <td class="right">${escapeHtml(formatAmount(row.gstAmount))}</td>
           <td class="right">${escapeHtml(formatSignedAmount(
-            isPurchase
-              ? -Math.abs(Number(row.totalAmount || row.amount || 0))
-              : Number(row.totalAmount || row.amount || 0),
+            String(
+              isPurchase
+                ? -Math.abs(Number(row.totalAmount || row.amount || 0))
+                : Number(row.totalAmount || row.amount || 0),
+            ),
           ))}</td>
         </tr>`
     )

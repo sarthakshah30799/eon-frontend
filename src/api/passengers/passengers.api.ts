@@ -8,9 +8,10 @@ import type {
 } from '@/modules/passengers/types/passengerTypes';
 
 export const passengersApi = {
-  getOtherDocumentTypes: async (): Promise<Array<{ value: string; label: string }>> => {
+  getOtherDocumentTypes: async (search?: string): Promise<Array<{ value: string; label: string }>> => {
+    const query = search?.trim() ? `?search=${encodeURIComponent(search.trim())}` : '';
     const res = await apiClient.get<Array<{ value: string; label: string }>>(
-      '/passengers/other-document-types'
+      `/passengers/other-document-types${query}`
     );
 
     if (res.error) {

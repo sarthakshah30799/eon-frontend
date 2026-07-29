@@ -112,7 +112,7 @@ export const PassengerIdentityFields = ({
             placeholder="Select DOB"
             onBlur={onPanFieldBlur}
           />
-          {showPanRelation ? (
+          {showPanRelation && isPanRequired ? (
             <FormFieldCategoryOption
               name="panHolderRelationType"
               label="PAN Holder Relation"

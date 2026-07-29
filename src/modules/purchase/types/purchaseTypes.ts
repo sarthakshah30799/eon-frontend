@@ -91,6 +91,10 @@ export interface IPurchaseFormValues {
   itrFiled: boolean;
   tcsDeclarationAccepted: boolean;
   isProprietorship: boolean;
+  cdfNo: string;
+  cdfIssuingAuthority: string;
+  cdfApprovedUsd: string;
+  cdfArrivalDate: string;
   panHolderRelationType: string;
   paidByPanNumber: string;
   paidByPanHolderName: string;
@@ -202,10 +206,14 @@ export interface IPurchaseSubmitPayload {
   preTcsFinalAmount?: string | null;
   tcsRatePercent?: string | null;
     tcsRateType?: PurposeRateType | null;
-    tcsAmount?: string | null;
-    itrFiled?: boolean | null;
+  tcsAmount?: string | null;
+  itrFiled?: boolean | null;
   tcsDeclarationAccepted?: boolean | null;
   isProprietorship?: boolean | null;
+  cdfNo?: string | null;
+  cdfIssuingAuthority?: string | null;
+  cdfApprovedUsd?: string | null;
+  cdfArrivalDate?: string | null;
   passenger?: import('@/modules/transactions').ICreateTransactionPassengerPayload | null;
   passengerTravel?: import('@/modules/transactions').ICreateTransactionPassengerTravelPayload | null;
   manualBookPageId?: string | null;

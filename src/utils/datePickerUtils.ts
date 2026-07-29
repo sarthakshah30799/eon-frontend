@@ -35,12 +35,19 @@ export const parseDateInput = (value: string): Date | null => {
     return null;
   }
 
-  const isoParsed = new Date(`${value}T00:00:00`);
-  if (!Number.isNaN(isoParsed.getTime())) {
-    return isoParsed;
+  const normalized = value.trim();
+
+  const directParsed = new Date(normalized);
+  if (!Number.isNaN(directParsed.getTime())) {
+    return directParsed;
   }
 
-  const match = value.trim().match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(normalized)) {
+    const parsed = new Date(`${normalized}T00:00:00`);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  const match = normalized.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
   if (!match) {
     return null;
   }

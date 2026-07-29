@@ -42,6 +42,10 @@ import { PurchasePartyProfileField } from '../components/PurchasePartyProfileFie
 import { PurchaseReferenceNumberField } from '../components/PurchaseReferenceNumberField';
 import { PurchaseWorkplaceFields } from '../components/PurchaseWorkplaceFields';
 import { PurchaseRulePreviewSection } from '../components/PurchaseRulePreviewSection';
+import {
+  PurchaseCdfDeclarationModal,
+  type IPurchaseCdfDeclarationValues,
+} from '../components/PurchaseCdfDeclarationModal';
 import { PurchaseTransactionTable } from '../components/PurchaseTransactionTable';
 import {
   buildPurchasePrintHtml,
@@ -129,6 +133,10 @@ interface PurchaseFormBodyProps {
   onSelectDraftDocument: (documentProfileId: string, file: File) => void | Promise<void>;
   onClearDraftDocument: (documentProfileId: string) => void | Promise<void>;
   onPurchaseRuleBlockChange: (isBlocked: boolean) => void;
+  onPurchaseRuleMetaChange: (meta: {
+    allowed: boolean;
+    requiresCdf: boolean;
+  }) => void;
   transactionDatePolicy: ReturnType<typeof getTransactionDatePolicy>;
 }
 
@@ -152,6 +160,7 @@ const PurchaseFormBody = ({
   onSelectDraftDocument,
   onClearDraftDocument,
   onPurchaseRuleBlockChange,
+  onPurchaseRuleMetaChange,
   transactionDatePolicy,
 }: PurchaseFormBodyProps) => {
   void _branchCode;
@@ -589,15 +598,21 @@ const PurchaseFormBody = ({
   useEffect(() => {
     if (!isPurchaseTransaction) {
       onPurchaseRuleBlockChange(false);
+      onPurchaseRuleMetaChange({ allowed: true, requiresCdf: false });
       return;
     }
 
     onPurchaseRuleBlockChange(
       Boolean(resolvedPurchaseRulePreview && !resolvedPurchaseRulePreview.allowed)
     );
+    onPurchaseRuleMetaChange({
+      allowed: Boolean(resolvedPurchaseRulePreview?.allowed ?? true),
+      requiresCdf: Boolean(resolvedPurchaseRulePreview?.requiresCdf),
+    });
   }, [
     isPurchaseTransaction,
     onPurchaseRuleBlockChange,
+    onPurchaseRuleMetaChange,
     resolvedPurchaseRulePreview,
   ]);
 
@@ -1507,6 +1522,7 @@ const PurchaseFormBody = ({
         selectablePagesUserId={cashierUserId || undefined}
         cashControlAccountId={cashControlAccountId}
         allowCashPayment={allowCashPayment}
+        allowedPaymentMethods={resolvedPurchaseRulePreview?.paymentMethodsAllowed ?? undefined}
         disabled={isReadOnly}
         title="Payment Details"
         description="Store how this transaction will be settled. Payment accounts are filtered by ledger type and purchase/sale mode."
@@ -1638,6 +1654,15 @@ export const PurchaseForm = ({
   const { policyContext } = useAuth();
   const [draftDocuments, setDraftDocuments] = useState<Record<string, File | null>>({});
   const [isPurchaseRuleBlocked, setIsPurchaseRuleBlocked] = useState(false);
+  const [purchaseRuleMeta, setPurchaseRuleMeta] = useState({
+    allowed: true,
+    requiresCdf: false,
+  });
+  const [isCdfModalOpen, setIsCdfModalOpen] = useState(false);
+  const [pendingSubmitPayload, setPendingSubmitPayload] =
+    useState<IPurchaseFormValues | null>(null);
+  const [cdfDeclarationValues, setCdfDeclarationValues] =
+    useState<IPurchaseCdfDeclarationValues | null>(null);
   const transactionDatePolicy = useMemo(
     () => getTransactionDatePolicy(policyContext),
     [policyContext]
@@ -1670,10 +1695,56 @@ export const PurchaseForm = ({
     [draftDocuments]
   );
 
+  const handleFormSubmit = async (values: IPurchaseFormValues) => {
+    if (purchaseRuleMeta.requiresCdf && !cdfDeclarationValues) {
+      setPendingSubmitPayload(values);
+      setIsCdfModalOpen(true);
+      return;
+    }
+
+    const mergedValues = cdfDeclarationValues
+      ? {
+          ...values,
+          ...cdfDeclarationValues,
+        }
+      : values;
+
+    await onSubmit(mergedValues, draftDocumentAttachments);
+  };
+
+  const handleConfirmCdfDeclaration = async (
+    values: IPurchaseCdfDeclarationValues
+  ) => {
+    setCdfDeclarationValues(values);
+    setIsCdfModalOpen(false);
+
+    if (!pendingSubmitPayload) {
+      return;
+    }
+
+    const mergedValues = {
+      ...pendingSubmitPayload,
+      ...values,
+    };
+
+    setPendingSubmitPayload(null);
+    await onSubmit(mergedValues, draftDocumentAttachments);
+  };
+
+  const handleCdfModalOpenChange = (open: boolean) => {
+    setIsCdfModalOpen(open);
+
+    if (open) {
+      return;
+    }
+
+    setPendingSubmitPayload(null);
+  };
+
   return (
       <Form<IPurchaseFormValues>
       id="purchase-form"
-      onSubmit={values => onSubmit(values, draftDocumentAttachments)}
+      onSubmit={handleFormSubmit}
       onError={errors => {
         console.warn('[PurchaseForm] submit validation failed', errors);
       }}
@@ -1711,7 +1782,17 @@ export const PurchaseForm = ({
         onSelectDraftDocument={handleSelectDraftDocument}
         onClearDraftDocument={handleClearDraftDocument}
         onPurchaseRuleBlockChange={setIsPurchaseRuleBlocked}
+        onPurchaseRuleMetaChange={setPurchaseRuleMeta}
         transactionDatePolicy={transactionDatePolicy}
+      />
+
+      <PurchaseCdfDeclarationModal
+        open={isCdfModalOpen}
+        onOpenChange={handleCdfModalOpenChange}
+        initialValues={cdfDeclarationValues ?? undefined}
+        onConfirm={values => {
+          void handleConfirmCdfDeclaration(values);
+        }}
       />
     </Form>
   );

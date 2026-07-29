@@ -267,6 +267,14 @@ const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => 
         [branchManagers]
     );
 
+    const assignedToOptions = useMemo(
+        () => branchManagers.map(manager => ({
+            value: manager.id,
+            label: manager.name,
+        })),
+        [branchManagers]
+    );
+
     return (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <FormFieldInput name="dispatchDate" label="Date" type="date" />
@@ -307,6 +315,7 @@ const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => 
                     name="assignedTo"
                     label="Assigned To"
                     loadOptions={loadAssignedTo}
+                    defaultOptions={assignedToOptions}
                 />
             )}
             <FormFieldTextarea name="remarks" label="Remarks" rows={3} />

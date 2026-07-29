@@ -81,7 +81,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       };
 
       if (!workplace.activeBranchId || !workplace.activeCounterId) {
-        nextUser.permissions = {};
+        if (!nextUser.isAdmin && !nextUser.isHo && !nextUser.isHoStaff) {
+          nextUser.permissions = {};
+        }
       }
 
       setUser(nextUser);

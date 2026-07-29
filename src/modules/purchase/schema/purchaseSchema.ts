@@ -146,7 +146,10 @@ const passengerOtherDocumentSchema = yup.object({
   documentFile: yup.string().trim().default(''),
 });
 
-export const createPurchaseFormSchema = (transactionType: TransactionType) =>
+export const createPurchaseFormSchema = (
+  transactionType: TransactionType,
+  purchasePageType: PurchasePageType | null = null
+) =>
   yup.object({
     purchasePageType: yup
       .mixed<PurchasePageType>()
@@ -191,7 +194,16 @@ export const createPurchaseFormSchema = (transactionType: TransactionType) =>
         then: schema => schema.required('Entity selection is required'),
         otherwise: schema => schema.default(''),
       }),
-    purposeId: yup.string().trim().required('Purpose is required'),
+    purposeId: yup
+      .string()
+      .trim()
+      .when([], {
+        is: () =>
+          purchasePageType === TransactionTypeProfileEnum.PURCHASE_CORPORATE_INDIVIDUAL ||
+          purchasePageType === TransactionTypeProfileEnum.SALE_CORPORATE_INDIVIDUAL,
+        then: schema => schema.required('Purpose is required'),
+        otherwise: schema => schema.default(''),
+      }),
     agentProfileId: yup.string().trim().default(''),
     agentProfileCode: yup.string().trim().default(''),
     agentProfileName: yup.string().trim().default(''),

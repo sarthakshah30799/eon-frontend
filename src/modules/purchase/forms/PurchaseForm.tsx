@@ -1678,7 +1678,7 @@ export const PurchaseForm = ({
         console.warn('[PurchaseForm] submit validation failed', errors);
       }}
       resolver={yupResolver(
-        createPurchaseFormSchema(defaultValues.transactionType),
+        createPurchaseFormSchema(defaultValues.transactionType, defaultValues.purchasePageType),
       ) as unknown as Resolver<IPurchaseFormValues>}
       defaultValues={defaultValues}
       mode="onBlur"

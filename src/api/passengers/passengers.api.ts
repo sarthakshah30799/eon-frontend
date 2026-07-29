@@ -4,6 +4,7 @@ import type {
   IPassengerPanVerificationRequest,
   IPassengerPassportVerificationRequest,
   IPassengerAmlVerificationResponse,
+  IPassengerPassportLookupResponse,
 } from '@/modules/passengers/types/passengerTypes';
 
 export const passengersApi = {
@@ -52,6 +53,25 @@ export const passengersApi = {
 
     if (!res.data) {
       throw new Error('Failed to verify passenger passport details');
+    }
+
+    return res.data;
+  },
+
+  lookupPassport: async (
+    payload: { passportNumber: string }
+  ): Promise<IPassengerPassportLookupResponse> => {
+    const res = await apiClient.post<IPassengerPassportLookupResponse>(
+      '/passengers/lookup-passport',
+      payload
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      throw new Error('Failed to lookup passenger passport details');
     }
 
     return res.data;

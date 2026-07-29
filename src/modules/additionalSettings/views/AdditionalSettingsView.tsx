@@ -20,7 +20,13 @@ import type {
   IAdditionalSettingCategoryFormValues,
 } from '../types';
 
-export const AdditionalSettingsView = () => {
+interface AdditionalSettingsViewProps {
+  preferredCategoryCode?: string;
+}
+
+export const AdditionalSettingsView = ({
+  preferredCategoryCode,
+}: AdditionalSettingsViewProps = {}) => {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
     null
   );
@@ -46,7 +52,16 @@ export const AdditionalSettingsView = () => {
   const { submitAdditionalSetting: updateSubcategory } =
     useUpdateAdditionalSettingSubcategory();
 
-  const activeCategoryId = selectedCategoryId ?? categories[0]?.id ?? null;
+  const preferredCategory = preferredCategoryCode
+    ? categories.find(
+        category =>
+          category.code.trim().toUpperCase() ===
+          preferredCategoryCode.trim().toUpperCase()
+      )
+    : null;
+
+  const activeCategoryId =
+    selectedCategoryId ?? preferredCategory?.id ?? categories[0]?.id ?? null;
 
   const activeCategory = useMemo<IAdditionalSettingCategory | null>(() => {
     if (!activeCategoryId) {

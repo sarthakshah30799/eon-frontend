@@ -236,6 +236,7 @@ export const AD1EditView = () => {
         defaultValues={defaultValues}
         allowWorkplaceSelection={false}
         submitLabel="Save"
+        enforceTransactionDatePolicy={false}
         onSubmit={async (values) => {
           await transactionAd1Api.update(transaction.id, {
             transactionType: values.transactionType as string,

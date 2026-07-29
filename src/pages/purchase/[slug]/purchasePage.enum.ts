@@ -9,8 +9,10 @@ import {
 import {
   TradeModeEnum,
   TransactionTypeEnum,
+  TransactionPartyProfileTypeEnum,
   TransactionTypeProfileEnum,
   type TransactionTypeProfile,
+  type TransactionPartyProfileType,
   type TradeMode,
   type TransactionType,
 } from '@/modules/transactions';
@@ -20,8 +22,7 @@ export type PurchasePageType = TransactionTypeProfile;
 
 const PURCHASE_PAGE_TYPE_BY_SLUG: Record<string, PurchasePageType> = {
   'ffmc-ads': TransactionTypeProfileEnum.PURCHASE_FFMC,
-  corporate: TransactionTypeProfileEnum.PURCHASE_CORPORATE,
-  individual: TransactionTypeProfileEnum.PURCHASE_INDIVIDUAL,
+  'corporate-individual': TransactionTypeProfileEnum.PURCHASE_CORPORATE_INDIVIDUAL,
   'sale-ffmc-ads': TransactionTypeProfileEnum.SALE_FFMC,
   'sale-rmc': TransactionTypeProfileEnum.SALE_RMC,
   'sale-forex': TransactionTypeProfileEnum.SALE_FOREX,
@@ -37,10 +38,8 @@ const PURCHASE_PAGE_TYPE_BY_SLUG: Record<string, PurchasePageType> = {
 
 const PURCHASE_PAGE_SLUG_BY_TYPE: Record<PurchasePageType, string> = {
   [TransactionTypeProfileEnum.PURCHASE_FFMC]: 'ffmc-ads',
-  [TransactionTypeProfileEnum.PURCHASE_CORPORATE]: 'corporate',
-  [TransactionTypeProfileEnum.PURCHASE_INDIVIDUAL]: 'individual',
-  [TransactionTypeProfileEnum.SALE_CORPORATE]: 'corporate',
-  [TransactionTypeProfileEnum.SALE_INDIVIDUAL]: 'individual',
+  [TransactionTypeProfileEnum.PURCHASE_CORPORATE_INDIVIDUAL]: 'corporate-individual',
+  [TransactionTypeProfileEnum.SALE_CORPORATE_INDIVIDUAL]: 'corporate-individual',
   [TransactionTypeProfileEnum.SALE_FFMC]: 'ffmc-ads',
   [TransactionTypeProfileEnum.SALE_RMC]: 'sale-rmc',
   [TransactionTypeProfileEnum.SALE_FOREX]: 'sale-forex',
@@ -62,73 +61,65 @@ const PURCHASE_PAGE_CONFIG_BY_TYPE: Record<
   }
 > = {
   [TransactionTypeProfileEnum.PURCHASE_FFMC]: {
-    title: 'Purchase FFMC/Ads',
+    title: 'Purchase From FFMC/Ads',
     partyProfileTypes: [
       PartyProfileTypeEnum.FFMC,
       PartyProfileTypeEnum.AUTHORISED_DEALER,
     ],
   },
-  [TransactionTypeProfileEnum.PURCHASE_CORPORATE]: {
-    title: 'Purchase Corporate',
+  [TransactionTypeProfileEnum.PURCHASE_CORPORATE_INDIVIDUAL]: {
+    title: 'Purchase From Corporate / Individual',
     partyProfileTypes: [PartyProfileTypeEnum.CORPORATE_CLIENT],
   },
-  [TransactionTypeProfileEnum.PURCHASE_INDIVIDUAL]: {
-    title: 'Purchase Individual',
-    partyProfileTypes: [],
-  },
-  [TransactionTypeProfileEnum.SALE_CORPORATE]: {
-    title: 'Sell Corporate',
+  [TransactionTypeProfileEnum.SALE_CORPORATE_INDIVIDUAL]: {
+    title: 'Sell To Corporate / Individual',
     partyProfileTypes: [PartyProfileTypeEnum.CORPORATE_CLIENT],
-  },
-  [TransactionTypeProfileEnum.SALE_INDIVIDUAL]: {
-    title: 'Sell Individual',
-    partyProfileTypes: [],
   },
   [TransactionTypeProfileEnum.SALE_FFMC]: {
-    title: 'Sell FFMC/Ads',
+    title: 'Sell To FFMC/Ads',
     partyProfileTypes: [
       PartyProfileTypeEnum.FFMC,
       PartyProfileTypeEnum.AUTHORISED_DEALER,
     ],
   },
   [TransactionTypeProfileEnum.SALE_RMC]: {
-    title: 'Sell RMC',
+    title: 'Sell To RMC',
     partyProfileTypes: [PartyProfileTypeEnum.RMC],
   },
   [TransactionTypeProfileEnum.SALE_FOREX]: {
-    title: 'Sell Forex',
+    title: 'Sell To Forex',
     partyProfileTypes: [PartyProfileTypeEnum.FOREX_CORRESPONDENT],
   },
   [TransactionTypeProfileEnum.SALE_FOREIGN]: {
-    title: 'Sell Foreign',
+    title: 'Sell To Foreign',
     partyProfileTypes: [PartyProfileTypeEnum.FOREIGN_CORRESPONDENT],
   },
   [TransactionTypeProfileEnum.SALE_MISC]: {
-    title: 'Sell Misc',
+    title: 'Sell To Misc',
     partyProfileTypes: [PartyProfileTypeEnum.MISC_PROFILE],
   },
   [TransactionTypeProfileEnum.SALE_FRANCHISE]: {
-    title: 'Sell Franchise',
+    title: 'Sell To Franchise',
     partyProfileTypes: [PartyProfileTypeEnum.FRANCHISE],
   },
   [TransactionTypeProfileEnum.PURCHASE_RMC]: {
-    title: 'Purchase RMC',
+    title: 'Purchase From RMC',
     partyProfileTypes: [PartyProfileTypeEnum.RMC],
   },
   [TransactionTypeProfileEnum.PURCHASE_FOREX]: {
-    title: 'Purchase Forex',
+    title: 'Purchase From Forex',
     partyProfileTypes: [PartyProfileTypeEnum.FOREX_CORRESPONDENT],
   },
   [TransactionTypeProfileEnum.PURCHASE_FOREIGN]: {
-    title: 'Purchase Foreign',
+    title: 'Purchase From Foreign',
     partyProfileTypes: [PartyProfileTypeEnum.FOREIGN_CORRESPONDENT],
   },
   [TransactionTypeProfileEnum.PURCHASE_MISC]: {
-    title: 'Purchase Misc',
+    title: 'Purchase From Misc',
     partyProfileTypes: [PartyProfileTypeEnum.MISC_PROFILE],
   },
   [TransactionTypeProfileEnum.PURCHASE_FRANCHISE]: {
-    title: 'Purchase Franchise',
+    title: 'Purchase From Franchise',
     partyProfileTypes: [PartyProfileTypeEnum.FRANCHISE],
   },
 };
@@ -150,11 +141,8 @@ export const getPurchasePageTypeFromPath = (
   const normalizedPath = pathname?.trim().toLowerCase() ?? '';
   if (normalizedPath.startsWith('/sell/')) {
     const normalizedSlug = slug?.trim().toLowerCase();
-    if (normalizedSlug === 'corporate') {
-      return TransactionTypeProfileEnum.SALE_CORPORATE;
-    }
-    if (normalizedSlug === 'individual') {
-      return TransactionTypeProfileEnum.SALE_INDIVIDUAL;
+    if (normalizedSlug === 'corporate-individual') {
+      return TransactionTypeProfileEnum.SALE_CORPORATE_INDIVIDUAL;
     }
     if (normalizedSlug === 'ffmc-ads' || normalizedSlug === 'sale-ffmc-ads') {
       return TransactionTypeProfileEnum.SALE_FFMC;
@@ -209,8 +197,7 @@ export const getPurchaseTransactionType = (
 ): TransactionType => {
   switch (pageType) {
     case TransactionTypeProfileEnum.SALE_FFMC:
-    case TransactionTypeProfileEnum.SALE_CORPORATE:
-    case TransactionTypeProfileEnum.SALE_INDIVIDUAL:
+    case TransactionTypeProfileEnum.SALE_CORPORATE_INDIVIDUAL:
     case TransactionTypeProfileEnum.SALE_RMC:
     case TransactionTypeProfileEnum.SALE_FOREX:
     case TransactionTypeProfileEnum.SALE_FOREIGN:
@@ -218,8 +205,7 @@ export const getPurchaseTransactionType = (
     case TransactionTypeProfileEnum.SALE_FRANCHISE:
       return TransactionTypeEnum.SALE;
     case TransactionTypeProfileEnum.PURCHASE_FFMC:
-    case TransactionTypeProfileEnum.PURCHASE_CORPORATE:
-    case TransactionTypeProfileEnum.PURCHASE_INDIVIDUAL:
+    case TransactionTypeProfileEnum.PURCHASE_CORPORATE_INDIVIDUAL:
       return TransactionTypeEnum.PURCHASE;
     default:
       return TransactionTypeEnum.PURCHASE;
@@ -231,16 +217,14 @@ export const getPurchaseTradeMode = (
 ): TradeMode => {
   switch (pageType) {
     case TransactionTypeProfileEnum.SALE_FFMC:
-    case TransactionTypeProfileEnum.SALE_CORPORATE:
-    case TransactionTypeProfileEnum.SALE_INDIVIDUAL:
+    case TransactionTypeProfileEnum.SALE_CORPORATE_INDIVIDUAL:
     case TransactionTypeProfileEnum.SALE_RMC:
     case TransactionTypeProfileEnum.SALE_FOREX:
     case TransactionTypeProfileEnum.SALE_FOREIGN:
     case TransactionTypeProfileEnum.SALE_MISC:
     case TransactionTypeProfileEnum.SALE_FRANCHISE:
     case TransactionTypeProfileEnum.PURCHASE_FFMC:
-    case TransactionTypeProfileEnum.PURCHASE_CORPORATE:
-    case TransactionTypeProfileEnum.PURCHASE_INDIVIDUAL:
+    case TransactionTypeProfileEnum.PURCHASE_CORPORATE_INDIVIDUAL:
       return TradeModeEnum.BULK;
     default:
       return TradeModeEnum.BULK;
@@ -249,17 +233,16 @@ export const getPurchaseTradeMode = (
 
 export const getPurchasePageBasePath = (
   pageType: PurchasePageType | null
-): 'purchase' | 'sale' => {
+): 'purchase' | 'sell' => {
   switch (pageType) {
-    case TransactionTypeProfileEnum.SALE_CORPORATE:
-    case TransactionTypeProfileEnum.SALE_INDIVIDUAL:
+    case TransactionTypeProfileEnum.SALE_CORPORATE_INDIVIDUAL:
     case TransactionTypeProfileEnum.SALE_FFMC:
     case TransactionTypeProfileEnum.SALE_RMC:
     case TransactionTypeProfileEnum.SALE_FOREX:
     case TransactionTypeProfileEnum.SALE_FOREIGN:
     case TransactionTypeProfileEnum.SALE_MISC:
     case TransactionTypeProfileEnum.SALE_FRANCHISE:
-      return 'sale';
+      return 'sell';
     default:
       return 'purchase';
   }
@@ -269,27 +252,30 @@ export const getPurchasePageEntityType = (
   pageType: PurchasePageType | null
 ): PassengerEntityType | null => {
   switch (pageType) {
-    case TransactionTypeProfileEnum.PURCHASE_CORPORATE:
-    case TransactionTypeProfileEnum.SALE_CORPORATE:
+    case TransactionTypeProfileEnum.PURCHASE_CORPORATE_INDIVIDUAL:
+    case TransactionTypeProfileEnum.SALE_CORPORATE_INDIVIDUAL:
       return PassengerEntityTypeEnum.CORPORATE;
-    case TransactionTypeProfileEnum.PURCHASE_INDIVIDUAL:
-    case TransactionTypeProfileEnum.SALE_INDIVIDUAL:
-      return PassengerEntityTypeEnum.INDIVIDUAL;
     default:
       return null;
   }
 };
 
 export const getPurchasePurposePartyProfileType = (
-  pageType: PurchasePageType | null
+  pageType: PurchasePageType | null,
+  transactionPartyProfileType?: TransactionPartyProfileType | null
 ): 'CORPORATE' | 'INDIVIDUAL' | null => {
   switch (pageType) {
-    case TransactionTypeProfileEnum.PURCHASE_CORPORATE:
-    case TransactionTypeProfileEnum.SALE_CORPORATE:
+    case TransactionTypeProfileEnum.PURCHASE_CORPORATE_INDIVIDUAL:
+    case TransactionTypeProfileEnum.SALE_CORPORATE_INDIVIDUAL:
+      if (transactionPartyProfileType === TransactionPartyProfileTypeEnum.INDIVIDUAL) {
+        return 'INDIVIDUAL';
+      }
+
+      if (transactionPartyProfileType === TransactionPartyProfileTypeEnum.CORPORATE) {
+        return 'CORPORATE';
+      }
+
       return 'CORPORATE';
-    case TransactionTypeProfileEnum.PURCHASE_INDIVIDUAL:
-    case TransactionTypeProfileEnum.SALE_INDIVIDUAL:
-      return 'INDIVIDUAL';
     default:
       return null;
   }

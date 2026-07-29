@@ -11,9 +11,7 @@ import {
   mapPurchaseFormValuesToSubmitPayload,
 } from '../utils/purchaseUtils';
 import { PurchaseForm } from '../forms/PurchaseForm';
-import {
-  type PurchasePageType,
-} from '@/pages/purchase/[slug]/purchasePage.enum';
+import { type PurchasePageType } from '@/pages/purchase/[slug]/purchasePage.enum';
 import { getAdditionalSettingBooleanValue } from '@/modules/additionalSettings/utils';
 import {
   getPurchasePageTitle,
@@ -21,9 +19,13 @@ import {
   getPurchaseTradeMode,
   getPurchaseTransactionType,
 } from '@/pages/purchase/[slug]/purchasePage.enum';
-import type { ITransactionEntity, ITransactionReferenceSnapshot } from '@/modules/transactions';
+import type {
+  ITransactionEntity,
+  ITransactionReferenceSnapshot,
+} from '@/modules/transactions';
 import { AdditionalSettingsCodeEnum } from '@/modules/additionalSettings/constants';
 import { getAdditionalSettingTextValue } from '@/modules/additionalSettings/utils';
+import { getTransactionDatePolicy } from '@/modules/transactionPolicies/utils/transactionDatePolicy';
 
 interface PurchaseCreateViewProps {
   purchasePageType: PurchasePageType | null;
@@ -33,11 +35,12 @@ export const PurchaseCreateView = ({
   purchasePageType,
 }: PurchaseCreateViewProps) => {
   const navigate = useNavigate();
-  const { user, activeBranchId, activeCounterId, setWorkplace } = useAuth();
+  const { user, activeBranchId, activeCounterId, policyContext } = useAuth();
   const canSelectWorkplace = Boolean(
     user?.isAdmin || user?.isHo || user?.isHoStaff
   );
-  const [savedTransaction, setSavedTransaction] = useState<ITransactionEntity | null>(null);
+  const [savedTransaction, setSavedTransaction] =
+    useState<ITransactionEntity | null>(null);
   const {
     data: branchProfile,
     isLoading: isBranchLoading,
@@ -55,6 +58,10 @@ export const PurchaseCreateView = ({
   } = useListAdditionalSettings();
   const { createPurchaseTransaction, isPending: isSaving } =
     useCreatePurchaseTransaction();
+  const transactionDatePolicy = useMemo(
+    () => getTransactionDatePolicy(policyContext),
+    [policyContext]
+  );
 
   const partyProfileTypes = useMemo(
     () => getPurchasePartyProfileTypes(purchasePageType),
@@ -125,10 +132,19 @@ export const PurchaseCreateView = ({
               label: `${branchProfile.code} - ${branchProfile.name}`,
             } satisfies ITransactionReferenceSnapshot)
           : null,
-        canSelectWorkplace ? '' : activeBranchId ?? '',
-        canSelectWorkplace ? '' : activeCounterId ?? ''
+        canSelectWorkplace ? '' : (activeBranchId ?? ''),
+        canSelectWorkplace ? '' : (activeCounterId ?? ''),
+        transactionDatePolicy.defaultTransactionDate ||
+          new Date().toISOString().slice(0, 10)
       ),
-    [activeBranchId, activeCounterId, branchProfile, canSelectWorkplace, purchasePageType]
+    [
+      activeBranchId,
+      activeCounterId,
+      branchProfile,
+      canSelectWorkplace,
+      purchasePageType,
+      transactionDatePolicy.defaultTransactionDate,
+    ]
   );
   const pricingData = useMemo(
     () => ({
@@ -180,7 +196,8 @@ export const PurchaseCreateView = ({
           {getPurchasePageTitle(purchasePageType)}
         </h1>
         <p className="text-sm text-text-secondary">
-          Capture the party profile, transaction number, pricing, and draft documents in one form.
+          Capture the party profile, transaction number, pricing, and draft
+          documents in one form.
         </p>
       </div>
 
@@ -192,19 +209,20 @@ export const PurchaseCreateView = ({
         requiresApproval={requiresApproval}
         cashControlAccountId={cashControlAccountId}
         handlingFeeControlAccountId={handlingFeeControlAccountId}
-        branchId={canSelectWorkplace ? '' : activeBranchId ?? ''}
-        branchCode={canSelectWorkplace ? '' : branchProfile?.code ?? ''}
+        branchId={canSelectWorkplace ? '' : (activeBranchId ?? '')}
+        branchCode={canSelectWorkplace ? '' : (branchProfile?.code ?? '')}
         sacCode={sacCode}
         gstRatePercent={gstRatePercent}
         isSubmitting={isSaving}
         submitLabel={requiresApproval ? 'Submit for Approval' : 'Save'}
         onSubmit={async (values, attachments) => {
-          await setWorkplace(values.branchId, values.counterId);
+          console.log('Submitting purchase form values:', values);
           const payload = mapPurchaseFormValuesToSubmitPayload(
             values,
             attachments,
             requiresApproval
           );
+          console.log('Mapped payload for submission:', payload);
           const created = await createPurchaseTransaction(payload);
           setSavedTransaction(created);
         }}

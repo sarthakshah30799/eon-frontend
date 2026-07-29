@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import type { SubmitErrorHandler, Resolver } from 'react-hook-form';
-import { useFormContext } from 'react-hook-form';
+import { useFormContext, useWatch } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import {
   Form,
@@ -14,10 +14,12 @@ import { countryProfileSchema } from '../schema';
 import { COUNTRY_PROFILE_TEXTS, riskCategoryOptions } from '../constants';
 import type { ICreateCountryProfile } from '../types';
 import { useNavigate } from 'react-router-dom';
-import { countryGroupApi } from '@/api';
 import { CountryGroupModal } from '../components';
 import { countryProfileApi } from '@/api/countryProfile';
 import { normalizeCodeValue } from '@/utils';
+import { usePermission } from '@/hooks';
+import { useListCountryGroups } from '@/modules/countryGroup';
+import { CountryAccessRulesSection } from '../components';
 
 const loadRiskCategoryOptions = async (
   inputValue: string
@@ -29,28 +31,33 @@ const loadRiskCategoryOptions = async (
   return { options: filtered };
 };
 
-const loadCountryGroupOptions = async (
-  inputValue: string
-): Promise<AsyncSelectResponse> => {
-  try {
-    const groups = await countryGroupApi.getCountryGroups();
-    const options = groups
-      .filter(g => g.name.toLowerCase().includes(inputValue.toLowerCase()))
-      .map(g => ({
-        value: g.id,
-        label: g.name,
-      }));
-    return { options };
-  } catch (error) {
-    console.error('Failed to load country groups:', error);
-    return { options: [] };
-  }
-};
-
 const CountryGroupField = ({ isDisabled }: { isDisabled: boolean }) => {
   const { setValue } = useFormContext();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [pendingGroupName, setPendingGroupName] = useState('');
+  const { canAdd } = usePermission('/admin/country-group');
+  const { data: countryGroups = [] } = useListCountryGroups();
+
+  const loadCountryGroupOptions = useCallback(
+    async (inputValue: string): Promise<AsyncSelectResponse> => {
+      const normalizedSearch = inputValue.trim().toLowerCase();
+      const options = countryGroups
+        .filter(group =>
+          normalizedSearch
+            ? [group.code, group.name].some(value =>
+                value.toLowerCase().includes(normalizedSearch)
+              )
+            : true
+        )
+        .map(group => ({
+          value: group.id,
+          label: group.name,
+        }));
+
+      return { options };
+    },
+    [countryGroups]
+  );
 
   const handleSuccess = (newGroupId: string) => {
     setValue('countryGroupId', newGroupId, {
@@ -69,8 +76,11 @@ const CountryGroupField = ({ isDisabled }: { isDisabled: boolean }) => {
         disabled={isDisabled}
         isClearable
         isSearchable={true}
-        isCreatable={true}
+        isCreatable={canAdd}
         onCreateOption={inputValue => {
+          if (!canAdd) {
+            return;
+          }
           setPendingGroupName(inputValue);
           setIsModalOpen(true);
         }}
@@ -93,76 +103,23 @@ const CountryGroupField = ({ isDisabled }: { isDisabled: boolean }) => {
   );
 };
 
-interface CountryProfileFormProps {
-  defaultValues: ICreateCountryProfile;
-  onSubmit: (values: ICreateCountryProfile) => void | Promise<void>;
-  submitLabel?: string;
-  isSubmitting?: boolean;
-  readOnly?: boolean;
-  insideModal?: boolean;
+interface CountryProfileFormFieldsProps {
+  isDisabled: boolean;
   currentId?: string;
 }
 
-export const CountryProfileForm = ({
-  defaultValues,
-  onSubmit,
-  submitLabel = COUNTRY_PROFILE_TEXTS.CREATE_COUNTRY,
-  isSubmitting = false,
-  readOnly = false,
-  insideModal = false,
+const CountryProfileFormFields = ({
+  isDisabled,
   currentId,
-}: CountryProfileFormProps) => {
-  const navigate = useNavigate();
-  const validateCountryCode = useCallback(
-    async (value: string) => {
-      const normalizedCode = normalizeCodeValue(value);
-      if (!normalizedCode) {
-        return false;
-      }
+}: CountryProfileFormFieldsProps) => {
+  const form = useFormContext<ICreateCountryProfile>();
+  const isBlocked = useWatch({
+    control: form.control,
+    name: 'isBlocked',
+  }) as boolean | undefined;
 
-      const res = await countryProfileApi.getCountryProfiles({
-        page: 1,
-        limit: 20,
-        code: normalizedCode,
-      });
-
-      return (res.data ?? []).some(
-        country =>
-          normalizeCodeValue(country.code) === normalizedCode &&
-          country.id !== currentId
-      );
-    },
-    [currentId]
-  );
-
-  const handleSubmitErrors: SubmitErrorHandler<
-    ICreateCountryProfile
-  > = errors => {
-    console.log('CountryProfileForm submit errors:', errors);
-  };
-
-  const isDisabled = isSubmitting || readOnly;
-  const onCancel = () => {
-    navigate('/admin/country-profile');
-  };
   return (
-    <Form
-      id={insideModal? "" : "country-profile-form"}
-      onSubmit={onSubmit}
-      onError={handleSubmitErrors}
-      resolver={
-        yupResolver(countryProfileSchema) as Resolver<ICreateCountryProfile>
-      }
-      defaultValues={defaultValues}
-      className="space-y-6"
-      footer={{
-        submitLabel,
-        onBackClick: () => {
-          void onCancel?.();
-        },
-        onCancel,
-      }}
-    >
+    <>
       <div className="grid gap-4 md:grid-cols-2">
         <FormFieldInput
           name="code"
@@ -170,7 +127,24 @@ export const CountryProfileForm = ({
           disabled={isDisabled || Boolean(currentId)}
           asyncValidation={{
             enabled: !isDisabled,
-            check: validateCountryCode,
+            check: async value => {
+              const normalizedCode = normalizeCodeValue(value);
+              if (!normalizedCode) {
+                return false;
+              }
+
+              const res = await countryProfileApi.getCountryProfiles({
+                page: 1,
+                limit: 20,
+                code: normalizedCode,
+              });
+
+              return (res.data ?? []).some(
+                country =>
+                  normalizeCodeValue(country.code) === normalizedCode &&
+                  country.id !== currentId
+              );
+            },
             message: 'Country code already exists',
             normalize: normalizeCodeValue,
           }}
@@ -225,6 +199,81 @@ export const CountryProfileForm = ({
           disabled={isDisabled}
         />
       </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <FormFieldCheckbox
+          name="isBlocked"
+          label="Blocked Country"
+          disabled={isDisabled}
+        />
+        <FormFieldInput
+          name="blockedReason"
+          label="Blocked Reason"
+          placeholder="Optional reason for blocking this country"
+          disabled={isDisabled}
+        />
+      </div>
+
+      {currentId ? (
+        <CountryAccessRulesSection
+          countryId={currentId}
+          countryBlocked={Boolean(isBlocked)}
+        />
+      ) : null}
+    </>
+  );
+};
+
+interface CountryProfileFormProps {
+  defaultValues: ICreateCountryProfile;
+  onSubmit: (values: ICreateCountryProfile) => void | Promise<void>;
+  submitLabel?: string;
+  isSubmitting?: boolean;
+  readOnly?: boolean;
+  insideModal?: boolean;
+  currentId?: string;
+}
+
+export const CountryProfileForm = ({
+  defaultValues,
+  onSubmit,
+  submitLabel = COUNTRY_PROFILE_TEXTS.CREATE_COUNTRY,
+  isSubmitting = false,
+  readOnly = false,
+  insideModal = false,
+  currentId,
+}: CountryProfileFormProps) => {
+  const navigate = useNavigate();
+
+  const handleSubmitErrors: SubmitErrorHandler<
+    ICreateCountryProfile
+  > = errors => {
+    console.log('CountryProfileForm submit errors:', errors);
+  };
+
+  const isDisabled = isSubmitting || readOnly;
+  const onCancel = () => {
+    navigate('/admin/country-profile');
+  };
+  return (
+    <Form
+      id={insideModal ? '' : 'country-profile-form'}
+      onSubmit={onSubmit}
+      onError={handleSubmitErrors}
+      resolver={
+        yupResolver(countryProfileSchema) as Resolver<ICreateCountryProfile>
+      }
+      defaultValues={defaultValues}
+      className="space-y-6"
+      footer={{
+        submitLabel,
+        onBackClick: () => {
+          void onCancel?.();
+        },
+        onCancel,
+      }}
+    >
+      <CountryProfileFormFields isDisabled={isDisabled} currentId={currentId} />
 
       {!readOnly && insideModal && (
         <div className="flex justify-end border-t border-border-primary pt-4">

@@ -11,16 +11,15 @@ import {
   type IPassengerAmlVerificationValues,
   type IPassengerPassengerDetailsValues,
 } from '../types/passengerTypes';
+import {
+  isPassengerOtherDocumentComplete,
+  shouldShowPassengerOtherDocumentValidityFields,
+} from '../utils/passengerOtherDocumentRules';
 
 export const PASSENGER_PAN_VERIFICATION_FIELDS = [
   'panNumber',
   'panHolderName',
   'panDob',
-  'panHolderRelationType',
-  'corporatePanNumber',
-  'corporatePanHolderName',
-  'corporatePanDob',
-  'corporatePanHolderRelationType',
 ] as const;
 
 export const PASSENGER_PASSPORT_VERIFICATION_FIELDS = [
@@ -29,6 +28,7 @@ export const PASSENGER_PASSPORT_VERIFICATION_FIELDS = [
   'passportIssueDate',
   'passportExpiryDate',
   'arrivalDate',
+  'countryId',
 ] as const;
 
 export const PASSENGER_OTHER_DOCUMENT_FIELDS = [
@@ -67,7 +67,8 @@ const passengerOtherDocumentSchema = yup
       otherwise: schema => schema.default(''),
     }),
     validTill: yup.string().trim().default('').when('documentType', {
-      is: (documentType: string) => Boolean(documentType),
+      is: (documentType: string) =>
+        shouldShowPassengerOtherDocumentValidityFields(documentType),
       then: schema => schema.required('Valid till is required'),
       otherwise: schema => schema.default(''),
     }),
@@ -106,10 +107,6 @@ export const createPassengerPanVerificationSchema = () =>
       otherwise: schema => schema.default(''),
     }),
     panHolderRelationType: yup.string().trim().default(''),
-    corporatePanNumber: optionalText(),
-    corporatePanHolderName: optionalText(),
-    corporatePanDob: yup.string().trim().default(''),
-    corporatePanHolderRelationType: yup.string().trim().default(''),
   });
 
 export const createPassengerPassportVerificationSchema = () =>
@@ -167,6 +164,11 @@ export const createPassengerOtherDocumentVerificationSchema = () =>
       .array()
       .of(passengerOtherDocumentSchema)
       .min(1, 'At least one document is required')
+      .test(
+        'has-valid-other-document',
+        'At least one document is required',
+        rows => (rows ?? []).some(row => isPassengerOtherDocumentComplete(row))
+      )
       .required(),
   });
 

@@ -1,6 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
 import { AsyncSelect, Button, Checkbox, Input, Modal } from '@/components/ui';
-import { useQuery } from '@tanstack/react-query';
 import type {
   IAdditionalSettingCategory,
   IAdditionalSettingSubcategory,
@@ -12,6 +11,9 @@ import {
 } from '../registry/additionalSettingsRegistry';
 import { formatAccountProfileLabel } from '../utils/additionalSettingsUtils';
 import { accountProfileApi } from '@/api/accountProfile';
+import { useGetAccountProfile } from '@/modules/accountProfile/hooks';
+import { useGetCurrencyProfile } from '@/modules/currencyProfile/hooks';
+import { currencyProfileApi } from '@/api';
 
 interface AdditionalSettingsCategoryDetailsProps {
   category: IAdditionalSettingCategory | null;
@@ -74,21 +76,31 @@ const SubcategoryRow = ({
     subcategory.code
   );
   const isAccountProfileValue = subcategoryDefinition?.optionsSource === 'account-profile';
-  const { data: accountLabel, isFetching } = useQuery({
-    queryKey: ['additional-settings-account-label', subcategory.value],
-    queryFn: async () => {
-      if (!isAccountProfileValue || !subcategory.value) {
-        return '';
-      }
+  const isCurrencyProfileValue = subcategoryDefinition?.optionsSource === 'currency-profile';
+  const { data: accountProfile, isFetching } = useGetAccountProfile(
+    isAccountProfileValue ? subcategory.value : ''
+  );
+  const { data: currencyProfile, isFetching: isCurrencyFetching } = useGetCurrencyProfile(
+    isCurrencyProfileValue ? subcategory.value : ''
+  );
+  const accountLabel = formatAccountProfileLabel(accountProfile);
+  const currencyLabel = useMemo(() => {
+    if (!currencyProfile) {
+      return '';
+    }
 
-      const account = await accountProfileApi.getAccountProfileById(subcategory.value);
-      return formatAccountProfileLabel(account);
-    },
-    enabled: isAccountProfileValue && Boolean(subcategory.value),
-  });
+    const currencyCode = currencyProfile.currencyCode?.trim() || '';
+    const currencyName = currencyProfile.currencyName?.trim() || '';
+
+    return currencyCode && currencyName
+      ? `${currencyCode} - ${currencyName}`
+      : currencyName || currencyCode;
+  }, [currencyProfile]);
   const displayValue = isAccountProfileValue
     ? accountLabel || subcategory.value
-    : subcategory.value;
+    : isCurrencyProfileValue
+      ? currencyLabel || subcategory.value
+      : subcategory.value;
 
   return (
     <tr className="border-t border-border-primary/80 hover:bg-surface-secondary/50">
@@ -96,7 +108,9 @@ const SubcategoryRow = ({
         {subcategory.description || subcategory.title}
       </td>
       <td className="px-4 py-4 text-xs font-medium leading-5 text-text-primary">
-        {isFetching && isAccountProfileValue ? 'Loading...' : displayValue}
+        {(isFetching && isAccountProfileValue) || (isCurrencyFetching && isCurrencyProfileValue)
+          ? 'Loading...'
+          : displayValue}
       </td>
       <td className="px-4 py-4">
         <Button
@@ -153,25 +167,30 @@ const EditSubcategoryForm = ({
       })),
     [subcategoryDefinition?.options]
   );
-  const { data: selectedAccountOption } = useQuery({
-    queryKey: ['additional-settings-account-option', value],
-    queryFn: async () => {
-      if (subcategoryDefinition?.optionsSource !== 'account-profile' || !value) {
-        return null;
-      }
-
-      const account = await accountProfileApi.getAccountProfileById(value);
-      return account
-        ? {
-            value: account.id,
-            label: formatAccountProfileLabel(account),
-          }
-        : null;
-    },
-    enabled: subcategoryDefinition?.optionsSource === 'account-profile' && Boolean(value),
-  });
+  const { data: accountProfile } = useGetAccountProfile(
+    subcategoryDefinition?.optionsSource === 'account-profile' ? value : ''
+  );
+  const { data: currencyProfile } = useGetCurrencyProfile(
+    subcategoryDefinition?.optionsSource === 'currency-profile' ? value : ''
+  );
   const selectedValueOption =
-    selectedAccountOption ?? selectValueOptions.find(option => option.value === value) ?? null;
+    (accountProfile
+      ? {
+          value: accountProfile.id,
+          label: formatAccountProfileLabel(accountProfile),
+        }
+      : null) ??
+    (currencyProfile
+      ? {
+          value: currencyProfile.id,
+          label:
+            currencyProfile.currencyCode?.trim() && currencyProfile.currencyName?.trim()
+              ? `${currencyProfile.currencyCode.trim()} - ${currencyProfile.currencyName.trim()}`
+              : currencyProfile.currencyName?.trim() || currencyProfile.currencyCode?.trim() || '',
+        }
+      : null) ??
+    selectValueOptions.find(option => option.value === value) ??
+    null;
   const loadAccountProfileOptions = useCallback(
     async (inputValue: string, page = 1) => {
       const response = await accountProfileApi.getAccountProfiles({
@@ -191,10 +210,35 @@ const EditSubcategoryForm = ({
     },
     []
   );
+  const loadCurrencyProfileOptions = useCallback(
+    async (inputValue: string) => {
+      const currencies = await currencyProfileApi.getCurrencyProfiles(inputValue);
+
+      return {
+        options: currencies.map(currency => {
+          const currencyCode = currency.currencyCode?.trim() || '';
+          const currencyName = currency.currencyName?.trim() || '';
+
+          return {
+            value: currency.id,
+            label: currencyCode && currencyName
+              ? `${currencyCode} - ${currencyName}`
+              : currencyName || currencyCode,
+          };
+        }),
+        hasMore: false,
+      };
+    },
+    []
+  );
   const loadSelectValueOptions = useCallback(
     async (inputValue = '', page = 1) => {
       if (subcategoryDefinition?.optionsSource === 'account-profile') {
         return loadAccountProfileOptions(inputValue, page);
+      }
+
+      if (subcategoryDefinition?.optionsSource === 'currency-profile') {
+        return loadCurrencyProfileOptions(inputValue);
       }
 
       return {
@@ -206,7 +250,12 @@ const EditSubcategoryForm = ({
         hasMore: false,
       };
     },
-    [loadAccountProfileOptions, subcategoryDefinition?.optionsSource, selectValueOptions]
+    [
+      loadAccountProfileOptions,
+      loadCurrencyProfileOptions,
+      subcategoryDefinition?.optionsSource,
+      selectValueOptions,
+    ]
   );
 
   const handleNumberingValueChange = (nextValue: string) => {
@@ -339,7 +388,7 @@ const EditSubcategoryForm = ({
             }}
             loadOptions={loadSelectValueOptions}
             placeholder="Select value"
-            isSearchable={subcategoryDefinition?.optionsSource === 'account-profile'}
+            isSearchable={subcategoryDefinition?.optionsSource !== undefined}
             isClearable={!isRequiredPolicyValue}
             isDisabled={false}
           />

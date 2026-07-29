@@ -92,6 +92,10 @@ export const DatePicker = ({
   const [inputValue, setInputValue] = useState(
     () => (selected ? formatDateDisplayInput(selected) : '')
   );
+  const handleDateChange = (date: Date | null) => {
+    setInputValue(date ? formatDateDisplayInput(date) : '');
+    onChange?.(date);
+  };
 
   return (
     <div className="space-y-1 max-w-[350px]">
@@ -99,7 +103,7 @@ export const DatePicker = ({
       <ReactDatePicker
         id={inputId}
         selected={selected}
-        onChange={(date: Date | null) => onChange?.(date)}
+        onChange={handleDateChange}
         disabled={disabled}
         placeholderText={placeholder}
         dateFormat={dateFormat}
@@ -109,9 +113,10 @@ export const DatePicker = ({
         key={`${inputId}-${selectedKey}`}
         customInput={
           <DatePickerInput
+            key={selectedKey}
             inputValue={inputValue}
             onInputValueChange={setInputValue}
-            onParsedDateChange={onChange}
+            onParsedDateChange={handleDateChange}
             onBlur={onBlur}
           />
         }

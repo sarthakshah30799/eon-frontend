@@ -173,7 +173,7 @@ export const SelectManualBillBooks = ({
       searchValue={search}
       onSearch={value => setSearch(value)}
       searchPlaceholder="Search book no, branch, txn type, status"
-      emptyMessage="No manual bill books found."
+      emptyMessage="No bill books available. Please ask your manager."
       onContinue={selectedRows =>
         onContinue(
           selectedRows.map(row => {

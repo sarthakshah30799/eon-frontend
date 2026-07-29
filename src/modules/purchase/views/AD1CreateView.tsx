@@ -8,13 +8,18 @@ import { AD1Form } from '../forms/AD1Form';
 import { useListAdditionalSettings } from '@/modules/additionalSettings/hooks';
 import { getAdditionalSettingBooleanValue } from '@/modules/additionalSettings/utils';
 import { AdditionalSettingsCodeEnum } from '@/modules/additionalSettings/constants';
+import { getTransactionDatePolicy } from '@/modules/transactionPolicies/utils/transactionDatePolicy';
 
 export const AD1CreateView = () => {
   const navigate = useNavigate();
-  const { user, activeBranchId, activeCounterId, setWorkplace } = useAuth();
+  const { user, activeBranchId, activeCounterId, setWorkplace, policyContext } = useAuth();
   const canSelectWorkplace = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
 
   const { data: additionalSettings = [] } = useListAdditionalSettings();
+  const transactionDatePolicy = useMemo(
+    () => getTransactionDatePolicy(policyContext),
+    [policyContext]
+  );
 
   const requiresApproval = useMemo(
     () =>
@@ -28,7 +33,6 @@ export const AD1CreateView = () => {
   );
 
   const defaultValues = useMemo(() => {
-    const today = new Date().toISOString().split('T')[0];
     return {
       transactionType: TransactionTypeEnum.PURCHASE,
       profileType: TransactionProfileType.AD1,
@@ -36,7 +40,9 @@ export const AD1CreateView = () => {
       counterId: canSelectWorkplace ? '' : activeCounterId ?? '',
       dealId: '',
       docNo: '',
-      transactionDate: today,
+      transactionDate:
+        transactionDatePolicy.defaultTransactionDate ||
+        new Date().toISOString().split('T')[0],
       marketingId: '',
       segmentId: '',
       servicedBy: '',
@@ -77,7 +83,12 @@ export const AD1CreateView = () => {
       rtgsImpsNeftRefNo: '',
       remarks: '',
     };
-  }, [activeBranchId, activeCounterId, canSelectWorkplace]);
+  }, [
+    activeBranchId,
+    activeCounterId,
+    canSelectWorkplace,
+    transactionDatePolicy.defaultTransactionDate,
+  ]);
 
   return (
     <div className="space-y-6">

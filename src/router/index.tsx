@@ -155,6 +155,12 @@ const ChequeBookReturnPage = lazy(
 const AdditionalSettingsPage = lazy(
   () => import('../pages/admin/additional-settings')
 );
+const DayEndStartProcessPage = lazy(
+  () => import('../pages/day-end-start-process')
+);
+const MonthwiseLockingPage = lazy(
+  () => import('../pages/admin/monthwise-locking')
+);
 const TransactionAccountPostingsPage = lazy(
   () => import('../pages/admin/transaction-account-postings/TransactionAccountPostingsPage')
 );
@@ -244,6 +250,18 @@ const CurrencyProfileCreatePage = lazy(
 const CurrencyProfileEditPage = lazy(
   () =>
     import('../pages/master/system-setups/currency-profile/edit/[id]/CurrencyProfileEditPage')
+);
+const CountryGroupListPage = lazy(
+  () =>
+    import('../pages/master/system-setups/country-group/list/CountryGroupListPage')
+);
+const CountryGroupCreatePage = lazy(
+  () =>
+    import('../pages/master/system-setups/country-group/create/CountryGroupCreatePage')
+);
+const CountryGroupEditPage = lazy(
+  () =>
+    import('../pages/master/system-setups/country-group/edit/[id]/CountryGroupEditPage')
 );
 const TdsProfileListPage = lazy(
   () =>
@@ -644,6 +662,22 @@ const router = createBrowserRouter([
     ),
   },
   {
+    path: '/day-end-start-process',
+    element: (
+      <ProtectedLayout>
+        <DayEndStartProcessPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/monthwise-locking',
+    element: (
+      <ProtectedLayout>
+        <MonthwiseLockingPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
     path: '/admin/transaction-account-postings',
     element: (
       <ProtectedLayout>
@@ -849,6 +883,30 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <CountryProfileEditPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/country-group',
+    element: (
+      <ProtectedLayout>
+        <CountryGroupListPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/country-group/create',
+    element: (
+      <ProtectedLayout>
+        <CountryGroupCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/country-group/edit/:id',
+    element: (
+      <ProtectedLayout>
+        <CountryGroupEditPage />
       </ProtectedLayout>
     ),
   },

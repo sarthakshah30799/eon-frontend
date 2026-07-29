@@ -7,9 +7,11 @@ interface PassengerVerificationFieldsProps {
   isCorporate: boolean;
   selectedPartyProfileLabel: string;
   isSelectedPartyProfileLoading?: boolean;
+  showPanRelation?: boolean;
   verificationStatus: 'idle' | 'checking' | 'valid' | 'invalid';
   verificationMessage: string | null;
   onPanFieldBlur?: () => void;
+  onPassportNumberBlur?: () => void;
   onPassportFieldBlur?: () => void;
   onNationalityChange?: (value: string | null) => void;
 }
@@ -19,9 +21,11 @@ export const PassengerVerificationFields = ({
   isCorporate,
   selectedPartyProfileLabel,
   isSelectedPartyProfileLoading = false,
+  showPanRelation = false,
   verificationStatus,
   verificationMessage,
   onPanFieldBlur,
+  onPassportNumberBlur,
   onPassportFieldBlur,
   onNationalityChange,
 }: PassengerVerificationFieldsProps) => {
@@ -51,7 +55,9 @@ export const PassengerVerificationFields = ({
       <PassengerIdentityFields
         entityType={entityType}
         showNationality={isIndianPrompt}
+        showPanRelation={showPanRelation}
         onPanFieldBlur={onPanFieldBlur}
+        onPassportNumberBlur={onPassportNumberBlur}
         onPassportFieldBlur={onPassportFieldBlur}
         onNationalityChange={onNationalityChange}
       />

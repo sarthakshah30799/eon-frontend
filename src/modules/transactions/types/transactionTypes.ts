@@ -18,10 +18,8 @@ export type TransactionType =
 
 export const TransactionTypeProfileEnum = {
   PURCHASE_FFMC: 'PURCHASE_FFMC',
-  PURCHASE_CORPORATE: 'PURCHASE_CORPORATE',
-  PURCHASE_INDIVIDUAL: 'PURCHASE_INDIVIDUAL',
-  SALE_CORPORATE: 'SALE_CORPORATE',
-  SALE_INDIVIDUAL: 'SALE_INDIVIDUAL',
+  PURCHASE_CORPORATE_INDIVIDUAL: 'PURCHASE_CORPORATE_INDIVIDUAL',
+  SALE_CORPORATE_INDIVIDUAL: 'SALE_CORPORATE_INDIVIDUAL',
   SALE_FFMC: 'SALE_FFMC',
   SALE_RMC: 'SALE_RMC',
   SALE_FOREX: 'SALE_FOREX',
@@ -38,12 +36,23 @@ export const TransactionTypeProfileEnum = {
 export type TransactionTypeProfile =
   (typeof TransactionTypeProfileEnum)[keyof typeof TransactionTypeProfileEnum];
 
+export const TransactionPartyProfileTypeEnum = {
+  FFMC: 'FFMC',
+  CORPORATE: 'CORPORATE',
+  INDIVIDUAL: 'INDIVIDUAL',
+  RMC: 'RMC',
+  FRANCHISE: 'FRANCHISE',
+  FOREX: 'FOREX',
+  MISC: 'MISC',
+} as const;
+
+export type TransactionPartyProfileType =
+  (typeof TransactionPartyProfileTypeEnum)[keyof typeof TransactionPartyProfileTypeEnum];
+
 export const TRANSACTION_TYPE_PROFILE_ORDER = [
   TransactionTypeProfileEnum.PURCHASE_FFMC,
-  TransactionTypeProfileEnum.PURCHASE_CORPORATE,
-  TransactionTypeProfileEnum.PURCHASE_INDIVIDUAL,
-  TransactionTypeProfileEnum.SALE_CORPORATE,
-  TransactionTypeProfileEnum.SALE_INDIVIDUAL,
+  TransactionTypeProfileEnum.PURCHASE_CORPORATE_INDIVIDUAL,
+  TransactionTypeProfileEnum.SALE_CORPORATE_INDIVIDUAL,
   TransactionTypeProfileEnum.SALE_FFMC,
   TransactionTypeProfileEnum.SALE_RMC,
   TransactionTypeProfileEnum.SALE_FOREX,
@@ -144,6 +153,7 @@ export interface ITransactionEntity {
   revisionNo: number;
   number: string | null;
   slug: string | null;
+  transactionDate: string | null;
   branchId: string;
   branchSnapshot?: ITransactionReferenceSnapshot | null;
   counterId: string;
@@ -155,6 +165,7 @@ export interface ITransactionEntity {
   partyProfileSnapshot?: ITransactionReferenceSnapshot | null;
   purposeId: string | null;
   purposeSnapshot?: ITransactionReferenceSnapshot | null;
+  transactionPartyProfileType: TransactionPartyProfileType | null;
   agentProfileId: string | null;
   agentProfileSnapshot?: ITransactionReferenceSnapshot | null;
   passengerId: string | null;
@@ -474,6 +485,51 @@ export interface ITransactionTaxPreviewResponse {
   }>;
 }
 
+export interface ITransactionTcsPreviewRequest {
+  transactionType: TransactionType;
+  purposeId: string;
+  slug?: string | null;
+  preTcsFinalAmount?: string | number | null;
+  itemBaseAmount?: string | number | null;
+  itemTaxAmount?: string | number | null;
+  additionalChargeBaseAmount?: string | number | null;
+  additionalChargeTaxAmount?: string | number | null;
+  loanAmount?: string | number | null;
+  declaredAmount?: string | number | null;
+  itrFiled?: boolean | null;
+  tcsDeclarationAccepted?: boolean | null;
+  isProprietorship?: boolean | null;
+  maxTcsRatePercent?: string | number | null;
+}
+
+export interface ITransactionTcsPreviewResponse {
+  transactionType: TransactionType;
+  purposeId: string | null;
+  preTcsFinalAmount: string;
+  effectiveAmount: string;
+  threshold: string;
+  effectiveThreshold: string;
+  loanAmount: string;
+  declaredAmount: string;
+  taxableAmount: string;
+  tcsRatePercent: string;
+  tcsRateType: 'PERCENT' | 'RUPEES' | null;
+  tcsAmount: string;
+  finalAmount: string;
+  tcsDeclarationAccepted: boolean;
+  itrFiled: boolean;
+  isProprietorship: boolean;
+  breakdowns: Array<{
+    lineNo: number;
+    purposeId: string | null;
+    purposeSlabId: string | null;
+    baseAmount: string;
+    ratePercent: string;
+    rateType: 'PERCENT' | 'RUPEES';
+    tcsAmount: string;
+  }>;
+}
+
 export interface IPurchaseRulePreviewRequest {
   transaction: ICreateTransactionPayload;
 }
@@ -516,6 +572,19 @@ export interface ICreateTransactionPassengerOtherDocumentPayload {
   remarks?: string | null;
 }
 
+export interface ICreateTransactionPassengerTravelPayload {
+  airlineTtId?: string | null;
+  ticketNo?: string | null;
+  route?: string | null;
+  travellingCountryId?: string | null;
+  noOfDays?: number | null;
+  noOfPax?: number | null;
+  departureDate?: string | null;
+  travelPnr?: string | null;
+  visa?: boolean | null;
+  isCisCountry?: boolean | null;
+}
+
 export interface ICreateTransactionPassengerPayload {
   entityType: string;
   nationalityType: string;
@@ -532,10 +601,6 @@ export interface ICreateTransactionPassengerPayload {
   panHolderName?: string | null;
   panDob?: string | null;
   panHolderRelationType?: string | null;
-  corporatePanNumber?: string | null;
-  corporatePanHolderName?: string | null;
-  corporatePanDob?: string | null;
-  corporatePanHolderRelationType?: string | null;
   paidByPanNumber?: string | null;
   paidByPanHolderName?: string | null;
   paidByPanDob?: string | null;
@@ -575,6 +640,7 @@ export interface ICreateTransactionPayload {
   purposeId?: string | null;
   agentProfileId?: string | null;
   passenger?: ICreateTransactionPassengerPayload | null;
+  passengerTravel?: ICreateTransactionPassengerTravelPayload | null;
   manualBookPageId?: string | null;
   manualBookPageSnapshot?: Record<string, unknown> | null;
   transactionType: TransactionType;

@@ -37,7 +37,7 @@ export interface AdditionalSettingSubcategoryDefinition {
   valueLocked?: boolean;
   placeholder?: string;
   options?: readonly { value: string; label: string }[];
-  optionsSource?: 'account-profile';
+  optionsSource?: 'account-profile' | 'currency-profile';
 }
 
 export interface AdditionalSettingCategoryDefinition {
@@ -210,9 +210,10 @@ const PURCHASE_PASSENGER_RULE_SUBCATEGORIES: readonly AdditionalSettingSubcatego
   {
     code: AdditionalSettingsCodeEnum.PurchasePassengerRuleReferenceCurrencyCode,
     label: 'REFERENCE CURRENCY CODE',
-    valueType: 'text',
+    valueType: 'select',
     required: true,
-    placeholder: 'Enter reference currency code (USD)',
+    placeholder: 'Select reference currency',
+    optionsSource: 'currency-profile',
   },
   {
     code: AdditionalSettingsCodeEnum.PurchasePassengerRuleCdfThresholdAmount,
@@ -258,9 +259,16 @@ const TRANSACTION_NUMBERING_SUBCATEGORY_CONFIG: Partial<Record<
     required: true,
     placeholder: 'Enter starting sequence number',
   },
-  [TransactionTypeProfileEnum.PURCHASE_CORPORATE]: {
+  [TransactionTypeProfileEnum.PURCHASE_CORPORATE_INDIVIDUAL]: {
     code: AdditionalSettingsCodeEnum.PurchaseCorporateNumberSeries,
     label: 'PURCHASE CORPORATE / INDIVIDUAL',
+    valueType: 'number',
+    required: true,
+    placeholder: 'Enter starting sequence number',
+  },
+  [TransactionTypeProfileEnum.SALE_CORPORATE_INDIVIDUAL]: {
+    code: AdditionalSettingsCodeEnum.SaleCorporateNumberSeries,
+    label: 'SELL CORPORATE / INDIVIDUAL',
     valueType: 'number',
     required: true,
     placeholder: 'Enter starting sequence number',

@@ -30,6 +30,8 @@ import type { AsyncSelectResponse } from '@/components/ui';
 import type { DefaultValues } from 'react-hook-form';
 import type { IAd1FormValues } from '../types';
 import type { TransactionType } from '@/modules/transactions';
+import { useAuth } from '@/lib/AuthContext';
+import { getTransactionDatePolicy } from '@/modules/transactionPolicies/utils/transactionDatePolicy';
 import {
   getPurchaseTransactionAccountFilter,
   getPurchaseTransactionProductFilter,
@@ -44,6 +46,7 @@ interface AD1FormProps {
   readOnly?: boolean;
   allowWorkplaceSelection?: boolean;
   submitLabel?: string;
+  enforceTransactionDatePolicy?: boolean;
 }
 
 export const AD1Form = ({
@@ -53,7 +56,16 @@ export const AD1Form = ({
   readOnly = false,
   allowWorkplaceSelection = true,
   submitLabel = 'Save',
+  enforceTransactionDatePolicy = true,
 }: AD1FormProps) => {
+  const { policyContext } = useAuth();
+  const transactionDatePolicy = useMemo(
+    () => getTransactionDatePolicy(policyContext),
+    [policyContext]
+  );
+  const shouldEnforceTransactionDatePolicy =
+    enforceTransactionDatePolicy && !readOnly;
+
   return (
     <Form<IAd1FormValues>
       id="ad1-form"
@@ -67,9 +79,16 @@ export const AD1Form = ({
         onBackClick: onCancel,
         onCancel,
         showSubmit: !readOnly,
+        isSubmitDisabled:
+          shouldEnforceTransactionDatePolicy &&
+          !transactionDatePolicy.canPunchTransactions,
       }}
     >
-      <AD1FormBody readOnly={readOnly} allowWorkplaceSelection={allowWorkplaceSelection} />
+      <AD1FormBody
+        readOnly={readOnly}
+        allowWorkplaceSelection={allowWorkplaceSelection}
+        transactionDatePolicy={transactionDatePolicy}
+      />
     </Form>
   );
 };
@@ -77,9 +96,14 @@ export const AD1Form = ({
 interface AD1FormBodyProps {
   readOnly: boolean;
   allowWorkplaceSelection: boolean;
+  transactionDatePolicy: ReturnType<typeof getTransactionDatePolicy>;
 }
 
-const AD1FormBody = ({ readOnly, allowWorkplaceSelection }: AD1FormBodyProps) => {
+const AD1FormBody = ({
+  readOnly,
+  allowWorkplaceSelection,
+  transactionDatePolicy,
+}: AD1FormBodyProps) => {
   const form = useFormContext<IAd1FormValues>();
   const { control, setValue } = form;
 
@@ -100,7 +124,6 @@ const AD1FormBody = ({ readOnly, allowWorkplaceSelection }: AD1FormBodyProps) =>
   const watchedAgentComm = useWatch({ name: 'agentComm', control });
   const tds = useWatch({ name: 'tds', control });
   const tcs = useWatch({ name: 'tcs', control });
-
   const [productProfiles, setProductProfiles] = useState<import('@/modules/productProfile/types').IProductProfile[]>([]);
   const [currencies, setCurrencies] = useState<ICurrencyProfile[]>([]);
   const agentRuleRef = useRef<{ type: PartyProfileCommissionType; value: number } | null>(null);
@@ -388,7 +411,16 @@ const AD1FormBody = ({ readOnly, allowWorkplaceSelection }: AD1FormBodyProps) =>
           />
           <FormFieldInput name="dealId" label="Deal ID" placeholder="Deal ID" disabled={readOnly} />
           <FormFieldInput name="docNo" label="Doc No." placeholder="Doc No." disabled={readOnly} />
-          <FormFieldDatePicker name="transactionDate" label="Transaction Date" disabled={readOnly} />
+          <FormFieldDatePicker
+            name="transactionDate"
+            label="Transaction Date"
+            disabled={readOnly || !transactionDatePolicy.canPunchTransactions}
+            minDate={transactionDatePolicy.minDate}
+            maxDate={transactionDatePolicy.maxDate}
+          />
+          <p className="text-xs text-text-tertiary lg:col-span-2">
+            {transactionDatePolicy.helperText}
+          </p>
           <FormFieldCategoryOption name="marketingId" code={CategoryOptionCodeEnum.Marketing} label="Marketing" disabled={readOnly} />
           <FormFieldCategoryOption name="segmentId" code={CategoryOptionCodeEnum.Segment} label="Segment" disabled={readOnly} />
           <FormFieldInput name="servicedBy" label="Serviced By" placeholder="Serviced By" disabled={readOnly} />

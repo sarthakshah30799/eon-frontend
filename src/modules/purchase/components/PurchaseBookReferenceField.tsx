@@ -99,6 +99,11 @@ export const PurchaseBookReferenceField = ({
       (!canOverrideWorkplace || isDeliveryBoyMode || Boolean(cashierAssigneeId)),
   });
   const isBookPagesLoading = isLoadingPages || isFetchingPages;
+  const hasPageSelectionPrerequisites = Boolean(resolvedBranchId) &&
+    (!isDeliveryBoyMode || Boolean(deliveryBoyAssigneeId)) &&
+    (!canOverrideWorkplace || isDeliveryBoyMode || Boolean(cashierAssigneeId));
+  const hasNoBookPagesAvailable =
+    hasPageSelectionPrerequisites && !isBookPagesLoading && pageOptions.length === 0;
 
   useEffect(() => {
     if (previousReferenceTypeRef.current === manualBookReferenceType) {
@@ -323,6 +328,21 @@ export const PurchaseBookReferenceField = ({
     [isSale, pageOptions]
   );
 
+  const getManualBookPageEmptyMessage = useCallback(
+    ({ inputValue }: { inputValue: string }) => {
+      if (hasNoBookPagesAvailable) {
+        return 'No bill books available. Please ask your manager.';
+      }
+
+      if (inputValue.trim()) {
+        return 'No options found';
+      }
+
+      return 'Start typing to search...';
+    },
+    [hasNoBookPagesAvailable]
+  );
+
   const handleDeliveryBoyContinue = (
     users: Array<{ id: string; code: string; name: string }>
   ) => {
@@ -428,6 +448,7 @@ export const PurchaseBookReferenceField = ({
             isLoading={isBookPagesLoading}
             placeholder={'Select bill book page'}
             loadOptions={loadManualBookPageOptions}
+            noOptionsMessage={getManualBookPageEmptyMessage}
             disabled={
               disabled ||
               !resolvedBranchId ||
@@ -441,6 +462,8 @@ export const PurchaseBookReferenceField = ({
           <p className="mt-1 text-xs text-text-tertiary">
             {isBookPagesLoading
               ? 'Loading available bill book pages...'
+              : hasNoBookPagesAvailable
+                ? 'No bill books available. Please ask your manager.'
               : manualBookNo
                 ? `Selected book: ${manualBookNo}`
                 : 'Choose a page from the filtered list.'}

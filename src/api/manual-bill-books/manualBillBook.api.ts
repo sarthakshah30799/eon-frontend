@@ -157,11 +157,9 @@ export const manualBillBookApi = {
   validateBookRange: async (params: {
     bookNoFrom: number;
     bookNoTo: number;
-    transactionType?: string;
   }): Promise<{ valid: boolean; error?: string }> => {
-    const query = `bookNoFrom=${params.bookNoFrom}&bookNoTo=${params.bookNoTo}${params.transactionType ? `&transactionType=${encodeURIComponent(params.transactionType)}` : ''}`;
     const res = await apiClient.get<{ valid: boolean; error?: string }>(
-      `/manual-bill-books/validate-book-range?${query}`
+      `/manual-bill-books/validate-book-range?bookNoFrom=${params.bookNoFrom}&bookNoTo=${params.bookNoTo}`
     );
     if (res.error) throw new Error(res.error);
     return res.data || { valid: true };
@@ -170,11 +168,9 @@ export const manualBillBookApi = {
   validatePageRange: async (params: {
     mvNoFrom: number;
     mvNoTo: number;
-    transactionType?: string;
   }): Promise<{ valid: boolean; error?: string }> => {
-    const query = `mvNoFrom=${params.mvNoFrom}&mvNoTo=${params.mvNoTo}${params.transactionType ? `&transactionType=${encodeURIComponent(params.transactionType)}` : ''}`;
     const res = await apiClient.get<{ valid: boolean; error?: string }>(
-      `/manual-bill-books/validate-page-range?${query}`
+      `/manual-bill-books/validate-page-range?mvNoFrom=${params.mvNoFrom}&mvNoTo=${params.mvNoTo}`
     );
     if (res.error) throw new Error(res.error);
     return res.data || { valid: true };

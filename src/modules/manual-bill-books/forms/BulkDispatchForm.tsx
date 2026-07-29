@@ -46,13 +46,12 @@ const bulkDispatchSchema = yup.object().shape({
         .positive()
         .required('Book No. From is required')
         .test('book-range-overlap', 'Book range overlaps', async function (value) {
-            const { bookNoTo, transactionType } = this.parent;
+            const { bookNoTo } = this.parent;
             if (value === undefined || value === null || isNaN(value) || bookNoTo === undefined || bookNoTo === null || isNaN(bookNoTo)) return true;
             try {
                 const res = await debouncedValidateBookRange({
                     bookNoFrom: value,
                     bookNoTo,
-                    transactionType,
                 });
                 if (!res.valid) {
                     throw this.createError({
@@ -89,13 +88,12 @@ const bulkDispatchSchema = yup.object().shape({
         .positive()
         .required('MV No. From is required')
         .test('page-range-overlap', 'Page range overlaps', async function (value) {
-            const { mvNoTo, transactionType } = this.parent;
+            const { mvNoTo } = this.parent;
             if (value === undefined || value === null || isNaN(value) || !mvNoTo || isNaN(parseInt(mvNoTo, 10))) return true;
             try {
                 const res = await debouncedValidatePageRange({
                     mvNoFrom: value,
                     mvNoTo: parseInt(mvNoTo, 10),
-                    transactionType,
                 });
                 if (!res.valid) {
                     throw this.createError({

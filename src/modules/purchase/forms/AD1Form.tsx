@@ -131,7 +131,7 @@ const AD1FormBody = ({
 
   // Load product profiles and currencies on mount
   useEffect(() => {
-    productProfileApi.getProductProfiles().then(setProductProfiles).catch(console.error);
+    productProfileApi.getProductProfiles({ otherTransaction: true }).then(setProductProfiles).catch(console.error);
     currencyProfileApi.getCurrencyProfiles().then(res => setCurrencies(res.filter(c => c.active))).catch(console.error);
   }, []);
 

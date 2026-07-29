@@ -82,9 +82,7 @@ export const buildParentMenuOptions = (
     childrenByParent.set(key, existing);
   }
 
-  for (const items of childrenByParent.values()) {
-    items.sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name));
-  }
+  
 
   const options: AsyncSelectOption[] = [];
 

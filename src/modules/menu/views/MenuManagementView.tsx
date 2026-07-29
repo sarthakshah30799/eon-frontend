@@ -86,10 +86,6 @@ const MenuTreeRow = ({
         <ul className="space-y-2">
           {menu.children
             .slice()
-            .sort(
-              (a, b) =>
-                a.sortOrder - b.sortOrder || a.name.localeCompare(b.name)
-            )
             .map(child => (
               <MenuTreeRow
                 key={child.id}

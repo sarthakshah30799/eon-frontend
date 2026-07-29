@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { branchProfileApi } from '@/api';
 import { buildReportOptionLabel, toggleId, uniqueOptions } from '../utils';
@@ -12,6 +13,13 @@ import {
   type ReportSortBy,
   type SpecialReportTemplate,
 } from '../types';
+import {
+  buildSearchParams,
+  readSearchParamList,
+  readSearchParamValue,
+  setSearchParamList,
+  setSearchParamValue,
+} from '../utils/reportSearchParams';
 
 const TEMPLATE_OPTIONS: IReportTemplateOption[] = [
   {
@@ -22,15 +30,44 @@ const TEMPLATE_OPTIONS: IReportTemplateOption[] = [
 
 export const useSpecialReportFilters = () => {
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const isRestrictedUser = !user?.isAdmin && !user?.isHo && !user?.isHoStaff;
   const userAssignments = useMemo(() => user?.assignments ?? [], [user?.assignments]);
-  const [branchIds, setBranchIds] = useState<string[]>([]);
-  const [template, setTemplate] = useState<SpecialReportTemplate>(
-    SpecialReportTemplateEnum.ACCOUNT_POSTING,
+  const searchParamsKey = searchParams.toString();
+  const parsedSearchParams = useMemo(() => new URLSearchParams(searchParamsKey), [searchParamsKey]);
+
+  const hydratedRouteState = useMemo(() => {
+    return {
+      branchIds: readSearchParamList(parsedSearchParams, 'branchIds'),
+      template:
+        (readSearchParamValue(parsedSearchParams, 'template') as SpecialReportTemplate) ||
+        SpecialReportTemplateEnum.ACCOUNT_POSTING,
+      sortBy:
+        (readSearchParamValue(parsedSearchParams, 'sortBy') as ReportSortBy) ||
+        ReportSortByEnum.DATE_ASC,
+      transactionNumbersText: readSearchParamList(parsedSearchParams, 'transactionNumbers').join(','),
+    };
+  }, [parsedSearchParams]);
+
+  const [branchIds, setBranchIds] = useState<string[]>(hydratedRouteState.branchIds);
+  const [template, setTemplate] = useState<SpecialReportTemplate>(hydratedRouteState.template);
+  const [sortBy, setSortBy] = useState<ReportSortBy>(hydratedRouteState.sortBy);
+  const [transactionNumbersText, setTransactionNumbersText] = useState(
+    hydratedRouteState.transactionNumbersText,
   );
-  const [sortBy, setSortBy] = useState<ReportSortBy>(ReportSortByEnum.DATE_ASC);
-  const [transactionNumbersText, setTransactionNumbersText] = useState('');
-  const [appliedFilters, setAppliedFilters] = useState<ISpecialReportRequest | null>(null);
+  const [appliedFilters, setAppliedFilters] = useState<ISpecialReportRequest | null>(
+    searchParamsKey
+      ? {
+          branchIds: hydratedRouteState.branchIds,
+          template: hydratedRouteState.template,
+          transactionNumbers: hydratedRouteState.transactionNumbersText
+            .split(/[\n,]/)
+            .map(item => item.trim())
+            .filter(Boolean),
+          sortBy: hydratedRouteState.sortBy,
+        }
+      : null,
+  );
 
   const { data: branchProfiles = [] } = useQuery({
     queryKey: ['reports-special-branch-profiles'],
@@ -82,12 +119,22 @@ export const useSpecialReportFilters = () => {
       .map(item => item.trim())
       .filter(Boolean);
 
-    setAppliedFilters({
+    const nextAppliedFilters = {
       branchIds: selectedBranchIds,
       template,
       transactionNumbers,
       sortBy,
+    };
+
+    const nextSearchParams = buildSearchParams(undefined, next => {
+      setSearchParamList(next, 'branchIds', selectedBranchIds);
+      setSearchParamValue(next, 'template', template);
+      setSearchParamValue(next, 'sortBy', sortBy);
+      setSearchParamList(next, 'transactionNumbers', transactionNumbers);
     });
+
+    setAppliedFilters(nextAppliedFilters);
+    setSearchParams(nextSearchParams, { replace: true });
   };
 
   const resetFilters = () => {
@@ -96,6 +143,7 @@ export const useSpecialReportFilters = () => {
     setSortBy(ReportSortByEnum.DATE_ASC);
     setTransactionNumbersText('');
     setAppliedFilters(null);
+    setSearchParams(new URLSearchParams(), { replace: true });
   };
 
   const toggleBranch = (id: string, checked: boolean) => {

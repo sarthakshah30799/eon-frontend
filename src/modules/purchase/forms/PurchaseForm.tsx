@@ -728,12 +728,28 @@ const PurchaseFormBody = ({
         cgstRatePercent: charge.cgstRatePercent ?? '0.00',
         sgstRatePercent: charge.sgstRatePercent ?? '0.00',
         splitMode: charge.splitMode ?? null,
-        totalAmount: String(
-          Number(charge.amount ?? 0) + Number(charge.gstAmount ?? 0)
-        ),
+        totalAmount:
+          transactionType === TransactionTypeEnum.PURCHASE
+            ? String(
+                -(
+                  Math.abs(Number(charge.amount ?? 0)) +
+                  Math.abs(Number(charge.gstAmount ?? 0))
+                )
+              )
+            : String(Number(charge.amount ?? 0) + Number(charge.gstAmount ?? 0)),
       })),
     };
-  }, [savedTransaction, taxPreview]);
+  }, [savedTransaction, taxPreview, transactionType]);
+  const formatPurchaseSummaryAmount = (value?: string | number | null) => {
+    const formattedValue = formatPurchaseDecimal(value);
+    if (!formattedValue) {
+      return formattedValue;
+    }
+
+    return transactionType === TransactionTypeEnum.PURCHASE
+      ? `-${formattedValue.replace(/^-/, '')}`
+      : formattedValue;
+  };
   const tcsPreviewRequest = useMemo(
     () => {
       if (
@@ -1270,7 +1286,7 @@ const PurchaseFormBody = ({
                   Final item tax amount
                 </div>
                 <div className="text-sm font-semibold text-text-primary text-right">
-                  {formatPurchaseDecimal(resolvedTaxSummary.itemTaxAmount)}
+                  {formatPurchaseSummaryAmount(resolvedTaxSummary.itemTaxAmount)}
                 </div>
               </div>
             </div>
@@ -1662,7 +1678,7 @@ export const PurchaseForm = ({
         console.warn('[PurchaseForm] submit validation failed', errors);
       }}
       resolver={yupResolver(
-        createPurchaseFormSchema(defaultValues.transactionType),
+        createPurchaseFormSchema(defaultValues.transactionType, defaultValues.purchasePageType),
       ) as unknown as Resolver<IPurchaseFormValues>}
       defaultValues={defaultValues}
       mode="onBlur"

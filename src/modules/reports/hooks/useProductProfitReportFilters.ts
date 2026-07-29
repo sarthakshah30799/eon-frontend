@@ -1,7 +1,13 @@
 import { useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useListCurrencyProfiles } from '@/modules/currencyProfile/hooks';
 import { useListProductProfiles } from '@/modules/productProfile/hooks';
 import { buildReportOptionLabel, toggleId } from '../utils';
+import {
+  buildSearchParams,
+  readSearchParamList,
+  setSearchParamList,
+} from '../utils/reportSearchParams';
 import type {
   IProductProfitReportFiltersState,
   IReportSelectOption,
@@ -10,13 +16,39 @@ import { useSalePurchaseReportFilters } from './useSalePurchaseReportFilters';
 
 export const useProductProfitReportFilters = () => {
   const baseFilters = useSalePurchaseReportFilters();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { data: currencyProfiles = [] } = useListCurrencyProfiles(undefined, true);
   const { data: productProfiles = [] } = useListProductProfiles(true);
+  const searchParamsKey = searchParams.toString();
+  const parsedSearchParams = useMemo(() => new URLSearchParams(searchParamsKey), [searchParamsKey]);
 
-  const [currencyIds, setCurrencyIds] = useState<string[]>([]);
-  const [productIds, setProductIds] = useState<string[]>([]);
+  const hydratedRouteState = useMemo(() => {
+    return {
+      currencyIds: readSearchParamList(parsedSearchParams, 'currencyIds'),
+      productIds: readSearchParamList(parsedSearchParams, 'productIds'),
+    };
+  }, [parsedSearchParams]);
+
+  const [currencyIds, setCurrencyIds] = useState<string[]>(hydratedRouteState.currencyIds);
+  const [productIds, setProductIds] = useState<string[]>(hydratedRouteState.productIds);
   const [appliedFilters, setAppliedFilters] =
-    useState<IProductProfitReportFiltersState | null>(null);
+    useState<IProductProfitReportFiltersState | null>(
+      searchParamsKey
+        ? {
+            dateRange: baseFilters.dateRange,
+            stateIds: baseFilters.stateIds,
+            branchIds: baseFilters.branchIds,
+            counterIds: baseFilters.counterIds,
+            partyTypeCodes: baseFilters.partyTypeCodes,
+            partyProfileSearch: baseFilters.partyProfileSearch,
+            partyProfileSelection: baseFilters.partyProfileSelection,
+            transactionTypes: baseFilters.transactionTypes,
+            sortBy: baseFilters.sortBy,
+            currencyIds: hydratedRouteState.currencyIds,
+            productIds: hydratedRouteState.productIds,
+          }
+        : null,
+    );
 
   const currencyOptions = useMemo<IReportSelectOption[]>(
     () =>
@@ -52,19 +84,33 @@ export const useProductProfitReportFilters = () => {
     productOptions.length > 0 && selectedProductIds.length === productOptions.length;
 
   const handleView = () => {
-    setAppliedFilters({
-      dateRange: baseFilters.dateRange,
-      stateIds: baseFilters.stateIds,
-      branchIds: baseFilters.branchIds,
-      counterIds: baseFilters.counterIds,
-      partyTypeCodes: baseFilters.partyTypeCodes,
-      partyProfileSearch: baseFilters.partyProfileSearch,
-      partyProfileSelection: baseFilters.partyProfileSelection,
-      transactionTypes: baseFilters.transactionTypes,
-      sortBy: baseFilters.sortBy,
+    const nextAppliedFilters: IProductProfitReportFiltersState = {
+      dateRange: baseFilters.appliedFilters?.dateRange ?? baseFilters.dateRange,
+      stateIds: baseFilters.appliedFilters?.stateIds ?? baseFilters.stateIds,
+      branchIds: baseFilters.appliedFilters?.branchIds ?? baseFilters.branchIds,
+      counterIds: baseFilters.appliedFilters?.counterIds ?? baseFilters.counterIds,
+      partyTypeCodes: baseFilters.appliedFilters?.partyTypeCodes ?? baseFilters.partyTypeCodes,
+      partyProfileSearch: baseFilters.appliedFilters?.partyProfileSearch ?? baseFilters.partyProfileSearch,
+      partyProfileSelection:
+        baseFilters.appliedFilters?.partyProfileSelection ?? baseFilters.partyProfileSelection,
+      transactionTypes: baseFilters.appliedFilters?.transactionTypes ?? baseFilters.transactionTypes,
+      sortBy: baseFilters.appliedFilters?.sortBy ?? baseFilters.sortBy,
       currencyIds: selectedCurrencyIds,
       productIds: selectedProductIds,
+    };
+
+    const nextSearchParams = buildSearchParams(undefined, next => {
+      setSearchParamList(next, 'stateIds', baseFilters.stateIds);
+      setSearchParamList(next, 'branchIds', baseFilters.branchIds);
+      setSearchParamList(next, 'counterIds', baseFilters.counterIds);
+      setSearchParamList(next, 'partyTypeCodes', baseFilters.partyTypeCodes);
+      setSearchParamList(next, 'transactionTypes', baseFilters.transactionTypes);
+      setSearchParamList(next, 'currencyIds', selectedCurrencyIds);
+      setSearchParamList(next, 'productIds', selectedProductIds);
     });
+
+    setAppliedFilters(nextAppliedFilters);
+    setSearchParams(nextSearchParams, { replace: true });
   };
 
   const resetFilters = () => {
@@ -72,6 +118,7 @@ export const useProductProfitReportFilters = () => {
     setCurrencyIds([]);
     setProductIds([]);
     setAppliedFilters(null);
+    setSearchParams(new URLSearchParams(), { replace: true });
   };
 
   const toggleCurrency = (id: string, checked: boolean) => {

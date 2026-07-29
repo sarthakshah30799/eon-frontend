@@ -907,7 +907,8 @@ export const calculatePurchasePayableTotal = (
   additionalCharges: Array<{
     totalAmount?: string | null;
     amount?: string | null;
-  }>
+  }>,
+  transactionType: TransactionType = TransactionTypeEnum.PURCHASE
 ) => {
   const transactionTotal = transactions.reduce(
     (sum, transaction) =>
@@ -915,7 +916,14 @@ export const calculatePurchasePayableTotal = (
     0
   );
   const additionalChargeTotal = additionalCharges.reduce(
-    (sum, charge) => sum + toNumericTotal(charge.totalAmount || charge.amount),
+    (sum, charge) => {
+      const rowTotal = toNumericTotal(charge.totalAmount || charge.amount);
+      return sum + (
+        transactionType === TransactionTypeEnum.PURCHASE
+          ? -Math.abs(rowTotal)
+          : Math.abs(rowTotal)
+      );
+    },
     0
   );
 

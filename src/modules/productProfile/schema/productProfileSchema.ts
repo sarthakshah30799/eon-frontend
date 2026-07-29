@@ -55,6 +55,7 @@ export const productProfileSchema = yup.object({
   bulkBuyingSeriesApplicable: yup.boolean().default(false),
   availableInBulkSelling: yup.boolean().default(false),
   bulkSellingSeriesApplicable: yup.boolean().default(false),
+  availableInOtherTransaction: yup.boolean().default(false),
   allowProductCancellation: yup.boolean().default(false),
   maintainBlankStockOfProduct: yup.boolean().default(false),
   denominationApplicable: yup.boolean().default(false),

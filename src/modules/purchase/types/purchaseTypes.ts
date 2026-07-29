@@ -175,6 +175,7 @@ export interface IPurchaseProductOption {
   productDescription: string;
   availableInBulkBuying: boolean;
   availableInBulkSelling: boolean;
+  availableInOtherTransaction: boolean;
 }
 
 export interface IPurchasePricingData {

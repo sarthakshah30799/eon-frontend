@@ -67,6 +67,7 @@ const RetailTransactionConfig = ({
   const availableInRetailSelling = watch('availableInRetailSelling');
   const availableInBulkBuying = watch('availableInBulkBuying');
   const availableInBulkSelling = watch('availableInBulkSelling');
+  const availableInOtherTransaction = watch('availableInOtherTransaction');
 
   const retailBuyingSeriesApplicable = watch('retailBuyingSeriesApplicable');
   const retailSellingSeriesApplicable = watch('retailSellingSeriesApplicable');
@@ -100,7 +101,7 @@ const RetailTransactionConfig = ({
   return (
     <div className="space-y-6">
       {/* Availability cards with nested series toggles */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         {/* Retail Buying Card */}
         <div
           className={`rounded-md border p-4 flex flex-col justify-between h-36 transition-all duration-300 ${
@@ -291,6 +292,30 @@ const RetailTransactionConfig = ({
             <p className="text-[11px] text-text-tertiary italic leading-relaxed">
               Product cannot be sold in bulk transactions. Check to enable
               series configurations.
+            </p>
+          )}
+        </div>
+
+        {/* Other Transactions Card (AD1) */}
+        <div
+          className={`rounded-md border p-4 flex flex-col justify-between h-36 transition-all duration-300 ${
+            availableInOtherTransaction
+              ? 'border-primary-500 bg-surface-primary shadow-sm ring-1 ring-primary-500/20'
+              : 'border-border-primary bg-surface-secondary/50 opacity-80'
+          }`}
+        >
+          <FormFieldCheckbox
+            name="availableInOtherTransaction"
+            label="Other Transactions (AD1)"
+            disabled={isSubmitting}
+          />
+          {availableInOtherTransaction ? (
+            <p className="text-[11px] text-text-tertiary italic leading-relaxed">
+              Product is available for AD1 and similar transactions.
+            </p>
+          ) : (
+            <p className="text-[11px] text-text-tertiary italic leading-relaxed">
+              Product will not appear in AD1 transaction product lists.
             </p>
           )}
         </div>

@@ -12,6 +12,7 @@ import { toast } from 'react-hot-toast';
 import { AUTH_SESSION_EXPIRED_EVENT } from './authSessionEvents';
 import { AUTH_CONSTANTS } from '../modules/auth/constants/authConstants';
 import { clearQueryCache } from './queryClient';
+import { DAY_WORK_PROMPT_DISMISSED_STORAGE_KEY } from '@/modules/dayEndStartProcess/constants';
 
 interface AuthContextType {
   user: IUser | null;
@@ -52,6 +53,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setActiveBranchId(null);
     setActiveCounterId(null);
     setPolicyContext(null);
+    window.sessionStorage.removeItem(DAY_WORK_PROMPT_DISMISSED_STORAGE_KEY);
   }, []);
 
   const handleSessionExpired = useCallback((message?: string) => {

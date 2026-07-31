@@ -198,6 +198,7 @@ export interface ITransactionEntity {
   tcsRatePercent: string;
   tcsRateType: 'PERCENT' | 'RUPEES' | null;
   tcsAmount: string;
+  commissionAmount: string;
   taxableAmount: string;
   itemBaseAmount: string;
   itemTaxableAmount: string;

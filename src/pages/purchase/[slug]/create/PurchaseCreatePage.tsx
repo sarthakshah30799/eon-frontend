@@ -1,7 +1,6 @@
 import { useLocation, useParams } from 'react-router-dom';
 import { NotFoundState } from '@/components/ui/not-found-state';
 import { PurchaseCreateView, AD1CreateView } from '@/modules/purchase';
-import { DayStartEntryGuard } from '@/modules/dayEndStartProcess';
 import { getPurchasePageTypeFromPath } from '../purchasePage.enum';
 
 const PurchaseCreatePage = () => {
@@ -19,11 +18,7 @@ const PurchaseCreatePage = () => {
     );
   }
 
-  return (
-    <DayStartEntryGuard>
-      <PurchaseCreateView purchasePageType={purchasePageType} />
-    </DayStartEntryGuard>
-  );
+  return <PurchaseCreateView purchasePageType={purchasePageType} />;
 };
 
 export default PurchaseCreatePage;

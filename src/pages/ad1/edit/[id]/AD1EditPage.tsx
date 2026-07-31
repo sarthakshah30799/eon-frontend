@@ -1,12 +1,7 @@
 import { AD1EditView } from '@/modules/purchase';
-import { DayStartEntryGuard } from '@/modules/dayEndStartProcess';
 
 const AD1EditPage = () => {
-  return (
-    <DayStartEntryGuard>
-      <AD1EditView />
-    </DayStartEntryGuard>
-  );
+  return <AD1EditView />;
 };
 
 export default AD1EditPage;

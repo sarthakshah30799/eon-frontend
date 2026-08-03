@@ -213,6 +213,7 @@ const TransferCreatePage = lazy(
 const TransferEditPage = lazy(
   () => import('../pages/transfers/[type]/edit/[id]')
 );
+const FakeCurrencyPage = lazy(() => import('../pages/fake-currencies/FakeCurrencyPage'));
 const AD1ListPage = lazy(() => import('../modules/purchase/views/AD1ListView').then(m => ({ default: m.AD1ListView })));
 const AD1CreatePage = lazy(() => import('../pages/ad1/create'));
 const AD1EditPage = lazy(() => import('../pages/ad1/edit/[id]'));
@@ -892,6 +893,14 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <TransferEditPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/fake-currencies',
+    element: (
+      <ProtectedLayout>
+        <FakeCurrencyPage />
       </ProtectedLayout>
     ),
   },

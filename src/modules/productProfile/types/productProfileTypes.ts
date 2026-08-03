@@ -16,6 +16,7 @@ export interface IProductProfile {
   acOfIssuer: string;
   commissionAc: string;
   fakeAccount: string;
+  lossAccount: string;
   bulkPurAc: string;
   openAc: string;
   closingAc: string;

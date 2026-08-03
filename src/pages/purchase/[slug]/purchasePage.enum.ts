@@ -37,6 +37,7 @@ const PURCHASE_PAGE_TYPE_BY_SLUG: Record<string, PurchasePageType> = {
 };
 
 const PURCHASE_PAGE_SLUG_BY_TYPE: Record<PurchasePageType, string> = {
+  [TransactionTypeProfileEnum.FAKE_CURRENCY]: 'fake-currencies',
   [TransactionTypeProfileEnum.PURCHASE_FFMC]: 'ffmc-ads',
   [TransactionTypeProfileEnum.PURCHASE_CORPORATE_INDIVIDUAL]: 'corporate-individual',
   [TransactionTypeProfileEnum.SALE_CORPORATE_INDIVIDUAL]: 'corporate-individual',
@@ -60,6 +61,10 @@ const PURCHASE_PAGE_CONFIG_BY_TYPE: Record<
     partyProfileTypes: PartyProfileType[];
   }
 > = {
+  [TransactionTypeProfileEnum.FAKE_CURRENCY]: {
+    title: 'Fake Currencies',
+    partyProfileTypes: [],
+  },
   [TransactionTypeProfileEnum.PURCHASE_FFMC]: {
     title: 'Purchase From FFMC/Ads',
     partyProfileTypes: [

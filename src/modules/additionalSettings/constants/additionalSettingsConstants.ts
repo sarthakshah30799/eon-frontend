@@ -56,6 +56,11 @@ export const AdditionalSettingsCodeEnum = {
   BranchTransferPurchaseNumberSeries: 'BRANCH_TRANSFER_PURCHASE',
   CounterTransferSellNumberSeries: 'COUNTER_TRANSFER_SELL',
   CounterTransferPurchaseNumberSeries: 'COUNTER_TRANSFER_PURCHASE',
+  FakeCurrencyNumberSeries: 'FAKE_CURRENCY',
+  FakeCurrencyRateEditable: 'FAKE_CURRENCY_RATE_EDITABLE',
+  TransferRateEditable: 'TRANSFER_RATE_EDITABLE',
+  FakeCurrency: 'FAKE_CURRENCY_SETTINGS',
+  TransferSettings: 'TRANSFER_SETTINGS',
 } as const;
 
 export const ADDITIONAL_SETTINGS_TEXTS = {

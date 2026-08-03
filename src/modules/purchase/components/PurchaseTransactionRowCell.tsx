@@ -23,6 +23,7 @@ import type { AsyncSelectResponse } from '@/components/ui';
 import type { IPartyProfileCommissionRule } from '@/modules/partyProfiles/types';
 import { usePurchaseQuantityAvailability } from '../hooks';
 import { TransactionItemRowShell } from '@/components/forms/TransactionItemsFieldArray/TransactionItemRowShell';
+import { useAverageSellPrice } from '@/modules/transactions/hooks/useAverageSellPrice';
 
 interface PurchaseTransactionRowCellProps {
   rowIndex: number;
@@ -36,6 +37,8 @@ interface PurchaseTransactionRowCellProps {
   onRemove: (rowIndex: number) => void;
   canRemove: boolean;
   disabled?: boolean;
+  rateEditable?: boolean;
+  useAverageSellRate?: boolean;
 }
 
 const loadProductOptions = async (
@@ -90,6 +93,8 @@ export const PurchaseTransactionRowCell = ({
   onRemove,
   canRemove,
   disabled = false,
+  rateEditable = true,
+  useAverageSellRate = false,
 }: PurchaseTransactionRowCellProps) => {
   const form = useFormContext<IPurchaseFormValues>();
   const fieldPath = useMemo(
@@ -152,6 +157,11 @@ export const PurchaseTransactionRowCell = ({
     [currencyId, pricingData.productCurrencyRates, productId]
   );
   const pricingSide = getPurchaseTransactionPricingSide(transactionType);
+  const averageSellRateQuery = useAverageSellPrice({
+    productId: String(productId || ''),
+    currencyId: String(currencyId || ''),
+    enabled: useAverageSellRate,
+  });
   const pricingSideLabel =
     getPurchaseTransactionPricingSideLabel(transactionType);
 
@@ -168,7 +178,9 @@ export const PurchaseTransactionRowCell = ({
   const effectiveGroupCode = preview?.effectiveGroupCode ?? '';
   const selectedSidePreview =
     pricingSide === 'sale' ? (preview?.sale ?? null) : (preview?.buy ?? null);
-  const calculatedRate = selectedSidePreview?.appliedFinalRate ?? '';
+  const calculatedRate = useAverageSellRate
+    ? averageSellRateQuery.data?.averageSellRate || selectedSidePreview?.appliedFinalRate || ''
+    : selectedSidePreview?.appliedFinalRate ?? '';
   const selectedCurrencyProfile = useMemo(
     () =>
       (pricingData.currencies ?? []).find(
@@ -600,7 +612,7 @@ export const PurchaseTransactionRowCell = ({
             }
             placeholder="Select currency"
             onClick={() => onOpenCurrencyPicker(rowIndex)}
-            disabled={disabled}
+            disabled={disabled || !rateEditable}
             helperText={rateHelperText || undefined}
             buttonPosition="bottom"
           />

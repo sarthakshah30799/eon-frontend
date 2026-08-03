@@ -13,6 +13,7 @@ export type HeaderMeta = {
 
 const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
   { path: '/', meta: { title: 'Dashboard' } },
+  { path: '/fake-currencies', meta: { title: 'Fake Currencies' } },
   { path: '/users/list', meta: { title: 'Users' } },
   { path: '/users/create', meta: { title: 'Create User' } },
   { path: '/users/edit/:id', meta: { title: 'Edit User' } },

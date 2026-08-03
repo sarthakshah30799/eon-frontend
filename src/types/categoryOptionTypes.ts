@@ -29,6 +29,7 @@ export const CategoryOptionCodeEnum = {
   PassengerNationality: 'NATIONALITY',
   PassengerResidentStatus: 'RESIDENT',
   PassengerPanHolderRelation: 'RELATION',
+  FakeCurrencyReason: 'FAKE_CURRENCY_REASON',
 } as const;
 
 export type CategoryOptionCode =

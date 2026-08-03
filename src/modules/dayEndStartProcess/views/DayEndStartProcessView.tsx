@@ -5,6 +5,7 @@ import { Loader } from '@/components/ui/loader';
 import { useAuth } from '@/lib/AuthContext';
 import { transactionPoliciesApi } from '@/api/transactionPolicies/transactionPolicies.api';
 import type { IPolicyChecklistItem } from '@/modules/auth/types';
+import { formatDateTime } from '@/utils';
 
 type ChecklistAnswers = Record<string, string | boolean>;
 type DayEndAction = 'start' | 'end';
@@ -210,7 +211,7 @@ const DayEndStartProcessForm = ({
                 Business Date
               </div>
               <div className="mt-2 text-sm font-medium text-text-primary">
-                {currentBusinessDate || 'Not available'}
+                {currentBusinessDate ? formatDateTime(currentBusinessDate, 'DD/MM/YYYY') : 'Not available'}
               </div>
             </div>
           </div>
@@ -241,15 +242,23 @@ const DayEndStartProcessForm = ({
                   : 'No pending EOD'}
             </div>
           </div>
-          <div className="rounded-lg border border-border-primary bg-surface-secondary px-4 py-3 text-sm text-text-secondary">
-            <div className="font-semibold text-text-primary">Transaction Date</div>
-            <div>{transactionDate || openBusinessDate || currentBusinessDate || 'Not available'}</div>
+            <div className="rounded-lg border border-border-primary bg-surface-secondary px-4 py-3 text-sm text-text-secondary">
+              <div className="font-semibold text-text-primary">Transaction Date</div>
+            <div>
+              {transactionDate
+                ? formatDateTime(transactionDate, 'DD/MM/YYYY')
+                : openBusinessDate
+                  ? formatDateTime(openBusinessDate, 'DD/MM/YYYY')
+                  : currentBusinessDate
+                    ? formatDateTime(currentBusinessDate, 'DD/MM/YYYY')
+                    : 'Not available'}
+            </div>
           </div>
           {activeMonthlyLock ? (
             <div className="rounded-lg border border-warning-200 bg-warning-50 px-4 py-3 text-sm text-warning-800">
               <div className="font-semibold">Monthly Lock Active</div>
               <div>
-                {activeMonthlyLock.fromDate} to {activeMonthlyLock.toDate}
+                {formatDateTime(activeMonthlyLock.fromDate, 'DD/MM/YYYY')} to {formatDateTime(activeMonthlyLock.toDate, 'DD/MM/YYYY')}
               </div>
             </div>
           ) : null}

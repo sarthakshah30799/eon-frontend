@@ -100,6 +100,9 @@ export const useDashboard = () => {
       case 'manual-book':
         navigate(`/manual-bill-books/${item.id}`);
         break;
+      case 'transfer':
+        navigate(`/transfer/${(item.subType ?? item.type).toLowerCase()}/edit/${item.id}`);
+        break;
       default:
         break;
     }

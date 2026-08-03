@@ -213,11 +213,19 @@ const TRANSACTION_ACCOUNTING_SUBCATEGORIES: readonly AdditionalSettingSubcategor
     optionsSource: 'account-profile',
   },
   {
-    code: AdditionalSettingsCodeEnum.CommissionControlAccount,
-    label: 'COMMISSION CONTROL ACCOUNT',
+    code: AdditionalSettingsCodeEnum.BranchControlAccount,
+    label: 'BRANCH CONTROL ACCOUNT',
     valueType: 'select',
     required: true,
-    placeholder: 'Select commission control account',
+    placeholder: 'Select branch control account',
+    optionsSource: 'account-profile',
+  },
+  {
+    code: AdditionalSettingsCodeEnum.CounterControlAccount,
+    label: 'COUNTER CONTROL ACCOUNT',
+    valueType: 'select',
+    required: true,
+    placeholder: 'Select counter control account',
     optionsSource: 'account-profile',
   },
   {
@@ -376,11 +384,45 @@ const TRANSACTION_NUMBERING_SUBCATEGORY_CONFIG: Partial<Record<
   },
 };
 
+const TRANSFER_NUMBERING_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] = [
+  {
+    code: AdditionalSettingsCodeEnum.BranchTransferSellNumberSeries,
+    label: 'BRANCH TRANSFER SELL',
+    valueType: 'number',
+    required: true,
+    placeholder: 'Enter starting sequence number',
+  },
+  {
+    code: AdditionalSettingsCodeEnum.BranchTransferPurchaseNumberSeries,
+    label: 'BRANCH TRANSFER PURCHASE',
+    valueType: 'number',
+    required: true,
+    placeholder: 'Enter starting sequence number',
+  },
+  {
+    code: AdditionalSettingsCodeEnum.CounterTransferSellNumberSeries,
+    label: 'COUNTER TRANSFER SELL',
+    valueType: 'number',
+    required: true,
+    placeholder: 'Enter starting sequence number',
+  },
+  {
+    code: AdditionalSettingsCodeEnum.CounterTransferPurchaseNumberSeries,
+    label: 'COUNTER TRANSFER PURCHASE',
+    valueType: 'number',
+    required: true,
+    placeholder: 'Enter starting sequence number',
+  },
+];
+
 const TRANSACTION_NUMBERING_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] =
-  TRANSACTION_TYPE_PROFILE_ORDER.flatMap(profileType => {
-    const definition = TRANSACTION_NUMBERING_SUBCATEGORY_CONFIG[profileType];
-    return definition ? [{ ...definition }] : [];
-  });
+  [
+    ...TRANSACTION_TYPE_PROFILE_ORDER.flatMap(profileType => {
+      const definition = TRANSACTION_NUMBERING_SUBCATEGORY_CONFIG[profileType];
+      return definition ? [{ ...definition }] : [];
+    }),
+    ...TRANSFER_NUMBERING_SUBCATEGORIES,
+  ];
 
 export const ADDITIONAL_SETTING_DEFINITIONS: readonly AdditionalSettingCategoryDefinition[] = [
   {

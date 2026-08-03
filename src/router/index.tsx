@@ -204,6 +204,15 @@ const PurchaseCreatePage = lazy(
 const PurchaseEditPage = lazy(
   () => import('../pages/purchase/[slug]/edit/[id]')
 );
+const TransferListPage = lazy(
+  () => import('../pages/transfers/[type]')
+);
+const TransferCreatePage = lazy(
+  () => import('../pages/transfers/[type]/create')
+);
+const TransferEditPage = lazy(
+  () => import('../pages/transfers/[type]/edit/[id]')
+);
 const AD1ListPage = lazy(() => import('../modules/purchase/views/AD1ListView').then(m => ({ default: m.AD1ListView })));
 const AD1CreatePage = lazy(() => import('../pages/ad1/create'));
 const AD1EditPage = lazy(() => import('../pages/ad1/edit/[id]'));
@@ -859,6 +868,30 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <PurchaseEditPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/transfer/:type',
+    element: (
+      <ProtectedLayout>
+        <TransferListPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/transfer/:type/create',
+    element: (
+      <ProtectedLayout>
+        <TransferCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/transfer/:type/edit/:id',
+    element: (
+      <ProtectedLayout>
+        <TransferEditPage />
       </ProtectedLayout>
     ),
   },

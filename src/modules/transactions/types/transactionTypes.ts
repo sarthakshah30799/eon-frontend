@@ -44,6 +44,8 @@ export const TransactionPartyProfileTypeEnum = {
   FRANCHISE: 'FRANCHISE',
   FOREX: 'FOREX',
   MISC: 'MISC',
+  BRANCH: 'BRANCH',
+  COUNTER: 'COUNTER',
 } as const;
 
 export type TransactionPartyProfileType =
@@ -172,6 +174,7 @@ export interface ITransactionEntity {
   passengerSnapshot?: Record<string, unknown> | null;
   passengerTravelId: string | null;
   passengerTravelSnapshot?: Record<string, unknown> | null;
+  transferRequestId: string | null;
   manualBookPageId: string | null;
   manualBookPageSnapshot?: Record<string, unknown> | null;
   transactionType: TransactionType;
@@ -684,6 +687,7 @@ export interface IRecordTransactionPrintPayload {
 
 export interface ITransactionQuantityAvailability {
   branchId: string;
+  counterId: string;
   currencyId: string;
   productId: string;
   purchasedQuantity: string;

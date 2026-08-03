@@ -31,6 +31,7 @@ export * from './expenseIncomeBooking/expenseIncomeBooking.api';
 export * from './manual-bill-books/manualBillBook.api';
 export * from './chequebooks/chequebook.api';
 export * from './transactions';
+export * from './transfers/transfers.api';
 export * from './reports';
 export * from './dashboard/dashboard.api';
 export * from './purpose';

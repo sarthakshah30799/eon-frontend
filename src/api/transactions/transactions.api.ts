@@ -62,6 +62,7 @@ export const transactionsApi = {
   getQuantityAvailability: async (
     params: {
       branchId: string;
+      counterId: string;
       currencyId: string;
       productId: string;
       excludeTransactionId?: string;
@@ -69,6 +70,7 @@ export const transactionsApi = {
   ): Promise<ITransactionQuantityAvailability> => {
     const query = new URLSearchParams();
     query.set('branchId', params.branchId);
+    query.set('counterId', params.counterId);
     query.set('currencyId', params.currencyId);
     query.set('productId', params.productId);
 

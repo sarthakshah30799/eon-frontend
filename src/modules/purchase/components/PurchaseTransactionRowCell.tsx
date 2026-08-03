@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
-import { TrashIcon } from '@heroicons/react/24/outline';
-import { Button } from '@/components/ui';
 import { FormFieldAsyncSelect, FormFieldInput } from '@/components/forms';
 import { TransactionTypeEnum } from '@/modules/transactions';
 import type {
@@ -24,10 +22,13 @@ import { EntityPickerField } from './EntityPickerField';
 import type { AsyncSelectResponse } from '@/components/ui';
 import type { IPartyProfileCommissionRule } from '@/modules/partyProfiles/types';
 import { usePurchaseQuantityAvailability } from '../hooks';
+import { TransactionItemRowShell } from '@/components/forms/TransactionItemsFieldArray/TransactionItemRowShell';
 
 interface PurchaseTransactionRowCellProps {
   rowIndex: number;
+  fieldPrefix?: string;
   branchId?: string;
+  counterId?: string;
   excludeTransactionId?: string;
   pricingData: IPurchasePricingData;
   agentCommissionRules?: IPartyProfileCommissionRule[];
@@ -79,7 +80,9 @@ const normalizeValue = (value: unknown) => String(value ?? '').trim();
 
 export const PurchaseTransactionRowCell = ({
   rowIndex,
+  fieldPrefix = 'transactions',
   branchId = '',
+  counterId = '',
   excludeTransactionId,
   pricingData,
   agentCommissionRules = [],
@@ -89,21 +92,25 @@ export const PurchaseTransactionRowCell = ({
   disabled = false,
 }: PurchaseTransactionRowCellProps) => {
   const form = useFormContext<IPurchaseFormValues>();
+  const fieldPath = useMemo(
+    () => (fieldName: string) => `${fieldPrefix}.${rowIndex}.${fieldName}` as const,
+    [fieldPrefix, rowIndex]
+  );
   const currencyId = useWatch({
     control: form.control,
-    name: `transactions.${rowIndex}.currencyId`,
+    name: fieldPath('currencyId'),
   });
   const currencyCode = useWatch({
     control: form.control,
-    name: `transactions.${rowIndex}.currencyCode`,
+    name: fieldPath('currencyCode'),
   });
   const currencyName = useWatch({
     control: form.control,
-    name: `transactions.${rowIndex}.currencyName`,
+    name: fieldPath('currencyName'),
   });
   const productId = useWatch({
     control: form.control,
-    name: `transactions.${rowIndex}.productId`,
+    name: fieldPath('productId'),
   });
   const transactionType = useWatch({
     control: form.control,
@@ -111,19 +118,19 @@ export const PurchaseTransactionRowCell = ({
   });
   const quantity = useWatch({
     control: form.control,
-    name: `transactions.${rowIndex}.quantity`,
+    name: fieldPath('quantity'),
   });
   const perValue = useWatch({
     control: form.control,
-    name: `transactions.${rowIndex}.per`,
+    name: fieldPath('per'),
   });
   const rateValue = useWatch({
     control: form.control,
-    name: `transactions.${rowIndex}.rate`,
+    name: fieldPath('rate'),
   });
   const finalAmountValue = useWatch({
     control: form.control,
-    name: `transactions.${rowIndex}.finalAmount`,
+    name: fieldPath('finalAmount'),
   });
 
   const selectedProduct = useMemo(
@@ -170,10 +177,11 @@ export const PurchaseTransactionRowCell = ({
   );
   const quantityAvailabilityQuery = usePurchaseQuantityAvailability({
     branchId,
+    counterId,
     currencyId: String(currencyId || ''),
     productId: String(productId || ''),
     excludeTransactionId,
-    enabled: Boolean(branchId && currencyId && productId),
+    enabled: Boolean(branchId && counterId && currencyId && productId),
   });
   const quantityAvailability = quantityAvailabilityQuery.data ?? null;
   const agentCommissionRule = useMemo(
@@ -267,7 +275,7 @@ export const PurchaseTransactionRowCell = ({
   }, [selectionKey]);
 
   useEffect(() => {
-    const fieldName = `transactions.${rowIndex}.rate` as const;
+    const fieldName = fieldPath('rate');
     const currentRate = String(rateValue ?? '').trim();
 
     if (!hasCurrencyProductSelection || !calculatedRate) {
@@ -300,13 +308,14 @@ export const PurchaseTransactionRowCell = ({
     calculatedRate,
     form,
     hasCurrencyProductSelection,
+    fieldPath,
     rowIndex,
     rateValue,
     selectionKey,
   ]);
 
   useEffect(() => {
-    const fieldName = `transactions.${rowIndex}.per` as const;
+    const fieldName = fieldPath('per');
     const nextPer = String(selectedCurrencyProfile?.ratePer ?? '').trim();
     const currentPer = normalizeValue(perValue);
 
@@ -317,20 +326,20 @@ export const PurchaseTransactionRowCell = ({
         shouldValidate: false,
       });
     }
-  }, [form, perValue, rowIndex, selectedCurrencyProfile?.ratePer]);
+  }, [fieldPath, form, perValue, rowIndex, selectedCurrencyProfile?.ratePer]);
 
   useEffect(() => {
     const nextProductCode = selectedProduct?.productCode ?? '';
     const nextProductDescription = selectedProduct?.productDescription ?? '';
     const currentProductCode = normalizeValue(
-      form.getValues(`transactions.${rowIndex}.productCode`)
+      form.getValues(fieldPath('productCode'))
     );
     const currentProductDescription = normalizeValue(
-      form.getValues(`transactions.${rowIndex}.productDescription`)
+      form.getValues(fieldPath('productDescription'))
     );
 
     if (currentProductCode !== nextProductCode) {
-      form.setValue(`transactions.${rowIndex}.productCode`, nextProductCode, {
+      form.setValue(fieldPath('productCode'), nextProductCode, {
         shouldDirty: false,
         shouldTouch: false,
         shouldValidate: false,
@@ -338,20 +347,16 @@ export const PurchaseTransactionRowCell = ({
     }
 
     if (currentProductDescription !== nextProductDescription) {
-      form.setValue(
-        `transactions.${rowIndex}.productDescription`,
-        nextProductDescription,
-        {
-          shouldDirty: false,
-          shouldTouch: false,
-          shouldValidate: false,
-        }
-      );
+      form.setValue(fieldPath('productDescription'), nextProductDescription, {
+        shouldDirty: false,
+        shouldTouch: false,
+        shouldValidate: false,
+      });
     }
-  }, [form, rowIndex, selectedProduct]);
+  }, [fieldPath, form, rowIndex, selectedProduct]);
 
   useEffect(() => {
-    const fieldName = `transactions.${rowIndex}.rate` as const;
+    const fieldName = fieldPath('rate');
     if (!hasCurrencyProductSelection) {
       if (form.getFieldState(fieldName).error?.type === rangeErrorType) {
         form.clearErrors(fieldName);
@@ -411,6 +416,7 @@ export const PurchaseTransactionRowCell = ({
     form,
     hasCurrencyProductSelection,
     pricingSideLabel,
+    fieldPath,
     rowIndex,
     rateValue,
     sideMaxRate,
@@ -418,7 +424,7 @@ export const PurchaseTransactionRowCell = ({
   ]);
 
   useEffect(() => {
-    const fieldName = `transactions.${rowIndex}.quantity` as const;
+    const fieldName = fieldPath('quantity');
     const currentQuantity = Number(String(quantity ?? '').trim() || 0);
     const availableQuantity = Number(
       String(quantityAvailability?.availableQuantity ?? '').trim() || 0
@@ -466,6 +472,7 @@ export const PurchaseTransactionRowCell = ({
   }, [
     form,
     hasCurrencyProductSelection,
+    fieldPath,
     quantity,
     quantityAvailability?.availableQuantity,
     rowIndex,
@@ -473,7 +480,7 @@ export const PurchaseTransactionRowCell = ({
   ]);
 
   useEffect(() => {
-    const fieldName = `transactions.${rowIndex}.total` as const;
+    const fieldName = fieldPath('total');
     const currentTotal = normalizeValue(form.getValues(fieldName));
 
     if (currentTotal !== total) {
@@ -483,11 +490,11 @@ export const PurchaseTransactionRowCell = ({
         shouldValidate: false,
       });
     }
-  }, [form, rowIndex, total]);
+  }, [fieldPath, form, rowIndex, total]);
 
   useEffect(() => {
-    const roundOffField = `transactions.${rowIndex}.roundOff` as const;
-    const finalAmountField = `transactions.${rowIndex}.finalAmount` as const;
+    const roundOffField = fieldPath('roundOff');
+    const finalAmountField = fieldPath('finalAmount');
     const currentRoundOff = normalizeValue(form.getValues(roundOffField));
     const currentFinalAmount = normalizeValue(form.getValues(finalAmountField));
 
@@ -506,10 +513,10 @@ export const PurchaseTransactionRowCell = ({
         shouldValidate: false,
       });
     }
-  }, [form, rowIndex, roundedTotal, roundOffAmount]);
+  }, [fieldPath, form, rowIndex, roundedTotal, roundOffAmount]);
 
   useEffect(() => {
-    const fieldName = `transactions.${rowIndex}.commission` as const;
+    const fieldName = fieldPath('commission');
     const currentCommission = normalizeValue(form.getValues(fieldName));
     const nextCommission = commissionAmount || '';
 
@@ -520,10 +527,10 @@ export const PurchaseTransactionRowCell = ({
         shouldValidate: false,
       });
     }
-  }, [commissionAmount, form, rowIndex]);
+  }, [commissionAmount, fieldPath, form, rowIndex]);
 
   useEffect(() => {
-    const fieldName = `transactions.${rowIndex}.commissionSnapshot` as const;
+    const fieldName = fieldPath('commissionSnapshot');
     const currentSnapshot = form.getValues(fieldName);
     const nextSnapshot = commissionSnapshot;
     if (JSON.stringify(currentSnapshot) !== JSON.stringify(nextSnapshot)) {
@@ -533,7 +540,7 @@ export const PurchaseTransactionRowCell = ({
         shouldValidate: false,
       });
     }
-  }, [commissionSnapshot, form, rowIndex]);
+  }, [commissionSnapshot, fieldPath, form, rowIndex]);
 
   const productLoadOptions = useCallback(
     (inputValue: string) =>
@@ -549,38 +556,37 @@ export const PurchaseTransactionRowCell = ({
   );
 
   return (
-    <div className="flex flex-col items-start gap-2 border-b border-border-base px-1 py-1 last:border-b-0">
-      {hasCurrencyProductSelection ? (
-        <div className="flex w-full space-y-0.5 space-x-2 break-words text-[10px] leading-snug text-text-tertiary">
-          {quantityAvailabilityQuery.isLoading ? (
-            <div>Checking available quantity...</div>
+    <TransactionItemRowShell
+      title={`Transaction Item ${rowIndex + 1}`}
+      availabilityText={
+        hasCurrencyProductSelection ? (
+          quantityAvailabilityQuery.isLoading ? (
+            'Checking available quantity...'
           ) : (
             <>
-              <div>
-                <b>Available:{' '}</b>
-                {formatPurchaseDecimal(
-                  quantityAvailability?.availableQuantity,
-                  PURCHASE_RATE_DECIMALS
-                )}
-              </div>
-              <div>
-                <b>Purchased:{' '}</b>
-                {formatPurchaseDecimal(
-                  quantityAvailability?.purchasedQuantity,
-                  PURCHASE_RATE_DECIMALS
-                )}
-              </div>
-              <div>
-                <b>Sold:{' '}</b>
-                {formatPurchaseDecimal(
-                  quantityAvailability?.soldQuantity,
-                  PURCHASE_RATE_DECIMALS
-                )}
-              </div>
+              <b>Available:</b>{' '}
+              {formatPurchaseDecimal(
+                quantityAvailability?.availableQuantity,
+                PURCHASE_RATE_DECIMALS
+              )}{' '}
+              <b>Purchased:</b>{' '}
+              {formatPurchaseDecimal(
+                quantityAvailability?.purchasedQuantity,
+                PURCHASE_RATE_DECIMALS
+              )}{' '}
+              <b>Sold:</b>{' '}
+              {formatPurchaseDecimal(
+                quantityAvailability?.soldQuantity,
+                PURCHASE_RATE_DECIMALS
+              )}
             </>
-          )}
-        </div>
-      ) : null}
+          )
+        ) : null
+      }
+      canRemove={canRemove}
+      disabled={disabled}
+      onRemove={() => onRemove(rowIndex)}
+    >
       <div className="grid gap-2 px-1 py-1 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1.4fr)_minmax(0,0.55fr)_minmax(0,0.65fr)_minmax(0,0.75fr)_minmax(0,0.55fr)_minmax(0,0.55fr)_minmax(0,0.55fr)_minmax(0,0.55fr)_44px]">
         <div className="min-w-0">
           <EntityPickerField
@@ -599,7 +605,7 @@ export const PurchaseTransactionRowCell = ({
         </div>
         <div className="min-w-0">
           <FormFieldAsyncSelect
-            name={`transactions.${rowIndex}.productId`}
+            name={fieldPath('productId')}
             label="Product"
             loadOptions={productLoadOptions}
             placeholder="Select product"
@@ -611,7 +617,7 @@ export const PurchaseTransactionRowCell = ({
         </div>
         <div className="relative min-w-0 pb-14">
           <FormFieldInput
-            name={`transactions.${rowIndex}.quantity`}
+            name={fieldPath('quantity')}
             label="Quantity"
             type="number"
             inputMode="decimal"
@@ -623,7 +629,7 @@ export const PurchaseTransactionRowCell = ({
         </div>
         <div className="relative min-w-0 pb-14">
           <FormFieldInput
-            name={`transactions.${rowIndex}.rate`}
+            name={fieldPath('rate')}
             label="Rate"
             type="number"
             step={`0.${'0'.repeat(PURCHASE_RATE_DECIMALS - 1)}1`}
@@ -662,7 +668,7 @@ export const PurchaseTransactionRowCell = ({
         </div>
         <div className="min-w-0">
           <FormFieldInput
-            name={`transactions.${rowIndex}.per`}
+            name={fieldPath('per')}
             label="Per"
             readOnly
             classes={{ container: 'max-w-[95px]' }}
@@ -670,7 +676,7 @@ export const PurchaseTransactionRowCell = ({
         </div>
         <div className="min-w-0">
           <FormFieldInput
-            name={`transactions.${rowIndex}.total`}
+            name={fieldPath('total')}
             label="Total"
             readOnly
             classes={{ container: 'max-w-[95px]' }}
@@ -678,7 +684,7 @@ export const PurchaseTransactionRowCell = ({
         </div>
         <div className="min-w-0">
           <FormFieldInput
-            name={`transactions.${rowIndex}.roundOff`}
+            name={fieldPath('roundOff')}
             label="Round Off"
             readOnly
             classes={{ container: 'max-w-[95px]' }}
@@ -686,7 +692,7 @@ export const PurchaseTransactionRowCell = ({
         </div>
         <div className="min-w-0">
           <FormFieldInput
-            name={`transactions.${rowIndex}.finalAmount`}
+            name={fieldPath('finalAmount')}
             label="Final Amount"
             readOnly
             classes={{ container: 'max-w-[95px]' }}
@@ -694,26 +700,14 @@ export const PurchaseTransactionRowCell = ({
         </div>
         <div className="min-w-0">
           <FormFieldInput
-            name={`transactions.${rowIndex}.commission`}
+            name={fieldPath('commission')}
             label="Commission"
             readOnly
             classes={{ container: 'max-w-[95px]' }}
           />
         </div>
-        <div className="flex min-w-0 items-start justify-end pt-4">
-          <Button
-            type="button"
-            variant="destructive"
-            size="icon"
-            disabled={!canRemove || disabled}
-            onClick={() => onRemove(rowIndex)}
-            aria-label="Remove transaction row"
-          >
-            <TrashIcon className="h-4 w-4" aria-hidden="true" />
-          </Button>
-        </div>
       </div>
-    </div>
+    </TransactionItemRowShell>
   );
 };
 

@@ -13,6 +13,7 @@ const entityLabels: Record<string, string> = {
   transaction: 'Transaction',
   chequebook: 'Cheque Book',
   'manual-book': 'Manual Bill',
+  transfer: 'Transfer',
 };
 
 const PendingApprovals = ({ approvals, loading = false, onItemClick }: PendingApprovalsProps) => (

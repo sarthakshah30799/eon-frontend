@@ -10,6 +10,7 @@ export interface DashboardStats {
   pendingTransactions: number;
   pendingChequeBooks: number;
   pendingManualBooks: number;
+  pendingTransfers: number;
   activeAlerts: number;
 }
 
@@ -71,6 +72,7 @@ export const dashboardApi = {
       pendingTransactions: 0,
       pendingChequeBooks: 0,
       pendingManualBooks: 0,
+      pendingTransfers: 0,
       activeAlerts: 0,
     };
   },

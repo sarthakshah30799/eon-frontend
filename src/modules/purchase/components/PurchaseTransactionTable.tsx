@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import { useFieldArray, useFormContext } from 'react-hook-form';
 import type { TableColumnDef } from '@/components/ui';
-import { Button, CardSection, Table } from '@/components/ui';
 import type {
   IPurchaseFormValues,
   IPurchasePricingData,
@@ -9,9 +8,11 @@ import type {
 import { createEmptyPurchaseTransactionRow } from '../utils/purchaseUtils';
 import { PurchaseTransactionRowCell } from './PurchaseTransactionRowCell';
 import type { IPartyProfileCommissionRule } from '@/modules/partyProfiles/types';
+import { TransactionItemsFieldArray } from '@/components/forms/TransactionItemsFieldArray/TransactionItemsFieldArray';
 
 interface PurchaseTransactionTableProps {
   branchId?: string;
+  counterId?: string;
   excludeTransactionId?: string;
   pricingData: IPurchasePricingData;
   agentCommissionRules?: IPartyProfileCommissionRule[];
@@ -21,6 +22,7 @@ interface PurchaseTransactionTableProps {
 
 export const PurchaseTransactionTable = ({
   branchId = '',
+  counterId = '',
   excludeTransactionId,
   pricingData,
   agentCommissionRules = [],
@@ -42,6 +44,7 @@ export const PurchaseTransactionTable = ({
           <PurchaseTransactionRowCell
             rowIndex={row.index}
             branchId={branchId}
+            counterId={counterId}
             excludeTransactionId={excludeTransactionId}
             pricingData={pricingData}
             agentCommissionRules={agentCommissionRules}
@@ -60,6 +63,7 @@ export const PurchaseTransactionTable = ({
   }, [
     agentCommissionRules,
     branchId,
+    counterId,
     excludeTransactionId,
     disabled,
     fields.length,
@@ -69,34 +73,15 @@ export const PurchaseTransactionTable = ({
   ]);
 
   return (
-    <CardSection heading="Transaction Details">
-      <div className="space-y-3">
-        <Table
-          columns={columns}
-          data={fields}
-          enableSorting={false}
-          enableFiltering={false}
-          enablePagination={false}
-          enableRowSelection={false}
-          enableColumnVisibility={false}
-          loading={false}
-          className="table-fixed"
-          emptyMessage="No transaction rows found."
-          getRowId={row => row.id}
-        />
-
-        <div className="flex justify-end">
-          <Button
-            type="button"
-            variant="outline"
-            disabled={disabled}
-            onClick={() => append(createEmptyPurchaseTransactionRow())}
-          >
-            Add Row
-          </Button>
-        </div>
-      </div>
-    </CardSection>
+    <TransactionItemsFieldArray
+      heading="Transaction Details"
+      emptyMessage="No transaction rows found."
+      addLabel="Add Row"
+      data={fields}
+      columns={columns}
+      disabled={disabled}
+      onAdd={() => append(createEmptyPurchaseTransactionRow())}
+    />
   );
 };
 

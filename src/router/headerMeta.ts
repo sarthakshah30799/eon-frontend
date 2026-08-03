@@ -313,6 +313,18 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
     meta: { title: 'Sell' },
   },
   {
+    path: '/transfer/:type',
+    meta: { title: 'Transfer' },
+  },
+  {
+    path: '/transfer/:type/create',
+    meta: { title: 'Transfer' },
+  },
+  {
+    path: '/transfer/:type/edit/:id',
+    meta: { title: 'Transfer' },
+  },
+  {
     path: '/party-profiles/:type/documents/:id',
     meta: {
       title: 'Party Profile Documents',
@@ -485,6 +497,9 @@ export const resolveHeaderMeta = (
     { path: '/sell/:slug/edit/:id', action: 'edit' as const },
     { path: '/sell/:slug/create', action: 'create' as const },
     { path: '/sell/:slug', action: 'view' as const },
+    { path: '/transfer/:type/edit/:id', action: 'edit' as const },
+    { path: '/transfer/:type/create', action: 'create' as const },
+    { path: '/transfer/:type', action: 'view' as const },
   ];
 
   for (const route of purchaseRouteMatches) {
@@ -500,18 +515,29 @@ export const resolveHeaderMeta = (
       matchedRoute.params.slug
     ) ?? getPurchasePageTypeFromSlug(matchedRoute.params.slug);
 
-    const pageTitle = getPurchasePageTitle(purchasePageType);
+    const pageTitle = route.path.startsWith('/transfer')
+      ? 'Transfer'
+      : getPurchasePageTitle(purchasePageType);
 
     switch (route.action) {
       case 'edit':
+        if (route.path.startsWith('/transfer')) {
+          return { title: 'Edit Transfer' };
+        }
         return {
           title: purchasePageType ? `Edit ${pageTitle}` : 'Edit Transaction',
         };
       case 'create':
+        if (route.path.startsWith('/transfer')) {
+          return { title: 'Create Transfer' };
+        }
         return {
           title: purchasePageType ? `Create ${pageTitle}` : 'Create Transaction',
         };
       case 'view':
+        if (route.path.startsWith('/transfer')) {
+          return { title: 'Transfer' };
+        }
         return {
           title: pageTitle,
         };

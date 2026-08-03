@@ -166,6 +166,7 @@ const PurchaseFormBody = ({
   void _branchCode;
   void _isFreshlyCreated;
   const form = useFormContext<IPurchaseFormValues>();
+  const { activeCounterId } = useAuth();
   const [currencyPickerRowIndex, setCurrencyPickerRowIndex] = useState<
     number | null
   >(null);
@@ -214,7 +215,12 @@ const PurchaseFormBody = ({
     control: form.control,
     name: 'branchId',
   });
+  const watchedCounterId = useWatch({
+    control: form.control,
+    name: 'counterId',
+  });
   const resolvedBranchId = watchedBranchId || branchId;
+  const resolvedCounterId = watchedCounterId || activeCounterId || '';
   const resolvedPassengerEntityType =
     isCombinedPartyProfilePage &&
     transactionPartyProfileType === TransactionPartyProfileTypeEnum.INDIVIDUAL
@@ -1227,6 +1233,7 @@ const PurchaseFormBody = ({
 
       <PurchaseTransactionTable
         branchId={resolvedBranchId}
+        counterId={resolvedCounterId}
         excludeTransactionId={savedTransaction?.id ?? undefined}
         pricingData={pricingData}
         onOpenCurrencyPicker={setCurrencyPickerRowIndex}

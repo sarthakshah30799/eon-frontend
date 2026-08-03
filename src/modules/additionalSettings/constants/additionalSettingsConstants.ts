@@ -28,7 +28,8 @@ export const AdditionalSettingsCodeEnum = {
   HandlingChargeAccount: 'HANDLING_CHARGE_ACCOUNT',
   AgentControlAccount: 'AGENT_CRDAGT',
   TdsControlAccount: 'TDSFXCOM',
-  CommissionControlAccount: 'COMGCN',
+  BranchControlAccount: 'BRANCH_CONTROL_ACCOUNT',
+  CounterControlAccount: 'COUNTER_CONTROL_ACCOUNT',
   TaxRate: 'GST_RATE',
   PurchasePassengerRule: 'PURCHASE_PASSENGER_RULE',
   PurchasePassengerRuleReferenceCurrencyCode: 'PURCHASE_PASSENGER_RULE_REFERENCE_CURRENCY_CODE',
@@ -51,6 +52,10 @@ export const AdditionalSettingsCodeEnum = {
   PurchaseForeignNumberSeries: 'PURCHASE_FOREIGN',
   PurchaseMiscNumberSeries: 'PURCHASE_MISC',
   PurchaseFranchiseNumberSeries: 'PURCHASE_FRANCHISE',
+  BranchTransferSellNumberSeries: 'BRANCH_TRANSFER_SELL',
+  BranchTransferPurchaseNumberSeries: 'BRANCH_TRANSFER_PURCHASE',
+  CounterTransferSellNumberSeries: 'COUNTER_TRANSFER_SELL',
+  CounterTransferPurchaseNumberSeries: 'COUNTER_TRANSFER_PURCHASE',
 } as const;
 
 export const ADDITIONAL_SETTINGS_TEXTS = {

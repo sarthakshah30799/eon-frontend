@@ -1,6 +1,11 @@
 import type { ICreateTransferPayload } from '@/api/transfers/transfers.api';
 import { calculateRoundedTransactionAmount, calculateTransactionRoundOff, calculateTransactionTotal, formatPurchaseDecimal } from '@/modules/purchase/utils/purchaseUtils';
-import type { ICurrencyTransfer, ITransferFormItem, ITransferFormValues } from '../types';
+import {
+  TransferTypeEnum,
+  type ICurrencyTransfer,
+  type ITransferFormItem,
+  type ITransferFormValues,
+} from '../types';
 import type { ITransactionReferenceSnapshot } from '@/modules/transactions';
 
 export const createEmptyTransferFormItem = (): ITransferFormItem => ({

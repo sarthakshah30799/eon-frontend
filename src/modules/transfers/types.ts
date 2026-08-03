@@ -25,7 +25,7 @@ export interface ITransferItem {
   per: string;
   rate: string;
   rateEditable: boolean;
-  total: string;
+  amount: string;
   roundOff: string;
   finalAmount: string;
   commission?: string | null;

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { useFormContext, useWatch } from 'react-hook-form';
+import { useFormContext, useWatch, type FieldPath } from 'react-hook-form';
 import { FormFieldAsyncSelect, FormFieldInput } from '@/components/forms';
 import { TransactionTypeEnum } from '@/modules/transactions';
 import type {
@@ -93,7 +93,8 @@ export const PurchaseTransactionRowCell = ({
 }: PurchaseTransactionRowCellProps) => {
   const form = useFormContext<IPurchaseFormValues>();
   const fieldPath = useMemo(
-    () => (fieldName: string) => `${fieldPrefix}.${rowIndex}.${fieldName}` as const,
+    () => (fieldName: string) =>
+      `${fieldPrefix}.${rowIndex}.${fieldName}` as FieldPath<IPurchaseFormValues>,
     [fieldPrefix, rowIndex]
   );
   const currencyId = useWatch({
@@ -182,6 +183,7 @@ export const PurchaseTransactionRowCell = ({
     productId: String(productId || ''),
     excludeTransactionId,
     enabled: Boolean(branchId && counterId && currencyId && productId),
+    queryKeyPrefix: 'transaction-quantity-availability',
   });
   const quantityAvailability = quantityAvailabilityQuery.data ?? null;
   const agentCommissionRule = useMemo(

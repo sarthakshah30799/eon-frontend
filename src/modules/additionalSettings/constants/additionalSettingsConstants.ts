@@ -61,6 +61,8 @@ export const AdditionalSettingsCodeEnum = {
   TransferRateEditable: 'TRANSFER_RATE_EDITABLE',
   FakeCurrency: 'FAKE_CURRENCY_SETTINGS',
   TransferSettings: 'TRANSFER_SETTINGS',
+  StockRevaluationSettings: 'STOCK_REVALUATION_SETTINGS',
+  StockRevaluationFrequency: 'STOCK_REVALUATION_FREQUENCY',
 } as const;
 
 export const ADDITIONAL_SETTINGS_TEXTS = {

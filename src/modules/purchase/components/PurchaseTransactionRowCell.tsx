@@ -612,7 +612,7 @@ export const PurchaseTransactionRowCell = ({
             }
             placeholder="Select currency"
             onClick={() => onOpenCurrencyPicker(rowIndex)}
-            disabled={disabled || !rateEditable}
+            disabled={disabled}
             helperText={rateHelperText || undefined}
             buttonPosition="bottom"
           />
@@ -648,7 +648,7 @@ export const PurchaseTransactionRowCell = ({
             type="number"
             step={`0.${'0'.repeat(PURCHASE_RATE_DECIMALS - 1)}1`}
             maxDecimalPlaces={PURCHASE_RATE_DECIMALS}
-            disabled={disabled}
+            disabled={disabled || !rateEditable}
             onChange={() => {
               hasManualRateChangeRef.current = true;
             }}

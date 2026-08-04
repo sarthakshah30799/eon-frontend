@@ -43,6 +43,11 @@ const fakeCurrencySchema = yup.object({
 
 type FakeCurrencyFormValues = IPurchaseFormValues & { reasonId: string; remarks: string };
 
+interface FakeCurrencyCreateViewProps {
+  initialValues?: FakeCurrencyFormValues;
+  readOnly?: boolean;
+}
+
 const FakeCurrencyTotal = () => {
   const rows = (useWatch({ name: 'transactions' }) as FakeCurrencyFormValues['transactions'] | undefined) ?? [];
   const total = rows.reduce((sum: number, row) => sum + Number(row?.finalAmount || 0), 0);
@@ -77,7 +82,10 @@ const FakeCurrencyPicker = ({
   );
 };
 
-export const FakeCurrencyCreateView = () => {
+export const FakeCurrencyCreateView = ({
+  initialValues,
+  readOnly = false,
+}: FakeCurrencyCreateViewProps) => {
   const navigate = useNavigate();
   const { activeBranchId, activeCounterId } = useAuth();
   const [currencyPickerRowIndex, setCurrencyPickerRowIndex] = useState<number | null>(null);
@@ -95,7 +103,7 @@ export const FakeCurrencyCreateView = () => {
     false,
   );
 
-  const defaultValues = useMemo<FakeCurrencyFormValues>(() => ({
+  const generatedDefaultValues = useMemo<FakeCurrencyFormValues>(() => ({
     ...createEmptyPurchaseFormValues(
       TransactionTypeEnum.SALE,
       TradeModeEnum.RETAIL,
@@ -108,6 +116,7 @@ export const FakeCurrencyCreateView = () => {
     reasonId: '',
     remarks: '',
   }), [activeBranchId, activeCounterId, branch]);
+  const defaultValues = initialValues ?? generatedDefaultValues;
 
   const draftDocumentAttachments = useMemo<IPurchaseDraftDocumentAttachment[]>(
     () =>
@@ -137,6 +146,9 @@ export const FakeCurrencyCreateView = () => {
       mode="onChange"
       onError={onError}
       onSubmit={async values => {
+        if (readOnly) {
+          return;
+        }
         await createFakeCurrency({
           transaction: {
             slug: 'FAKE_CURRENCY',
@@ -167,7 +179,10 @@ export const FakeCurrencyCreateView = () => {
         });
         navigate('/fake-currencies');
       }}
-      footer={{ submitLabel: isPending ? 'Saving...' : 'Save Fake Currency', isSubmitDisabled: isPending }}
+      footer={readOnly ? undefined : {
+        submitLabel: isPending ? 'Saving...' : 'Save Fake Currency',
+        isSubmitDisabled: isPending,
+      }}
     >
       <div className="space-y-6">
         <div>
@@ -175,26 +190,25 @@ export const FakeCurrencyCreateView = () => {
           <p className="text-sm text-text-secondary">Remove unusable currency from the selected counter stock.</p>
         </div>
         <CardSection heading="Fake Currency Details" className="grid gap-4 md:grid-cols-2">
-          <FormFieldDatePicker name="transactionDate" label="Transaction Date" />
-          <FormFieldCategoryOption name="reasonId" code={CategoryOptionCodeEnum.FakeCurrencyReason} label="Reason" />
-          <FormFieldTextarea name="remarks" label="Remarks" className="md:col-span-2" />
+          <FormFieldDatePicker name="transactionDate" label="Transaction Date" disabled={readOnly} />
+          <FormFieldCategoryOption name="reasonId" code={CategoryOptionCodeEnum.FakeCurrencyReason} label="Reason" disabled={readOnly} />
+          <FormFieldTextarea name="remarks" label="Remarks" className="md:col-span-2" disabled={readOnly} />
         </CardSection>
-        <CardSection heading="Transaction Details">
-          <PurchaseTransactionTable
-            branchId={activeBranchId ?? ''}
-            counterId={activeCounterId ?? ''}
-            pricingData={resolvedPricingData}
-            agentCommissionRules={[]}
-            onOpenCurrencyPicker={setCurrencyPickerRowIndex}
-            rateEditable={rateEditable}
-            useAverageSellRate
-          />
-        </CardSection>
+        <PurchaseTransactionTable
+          branchId={initialValues?.branchId ?? activeBranchId ?? ''}
+          counterId={initialValues?.counterId ?? activeCounterId ?? ''}
+          pricingData={resolvedPricingData}
+          agentCommissionRules={[]}
+          onOpenCurrencyPicker={setCurrencyPickerRowIndex}
+          disabled={readOnly}
+          rateEditable={rateEditable}
+          useAverageSellRate
+        />
         <CardSection heading="Total Amount" className="flex items-center justify-between">
           <span className="text-sm text-text-secondary">Total fake currency value</span>
           <FakeCurrencyTotal />
         </CardSection>
-        <CardSection heading="Transaction Documents" className="space-y-4">
+        {!readOnly ? <CardSection heading="Transaction Documents" className="space-y-4">
           <p className="text-sm text-text-secondary">
             Attach optional supporting documents for this fake-currency entry.
           </p>
@@ -221,9 +235,9 @@ export const FakeCurrencyCreateView = () => {
           ) : (
             <p className="text-sm text-text-secondary">No active document profiles found.</p>
           )}
-        </CardSection>
+        </CardSection> : null}
       </div>
-      <FakeCurrencyPicker rowIndex={currencyPickerRowIndex} onClose={() => setCurrencyPickerRowIndex(null)} />
+      {!readOnly ? <FakeCurrencyPicker rowIndex={currencyPickerRowIndex} onClose={() => setCurrencyPickerRowIndex(null)} /> : null}
     </Form>
   );
 };

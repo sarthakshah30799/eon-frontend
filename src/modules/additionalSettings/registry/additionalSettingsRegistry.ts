@@ -442,6 +442,21 @@ const TRANSFER_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] 
   },
 ];
 
+const STOCK_REVALUATION_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] = [
+  {
+    code: AdditionalSettingsCodeEnum.StockRevaluationFrequency,
+    label: 'STOCK REVALUATION FREQUENCY',
+    valueType: 'select',
+    required: true,
+    options: [
+      { value: 'MONTHLY', label: 'Monthly' },
+      { value: 'QUARTERLY', label: 'Quarterly' },
+      { value: 'HALF_YEARLY', label: 'Half-yearly' },
+      { value: 'YEARLY', label: 'Yearly' },
+    ],
+  },
+];
+
 const TRANSACTION_NUMBERING_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] =
   [
     ...TRANSACTION_TYPE_PROFILE_ORDER.flatMap(profileType => {
@@ -521,6 +536,13 @@ export const ADDITIONAL_SETTING_DEFINITIONS: readonly AdditionalSettingCategoryD
     rendererKey: 'default',
     titleLocked: true,
     subcategories: TRANSFER_SUBCATEGORIES,
+  },
+  {
+    code: AdditionalSettingsCodeEnum.StockRevaluationSettings,
+    label: 'STOCK REVALUATION SETTINGS',
+    rendererKey: 'default',
+    titleLocked: true,
+    subcategories: STOCK_REVALUATION_SUBCATEGORIES,
   },
 ];
 

@@ -53,6 +53,7 @@ export type TransactionPartyProfileType =
   (typeof TransactionPartyProfileTypeEnum)[keyof typeof TransactionPartyProfileTypeEnum];
 
 export const TRANSACTION_TYPE_PROFILE_ORDER = [
+  TransactionTypeProfileEnum.FAKE_CURRENCY,
   TransactionTypeProfileEnum.PURCHASE_FFMC,
   TransactionTypeProfileEnum.PURCHASE_CORPORATE_INDIVIDUAL,
   TransactionTypeProfileEnum.SALE_CORPORATE_INDIVIDUAL,
@@ -168,6 +169,8 @@ export interface ITransactionEntity {
   partyProfileSnapshot?: ITransactionReferenceSnapshot | null;
   purposeId: string | null;
   purposeSnapshot?: ITransactionReferenceSnapshot | null;
+  reasonId: string | null;
+  reasonSnapshot?: ITransactionReferenceSnapshot | null;
   transactionPartyProfileType: TransactionPartyProfileType | null;
   agentProfileId: string | null;
   agentProfileSnapshot?: ITransactionReferenceSnapshot | null;

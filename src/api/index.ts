@@ -35,3 +35,4 @@ export * from './transfers/transfers.api';
 export * from './reports';
 export * from './dashboard/dashboard.api';
 export * from './purpose';
+export * from './stockRevaluation';

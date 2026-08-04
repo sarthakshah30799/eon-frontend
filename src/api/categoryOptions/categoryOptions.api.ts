@@ -25,15 +25,17 @@ export const categoryOptionsApi = {
   },
 
   getCategoryOptionsByCode: async (
-    code: CategoryOptionCode
+    code: CategoryOptionCode,
+    search?: string
   ): Promise<ICategoryOption[]> => {
     const normalizedCode = normalizeCode(code);
     if (!normalizedCode) {
       return [];
     }
 
+    const query = search?.trim() ? `?search=${encodeURIComponent(search.trim())}` : '';
     const res = await apiClient.get<ICategoryOption[]>(
-      `/select-options/${encodeURIComponent(normalizedCode)}`
+      `/select-options/${encodeURIComponent(normalizedCode)}${query}`
     );
 
     if (res.error) throw new Error(res.error);

@@ -15,24 +15,6 @@ const toAsyncSelectOption = (option: ICategoryOption, useValueAsId = false): Asy
   label: option.label,
 });
 
-const filterOptions = (
-  options: ICategoryOption[],
-  inputValue: string
-): ICategoryOption[] => {
-  const normalizedValue = inputValue.trim().toLowerCase();
-
-  if (!normalizedValue) {
-    return options;
-  }
-
-  return options.filter(option => {
-    const label = option.label.trim().toLowerCase();
-    const value = option.value.trim().toLowerCase();
-
-    return label.includes(normalizedValue) || value.includes(normalizedValue);
-  });
-};
-
 const createQueryKey = (code: string) => [
   'category-options',
   code.trim().toLowerCase(),
@@ -47,14 +29,14 @@ const sortCategoryOptions = (options: ICategoryOption[]) =>
     return left.label.localeCompare(right.label);
   });
 
-export const useCategoryOptions = (code?: CategoryOptionCode, useValueAsId = false) => {
+export const useCategoryOptions = (code?: CategoryOptionCode, useValueAsId = false, search?: string) => {
   const normalizedCode = code?.trim() ?? '';
   const queryClient = useQueryClient();
   const queryKey = useMemo(() => createQueryKey(normalizedCode), [normalizedCode]);
 
   const query = useQuery({
     queryKey,
-    queryFn: () => categoryOptionsApi.getCategoryOptionsByCode(normalizedCode as CategoryOptionCode),
+    queryFn: () => categoryOptionsApi.getCategoryOptionsByCode(normalizedCode as CategoryOptionCode, search),
     enabled: Boolean(normalizedCode),
     staleTime: CATEGORY_OPTIONS_STALE_TIME,
   });
@@ -67,12 +49,12 @@ export const useCategoryOptions = (code?: CategoryOptionCode, useValueAsId = fal
 
       const options = await queryClient.fetchQuery({
         queryKey,
-        queryFn: () => categoryOptionsApi.getCategoryOptionsByCode(normalizedCode as CategoryOptionCode),
+        queryFn: () => categoryOptionsApi.getCategoryOptionsByCode(normalizedCode as CategoryOptionCode, inputValue),
         staleTime: CATEGORY_OPTIONS_STALE_TIME,
       });
 
       return {
-        options: filterOptions(options, inputValue).map(opt => toAsyncSelectOption(opt, useValueAsId)),
+        options: options.map(opt => toAsyncSelectOption(opt, useValueAsId)),
       };
     },
     [normalizedCode, queryClient, queryKey, useValueAsId]

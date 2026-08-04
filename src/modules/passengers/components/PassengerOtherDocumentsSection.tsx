@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { useFieldArray, useFormContext, useFormState, useWatch } from 'react-hook-form';
 import { Button } from '@/components/ui';
 import {
@@ -32,21 +31,7 @@ export const PassengerOtherDocumentsSection = ({
     control: form.control,
     name: 'otherDocuments',
   });
-  const { data: documentTypes = [] } = usePassengerOtherDocumentTypes();
-  const loadOptions = useMemo(
-    () => async (inputValue: string) => {
-      const opts = documentTypes.map(option => ({
-        value: option.value,
-        label: option.label,
-      }));
-      return {
-        options: inputValue
-          ? opts.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
-          : opts,
-      };
-    },
-    [documentTypes]
-  );
+  const { data: documentTypes = [], loadOptions } = usePassengerOtherDocumentTypes();
 
   return (
     <div className="space-y-4">
@@ -86,95 +71,96 @@ export const PassengerOtherDocumentsSection = ({
           const documentType = watchedOtherDocuments?.[index]?.documentType ?? '';
 
           return (
-          <div
-            key={field.id}
-            className="rounded-sm border border-border-primary bg-surface-secondary p-4"
-          >
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <div className="text-sm font-medium text-text-primary">
-                Document {index + 1}
+            <div
+              key={field.id}
+              className="rounded-sm border border-border-primary bg-surface-secondary p-4"
+            >
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div className="text-sm font-medium text-text-primary">
+                  Document {index + 1}
+                </div>
+                {fields.length > 1 ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      remove(index);
+                      onDocumentChange?.();
+                    }}
+                  >
+                    Remove
+                  </Button>
+                ) : null}
               </div>
-              {fields.length > 1 ? (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    remove(index);
-                    onDocumentChange?.();
-                  }}
-                >
-                  Remove
-                </Button>
-              ) : null}
-            </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
-              <FormFieldSelect
-                name={`otherDocuments.${index}.documentType`}
-                label="Type of ID"
-                placeholder="Select document type"
-                loadOptions={loadOptions}
-                onValueChange={value => {
-                  if (Array.isArray(value)) {
-                    return;
-                  }
-
-                  const hiddenFieldNames = [
-                    `otherDocuments.${index}.validTill`,
-                    `otherDocuments.${index}.issueAt`,
-                    `otherDocuments.${index}.issueDate`,
-                    `otherDocuments.${index}.expiryDate`,
-                  ] as const;
-
-                  if (shouldShowPassengerOtherDocumentValidityFields(value)) {
-                    hiddenFieldNames.forEach(fieldName => {
-                      form.clearErrors(fieldName as never);
-                    });
-                    onDocumentChange?.();
-                    return;
-                  }
-
-                  hiddenFieldNames.forEach(fieldName => {
-                    const currentValue = form.getValues(fieldName);
-                    if (currentValue === '') {
+              <div className="grid gap-4 md:grid-cols-2">
+                <FormFieldSelect
+                  name={`otherDocuments.${index}.documentType`}
+                  label="Type of ID"
+                  placeholder="Select document type"
+                  loadOptions={loadOptions}
+                  defaultOptions={documentTypes}
+                  onValueChange={value => {
+                    if (Array.isArray(value)) {
                       return;
                     }
 
-                    form.setValue(fieldName as never, '' as never, {
-                      shouldDirty: true,
-                      shouldTouch: true,
-                      shouldValidate: false,
-                    });
-                    form.clearErrors(fieldName as never);
-                  });
+                    const hiddenFieldNames = [
+                      `otherDocuments.${index}.validTill`,
+                      `otherDocuments.${index}.issueAt`,
+                      `otherDocuments.${index}.issueDate`,
+                      `otherDocuments.${index}.expiryDate`,
+                    ] as const;
 
-                  onDocumentChange?.();
-                }}
-              />
-              <FormFieldInput
-                name={`otherDocuments.${index}.documentNumber`}
-                label="ID Number"
-                placeholder="Enter ID number"
-                onBlur={onDocumentChange}
-              />
-              {shouldShowPassengerOtherDocumentValidityFields(documentType) ? (
-                <FormFieldDatePicker
-                  name={`otherDocuments.${index}.validTill`}
-                  label="Valid Till"
-                  placeholder="Select expiry date"
+                    if (shouldShowPassengerOtherDocumentValidityFields(value)) {
+                      hiddenFieldNames.forEach(fieldName => {
+                        form.clearErrors(fieldName as never);
+                      });
+                      onDocumentChange?.();
+                      return;
+                    }
+
+                    hiddenFieldNames.forEach(fieldName => {
+                      const currentValue = form.getValues(fieldName);
+                      if (currentValue === '') {
+                        return;
+                      }
+
+                      form.setValue(fieldName as never, '' as never, {
+                        shouldDirty: true,
+                        shouldTouch: true,
+                        shouldValidate: false,
+                      });
+                      form.clearErrors(fieldName as never);
+                    });
+
+                    onDocumentChange?.();
+                  }}
+                />
+                <FormFieldInput
+                  name={`otherDocuments.${index}.documentNumber`}
+                  label="ID Number"
+                  placeholder="Enter ID number"
                   onBlur={onDocumentChange}
                 />
-              ) : null}
-              <div className="md:col-span-2">
-                <FormFieldFileUploader
-                  name={`otherDocuments.${index}.documentFile`}
-                  label="Upload Document"
-                  placeholder="Choose file"
-                />
+                {shouldShowPassengerOtherDocumentValidityFields(documentType) ? (
+                  <FormFieldDatePicker
+                    name={`otherDocuments.${index}.validTill`}
+                    label="Valid Till"
+                    placeholder="Select expiry date"
+                    onBlur={onDocumentChange}
+                  />
+                ) : null}
+                <div className="md:col-span-2">
+                  <FormFieldFileUploader
+                    name={`otherDocuments.${index}.documentFile`}
+                    label="Upload Document"
+                    placeholder="Choose file"
+                  />
+                </div>
               </div>
             </div>
-          </div>
           );
         })}
       </div>

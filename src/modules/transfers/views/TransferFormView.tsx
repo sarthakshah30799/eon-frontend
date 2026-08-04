@@ -26,6 +26,9 @@ import {
   type TransferWorkplaceReferenceOptions,
 } from '../components/TransferWorkplaceFields';
 import { TransferItemsFieldArray } from '../components/TransferItemsFieldArray';
+import { useListAdditionalSettings } from '@/modules/additionalSettings/hooks';
+import { getAdditionalSettingBooleanValue } from '@/modules/additionalSettings/utils';
+import { AdditionalSettingsCodeEnum } from '@/modules/additionalSettings/constants';
 
 const today = new Date().toISOString().slice(0, 10);
 
@@ -36,6 +39,7 @@ interface TransferFormBodyProps {
   currencyPickerRowIndex: number | null;
   setCurrencyPickerRowIndex: (value: number | null) => void;
   readOnly: boolean;
+  useTransferRateEditable: boolean;
   displayNumber?: string;
   readOnlyOptions?: TransferWorkplaceReferenceOptions;
 }
@@ -49,6 +53,7 @@ const TransferFormBody = ({
   readOnly,
   displayNumber,
   readOnlyOptions,
+  useTransferRateEditable,
 }: TransferFormBodyProps) => {
   const form = useFormContext<ITransferFormValues>();
   const sourceBranchId = form.watch('sourceBranchId');
@@ -156,6 +161,7 @@ const TransferFormBody = ({
           pricingData={pricingData}
           onOpenCurrencyPicker={setCurrencyPickerRowIndex}
           disabled={!canSubmit || readOnly}
+          rateEditable={useTransferRateEditable}
         />
       </div>
 
@@ -196,6 +202,7 @@ export const TransferFormView = ({
   const { user, activeBranchId, activeCounterId } = useAuth();
   const transferPermission = usePermission(pathname);
   const { data: pricingData, isLoading, error } = useCurrencyRatesViewData();
+  const { data: additionalSettings = [] } = useListAdditionalSettings();
   const [currencyPickerRowIndex, setCurrencyPickerRowIndex] = useState<number | null>(null);
   const createCounterTransfer = useCreateCounterTransfer();
   const createBranchTransfer = useCreateBranchTransfer();
@@ -207,6 +214,12 @@ export const TransferFormView = ({
         user.isHoStaff ||
         transferPermission.canAdd ||
         transferPermission.canModify)
+  );
+  const transferRateEditable = getAdditionalSettingBooleanValue(
+    additionalSettings,
+    AdditionalSettingsCodeEnum.TransferSettings,
+    AdditionalSettingsCodeEnum.TransferRateEditable,
+    false,
   );
 
   const defaultValues = useMemo(
@@ -307,6 +320,7 @@ export const TransferFormView = ({
         readOnly={readOnly}
         displayNumber={initialValues?.number}
         readOnlyOptions={readOnlyOptions}
+        useTransferRateEditable={transferRateEditable}
       />
     </Form>
   );

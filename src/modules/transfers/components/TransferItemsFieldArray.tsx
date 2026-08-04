@@ -13,6 +13,7 @@ interface TransferItemsFieldArrayProps {
   pricingData: IPurchasePricingData;
   onOpenCurrencyPicker: (rowIndex: number) => void;
   disabled?: boolean;
+  rateEditable?: boolean;
 }
 
 export const TransferItemsFieldArray = ({
@@ -21,6 +22,7 @@ export const TransferItemsFieldArray = ({
   pricingData,
   onOpenCurrencyPicker,
   disabled = false,
+  rateEditable = false,
 }: TransferItemsFieldArrayProps) => {
   const form = useFormContext<ITransferFormValues>();
   const watchedBranchId = useWatch({
@@ -53,6 +55,7 @@ export const TransferItemsFieldArray = ({
             disabled={disabled}
             canRemove={fields.length > 1}
             onRemove={remove}
+            rateEditable={rateEditable}
           />
         ),
         meta: {
@@ -69,6 +72,7 @@ export const TransferItemsFieldArray = ({
     remove,
     resolvedBranchId,
     resolvedCounterId,
+    rateEditable,
   ]);
 
   return (

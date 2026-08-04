@@ -291,6 +291,13 @@ const TRANSACTION_NUMBERING_SUBCATEGORY_CONFIG: Partial<Record<
     required: true,
     placeholder: 'Enter starting sequence number',
   },
+  [TransactionTypeProfileEnum.FAKE_CURRENCY]: {
+    code: AdditionalSettingsCodeEnum.FakeCurrencyNumberSeries,
+    label: 'FAKE CURRENCY',
+    valueType: 'number',
+    required: true,
+    placeholder: 'Enter starting sequence number',
+  },
   [TransactionTypeProfileEnum.PURCHASE_CORPORATE_INDIVIDUAL]: {
     code: AdditionalSettingsCodeEnum.PurchaseCorporateNumberSeries,
     label: 'PURCHASE CORPORATE / INDIVIDUAL',
@@ -415,6 +422,41 @@ const TRANSFER_NUMBERING_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDef
   },
 ];
 
+const FAKE_CURRENCY_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] = [
+  {
+    code: AdditionalSettingsCodeEnum.FakeCurrencyRateEditable,
+    label: 'FAKE CURRENCY RATE EDITABLE',
+    valueType: 'boolean',
+    required: true,
+    placeholder: 'YES or NO',
+  },
+];
+
+const TRANSFER_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] = [
+  {
+    code: AdditionalSettingsCodeEnum.TransferRateEditable,
+    label: 'TRANSFER RATE EDITABLE',
+    valueType: 'boolean',
+    required: true,
+    placeholder: 'YES or NO',
+  },
+];
+
+const STOCK_REVALUATION_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] = [
+  {
+    code: AdditionalSettingsCodeEnum.StockRevaluationFrequency,
+    label: 'STOCK REVALUATION FREQUENCY',
+    valueType: 'select',
+    required: true,
+    options: [
+      { value: 'MONTHLY', label: 'Monthly' },
+      { value: 'QUARTERLY', label: 'Quarterly' },
+      { value: 'HALF_YEARLY', label: 'Half-yearly' },
+      { value: 'YEARLY', label: 'Yearly' },
+    ],
+  },
+];
+
 const TRANSACTION_NUMBERING_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] =
   [
     ...TRANSACTION_TYPE_PROFILE_ORDER.flatMap(profileType => {
@@ -480,6 +522,27 @@ export const ADDITIONAL_SETTING_DEFINITIONS: readonly AdditionalSettingCategoryD
     rendererKey: 'default',
     titleLocked: true,
     subcategories: TRANSACTION_NUMBERING_SUBCATEGORIES,
+  },
+  {
+    code: AdditionalSettingsCodeEnum.FakeCurrency,
+    label: 'FAKE CURRENCY SETTINGS',
+    rendererKey: 'default',
+    titleLocked: true,
+    subcategories: FAKE_CURRENCY_SUBCATEGORIES,
+  },
+  {
+    code: AdditionalSettingsCodeEnum.TransferSettings,
+    label: 'TRANSFER SETTINGS',
+    rendererKey: 'default',
+    titleLocked: true,
+    subcategories: TRANSFER_SUBCATEGORIES,
+  },
+  {
+    code: AdditionalSettingsCodeEnum.StockRevaluationSettings,
+    label: 'STOCK REVALUATION SETTINGS',
+    rendererKey: 'default',
+    titleLocked: true,
+    subcategories: STOCK_REVALUATION_SUBCATEGORIES,
   },
 ];
 

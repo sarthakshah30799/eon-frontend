@@ -93,6 +93,15 @@ export const transactionsApi = {
     return res.data;
   },
 
+  getAverageSellPrice: async (params: { productId: string; currencyId: string }) => {
+    const query = new URLSearchParams({ productId: params.productId, currencyId: params.currencyId });
+    const res = await apiClient.get<{ productId: string; currencyId: string; averageSellRate: string }>(
+      `/transactions/average-sell-price?${query.toString()}`,
+    );
+    if (res.error) throw new Error(res.error);
+    return res.data ?? { ...params, averageSellRate: '0.00' };
+  },
+
   requestAccountPostingRebuild: async (
     transactionId: string
   ): Promise<{ message: string }> => {

@@ -17,6 +17,7 @@ export type TransactionType =
   (typeof TransactionTypeEnum)[keyof typeof TransactionTypeEnum];
 
 export const TransactionTypeProfileEnum = {
+  FAKE_CURRENCY: 'FAKE_CURRENCY',
   PURCHASE_FFMC: 'PURCHASE_FFMC',
   PURCHASE_CORPORATE_INDIVIDUAL: 'PURCHASE_CORPORATE_INDIVIDUAL',
   SALE_CORPORATE_INDIVIDUAL: 'SALE_CORPORATE_INDIVIDUAL',
@@ -52,6 +53,7 @@ export type TransactionPartyProfileType =
   (typeof TransactionPartyProfileTypeEnum)[keyof typeof TransactionPartyProfileTypeEnum];
 
 export const TRANSACTION_TYPE_PROFILE_ORDER = [
+  TransactionTypeProfileEnum.FAKE_CURRENCY,
   TransactionTypeProfileEnum.PURCHASE_FFMC,
   TransactionTypeProfileEnum.PURCHASE_CORPORATE_INDIVIDUAL,
   TransactionTypeProfileEnum.SALE_CORPORATE_INDIVIDUAL,
@@ -163,10 +165,12 @@ export interface ITransactionEntity {
   companyId: string | null;
   companySnapshot?: ITransactionReferenceSnapshot | null;
   sacCode: string | null;
-  partyProfileId: string;
+  partyProfileId: string | null;
   partyProfileSnapshot?: ITransactionReferenceSnapshot | null;
   purposeId: string | null;
   purposeSnapshot?: ITransactionReferenceSnapshot | null;
+  reasonId: string | null;
+  reasonSnapshot?: ITransactionReferenceSnapshot | null;
   transactionPartyProfileType: TransactionPartyProfileType | null;
   agentProfileId: string | null;
   agentProfileSnapshot?: ITransactionReferenceSnapshot | null;
@@ -638,9 +642,12 @@ export interface ICreateTransactionPayload {
   revisionNo?: number;
   number?: string | null;
   slug: string;
+  transactionDate?: string | null;
   branchSnapshot?: ITransactionReferenceSnapshot | null;
   requiresApproval?: boolean;
-  partyProfileId: string;
+  partyProfileId?: string | null;
+  reasonId?: string | null;
+  reasonSnapshot?: Record<string, unknown> | null;
   purposeId?: string | null;
   agentProfileId?: string | null;
   passenger?: ICreateTransactionPassengerPayload | null;

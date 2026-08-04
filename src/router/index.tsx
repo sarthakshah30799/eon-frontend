@@ -213,6 +213,9 @@ const TransferCreatePage = lazy(
 const TransferEditPage = lazy(
   () => import('../pages/transfers/[type]/edit/[id]')
 );
+const FakeCurrencyListPage = lazy(() => import('../pages/fake-currencies/FakeCurrencyListPage'));
+const FakeCurrencyCreatePage = lazy(() => import('../pages/fake-currencies/create/FakeCurrencyCreatePage'));
+const FakeCurrencyEditPage = lazy(() => import('../pages/fake-currencies/edit/[id]/FakeCurrencyEditPage'));
 const AD1ListPage = lazy(() => import('../modules/purchase/views/AD1ListView').then(m => ({ default: m.AD1ListView })));
 const AD1CreatePage = lazy(() => import('../pages/ad1/create'));
 const AD1EditPage = lazy(() => import('../pages/ad1/edit/[id]'));
@@ -320,6 +323,7 @@ const IncomeBookingEditPage = lazy(
     import('../pages/master/system-setups/income-booking/IncomeBookingEditPage')
 );
 const ReportsPage = lazy(() => import('../pages/reports'));
+const StockRevaluationPage = lazy(() => import('../pages/stock-revaluations'));
 
 const router = createBrowserRouter([
   {
@@ -892,6 +896,38 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <TransferEditPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/fake-currencies',
+    element: (
+      <ProtectedLayout>
+        <FakeCurrencyListPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/fake-currencies/create',
+    element: (
+      <ProtectedLayout>
+        <FakeCurrencyCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/fake-currencies/edit/:id',
+    element: (
+      <ProtectedLayout>
+        <FakeCurrencyEditPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/stock-revaluations',
+    element: (
+      <ProtectedLayout>
+        <StockRevaluationPage />
       </ProtectedLayout>
     ),
   },

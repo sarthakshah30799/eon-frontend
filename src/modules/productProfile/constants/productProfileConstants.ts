@@ -27,6 +27,7 @@ export const PRODUCT_PROFILE_ACCOUNTING_FIELDS: IProductProfileFieldConfig[] = [
   { name: 'acOfIssuer', label: 'Account of Issuer' },
   { name: 'commissionAc', label: 'Commission Account' },
   { name: 'fakeAccount', label: 'Fake Account' },
+  { name: 'lossAccount', label: 'Loss Account for Fake Transactions' },
   { name: 'bulkPurAc', label: 'Bulk Purchase Account' },
   { name: 'openAc', label: 'Open Account' },
   { name: 'closingAc', label: 'Closing Account' },

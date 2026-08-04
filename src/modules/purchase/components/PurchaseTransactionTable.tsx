@@ -18,6 +18,8 @@ interface PurchaseTransactionTableProps {
   agentCommissionRules?: IPartyProfileCommissionRule[];
   onOpenCurrencyPicker: (rowIndex: number) => void;
   disabled?: boolean;
+  rateEditable?: boolean;
+  useAverageSellRate?: boolean;
 }
 
 export const PurchaseTransactionTable = ({
@@ -28,6 +30,8 @@ export const PurchaseTransactionTable = ({
   agentCommissionRules = [],
   onOpenCurrencyPicker,
   disabled = false,
+  rateEditable = true,
+  useAverageSellRate = false,
 }: PurchaseTransactionTableProps) => {
   const form = useFormContext<IPurchaseFormValues>();
   const { fields, append, remove } = useFieldArray({
@@ -52,6 +56,8 @@ export const PurchaseTransactionTable = ({
             onRemove={remove}
             canRemove={fields.length > 1}
             disabled={disabled}
+            rateEditable={rateEditable}
+            useAverageSellRate={useAverageSellRate}
           />
         ),
         meta: {

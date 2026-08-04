@@ -26,6 +26,7 @@ const ACCOUNT_PROFILE_SELECT_FIELDS: ReadonlySet<keyof ICreateProductProfile> =
     'acOfIssuer',
     'commissionAc',
     'fakeAccount',
+    'lossAccount',
     'bulkPurAc',
     'openAc',
     'closingAc',

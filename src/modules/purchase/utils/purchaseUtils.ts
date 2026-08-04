@@ -447,7 +447,7 @@ export const mapPurchaseTransactionToFormValues = (
     : '',
   transactionType: transaction.transactionType,
   tradeMode: transaction.tradeMode,
-  partyProfileId: transaction.partyProfileId,
+  partyProfileId: transaction.partyProfileId ?? '',
   partyProfileCode: transaction.partyProfileSnapshot?.code ?? '',
   partyProfileName: transaction.partyProfileSnapshot?.name ?? '',
   partyProfileEmail:

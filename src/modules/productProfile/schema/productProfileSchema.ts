@@ -13,6 +13,7 @@ export const productProfileSchema = yup.object({
   acOfIssuer: yup.string().trim().default('').defined(),
   commissionAc: yup.string().trim().default('').defined(),
   fakeAccount: yup.string().trim().default('').defined(),
+  lossAccount: yup.string().trim().default('').defined(),
   bulkPurAc: yup.string().trim().default('').defined(),
   openAc: yup.string().trim().default('').defined(),
   closingAc: yup.string().trim().default('').defined(),

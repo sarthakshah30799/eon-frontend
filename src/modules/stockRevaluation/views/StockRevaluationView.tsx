@@ -44,12 +44,24 @@ export const StockRevaluationView = () => {
 
   const process = async () => {
     if (!selectedTargets.length) return toast.error('Select at least one branch and counter');
-    if (!file) return toast.error('Upload a stock revaluation template');
     try {
-      await selected.process({ targets: selectedTargets, frequency: effectiveFrequency, file });
+      await selected.processUploaded({ targets: selectedTargets, frequency: effectiveFrequency });
       toast.success('Stock revaluation processed successfully');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to process stock revaluation');
+    }
+  };
+
+  const upload = async () => {
+    if (!selectedTargets.length) return toast.error('Select at least one branch and counter');
+    if (!file) return toast.error('Upload a stock revaluation template');
+    try {
+      await selected.process({ targets: selectedTargets, frequency: effectiveFrequency, file });
+      setFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      toast.success('Stock revaluation rates uploaded successfully');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to upload stock revaluation rates');
     }
   };
 
@@ -92,18 +104,24 @@ export const StockRevaluationView = () => {
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <Button type="button" variant="outline" onClick={() => void downloadTemplate()} disabled={selected.isDownloadingTemplate}>Download Template</Button>
-          <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>Choose Template</Button>
-          <input ref={fileInputRef} type="file" className="hidden" accept=".xlsx,.xls,.csv" onChange={event => setFile(event.target.files?.[0] ?? null)} />
-          <span className="text-xs text-text-secondary">{file?.name ?? 'No file selected'}</span>
-          <Button type="button" onClick={() => void process()} disabled={selected.isProcessing || !stockSetting || selected.reports.length > 0}>{selected.isProcessing ? 'Processing...' : 'Process'}</Button>
+          {isAllAccess && <Button type="button" variant="outline" onClick={() => void downloadTemplate()} disabled={selected.isDownloadingTemplate}>Download Template</Button>}
+          {isAllAccess && <>
+            <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>Choose Template</Button>
+            <input ref={fileInputRef} type="file" className="hidden" accept=".xlsx,.xls,.csv" onChange={event => setFile(event.target.files?.[0] ?? null)} />
+            <span className="text-xs text-text-secondary">{file?.name ?? 'No file selected'}</span>
+            <Button type="button" onClick={() => void upload()} disabled={selected.isProcessing || !stockSetting}>{selected.isProcessing ? 'Uploading...' : 'Upload Rates'}</Button>
+          </>}
+          <Button type="button" onClick={() => void process()} disabled={selected.isProcessingUploaded || !stockSetting || selected.pendingUploads.length === 0}>{selected.isProcessingUploaded ? 'Processing...' : 'Process'}</Button>
+          {!isAllAccess && <p className="w-full text-xs text-text-secondary">Rates must be uploaded by Admin, HO, or HO Staff before you can process them.</p>}
+          {selected.pendingUploads.length > 0 && <p className="w-full text-xs text-emerald-700">Rates uploaded and ready for processing.</p>}
+          {isAllAccess && selected.pendingUploads.length > 0 && <Button type="button" variant="outline" onClick={() => void Promise.all(selected.pendingUploads.map(upload => selected.remove(upload.id))).then(() => toast.success('Uploaded rates removed')).catch(error => toast.error(error instanceof Error ? error.message : 'Delete failed'))} disabled={selected.isDeleting}>Remove Uploaded Rates</Button>}
         </div>
         {!stockSetting && <p className="text-xs text-amber-700">Configure Stock Revaluation Frequency in Additional Settings before processing.</p>}
-        {selected.reports.length > 0 && <p className="text-xs text-amber-700">Delete the existing upload for this period before uploading a replacement.</p>}
+        {selected.reports.length > 0 && <p className="text-xs text-amber-700">Delete the processed revaluation for this period before uploading a replacement.</p>}
       </CardSection>
       {rows.length > 0 && (
         <CardSection heading="Stock Revaluation Report" className="overflow-x-auto">
-          <div className="mb-3 flex items-center justify-between text-xs"><span>{selected.reports[0]?.branchSnapshot?.label} / {selected.reports[0]?.counterSnapshot?.label} - {formatDate(selected.reports[0]?.valuationDate ?? '')}</span><Button type="button" variant="outline" onClick={() => void Promise.all(selected.reports.map(report => selected.remove(report.id))).then(() => toast.success('Stock revaluation deleted')).catch(error => toast.error(error instanceof Error ? error.message : 'Delete failed'))} disabled={selected.isDeleting}>Delete Upload</Button></div>
+          <div className="mb-3 flex items-center justify-between text-xs"><span>{selected.reports[0]?.branchSnapshot?.label} / {selected.reports[0]?.counterSnapshot?.label} - {formatDate(selected.reports[0]?.valuationDate ?? '')}</span>{isAllAccess && <Button type="button" variant="outline" onClick={() => void Promise.all(selected.reports.map(report => selected.remove(report.id))).then(() => toast.success('Stock revaluation deleted')).catch(error => toast.error(error instanceof Error ? error.message : 'Delete failed'))} disabled={selected.isDeleting}>Delete Upload</Button>}</div>
           <table className="min-w-full text-left text-xs">
             <thead><tr className="border-b border-slate-200 text-text-secondary"><th className="px-2 py-2">Branch</th><th className="px-2 py-2">Counter</th><th className="px-2 py-2">Valuation Date</th><th className="px-2 py-2">Currency</th><th className="px-2 py-2">Closing Quantity</th><th className="px-2 py-2">AWP</th><th className="px-2 py-2">Closing INR</th><th className="px-2 py-2">New Rate</th><th className="px-2 py-2">New INR</th><th className="px-2 py-2">Difference INR</th></tr></thead>
             <tbody>{rows.map(({ report, item }) => <tr key={`${report.id}-${item.id}`} className="border-b border-slate-100"><td className="px-2 py-2">{report.branchSnapshot?.label ?? report.branchSnapshot?.name ?? report.branchId}</td><td className="px-2 py-2">{report.counterSnapshot?.label ?? report.counterSnapshot?.name ?? report.counterId}</td><td className="px-2 py-2">{formatDate(report.valuationDate)}</td><td className="px-2 py-2">{item.currencySnapshot?.currencyCode} - {item.currencySnapshot?.currencyName}</td><td className="px-2 py-2">{Number(item.closingQuantity).toFixed(7)}</td><td className="px-2 py-2">{Number(item.awp).toFixed(7)}</td><td className="px-2 py-2">{formatAmount(item.closingInrAmount)}</td><td className="px-2 py-2">{Number(item.newRate).toFixed(7)}</td><td className="px-2 py-2">{formatAmount(item.newInrAmount)}</td><td className={`px-2 py-2 font-semibold ${Number(item.differenceInr) >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>{formatAmount(item.differenceInr)}</td></tr>)}</tbody>

@@ -24,6 +24,7 @@ import type { IPartyProfileCommissionRule } from '@/modules/partyProfiles/types'
 import { usePurchaseQuantityAvailability } from '../hooks';
 import { TransactionItemRowShell } from '@/components/forms/TransactionItemsFieldArray/TransactionItemRowShell';
 import { useAverageSellPrice } from '@/modules/transactions/hooks/useAverageSellPrice';
+import { useCounterHoldCost } from '@/modules/transactions/hooks/useCounterHoldCost';
 
 interface PurchaseTransactionRowCellProps {
   rowIndex: number;
@@ -39,6 +40,7 @@ interface PurchaseTransactionRowCellProps {
   disabled?: boolean;
   rateEditable?: boolean;
   useAverageSellRate?: boolean;
+  useCounterHoldCostRate?: boolean;
 }
 
 const loadProductOptions = async (
@@ -95,6 +97,7 @@ export const PurchaseTransactionRowCell = ({
   disabled = false,
   rateEditable = true,
   useAverageSellRate = false,
+  useCounterHoldCostRate = false,
 }: PurchaseTransactionRowCellProps) => {
   const form = useFormContext<IPurchaseFormValues>();
   const fieldPath = useMemo(
@@ -162,6 +165,12 @@ export const PurchaseTransactionRowCell = ({
     currencyId: String(currencyId || ''),
     enabled: useAverageSellRate,
   });
+  const counterHoldCostQuery = useCounterHoldCost({
+    branchId,
+    counterId,
+    currencyId: String(currencyId || ''),
+    enabled: useCounterHoldCostRate,
+  });
   const pricingSideLabel =
     getPurchaseTransactionPricingSideLabel(transactionType);
 
@@ -178,9 +187,6 @@ export const PurchaseTransactionRowCell = ({
   const effectiveGroupCode = preview?.effectiveGroupCode ?? '';
   const selectedSidePreview =
     pricingSide === 'sale' ? (preview?.sale ?? null) : (preview?.buy ?? null);
-  const calculatedRate = useAverageSellRate
-    ? averageSellRateQuery.data?.averageSellRate || selectedSidePreview?.appliedFinalRate || ''
-    : selectedSidePreview?.appliedFinalRate ?? '';
   const selectedCurrencyProfile = useMemo(
     () =>
       (pricingData.currencies ?? []).find(
@@ -188,6 +194,13 @@ export const PurchaseTransactionRowCell = ({
       ) ?? null,
     [currencyId, pricingData.currencies]
   );
+  const calculatedRate = useCounterHoldCostRate
+    ? counterHoldCostQuery.data?.holdCostRate && selectedCurrencyProfile?.ratePer
+      ? (Number(counterHoldCostQuery.data.holdCostRate) * Number(selectedCurrencyProfile.ratePer)).toFixed(PURCHASE_RATE_DECIMALS)
+      : ''
+    : useAverageSellRate
+    ? averageSellRateQuery.data?.averageSellRate || selectedSidePreview?.appliedFinalRate || ''
+    : selectedSidePreview?.appliedFinalRate ?? '';
   const quantityAvailabilityQuery = usePurchaseQuantityAvailability({
     branchId,
     counterId,

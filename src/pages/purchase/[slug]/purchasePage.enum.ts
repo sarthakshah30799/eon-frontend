@@ -18,7 +18,10 @@ import {
 } from '@/modules/transactions';
 
 export { TransactionTypeProfileEnum } from '@/modules/transactions';
-export type PurchasePageType = TransactionTypeProfile;
+export type PurchasePageType = Exclude<
+  TransactionTypeProfile,
+  typeof TransactionTypeProfileEnum.CARD_STOCK_RECEIPT
+>;
 
 const PURCHASE_PAGE_TYPE_BY_SLUG: Record<string, PurchasePageType> = {
   'ffmc-ads': TransactionTypeProfileEnum.PURCHASE_FFMC,

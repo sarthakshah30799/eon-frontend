@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useFormContext, type Resolver } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Button, CardSection } from '@/components/ui';
@@ -13,11 +13,15 @@ import {
   PRODUCT_PROFILE_DETAIL_CHECKBOXES,
 } from '../constants';
 import { productProfileSchema } from '../schema';
-import type { ICreateProductProfile } from '../types';
+import type { ICreateProductProfile, IUpdateProductProfilePayload } from '../types';
 import { useNavigate } from 'react-router-dom';
 import { productProfileApi } from '@/api/productProfile';
+import { partyProfileApi } from '@/api/partyProfile';
 import { accountProfileApi } from '@/api/accountProfile';
 import { normalizeCodeValue } from '@/utils';
+import { SelectPartyProfiles } from '@/modules/partyProfiles/components';
+import { PartyProfileTypeEnum } from '@/modules/partyProfiles/types';
+import type { IPartyProfile } from '@/modules/partyProfiles/types';
 
 const ACCOUNT_PROFILE_OPTION_PAGE_SIZE = 30;
 
@@ -51,11 +55,102 @@ const isAccountProfileSelectField = (
 
 interface ProductProfileFormProps {
   defaultValues: ICreateProductProfile;
-  onSubmit: (values: ICreateProductProfile) => void | Promise<void>;
+  onSubmit: (
+    values: ICreateProductProfile | IUpdateProductProfilePayload
+  ) => void | Promise<void>;
   submitLabel?: string;
   isSubmitting?: boolean;
   currentId?: string;
 }
+
+const CardIssuerField = ({
+  isSubmitting,
+}: {
+  isSubmitting: boolean;
+}) => {
+  const { watch, setValue } = useFormContext<ICreateProductProfile>();
+  const issuerIds = watch('cardIssuerProfileIds') ?? [];
+  const [selectedProfiles, setSelectedProfiles] = useState<IPartyProfile[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadSelectedProfiles = async () => {
+      if (issuerIds.length === 0) {
+        setSelectedProfiles([]);
+        return;
+      }
+
+      const profiles = await Promise.all(
+        issuerIds.map(id => partyProfileApi.getPartyProfileById(id).catch(() => undefined))
+      );
+      if (active) {
+        setSelectedProfiles(
+          profiles.filter((profile): profile is IPartyProfile => Boolean(profile))
+        );
+      }
+    };
+
+    void loadSelectedProfiles();
+    return () => {
+      active = false;
+    };
+  }, [issuerIds.join('|')]);
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-sm font-semibold text-text-primary">Card Issuers</p>
+          <p className="text-xs text-text-secondary">
+            Select active and approved card issuer profiles.
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={isSubmitting}
+          onClick={() => setIsModalOpen(true)}
+        >
+          Select Card Issuers
+        </Button>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {selectedProfiles.length === 0 ? (
+          <span className="text-sm text-text-tertiary">No card issuers selected.</span>
+        ) : selectedProfiles.map(profile => (
+          <span
+            key={profile.id}
+            className="inline-flex items-center rounded-full border border-border-secondary bg-surface-secondary px-3 py-1 text-sm"
+          >
+            {profile.code} - {profile.name}
+          </span>
+        ))}
+      </div>
+
+      <SelectPartyProfiles
+        open={isModalOpen}
+        types={PartyProfileTypeEnum.CARD_ISSUER_PROFILE}
+        selectable
+        multiple
+        title="Select Card Issuers"
+        description="Select active and approved card issuer profiles for this product."
+        initialSelectedProfiles={selectedProfiles}
+        onContinue={profiles => {
+          setSelectedProfiles(profiles);
+          setValue('cardIssuerProfileIds', profiles.map(profile => profile.id), {
+            shouldDirty: true,
+            shouldValidate: true,
+          });
+          setIsModalOpen(false);
+        }}
+        onClose={() => setIsModalOpen(false)}
+      />
+    </div>
+  );
+};
 
 const RetailTransactionConfig = ({
   isSubmitting,
@@ -412,10 +507,31 @@ export const ProductProfileForm = ({
   const onCancel = () => {
     navigate('/admin/product-profile');
   };
+
+  const handleFormSubmit = useCallback(
+    (values: ICreateProductProfile) => {
+      const currentIds = values.cardIssuerProfileIds ?? [];
+      const initialIds = defaultValues.cardIssuerProfileIds ?? [];
+      const initialIdSet = new Set(initialIds);
+      const currentIdSet = new Set(currentIds);
+
+      if (!currentId) {
+        return onSubmit({ ...values, cardIssuerProfileIds: currentIds });
+      }
+
+      return onSubmit({
+        ...values,
+        cardIssuerProfileIds: currentIds.filter(id => !initialIdSet.has(id)),
+        removedCardIssuerProfileIds: initialIds.filter(id => !currentIdSet.has(id)),
+      });
+    },
+    [currentId, defaultValues.cardIssuerProfileIds, onSubmit]
+  );
+
   return (
     <Form
       id="product-profile-form"
-      onSubmit={onSubmit}
+      onSubmit={handleFormSubmit}
       resolver={
         yupResolver(productProfileSchema) as Resolver<ICreateProductProfile>
       }
@@ -448,6 +564,9 @@ export const ProductProfileForm = ({
             label="Product Description"
             disabled={isSubmitting}
           />
+        </div>
+        <div className="mt-4">
+          <CardIssuerField isSubmitting={isSubmitting} />
         </div>
       </CardSection>
 

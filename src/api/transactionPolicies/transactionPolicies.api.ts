@@ -10,8 +10,12 @@ import type {
 } from '@/modules/transactionPolicies/types';
 
 export const transactionPoliciesApi = {
-  getPolicyContext: async (): Promise<IPolicyContext> => {
-    const res = await apiClient.get<IPolicyContext>('/auth/policy-context');
+  getPolicyContext: async (branchId?: string, counterId?: string): Promise<IPolicyContext> => {
+    const params = new URLSearchParams();
+    if (branchId) params.set('branchId', branchId);
+    if (counterId) params.set('counterId', counterId);
+    const query = params.toString() ? `?${params.toString()}` : '';
+    const res = await apiClient.get<IPolicyContext>(`/auth/policy-context${query}`);
     if (res.error) throw new Error(res.error);
     if (!res.data) {
       throw new Error('Failed to load policy context');
@@ -65,7 +69,7 @@ export const transactionPoliciesApi = {
   },
 
   completeDayEnd: async (
-    payload: { answers?: Record<string, unknown> },
+    payload: { branchId?: string; counterId?: string; answers?: Record<string, unknown> },
   ): Promise<{ message: string }> => {
     const res = await apiClient.post<{ message: string }>(
       '/day-end-start-process/complete',
@@ -79,7 +83,7 @@ export const transactionPoliciesApi = {
   },
 
   startDay: async (
-    payload: { answers?: Record<string, unknown> },
+    payload: { branchId?: string; counterId?: string; answers?: Record<string, unknown> },
   ): Promise<{ message: string }> => {
     const res = await apiClient.post<{ message: string }>(
       '/day-end-start-process/start',

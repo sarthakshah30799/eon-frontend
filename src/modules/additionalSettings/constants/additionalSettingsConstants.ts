@@ -1,3 +1,5 @@
+import { TransactionTypeProfileEnum } from '@/modules/transactions';
+
 export const ADDITIONAL_SETTINGS_STORAGE_KEY = 'additional-settings';
 
 export const AdditionalSettingsCodeEnum = {
@@ -57,6 +59,7 @@ export const AdditionalSettingsCodeEnum = {
   CounterTransferSellNumberSeries: 'COUNTER_TRANSFER_SELL',
   CounterTransferPurchaseNumberSeries: 'COUNTER_TRANSFER_PURCHASE',
   FakeCurrencyNumberSeries: 'FAKE_CURRENCY',
+  CardStockReceiptNumberSeries: TransactionTypeProfileEnum.CARD_STOCK_RECEIPT,
   FakeCurrencyRateEditable: 'FAKE_CURRENCY_RATE_EDITABLE',
   TransferRateEditable: 'TRANSFER_RATE_EDITABLE',
   FakeCurrency: 'FAKE_CURRENCY_SETTINGS',

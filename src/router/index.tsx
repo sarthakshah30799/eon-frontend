@@ -324,6 +324,9 @@ const IncomeBookingEditPage = lazy(
 );
 const ReportsPage = lazy(() => import('../pages/reports'));
 const StockRevaluationPage = lazy(() => import('../pages/stock-revaluations'));
+const CardStockListPage = lazy(() => import('../pages/card-stock/CardStockListPage'));
+const CardStockCreatePage = lazy(() => import('../pages/card-stock/create/CardStockCreatePage'));
+const CardStockEditPage = lazy(() => import('../pages/card-stock/edit/[id]/CardStockEditPage'));
 
 const router = createBrowserRouter([
   {
@@ -928,6 +931,30 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <StockRevaluationPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/card-stock',
+    element: (
+      <ProtectedLayout>
+        <CardStockListPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/card-stock/create',
+    element: (
+      <ProtectedLayout>
+        <CardStockCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/card-stock/edit/:id',
+    element: (
+      <ProtectedLayout>
+        <CardStockEditPage />
       </ProtectedLayout>
     ),
   },

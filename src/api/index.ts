@@ -34,5 +34,6 @@ export * from './transactions';
 export * from './transfers/transfers.api';
 export * from './reports';
 export * from './dashboard/dashboard.api';
+export * from './cardStock';
 export * from './purpose';
 export * from './stockRevaluation';

@@ -3,7 +3,7 @@ import { ProductProfileEditorView } from './ProductProfileEditorView';
 import { useGetProductProfile, useUpdateProductProfile } from '../hooks';
 import { PRODUCT_PROFILE_TEXTS } from '../constants';
 import { mapRecordToFormValues } from '../utils';
-import type { ICreateProductProfile } from '../types';
+import type { IUpdateProductProfilePayload } from '../types';
 import { Loader } from '@/components/ui/loader';
 
 export const ProductProfileEditView = () => {
@@ -25,7 +25,7 @@ export const ProductProfileEditView = () => {
     );
   }
 
-  const handleSubmit = async (values: ICreateProductProfile) => {
+  const handleSubmit = async (values: IUpdateProductProfilePayload) => {
     await submitProductProfile(values);
     navigate('/admin/product-profile');
   };

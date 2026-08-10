@@ -13,6 +13,7 @@ export interface IProductProfile {
   id: string;
   productCode: string;
   productDescription: string;
+  cardIssuerProfileIds: string[];
   acOfIssuer: string;
   commissionAc: string;
   fakeAccount: string;
@@ -77,3 +78,9 @@ export type ICreateProductProfile = Omit<
 >;
 
 export type IUpdateProductProfile = Partial<ICreateProductProfile>;
+
+export interface IUpdateProductProfilePayload
+  extends Partial<ICreateProductProfile> {
+  cardIssuerProfileIds?: string[];
+  removedCardIssuerProfileIds?: string[];
+}

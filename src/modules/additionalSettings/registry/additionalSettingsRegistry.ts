@@ -298,6 +298,13 @@ const TRANSACTION_NUMBERING_SUBCATEGORY_CONFIG: Partial<Record<
     required: true,
     placeholder: 'Enter starting sequence number',
   },
+  [TransactionTypeProfileEnum.CARD_STOCK_RECEIPT]: {
+    code: AdditionalSettingsCodeEnum.CardStockReceiptNumberSeries,
+    label: 'CARD STOCK RECEIPT',
+    valueType: 'number',
+    required: true,
+    placeholder: 'Enter starting sequence number',
+  },
   [TransactionTypeProfileEnum.PURCHASE_CORPORATE_INDIVIDUAL]: {
     code: AdditionalSettingsCodeEnum.PurchaseCorporateNumberSeries,
     label: 'PURCHASE CORPORATE / INDIVIDUAL',

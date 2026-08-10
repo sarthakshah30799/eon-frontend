@@ -1136,9 +1136,6 @@ const PurchaseFormBody = ({
             minDate={transactionDatePolicy.minDate}
             maxDate={transactionDatePolicy.maxDate}
           />
-          <p className="text-xs text-text-tertiary lg:col-span-2">
-            {transactionDatePolicy.helperText}
-          </p>
         </div>
 
         {isCombinedPartyProfilePage ? (

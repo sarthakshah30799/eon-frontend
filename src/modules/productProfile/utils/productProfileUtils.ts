@@ -5,6 +5,7 @@ export const createEmptyProductProfileFormValues =
   (): ICreateProductProfile => ({
     productCode: '',
     productDescription: '',
+    cardIssuerProfileIds: [],
     acOfIssuer: '',
     commissionAc: '',
     fakeAccount: '',
@@ -64,6 +65,7 @@ export const mapRecordToFormValues = (
 ): ICreateProductProfile => ({
   productCode: record.productCode,
   productDescription: record.productDescription,
+  cardIssuerProfileIds: record.cardIssuerProfileIds ?? [],
   acOfIssuer: record.acOfIssuer,
   commissionAc: record.commissionAc,
   fakeAccount: record.fakeAccount,

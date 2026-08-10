@@ -1,12 +1,14 @@
 import { ProductProfileForm } from '../forms';
-import type { ICreateProductProfile } from '../types';
+import type { ICreateProductProfile, IUpdateProductProfilePayload } from '../types';
 
 interface ProductProfileEditorViewProps {
   heading: string;
   description: string;
   submitLabel: string;
   defaultValues: ICreateProductProfile;
-  onSubmitProduct: (values: ICreateProductProfile) => void | Promise<void>;
+  onSubmitProduct: (
+    values: ICreateProductProfile | IUpdateProductProfilePayload
+  ) => void | Promise<void>;
   isSubmitting?: boolean;
   currentId?: string;
 }

@@ -153,7 +153,11 @@ export const createPurchaseFormSchema = (
   yup.object({
     purchasePageType: yup
       .mixed<PurchasePageType>()
-      .oneOf(Object.values(TransactionTypeProfileEnum))
+      .oneOf(
+        Object.values(TransactionTypeProfileEnum).filter(
+          value => value !== TransactionTypeProfileEnum.CARD_STOCK_RECEIPT
+        ) as PurchasePageType[]
+      )
       .nullable()
       .default(null),
     branchId: yup.string().trim().required('Branch is required'),

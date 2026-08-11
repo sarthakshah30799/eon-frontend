@@ -14,6 +14,7 @@ const entityLabels: Record<string, string> = {
   chequebook: 'Cheque Book',
   'manual-book': 'Manual Bill',
   transfer: 'Transfer',
+  'card-transfer': 'CARD Transfer',
 };
 
 const PendingApprovals = ({ approvals, loading = false, onItemClick }: PendingApprovalsProps) => (
@@ -30,7 +31,7 @@ const PendingApprovals = ({ approvals, loading = false, onItemClick }: PendingAp
       <div className="py-6 text-center text-xs text-text-tertiary">No pending approvals</div>
     ) : (
       <div className="max-h-[280px] space-y-2.5 overflow-y-auto">
-        {approvals.slice(0, 5).map((item) => (
+        {approvals.map((item) => (
           <div
             key={`${item.entityType}-${item.id}`}
             className="cursor-pointer rounded-md border border-border-primary p-3 transition-colors hover:bg-surface-secondary"

@@ -60,6 +60,7 @@ export const AdditionalSettingsCodeEnum = {
   CounterTransferPurchaseNumberSeries: 'COUNTER_TRANSFER_PURCHASE',
   FakeCurrencyNumberSeries: 'FAKE_CURRENCY',
   CardStockReceiptNumberSeries: TransactionTypeProfileEnum.CARD_STOCK_RECEIPT,
+  CardTransferSellNumberSeries: TransactionTypeProfileEnum.CARD_TRANSFER_SELL,
   FakeCurrencyRateEditable: 'FAKE_CURRENCY_RATE_EDITABLE',
   TransferRateEditable: 'TRANSFER_RATE_EDITABLE',
   FakeCurrency: 'FAKE_CURRENCY_SETTINGS',

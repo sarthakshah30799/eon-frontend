@@ -41,7 +41,7 @@ export const useDashboard = () => {
 
   const pendingApprovalsQuery = useQuery({
     queryKey: ['dashboard', 'pending-approvals'],
-    queryFn: () => dashboardApi.getPendingApprovals(10),
+    queryFn: () => dashboardApi.getPendingApprovals(100),
     refetchInterval: 30000,
   });
 
@@ -102,6 +102,9 @@ export const useDashboard = () => {
         break;
       case 'transfer':
         navigate(`/transfer/${(item.subType ?? item.type).toLowerCase()}/edit/${item.id}`);
+        break;
+      case 'card-transfer':
+        navigate(`/card-transfer/edit/${item.id}`);
         break;
       default:
         break;

@@ -20,7 +20,7 @@ import {
 export { TransactionTypeProfileEnum } from '@/modules/transactions';
 export type PurchasePageType = Exclude<
   TransactionTypeProfile,
-  typeof TransactionTypeProfileEnum.CARD_STOCK_RECEIPT
+  typeof TransactionTypeProfileEnum.CARD_STOCK_RECEIPT | typeof TransactionTypeProfileEnum.CARD_TRANSFER_SELL
 >;
 
 const PURCHASE_PAGE_TYPE_BY_SLUG: Record<string, PurchasePageType> = {

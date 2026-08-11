@@ -24,7 +24,6 @@ export interface ICardStockFormValues {
   receiptDate: string;
   issuerPartyProfileId: string;
   hoBranchId: string;
-  counterId: string;
   totalFeAmount: string;
   items: ICardStockFormItem[];
 }

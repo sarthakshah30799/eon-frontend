@@ -327,6 +327,9 @@ const StockRevaluationPage = lazy(() => import('../pages/stock-revaluations'));
 const CardStockListPage = lazy(() => import('../pages/card-stock/CardStockListPage'));
 const CardStockCreatePage = lazy(() => import('../pages/card-stock/create/CardStockCreatePage'));
 const CardStockEditPage = lazy(() => import('../pages/card-stock/edit/[id]/CardStockEditPage'));
+const CardTransferListPage = lazy(() => import('../pages/card-transfer/CardTransferListPage'));
+const CardTransferCreatePage = lazy(() => import('../pages/card-transfer/create/CardTransferCreatePage'));
+const CardTransferEditPage = lazy(() => import('../pages/card-transfer/edit/[id]/CardTransferEditPage'));
 
 const router = createBrowserRouter([
   {
@@ -955,6 +958,30 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <CardStockEditPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/card-transfer',
+    element: (
+      <ProtectedLayout>
+        <CardTransferListPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/card-transfer/create',
+    element: (
+      <ProtectedLayout>
+        <CardTransferCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/card-transfer/edit/:id',
+    element: (
+      <ProtectedLayout>
+        <CardTransferEditPage />
       </ProtectedLayout>
     ),
   },

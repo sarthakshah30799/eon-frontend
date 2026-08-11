@@ -8,6 +8,7 @@ import { CardSection } from '@/components/ui';
 import { Form, FormFieldDatePicker, FormFieldInput } from '@/components/forms';
 import { PurchaseReferenceNumberField } from '@/modules/purchase/components/PurchaseReferenceNumberField';
 import { useAuth } from '@/lib/AuthContext';
+import { getTransactionDatePolicy } from '@/modules/transactionPolicies/utils/transactionDatePolicy';
 import { usePermission } from '@/hooks/usePermission';
 import { useCurrencyRatesViewData } from '@/modules/currencyRates/hooks/useCurrencyRatesViewData';
 import { useTransactionNextNumber } from '@/modules/transactions/hooks';
@@ -30,8 +31,6 @@ import { useListAdditionalSettings } from '@/modules/additionalSettings/hooks';
 import { getAdditionalSettingBooleanValue } from '@/modules/additionalSettings/utils';
 import { AdditionalSettingsCodeEnum } from '@/modules/additionalSettings/constants';
 
-const today = new Date().toISOString().slice(0, 10);
-
 interface TransferFormBodyProps {
   transferType: TransferType;
   pricingData: NonNullable<ReturnType<typeof useCurrencyRatesViewData>['data']>;
@@ -40,6 +39,7 @@ interface TransferFormBodyProps {
   setCurrencyPickerRowIndex: (value: number | null) => void;
   readOnly: boolean;
   useTransferRateEditable: boolean;
+  transactionDatePolicy: ReturnType<typeof getTransactionDatePolicy>;
   displayNumber?: string;
   readOnlyOptions?: TransferWorkplaceReferenceOptions;
 }
@@ -54,6 +54,7 @@ const TransferFormBody = ({
   displayNumber,
   readOnlyOptions,
   useTransferRateEditable,
+  transactionDatePolicy,
 }: TransferFormBodyProps) => {
   const form = useFormContext<ITransferFormValues>();
   const sourceBranchId = form.watch('sourceBranchId');
@@ -138,7 +139,9 @@ const TransferFormBody = ({
               name="transactionDate"
               label="Transaction Date"
               placeholder="Select transaction date"
-              disabled={readOnly}
+              disabled={readOnly || !transactionDatePolicy.canPunchTransactions}
+              minDate={transactionDatePolicy.minDate}
+              maxDate={transactionDatePolicy.maxDate}
             />
             <FormFieldInput
               name="billReference"
@@ -200,6 +203,7 @@ export const TransferFormView = ({
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const { user, activeBranchId, activeCounterId } = useAuth();
+  const { policyContext } = useAuth();
   const transferPermission = usePermission(pathname);
   const { data: pricingData, isLoading, error } = useCurrencyRatesViewData();
   const { data: additionalSettings = [] } = useListAdditionalSettings();
@@ -221,18 +225,22 @@ export const TransferFormView = ({
     AdditionalSettingsCodeEnum.TransferRateEditable,
     false,
   );
+  const transactionDatePolicy = useMemo(
+    () => getTransactionDatePolicy(policyContext),
+    [policyContext],
+  );
 
   const defaultValues = useMemo(
     () =>
       createEmptyTransferFormValues({
         transferType,
-        transactionDate: today,
+        transactionDate: transactionDatePolicy.defaultTransactionDate,
         sourceBranchId: activeBranchId ?? '',
         sourceCounterId: activeCounterId ?? '',
         destinationBranchId: transferType === 'COUNTER' ? (activeBranchId ?? '') : '',
         destinationCounterId: '',
       }),
-    [activeBranchId, activeCounterId, transferType]
+    [activeBranchId, activeCounterId, transferType, transactionDatePolicy.defaultTransactionDate]
   );
 
   if (isLoading) {
@@ -269,7 +277,7 @@ export const TransferFormView = ({
         submitLabel:
           transferType === 'COUNTER' ? 'Create Counter Transfer' : 'Create Branch Transfer',
         onCancel: onCancel ?? (() => navigate(`/transfer/${transferType.toLowerCase()}`)),
-        isSubmitDisabled: !canSubmit || readOnly,
+        isSubmitDisabled: !canSubmit || readOnly || !transactionDatePolicy.canPunchTransactions,
         showSubmit: showSubmit && !readOnly,
         actions: footerActions,
       }}
@@ -321,6 +329,7 @@ export const TransferFormView = ({
         displayNumber={initialValues?.number}
         readOnlyOptions={readOnlyOptions}
         useTransferRateEditable={transferRateEditable}
+        transactionDatePolicy={transactionDatePolicy}
       />
     </Form>
   );

@@ -41,8 +41,7 @@ export const AD1CreateView = () => {
       dealId: '',
       docNo: '',
       transactionDate:
-        transactionDatePolicy.defaultTransactionDate ||
-        new Date().toISOString().split('T')[0],
+        transactionDatePolicy.defaultTransactionDate,
       marketingId: '',
       segmentId: '',
       servicedBy: '',

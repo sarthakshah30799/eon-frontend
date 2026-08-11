@@ -62,7 +62,9 @@ export const getTransactionDatePolicy = (
     ? formatDateOnly(clampDate(baseDate, minDate, maxDate))
     : '';
 
-  const helperText = '';
+  const helperText = workflowState === 'PENDING_EOD'
+    ? `EOD is pending for ${openBusinessDate || 'the previous business date'}. Transactions must use that date.`
+    : '';
 
   return {
     canPunchTransactions,

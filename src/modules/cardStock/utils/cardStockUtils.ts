@@ -9,8 +9,8 @@ export const emptyItem = (): ICardStockFormItem => ({
   currencyId: '', per: '1', productId: '', issuerPartyProfileId: '', feAmount: '', cards: [emptyCard()],
 });
 
-export const emptyForm = (hoBranchId = '', counterId = ''): ICardStockFormValues => ({
-  transactionNumber: '', receiptDate: '', issuerPartyProfileId: '', hoBranchId, counterId, totalFeAmount: '', items: [emptyItem()],
+export const emptyForm = (hoBranchId = ''): ICardStockFormValues => ({
+  transactionNumber: '', receiptDate: '', issuerPartyProfileId: '', hoBranchId, totalFeAmount: '', items: [emptyItem()],
 });
 
 export const mapReceiptToForm = (receipt: ICardStockReceipt): ICardStockFormValues => ({
@@ -18,7 +18,6 @@ export const mapReceiptToForm = (receipt: ICardStockReceipt): ICardStockFormValu
   receiptDate: receipt.receiptDate?.slice(0, 10) ?? '',
   issuerPartyProfileId: receipt.issuerPartyProfileId,
   hoBranchId: receipt.hoBranchId,
-  counterId: receipt.counterId ?? '',
   totalFeAmount: receipt.totalFeAmount,
   items: receipt.items.map(item => ({
     currencyId: item.currencyId,

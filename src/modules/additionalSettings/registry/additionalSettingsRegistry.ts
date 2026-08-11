@@ -305,6 +305,13 @@ const TRANSACTION_NUMBERING_SUBCATEGORY_CONFIG: Partial<Record<
     required: true,
     placeholder: 'Enter starting sequence number',
   },
+  [TransactionTypeProfileEnum.CARD_TRANSFER_SELL]: {
+    code: AdditionalSettingsCodeEnum.CardTransferSellNumberSeries,
+    label: 'CARD TRANSFER SELL',
+    valueType: 'number',
+    required: true,
+    placeholder: 'Enter starting sequence number',
+  },
   [TransactionTypeProfileEnum.PURCHASE_CORPORATE_INDIVIDUAL]: {
     code: AdditionalSettingsCodeEnum.PurchaseCorporateNumberSeries,
     label: 'PURCHASE CORPORATE / INDIVIDUAL',

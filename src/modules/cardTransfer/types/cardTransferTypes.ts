@@ -26,13 +26,10 @@ export interface CardTransferItem {
 }
 
 export interface CardTransferFormValues {
-  transferType: CardTransferType;
   sourceBranchId: string;
-  sourceCounterId: string;
   destinationBranchId: string;
   transactionDate: string;
-  sellTransactionNumber: string;
-  purchaseTransactionNumber: string;
+  transactionNumber: string;
   remarks: string;
   items: CardTransferItem[];
 }
@@ -42,9 +39,6 @@ export interface CardTransferRequest extends CardTransferFormValues {
   status: CardTransferStatus;
   sourceBranch?: IBranchProfile | null;
   destinationBranch?: IBranchProfile | null;
-  sourceBranchName?: string;
-  destinationBranchName?: string;
-  sourceCounterName?: string;
   createdAt: string;
   updatedAt?: string;
   rejectionReason?: string;

@@ -1,10 +1,3 @@
-import type { AsyncSelectOption } from '@/components/ui';
-
-export const CARD_TRANSFER_TYPE_OPTIONS: AsyncSelectOption[] = [
-  { value: 'SELL', label: 'Card Transfer Sell' },
-  { value: 'PURCHASE', label: 'Card Transfer Purchase' },
-];
-
 export const CARD_TRANSFER_STATUS_OPTIONS = [
   { value: 'ALL', label: 'All' },
   { value: 'HELD', label: 'Held' },
@@ -20,4 +13,3 @@ export const CARD_TRANSFER_COPY = {
   editTitle: 'CARD Transfer Request',
   sourceDescription: 'Cards are reserved from the selected HO branch and counter when submitted.',
 } as const;
-

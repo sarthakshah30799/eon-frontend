@@ -56,6 +56,7 @@ export const TransferItemsFieldArray = ({
             canRemove={fields.length > 1}
             onRemove={remove}
             rateEditable={rateEditable}
+            useCounterHoldCostRate
           />
         ),
         meta: {

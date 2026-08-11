@@ -1,11 +1,14 @@
 import { useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
-import { Button, CardSection, Checkbox, Input } from '@/components/ui';
+import { AsyncSelect, Button, CardSection, Checkbox, Input, type AsyncSelectOption } from '@/components/ui';
 import { Loader } from '@/components/ui/loader';
 import { useAuth } from '@/lib/AuthContext';
 import { transactionPoliciesApi } from '@/api/transactionPolicies/transactionPolicies.api';
 import type { IPolicyChecklistItem } from '@/modules/auth/types';
 import { formatDateTime } from '@/utils';
+import { useListBranchProfiles } from '@/modules/branchProfile/hooks';
+import { useListCounterProfiles } from '@/modules/counterProfile/hooks';
 
 type ChecklistAnswers = Record<string, string | boolean>;
 type DayEndAction = 'start' | 'end';
@@ -51,23 +54,43 @@ const DayEndStartProcessForm = ({
   policyContext,
   checkAuth,
 }: DayEndStartProcessFormProps) => {
-  const checklist = useMemo(() => policyContext?.checklist ?? [], [policyContext?.checklist]);
+  const { activeBranchId, activeCounterId } = useAuth();
+  const canSelectWorkplace = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
+  const { data: branches = [] } = useListBranchProfiles({ activeOnly: true }, canSelectWorkplace);
+  const [selectedBranchId, setSelectedBranchId] = useState(activeBranchId ?? '');
+  const [selectedCounterId, setSelectedCounterId] = useState(activeCounterId ?? '');
+  const { data: counters = [] } = useListCounterProfiles(
+    { branchId: selectedBranchId, activeOnly: true },
+    Boolean(selectedBranchId),
+  );
+  const selectedPolicy = useQuery({
+    queryKey: ['day-end-start-process', 'policy-context', selectedBranchId, selectedCounterId],
+    queryFn: () => transactionPoliciesApi.getPolicyContext(selectedBranchId, selectedCounterId),
+    enabled: Boolean(selectedBranchId && selectedCounterId),
+  });
+  const effectivePolicyContext = selectedPolicy.data ?? (
+    selectedBranchId === activeBranchId && selectedCounterId === activeCounterId ? policyContext : null
+  );
+  const effectiveBranches = branches;
+  const branchOptions = effectiveBranches.map(branch => ({ value: branch.id, label: `${branch.code} - ${branch.name}` }));
+  const counterOptions = counters.map(counter => ({ value: counter.id, label: `${counter.counterNo} - ${counter.name}` }));
+  const checklist = useMemo(() => effectivePolicyContext?.checklist ?? [], [effectivePolicyContext?.checklist]);
   const [answers, setAnswers] = useState<ChecklistAnswers>(() =>
     createDefaultAnswers(checklist)
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const hasBodCompleted = Boolean(policyContext?.bodCompleted);
-  const hasEodPending = Boolean(policyContext?.eodIncomplete);
-  const canStartDay = Boolean(policyContext?.canStartDay ?? !hasBodCompleted);
-  const canCompleteDayEnd = Boolean(policyContext?.canCompleteDayEnd ?? hasEodPending);
-  const workflowState = policyContext?.workflowState ?? (
+  const hasBodCompleted = Boolean(effectivePolicyContext?.bodCompleted);
+  const hasEodPending = Boolean(effectivePolicyContext?.eodIncomplete);
+  const canStartDay = Boolean(effectivePolicyContext?.canStartDay ?? !hasBodCompleted);
+  const canCompleteDayEnd = Boolean(effectivePolicyContext?.canCompleteDayEnd ?? hasEodPending);
+  const workflowState = effectivePolicyContext?.workflowState ?? (
     hasEodPending ? 'PENDING_EOD' : hasBodCompleted ? 'READY_TO_START' : 'PENDING_BOD'
   );
-  const currentBusinessDate = policyContext?.currentBusinessDate ?? '';
-  const transactionDate = policyContext?.transactionDate ?? '';
-  const openBusinessDate = policyContext?.openBusinessDate ?? currentBusinessDate;
-  const activeMonthlyLock = policyContext?.activeMonthlyLock ?? null;
+  const currentBusinessDate = effectivePolicyContext?.currentBusinessDate ?? '';
+  const transactionDate = effectivePolicyContext?.transactionDate ?? '';
+  const openBusinessDate = effectivePolicyContext?.openBusinessDate ?? currentBusinessDate;
+  const activeMonthlyLock = effectivePolicyContext?.activeMonthlyLock ?? null;
   const isPendingBod = workflowState === 'PENDING_BOD';
   const isPendingEod = workflowState === 'PENDING_EOD';
   const isClosedToday = workflowState === 'CLOSED_TODAY';
@@ -147,7 +170,7 @@ const DayEndStartProcessForm = ({
 
     setIsSubmitting(true);
     try {
-      const payload = { answers };
+      const payload = { branchId: selectedBranchId, counterId: selectedCounterId, answers };
       if (action === 'start') {
         await transactionPoliciesApi.startDay(payload);
         toast.success('Day started successfully');
@@ -157,6 +180,7 @@ const DayEndStartProcessForm = ({
       }
 
       await checkAuth();
+      await selectedPolicy.refetch();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Unable to save day process');
     } finally {
@@ -219,6 +243,47 @@ const DayEndStartProcessForm = ({
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
+        <CardSection heading="Workplace" className="space-y-4 lg:col-span-3">
+          <div className="grid gap-4 md:grid-cols-2">
+            <AsyncSelect
+              label="Branch"
+              value={branchOptions.find(option => option.value === selectedBranchId) ?? null}
+              defaultOptions={branchOptions}
+              isSearchable
+              isClearable={false}
+              disabled={!canSelectWorkplace}
+              loadOptions={async input => ({
+                options: branchOptions.filter(option => option.label.toLowerCase().includes(input.toLowerCase())),
+              })}
+              onChange={option => {
+                const selected = Array.isArray(option) ? option[0] : option;
+                const nextBranchId = selected ? String((selected as AsyncSelectOption).value) : '';
+                setSelectedBranchId(nextBranchId);
+                setSelectedCounterId('');
+              }}
+            />
+            <AsyncSelect
+              label="Counter"
+              value={counterOptions.find(option => option.value === selectedCounterId) ?? null}
+              defaultOptions={counterOptions}
+              isSearchable
+              isClearable={false}
+              disabled={!selectedBranchId || !canSelectWorkplace}
+              loadOptions={async input => ({
+                options: counterOptions.filter(option => option.label.toLowerCase().includes(input.toLowerCase())),
+              })}
+              onChange={option => {
+                const selected = Array.isArray(option) ? option[0] : option;
+                setSelectedCounterId(selected ? String((selected as AsyncSelectOption).value) : '');
+              }}
+            />
+          </div>
+          <p className="text-xs text-text-secondary">
+            {canSelectWorkplace
+              ? 'Select the branch and counter where this BOD/EOD action will be recorded.'
+              : 'Your current branch and counter are used for this BOD/EOD action.'}
+          </p>
+        </CardSection>
         <CardSection heading="Current Status" className="space-y-3">
           <div className={`rounded-lg border px-4 py-3 text-sm ${getStatusTone(hasBodCompleted && !isPendingBod)}`}>
             <div className="font-semibold">BOD Status</div>
@@ -335,7 +400,7 @@ const DayEndStartProcessForm = ({
                 type="button"
                 onClick={() => void submitAction('start')}
                 loading={isSubmitting}
-                disabled={isSubmitting || !canStartDay}
+                disabled={isSubmitting || !canStartDay || selectedPolicy.isFetching || !selectedBranchId || !selectedCounterId}
               >
               {isPendingBod
                 ? 'Start Pending Day'
@@ -350,7 +415,7 @@ const DayEndStartProcessForm = ({
                 variant="outline"
                 onClick={() => void submitAction('end')}
                 loading={isSubmitting}
-                disabled={isSubmitting || !canCompleteDayEnd}
+                disabled={isSubmitting || !canCompleteDayEnd || selectedPolicy.isFetching || !selectedBranchId || !selectedCounterId}
               >
               {isPendingEod ? 'Complete Pending EOD' : isClosedToday ? 'Day End Completed' : 'Complete Day End'}
               </Button>

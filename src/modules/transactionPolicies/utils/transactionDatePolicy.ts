@@ -62,16 +62,7 @@ export const getTransactionDatePolicy = (
     ? formatDateOnly(clampDate(baseDate, minDate, maxDate))
     : '';
 
-  let helperText = 'Select the transaction date before saving.';
-  if (activeLock) {
-    helperText = `Backdated entries are allowed from ${activeLock.fromDate} to ${activeLock.toDate}.`;
-  } else if (workflowState === 'PENDING_EOD') {
-    helperText = `Only ${openBusinessDate || currentBusinessDate || 'the open business date'} is allowed until EOD is completed.`;
-  } else if (workflowState === 'READY_TO_START' || workflowState === 'PENDING_BOD') {
-    helperText = 'Start the day before punching transactions.';
-  } else if (workflowState === 'CLOSED_TODAY') {
-    helperText = `Day end is already completed for ${openBusinessDate || currentBusinessDate || 'today'}.`;
-  }
+  const helperText = '';
 
   return {
     canPunchTransactions,

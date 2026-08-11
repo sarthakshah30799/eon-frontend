@@ -3,7 +3,7 @@ import { Checkbox, SelectEntity, type TableColumnDef } from '@/components/ui';
 import type { PaginationState } from '@tanstack/react-table';
 import { useDebounce } from '@/hooks';
 import { useListPartyProfiles } from '../hooks';
-import type { PartyProfileType } from '../types';
+import { PartyProfileStatusEnum, type PartyProfileType } from '../types';
 import type { IPartyProfile, IPartyProfileListQuery } from '../types';
 
 interface SelectPartyProfilesProps {
@@ -14,6 +14,7 @@ interface SelectPartyProfilesProps {
   title?: string;
   description?: string;
   queryParams?: Omit<IPartyProfileListQuery, 'page' | 'limit' | 'search'>;
+  initialSelectedProfiles?: IPartyProfile[];
   onContinue: (profiles: IPartyProfile[]) => void;
   onClose: () => void;
 }
@@ -110,11 +111,15 @@ export const SelectPartyProfiles = ({
   title = 'Select Party Profiles',
   description = 'Search and choose party profiles from the list.',
   queryParams,
+  initialSelectedProfiles = [],
   onContinue,
   onClose,
 }: SelectPartyProfilesProps) => {
   const [search, setSearch] = useState('');
   const [pageSize, setPageSize] = useState(50);
+  const [selectedProfiles, setSelectedProfiles] = useState<IPartyProfile[]>(
+    initialSelectedProfiles
+  );
   const debouncedSearch = useDebounce(search, 350);
 
   const normalizedTypes = useMemo(
@@ -128,6 +133,8 @@ export const SelectPartyProfiles = ({
       page: 1,
       limit: pageSize,
       ...queryParams,
+      activeOnly: true,
+      status: PartyProfileStatusEnum.APPROVE,
     },
     normalizedTypes,
     open,
@@ -135,6 +142,7 @@ export const SelectPartyProfiles = ({
   );
 
   const profiles = response?.data ?? EMPTY_PARTY_PROFILE_ROWS;
+  const selectedRowIds = selectedProfiles.map(profile => profile.id);
   const rows = useMemo<SelectablePartyProfileRow[]>(
     () =>
       profiles.map(profile => ({
@@ -167,18 +175,73 @@ export const SelectPartyProfiles = ({
         searchPlaceholder="Search code, name, city, phone"
         emptyMessage="No party profiles found."
         onContinue={selectedRows =>
-          onContinue(
-            selectedRows.map(row => {
+          (() => {
+            const nextProfiles = selectedRows.map(row => {
               const { rowKey, ...profile } = row;
               void rowKey;
               return profile;
-            })
-          )
+            });
+            setSelectedProfiles(nextProfiles);
+            onContinue(nextProfiles);
+          })()
         }
         onClose={() => {
+          setSelectedProfiles(initialSelectedProfiles);
           onClose();
         }}
         getRowId={row => row.rowKey}
+        selectedRowIds={selectedRowIds}
+        selectedRows={selectedProfiles.map(profile => ({ ...profile, rowKey: profile.id }))}
+        onSelectedRowIdsChange={nextIds => {
+          setSelectedProfiles(current => {
+            const profilesById = new Map([
+              ...current.map(profile => [profile.id, profile] as const),
+              ...profiles.map(profile => [profile.id, profile] as const),
+            ]);
+
+            return nextIds
+              .map(id => profilesById.get(id))
+              .filter((profile): profile is IPartyProfile => Boolean(profile));
+          });
+        }}
+        selectedSummary={
+          selectedProfiles.length > 0 ? (
+            <div className="rounded-sm border border-border-primary bg-surface-secondary p-3">
+              <div className="mb-2 text-sm font-semibold text-text-primary">
+                Selected Card Issuers ({selectedProfiles.length})
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {selectedProfiles.map(profile => {
+                  const unavailable =
+                    !profile.active || profile.status !== PartyProfileStatusEnum.APPROVE;
+                  return (
+                    <div
+                      key={profile.id}
+                      className="inline-flex items-center gap-2 rounded-full border border-border-secondary bg-surface-primary px-3 py-1 text-sm"
+                    >
+                      <span>{profile.code} - {profile.name}</span>
+                      {unavailable && (
+                        <span className="text-xs text-text-tertiary">Unavailable</span>
+                      )}
+                      <button
+                        type="button"
+                        className="text-error-600 hover:text-error-700"
+                        aria-label={`Remove ${profile.code}`}
+                        onClick={() => {
+                          setSelectedProfiles(current =>
+                            current.filter(item => item.id !== profile.id)
+                          );
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null
+        }
         enablePagination
         pageSize={pageSize}
         onPaginationChange={(pagination: PaginationState) => {

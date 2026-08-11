@@ -1,6 +1,7 @@
 import { apiClient } from '../api';
 
 export type StockRevaluationFrequency = 'MONTHLY' | 'QUARTERLY' | 'HALF_YEARLY' | 'YEARLY';
+export type StockRevaluationStatus = 'PENDING' | 'PROCESSED';
 export interface StockRevaluationTarget { branchId: string; counterId: string; }
 
 export interface IStockRevaluationItem {
@@ -23,6 +24,7 @@ export interface IStockRevaluation {
   counterSnapshot: { id?: string; counterNo?: number; name?: string; label?: string } | null;
   branchSnapshot: { id?: string; code?: string; name?: string; label?: string } | null;
   frequency: StockRevaluationFrequency;
+  status: StockRevaluationStatus;
   valuationDate: string;
   uploadedDate: string;
   items: IStockRevaluationItem[];
@@ -40,7 +42,16 @@ export const stockRevaluationApi = {
     formData.append('targets', JSON.stringify(payload.targets));
     formData.append('frequency', payload.frequency);
     formData.append('file', payload.file);
-    const response = await apiClient.postFormData<IStockRevaluation[]>('/stock-revaluations/process', formData);
+    const response = await apiClient.postFormData<IStockRevaluation[]>('/stock-revaluations/upload', formData);
+    if (response.error || !response.data) throw new Error(response.error || 'Failed to process stock revaluation');
+    return response.data;
+  },
+
+  processUploaded: async (payload: { targets: StockRevaluationTarget[]; frequency: StockRevaluationFrequency }) => {
+    const response = await apiClient.post<IStockRevaluation[]>('/stock-revaluations/process', {
+      targets: JSON.stringify(payload.targets),
+      frequency: payload.frequency,
+    });
     if (response.error || !response.data) throw new Error(response.error || 'Failed to process stock revaluation');
     return response.data;
   },

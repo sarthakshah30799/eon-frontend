@@ -10,6 +10,7 @@ export const productProfileSchema = yup.object({
     .string()
     .trim()
     .required('Product Description is required'),
+  cardIssuerProfileIds: yup.array().of(yup.string().required()).required(),
   acOfIssuer: yup.string().trim().default('').defined(),
   commissionAc: yup.string().trim().default('').defined(),
   fakeAccount: yup.string().trim().default('').defined(),

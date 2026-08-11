@@ -18,6 +18,7 @@ export type TransactionType =
 
 export const TransactionTypeProfileEnum = {
   FAKE_CURRENCY: 'FAKE_CURRENCY',
+  CARD_STOCK_RECEIPT: 'CARD_STOCK_RECEIPT',
   PURCHASE_FFMC: 'PURCHASE_FFMC',
   PURCHASE_CORPORATE_INDIVIDUAL: 'PURCHASE_CORPORATE_INDIVIDUAL',
   SALE_CORPORATE_INDIVIDUAL: 'SALE_CORPORATE_INDIVIDUAL',
@@ -54,6 +55,7 @@ export type TransactionPartyProfileType =
 
 export const TRANSACTION_TYPE_PROFILE_ORDER = [
   TransactionTypeProfileEnum.FAKE_CURRENCY,
+  TransactionTypeProfileEnum.CARD_STOCK_RECEIPT,
   TransactionTypeProfileEnum.PURCHASE_FFMC,
   TransactionTypeProfileEnum.PURCHASE_CORPORATE_INDIVIDUAL,
   TransactionTypeProfileEnum.SALE_CORPORATE_INDIVIDUAL,

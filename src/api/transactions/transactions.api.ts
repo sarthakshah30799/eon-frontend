@@ -102,6 +102,21 @@ export const transactionsApi = {
     return res.data ?? { ...params, averageSellRate: '0.00' };
   },
 
+  getCounterHoldCost: async (params: { branchId: string; counterId: string; currencyId: string }) => {
+    const query = new URLSearchParams(params);
+    const res = await apiClient.get<{
+      branchId: string;
+      counterId: string;
+      currencyId: string;
+      closingQuantity: string;
+      closingInrAmount: string;
+      holdCostRate: string | null;
+    }>(`/transactions/counter-hold-cost?${query.toString()}`);
+    if (res.error) throw new Error(res.error);
+    if (!res.data) throw new Error('Failed to fetch counter hold cost');
+    return res.data;
+  },
+
   requestAccountPostingRebuild: async (
     transactionId: string
   ): Promise<{ message: string }> => {

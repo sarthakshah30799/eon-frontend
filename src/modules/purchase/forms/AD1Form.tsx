@@ -417,9 +417,6 @@ const AD1FormBody = ({
             minDate={transactionDatePolicy.minDate}
             maxDate={transactionDatePolicy.maxDate}
           />
-          <p className="text-xs text-text-tertiary lg:col-span-2">
-            {transactionDatePolicy.helperText}
-          </p>
           <FormFieldCategoryOption name="marketingId" code={CategoryOptionCodeEnum.Marketing} label="Marketing" disabled={readOnly} />
           <FormFieldCategoryOption name="segmentId" code={CategoryOptionCodeEnum.Segment} label="Segment" disabled={readOnly} />
           <FormFieldInput name="servicedBy" label="Serviced By" placeholder="Serviced By" disabled={readOnly} />

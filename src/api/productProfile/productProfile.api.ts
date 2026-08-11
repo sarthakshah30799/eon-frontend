@@ -2,6 +2,7 @@ import { apiClient } from '../api';
 import type {
   ICreateProductProfile,
   IProductProfile,
+  IUpdateProductProfilePayload,
 } from '@/modules/productProfile/types';
 
 export const productProfileApi = {
@@ -45,7 +46,7 @@ export const productProfileApi = {
 
   updateProductProfile: async (
     id: string,
-    data: ICreateProductProfile
+    data: IUpdateProductProfilePayload
   ): Promise<IProductProfile | undefined> => {
     const res = await apiClient.put<IProductProfile>(`/products/${id}`, data);
     if (res.error) {

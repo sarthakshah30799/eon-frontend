@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Button } from '../button1';
 import { Modal } from '../modal';
 import { Table, type TableColumnDef } from '../table';
@@ -25,6 +25,10 @@ interface SelectEntityProps<T extends { id: string }> {
   searchPlaceholder?: string;
   emptyMessage?: string;
   onContinue: (rows: T[]) => void;
+  selectedRowIds?: string[];
+  selectedRows?: T[];
+  onSelectedRowIdsChange?: (rowIds: string[]) => void;
+  selectedSummary?: ReactNode;
   onClose: () => void;
   getRowId?: (row: T) => string;
   continueLabel?: string;
@@ -51,6 +55,10 @@ export const SelectEntity = <T extends { id: string }>({
   searchPlaceholder = 'Search',
   emptyMessage = 'No records found.',
   onContinue,
+  selectedRowIds,
+  selectedRows: selectedRowsOverride,
+  onSelectedRowIdsChange,
+  selectedSummary,
   onClose,
   getRowId,
   continueLabel = 'Continue',
@@ -60,17 +68,36 @@ export const SelectEntity = <T extends { id: string }>({
     EMPTY_ROW_SELECTION
   );
 
+  const displayedRowSelection = selectedRowIds
+    ? Object.fromEntries(selectedRowIds.map(rowId => [rowId, true]))
+    : rowSelection;
+
   const handleClose = () => {
     setRowSelection(EMPTY_ROW_SELECTION);
     onClose();
   };
 
   const handleContinue = () => {
-    onContinue(selectable ? selectedRows : data);
+    if (!selectable) {
+      onContinue(data);
+    } else if (selectedRowsOverride) {
+      const selectedById = new Map(
+        selectedRowsOverride.map(row => [getRowId?.(row) ?? row.id, row])
+      );
+      data.forEach(row => {
+        const rowId = getRowId?.(row) ?? row.id;
+        if (selectedIds.includes(rowId)) {
+          selectedById.set(rowId, row);
+        }
+      });
+      onContinue([...selectedById.values()]);
+    } else {
+      onContinue(selectedRows);
+    }
     setRowSelection(EMPTY_ROW_SELECTION);
   };
 
-  const selectedIds = Object.entries(rowSelection)
+  const selectedIds = Object.entries(displayedRowSelection)
     .filter(([, selected]) => selected)
     .map(([rowId]) => rowId);
 
@@ -79,8 +106,21 @@ export const SelectEntity = <T extends { id: string }>({
   });
 
   const handleRowSelectionChange = (nextSelection: RowSelectionState) => {
+    const currentPageIds = new Set(
+      data.map(row => getRowId?.(row) ?? row.id)
+    );
+    const retainedIds = (selectedRowIds ?? []).filter(
+      rowId => !currentPageIds.has(rowId)
+    );
+    const nextPageIds = Object.entries(nextSelection)
+      .filter(([, selected]) => selected)
+      .map(([rowId]) => rowId);
+
     if (multiple) {
       setRowSelection(nextSelection);
+      onSelectedRowIdsChange?.(
+        [...new Set([...retainedIds, ...nextPageIds])]
+      );
       return;
     }
 
@@ -91,6 +131,9 @@ export const SelectEntity = <T extends { id: string }>({
 
     const resolvedSelection = selectedRowId ? { [selectedRowId]: true } : {};
     setRowSelection(resolvedSelection);
+    onSelectedRowIdsChange?.(
+      selectedRowId ? [...new Set([...retainedIds, selectedRowId])] : retainedIds
+    );
   };
 
   return (
@@ -106,6 +149,7 @@ export const SelectEntity = <T extends { id: string }>({
       size="xl"
     >
       <div className="space-y-5">
+        {selectedSummary}
         <Table
         columns={columns}
         data={data}
@@ -117,7 +161,7 @@ export const SelectEntity = <T extends { id: string }>({
         pageSize={pageSize}
         pageSizeOptions={pageSizeOptions}
         enableRowSelection={selectable}
-        rowSelection={rowSelection}
+        rowSelection={displayedRowSelection}
         onPaginationChange={onPaginationChange}
         onRowSelectionChange={handleRowSelectionChange}
           onSearch={onSearch}

@@ -28,6 +28,7 @@ import { TransactionTypeEnum, TradeModeEnum, TransactionTypeProfileEnum } from '
 import type { IPurchaseFormValues } from '@/modules/purchase/types/purchaseTypes';
 import type { IPurchaseDraftDocumentAttachment } from '@/modules/purchase/types/purchaseTypes';
 import { useCreateFakeCurrency } from '../hooks';
+import { getTransactionDatePolicy } from '@/modules/transactionPolicies/utils/transactionDatePolicy';
 
 const fakeCurrencySchema = yup.object({
   transactionDate: yup.string().required('Transaction date is required'),
@@ -87,7 +88,11 @@ export const FakeCurrencyCreateView = ({
   readOnly = false,
 }: FakeCurrencyCreateViewProps) => {
   const navigate = useNavigate();
-  const { activeBranchId, activeCounterId } = useAuth();
+  const { activeBranchId, activeCounterId, policyContext } = useAuth();
+  const transactionDatePolicy = useMemo(
+    () => getTransactionDatePolicy(policyContext),
+    [policyContext],
+  );
   const [currencyPickerRowIndex, setCurrencyPickerRowIndex] = useState<number | null>(null);
   const [draftDocuments, setDraftDocuments] = useState<Record<string, File | null>>({});
   const { data: branch } = useGetBranchProfile(activeBranchId ?? '');
@@ -111,11 +116,11 @@ export const FakeCurrencyCreateView = ({
       branch ? { id: branch.id, code: branch.code, name: branch.name, label: `${branch.code} - ${branch.name}` } : null,
       activeBranchId ?? '',
       activeCounterId ?? '',
-      new Date().toISOString().slice(0, 10),
+      transactionDatePolicy.defaultTransactionDate,
     ),
     reasonId: '',
     remarks: '',
-  }), [activeBranchId, activeCounterId, branch]);
+  }), [activeBranchId, activeCounterId, branch, transactionDatePolicy.defaultTransactionDate]);
   const defaultValues = initialValues ?? generatedDefaultValues;
 
   const draftDocumentAttachments = useMemo<IPurchaseDraftDocumentAttachment[]>(
@@ -181,7 +186,7 @@ export const FakeCurrencyCreateView = ({
       }}
       footer={readOnly ? undefined : {
         submitLabel: isPending ? 'Saving...' : 'Save Fake Currency',
-        isSubmitDisabled: isPending,
+        isSubmitDisabled: isPending || !transactionDatePolicy.canPunchTransactions,
       }}
     >
       <div className="space-y-6">
@@ -190,7 +195,7 @@ export const FakeCurrencyCreateView = ({
           <p className="text-sm text-text-secondary">Remove unusable currency from the selected counter stock.</p>
         </div>
         <CardSection heading="Fake Currency Details" className="grid gap-4 md:grid-cols-2">
-          <FormFieldDatePicker name="transactionDate" label="Transaction Date" disabled={readOnly} />
+          <FormFieldDatePicker name="transactionDate" label="Transaction Date" disabled={readOnly || !transactionDatePolicy.canPunchTransactions} minDate={transactionDatePolicy.minDate} maxDate={transactionDatePolicy.maxDate} />
           <FormFieldCategoryOption name="reasonId" code={CategoryOptionCodeEnum.FakeCurrencyReason} label="Reason" disabled={readOnly} />
           <FormFieldTextarea name="remarks" label="Remarks" className="md:col-span-2" disabled={readOnly} />
         </CardSection>

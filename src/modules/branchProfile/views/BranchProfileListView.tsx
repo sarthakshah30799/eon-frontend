@@ -10,18 +10,13 @@ export const BranchProfileListView = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const search = searchParams.get('search') ?? '';
-  const filtersParam = searchParams.get('filters');
-  const filters = filtersParam ? JSON.parse(filtersParam) : {};
   const debouncedSearch = useDebounce(search, 400);
   const query = useMemo(
     () => ({
       activeOnly: false,
       search: debouncedSearch.trim() || undefined,
-      ...Object.fromEntries(
-        Object.entries(filters).map(([key, value]) => [key, (value as string).trim() || undefined])
-      ),
     }),
-    [debouncedSearch, filters]
+    [debouncedSearch]
   );
   const {
     data: branches = [],
@@ -74,19 +69,6 @@ export const BranchProfileListView = () => {
               return nextParams;
             })
           }
-          onFiltersChange={(filters) => {
-            setSearchParams(prev => {
-              const nextParams = new URLSearchParams(prev);
-              
-              if (filters.length > 0) {
-                nextParams.set('filters', JSON.stringify(filters));
-              } else {
-                nextParams.delete('filters');
-              }
-
-              return nextParams;
-            });
-          }}
           searchValue={search}
           searchPlaceholder="Search branch code, name, city, state, or country"
           loading={isLoading || isFetching}

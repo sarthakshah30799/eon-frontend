@@ -36,7 +36,6 @@ export interface CardStockReceiptPayload {
   receiptDate: string;
   issuerPartyProfileId: string;
   hoBranchId: string;
-  counterId: string;
   totalFeAmount: string;
   items: CardStockItemPayload[];
 }
@@ -61,7 +60,6 @@ export interface ICardStockReceipt {
   issuerPartyProfileId: string;
   issuerPartyProfileSnapshot?: CardStockSnapshot | null;
   hoBranchId: string;
-  counterId?: string;
   hoBranchSnapshot?: CardStockSnapshot | null;
   totalFeAmount: string;
   status: string;

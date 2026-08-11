@@ -134,8 +134,7 @@ export const PurchaseCreateView = ({
           : null,
         canSelectWorkplace ? '' : (activeBranchId ?? ''),
         canSelectWorkplace ? '' : (activeCounterId ?? ''),
-        transactionDatePolicy.defaultTransactionDate ||
-          new Date().toISOString().slice(0, 10)
+        transactionDatePolicy.defaultTransactionDate
       ),
     [
       activeBranchId,

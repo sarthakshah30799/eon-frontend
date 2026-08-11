@@ -11,7 +11,6 @@ export const cardStockSchema = yup.object({
   receiptDate: yup.string().required('Receipt date is required'),
   issuerPartyProfileId: yup.string().required('Card issuer is required'),
   hoBranchId: yup.string().required('HO branch is required'),
-  counterId: yup.string().required('Counter is required'),
   totalFeAmount: yup.string().required(),
   items: yup.array().of(yup.object({
     currencyId: yup.string().required('Currency is required'),

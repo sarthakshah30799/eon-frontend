@@ -8,7 +8,6 @@ import { transactionPoliciesApi } from '@/api/transactionPolicies/transactionPol
 import type { IPolicyChecklistItem } from '@/modules/auth/types';
 import { formatDateTime } from '@/utils';
 import { useListBranchProfiles } from '@/modules/branchProfile/hooks';
-import { useListCounterProfiles } from '@/modules/counterProfile/hooks';
 
 type ChecklistAnswers = Record<string, string | boolean>;
 type DayEndAction = 'start' | 'end';
@@ -54,26 +53,35 @@ const DayEndStartProcessForm = ({
   policyContext,
   checkAuth,
 }: DayEndStartProcessFormProps) => {
-  const { activeBranchId, activeCounterId } = useAuth();
+  const { activeBranchId } = useAuth();
   const canSelectWorkplace = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
   const { data: branches = [] } = useListBranchProfiles({ activeOnly: true }, canSelectWorkplace);
-  const [selectedBranchId, setSelectedBranchId] = useState(activeBranchId ?? '');
-  const [selectedCounterId, setSelectedCounterId] = useState(activeCounterId ?? '');
-  const { data: counters = [] } = useListCounterProfiles(
-    { branchId: selectedBranchId, activeOnly: true },
-    Boolean(selectedBranchId),
+  const [selectedBranchId, setSelectedBranchId] = useState(
+    canSelectWorkplace ? '' : activeBranchId ?? '',
   );
+
+  const effectiveSelectedBranchId = canSelectWorkplace ? selectedBranchId : activeBranchId ?? '';
   const selectedPolicy = useQuery({
-    queryKey: ['day-end-start-process', 'policy-context', selectedBranchId, selectedCounterId],
-    queryFn: () => transactionPoliciesApi.getPolicyContext(selectedBranchId, selectedCounterId),
-    enabled: Boolean(selectedBranchId && selectedCounterId),
+    queryKey: ['day-end-start-process', 'policy-context', effectiveSelectedBranchId],
+    queryFn: () => transactionPoliciesApi.getPolicyContext(effectiveSelectedBranchId),
+    enabled: Boolean(effectiveSelectedBranchId),
   });
   const effectivePolicyContext = selectedPolicy.data ?? (
-    selectedBranchId === activeBranchId && selectedCounterId === activeCounterId ? policyContext : null
+    effectiveSelectedBranchId === activeBranchId ? policyContext : null
   );
-  const effectiveBranches = branches;
-  const branchOptions = effectiveBranches.map(branch => ({ value: branch.id, label: `${branch.code} - ${branch.name}` }));
-  const counterOptions = counters.map(counter => ({ value: counter.id, label: `${counter.counterNo} - ${counter.name}` }));
+  const effectiveBranches = canSelectWorkplace
+    ? branches
+    : activeBranchId
+      ? [{
+          id: activeBranchId,
+          code: '',
+          name: user?.branchName?.trim() || activeBranchId,
+        }]
+      : [];
+  const branchOptions = effectiveBranches.map(branch => ({
+    value: branch.id,
+    label: branch.code ? `${branch.code} - ${branch.name}` : branch.name,
+  }));
   const checklist = useMemo(() => effectivePolicyContext?.checklist ?? [], [effectivePolicyContext?.checklist]);
   const [answers, setAnswers] = useState<ChecklistAnswers>(() =>
     createDefaultAnswers(checklist)
@@ -170,7 +178,7 @@ const DayEndStartProcessForm = ({
 
     setIsSubmitting(true);
     try {
-      const payload = { branchId: selectedBranchId, counterId: selectedCounterId, answers };
+      const payload = { branchId: effectiveSelectedBranchId, answers };
       if (action === 'start') {
         await transactionPoliciesApi.startDay(payload);
         toast.success('Day started successfully');
@@ -247,7 +255,7 @@ const DayEndStartProcessForm = ({
           <div className="grid gap-4 md:grid-cols-2">
             <AsyncSelect
               label="Branch"
-              value={branchOptions.find(option => option.value === selectedBranchId) ?? null}
+              value={branchOptions.find(option => option.value === effectiveSelectedBranchId) ?? null}
               defaultOptions={branchOptions}
               isSearchable
               isClearable={false}
@@ -259,29 +267,13 @@ const DayEndStartProcessForm = ({
                 const selected = Array.isArray(option) ? option[0] : option;
                 const nextBranchId = selected ? String((selected as AsyncSelectOption).value) : '';
                 setSelectedBranchId(nextBranchId);
-                setSelectedCounterId('');
-              }}
-            />
-            <AsyncSelect
-              label="Counter"
-              value={counterOptions.find(option => option.value === selectedCounterId) ?? null}
-              defaultOptions={counterOptions}
-              isSearchable
-              isClearable={false}
-              disabled={!selectedBranchId || !canSelectWorkplace}
-              loadOptions={async input => ({
-                options: counterOptions.filter(option => option.label.toLowerCase().includes(input.toLowerCase())),
-              })}
-              onChange={option => {
-                const selected = Array.isArray(option) ? option[0] : option;
-                setSelectedCounterId(selected ? String((selected as AsyncSelectOption).value) : '');
               }}
             />
           </div>
           <p className="text-xs text-text-secondary">
             {canSelectWorkplace
-              ? 'Select the branch and counter where this BOD/EOD action will be recorded.'
-              : 'Your current branch and counter are used for this BOD/EOD action.'}
+              ? 'Select the branch where this BOD/EOD action will be recorded.'
+              : 'Your current branch is used for this BOD/EOD action.'}
           </p>
         </CardSection>
         <CardSection heading="Current Status" className="space-y-3">
@@ -400,7 +392,7 @@ const DayEndStartProcessForm = ({
                 type="button"
                 onClick={() => void submitAction('start')}
                 loading={isSubmitting}
-                disabled={isSubmitting || !canStartDay || selectedPolicy.isFetching || !selectedBranchId || !selectedCounterId}
+                disabled={isSubmitting || !canStartDay || selectedPolicy.isFetching || !effectiveSelectedBranchId}
               >
               {isPendingBod
                 ? 'Start Pending Day'
@@ -415,7 +407,7 @@ const DayEndStartProcessForm = ({
                 variant="outline"
                 onClick={() => void submitAction('end')}
                 loading={isSubmitting}
-                disabled={isSubmitting || !canCompleteDayEnd || selectedPolicy.isFetching || !selectedBranchId || !selectedCounterId}
+                disabled={isSubmitting || !canCompleteDayEnd || selectedPolicy.isFetching || !effectiveSelectedBranchId}
               >
               {isPendingEod ? 'Complete Pending EOD' : isClosedToday ? 'Day End Completed' : 'Complete Day End'}
               </Button>

@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { PencilSquareIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button1';
 import { Table, type TableColumnDef } from '@/components/ui/table';
-import { Filter } from '@/components/ui/filter';
 import type { IBranchProfile } from '../types';
 
 interface BranchProfileTableProps {
@@ -14,7 +13,6 @@ interface BranchProfileTableProps {
   onSearch?: (value: string) => void;
   searchValue?: string;
   searchPlaceholder?: string;
-  onFiltersChange?: (filters: Array<{ id: string; value: string }>) => void;
 }
 
 interface BranchProfileTableRow {
@@ -38,7 +36,6 @@ export const BranchProfileTable = ({
   onSearch,
   searchValue,
   searchPlaceholder,
-  onFiltersChange,
 }: BranchProfileTableProps) => {
   const navigate = useNavigate();
 
@@ -134,12 +131,6 @@ export const BranchProfileTable = ({
 
   return (
     <div className="space-y-6">
-      {/* Filter Section */}
-      <Filter
-        onFiltersChange={onFiltersChange || (() => {})}
-        columns={columns.filter(col => col.id).map(col => ({ id: col.id!, header: (col.header as string) || '' }))}
-      />
-      
       {/* Table Section */}
       <Table
         columns={columns}

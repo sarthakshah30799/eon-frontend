@@ -200,7 +200,7 @@ function Table<T extends object>({
             </div>
           )}
 
-          {enableFiltering && (
+          {/* {enableFiltering && (
             <div className="flex flex-wrap gap-2">
               {table
                 .getAllColumns()
@@ -243,7 +243,7 @@ function Table<T extends object>({
                   </label>
                 ))}
             </div>
-          )}
+          )} */}
         </div>
       )}
 

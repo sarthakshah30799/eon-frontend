@@ -32,6 +32,11 @@ export interface IPurchaseTransactionFormRow {
   total: string;
   roundOff: string;
   finalAmount: string;
+  cardId: string;
+  issuerPartyProfileId: string;
+  issuerPartyProfileSnapshot: ITransactionReferenceSnapshot | null;
+  cardSnapshot: ITransactionReferenceSnapshot | null;
+  isReload: boolean;
 }
 
 export interface IPurchaseFormValues {
@@ -65,6 +70,7 @@ export interface IPurchaseFormValues {
   agentProfileName: string;
   entityType: string;
   passengerInfoCaptured: boolean;
+  passengerId: string;
   panNumber: string;
   panHolderName: string;
   panDob: string;
@@ -179,6 +185,7 @@ export interface IPurchaseProductOption {
   productDescription: string;
   availableInBulkBuying: boolean;
   availableInBulkSelling: boolean;
+  cardIssuerProfileIds?: string[];
   availableInOtherTransaction: boolean;
 }
 

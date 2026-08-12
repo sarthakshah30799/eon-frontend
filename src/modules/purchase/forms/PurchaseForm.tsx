@@ -207,6 +207,10 @@ const PurchaseFormBody = ({
     control: form.control,
     name: 'passengerInfoCaptured',
   });
+  const passengerId = useWatch({
+    control: form.control,
+    name: 'passengerId',
+  });
   const paymentDetails = useWatch({
     control: form.control,
     name: 'paymentDetails',
@@ -1231,6 +1235,7 @@ const PurchaseFormBody = ({
       <PurchaseTransactionTable
         branchId={resolvedBranchId}
         counterId={resolvedCounterId}
+        passengerId={passengerId || ''}
         excludeTransactionId={savedTransaction?.id ?? undefined}
         pricingData={pricingData}
         onOpenCurrencyPicker={setCurrencyPickerRowIndex}

@@ -89,6 +89,11 @@ export const createEmptyPurchaseTransactionRow =
     total: '',
     roundOff: '',
     finalAmount: '',
+    cardId: '',
+    issuerPartyProfileId: '',
+    issuerPartyProfileSnapshot: null,
+    cardSnapshot: null,
+    isReload: false,
   });
 
 export const createEmptyPurchaseFormValues = (
@@ -135,6 +140,7 @@ export const createEmptyPurchaseFormValues = (
   agentProfileName: '',
   entityType: getPurchasePageEntityType(purchasePageType) ?? '',
   passengerInfoCaptured: false,
+  passengerId: '',
   panNumber: '',
   panHolderName: '',
   panDob: '',
@@ -358,6 +364,11 @@ export const mapPurchaseFormValuesToSubmitPayload = (
         commission: row.commission || null,
         commissionSnapshot: row.commissionSnapshot ?? null,
         remarks: null,
+        cardId: row.cardId || null,
+        issuerPartyProfileId: row.issuerPartyProfileId || null,
+        issuerPartyProfileSnapshot: row.issuerPartyProfileSnapshot ?? null,
+        cardSnapshot: row.cardSnapshot ?? null,
+        isReload: Boolean(row.isReload),
       })),
       documents: attachments.map(attachment => ({
         documentProfileId: attachment.documentProfileId,
@@ -485,6 +496,7 @@ export const mapPurchaseTransactionToFormValues = (
     ? String(passengerSnapshot.entityType)
     : '',
   passengerInfoCaptured: Boolean(transaction.passengerId),
+  passengerId: transaction.passengerId ?? '',
   panNumber:
     (passengerSnapshot?.panNumber as string | undefined) ?? '',
   panHolderName:
@@ -651,6 +663,11 @@ export const mapPurchaseTransactionToFormValues = (
     total: '',
     roundOff: '',
     finalAmount: '',
+    cardId: item.cardId ?? '',
+    issuerPartyProfileId: item.issuerPartyProfileId ?? '',
+    issuerPartyProfileSnapshot: item.issuerPartyProfileSnapshot ?? null,
+    cardSnapshot: item.cardSnapshot ?? null,
+    isReload: Boolean(item.isReload),
   })),
   additionalCharges: (transaction.additionalCharges ?? []).map(charge => ({
     accountId: charge.accountId,

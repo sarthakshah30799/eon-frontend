@@ -78,6 +78,13 @@ export const passengersApi = {
     return res.data;
   },
 
+  lookupIdentity: async (payload: { panNumber?: string; passportNumber?: string }): Promise<IPassengerPassportLookupResponse> => {
+    const res = await apiClient.post<IPassengerPassportLookupResponse>('/passengers/lookup-identity', payload);
+    if (res.error) throw new Error(res.error);
+    if (!res.data) throw new Error('Failed to lookup passenger identity');
+    return res.data;
+  },
+
   verifyOtherDocument: async (
     payload: IPassengerOtherDocumentVerificationRequest
   ): Promise<IPassengerAmlVerificationResponse> => {

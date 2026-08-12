@@ -19,8 +19,7 @@ export const cardStockSchema = yup.object({
     issuerPartyProfileId: yup.string().required('Issuer is required'),
     feAmount: yup.string().required(),
     cards: yup.array().of(yup.object({
-      series: yup.string().matches(/^[A-Za-z0-9]{6}$/, 'Series must be exactly 6 alphanumeric characters (for example, CC0000)').required('Series is required'),
-      quantity: yup.string().oneOf(['1'], 'Quantity must be 1').required(),
+      series: yup.string().matches(/^[A-Za-z0-9]{1,4}$/, 'Series prefix must be 1 to 4 alphanumeric characters (for example, CC)').required('Series prefix is required'),
       kitNumber: yup.string().trim().required('Kit number is required'),
       cardNumber: yup.string().trim().required('Card number is required'),
       denomination: yup.string().test('positive', 'Denomination must be greater than zero', value => Number(value) > 0).required('Denomination is required'),

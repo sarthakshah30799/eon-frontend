@@ -9,7 +9,7 @@ interface PreviewRow extends ICardStockFormCard {
   error: string;
 }
 
-const requiredHeaders = ['series', 'quantity', 'kit number', 'card number', 'denomination', 'expiration date'];
+const requiredHeaders = ['series', 'kit number', 'card number', 'denomination', 'expiration date'];
 
 const parseCsvLine = (line: string) => {
   const values: string[] = [];
@@ -33,6 +33,16 @@ const parseCsvLine = (line: string) => {
   return values;
 };
 
+const parseTemplateDate = (value: string) => {
+  const match = value.trim().match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!match) return '';
+  const [, day, month, year] = match;
+  const date = new Date(`${year}-${month}-${day}T00:00:00`);
+  return date.getFullYear() === Number(year) && date.getMonth() + 1 === Number(month) && date.getDate() === Number(day)
+    ? `${year}-${month}-${day}`
+    : '';
+};
+
 const isFutureDate = (value: string) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -49,18 +59,18 @@ const parseCsv = (content: string): PreviewRow[] => {
   return lines.slice(1).map((line, index) => {
     const values = parseCsvLine(line);
     const get = (header: string) => values[headers.indexOf(header)] ?? '';
+    const expirationDate = parseTemplateDate(get('expiration date'));
     const card: ICardStockFormCard = {
-      series: get('series'), quantity: get('quantity') || '1', kitNumber: get('kit number'),
-      cardNumber: get('card number'), denomination: get('denomination'), amount: '', expirationDate: get('expiration date'),
+      series: get('series'), kitNumber: get('kit number'),
+      cardNumber: get('card number'), denomination: get('denomination'), amount: Number(get('denomination')).toFixed(2), expirationDate,
     };
-    card.amount = (Number(card.quantity) * Number(card.denomination)).toFixed(2);
     const errors: string[] = [];
-    if (!/^[A-Za-z0-9]{6}$/.test(card.series)) errors.push('Series must be exactly 6 alphanumeric characters (for example, CC0000)');
-    if (card.quantity !== '1') errors.push('Quantity must be 1');
+    if (!/^[A-Za-z0-9]{1,4}$/.test(card.series)) errors.push('Series prefix must be 1 to 4 alphanumeric characters (for example, CC)');
     if (!card.kitNumber) errors.push('Kit number is required');
     if (!/^(\d{8}|\d{16}|\d{4}X+\d{4})$/.test(card.cardNumber)) errors.push('Card number must be 8/16 digits or masked');
     if (!(Number(card.denomination) > 0)) errors.push('Denomination must be greater than zero');
-    if (!isFutureDate(card.expirationDate)) errors.push('Expiration date must be in the future');
+    if (!expirationDate) errors.push('Expiration date must use dd/mm/yyyy format');
+    else if (!isFutureDate(card.expirationDate)) errors.push('Expiration date must be in the future');
     return { ...card, id: `upload-${index}`, rowNumber: index + 2, error: errors.join('; ') };
   });
 };
@@ -92,7 +102,6 @@ export const CardStockUploadSection = ({ itemIndex, readOnly }: { itemIndex: num
       .filter(row => !row.error)
       .map(row => ({
         series: row.series,
-        quantity: row.quantity,
         kitNumber: row.kitNumber,
         cardNumber: row.cardNumber,
         denomination: row.denomination,
@@ -106,7 +115,7 @@ export const CardStockUploadSection = ({ itemIndex, readOnly }: { itemIndex: num
   };
 
   const downloadTemplate = () => {
-    const content = 'series,quantity,kit number,card number,denomination,expiration date\nCC0000,1,KIT-001,1234567890123456,1000,2030-12-31\n';
+    const content = 'series,kit number,card number,denomination,expiration date\nCC,KIT-001,1234567890123456,1000,31/12/2030\n';
     const url = URL.createObjectURL(new Blob([content], { type: 'text/csv;charset=utf-8' }));
     const link = document.createElement('a');
     link.href = url;
@@ -118,12 +127,11 @@ export const CardStockUploadSection = ({ itemIndex, readOnly }: { itemIndex: num
   const columns: TableColumnDef<PreviewRow>[] = [
     { accessorKey: 'rowNumber', header: 'Row' },
     { accessorKey: 'series', header: 'Series' },
-    { accessorKey: 'quantity', header: 'Quantity' },
     { accessorKey: 'kitNumber', header: 'Kit Number' },
     { accessorKey: 'cardNumber', header: 'Card Number' },
     { accessorKey: 'denomination', header: 'Denomination' },
     { accessorKey: 'amount', header: 'Amount' },
-    { accessorKey: 'expirationDate', header: 'Expiration' },
+    { id: 'expirationDate', header: 'Expiration (dd/mm/yyyy)', cell: ({ row }) => row.original.expirationDate ? row.original.expirationDate.split('-').reverse().join('/') : '' },
     { accessorKey: 'error', header: 'Validation' },
   ];
 

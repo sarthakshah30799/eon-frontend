@@ -2,7 +2,6 @@ import type { CardStockReceiptPayload, ICardStockReceipt } from '@/api/cardStock
 
 export interface ICardStockFormCard {
   series: string;
-  quantity: string;
   kitNumber: string;
   cardNumber: string;
   denomination: string;

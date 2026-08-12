@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFormContext, useWatch, type FieldPath } from 'react-hook-form';
-import { FormFieldAsyncSelect, FormFieldInput } from '@/components/forms';
+import { FormFieldAsyncSelect, FormFieldInput, FormFieldCheckbox } from '@/components/forms';
 import { TransactionTypeEnum } from '@/modules/transactions';
 import type {
   IPurchaseFormValues,
@@ -25,12 +25,17 @@ import { usePurchaseQuantityAvailability } from '../hooks';
 import { TransactionItemRowShell } from '@/components/forms/TransactionItemsFieldArray/TransactionItemRowShell';
 import { useAverageSellPrice } from '@/modules/transactions/hooks/useAverageSellPrice';
 import { useCounterHoldCost } from '@/modules/transactions/hooks/useCounterHoldCost';
+import { SelectPartyProfiles } from '@/modules/partyProfiles/components';
+import { PartyProfileTypeEnum, type IPartyProfile } from '@/modules/partyProfiles/types';
+import { SelectCardStockCards } from '@/modules/cardStock/components/SelectCardStockCards';
+import type { CardStockSelectableCard } from '@/api/cardStock';
 
 interface PurchaseTransactionRowCellProps {
   rowIndex: number;
   fieldPrefix?: string;
   branchId?: string;
   counterId?: string;
+  passengerId?: string;
   excludeTransactionId?: string;
   pricingData: IPurchasePricingData;
   agentCommissionRules?: IPartyProfileCommissionRule[];
@@ -88,6 +93,7 @@ export const PurchaseTransactionRowCell = ({
   fieldPrefix = 'transactions',
   branchId = '',
   counterId = '',
+  passengerId = '',
   excludeTransactionId,
   pricingData,
   agentCommissionRules = [],
@@ -100,6 +106,8 @@ export const PurchaseTransactionRowCell = ({
   useCounterHoldCostRate = false,
 }: PurchaseTransactionRowCellProps) => {
   const form = useFormContext<IPurchaseFormValues>();
+  const [issuerPickerOpen, setIssuerPickerOpen] = useState(false);
+  const [cardPickerOpen, setCardPickerOpen] = useState(false);
   const fieldPath = useMemo(
     () => (fieldName: string) =>
       `${fieldPrefix}.${rowIndex}.${fieldName}` as FieldPath<IPurchaseFormValues>,
@@ -141,6 +149,10 @@ export const PurchaseTransactionRowCell = ({
     control: form.control,
     name: fieldPath('finalAmount'),
   });
+  const issuerPartyProfileId = useWatch({ control: form.control, name: fieldPath('issuerPartyProfileId') });
+  const issuerSnapshot = useWatch({ control: form.control, name: fieldPath('issuerPartyProfileSnapshot') });
+  const cardSnapshot = useWatch({ control: form.control, name: fieldPath('cardSnapshot') });
+  const isReload = useWatch({ control: form.control, name: fieldPath('isReload') });
 
   const selectedProduct = useMemo(
     () =>
@@ -149,6 +161,7 @@ export const PurchaseTransactionRowCell = ({
       ) ?? null,
     [pricingData.products, productId]
   );
+  const isCardProduct = String(selectedProduct?.productCode ?? '').toUpperCase() === 'CC';
 
   const selectedProductCurrencyRule = useMemo(
     () =>
@@ -630,6 +643,11 @@ export const PurchaseTransactionRowCell = ({
             buttonPosition="bottom"
           />
         </div>
+        {isCardProduct ? (
+          <div className="min-w-0">
+            <EntityPickerField label="Issuer" value={String(issuerSnapshot?.name ?? issuerSnapshot?.code ?? '')} placeholder="Select issuer" disabled={disabled} onClick={() => setIssuerPickerOpen(true)} buttonPosition="bottom" />
+          </div>
+        ) : null}
         <div className="min-w-0">
           <FormFieldAsyncSelect
             name={fieldPath('productId')}
@@ -645,7 +663,7 @@ export const PurchaseTransactionRowCell = ({
         <div className="relative min-w-0 pb-14">
           <FormFieldInput
             name={fieldPath('quantity')}
-            label="Quantity"
+            label={isCardProduct ? 'Denomination' : 'Quantity'}
             type="number"
             inputMode="decimal"
             step={`0.${'0'.repeat(PURCHASE_RATE_DECIMALS - 1)}1`}
@@ -654,6 +672,11 @@ export const PurchaseTransactionRowCell = ({
             classes={{ container: 'max-w-[90px]' }}
           />
         </div>
+        {isCardProduct ? (
+          <div className="min-w-0">
+            <EntityPickerField label="CARD" value={String(cardSnapshot?.maskedCardNumber ?? cardSnapshot?.series ?? '')} placeholder="Select card" disabled={disabled || !issuerPartyProfileId} onClick={() => setCardPickerOpen(true)} buttonPosition="bottom" />
+          </div>
+        ) : null}
         <div className="relative min-w-0 pb-14">
           <FormFieldInput
             name={fieldPath('rate')}
@@ -734,6 +757,9 @@ export const PurchaseTransactionRowCell = ({
           />
         </div>
       </div>
+      {isCardProduct ? <div className="mt-2 flex items-center gap-4 px-1"><FormFieldCheckbox name={fieldPath('isReload')} label="Reload" disabled={disabled} /><span className="text-xs text-text-tertiary">Select an issuer and eligible card before entering the denomination.</span></div> : null}
+      <SelectPartyProfiles open={issuerPickerOpen} types={PartyProfileTypeEnum.CARD_ISSUER_PROFILE} allowedProfileIds={selectedProduct?.cardIssuerProfileIds ?? []} selectable multiple={false} title="Select CARD issuer" description="Select an approved active CARD issuer linked to this CARD product." onClose={() => setIssuerPickerOpen(false)} onContinue={(profiles: IPartyProfile[]) => { const profile = profiles[0]; if (!profile) return; form.setValue(fieldPath('issuerPartyProfileId'), profile.id, { shouldDirty: true, shouldValidate: true }); form.setValue(fieldPath('issuerPartyProfileSnapshot'), { id: profile.id, code: profile.code, name: profile.name }, { shouldDirty: true }); setCardPickerOpen(false); setIssuerPickerOpen(false); }} />
+      <SelectCardStockCards open={cardPickerOpen} reload={Boolean(isReload)} branchId={branchId} passengerId={passengerId} currencyId={String(currencyId || '')} productId={String(productId || '')} issuerPartyProfileId={String(issuerPartyProfileId || '')} onClose={() => setCardPickerOpen(false)} onContinue={(card: CardStockSelectableCard) => { form.setValue(fieldPath('cardId'), card.id, { shouldDirty: true, shouldValidate: true }); form.setValue(fieldPath('cardSnapshot'), { id: card.id, series: card.series, kitNumber: card.kitNumber, maskedCardNumber: card.maskedCardNumber, denomination: card.denomination, amount: card.amount, expirationDate: card.expirationDate }, { shouldDirty: true }); form.setValue(fieldPath('quantity'), card.denomination, { shouldDirty: true, shouldValidate: true }); setCardPickerOpen(false); }} />
     </TransactionItemRowShell>
   );
 };

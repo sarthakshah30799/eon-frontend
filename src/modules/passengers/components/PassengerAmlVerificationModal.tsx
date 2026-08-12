@@ -18,6 +18,7 @@ import { PassengerAmlVerificationStepForm } from '../forms/PassengerAmlVerificat
 import { PassengerAmlDetailsStepForm } from '../forms/PassengerAmlDetailsStepForm';
 import { mapPassengerSnapshotToPurchaseFormValues } from '../utils/passengerAmlUtils';
 import { isPassengerOtherDocumentFilled } from '../utils/passengerOtherDocumentRules';
+import { passengersApi } from '@/api/passengers';
 
 interface PassengerAmlVerificationModalProps {
   open: boolean;
@@ -261,7 +262,15 @@ export const PassengerAmlVerificationModal = ({
           continue;
         }
 
-        form.setValue(fieldName as never, fieldValue as never, {
+      form.setValue(fieldName as never, fieldValue as never, {
+          shouldDirty: false,
+          shouldTouch: false,
+          shouldValidate: false,
+        });
+      }
+
+      if (snapshot.id) {
+        form.setValue('passengerId', String(snapshot.id), {
           shouldDirty: false,
           shouldTouch: false,
           shouldValidate: false,
@@ -297,6 +306,7 @@ export const PassengerAmlVerificationModal = ({
       ...amlDefaults,
       ...detailsDefaults,
       entityType,
+      passengerId: '',
       passengerInfoCaptured: false,
       purposeId: currentValues.purposeId || '',
       arrivalDate: '',
@@ -420,6 +430,15 @@ export const PassengerAmlVerificationModal = ({
         );
 
         if (notifyOnSuccess) {
+          const identityLookup = await passengersApi.lookupIdentity({
+            panNumber: currentValues.panNumber || undefined,
+            passportNumber: currentValues.passportNumber || undefined,
+          });
+          form.setValue('passengerId', identityLookup.passenger?.id ? String(identityLookup.passenger.id) : '', {
+            shouldDirty: false,
+            shouldTouch: false,
+            shouldValidate: false,
+          });
           onVerified({
             entityType: (currentValues.entityType || entityType) as PassengerEntityType,
             isIndianNationality:
@@ -700,6 +719,15 @@ export const PassengerAmlVerificationModal = ({
       }
     }
 
+    const identityLookup = await passengersApi.lookupIdentity({
+      panNumber: currentValues.panNumber || undefined,
+      passportNumber: currentValues.passportNumber || undefined,
+    });
+    form.setValue('passengerId', identityLookup.passenger?.id ? String(identityLookup.passenger.id) : '', {
+      shouldDirty: false,
+      shouldTouch: false,
+      shouldValidate: false,
+    });
     form.setValue('passengerInfoCaptured', true, {
       shouldDirty: true,
       shouldTouch: true,

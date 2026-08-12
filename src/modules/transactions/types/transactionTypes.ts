@@ -303,6 +303,11 @@ export interface ITransactionItemEntity {
   productCurrencyRateSnapshot: ITransactionPricingRuleSnapshot | null;
   pricingRuleSnapshot: ITransactionPricingRuleSnapshot | null;
   commissionSnapshot: ITransactionPricingRuleSnapshot | null;
+  cardId: string | null;
+  issuerPartyProfileId: string | null;
+  issuerPartyProfileSnapshot: ITransactionReferenceSnapshot | null;
+  cardSnapshot: ITransactionReferenceSnapshot | null;
+  isReload: boolean;
   remarks: string | null;
   createdAt: string;
   updatedAt: string;
@@ -409,6 +414,11 @@ export interface ICreateTransactionItemPayload {
   commission?: string | null;
   commissionSnapshot?: ITransactionPricingRuleSnapshot | null;
   remarks?: string | null;
+  cardId?: string | null;
+  issuerPartyProfileId?: string | null;
+  issuerPartyProfileSnapshot?: ITransactionReferenceSnapshot | null;
+  cardSnapshot?: ITransactionReferenceSnapshot | null;
+  isReload?: boolean;
 }
 
 export interface ICreateTransactionDocumentPayload {

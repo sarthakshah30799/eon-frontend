@@ -2,7 +2,7 @@ import type { ICardStockFormCard, ICardStockFormItem, ICardStockFormValues } fro
 import type { ICardStockReceipt } from '@/api/cardStock';
 
 export const emptyCard = (): ICardStockFormCard => ({
-  series: '', quantity: '1', kitNumber: '', cardNumber: '', denomination: '', amount: '', expirationDate: '',
+  series: '', kitNumber: '', cardNumber: '', denomination: '', amount: '', expirationDate: '',
 });
 
 export const emptyItem = (): ICardStockFormItem => ({
@@ -26,7 +26,7 @@ export const mapReceiptToForm = (receipt: ICardStockReceipt): ICardStockFormValu
     issuerPartyProfileId: item.issuerPartyProfileId,
     feAmount: item.feAmount,
     cards: item.cards.map(card => ({
-      series: card.series, quantity: String(card.quantity), kitNumber: card.kitNumber,
+      series: card.series, kitNumber: card.kitNumber,
       cardNumber: card.maskedCardNumber ?? '', denomination: card.denomination,
       amount: card.amount, expirationDate: card.expirationDate?.slice(0, 10) ?? '',
     })),
@@ -35,5 +35,5 @@ export const mapReceiptToForm = (receipt: ICardStockReceipt): ICardStockFormValu
 
 export const toReceiptPayload = (values: ICardStockFormValues) => ({
   ...values,
-  items: values.items.map((item, index) => ({ ...item, lineNo: index + 1, cards: item.cards.map(card => ({ ...card, quantity: 1 })) })),
+  items: values.items.map((item, index) => ({ ...item, lineNo: index + 1 })),
 });

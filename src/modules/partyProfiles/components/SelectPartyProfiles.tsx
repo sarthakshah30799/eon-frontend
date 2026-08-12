@@ -14,6 +14,7 @@ interface SelectPartyProfilesProps {
   title?: string;
   description?: string;
   queryParams?: Omit<IPartyProfileListQuery, 'page' | 'limit' | 'search'>;
+  allowedProfileIds?: string[];
   initialSelectedProfiles?: IPartyProfile[];
   onContinue: (profiles: IPartyProfile[]) => void;
   onClose: () => void;
@@ -111,6 +112,7 @@ export const SelectPartyProfiles = ({
   title = 'Select Party Profiles',
   description = 'Search and choose party profiles from the list.',
   queryParams,
+  allowedProfileIds,
   initialSelectedProfiles = [],
   onContinue,
   onClose,
@@ -141,7 +143,9 @@ export const SelectPartyProfiles = ({
     true
   );
 
-  const profiles = response?.data ?? EMPTY_PARTY_PROFILE_ROWS;
+  const profiles = (response?.data ?? EMPTY_PARTY_PROFILE_ROWS).filter(profile =>
+    allowedProfileIds === undefined || allowedProfileIds.includes(profile.id)
+  );
   const selectedRowIds = selectedProfiles.map(profile => profile.id);
   const rows = useMemo<SelectablePartyProfileRow[]>(
     () =>

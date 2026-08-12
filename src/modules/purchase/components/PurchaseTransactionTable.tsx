@@ -13,6 +13,7 @@ import { TransactionItemsFieldArray } from '@/components/forms/TransactionItemsF
 interface PurchaseTransactionTableProps {
   branchId?: string;
   counterId?: string;
+  passengerId?: string;
   excludeTransactionId?: string;
   pricingData: IPurchasePricingData;
   agentCommissionRules?: IPartyProfileCommissionRule[];
@@ -25,6 +26,7 @@ interface PurchaseTransactionTableProps {
 export const PurchaseTransactionTable = ({
   branchId = '',
   counterId = '',
+  passengerId = '',
   excludeTransactionId,
   pricingData,
   agentCommissionRules = [],
@@ -49,6 +51,7 @@ export const PurchaseTransactionTable = ({
             rowIndex={row.index}
             branchId={branchId}
             counterId={counterId}
+            passengerId={passengerId}
             excludeTransactionId={excludeTransactionId}
             pricingData={pricingData}
             agentCommissionRules={agentCommissionRules}
@@ -70,12 +73,15 @@ export const PurchaseTransactionTable = ({
     agentCommissionRules,
     branchId,
     counterId,
+    passengerId,
     excludeTransactionId,
     disabled,
     fields.length,
     onOpenCurrencyPicker,
     pricingData,
     remove,
+    rateEditable,
+    useAverageSellRate,
   ]);
 
   return (

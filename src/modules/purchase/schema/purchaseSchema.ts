@@ -68,6 +68,11 @@ const purchaseTransactionSchema = yup.object({
   total: decimalStringSchema.default(''),
   roundOff: signedDecimalStringSchema.default(''),
   finalAmount: decimalStringSchema.default(''),
+  cardId: yup.string().default(''),
+  issuerPartyProfileId: yup.string().default(''),
+  issuerPartyProfileSnapshot: yup.mixed().nullable().default(null),
+  cardSnapshot: yup.mixed().nullable().default(null),
+  isReload: yup.boolean().default(false),
 });
 
 const additionalChargeSchema = yup.object({
@@ -219,6 +224,7 @@ export const createPurchaseFormSchema = (
       .boolean()
       .default(false)
       .oneOf([true], 'Passenger details are required'),
+    passengerId: yup.string().default(''),
     nationalityType: yup
       .mixed<(typeof PassengerNationalityTypeEnum)[keyof typeof PassengerNationalityTypeEnum] | ''>()
       .oneOf([...Object.values(PassengerNationalityTypeEnum), ''] as const)

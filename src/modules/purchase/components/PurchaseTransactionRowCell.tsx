@@ -6,6 +6,7 @@ import type {
   IPurchaseFormValues,
   IPurchasePricingData,
 } from '../types/purchaseTypes';
+import type { ITransactionReferenceSnapshot } from '@/modules/transactions';
 import {
   PURCHASE_RATE_DECIMALS,
   calculateRoundedTransactionAmount,
@@ -150,8 +151,8 @@ export const PurchaseTransactionRowCell = ({
     name: fieldPath('finalAmount'),
   });
   const issuerPartyProfileId = useWatch({ control: form.control, name: fieldPath('issuerPartyProfileId') });
-  const issuerSnapshot = useWatch({ control: form.control, name: fieldPath('issuerPartyProfileSnapshot') });
-  const cardSnapshot = useWatch({ control: form.control, name: fieldPath('cardSnapshot') });
+  const issuerSnapshot = useWatch({ control: form.control, name: fieldPath('issuerPartyProfileSnapshot') }) as ITransactionReferenceSnapshot | null;
+  const cardSnapshot = useWatch({ control: form.control, name: fieldPath('cardSnapshot') }) as ITransactionReferenceSnapshot | null;
   const isReload = useWatch({ control: form.control, name: fieldPath('isReload') });
 
   const selectedProduct = useMemo(

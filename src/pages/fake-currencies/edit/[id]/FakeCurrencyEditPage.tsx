@@ -41,6 +41,11 @@ export default function FakeCurrencyEditPage() {
       total: '',
       roundOff: item.roundOff ?? '0',
       finalAmount: '',
+      cardId: '',
+      issuerPartyProfileId: '',
+      issuerPartyProfileSnapshot: null,
+      cardSnapshot: null,
+      isReload: false,
     }));
     return values;
   }, [transaction]);

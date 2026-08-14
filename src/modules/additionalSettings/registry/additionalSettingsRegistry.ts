@@ -213,6 +213,14 @@ const TRANSACTION_ACCOUNTING_SUBCATEGORIES: readonly AdditionalSettingSubcategor
     optionsSource: 'account-profile',
   },
   {
+    code: AdditionalSettingsCodeEnum.CommissionControlAccount,
+    label: 'COMMISSION CONTROL ACCOUNT',
+    valueType: 'select',
+    required: true,
+    placeholder: 'Select commission control account',
+    optionsSource: 'account-profile',
+  },
+  {
     code: AdditionalSettingsCodeEnum.BranchControlAccount,
     label: 'BRANCH CONTROL ACCOUNT',
     valueType: 'select',
@@ -234,6 +242,14 @@ const TRANSACTION_ACCOUNTING_SUBCATEGORIES: readonly AdditionalSettingSubcategor
     valueType: 'select',
     required: true,
     placeholder: 'Select cash control account',
+    optionsSource: 'account-profile',
+  },
+  {
+    code: AdditionalSettingsCodeEnum.AdvanceControlAccount,
+    label: 'ADVANCE CONTROL ACCOUNT',
+    valueType: 'select',
+    required: true,
+    placeholder: 'Select advance control account',
     optionsSource: 'account-profile',
   },
 ];
@@ -436,6 +452,20 @@ const TRANSFER_NUMBERING_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDef
   },
 ];
 
+const CARD_TECHNICAL_NUMBERING_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] = [
+  { code: AdditionalSettingsCodeEnum.CardStockNumberSeries, label: 'CARD STOCK TECHNICAL', valueType: 'number', required: true, placeholder: 'Enter starting sequence number' },
+  { code: AdditionalSettingsCodeEnum.CardTransferOutNumberSeries, label: 'CARD TRANSFER OUT', valueType: 'number', required: true, placeholder: 'Enter starting sequence number' },
+  { code: AdditionalSettingsCodeEnum.CardTransferInNumberSeries, label: 'CARD TRANSFER IN', valueType: 'number', required: true, placeholder: 'Enter starting sequence number' },
+  { code: AdditionalSettingsCodeEnum.CardStockLoadNumberSeries, label: 'CARD STOCK LOAD', valueType: 'number', required: true, placeholder: 'Enter starting sequence number' },
+  { code: AdditionalSettingsCodeEnum.CardSettleNumberSeries, label: 'CARD SETTLEMENT', valueType: 'number', required: true, placeholder: 'Enter starting sequence number' },
+];
+
+const VOUCHER_NUMBERING_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] = [
+  { code: AdditionalSettingsCodeEnum.ReceiptVoucherNumberSeries, label: 'RECEIPT VOUCHER', valueType: 'number', required: true, placeholder: 'Enter starting sequence number' },
+  { code: AdditionalSettingsCodeEnum.PaymentVoucherNumberSeries, label: 'PAYMENT VOUCHER', valueType: 'number', required: true, placeholder: 'Enter starting sequence number' },
+  { code: AdditionalSettingsCodeEnum.JournalVoucherNumberSeries, label: 'JOURNAL VOUCHER', valueType: 'number', required: true, placeholder: 'Enter starting sequence number' },
+];
+
 const FAKE_CURRENCY_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] = [
   {
     code: AdditionalSettingsCodeEnum.FakeCurrencyRateEditable,
@@ -478,6 +508,8 @@ const TRANSACTION_NUMBERING_SUBCATEGORIES: readonly AdditionalSettingSubcategory
       return definition ? [{ ...definition }] : [];
     }),
     ...TRANSFER_NUMBERING_SUBCATEGORIES,
+    ...CARD_TECHNICAL_NUMBERING_SUBCATEGORIES,
+    ...VOUCHER_NUMBERING_SUBCATEGORIES,
   ];
 
 export const ADDITIONAL_SETTING_DEFINITIONS: readonly AdditionalSettingCategoryDefinition[] = [

@@ -93,6 +93,9 @@ export interface IAccountProfileListQuery {
   active?: boolean;
   bulkPurchase?: boolean;
   bulkSale?: boolean;
+  receipt?: boolean;
+  payment?: boolean;
+  journalVoucher?: boolean;
 }
 
 export interface IAccountProfileListResponse {

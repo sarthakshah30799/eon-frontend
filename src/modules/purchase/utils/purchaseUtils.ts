@@ -86,6 +86,7 @@ export const createEmptyPurchaseTransactionRow =
     rate: '',
     commission: '',
     commissionSnapshot: null,
+    pricingRuleSnapshot: null,
     total: '',
     roundOff: '',
     finalAmount: '',
@@ -219,6 +220,12 @@ export const createEmptyPurchaseFormValues = (
 
 export const createEmptyPurchasePaymentRow = (
   overrides: Partial<{
+    settlementSource: 'NORMAL' | 'ADVANCE';
+    advanceVoucherId: string;
+    advanceVoucherNumber: string;
+    advanceAvailableAmount: string;
+    isAdvanceRemainder: boolean;
+    amountLocked: boolean;
     paymentMethod: string;
     accountId: string;
     accountName: string;
@@ -232,6 +239,12 @@ export const createEmptyPurchasePaymentRow = (
     remarks: string;
   }> = {}
 ) => ({
+  settlementSource: overrides.settlementSource ?? 'NORMAL',
+  advanceVoucherId: overrides.advanceVoucherId ?? '',
+  advanceVoucherNumber: overrides.advanceVoucherNumber ?? '',
+  advanceAvailableAmount: overrides.advanceAvailableAmount ?? '',
+  isAdvanceRemainder: overrides.isAdvanceRemainder ?? false,
+  amountLocked: overrides.amountLocked ?? false,
   paymentMethod: overrides.paymentMethod ?? '',
   accountId: overrides.accountId ?? '',
   accountName: overrides.accountName ?? '',
@@ -363,6 +376,7 @@ export const mapPurchaseFormValuesToSubmitPayload = (
         rate: row.rate,
         commission: row.commission || null,
         commissionSnapshot: row.commissionSnapshot ?? null,
+        pricingRuleSnapshot: row.pricingRuleSnapshot ?? null,
         remarks: null,
         cardId: row.cardId || null,
         issuerPartyProfileId: row.issuerPartyProfileId || null,
@@ -385,6 +399,11 @@ export const mapPurchaseFormValuesToSubmitPayload = (
       })),
       payments: values.paymentDetails.map(row => ({
         accountId: row.accountId,
+        settlementSource: row.settlementSource ?? 'NORMAL',
+        advanceVoucherId:
+          row.settlementSource === 'ADVANCE'
+            ? row.advanceVoucherId || null
+            : null,
         paymentMethod:
           row.paymentMethod === TransactionPaymentMethodEnum.CASH
             ? TransactionPaymentMethodEnum.CASH
@@ -660,6 +679,7 @@ export const mapPurchaseTransactionToFormValues = (
     rate: item.rate ?? '',
     commission: item.commission ?? '',
     commissionSnapshot: item.commissionSnapshot ?? null,
+    pricingRuleSnapshot: item.pricingRuleSnapshot ?? null,
     total: '',
     roundOff: '',
     finalAmount: '',
@@ -700,6 +720,10 @@ export const mapPurchaseTransactionToFormValues = (
     remarks: charge.remarks ?? '',
   })),
   paymentDetails: (transaction.payments ?? []).map(payment => ({
+    settlementSource: payment.settlementSource ?? 'NORMAL',
+    advanceVoucherId: payment.advanceVoucherId ?? '',
+    advanceVoucherNumber: payment.advanceApplication?.voucher?.number ?? '',
+    advanceAvailableAmount: payment.advanceApplication?.amount ?? payment.amount ?? '',
     paymentMethod: payment.paymentMethod,
     accountId: payment.accountId,
     accountName:

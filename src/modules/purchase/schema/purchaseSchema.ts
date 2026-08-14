@@ -65,6 +65,7 @@ const purchaseTransactionSchema = yup.object({
   rate: decimalStringSchema.default(''),
   commission: decimalStringSchema.default(''),
   commissionSnapshot: yup.mixed().nullable().default(null),
+  pricingRuleSnapshot: yup.mixed().nullable().default(null),
   total: decimalStringSchema.default(''),
   roundOff: signedDecimalStringSchema.default(''),
   finalAmount: decimalStringSchema.default(''),
@@ -86,6 +87,15 @@ const additionalChargeSchema = yup.object({
 
 const createPaymentDetailSchema = (transactionType: TransactionType) =>
   yup.object({
+    settlementSource: yup
+      .mixed<'NORMAL' | 'ADVANCE'>()
+      .oneOf(['NORMAL', 'ADVANCE'])
+      .default('NORMAL'),
+    advanceVoucherId: yup.string().trim().when('settlementSource', {
+      is: 'ADVANCE',
+      then: schema => schema.required('Advance voucher is required'),
+      otherwise: schema => schema.default(''),
+    }),
     paymentMethod: yup
       .mixed<(typeof TransactionPaymentMethodEnum)[keyof typeof TransactionPaymentMethodEnum]>()
       .oneOf([
@@ -95,8 +105,10 @@ const createPaymentDetailSchema = (transactionType: TransactionType) =>
       .required('Payment mode is required'),
     accountId: yup.string().trim().required('Account is required'),
     accountName: yup.string().trim().default(''),
-    chequePageId: yup.string().trim().when('paymentMethod', {
-      is: TransactionPaymentMethodEnum.CHEQUE,
+    chequePageId: yup.string().trim().when(['paymentMethod', 'settlementSource'], {
+      is: (paymentMethod: string, settlementSource: string) =>
+        paymentMethod === TransactionPaymentMethodEnum.CHEQUE &&
+        settlementSource !== 'ADVANCE',
       then: schema =>
         transactionType === TransactionTypeEnum.PURCHASE
           ? schema.required('Cheque page is required')
@@ -348,7 +360,10 @@ export const createPurchaseFormSchema = (
     travelAirlineId: yup.string().trim().default(''),
     travelTicketNo: yup.string().trim().default(''),
     travelRoute: yup.string().trim().default(''),
-    travelCountryId: yup.string().trim().default(''),
+    travelCountryId: yup.string().trim().default('').test('card-reload-travel-country', 'Travel country is required for CARD reload', function (value) {
+      const rows = Array.isArray(this.parent.transactions) ? this.parent.transactions : [];
+      return !rows.some((row: { cardId?: string; isReload?: boolean }) => Boolean(row?.cardId && row?.isReload)) || Boolean(value);
+    }),
     travelNoOfDays: yup.string().trim().default(''),
     travelNoOfPax: yup.string().trim().default(''),
     travelDepartureDate: yup.string().trim().default(''),

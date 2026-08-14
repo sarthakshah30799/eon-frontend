@@ -1,4 +1,10 @@
 export interface ITransactionPaymentDetailFormRow {
+  settlementSource?: 'NORMAL' | 'ADVANCE';
+  advanceVoucherId?: string;
+  advanceVoucherNumber?: string;
+  advanceAvailableAmount?: string;
+  isAdvanceRemainder?: boolean;
+  amountLocked?: boolean;
   paymentMethod: string;
   accountId: string;
   accountName: string;

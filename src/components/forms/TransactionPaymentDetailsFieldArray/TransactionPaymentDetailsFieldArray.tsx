@@ -21,6 +21,7 @@ import {
 } from '@/modules/transactions';
 import { useAuth } from '@/lib/AuthContext';
 import type { ITransactionPaymentDetailFormRow } from './transactionPaymentDetailsTypes';
+import { useAvailableAdvances } from '@/modules/vouchers';
 import {
   createEmptyPurchasePaymentRow,
   formatPurchaseEntityLabel,
@@ -61,7 +62,13 @@ const normalizeAmount = (value?: string | number | null) => {
     return '';
   }
 
-  return String(value);
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric.toFixed(2) : String(value);
+};
+
+const amountCents = (value?: string | number | null) => {
+  const numeric = Number(value ?? 0);
+  return Number.isFinite(numeric) ? Math.round(numeric * 100) : 0;
 };
 
 const PaymentDetailRow = ({
@@ -78,6 +85,8 @@ const PaymentDetailRow = ({
   disabled = false,
   onRemove,
   canRemove,
+  selectedAdvanceVoucherIds,
+  onAdvanceSelected,
 }: {
   arrayName: string;
   index: number;
@@ -92,6 +101,8 @@ const PaymentDetailRow = ({
   disabled?: boolean;
   onRemove: (index: number) => void;
   canRemove: boolean;
+  selectedAdvanceVoucherIds: string[];
+  onAdvanceSelected: (index: number, voucherId: string, amount: string, paymentMethod: string) => void;
 }) => {
   const form = useFormContext();
   const { activeBranchId } = useAuth();
@@ -103,6 +114,19 @@ const PaymentDetailRow = ({
     control: form.control,
     name: `${arrayName}.${index}.paymentMethod`,
   }) as string | undefined;
+  const settlementSource = (useWatch({
+    control: form.control,
+    name: `${arrayName}.${index}.settlementSource`,
+  }) as 'NORMAL' | 'ADVANCE' | undefined) ?? 'NORMAL';
+  const advanceVoucherId = useWatch({
+    control: form.control,
+    name: `${arrayName}.${index}.advanceVoucherId`,
+  }) as string | undefined;
+  const partyProfileId = useWatch({ control: form.control, name: 'partyProfileId' }) as string | undefined;
+  const transactionDate = useWatch({ control: form.control, name: 'transactionDate' }) as string | undefined;
+  const counterId = useWatch({ control: form.control, name: 'counterId' }) as string | undefined;
+  const isAdvanceRemainder = Boolean(useWatch({ control: form.control, name: `${arrayName}.${index}.isAdvanceRemainder` }));
+  const amountLocked = Boolean(useWatch({ control: form.control, name: `${arrayName}.${index}.amountLocked` }));
   const paymentRows = useWatch({
     control: form.control,
     name: arrayName,
@@ -131,6 +155,23 @@ const PaymentDetailRow = ({
   const [isLoadingCashAccount, setIsLoadingCashAccount] = useState(false);
   const previousPaymentMethodRef = useRef<string | undefined>(paymentMethod);
   const previousSelectionKeyRef = useRef<string | null>(null);
+  const appliedAdvanceSelectionRef = useRef<string>('');
+  const advanceType = isSale ? 'RECEIPT' : 'PAYMENT';
+  const { data: availableAdvances = [], isLoading: isLoadingAdvances } = useAvailableAdvances(
+    advanceType,
+    {
+      partyProfileId: partyProfileId ?? '',
+      branchId: resolvedBranchId ?? '',
+      counterId: counterId ?? '',
+      transactionDate: transactionDate ?? '',
+      paymentMethod: paymentMethod === TransactionPaymentMethodEnum.CASH ? 'CASH' : 'CHEQUE',
+    },
+    settlementSource === 'ADVANCE' && Boolean(paymentMethod)
+  );
+  const advanceOptions = useMemo(() => availableAdvances.filter(voucher => voucher.id === advanceVoucherId || !selectedAdvanceVoucherIds.includes(voucher.id)).map(voucher => ({
+    value: voucher.id,
+    label: `${voucher.number} | ${voucher.transactionDate} | Available ${formatAmount(voucher.availableAmount)}`,
+  })), [advanceVoucherId, availableAdvances, selectedAdvanceVoucherIds]);
 
   const priorAmount = useMemo(() => {
     return (paymentRows ?? [])
@@ -146,6 +187,37 @@ const PaymentDetailRow = ({
 
     return Math.max(total - priorAmount, 0);
   }, [maxAmount, priorAmount]);
+
+  useEffect(() => {
+    if (settlementSource !== 'ADVANCE') {
+      appliedAdvanceSelectionRef.current = '';
+      form.setValue(`${arrayName}.${index}.advanceVoucherId`, '', { shouldValidate: false });
+      form.setValue(`${arrayName}.${index}.amountLocked`, isAdvanceRemainder, { shouldValidate: false });
+      return;
+    }
+    const voucher = availableAdvances.find(item => item.id === advanceVoucherId);
+    if (!voucher) return;
+    form.setValue(`${arrayName}.${index}.accountId`, voucher.advanceControlAccountId ?? '', { shouldDirty: true, shouldValidate: true });
+    form.setValue(`${arrayName}.${index}.accountName`, voucher.advanceControlAccountSnapshot?.label ?? voucher.advanceControlAccountSnapshot?.name ?? 'Advance Control Account', { shouldDirty: true });
+    form.setValue(`${arrayName}.${index}.advanceVoucherNumber`, voucher.number, { shouldDirty: true });
+    form.setValue(`${arrayName}.${index}.advanceAvailableAmount`, voucher.availableAmount, { shouldDirty: true });
+    const appliedAmount = Math.min(availableAmount, Number(voucher.availableAmount)).toFixed(2);
+    form.setValue(`${arrayName}.${index}.amount`, appliedAmount, { shouldDirty: true, shouldValidate: true });
+    form.setValue(`${arrayName}.${index}.isAdvanceRemainder`, false, { shouldDirty: true });
+    form.setValue(`${arrayName}.${index}.amountLocked`, true, { shouldDirty: true });
+    form.setValue(`${arrayName}.${index}.chequePageId`, '', { shouldDirty: true, shouldValidate: true });
+    form.setValue(`${arrayName}.${index}.chequePageSnapshot`, null, { shouldDirty: true });
+    if (paymentMethod === TransactionPaymentMethodEnum.CHEQUE) {
+      form.setValue(`${arrayName}.${index}.chequeNumber`, voucher.chequeNumber ?? '', { shouldDirty: true });
+      form.setValue(`${arrayName}.${index}.chequeDate`, voucher.chequeDate ?? '', { shouldDirty: true });
+      form.setValue(`${arrayName}.${index}.branchName`, voucher.chequeBranch ?? '', { shouldDirty: true });
+      form.setValue(`${arrayName}.${index}.drawnOn`, voucher.drawnOn ?? '', { shouldDirty: true });
+    }
+    if (appliedAdvanceSelectionRef.current !== voucher.id) {
+      appliedAdvanceSelectionRef.current = voucher.id;
+      onAdvanceSelected(index, voucher.id, appliedAmount, paymentMethod ?? '');
+    }
+  }, [advanceVoucherId, arrayName, availableAdvances, availableAmount, form, index, isAdvanceRemainder, onAdvanceSelected, paymentMethod, settlementSource]);
 
   const remainingAfterCurrent = useMemo(() => {
     const currentAmount = Number(amount || 0);
@@ -379,6 +451,7 @@ const PaymentDetailRow = ({
     const loadPages = async () => {
       if (
         paymentMethod !== TransactionPaymentMethodEnum.CHEQUE ||
+        settlementSource === 'ADVANCE' ||
         !isPurchase ||
         !accountId ||
         !resolvedBranchId
@@ -408,6 +481,7 @@ const PaymentDetailRow = ({
     accountId,
     isPurchase,
     paymentMethod,
+    settlementSource,
     resolvedBranchId,
     selectablePagesUserId,
   ]);
@@ -539,7 +613,27 @@ const PaymentDetailRow = ({
   const isCheque = paymentMethod === TransactionPaymentMethodEnum.CHEQUE;
 
   return (
-    <div className="grid gap-4 rounded-sm border border-border-secondary bg-surface-primary p-4 md:grid-cols-2 xl:grid-cols-[1.3fr_1fr_1fr_1fr_1fr_1fr_1fr_auto]">
+    <div className="grid gap-4 rounded-sm border border-border-secondary bg-surface-primary p-4 md:grid-cols-2 xl:grid-cols-[1fr_1.3fr_1fr_1fr_1fr_1fr_1fr_1fr_auto]">
+      <div className="md:col-span-2 xl:col-span-1">
+        <FormFieldSelect
+          name={`${arrayName}.${index}.settlementSource`}
+          label="Settlement Source"
+          loadOptions={async () => ({ options: [{ value: 'NORMAL', label: 'Normal' }, { value: 'ADVANCE', label: 'Advance' }] })}
+          defaultOptions={[{ value: 'NORMAL', label: 'Normal' }, { value: 'ADVANCE', label: 'Advance' }]}
+          disabled={disabled || Boolean(advanceVoucherId)}
+        />
+      </div>
+      {settlementSource === 'ADVANCE' ? <div className="md:col-span-2 xl:col-span-1">
+        <FormFieldSelect
+          name={`${arrayName}.${index}.advanceVoucherId`}
+          label={`${isSale ? 'Receipt' : 'Payment'} Advance`}
+          placeholder="Select available advance"
+          loadOptions={async input => ({ options: advanceOptions.filter(option => option.label.toLowerCase().includes(input.toLowerCase())) })}
+          defaultOptions={advanceOptions}
+          disabled={disabled || Boolean(advanceVoucherId) || isLoadingAdvances || !partyProfileId || !resolvedBranchId || !counterId || !transactionDate}
+          cacheOptions={false}
+        />
+      </div> : null}
       <div className="md:col-span-2 xl:col-span-1">
         <FormFieldSelect
           key={`account-${paymentMethod}-${cashControlAccountId || 'none'}-${accountId || 'empty'}`}
@@ -555,13 +649,13 @@ const PaymentDetailRow = ({
           loadOptions={loadAccountOptions}
           pagination={!isCash}
           pageSize={ACCOUNT_PROFILE_OPTION_PAGE_SIZE}
-          disabled={disabled || isCash}
+          disabled={disabled || isCash || settlementSource === 'ADVANCE'}
           isSearchable
           cacheOptions={false}
         />
       </div>
 
-      {isCheque && isPurchase ? (
+      {isCheque && isPurchase && settlementSource !== 'ADVANCE' ? (
         <div className="md:col-span-2 xl:col-span-1">
           <FormFieldSelect
             key={`cheque-page-${accountId || 'empty'}-${pageOptions.length}`}
@@ -613,7 +707,7 @@ const PaymentDetailRow = ({
                 ? 'Enter customer cheque number'
                 : 'Page no will fill here'
           }
-          disabled={disabled || isCash}
+          disabled={disabled || isCash || settlementSource === 'ADVANCE'}
         />
       </div>
 
@@ -621,7 +715,7 @@ const PaymentDetailRow = ({
         <FormFieldDatePicker
           name={`${arrayName}.${index}.chequeDate`}
           label="Cheque Date"
-          disabled={disabled || !isCheque}
+          disabled={disabled || !isCheque || settlementSource === 'ADVANCE'}
         />
       </div>
 
@@ -630,7 +724,7 @@ const PaymentDetailRow = ({
           name={`${arrayName}.${index}.branchName`}
           label="Branch Name"
           placeholder="Branch name"
-          disabled={disabled || !isCheque}
+          disabled={disabled || !isCheque || settlementSource === 'ADVANCE'}
         />
       </div>
 
@@ -639,7 +733,7 @@ const PaymentDetailRow = ({
           name={`${arrayName}.${index}.drawnOn`}
           label="Drawn On"
           placeholder="Drawn on"
-          disabled={disabled || !isCheque}
+          disabled={disabled || !isCheque || settlementSource === 'ADVANCE'}
         />
       </div>
 
@@ -648,7 +742,7 @@ const PaymentDetailRow = ({
           name={`${arrayName}.${index}.amount`}
           label="Amount"
           type="number"
-          disabled={disabled}
+          disabled={disabled || settlementSource === 'ADVANCE' || amountLocked}
         />
       </div>
 
@@ -665,7 +759,7 @@ const PaymentDetailRow = ({
         </Button>
       </div>
 
-      <div className="md:col-span-2 xl:col-span-7">
+      <div className="md:col-span-2 xl:col-span-8">
         <p className="text-xs text-text-secondary">
           Available amount for this row: {formatAmount(availableAmount)}
           {maxAmount !== undefined
@@ -749,6 +843,60 @@ export const TransactionPaymentDetailsFieldArray = ({
     );
   }, [paymentRows]);
 
+  const selectedAdvanceVoucherIds = useMemo(() => (paymentRows ?? [])
+    .filter(row => row.settlementSource === 'ADVANCE' && Boolean(row.advanceVoucherId))
+    .map(row => String(row.advanceVoucherId)), [paymentRows]);
+
+  const handleAdvanceSelected = useCallback((selectedIndex: number, voucherId: string, appliedAmount: string, paymentMethod: string) => {
+    const rows = (form.getValues(name) ?? []) as ITransactionPaymentDetailFormRow[];
+    if (rows.some((row, index) => index !== selectedIndex && row.advanceVoucherId === voucherId)) {
+      form.setError(`${name}.${selectedIndex}.advanceVoucherId`, { type: 'duplicate', message: 'This advance is already selected in this transaction' });
+      return;
+    }
+
+    const totalCents = amountCents(maxAmount);
+    const remainderIndex = rows.findIndex((row, index) => index !== selectedIndex && row.isAdvanceRemainder);
+    const usedCents = rows.reduce((sum, row, index) => {
+      if (index === remainderIndex) return sum;
+      return sum + (index === selectedIndex ? amountCents(appliedAmount) : amountCents(row.amount));
+    }, 0);
+    const remainderCents = Math.max(totalCents - usedCents, 0);
+
+    if (remainderIndex >= 0) {
+      if (remainderCents === 0 && rows.length > 1) {
+        remove(remainderIndex);
+      } else {
+        form.setValue(`${name}.${remainderIndex}.amount`, (remainderCents / 100).toFixed(2), { shouldDirty: true, shouldValidate: true });
+        form.setValue(`${name}.${remainderIndex}.paymentMethod`, paymentMethod, { shouldDirty: true, shouldValidate: true });
+        form.setValue(`${name}.${remainderIndex}.amountLocked`, true, { shouldDirty: true });
+      }
+      return;
+    }
+
+    if (remainderCents > 0) {
+      append(createEmptyPurchasePaymentRow({
+        settlementSource: 'NORMAL',
+        paymentMethod,
+        amount: (remainderCents / 100).toFixed(2),
+        isAdvanceRemainder: true,
+        amountLocked: true,
+      }), { shouldFocus: false });
+    }
+  }, [append, form, maxAmount, name, remove]);
+
+  useEffect(() => {
+    const rows = (paymentRows ?? []);
+    const remainderIndex = rows.findIndex(row => row.isAdvanceRemainder);
+    if (remainderIndex < 0) return;
+    const desiredCents = Math.max(amountCents(maxAmount) - rows.reduce((sum, row, index) => index === remainderIndex ? sum : sum + amountCents(row.amount), 0), 0);
+    const currentCents = amountCents(rows[remainderIndex]?.amount);
+    if (desiredCents === 0 && rows.length > 1) {
+      remove(remainderIndex);
+    } else if (currentCents !== desiredCents) {
+      form.setValue(`${name}.${remainderIndex}.amount`, (desiredCents / 100).toFixed(2), { shouldDirty: true, shouldValidate: true });
+    }
+  }, [form, maxAmount, name, paymentRows, remove]);
+
   useEffect(() => {
     const total = Number(maxAmount || 0);
     if (
@@ -786,7 +934,7 @@ export const TransactionPaymentDetailsFieldArray = ({
     }
 
     const primaryAmountField = `${name}.0.amount` as const;
-    if (form.getFieldState(primaryAmountField).isDirty) {
+    if (form.getFieldState(primaryAmountField).isDirty || currentRows[0]?.amountLocked || currentRows[0]?.settlementSource === 'ADVANCE') {
       return;
     }
 
@@ -823,6 +971,18 @@ export const TransactionPaymentDetailsFieldArray = ({
       }
 
       currentRows.forEach((row, index) => {
+        form.setValue(`${name}.${index}.settlementSource`, 'NORMAL', {
+          shouldDirty: true,
+          shouldTouch: true,
+          shouldValidate: true,
+        });
+        form.setValue(`${name}.${index}.advanceVoucherId`, '', {
+          shouldDirty: true,
+          shouldTouch: true,
+          shouldValidate: false,
+        });
+        form.setValue(`${name}.${index}.isAdvanceRemainder`, false, { shouldDirty: true, shouldValidate: false });
+        form.setValue(`${name}.${index}.amountLocked`, false, { shouldDirty: true, shouldValidate: false });
         form.setValue(`${name}.${index}.paymentMethod`, method, {
           shouldDirty: true,
           shouldTouch: true,
@@ -958,6 +1118,8 @@ export const TransactionPaymentDetailsFieldArray = ({
                 disabled={disabled}
                 onRemove={remove}
                 canRemove={fields.length > 0}
+                selectedAdvanceVoucherIds={selectedAdvanceVoucherIds}
+                onAdvanceSelected={handleAdvanceSelected}
               />
             ))}
           </div>

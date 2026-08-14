@@ -15,6 +15,15 @@ const ResetPasswordPage = lazy(
   () => import('../pages/auth/reset-password/ResetPasswordPage')
 );
 const DashboardPage = lazy(() => import('../pages/dashboard/DashboardPage'));
+const ReceiptListPage = lazy(() => import('../pages/receipts'));
+const ReceiptCreatePage = lazy(() => import('../pages/receipts/create'));
+const ReceiptEditPage = lazy(() => import('../pages/receipts/edit'));
+const PaymentListPage = lazy(() => import('../pages/payments'));
+const PaymentCreatePage = lazy(() => import('../pages/payments/create'));
+const PaymentEditPage = lazy(() => import('../pages/payments/edit'));
+const JournalVoucherListPage = lazy(() => import('../pages/journal-vouchers'));
+const JournalVoucherCreatePage = lazy(() => import('../pages/journal-vouchers/create'));
+const JournalVoucherEditPage = lazy(() => import('../pages/journal-vouchers/edit'));
 
 const UserCreatePage = lazy(
   () => import('../pages/users/create/UserCreatePage')
@@ -330,6 +339,8 @@ const CardStockEditPage = lazy(() => import('../pages/card-stock/edit/[id]/CardS
 const CardTransferListPage = lazy(() => import('../pages/card-transfer/CardTransferListPage'));
 const CardTransferCreatePage = lazy(() => import('../pages/card-transfer/create/CardTransferCreatePage'));
 const CardTransferEditPage = lazy(() => import('../pages/card-transfer/edit/[id]/CardTransferEditPage'));
+const CardSettlementListPage = lazy(() => import('../pages/card-settlement/CardSettlementListPage'));
+const CardSettlementDetailPage = lazy(() => import('../pages/card-settlement/[id]/CardSettlementDetailPage'));
 
 const router = createBrowserRouter([
   {
@@ -946,6 +957,22 @@ const router = createBrowserRouter([
     ),
   },
   {
+    path: '/card-settlement',
+    element: (
+      <ProtectedLayout>
+        <CardSettlementListPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/card-settlement/:id',
+    element: (
+      <ProtectedLayout>
+        <CardSettlementDetailPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
     path: '/card-stock/create',
     element: (
       <ProtectedLayout>
@@ -1258,6 +1285,15 @@ const router = createBrowserRouter([
     ),
   },
 
+  { path: '/receipts', element: <ProtectedLayout><ReceiptListPage /></ProtectedLayout> },
+  { path: '/receipts/create', element: <ProtectedLayout><ReceiptCreatePage /></ProtectedLayout> },
+  { path: '/receipts/edit/:id', element: <ProtectedLayout><ReceiptEditPage /></ProtectedLayout> },
+  { path: '/payments', element: <ProtectedLayout><PaymentListPage /></ProtectedLayout> },
+  { path: '/payments/create', element: <ProtectedLayout><PaymentCreatePage /></ProtectedLayout> },
+  { path: '/payments/edit/:id', element: <ProtectedLayout><PaymentEditPage /></ProtectedLayout> },
+  { path: '/journal-vouchers', element: <ProtectedLayout><JournalVoucherListPage /></ProtectedLayout> },
+  { path: '/journal-vouchers/create', element: <ProtectedLayout><JournalVoucherCreatePage /></ProtectedLayout> },
+  { path: '/journal-vouchers/edit/:id', element: <ProtectedLayout><JournalVoucherEditPage /></ProtectedLayout> },
   {
     path: '*',
     element: (

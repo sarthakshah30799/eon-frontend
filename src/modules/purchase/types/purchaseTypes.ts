@@ -29,6 +29,7 @@ export interface IPurchaseTransactionFormRow {
   rate: string;
   commission: string;
   commissionSnapshot: Record<string, unknown> | null;
+  pricingRuleSnapshot?: Record<string, unknown> | null;
   total: string;
   roundOff: string;
   finalAmount: string;

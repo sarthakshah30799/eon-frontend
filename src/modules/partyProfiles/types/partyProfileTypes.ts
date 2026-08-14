@@ -182,6 +182,8 @@ export interface IPartyProfileListQuery {
   limit?: number;
   branchId?: string;
   branchIds?: string[];
+  entityTypeId?: string;
+  groupId?: string;
 }
 
 export interface IPartyProfileListResponse {

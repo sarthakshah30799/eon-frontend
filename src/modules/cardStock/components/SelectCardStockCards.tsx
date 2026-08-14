@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { SelectEntity, type TableColumnDef } from '@/components/ui';
 import { cardStockApi, type CardStockSelectableCard } from '@/api/cardStock';
+import { formatDateTime } from '@/utils';
 
 interface SelectCardStockCardsProps {
   open: boolean;
@@ -25,7 +26,7 @@ export const SelectCardStockCards = ({ open, reload = false, branchId, passenger
     { id: 'kitNumber', accessorKey: 'kitNumber', header: 'Kit Number' },
     { id: 'cardNumber', accessorKey: 'maskedCardNumber', header: 'Card Number' },
     { id: 'denomination', accessorKey: 'denomination', header: 'Denomination' },
-    { id: 'expirationDate', accessorKey: 'expirationDate', header: 'Expiration' },
+    { id: 'expirationDate', accessorKey: 'expirationDate', header: 'Expiration', cell: ({ row }) => formatDateTime(`${row.original.expirationDate}T00:00:00`, 'DD/MM/YYYY') },
   ];
   return <SelectEntity<CardStockSelectableCard> open={open} title={reload ? 'Select CARD for reload' : 'Select CARD'} description="Only eligible cards for the selected branch and issuer are shown." columns={columns} data={query.data ?? []} loading={query.isLoading || query.isFetching} selectable multiple={false} searchValue="" onSearch={() => undefined} searchPlaceholder="Search cards" emptyMessage={query.error instanceof Error ? query.error.message : 'No eligible cards found.'} onContinue={rows => { if (rows[0]) onContinue(rows[0]); }} onClose={onClose} />;
 };

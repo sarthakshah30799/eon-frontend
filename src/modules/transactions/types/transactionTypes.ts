@@ -57,6 +57,7 @@ export type TransactionPartyProfileType =
 export const TRANSACTION_TYPE_PROFILE_ORDER = [
   TransactionTypeProfileEnum.FAKE_CURRENCY,
   TransactionTypeProfileEnum.CARD_STOCK_RECEIPT,
+  TransactionTypeProfileEnum.CARD_TRANSFER_SELL,
   TransactionTypeProfileEnum.PURCHASE_FFMC,
   TransactionTypeProfileEnum.PURCHASE_CORPORATE_INDIVIDUAL,
   TransactionTypeProfileEnum.SALE_CORPORATE_INDIVIDUAL,
@@ -361,6 +362,18 @@ export interface ITransactionPaymentEntity {
   lineNo: number;
   accountId: string;
   accountSnapshot: ITransactionReferenceSnapshot | null;
+  settlementSource?: 'NORMAL' | 'ADVANCE';
+  advanceVoucherId?: string | null;
+  advanceApplication?: {
+    id: string;
+    voucherId: string;
+    amount: string;
+    state: 'RESERVED' | 'APPLIED' | 'RELEASED';
+    reservedAt?: string | null;
+    appliedAt?: string | null;
+    releasedAt?: string | null;
+    voucher?: { id: string; number: string } | null;
+  } | null;
   chequePageId: string | null;
   chequePageSnapshot?: Record<string, unknown> | null;
   paymentMethod: TransactionPaymentMethod;
@@ -638,6 +651,8 @@ export interface ICreateTransactionPassengerPayload {
 
 export interface ICreateTransactionPaymentPayload {
   accountId: string;
+  settlementSource?: 'NORMAL' | 'ADVANCE';
+  advanceVoucherId?: string | null;
   paymentMethod: TransactionPaymentMethod;
   paymentDirection?: TransactionPaymentDirection;
   referenceNumber?: string | null;

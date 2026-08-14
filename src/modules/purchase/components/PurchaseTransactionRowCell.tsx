@@ -151,9 +151,11 @@ export const PurchaseTransactionRowCell = ({
     name: fieldPath('finalAmount'),
   });
   const issuerPartyProfileId = useWatch({ control: form.control, name: fieldPath('issuerPartyProfileId') });
+  const cardId = useWatch({ control: form.control, name: fieldPath('cardId') });
   const issuerSnapshot = useWatch({ control: form.control, name: fieldPath('issuerPartyProfileSnapshot') }) as ITransactionReferenceSnapshot | null;
   const cardSnapshot = useWatch({ control: form.control, name: fieldPath('cardSnapshot') }) as ITransactionReferenceSnapshot | null;
   const isReload = useWatch({ control: form.control, name: fieldPath('isReload') });
+  const pricingRuleSnapshot = useWatch({ control: form.control, name: fieldPath('pricingRuleSnapshot') }) as Record<string, unknown> | null;
 
   const selectedProduct = useMemo(
     () =>
@@ -310,6 +312,26 @@ export const PurchaseTransactionRowCell = ({
   });
   const hasManualRateChangeRef = useRef(false);
   const selectionKey = `${currencyId || ''}:${productId || ''}`;
+  const cardSelectionContextKey = `${branchId}:${passengerId}:${currencyId || ''}:${productId || ''}:${issuerPartyProfileId || ''}`;
+  const previousCardSelectionContextRef = useRef(cardSelectionContextKey);
+
+  useEffect(() => {
+    if (previousCardSelectionContextRef.current === cardSelectionContextKey) return;
+    previousCardSelectionContextRef.current = cardSelectionContextKey;
+    if (!cardId) return;
+    form.setValue(fieldPath('cardId'), '', { shouldDirty: true, shouldValidate: true });
+    form.setValue(fieldPath('cardSnapshot'), null, { shouldDirty: true });
+  }, [cardId, cardSelectionContextKey, fieldPath, form]);
+
+  useEffect(() => {
+    if (disabled || !preview || !currencyId || !productId) return;
+    if (pricingRuleSnapshot?.currencyId === currencyId && pricingRuleSnapshot?.productId === productId) return;
+    form.setValue(fieldPath('pricingRuleSnapshot'), { ...preview, currencyId, productId }, {
+      shouldDirty: false,
+      shouldTouch: false,
+      shouldValidate: false,
+    });
+  }, [currencyId, disabled, fieldPath, form, pricingRuleSnapshot, preview, productId]);
 
   useEffect(() => {
     hasManualRateChangeRef.current = false;
@@ -758,8 +780,8 @@ export const PurchaseTransactionRowCell = ({
           />
         </div>
       </div>
-      {isCardProduct ? <div className="mt-2 flex items-center gap-4 px-1"><FormFieldCheckbox name={fieldPath('isReload')} label="Reload" disabled={disabled} /><span className="text-xs text-text-tertiary">Select an issuer and eligible card before entering the denomination.</span></div> : null}
-      <SelectPartyProfiles open={issuerPickerOpen} types={PartyProfileTypeEnum.CARD_ISSUER_PROFILE} allowedProfileIds={selectedProduct?.cardIssuerProfileIds ?? []} selectable multiple={false} title="Select CARD issuer" description="Select an approved active CARD issuer linked to this CARD product." onClose={() => setIssuerPickerOpen(false)} onContinue={(profiles: IPartyProfile[]) => { const profile = profiles[0]; if (!profile) return; form.setValue(fieldPath('issuerPartyProfileId'), profile.id, { shouldDirty: true, shouldValidate: true }); form.setValue(fieldPath('issuerPartyProfileSnapshot'), { id: profile.id, code: profile.code, name: profile.name }, { shouldDirty: true }); setCardPickerOpen(false); setIssuerPickerOpen(false); }} />
+      {isCardProduct ? <div className="mt-2 flex items-center gap-4 px-1"><FormFieldCheckbox name={fieldPath('isReload')} label="Reload" disabled={disabled} onChange={() => { form.setValue(fieldPath('cardId'), '', { shouldDirty: true, shouldValidate: true }); form.setValue(fieldPath('cardSnapshot'), null, { shouldDirty: true }); setCardPickerOpen(false); }} /><span className="text-xs text-text-tertiary">Select an issuer and eligible card before entering the denomination.</span></div> : null}
+      <SelectPartyProfiles open={issuerPickerOpen} types={PartyProfileTypeEnum.CARD_ISSUER_PROFILE} allowedProfileIds={selectedProduct?.cardIssuerProfileIds ?? []} selectable multiple={false} title="Select CARD issuer" description="Select an approved active CARD issuer linked to this CARD product." onClose={() => setIssuerPickerOpen(false)} onContinue={(profiles: IPartyProfile[]) => { const profile = profiles[0]; if (!profile) return; form.setValue(fieldPath('issuerPartyProfileId'), profile.id, { shouldDirty: true, shouldValidate: true }); form.setValue(fieldPath('issuerPartyProfileSnapshot'), { id: profile.id, code: profile.code, name: profile.name }, { shouldDirty: true }); form.setValue(fieldPath('cardId'), '', { shouldDirty: true, shouldValidate: true }); form.setValue(fieldPath('cardSnapshot'), null, { shouldDirty: true }); setCardPickerOpen(false); setIssuerPickerOpen(false); }} />
       <SelectCardStockCards open={cardPickerOpen} reload={Boolean(isReload)} branchId={branchId} passengerId={passengerId} currencyId={String(currencyId || '')} productId={String(productId || '')} issuerPartyProfileId={String(issuerPartyProfileId || '')} onClose={() => setCardPickerOpen(false)} onContinue={(card: CardStockSelectableCard) => { form.setValue(fieldPath('cardId'), card.id, { shouldDirty: true, shouldValidate: true }); form.setValue(fieldPath('cardSnapshot'), { id: card.id, series: card.series, kitNumber: card.kitNumber, maskedCardNumber: card.maskedCardNumber, denomination: card.denomination, amount: card.amount, expirationDate: card.expirationDate }, { shouldDirty: true }); form.setValue(fieldPath('quantity'), card.denomination, { shouldDirty: true, shouldValidate: true }); setCardPickerOpen(false); }} />
     </TransactionItemRowShell>
   );

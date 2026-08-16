@@ -2,6 +2,8 @@ import { apiClient } from '../api';
 import type { CardStockSnapshot } from '../cardStock';
 
 export const CardStockSettlementStatus = {
+  PENDING_BRANCH_SETTLEMENT: 'PENDING_BRANCH_SETTLEMENT',
+  PENDING_HO_ACCEPTANCE: 'PENDING_HO_ACCEPTANCE',
   PENDING_ISSUER_SETTLEMENT: 'PENDING_ISSUER_SETTLEMENT',
   ISSUER_SETTLED: 'ISSUER_SETTLED',
   CANCELLED: 'CANCELLED',
@@ -34,10 +36,22 @@ export interface CardStockSettlement {
   buyRate: string;
   settlementAmount: string;
   saleDate: string;
+  settlementMode: 'AUTO' | 'MANUAL';
+  branchRequestedDate?: string | null;
+  branchReference?: string | null;
+  branchRemarks?: string | null;
+  branchRequestedAt?: string | null;
+  branchRequestedById?: string | null;
   branchSettlementDate?: string | null;
   branchSettlementEntryId?: string | null;
+  hoAcceptedAt?: string | null;
+  hoAcceptedById?: string | null;
+  hoRejectedAt?: string | null;
+  hoRejectedById?: string | null;
+  hoRejectionReason?: string | null;
   issuerSettlementDate?: string | null;
   issuerReference?: string | null;
+  issuerRemarks?: string | null;
   issuerSettlementEntryId?: string | null;
   status: CardStockSettlementStatus;
   cancellationReason?: string | null;
@@ -60,6 +74,14 @@ export interface BulkSettleCardStockPayload {
   settlementIds: string[];
   issuerSettlementDate: string;
   issuerReference: string;
+  remarks?: string;
+}
+
+export interface SubmitBranchCardSettlementPayload {
+  settlementIds: string[];
+  settlementDate: string;
+  reference?: string;
+  remarks?: string;
 }
 
 const queryString = (filters: CardStockSettlementFilters) => {
@@ -82,6 +104,21 @@ export const cardSettlementApi = {
   },
   bulkSettle: async (payload: BulkSettleCardStockPayload): Promise<CardStockSettlement[]> => {
     const response = await apiClient.post<CardStockSettlement[]>('/card-stock/settlements/bulk-settle', payload);
+    if (response.error) throw new Error(response.error);
+    return response.data ?? [];
+  },
+  submitBranch: async (payload: SubmitBranchCardSettlementPayload): Promise<CardStockSettlement[]> => {
+    const response = await apiClient.post<CardStockSettlement[]>('/card-stock/settlements/branch-submit', payload);
+    if (response.error) throw new Error(response.error);
+    return response.data ?? [];
+  },
+  acceptBranch: async (settlementIds: string[]): Promise<CardStockSettlement[]> => {
+    const response = await apiClient.post<CardStockSettlement[]>('/card-stock/settlements/branch-accept', { settlementIds });
+    if (response.error) throw new Error(response.error);
+    return response.data ?? [];
+  },
+  rejectBranch: async (settlementIds: string[], reason: string): Promise<CardStockSettlement[]> => {
+    const response = await apiClient.post<CardStockSettlement[]>('/card-stock/settlements/branch-reject', { settlementIds, reason });
     if (response.error) throw new Error(response.error);
     return response.data ?? [];
   },

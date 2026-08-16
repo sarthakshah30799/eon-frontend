@@ -297,6 +297,7 @@ export interface ITransactionItemEntity {
   commission: string | null;
   holdCost: string | null;
   profit: string | null;
+  profitAmount: string | null;
   roundOff: string | null;
   currencySnapshot: ITransactionReferenceSnapshot | null;
   productSnapshot: ITransactionReferenceSnapshot | null;
@@ -671,6 +672,8 @@ export interface ICreateTransactionPayload {
   number?: string | null;
   slug: string;
   transactionDate?: string | null;
+  branchId?: string | null;
+  counterId?: string | null;
   branchSnapshot?: ITransactionReferenceSnapshot | null;
   requiresApproval?: boolean;
   partyProfileId?: string | null;

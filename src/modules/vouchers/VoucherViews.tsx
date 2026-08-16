@@ -4,9 +4,6 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui';
 import { Loader } from '@/components/ui/loader';
 import { useAuth } from '@/lib/AuthContext';
-import { useListAdditionalSettings } from '@/modules/additionalSettings/hooks';
-import { AdditionalSettingsCodeEnum } from '@/modules/additionalSettings/constants';
-import { getAdditionalSettingTextValue } from '@/modules/additionalSettings/utils';
 import { getTransactionDatePolicy } from '@/modules/transactionPolicies/utils/transactionDatePolicy';
 import { transactionPoliciesApi } from '@/api/transactionPolicies/transactionPolicies.api';
 import { VoucherForm } from './VoucherForm';
@@ -97,7 +94,6 @@ export const VoucherListView = ({ type }: { type: VoucherType }) => {
 export const VoucherCreateView = ({ type }: { type: VoucherType }) => {
   const navigate = useNavigate();
   const { user, activeBranchId, activeCounterId, policyContext } = useAuth();
-  const { data: settings = [], isLoading } = useListAdditionalSettings();
   const { createVoucher } = useCreateVoucher(type);
   const canSelectWorkplace = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
   const [selectedBranchId, setSelectedBranchId] = useState(canSelectWorkplace ? '' : activeBranchId ?? '');
@@ -111,9 +107,7 @@ export const VoucherCreateView = ({ type }: { type: VoucherType }) => {
     : policyContext;
   const policy = useMemo(() => getTransactionDatePolicy(selectedPolicyContext), [selectedPolicyContext]);
   const defaults = useMemo(() => emptyValues(policy.defaultTransactionDate, canSelectWorkplace ? '' : activeBranchId ?? '', canSelectWorkplace ? '' : activeCounterId ?? ''), [activeBranchId, activeCounterId, canSelectWorkplace, policy.defaultTransactionDate]);
-  const cashAccount = getAdditionalSettingTextValue(settings, AdditionalSettingsCodeEnum.TransactionAccounting, AdditionalSettingsCodeEnum.CashControlAccount, '');
-  if (isLoading) return <div className="flex min-h-[50vh] items-center justify-center"><Loader /></div>;
-  return <div className="space-y-5"><div><h1 className="text-2xl font-semibold">Create {VOUCHER_LABELS[type]}</h1>{policy.helperText && <p className="text-sm text-text-secondary">{policy.helperText}</p>}</div><VoucherForm type={type} defaultValues={defaults} minDate={policy.minDate} maxDate={policy.maxDate} policyTransactionDate={policy.defaultTransactionDate} onBranchChange={setSelectedBranchId} submitDisabled={!policy.canPunchTransactions || selectedBranchPolicy.isFetching || !selectedBranchId} cashControlAccountId={cashAccount} onBack={() => navigate(VOUCHER_PATHS[type])} onSubmit={async values => { const saved = await createVoucher(values); navigate(`${VOUCHER_PATHS[type]}/edit/${saved.id}`); }} /></div>;
+  return <div className="space-y-5"><div><h1 className="text-2xl font-semibold">Create {VOUCHER_LABELS[type]}</h1>{policy.helperText && <p className="text-sm text-text-secondary">{policy.helperText}</p>}</div><VoucherForm type={type} defaultValues={defaults} minDate={policy.minDate} maxDate={policy.maxDate} policyTransactionDate={policy.defaultTransactionDate} onBranchChange={setSelectedBranchId} submitDisabled={!policy.canPunchTransactions || selectedBranchPolicy.isFetching || !selectedBranchId} onBack={() => navigate(VOUCHER_PATHS[type])} onSubmit={async values => { const saved = await createVoucher(values); navigate(`${VOUCHER_PATHS[type]}/edit/${saved.id}`); }} /></div>;
 };
 
 export const VoucherEditView = ({ type }: { type: VoucherType }) => {

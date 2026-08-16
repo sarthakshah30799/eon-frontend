@@ -21,6 +21,7 @@ import { partyProfileApi } from '@/api/partyProfile';
 import { useAuth } from '@/lib/AuthContext';
 import { useGetStateProfile } from '@/modules/stateProfile';
 import {
+  CARD_ISSUER_FORM_TEXT,
   toPartyProfileDisplayLabel,
   toPartyProfileApiType,
 } from '../constants';
@@ -100,6 +101,8 @@ const PartyProfileFormFields = ({
     'CARD_ISSUER_PROFILE',
     'FRANCHISE',
   ].includes(toPartyProfileApiType(effectiveProfileType));
+  const showCardIssuerNumberRules =
+    toPartyProfileApiType(effectiveProfileType) === 'CARD_ISSUER_PROFILE';
   const showTdsGroup = Boolean(isTdsDeducted);
 
   useEffect(() => {
@@ -250,6 +253,27 @@ const PartyProfileFormFields = ({
           </div>
         </div>
       </CardSection>
+
+      {showCardIssuerNumberRules && (
+        <CardSection heading={CARD_ISSUER_FORM_TEXT.sectionHeading}>
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+            <FormFieldInput
+              name="cardNumberLength"
+              label={CARD_ISSUER_FORM_TEXT.lengthLabel}
+              type="number"
+              placeholder={CARD_ISSUER_FORM_TEXT.lengthPlaceholder}
+              disabled={isSubmitting}
+            />
+            <div className="flex items-center pt-6">
+              <FormFieldCheckbox
+                name="allowCardNumberMasking"
+                label={CARD_ISSUER_FORM_TEXT.maskingLabel}
+                disabled={isSubmitting}
+              />
+            </div>
+          </div>
+        </CardSection>
+      )}
 
       <CardSection heading="Credit Policy">
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">

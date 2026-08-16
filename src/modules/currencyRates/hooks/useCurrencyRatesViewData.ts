@@ -20,6 +20,7 @@ interface CurrencyRatesViewData {
     availableInBulkBuying: boolean;
     availableInBulkSelling: boolean;
     availableInOtherTransaction: boolean;
+    cardIssuerProfileIds: string[];
   }>;
   currencies: ICurrencyProfile[];
   rates: ICurrencyRate[];
@@ -50,6 +51,7 @@ const loadCurrencyRatesViewData = async (): Promise<CurrencyRatesViewData> => {
       availableInBulkBuying: product.availableInBulkBuying,
       availableInBulkSelling: product.availableInBulkSelling,
       availableInOtherTransaction: product.availableInOtherTransaction,
+      cardIssuerProfileIds: product.cardIssuerProfileIds ?? [],
     })),
     currencies,
     rates,

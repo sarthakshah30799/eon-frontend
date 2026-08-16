@@ -24,7 +24,6 @@ import type { ITransactionPaymentDetailFormRow } from './transactionPaymentDetai
 import { useAvailableAdvances } from '@/modules/vouchers';
 import {
   createEmptyPurchasePaymentRow,
-  formatPurchaseEntityLabel,
   getPurchaseTransactionAccountFilter,
 } from '@/modules/purchase/utils/purchaseUtils';
 
@@ -40,7 +39,6 @@ interface TransactionPaymentDetailsFieldArrayProps {
   transactionType?: TransactionType;
   branchId?: string;
   selectablePagesUserId?: string;
-  cashControlAccountId?: string;
   allowCashPayment?: boolean;
   allowedPaymentMethods?: Array<'CASH' | 'CHEQUE'>;
   disabled?: boolean;
@@ -79,7 +77,6 @@ const PaymentDetailRow = ({
   transactionType,
   branchId,
   selectablePagesUserId,
-  cashControlAccountId,
   allowCashPayment = true,
   canUseCheque = true,
   disabled = false,
@@ -95,7 +92,6 @@ const PaymentDetailRow = ({
   transactionType?: TransactionType;
   branchId?: string;
   selectablePagesUserId?: string;
-  cashControlAccountId?: string;
   allowCashPayment?: boolean;
   canUseCheque?: boolean;
   disabled?: boolean;
@@ -150,9 +146,7 @@ const PaymentDetailRow = ({
   });
 
   const [pageOptions, setPageOptions] = useState<IChequeBookPageTracking[]>([]);
-  const [cashAccountLabel, setCashAccountLabel] = useState<string>('');
   const [isLoadingPages, setIsLoadingPages] = useState(false);
-  const [isLoadingCashAccount, setIsLoadingCashAccount] = useState(false);
   const previousPaymentMethodRef = useRef<string | undefined>(paymentMethod);
   const previousSelectionKeyRef = useRef<string | null>(null);
   const appliedAdvanceSelectionRef = useRef<string>('');
@@ -261,61 +255,6 @@ const PaymentDetailRow = ({
   }, [amount, arrayName, availableAmount, form, index]);
 
   useEffect(() => {
-    let isActive = true;
-
-    const loadCashAccount = async () => {
-      if (
-        !cashControlAccountId ||
-        paymentMethod !== TransactionPaymentMethodEnum.CASH
-      ) {
-        setCashAccountLabel('');
-        return;
-      }
-
-      try {
-        setIsLoadingCashAccount(true);
-        const account =
-          await accountProfileApi.getAccountProfileById(cashControlAccountId);
-        if (!isActive || !account) {
-          return;
-        }
-
-        const label = formatPurchaseEntityLabel(
-          account.accountCode,
-          account.accountName
-        );
-        setCashAccountLabel(label);
-
-        if (
-          paymentMethod === TransactionPaymentMethodEnum.CASH &&
-          String(accountId || '') === String(cashControlAccountId)
-        ) {
-          form.setValue(`${arrayName}.${index}.accountName`, label, {
-            shouldDirty: true,
-            shouldTouch: true,
-            shouldValidate: false,
-          });
-        }
-      } catch (error) {
-        if (isActive) {
-          setCashAccountLabel('');
-        }
-        console.error('Failed to load cash control account:', error);
-      } finally {
-        if (isActive) {
-          setIsLoadingCashAccount(false);
-        }
-      }
-    };
-
-    void loadCashAccount();
-
-    return () => {
-      isActive = false;
-    };
-  }, [accountId, arrayName, canUseCheque, cashControlAccountId, form, index, paymentMethod]);
-
-  useEffect(() => {
     if (!paymentMethod) {
       return;
     }
@@ -346,20 +285,16 @@ const PaymentDetailRow = ({
     previousPaymentMethodRef.current = paymentMethod;
 
     if (paymentMethod === TransactionPaymentMethodEnum.CASH) {
-      if (cashControlAccountId) {
-        form.setValue(`${arrayName}.${index}.accountId`, cashControlAccountId, {
-          shouldDirty: true,
-          shouldTouch: true,
-          shouldValidate: true,
-        });
-        if (cashAccountLabel) {
-          form.setValue(`${arrayName}.${index}.accountName`, cashAccountLabel, {
-            shouldDirty: true,
-            shouldTouch: true,
-            shouldValidate: false,
-          });
-        }
-      }
+      form.setValue(`${arrayName}.${index}.accountId`, '', {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: true,
+      });
+      form.setValue(`${arrayName}.${index}.accountName`, '', {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: false,
+      });
 
       form.setValue(`${arrayName}.${index}.chequePageId`, '', {
         shouldDirty: true,
@@ -438,8 +373,6 @@ const PaymentDetailRow = ({
     }
   }, [
     arrayName,
-    cashAccountLabel,
-    cashControlAccountId,
     canUseCash,
     canUseCheque,
     form,
@@ -561,30 +494,16 @@ const PaymentDetailRow = ({
 
   const loadAccountOptions = useCallback(
     async (inputValue: string, page = 1): Promise<AsyncSelectResponse> => {
-      if (
-        paymentMethod === TransactionPaymentMethodEnum.CASH &&
-        cashControlAccountId
-      ) {
-        return {
-          options: cashAccountLabel
-            ? [
-                {
-                  value: cashControlAccountId,
-                  label: cashAccountLabel,
-                },
-              ]
-            : [],
-          hasMore: false,
-        };
-      }
-
       const response = await accountProfileApi.getAccountProfiles({
         ...accountQuery,
         page,
         limit: ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
         search: inputValue,
         active: true,
-        accountType: AccountProfileLedgerLabelEnum.BankLedger,
+        accountType:
+          paymentMethod === TransactionPaymentMethodEnum.CASH
+            ? AccountProfileLedgerLabelEnum.CashLedger
+            : AccountProfileLedgerLabelEnum.BankLedger,
         ...getPurchaseTransactionAccountFilter(
           transactionType ?? TransactionTypeEnum.PURCHASE
         ),
@@ -600,13 +519,7 @@ const PaymentDetailRow = ({
         hasMore: accounts.length === ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
       };
     },
-    [
-      accountQuery,
-      cashAccountLabel,
-      cashControlAccountId,
-      paymentMethod,
-      transactionType,
-    ]
+    [accountQuery, paymentMethod, transactionType]
   );
 
   const isCash = paymentMethod === TransactionPaymentMethodEnum.CASH;
@@ -636,20 +549,20 @@ const PaymentDetailRow = ({
       </div> : null}
       <div className="md:col-span-2 xl:col-span-1">
         <FormFieldSelect
-          key={`account-${paymentMethod}-${cashControlAccountId || 'none'}-${accountId || 'empty'}`}
+          key={`account-${paymentMethod}-${accountId || 'empty'}`}
           name={`${arrayName}.${index}.accountId`}
           label="Account"
           placeholder={
             isCash
-              ? 'Cash control account'
+              ? 'Select cash ledger account'
               : isSale
               ? 'Select sell bank account'
                 : 'Select purchase bank account'
           }
           loadOptions={loadAccountOptions}
-          pagination={!isCash}
+          pagination
           pageSize={ACCOUNT_PROFILE_OPTION_PAGE_SIZE}
-          disabled={disabled || isCash || settlementSource === 'ADVANCE'}
+          disabled={disabled || settlementSource === 'ADVANCE'}
           isSearchable
           cacheOptions={false}
         />
@@ -768,7 +681,7 @@ const PaymentDetailRow = ({
         </p>
         {paymentMethod === TransactionPaymentMethodEnum.CASH ? (
           <p className="mt-1 text-xs text-text-tertiary">
-            Cash mode uses the configured cash control account.
+            Cash mode requires an active INR Cash Ledger account.
           </p>
         ) : isSale ? (
           <p className="mt-1 text-xs text-text-tertiary">
@@ -780,11 +693,6 @@ const PaymentDetailRow = ({
             filled automatically.
           </p>
         )}
-        {isLoadingCashAccount ? (
-          <p className="mt-1 text-xs text-text-tertiary">
-            Loading cash control account...
-          </p>
-        ) : null}
       </div>
     </div>
   );
@@ -800,7 +708,6 @@ export const TransactionPaymentDetailsFieldArray = ({
   transactionType = TransactionTypeEnum.PURCHASE,
   branchId,
   selectablePagesUserId,
-  cashControlAccountId,
   allowCashPayment = true,
   allowedPaymentMethods,
   disabled = false,
@@ -990,11 +897,16 @@ export const TransactionPaymentDetailsFieldArray = ({
         });
 
         if (method === TransactionPaymentMethodEnum.CASH) {
-          if (cashControlAccountId) {
-            form.setValue(`${name}.${index}.accountId`, cashControlAccountId, {
+          if (row.paymentMethod !== method) {
+            form.setValue(`${name}.${index}.accountId`, '', {
               shouldDirty: true,
               shouldTouch: true,
               shouldValidate: true,
+            });
+            form.setValue(`${name}.${index}.accountName`, '', {
+              shouldDirty: true,
+              shouldTouch: true,
+              shouldValidate: false,
             });
           }
           form.setValue(`${name}.${index}.chequePageId`, '', {
@@ -1030,7 +942,7 @@ export const TransactionPaymentDetailsFieldArray = ({
           return;
         }
 
-        if (row.accountId === cashControlAccountId) {
+        if (row.paymentMethod !== method) {
           form.setValue(`${name}.${index}.accountId`, '', {
             shouldDirty: true,
             shouldTouch: true,
@@ -1039,7 +951,7 @@ export const TransactionPaymentDetailsFieldArray = ({
         }
       });
     },
-    [append, cashControlAccountId, form, maxAmount, name]
+    [append, form, maxAmount, name]
   );
 
   return (
@@ -1059,7 +971,7 @@ export const TransactionPaymentDetailsFieldArray = ({
                 ? 'default'
                 : 'outline'
             }
-            disabled={disabled || !cashControlAccountId || !canUseCash}
+            disabled={disabled || !canUseCash}
             onClick={() =>
               canUseCash
                 ? applyPaymentMethod(TransactionPaymentMethodEnum.CASH)
@@ -1085,11 +997,7 @@ export const TransactionPaymentDetailsFieldArray = ({
           >
             Cheque
           </Button>
-          {!cashControlAccountId ? (
-            <span className="text-xs text-error-600">
-              Cash control account is not configured.
-            </span>
-          ) : !canUseCash ? (
+          {!canUseCash ? (
             <span className="text-xs text-error-600">
               Cash payment is not allowed for this transaction type.
             </span>
@@ -1112,7 +1020,6 @@ export const TransactionPaymentDetailsFieldArray = ({
                 transactionType={transactionType}
                 branchId={branchId}
                 selectablePagesUserId={selectablePagesUserId}
-                cashControlAccountId={cashControlAccountId}
                 allowCashPayment={allowCashPayment}
                 canUseCheque={canUseCheque}
                 disabled={disabled}

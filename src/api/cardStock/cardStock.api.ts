@@ -20,6 +20,17 @@ export interface CardStockCardPayload {
   expirationDate: string;
 }
 
+export interface CardStockUploadPreviewRow {
+  rowNumber: number;
+  series: string;
+  kitNumber: string;
+  cardNumber: string;
+  denomination: string;
+  amount: string;
+  expirationDate: string;
+  error: string;
+}
+
 export interface CardStockSelectableCard {
   id: string;
   series: string;
@@ -47,7 +58,7 @@ export interface CardStockReceiptPayload {
   transactionNumber?: string;
   receiptDate: string;
   issuerPartyProfileId: string;
-  hoBranchId: string;
+  branchId: string;
   totalFeAmount: string;
   items: CardStockItemPayload[];
 }
@@ -71,8 +82,8 @@ export interface ICardStockReceipt {
   receiptDate: string;
   issuerPartyProfileId: string;
   issuerPartyProfileSnapshot?: CardStockSnapshot | null;
-  hoBranchId: string;
-  hoBranchSnapshot?: CardStockSnapshot | null;
+  branchId: string;
+  branchSnapshot?: CardStockSnapshot | null;
   totalFeAmount: string;
   status: string;
   createdAt: string;
@@ -96,6 +107,21 @@ export const cardStockApi = {
     const response = await apiClient.post<ICardStockReceipt>('/card-stock/receipts', payload);
     if (response.error || !response.data) throw new Error(response.error || 'Failed to create card stock receipt');
     return response.data;
+  },
+
+  downloadTemplate: async (): Promise<Blob> => {
+    const response = await apiClient.getDownload('/card-stock/receipts/cards/template');
+    if (response.error || !response.data) throw new Error(response.error || 'Failed to download CARD stock template');
+    return response.data.blob;
+  },
+
+  previewUpload: async (file: File, issuerPartyProfileId?: string): Promise<CardStockUploadPreviewRow[]> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (issuerPartyProfileId) formData.append('issuerPartyProfileId', issuerPartyProfileId);
+    const response = await apiClient.postFormData<CardStockUploadPreviewRow[]>('/card-stock/receipts/cards/preview', formData);
+    if (response.error) throw new Error(response.error);
+    return response.data ?? [];
   },
 
   listAvailableCards: async (params: { branchId: string; currencyId: string; productId: string; issuerPartyProfileId: string }): Promise<CardStockSelectableCard[]> => {

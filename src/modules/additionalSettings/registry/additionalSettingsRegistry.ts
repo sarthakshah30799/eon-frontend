@@ -142,7 +142,7 @@ const TRANSACTION_SAC_CODE_SUBCATEGORIES: readonly AdditionalSettingSubcategoryD
 const TRANSACTION_ACCOUNTING_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] = [
   {
     code: AdditionalSettingsCodeEnum.PurchaseControlAccount,
-    label: 'PURCHASE CONTROL ACCOUNT',
+    label: 'CURRENCY PURCHASE CONTROL ACCOUNT',
     valueType: 'select',
     required: true,
     placeholder: 'Select purchase control account',
@@ -150,10 +150,50 @@ const TRANSACTION_ACCOUNTING_SUBCATEGORIES: readonly AdditionalSettingSubcategor
   },
   {
     code: AdditionalSettingsCodeEnum.SaleControlAccount,
-    label: 'SELL CONTROL ACCOUNT',
+    label: 'CURRENCY SELL CONTROL ACCOUNT',
     valueType: 'select',
     required: true,
     placeholder: 'Select sell control account',
+    optionsSource: 'account-profile',
+  },
+  {
+    code: AdditionalSettingsCodeEnum.CardSellControlAccount,
+    label: 'CARD SELL CONTROL ACCOUNT (SELLCC)',
+    valueType: 'select',
+    required: true,
+    placeholder: 'Select CARD sell control account',
+    optionsSource: 'account-profile',
+  },
+  {
+    code: AdditionalSettingsCodeEnum.CardLoadControlAccount,
+    label: 'CARD LOAD CONTROL ACCOUNT (CLOCC)',
+    valueType: 'select',
+    required: true,
+    placeholder: 'Select CARD load control account',
+    optionsSource: 'account-profile',
+  },
+  {
+    code: AdditionalSettingsCodeEnum.CardControlAccount,
+    label: 'CARD CONTROL ACCOUNT (CRDCC)',
+    valueType: 'select',
+    required: true,
+    placeholder: 'Select CARD control account',
+    optionsSource: 'account-profile',
+  },
+  {
+    code: AdditionalSettingsCodeEnum.CardPurchaseControlAccount,
+    label: 'CARD PURCHASE CONTROL ACCOUNT (PURCC)',
+    valueType: 'select',
+    required: true,
+    placeholder: 'Select CARD purchase control account',
+    optionsSource: 'account-profile',
+  },
+  {
+    code: AdditionalSettingsCodeEnum.CardProfitControlAccount,
+    label: 'CARD PROFIT CONTROL ACCOUNT (PROCC)',
+    valueType: 'select',
+    required: true,
+    placeholder: 'Select CARD profit control account',
     optionsSource: 'account-profile',
   },
   {
@@ -453,7 +493,6 @@ const TRANSFER_NUMBERING_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDef
 ];
 
 const CARD_TECHNICAL_NUMBERING_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] = [
-  { code: AdditionalSettingsCodeEnum.CardStockNumberSeries, label: 'CARD STOCK TECHNICAL', valueType: 'number', required: true, placeholder: 'Enter starting sequence number' },
   { code: AdditionalSettingsCodeEnum.CardTransferOutNumberSeries, label: 'CARD TRANSFER OUT', valueType: 'number', required: true, placeholder: 'Enter starting sequence number' },
   { code: AdditionalSettingsCodeEnum.CardTransferInNumberSeries, label: 'CARD TRANSFER IN', valueType: 'number', required: true, placeholder: 'Enter starting sequence number' },
   { code: AdditionalSettingsCodeEnum.CardStockLoadNumberSeries, label: 'CARD STOCK LOAD', valueType: 'number', required: true, placeholder: 'Enter starting sequence number' },
@@ -498,6 +537,16 @@ const STOCK_REVALUATION_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefi
       { value: 'HALF_YEARLY', label: 'Half-yearly' },
       { value: 'YEARLY', label: 'Yearly' },
     ],
+  },
+];
+
+const CARD_SETTING_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] = [
+  {
+    code: AdditionalSettingsCodeEnum.CardAutoSettleWithHo,
+    label: 'AUTOMATICALLY SETTLE CARD SALES WITH HO',
+    valueType: 'boolean',
+    required: true,
+    placeholder: 'YES or NO',
   },
 ];
 
@@ -589,6 +638,13 @@ export const ADDITIONAL_SETTING_DEFINITIONS: readonly AdditionalSettingCategoryD
     rendererKey: 'default',
     titleLocked: true,
     subcategories: STOCK_REVALUATION_SUBCATEGORIES,
+  },
+  {
+    code: AdditionalSettingsCodeEnum.CardSettings,
+    label: 'CARD SETTINGS',
+    rendererKey: 'default',
+    titleLocked: true,
+    subcategories: CARD_SETTING_SUBCATEGORIES,
   },
 ];
 

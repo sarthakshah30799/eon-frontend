@@ -10,6 +10,7 @@ import { useListAccountProfiles } from '@/modules/accountProfile/hooks';
 import { useListPartyProfiles } from '@/modules/partyProfiles/hooks';
 import { useCategoryOptions } from '@/hooks';
 import { PartyProfileTypeEnum } from '@/modules/partyProfiles/types/partyProfileTypes';
+import { AccountProfileLedgerLabelEnum } from '@/modules/accountProfile';
 import { PurchaseWorkplaceFields } from '@/modules/purchase/components/PurchaseWorkplaceFields';
 import type { VoucherAccountMode, VoucherFormValues, VoucherType } from './types';
 import { VOUCHER_LABELS } from './constants';
@@ -69,13 +70,12 @@ interface Props {
   maxDate?: Date;
   policyTransactionDate?: string;
   onBranchChange?: (branchId: string) => void;
-  cashControlAccountId?: string;
   submitDisabled?: boolean;
   onSubmit: (values: VoucherFormValues) => Promise<void>;
   onBack: () => void;
 }
 
-const VoucherFields = ({ type, readOnly, cashControlAccountId, minDate, maxDate, policyTransactionDate, onBranchChange }: Pick<Props, 'type' | 'readOnly' | 'cashControlAccountId' | 'minDate' | 'maxDate' | 'policyTransactionDate' | 'onBranchChange'>) => {
+const VoucherFields = ({ type, readOnly, minDate, maxDate, policyTransactionDate, onBranchChange }: Pick<Props, 'type' | 'readOnly' | 'minDate' | 'maxDate' | 'policyTransactionDate' | 'onBranchChange'>) => {
   const form = useFormContext<VoucherFormValues>();
   const mode = useWatch({ control: form.control, name: 'accountMode' });
   const accountTypeOptionId = useWatch({ control: form.control, name: 'accountTypeOptionId' });
@@ -100,10 +100,11 @@ const VoucherFields = ({ type, readOnly, cashControlAccountId, minDate, maxDate,
   const accounts = useMemo(() => (accountResponse?.data ?? []).filter(account => (account.currencyCode ?? account.currency?.currencyCode) === 'INR'), [accountResponse]);
   const allHeaderAccounts = useMemo(() => (headerAccountResponse?.data ?? []).filter(account => (account.currencyCode ?? account.currency?.currencyCode) === 'INR'), [headerAccountResponse]);
   const headerAccounts = useMemo(() => allHeaderAccounts.filter(account => {
-    if (mode === 'CASH') return account.id === cashControlAccountId;
-    if (mode === 'BANK_CHEQUE') return account.accountType?.label?.toUpperCase() === 'BANK LEDGER';
+    const ledgerTypes = [account.accountType?.value, account.accountType?.label].map(value => String(value ?? '').trim().toUpperCase());
+    if (mode === 'CASH') return ledgerTypes.includes(AccountProfileLedgerLabelEnum.CashLedger);
+    if (mode === 'BANK_CHEQUE') return ledgerTypes.includes(AccountProfileLedgerLabelEnum.BankLedger);
     return true;
-  }), [allHeaderAccounts, cashControlAccountId, mode]);
+  }), [allHeaderAccounts, mode]);
   const accountOptions = useMemo(() => accounts.map(account => ({ value: account.id, label: `${account.accountCode} - ${account.accountName}` })), [accounts]);
   const headerAccountOptions = useMemo(() => headerAccounts.map(account => ({ value: account.id, label: `${account.accountCode} - ${account.accountName}` })), [headerAccounts]);
   const partyOptions = useMemo(() => parties.map(party => ({ value: party.id, label: `${party.code} - ${party.name}` })), [parties]);
@@ -133,12 +134,6 @@ const VoucherFields = ({ type, readOnly, cashControlAccountId, minDate, maxDate,
       form.setValue('chequeNumber', ''); form.setValue('chequeDate', ''); form.setValue('chequeBranch', ''); form.setValue('drawnOn', '');
     }
   }, [accountTypeOptionId, accountTypeOptions, form, mode]);
-  useEffect(() => {
-    if (mode !== 'CASH' || !cashControlAccountId) return;
-    const account = allHeaderAccounts.find(item => item.id === cashControlAccountId);
-    form.setValue('headerAccountId', cashControlAccountId, { shouldValidate: true });
-    form.setValue('headerAccountName', account?.accountName ?? '', { shouldValidate: false });
-  }, [allHeaderAccounts, cashControlAccountId, form, mode]);
   useEffect(() => {
     const account = headerAccounts.find(item => item.id === headerAccountId);
     form.setValue('headerAccountName', account?.accountName ?? '', { shouldValidate: false });
@@ -171,7 +166,7 @@ const VoucherFields = ({ type, readOnly, cashControlAccountId, minDate, maxDate,
       {type !== 'JOURNAL' && <>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           {readOnly ? <FormFieldInput name="accountTypeName" label="A/C Type" disabled /> : <FormFieldCategoryOption name="accountTypeOptionId" label="A/C Type" code={CategoryOptionCodeEnum.VoucherAccountType} isCreatable={false} />}
-          {readOnly ? <FormFieldInput name="headerAccountCode" label="A/C Code" disabled /> : <FormFieldSelect name="headerAccountId" label="A/C Code" loadOptions={optionFilter(headerAccountOptions)} defaultOptions={headerAccountOptions} disabled={mode === 'CASH'} />}
+          {readOnly ? <FormFieldInput name="headerAccountCode" label="A/C Code" disabled /> : <FormFieldSelect name="headerAccountId" label="A/C Code" loadOptions={optionFilter(headerAccountOptions)} defaultOptions={headerAccountOptions} />}
           <FormFieldInput name="headerAccountName" label="A/C Name" disabled />
           {readOnly ? <FormFieldInput name="entityTypeName" label="Party Type" disabled /> : <FormFieldCategoryOption name="entityTypeOptionId" label="Party Type" code={CategoryOptionCodeEnum.EntityType} isCreatable={false} />}
           {readOnly ? <FormFieldInput name="partyCode" label="Party Code" disabled /> : <FormFieldSelect name="partyProfileId" label="Party Code" loadOptions={optionFilter(partyOptions)} defaultOptions={partyOptions} disabled={!entityTypeOptionId} />}
@@ -213,7 +208,7 @@ const VoucherFields = ({ type, readOnly, cashControlAccountId, minDate, maxDate,
   </div>;
 };
 
-export const VoucherForm = ({ type, defaultValues, readOnly = false, onSubmit, onBack, cashControlAccountId, minDate, maxDate, policyTransactionDate, onBranchChange, submitDisabled = false }: Props) => (
+export const VoucherForm = ({ type, defaultValues, readOnly = false, onSubmit, onBack, minDate, maxDate, policyTransactionDate, onBranchChange, submitDisabled = false }: Props) => (
   <Form<VoucherFormValues>
     id={`${type.toLowerCase()}-voucher-form`}
     defaultValues={defaultValues}
@@ -227,6 +222,6 @@ export const VoucherForm = ({ type, defaultValues, readOnly = false, onSubmit, o
     }}
     footer={{ submitLabel: `Save ${VOUCHER_LABELS[type]}`, backLabel: 'Back', onBackClick: onBack, showSubmit: !readOnly, isSubmitDisabled: submitDisabled }}
   >
-    <VoucherFields type={type} readOnly={readOnly} cashControlAccountId={cashControlAccountId} minDate={minDate} maxDate={maxDate} policyTransactionDate={policyTransactionDate} onBranchChange={onBranchChange} />
+    <VoucherFields type={type} readOnly={readOnly} minDate={minDate} maxDate={maxDate} policyTransactionDate={policyTransactionDate} onBranchChange={onBranchChange} />
   </Form>
 );

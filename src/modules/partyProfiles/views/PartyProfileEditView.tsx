@@ -139,6 +139,8 @@ export const PartyProfileEditView = () => {
       rejectReason: '',
       ffmcRegNo: client?.ffmcRegNo || '',
       ffmcRegDate: formatDateForInput(client?.ffmcRegDate),
+      cardNumberLength: client?.cardNumberLength ?? 16,
+      allowCardNumberMasking: client?.allowCardNumberMasking ?? false,
       divisionFactor: client?.divisionFactor,
       commissionRules: client?.commissionRules ?? [],
     }),

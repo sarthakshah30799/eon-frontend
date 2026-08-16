@@ -19,6 +19,10 @@ import {
   isPassengerOtherDocumentFilled,
   shouldShowPassengerOtherDocumentValidityFields,
 } from '@/modules/passengers/utils/passengerOtherDocumentRules';
+import {
+  CARD_PRODUCT_CODE,
+  PURCHASE_TRANSACTION_TEXT,
+} from '../utils/purchaseUtils';
 
 const decimalStringSchema = yup
   .string()
@@ -53,14 +57,41 @@ const signedDecimalStringSchema = yup
     return /^-?\d+(\.\d+)?$/.test(value);
   });
 
-const purchaseTransactionSchema = yup.object({
+const createPurchaseTransactionSchema = (transactionType: TransactionType) =>
+  yup.object({
   currencyId: yup.string().trim().required('Currency is required'),
   currencyCode: yup.string().trim().default(''),
   currencyName: yup.string().trim().default(''),
   productId: yup.string().trim().required('Product is required'),
   productCode: yup.string().trim().default(''),
   productDescription: yup.string().trim().default(''),
-  quantity: quantityStringSchema.required('Quantity is required'),
+  quantity: quantityStringSchema.test(
+    'card-sale-fe-amount',
+    PURCHASE_TRANSACTION_TEXT.quantityRequired,
+    function (value) {
+      const isCardSale =
+        transactionType === TransactionTypeEnum.SALE &&
+        String(this.parent.productCode || '').toUpperCase() === CARD_PRODUCT_CODE;
+      if (!String(value ?? '').trim()) {
+        return this.createError({
+          message: isCardSale
+            ? PURCHASE_TRANSACTION_TEXT.feAmountRequired
+            : PURCHASE_TRANSACTION_TEXT.quantityRequired,
+        });
+      }
+
+      if (isCardSale) {
+        const amount = Number(value);
+        if (!Number.isFinite(amount) || amount <= 0) {
+          return this.createError({
+            message: PURCHASE_TRANSACTION_TEXT.feAmountPositive,
+          });
+        }
+      }
+
+      return true;
+    }
+  ),
   per: decimalStringSchema.default(''),
   rate: decimalStringSchema.default(''),
   commission: decimalStringSchema.default(''),
@@ -395,7 +426,7 @@ export const createPurchaseFormSchema = (
     number: yup.string().trim().default(''),
     transactions: yup
       .array()
-      .of(purchaseTransactionSchema)
+      .of(createPurchaseTransactionSchema(transactionType))
       .min(1, 'Add at least one transaction')
       .required(),
     additionalCharges: yup.array().of(additionalChargeSchema).default([])

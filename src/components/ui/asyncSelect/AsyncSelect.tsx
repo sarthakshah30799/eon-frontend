@@ -102,7 +102,7 @@ const AsyncSelectComponent = React.forwardRef<
     ref
   ) => {
     const [currentPage, setCurrentPage] = useState(1);
-    const [isLoadingMore, setIsLoadingMore] = useState(false);
+    const [isLoadingMore, setIsLoadingMore] = useState(props.isLoading ?? false);
     const [hasMore, setHasMore] = useState(true);
     const [inputValue, setInputValue] = useState('');
     const allOptionsRef = useRef<AsyncSelectOption[]>([]);

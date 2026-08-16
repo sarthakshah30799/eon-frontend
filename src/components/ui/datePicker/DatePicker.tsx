@@ -8,6 +8,7 @@ import {
   formatDateDisplayInput,
   maskDateInput,
   parseDateInput,
+  toDisplayDate,
 } from '@/utils';
 
 export interface DatePickerProps {
@@ -32,17 +33,19 @@ const DatePickerInput = forwardRef<
     onParsedDateChange?: (date: Date | null) => void;
     onDateBlur?: () => void;
   }
->((({ className = '', value, placeholder, onParsedDateChange, ...props }, ref) => {
-  const [displayValue, setDisplayValue] = useState(() => String(value ?? ''));
+>((({ className = '', value, placeholder, onParsedDateChange, onDateBlur, ...props }, ref) => {
+  const [typedValue, setTypedValue] = useState<string | null>(null);
+  const displayValue = typedValue ?? toDisplayDate(value);
 
   const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
+    setTypedValue(null);
     props.onBlur?.(event);
-    props.onDateBlur?.();
+    onDateBlur?.();
   };
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const nextValue = maskDateInput(event.target.value);
-    setDisplayValue(nextValue);
+    setTypedValue(nextValue);
 
     if (!nextValue) {
       onParsedDateChange?.(null);
@@ -58,13 +61,13 @@ const DatePickerInput = forwardRef<
   return (
     <div className="relative flex items-center w-full">
       <input
+        {...props}
         ref={ref}
         type="text"
         inputMode="numeric"
         className={`min-h-7.5 w-full rounded-md border border-border-secondary bg-surface-primary pl-3 pr-10 py-1 text-left text-sm text-text-primary shadow-none transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
         value={displayValue}
         placeholder={placeholder}
-        {...props}
         onChange={handleChange}
         onBlur={handleBlur}
       />

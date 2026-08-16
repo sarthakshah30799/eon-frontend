@@ -34,7 +34,7 @@ export const FormFieldDatePicker = ({
   placeholder,
   disabled = false,
   className = '',
-  dateFormat,
+  dateFormat = 'dd/MM/yyyy',
   minDate,
   maxDate,
   onValueChange,

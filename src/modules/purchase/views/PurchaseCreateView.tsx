@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Loader } from '@/components/ui/loader';
 import { useAuth } from '@/lib/AuthContext';
@@ -26,6 +26,7 @@ import type {
 import { AdditionalSettingsCodeEnum } from '@/modules/additionalSettings/constants';
 import { getAdditionalSettingTextValue } from '@/modules/additionalSettings/utils';
 import { getTransactionDatePolicy } from '@/modules/transactionPolicies/utils/transactionDatePolicy';
+import type { IPurchaseDraftDocumentAttachment, IPurchaseFormValues } from '../types';
 
 interface PurchaseCreateViewProps {
   purchasePageType: PurchasePageType | null;
@@ -35,7 +36,8 @@ export const PurchaseCreateView = ({
   purchasePageType,
 }: PurchaseCreateViewProps) => {
   const navigate = useNavigate();
-  const { user, activeBranchId, activeCounterId, policyContext } = useAuth();
+  const { user, activeBranchId, activeCounterId, policyContext } =
+    useAuth();
   const canSelectWorkplace = Boolean(
     user?.isAdmin || user?.isHo || user?.isHoStaff
   );
@@ -97,16 +99,6 @@ export const PurchaseCreateView = ({
       ),
     [additionalSettings]
   );
-  const cashControlAccountId = useMemo(
-    () =>
-      getAdditionalSettingTextValue(
-        additionalSettings,
-        AdditionalSettingsCodeEnum.TransactionAccounting,
-        AdditionalSettingsCodeEnum.CashControlAccount,
-        ''
-      ),
-    [additionalSettings]
-  );
   const handlingFeeControlAccountId = useMemo(
     () =>
       getAdditionalSettingTextValue(
@@ -161,6 +153,17 @@ export const PurchaseCreateView = ({
     [data]
   );
 
+  const onSubmit = useCallback(async (values: IPurchaseFormValues, attachments: IPurchaseDraftDocumentAttachment[]) => {
+    const payload = mapPurchaseFormValuesToSubmitPayload(
+      values,
+      attachments,
+      requiresApproval
+    );
+    const created = await createPurchaseTransaction(payload);
+    setSavedTransaction(created);
+    navigate(`/purchase/${purchasePageType?.toLowerCase()}`);
+  }, [createPurchaseTransaction, navigate, purchasePageType, requiresApproval]);
+
   const isLoading =
     isBranchLoading || isPricingLoading || isAdditionalSettingsLoading;
 
@@ -206,7 +209,6 @@ export const PurchaseCreateView = ({
         pricingData={pricingData}
         partyProfileTypes={partyProfileTypes}
         requiresApproval={requiresApproval}
-        cashControlAccountId={cashControlAccountId}
         handlingFeeControlAccountId={handlingFeeControlAccountId}
         branchId={canSelectWorkplace ? '' : (activeBranchId ?? '')}
         branchCode={canSelectWorkplace ? '' : (branchProfile?.code ?? '')}
@@ -214,17 +216,7 @@ export const PurchaseCreateView = ({
         gstRatePercent={gstRatePercent}
         isSubmitting={isSaving}
         submitLabel={requiresApproval ? 'Submit for Approval' : 'Save'}
-        onSubmit={async (values, attachments) => {
-          console.log('Submitting purchase form values:', values);
-          const payload = mapPurchaseFormValuesToSubmitPayload(
-            values,
-            attachments,
-            requiresApproval
-          );
-          console.log('Mapped payload for submission:', payload);
-          const created = await createPurchaseTransaction(payload);
-          setSavedTransaction(created);
-        }}
+        onSubmit={onSubmit}
         onCancel={() => navigate(-1)}
         savedTransaction={savedTransaction}
         isFreshlyCreated={Boolean(savedTransaction)}

@@ -9,6 +9,7 @@ import { toast } from 'react-hot-toast';
 import { useListBranchProfiles } from '@/modules/branchProfile/hooks';
 import { useListCounterProfiles } from '@/modules/counterProfile/hooks';
 import { WorkplaceFormFields } from './WorkplaceFormFields';
+import { CHOOSE_WORKPLACE_TEXT } from './chooseWorkplaceConstants';
 import type { IWorkplaceFormValues } from './chooseWorkplaceTypes';
 
 const workplaceSchema = yup.object().shape({
@@ -85,10 +86,12 @@ const ChooseWorkplacePage: React.FC = () => {
   const handleSubmit = async (values: IWorkplaceFormValues) => {
     try {
       await setWorkplace(values.branchId, values.counterId);
-      toast.success('Workplace set successfully!');
+      toast.success(CHOOSE_WORKPLACE_TEXT.setSuccess);
       navigate('/');
-    } catch {
-      toast.error('Failed to set workplace. Please try again.');
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : CHOOSE_WORKPLACE_TEXT.setFailed
+      );
     }
   };
 
@@ -97,7 +100,7 @@ const ChooseWorkplacePage: React.FC = () => {
       await logout();
       navigate('/login');
     } catch {
-      toast.error('Failed to logout');
+      toast.error(CHOOSE_WORKPLACE_TEXT.logoutFailed);
     }
   };
 

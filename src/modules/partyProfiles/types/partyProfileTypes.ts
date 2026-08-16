@@ -114,6 +114,8 @@ export interface IPartyProfile {
   cancelledChequeCopy?: string;
   ffmcRegNo?: string;
   ffmcRegDate?: string;
+  cardNumberLength?: number | null;
+  allowCardNumberMasking?: boolean;
   divisionFactor?: number;
   type: PartyProfileType;
   status?: PartyProfileStatus;

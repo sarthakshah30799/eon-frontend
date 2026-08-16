@@ -70,6 +70,8 @@ const createEmptyPartyProfileValues = (): Omit<ICreatePartyProfile, 'type'> => {
     rejectReason: '',
     ffmcRegNo: '',
     ffmcRegDate: '',
+    cardNumberLength: 16,
+    allowCardNumberMasking: false,
     divisionFactor: undefined,
     commissionRules: [],
   };

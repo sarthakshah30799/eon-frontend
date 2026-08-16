@@ -60,7 +60,7 @@ export const SelectEntity = <T extends { id: string }>({
   onSelectedRowIdsChange,
   selectedSummary,
   onClose,
-  getRowId,
+  getRowId = (row: T) => row.id,
   continueLabel = 'Continue',
   cancelLabel = 'Cancel',
 }: SelectEntityProps<T>) => {

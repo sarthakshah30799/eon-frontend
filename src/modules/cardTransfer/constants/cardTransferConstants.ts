@@ -11,5 +11,7 @@ export const CARD_TRANSFER_COPY = {
   listDescription: 'Review CARD transfer requests between branches.',
   createTitle: 'Create CARD Transfer',
   editTitle: 'CARD Transfer Request',
-  sourceDescription: 'Cards are reserved from the selected HO branch and counter when submitted.',
+  sourceDescription:
+    'Cards are reserved from the selected HO branch and counter when submitted.',
+  loadingTransactionDate: 'Loading transaction date for selected branch...',
 } as const;

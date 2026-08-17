@@ -321,7 +321,7 @@ export const ChequeBookListView = () => {
             setSelectedBook(null);
           }}
           title={
-            reviewBook?.status === ChequeBookStatusEnum.PENDING && !isHoStaff
+            reviewBook?.status === ChequeBookStatusEnum.PENDING
               ? 'Review Dispatch Request'
               : 'Dispatch Details'
           }
@@ -404,7 +404,7 @@ export const ChequeBookListView = () => {
               </div>
             </div>
 
-            {reviewBook?.status === ChequeBookStatusEnum.PENDING && !isHoStaff ? (
+            {reviewBook?.status === ChequeBookStatusEnum.PENDING ? (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>

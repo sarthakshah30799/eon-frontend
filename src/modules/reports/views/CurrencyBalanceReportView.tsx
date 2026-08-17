@@ -1,5 +1,7 @@
 import { useMemo } from 'react';
 import { Button } from '@/components/ui';
+import { AccessDeniedState } from '@/components/ui/access-denied-state';
+import { PAGE_STATUS_TEXTS } from '@/constants';
 import { useAuth } from '@/lib/AuthContext';
 import { CurrencyBalanceReportFiltersSection, CurrencyBalanceReportTable } from '../components';
 import { useCurrencyBalanceReport } from '../hooks';
@@ -42,11 +44,7 @@ export const CurrencyBalanceReportView = () => {
   ]);
 
   if (!canView) {
-    return (
-      <div className="rounded-xl border border-dashed border-slate-200 bg-white p-6 text-center text-sm text-text-secondary">
-        You do not have access to this page.
-      </div>
-    );
+    return <AccessDeniedState message={PAGE_STATUS_TEXTS.ACCESS_DENIED_MESSAGE} />;
   }
 
   return (

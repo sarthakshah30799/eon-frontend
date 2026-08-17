@@ -5,12 +5,12 @@ import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button1';
 import { AsyncSelect, type AsyncSelectOption, type AsyncSelectResponse } from '@/components/ui';
 import { Table, type TableColumnDef } from '@/components/ui/table';
-import { NotFoundState } from '@/components/ui/not-found-state';
+import { AccessDeniedState } from '@/components/ui/access-denied-state';
 import { usePermission } from '@/hooks/usePermission';
 import { useAuth } from '@/lib/AuthContext';
 import { useListBranchProfiles } from '@/modules/branchProfile/hooks';
 import { transactionAd1Api } from '@/api/transactionAd1/transactionAd1.api';
-import { formatDateTime } from '@/utils';
+import { PAGE_STATUS_TEXTS } from '@/constants';
 
 interface Ad1Row {
   id: string;
@@ -120,7 +120,7 @@ export const AD1ListView = () => {
   );
 
   if (!hasAnyPermission) {
-    return <NotFoundState message="You do not have access to this page." />;
+    return <AccessDeniedState message={PAGE_STATUS_TEXTS.ACCESS_DENIED_MESSAGE} />;
   }
 
   if (error) {

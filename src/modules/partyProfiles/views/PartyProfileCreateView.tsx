@@ -3,9 +3,10 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useCreatePartyProfile, usePartyProfileTypes } from '../hooks';
 import { PartyProfileForm } from '../forms/PartyProfileForm';
 import type { ICreatePartyProfile } from '../types';
-import { toPartyProfileApiType, toPartyProfileRouteType } from '../constants';
+import { toPartyProfileApiType, toPartyProfileRouteType, PARTY_PROFILE_STATUS_TEXT } from '../constants';
 import { buildPartyProfileDocumentsPath } from '@/modules/partyProfileDocuments/utils/partyProfileDocumentRoutes';
 import { NotFoundState } from '@/components/ui/not-found-state';
+import { AccessDeniedState } from '@/components/ui/access-denied-state';
 import { usePermission } from '@/hooks';
 import type { PartyProfileType } from '../types/partyProfileTypes';
 
@@ -121,11 +122,13 @@ export const PartyProfileCreateView = () => {
     );
   }
 
-  if (!routeOptions.length || isInvalidTypeRoute || !canAdd) {
+  if (isInvalidTypeRoute) {
+    return <NotFoundState message={PARTY_PROFILE_STATUS_TEXT.typeNotFound} />;
+  }
+
+  if (!routeOptions.length || !canAdd) {
     return (
-      <NotFoundState
-        message="You do not have access to create this party profile type."
-      />
+      <AccessDeniedState message={PARTY_PROFILE_STATUS_TEXT.accessDeniedCreate} />
     );
   }
 

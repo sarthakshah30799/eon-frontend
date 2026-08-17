@@ -1,6 +1,7 @@
 import { useLocation, useParams } from 'react-router-dom';
 import { NotFoundState } from '@/components/ui/not-found-state';
 import { PurchaseCreateView, AD1CreateView } from '@/modules/purchase';
+import { PURCHASE_PAGE_STATUS_TEXT } from '@/modules/purchase/constants/purchaseConstants';
 import { getPurchasePageTypeFromPath } from '../purchasePage.enum';
 
 const PurchaseCreatePage = () => {
@@ -14,7 +15,7 @@ const PurchaseCreatePage = () => {
 
   if (!purchasePageType) {
     return (
-      <NotFoundState message="You do not have access to this purchase page." />
+      <NotFoundState message={PURCHASE_PAGE_STATUS_TEXT.pageNotFound} />
     );
   }
 

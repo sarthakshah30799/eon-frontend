@@ -2,12 +2,14 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Button, AsyncSelect, type AsyncSelectOption, type AsyncSelectResponse } from '@/components/ui';
 import { NotFoundState } from '@/components/ui/not-found-state';
+import { AccessDeniedState } from '@/components/ui/access-denied-state';
 import { useDebounce, usePermission } from '@/hooks';
 import { PartyProfileTable } from '../components';
 import {
   formatPartyProfileLabel,
   toPartyProfileApiType,
   toPartyProfileRouteType,
+  PARTY_PROFILE_STATUS_TEXT,
 } from '../constants';
 import { useListPartyProfiles, usePartyProfileTypes } from '../hooks';
 import type { PartyProfileType } from '../types/partyProfileTypes';
@@ -112,11 +114,13 @@ export const PartyProfileListView = () => {
     );
   }
 
-  if (!routeOptions.length || isInvalidTypeRoute) {
+  if (isInvalidTypeRoute) {
+    return <NotFoundState message={PARTY_PROFILE_STATUS_TEXT.typeNotFound} />;
+  }
+
+  if (!routeOptions.length) {
     return (
-      <NotFoundState
-        message="You do not have access to this party profile type."
-      />
+      <AccessDeniedState message={PARTY_PROFILE_STATUS_TEXT.accessDeniedType} />
     );
   }
 

@@ -1,19 +1,19 @@
 import { PAGE_STATUS_TEXTS } from '@/constants';
 import { PageStatusState } from './page-status-state';
 
-interface NotFoundStateProps {
+interface AccessDeniedStateProps {
   title?: string;
   message?: string;
   actionLabel?: string;
   actionTo?: string;
 }
 
-export const NotFoundState = ({
-  title = PAGE_STATUS_TEXTS.NOT_FOUND_TITLE,
-  message = PAGE_STATUS_TEXTS.NOT_FOUND_MESSAGE,
+export const AccessDeniedState = ({
+  title = PAGE_STATUS_TEXTS.ACCESS_DENIED_TITLE,
+  message = PAGE_STATUS_TEXTS.ACCESS_DENIED_MESSAGE,
   actionLabel,
   actionTo,
-}: NotFoundStateProps) => {
+}: AccessDeniedStateProps) => {
   return (
     <PageStatusState
       title={title}
@@ -24,4 +24,4 @@ export const NotFoundState = ({
   );
 };
 
-export default NotFoundState;
+export default AccessDeniedState;

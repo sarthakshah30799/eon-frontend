@@ -1,14 +1,19 @@
 import React from 'react';
 import { useAuth } from '../../../lib/AuthContext';
 import { DashboardLayout } from '../DashboardLayout';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, useLocation, useMatches } from 'react-router-dom';
 import { Loader } from '@/components/ui/loader';
 import { DayWorkPromptModal } from '@/modules/dayEndStartProcess';
 import { usePermission } from '@/hooks/usePermission';
-import { NotFoundState } from '@/components/ui/not-found-state';
+import { AccessDeniedState } from '@/components/ui/access-denied-state';
+import { PAGE_STATUS_TEXTS } from '@/constants';
 
 interface ProtectedLayoutProps {
   children: React.ReactNode;
+}
+
+interface RouteHandle {
+  isCatchAll?: boolean;
 }
 
 export const ProtectedLayout: React.FC<ProtectedLayoutProps> = ({
@@ -16,8 +21,12 @@ export const ProtectedLayout: React.FC<ProtectedLayoutProps> = ({
 }) => {
   const { isLoading, isAuthenticated, user, activeBranchId, activeCounterId } = useAuth();
   const location = useLocation();
+  const matches = useMatches();
   const permission = usePermission(location.pathname);
   const canSkipWorkplace = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
+  const isCatchAllRoute = matches.some(
+    match => (match.handle as RouteHandle | undefined)?.isCatchAll
+  );
   const isRestrictedRoute =
     location.pathname !== '/' &&
     location.pathname !== '/dashboard' &&
@@ -39,14 +48,16 @@ export const ProtectedLayout: React.FC<ProtectedLayoutProps> = ({
     return <Navigate to="/choose-workplace" replace />;
   }
 
-  if (isRestrictedRoute && !permission.hasAnyPermission && !canSkipWorkplace) {
+  if (
+    !isCatchAllRoute &&
+    isRestrictedRoute &&
+    !permission.hasAnyPermission &&
+    !canSkipWorkplace
+  ) {
     return (
       <DashboardLayout>
-        <NotFoundState
-          title="Access denied"
-          message="You do not have permission to view this page for the selected counter."
-          actionLabel="Go Home"
-          actionTo="/"
+        <AccessDeniedState
+          message={PAGE_STATUS_TEXTS.ACCESS_DENIED_COUNTER_MESSAGE}
         />
       </DashboardLayout>
     );

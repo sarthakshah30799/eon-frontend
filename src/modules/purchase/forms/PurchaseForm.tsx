@@ -636,6 +636,7 @@ const PurchaseFormBody = ({
         quantity: buildPreviewNumericValue(transaction.quantity),
         rate: buildPreviewNumericValue(transaction.rate),
         per: buildPreviewNumericValue(transaction.per),
+        finalAmount: buildPreviewNumericValue(transaction.finalAmount),
       })),
       additionalCharges: (additionalCharges ?? []).map(charge => ({
         amount: buildPreviewNumericValue(charge.amount),
@@ -1063,13 +1064,15 @@ const PurchaseFormBody = ({
       setIsPrinting(true);
       const copyType =
         !hasPrintedOnce && !hasPrintedHistory ? 'CUSTOMER_COPY' : 'DUPLICATE_COPY';
+      const formValues = form.getValues();
       const html = buildPurchasePrintHtml({
         copyType,
         transactionNumber: savedTransaction.number,
-        transactionDate: new Date(),
+        transactionDate:
+          formValues.transactionDate || savedTransaction.transactionDate || '',
         company: currentCompany,
         branch: branchProfile ?? null,
-        transaction: form.getValues(),
+        transaction: formValues,
         sacCode,
       });
 

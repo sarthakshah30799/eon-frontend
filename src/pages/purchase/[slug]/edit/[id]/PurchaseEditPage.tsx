@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Loader } from '@/components/ui/loader';
 import { NotFoundState } from '@/components/ui/not-found-state';
+import { PURCHASE_PAGE_STATUS_TEXT } from '@/modules/purchase/constants/purchaseConstants';
 import { useAuth } from '@/lib/AuthContext';
 import { useCurrencyRatesViewData } from '@/modules/currencyRates/hooks/useCurrencyRatesViewData';
 import { useListAdditionalSettings } from '@/modules/additionalSettings/hooks';
@@ -140,7 +141,7 @@ const PurchaseEditPage = () => {
 
   if (!purchasePageType) {
     return (
-      <NotFoundState message="You do not have access to this purchase page." />
+      <NotFoundState message={PURCHASE_PAGE_STATUS_TEXT.pageNotFound} />
     );
   }
 
@@ -154,7 +155,7 @@ const PurchaseEditPage = () => {
 
   if (transactionError || branchError || pricingError || additionalSettingsError || !transaction) {
     return (
-      <NotFoundState message="Transaction not found." />
+      <NotFoundState message={PURCHASE_PAGE_STATUS_TEXT.transactionNotFound} />
     );
   }
 

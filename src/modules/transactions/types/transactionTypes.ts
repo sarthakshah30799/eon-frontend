@@ -461,6 +461,8 @@ export interface ITransactionTaxPreviewRequest {
   items: Array<{
     quantity?: string | number | null;
     rate?: string | number | null;
+    per?: string | number | null;
+    finalAmount?: string | number | null;
   }>;
   additionalCharges: Array<{
     amount?: string | number | null;

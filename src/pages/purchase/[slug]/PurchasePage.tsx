@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Button, AsyncSelect, type AsyncSelectOption, type AsyncSelectResponse } from '@/components/ui';
 import { NotFoundState } from '@/components/ui/not-found-state';
+import { PURCHASE_PAGE_STATUS_TEXT } from '@/modules/purchase/constants/purchaseConstants';
 import { useAuth } from '@/lib/AuthContext';
 import { transactionsApi } from '@/api/transactions';
 import type { ITransactionEntity } from '@/modules/transactions';
@@ -122,7 +123,7 @@ const PurchasePageView = ({ purchasePageType }: PurchasePageViewProps) => {
 
   if (!purchasePageType) {
     return (
-      <NotFoundState message="You do not have access to this transaction page." />
+      <NotFoundState message={PURCHASE_PAGE_STATUS_TEXT.transactionPageNotFound} />
     );
   }
 
@@ -215,7 +216,7 @@ const PurchasePage = () => {
 
   if (!purchasePageType) {
     return (
-      <NotFoundState message="You do not have access to this purchase page." />
+      <NotFoundState message={PURCHASE_PAGE_STATUS_TEXT.pageNotFound} />
     );
   }
 

@@ -1,8 +1,10 @@
 import type { IBranchProfile } from '@/modules/branchProfile/types';
 import type { ICompanyProfile } from '@/modules/companyProfile/types';
 import { TransactionTypeEnum } from '@/modules/transactions';
-import type { IPurchaseFormValues } from '../types/purchaseTypes';
-import { PURCHASE_RATE_DECIMALS } from './purchaseUtils';
+import { toDisplayDate } from '@/utils';
+import { PURCHASE_PRINT_TEXT } from '../constants/purchaseConstants';
+import type { IPurchaseFormValues, IPurchaseTransactionFormRow } from '../types/purchaseTypes';
+import { isCardProductCode, PURCHASE_RATE_DECIMALS } from './purchaseUtils';
 const PURCHASE_QUANTITY_DECIMALS = 7;
 
 type PurchasePrintCopyType = 'CUSTOMER_COPY' | 'DUPLICATE_COPY';
@@ -29,25 +31,11 @@ const formatDate = (value?: string | Date | null) => {
     return '-';
   }
 
-  const date = typeof value === 'string' ? new Date(value) : value;
-  if (Number.isNaN(date.getTime())) {
-    return '-';
+  if (value instanceof Date) {
+    return toDisplayDate(value.toISOString().slice(0, 10)) || '-';
   }
 
-  return date.toLocaleDateString('en-GB');
-};
-
-const formatDateTime = (value?: string | Date | null) => {
-  if (!value) {
-    return '-';
-  }
-
-  const date = typeof value === 'string' ? new Date(value) : value;
-  if (Number.isNaN(date.getTime())) {
-    return '-';
-  }
-
-  return date.toLocaleString('en-GB');
+  return toDisplayDate(value) || '-';
 };
 
 const units = [
@@ -162,6 +150,51 @@ const formatSignedAmount = (value?: string | null, decimals = 2) => {
 const getCustomerCopyLabel = (copyType: PurchasePrintCopyType) =>
   copyType === 'DUPLICATE_COPY' ? 'Duplicate Copy' : 'Original Copy';
 
+const isCardTransactionRow = (row: IPurchaseTransactionFormRow) =>
+  Boolean(row.cardId) || isCardProductCode(row.productCode);
+
+const snapshotText = (
+  snapshot: IPurchaseTransactionFormRow['cardSnapshot'],
+  key: string
+) => {
+  const value = snapshot?.[key];
+  return typeof value === 'string' && value.trim() ? value.trim() : '';
+};
+
+const buildCurrencyItemRows = (rows: IPurchaseTransactionFormRow[]) =>
+  rows
+    .map(
+      (row, index) => `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${escapeHtml(row.currencyCode || '-')}</td>
+          <td>${escapeHtml(row.productCode || '-')}</td>
+          <td class="right">${escapeHtml(formatAmount(row.quantity, PURCHASE_QUANTITY_DECIMALS))}</td>
+          <td class="right">${escapeHtml(formatAmount(row.per, PURCHASE_RATE_DECIMALS))}</td>
+          <td class="right">${escapeHtml(formatAmount(row.rate, PURCHASE_RATE_DECIMALS))}</td>
+          <td class="right">${escapeHtml(formatAmount(row.finalAmount || row.total))}</td>
+        </tr>`
+    )
+    .join('');
+
+const buildCardItemRows = (rows: IPurchaseTransactionFormRow[]) =>
+  rows
+    .map(
+      (row, index) => `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${escapeHtml(row.currencyCode || '-')}</td>
+          <td>${escapeHtml(row.productCode || '-')}</td>
+          <td>${escapeHtml(snapshotText(row.cardSnapshot, 'kitNumber') || '-')}</td>
+          <td>${escapeHtml(snapshotText(row.cardSnapshot, 'maskedCardNumber') || '-')}</td>
+          <td class="right">${escapeHtml(formatAmount(row.quantity, PURCHASE_QUANTITY_DECIMALS))}</td>
+          <td class="right">${escapeHtml(formatAmount(row.per, PURCHASE_RATE_DECIMALS))}</td>
+          <td class="right">${escapeHtml(formatAmount(row.rate, PURCHASE_RATE_DECIMALS))}</td>
+          <td class="right">${escapeHtml(formatAmount(row.finalAmount || row.total))}</td>
+        </tr>`
+    )
+    .join('');
+
 export const buildPurchasePrintHtml = ({
   copyType,
   transactionNumber,
@@ -195,21 +228,10 @@ export const buildPurchasePrintHtml = ({
   }, 0);
   const payableAmount = totalAmount + additionalCharges;
   const amountInWords = numberToWords(payableAmount);
-
-  const itemRows = transaction.transactions
-    .map(
-      (row, index) => `
-        <tr>
-          <td>${index + 1}</td>
-          <td>${escapeHtml(row.currencyCode || '-')}</td>
-          <td>${escapeHtml(row.productCode || '-')}</td>
-          <td class="right">${escapeHtml(formatAmount(row.quantity, PURCHASE_QUANTITY_DECIMALS))}</td>
-          <td class="right">${escapeHtml(formatAmount(row.per, PURCHASE_RATE_DECIMALS))}</td>
-          <td class="right">${escapeHtml(formatAmount(row.rate, PURCHASE_RATE_DECIMALS))}</td>
-          <td class="right">${escapeHtml(formatAmount(row.finalAmount || row.total))}</td>
-        </tr>`
-    )
-    .join('');
+  const currencyRows = transaction.transactions.filter(row => !isCardTransactionRow(row));
+  const cardRows = transaction.transactions.filter(isCardTransactionRow);
+  const itemRows = buildCurrencyItemRows(currencyRows);
+  const cardItemRows = buildCardItemRows(cardRows);
 
   const chargeRows = transaction.additionalCharges
     .map(
@@ -407,6 +429,12 @@ export const buildPurchasePrintHtml = ({
             text-transform: uppercase;
             letter-spacing: 0.08em;
           }
+          .nowrap-table th,
+          .nowrap-table td {
+            white-space: nowrap;
+            padding: 6px 6px;
+            font-size: 11px;
+          }
           @media print {
             body { padding: 0; }
             .page { max-width: none; }
@@ -463,25 +491,51 @@ export const buildPurchasePrintHtml = ({
             </div>
           </div>
 
+          ${currencyRows.length || !cardRows.length ? `
           <div class="section">
-            <h2>Transaction Details</h2>
+            <h2>${escapeHtml(PURCHASE_PRINT_TEXT.transactionDetails)}</h2>
             <table>
               <thead>
                 <tr>
-                  <th>Sr. No.</th>
-                  <th>Currency</th>
-                  <th>EX</th>
-                  <th class="right">Quantity</th>
-                  <th class="right">Per</th>
-                  <th class="right">Rate</th>
-                  <th class="right">Final Amount</th>
+                  <th>${escapeHtml(PURCHASE_PRINT_TEXT.srNo)}</th>
+                  <th>${escapeHtml(PURCHASE_PRINT_TEXT.currency)}</th>
+                  <th>${escapeHtml(PURCHASE_PRINT_TEXT.ex)}</th>
+                  <th class="right">${escapeHtml(PURCHASE_PRINT_TEXT.quantity)}</th>
+                  <th class="right">${escapeHtml(PURCHASE_PRINT_TEXT.per)}</th>
+                  <th class="right">${escapeHtml(PURCHASE_PRINT_TEXT.rate)}</th>
+                  <th class="right">${escapeHtml(PURCHASE_PRINT_TEXT.finalAmount)}</th>
                 </tr>
               </thead>
               <tbody>
-                ${itemRows || '<tr><td colspan="7">No items</td></tr>'}
+                ${itemRows || `<tr><td colspan="7">${escapeHtml(PURCHASE_PRINT_TEXT.noItems)}</td></tr>`}
               </tbody>
             </table>
           </div>
+          ` : ''}
+
+          ${cardRows.length ? `
+          <div class="section">
+            <h2>${escapeHtml(PURCHASE_PRINT_TEXT.cardDetails)}</h2>
+            <table class="nowrap-table">
+              <thead>
+                <tr>
+                  <th>${escapeHtml(PURCHASE_PRINT_TEXT.srNo)}</th>
+                  <th>${escapeHtml(PURCHASE_PRINT_TEXT.currency)}</th>
+                  <th>${escapeHtml(PURCHASE_PRINT_TEXT.ex)}</th>
+                  <th>${escapeHtml(PURCHASE_PRINT_TEXT.kitNumber)}</th>
+                  <th>${escapeHtml(PURCHASE_PRINT_TEXT.cardNumber)}</th>
+                  <th class="right">${escapeHtml(PURCHASE_PRINT_TEXT.quantity)}</th>
+                  <th class="right">${escapeHtml(PURCHASE_PRINT_TEXT.per)}</th>
+                  <th class="right">${escapeHtml(PURCHASE_PRINT_TEXT.rate)}</th>
+                  <th class="right">${escapeHtml(PURCHASE_PRINT_TEXT.finalAmount)}</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${cardItemRows || `<tr><td colspan="9">${escapeHtml(PURCHASE_PRINT_TEXT.noCardItems)}</td></tr>`}
+              </tbody>
+            </table>
+          </div>
+          ` : ''}
 
           <div class="section">
             <h2>Additional Charges</h2>
@@ -528,7 +582,7 @@ export const buildPurchasePrintHtml = ({
           <div class="footer">
             <div>
               <div>Original for Customer and Duplicate for Supplier</div>
-              <div class="muted">${escapeHtml(formatDateTime(transactionDate))}</div>
+              <div class="muted">${escapeHtml(formatDate(transactionDate))}</div>
             </div>
             <div class="sign-box">
               <div>Signature of Customer</div>

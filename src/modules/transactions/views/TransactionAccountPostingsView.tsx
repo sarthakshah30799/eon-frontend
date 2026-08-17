@@ -1,6 +1,7 @@
 import { ArrowPathIcon } from '@heroicons/react/24/outline';
 import { AsyncSelect, Button, Input } from '@/components/ui';
-import { NotFoundState } from '@/components/ui/not-found-state';
+import { AccessDeniedState } from '@/components/ui/access-denied-state';
+import { PAGE_STATUS_TEXTS } from '@/constants';
 import { useAuth } from '@/lib/AuthContext';
 import { TransactionListTable } from '../components';
 import { TransactionStatusEnum } from '../types';
@@ -58,7 +59,7 @@ export const TransactionAccountPostingsView = () => {
   };
 
   if (!canView) {
-    return <NotFoundState message="You do not have access to this page." />;
+    return <AccessDeniedState message={PAGE_STATUS_TEXTS.ACCESS_DENIED_MESSAGE} />;
   }
 
   if (error) {

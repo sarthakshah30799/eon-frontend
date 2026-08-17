@@ -10,9 +10,10 @@ import {
 } from '../hooks';
 import { PartyProfileForm } from '../forms/PartyProfileForm';
 import type { ICreatePartyProfile, IReviewPartyProfilePayload } from '../types';
-import { toPartyProfileApiType, toPartyProfileRouteType } from '../constants';
+import { toPartyProfileApiType, toPartyProfileRouteType, PARTY_PROFILE_STATUS_TEXT } from '../constants';
 import { PartyProfileDocumentsActionButton } from '../components';
 import { NotFoundState } from '@/components/ui/not-found-state';
+import { AccessDeniedState } from '@/components/ui/access-denied-state';
 import type { PartyProfileType } from '../types/partyProfileTypes';
 
 const formatDateForInput = (dateString?: string | Date) => {
@@ -193,9 +194,13 @@ export const PartyProfileEditView = () => {
     );
   }
 
-  if (!routeOptions.length || isInvalidTypeRoute || (!canModify && !canView)) {
+  if (isInvalidTypeRoute) {
+    return <NotFoundState message={PARTY_PROFILE_STATUS_TEXT.typeNotFound} />;
+  }
+
+  if (!routeOptions.length || (!canModify && !canView)) {
     return (
-      <NotFoundState message="You do not have access to edit this party profile type." />
+      <AccessDeniedState message={PARTY_PROFILE_STATUS_TEXT.accessDeniedEdit} />
     );
   }
 
@@ -216,7 +221,7 @@ export const PartyProfileEditView = () => {
   }
 
   if (error || !client) {
-    return <NotFoundState message="Party profile details were not found." />;
+    return <NotFoundState message={PARTY_PROFILE_STATUS_TEXT.detailsNotFound} />;
   }
 
   const canEditPartyProfile =

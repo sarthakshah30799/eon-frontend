@@ -1318,6 +1318,7 @@ const router = createBrowserRouter([
   { path: '/journal-vouchers/edit/:id', element: <ProtectedLayout><JournalVoucherEditPage /></ProtectedLayout> },
   {
     path: '*',
+    handle: { isCatchAll: true },
     element: (
       <ProtectedLayout>
         <MasterPageResolverPage />

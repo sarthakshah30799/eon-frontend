@@ -3,10 +3,12 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { Button, FormFooter } from '@/components/ui';
 import { Loader } from '@/components/ui/loader';
+import { AccessDeniedState } from '@/components/ui/access-denied-state';
 import { NotFoundState } from '@/components/ui/not-found-state';
 import { usePermission } from '@/hooks';
 import { useGetPartyProfile } from '@/modules/partyProfiles/hooks';
 import {
+  PARTY_PROFILE_STATUS_TEXT,
   toPartyProfileApiType,
   toPartyProfileRouteType,
 } from '@/modules/partyProfiles/constants';
@@ -105,12 +107,13 @@ export const PartyProfileDocumentsView = () => {
     return <Loader />;
   }
 
-  if (
-    !canViewPartyProfileType ||
-    partyProfileError ||
-    partyProfileDocumentsError ||
-    !partyProfile
-  ) {
+  if (!canViewPartyProfileType) {
+    return (
+      <AccessDeniedState message={PARTY_PROFILE_STATUS_TEXT.accessDeniedType} />
+    );
+  }
+
+  if (partyProfileError || partyProfileDocumentsError || !partyProfile) {
     return <NotFoundState message="Party profile documents were not found." />;
   }
 

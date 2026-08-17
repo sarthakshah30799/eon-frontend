@@ -565,7 +565,7 @@ export const ManualBillBookListView = () => {
               </div>
             </div>
 
-            {reviewBook?.status === ManualBillBookStatusEnum.PENDING && !isUserHo ? (
+            {reviewBook?.status === ManualBillBookStatusEnum.PENDING ? (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>

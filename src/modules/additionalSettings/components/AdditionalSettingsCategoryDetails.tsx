@@ -8,15 +8,17 @@ import { PencilSquareIcon } from '@heroicons/react/24/outline';
 import {
   getAdditionalSettingCategoryDefinition,
   getAdditionalSettingSubcategoryDefinition,
+  isRegisteredAdditionalSettingSubcategoryCode,
 } from '../registry/additionalSettingsRegistry';
 import { formatAccountProfileLabel } from '../utils/additionalSettingsUtils';
-import { accountProfileApi } from '@/api/accountProfile';
-import { useGetAccountProfile } from '@/modules/accountProfile/hooks';
 import { useGetCurrencyProfile } from '@/modules/currencyProfile/hooks';
 import { currencyProfileApi } from '@/api';
+import type { IAccountProfile } from '@/modules/accountProfile/types/accountProfileTypes';
 
 interface AdditionalSettingsCategoryDetailsProps {
   category: IAdditionalSettingCategory | null;
+  accountProfiles: IAccountProfile[];
+  areAccountProfilesFetching?: boolean;
   onOpenCreateCategory: () => void;
   onOpenEditCategory: (category: IAdditionalSettingCategory) => void;
   onSaveSubcategory: (
@@ -65,10 +67,14 @@ const CategoryTitleEditor = ({
 const SubcategoryRow = ({
   subcategory,
   categoryCode,
+  accountProfile,
+  areAccountProfilesFetching = false,
   onEdit,
 }: {
   subcategory: IAdditionalSettingSubcategory;
   categoryCode?: string;
+  accountProfile?: IAccountProfile;
+  areAccountProfilesFetching?: boolean;
   onEdit: (sub: IAdditionalSettingSubcategory) => void;
 }) => {
   const subcategoryDefinition = getAdditionalSettingSubcategoryDefinition(
@@ -77,9 +83,6 @@ const SubcategoryRow = ({
   );
   const isAccountProfileValue = subcategoryDefinition?.optionsSource === 'account-profile';
   const isCurrencyProfileValue = subcategoryDefinition?.optionsSource === 'currency-profile';
-  const { data: accountProfile, isFetching } = useGetAccountProfile(
-    isAccountProfileValue ? subcategory.value : ''
-  );
   const { data: currencyProfile, isFetching: isCurrencyFetching } = useGetCurrencyProfile(
     isCurrencyProfileValue ? subcategory.value : ''
   );
@@ -108,7 +111,7 @@ const SubcategoryRow = ({
         {subcategory.description || subcategory.title}
       </td>
       <td className="px-4 py-4 text-xs font-medium leading-5 text-text-primary">
-        {(isFetching && isAccountProfileValue) || (isCurrencyFetching && isCurrencyProfileValue)
+        {(areAccountProfilesFetching && isAccountProfileValue) || (isCurrencyFetching && isCurrencyProfileValue)
           ? 'Loading...'
           : displayValue}
       </td>
@@ -130,6 +133,11 @@ const SubcategoryRow = ({
 interface EditSubcategoryFormProps {
   categoryCode?: string;
   subcategory: IAdditionalSettingSubcategory;
+  accountProfiles: IAccountProfile[];
+  loadAccountProfileOptions: (
+    inputValue?: string,
+    page?: number
+  ) => Promise<{ options: { value: string; label: string }[]; hasMore: boolean }>;
   isPolicyCategory?: boolean;
   onSave: (values: { description: string; value: string }) => Promise<void>;
   onCancel: () => void;
@@ -138,6 +146,8 @@ interface EditSubcategoryFormProps {
 const EditSubcategoryForm = ({
   categoryCode,
   subcategory,
+  accountProfiles,
+  loadAccountProfileOptions,
   isPolicyCategory = false,
   onSave,
   onCancel,
@@ -167,8 +177,12 @@ const EditSubcategoryForm = ({
       })),
     [subcategoryDefinition?.options]
   );
-  const { data: accountProfile } = useGetAccountProfile(
-    subcategoryDefinition?.optionsSource === 'account-profile' ? value : ''
+  const accountProfile = useMemo(
+    () =>
+      subcategoryDefinition?.optionsSource === 'account-profile'
+        ? accountProfiles.find(account => account.id === value)
+        : undefined,
+    [accountProfiles, subcategoryDefinition?.optionsSource, value]
   );
   const { data: currencyProfile } = useGetCurrencyProfile(
     subcategoryDefinition?.optionsSource === 'currency-profile' ? value : ''
@@ -191,25 +205,6 @@ const EditSubcategoryForm = ({
       : null) ??
     selectValueOptions.find(option => option.value === value) ??
     null;
-  const loadAccountProfileOptions = useCallback(
-    async (inputValue: string, page = 1) => {
-      const response = await accountProfileApi.getAccountProfiles({
-        page,
-        limit: 30,
-        search: inputValue,
-        active: true,
-      });
-
-      return {
-        options: (response.data || []).map(account => ({
-          value: account.id,
-          label: formatAccountProfileLabel(account),
-        })),
-        hasMore: (response.data || []).length === 30,
-      };
-    },
-    []
-  );
   const loadCurrencyProfileOptions = useCallback(
     async (inputValue: string) => {
       const currencies = await currencyProfileApi.getCurrencyProfiles(inputValue);
@@ -232,9 +227,9 @@ const EditSubcategoryForm = ({
     []
   );
   const loadSelectValueOptions = useCallback(
-    async (inputValue = '', page = 1) => {
+    async (inputValue = '') => {
       if (subcategoryDefinition?.optionsSource === 'account-profile') {
-        return loadAccountProfileOptions(inputValue, page);
+        return loadAccountProfileOptions(inputValue);
       }
 
       if (subcategoryDefinition?.optionsSource === 'currency-profile') {
@@ -462,6 +457,8 @@ const EditSubcategoryForm = ({
 
 export const AdditionalSettingsCategoryDetails = ({
   category,
+  accountProfiles,
+  areAccountProfilesFetching = false,
   onOpenCreateCategory,
   onOpenEditCategory,
   onSaveSubcategory,
@@ -469,10 +466,45 @@ export const AdditionalSettingsCategoryDetails = ({
   const [editingSubcategory, setEditingSubcategory] = useState<IAdditionalSettingSubcategory | null>(null);
   const categoryDefinition = getAdditionalSettingCategoryDefinition(category?.code);
   const isLockedCategory = Boolean(categoryDefinition?.titleLocked);
+  const accountProfilesById = useMemo(
+    () => new Map(accountProfiles.map(account => [account.id, account])),
+    [accountProfiles]
+  );
+  const accountProfileOptions = useMemo(
+    () =>
+      accountProfiles
+        .filter(account => account.active)
+        .map(account => ({
+          value: account.id,
+          label: formatAccountProfileLabel(account),
+        })),
+    [accountProfiles]
+  );
+  const loadAccountProfileOptions = useCallback(
+    async (inputValue = '') => {
+      const normalizedSearch = inputValue.trim().toLowerCase();
+
+      return {
+        options: normalizedSearch
+          ? accountProfileOptions.filter(option =>
+              option.label.toLowerCase().includes(normalizedSearch)
+            )
+          : accountProfileOptions,
+        hasMore: false,
+      };
+    },
+    [accountProfileOptions]
+  );
+  const visibleSubcategories = useMemo(
+    () => category?.subcategories.filter(subcategory =>
+      !isLockedCategory || isRegisteredAdditionalSettingSubcategoryCode(category.code, subcategory.code)
+    ) ?? [],
+    [category, isLockedCategory]
+  );
 
   const hasSubcategories = useMemo(
-    () => Boolean(category?.subcategories.length),
-    [category]
+    () => visibleSubcategories.length > 0,
+    [visibleSubcategories]
   );
 
   return (
@@ -524,7 +556,7 @@ export const AdditionalSettingsCategoryDetails = ({
                 </p>
               </div>
               <p className="text-sm font-medium text-text-secondary">
-                {category.subcategories.length} items
+                {visibleSubcategories.length} items
               </p>
             </div>
 
@@ -539,11 +571,13 @@ export const AdditionalSettingsCategoryDetails = ({
                     </tr>
                   </thead>
                   <tbody>
-                    {category.subcategories.map(subcategory => (
+                    {visibleSubcategories.map(subcategory => (
                       <SubcategoryRow
                         key={subcategory.id}
                         subcategory={subcategory}
                         categoryCode={category.code}
+                        accountProfile={accountProfilesById.get(subcategory.value)}
+                        areAccountProfilesFetching={areAccountProfilesFetching}
                         onEdit={setEditingSubcategory}
                       />
                     ))}
@@ -576,6 +610,8 @@ export const AdditionalSettingsCategoryDetails = ({
           <EditSubcategoryForm
             categoryCode={category?.code}
             subcategory={editingSubcategory}
+            accountProfiles={accountProfiles}
+            loadAccountProfileOptions={loadAccountProfileOptions}
             isPolicyCategory={isLockedCategory}
             onCancel={() => setEditingSubcategory(null)}
             onSave={async (values) => {

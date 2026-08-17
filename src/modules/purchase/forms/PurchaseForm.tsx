@@ -94,7 +94,6 @@ interface PurchaseFormProps {
   pricingData: IPurchasePricingData;
   partyProfileTypes: PartyProfileType[];
   requiresApproval: boolean;
-  cashControlAccountId?: string;
   handlingFeeControlAccountId?: string;
   branchId?: string;
   branchCode?: string;
@@ -118,7 +117,6 @@ interface PurchaseFormBodyProps {
   pricingData: IPurchasePricingData;
   partyProfileTypes: PartyProfileType[];
   requiresApproval: boolean;
-  cashControlAccountId?: string;
   handlingFeeControlAccountId?: string;
   branchId: string;
   branchCode: string;
@@ -145,7 +143,6 @@ const PurchaseFormBody = ({
   pricingData,
   partyProfileTypes,
   requiresApproval,
-  cashControlAccountId,
   handlingFeeControlAccountId,
   branchId,
   sacCode,
@@ -166,7 +163,6 @@ const PurchaseFormBody = ({
   void _branchCode;
   void _isFreshlyCreated;
   const form = useFormContext<IPurchaseFormValues>();
-  const { activeCounterId } = useAuth();
   const [currencyPickerRowIndex, setCurrencyPickerRowIndex] = useState<
     number | null
   >(null);
@@ -224,7 +220,7 @@ const PurchaseFormBody = ({
     name: 'counterId',
   });
   const resolvedBranchId = watchedBranchId || branchId;
-  const resolvedCounterId = watchedCounterId || activeCounterId || '';
+  const resolvedCounterId = watchedCounterId || '';
   const resolvedPassengerEntityType =
     isCombinedPartyProfilePage &&
     transactionPartyProfileType === TransactionPartyProfileTypeEnum.INDIVIDUAL
@@ -1529,7 +1525,6 @@ const PurchaseFormBody = ({
         transactionType={transactionType}
         branchId={resolvedBranchId}
         selectablePagesUserId={cashierUserId || undefined}
-        cashControlAccountId={cashControlAccountId}
         allowCashPayment={allowCashPayment}
         allowedPaymentMethods={resolvedPurchaseRulePreview?.paymentMethodsAllowed ?? undefined}
         disabled={isReadOnly}
@@ -1646,7 +1641,6 @@ export const PurchaseForm = ({
   pricingData,
   partyProfileTypes,
   requiresApproval,
-  cashControlAccountId,
   branchId = '',
   branchCode = '',
   sacCode = '',
@@ -1777,7 +1771,6 @@ export const PurchaseForm = ({
         pricingData={pricingData}
         partyProfileTypes={partyProfileTypes}
         requiresApproval={requiresApproval}
-        cashControlAccountId={cashControlAccountId}
         branchId={branchId}
         branchCode={branchCode}
         sacCode={sacCode ?? ''}

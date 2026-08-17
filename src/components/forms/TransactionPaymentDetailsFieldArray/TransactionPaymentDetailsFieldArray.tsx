@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
+import { useController, useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { TrashIcon, PlusIcon } from '@heroicons/react/24/outline';
 import type { AsyncSelectResponse } from '@/components/ui';
-import { Button, CardSection } from '@/components/ui';
+import { Button, CardSection, Label } from '@/components/ui';
 import {
   FormFieldDatePicker,
   FormFieldInput,
@@ -21,14 +21,25 @@ import {
 } from '@/modules/transactions';
 import { useAuth } from '@/lib/AuthContext';
 import type { ITransactionPaymentDetailFormRow } from './transactionPaymentDetailsTypes';
-import { useAvailableAdvances } from '@/modules/vouchers';
+import { SelectAvailableAdvances } from '@/modules/vouchers/components/SelectAvailableAdvances';
+import { useAvailableAdvances } from '@/modules/vouchers/hooks';
+import type { AvailableAdvance } from '@/modules/vouchers/types';
+import { formatAdvanceAccountLabel } from '@/modules/vouchers/utils';
 import {
   createEmptyPurchasePaymentRow,
-  formatPurchaseEntityLabel,
   getPurchaseTransactionAccountFilter,
 } from '@/modules/purchase/utils/purchaseUtils';
+import {
+  SETTLEMENT_SOURCE_OPTIONS,
+  TRANSACTION_PAYMENT_TEXT,
+} from './transactionPaymentDetailsConstants';
 
 const ACCOUNT_PROFILE_OPTION_PAGE_SIZE = 30;
+const EMPTY_AVAILABLE_ADVANCES: AvailableAdvance[] = [];
+
+const loadSettlementSourceOptions = async (): Promise<AsyncSelectResponse> => ({
+  options: SETTLEMENT_SOURCE_OPTIONS,
+});
 
 interface TransactionPaymentDetailsFieldArrayProps {
   name: string;
@@ -40,7 +51,6 @@ interface TransactionPaymentDetailsFieldArrayProps {
   transactionType?: TransactionType;
   branchId?: string;
   selectablePagesUserId?: string;
-  cashControlAccountId?: string;
   allowCashPayment?: boolean;
   allowedPaymentMethods?: Array<'CASH' | 'CHEQUE'>;
   disabled?: boolean;
@@ -71,6 +81,42 @@ const amountCents = (value?: string | number | null) => {
   return Number.isFinite(numeric) ? Math.round(numeric * 100) : 0;
 };
 
+const buildAdvancePaymentRow = (
+  base: ITransactionPaymentDetailFormRow,
+  voucher: AvailableAdvance,
+  appliedAmount: string,
+  paymentMethod: string
+): ITransactionPaymentDetailFormRow => ({
+  ...base,
+  settlementSource: 'ADVANCE',
+  paymentMethod,
+  advanceVoucherId: voucher.id,
+  advanceVoucherNumber: voucher.number,
+  advanceAvailableAmount: String(voucher.availableAmount),
+  accountId: voucher.advanceControlAccountId ?? '',
+  accountName:
+    formatAdvanceAccountLabel(voucher.advanceControlAccountSnapshot) ||
+    TRANSACTION_PAYMENT_TEXT.advanceControlAccount,
+  isAdvanceRemainder: false,
+  amountLocked: true,
+  amount: appliedAmount,
+  chequePageId: '',
+  chequePageSnapshot: null,
+  ...(paymentMethod === TransactionPaymentMethodEnum.CHEQUE
+    ? {
+        chequeNumber: voucher.chequeNumber ?? '',
+        chequeDate: voucher.chequeDate ?? '',
+        branchName: voucher.chequeBranch ?? '',
+        drawnOn: voucher.drawnOn ?? '',
+      }
+    : {
+        chequeNumber: '',
+        chequeDate: '',
+        branchName: '',
+        drawnOn: '',
+      }),
+});
+
 const PaymentDetailRow = ({
   arrayName,
   index,
@@ -79,14 +125,13 @@ const PaymentDetailRow = ({
   transactionType,
   branchId,
   selectablePagesUserId,
-  cashControlAccountId,
   allowCashPayment = true,
   canUseCheque = true,
   disabled = false,
   onRemove,
   canRemove,
   selectedAdvanceVoucherIds,
-  onAdvanceSelected,
+  onAdvancesSelected,
 }: {
   arrayName: string;
   index: number;
@@ -95,14 +140,17 @@ const PaymentDetailRow = ({
   transactionType?: TransactionType;
   branchId?: string;
   selectablePagesUserId?: string;
-  cashControlAccountId?: string;
   allowCashPayment?: boolean;
   canUseCheque?: boolean;
   disabled?: boolean;
   onRemove: (index: number) => void;
   canRemove: boolean;
   selectedAdvanceVoucherIds: string[];
-  onAdvanceSelected: (index: number, voucherId: string, amount: string, paymentMethod: string) => void;
+  onAdvancesSelected: (
+    index: number,
+    vouchers: AvailableAdvance[],
+    paymentMethod: string
+  ) => void;
 }) => {
   const form = useFormContext();
   const { activeBranchId } = useAuth();
@@ -125,7 +173,6 @@ const PaymentDetailRow = ({
   const partyProfileId = useWatch({ control: form.control, name: 'partyProfileId' }) as string | undefined;
   const transactionDate = useWatch({ control: form.control, name: 'transactionDate' }) as string | undefined;
   const counterId = useWatch({ control: form.control, name: 'counterId' }) as string | undefined;
-  const isAdvanceRemainder = Boolean(useWatch({ control: form.control, name: `${arrayName}.${index}.isAdvanceRemainder` }));
   const amountLocked = Boolean(useWatch({ control: form.control, name: `${arrayName}.${index}.amountLocked` }));
   const paymentRows = useWatch({
     control: form.control,
@@ -150,28 +197,55 @@ const PaymentDetailRow = ({
   });
 
   const [pageOptions, setPageOptions] = useState<IChequeBookPageTracking[]>([]);
-  const [cashAccountLabel, setCashAccountLabel] = useState<string>('');
   const [isLoadingPages, setIsLoadingPages] = useState(false);
-  const [isLoadingCashAccount, setIsLoadingCashAccount] = useState(false);
+  const [isAdvanceModalOpen, setIsAdvanceModalOpen] = useState(false);
   const previousPaymentMethodRef = useRef<string | undefined>(paymentMethod);
   const previousSelectionKeyRef = useRef<string | null>(null);
-  const appliedAdvanceSelectionRef = useRef<string>('');
   const advanceType = isSale ? 'RECEIPT' : 'PAYMENT';
-  const { data: availableAdvances = [], isLoading: isLoadingAdvances } = useAvailableAdvances(
-    advanceType,
-    {
+  const advancePaymentMethod: 'CASH' | 'CHEQUE' =
+    paymentMethod === TransactionPaymentMethodEnum.CASH ? 'CASH' : 'CHEQUE';
+  const advanceQueryParams = useMemo(
+    () => ({
       partyProfileId: partyProfileId ?? '',
       branchId: resolvedBranchId ?? '',
       counterId: counterId ?? '',
       transactionDate: transactionDate ?? '',
-      paymentMethod: paymentMethod === TransactionPaymentMethodEnum.CASH ? 'CASH' : 'CHEQUE',
-    },
-    settlementSource === 'ADVANCE' && Boolean(paymentMethod)
+      paymentMethod: advancePaymentMethod,
+    }),
+    [advancePaymentMethod, counterId, partyProfileId, resolvedBranchId, transactionDate]
   );
-  const advanceOptions = useMemo(() => availableAdvances.filter(voucher => voucher.id === advanceVoucherId || !selectedAdvanceVoucherIds.includes(voucher.id)).map(voucher => ({
-    value: voucher.id,
-    label: `${voucher.number} | ${voucher.transactionDate} | Available ${formatAmount(voucher.availableAmount)}`,
-  })), [advanceVoucherId, availableAdvances, selectedAdvanceVoucherIds]);
+  const canLoadAdvances = Boolean(
+    partyProfileId && resolvedBranchId && counterId && transactionDate && paymentMethod
+  );
+  const { data: availableAdvances = EMPTY_AVAILABLE_ADVANCES, isLoading: isLoadingAdvances } =
+    useAvailableAdvances(
+      advanceType,
+      advanceQueryParams,
+      (settlementSource === 'ADVANCE' || isAdvanceModalOpen) && canLoadAdvances
+    );
+  const {
+    fieldState: { error: advanceVoucherError },
+  } = useController({
+    name: `${arrayName}.${index}.advanceVoucherId`,
+    control: form.control,
+  });
+  const advanceVoucherNumber = useWatch({
+    control: form.control,
+    name: `${arrayName}.${index}.advanceVoucherNumber`,
+  }) as string | undefined;
+  const advanceAvailableAmount = useWatch({
+    control: form.control,
+    name: `${arrayName}.${index}.advanceAvailableAmount`,
+  }) as string | undefined;
+  const selectableAdvanceCount = useMemo(
+    () =>
+      availableAdvances.filter(
+        voucher =>
+          voucher.id === advanceVoucherId ||
+          !selectedAdvanceVoucherIds.includes(voucher.id)
+      ).length,
+    [advanceVoucherId, availableAdvances, selectedAdvanceVoucherIds]
+  );
 
   const priorAmount = useMemo(() => {
     return (paymentRows ?? [])
@@ -189,35 +263,56 @@ const PaymentDetailRow = ({
   }, [maxAmount, priorAmount]);
 
   useEffect(() => {
-    if (settlementSource !== 'ADVANCE') {
-      appliedAdvanceSelectionRef.current = '';
-      form.setValue(`${arrayName}.${index}.advanceVoucherId`, '', { shouldValidate: false });
-      form.setValue(`${arrayName}.${index}.amountLocked`, isAdvanceRemainder, { shouldValidate: false });
+    if (settlementSource === 'ADVANCE') {
       return;
     }
-    const voucher = availableAdvances.find(item => item.id === advanceVoucherId);
-    if (!voucher) return;
-    form.setValue(`${arrayName}.${index}.accountId`, voucher.advanceControlAccountId ?? '', { shouldDirty: true, shouldValidate: true });
-    form.setValue(`${arrayName}.${index}.accountName`, voucher.advanceControlAccountSnapshot?.label ?? voucher.advanceControlAccountSnapshot?.name ?? 'Advance Control Account', { shouldDirty: true });
-    form.setValue(`${arrayName}.${index}.advanceVoucherNumber`, voucher.number, { shouldDirty: true });
-    form.setValue(`${arrayName}.${index}.advanceAvailableAmount`, voucher.availableAmount, { shouldDirty: true });
-    const appliedAmount = Math.min(availableAmount, Number(voucher.availableAmount)).toFixed(2);
-    form.setValue(`${arrayName}.${index}.amount`, appliedAmount, { shouldDirty: true, shouldValidate: true });
-    form.setValue(`${arrayName}.${index}.isAdvanceRemainder`, false, { shouldDirty: true });
-    form.setValue(`${arrayName}.${index}.amountLocked`, true, { shouldDirty: true });
-    form.setValue(`${arrayName}.${index}.chequePageId`, '', { shouldDirty: true, shouldValidate: true });
-    form.setValue(`${arrayName}.${index}.chequePageSnapshot`, null, { shouldDirty: true });
-    if (paymentMethod === TransactionPaymentMethodEnum.CHEQUE) {
-      form.setValue(`${arrayName}.${index}.chequeNumber`, voucher.chequeNumber ?? '', { shouldDirty: true });
-      form.setValue(`${arrayName}.${index}.chequeDate`, voucher.chequeDate ?? '', { shouldDirty: true });
-      form.setValue(`${arrayName}.${index}.branchName`, voucher.chequeBranch ?? '', { shouldDirty: true });
-      form.setValue(`${arrayName}.${index}.drawnOn`, voucher.drawnOn ?? '', { shouldDirty: true });
+
+    const currentId = String(
+      form.getValues(`${arrayName}.${index}.advanceVoucherId`) ?? ''
+    );
+    if (!currentId) {
+      return;
     }
-    if (appliedAdvanceSelectionRef.current !== voucher.id) {
-      appliedAdvanceSelectionRef.current = voucher.id;
-      onAdvanceSelected(index, voucher.id, appliedAmount, paymentMethod ?? '');
+
+    form.setValue(`${arrayName}.${index}.advanceVoucherId`, '', {
+      shouldValidate: false,
+    });
+    form.setValue(`${arrayName}.${index}.advanceVoucherNumber`, '', {
+      shouldValidate: false,
+    });
+    form.setValue(`${arrayName}.${index}.advanceAvailableAmount`, '', {
+      shouldValidate: false,
+    });
+    form.setValue(
+      `${arrayName}.${index}.amountLocked`,
+      Boolean(form.getValues(`${arrayName}.${index}.isAdvanceRemainder`)),
+      { shouldValidate: false }
+    );
+  }, [arrayName, form, index, settlementSource]);
+
+  const applySelectedAdvances = useCallback(
+    (vouchers: AvailableAdvance[]) => {
+      if (!vouchers.length) {
+        return;
+      }
+      setIsAdvanceModalOpen(false);
+      onAdvancesSelected(index, vouchers, paymentMethod ?? '');
+    },
+    [index, onAdvancesSelected, paymentMethod]
+  );
+
+  const closeAdvanceModal = useCallback(() => {
+    setIsAdvanceModalOpen(false);
+    const currentId = String(
+      form.getValues(`${arrayName}.${index}.advanceVoucherId`) ?? ''
+    );
+    if (!currentId) {
+      form.setValue(`${arrayName}.${index}.settlementSource`, 'NORMAL', {
+        shouldDirty: true,
+        shouldValidate: false,
+      });
     }
-  }, [advanceVoucherId, arrayName, availableAdvances, availableAmount, form, index, isAdvanceRemainder, onAdvanceSelected, paymentMethod, settlementSource]);
+  }, [arrayName, form, index]);
 
   const remainingAfterCurrent = useMemo(() => {
     const currentAmount = Number(amount || 0);
@@ -261,61 +356,6 @@ const PaymentDetailRow = ({
   }, [amount, arrayName, availableAmount, form, index]);
 
   useEffect(() => {
-    let isActive = true;
-
-    const loadCashAccount = async () => {
-      if (
-        !cashControlAccountId ||
-        paymentMethod !== TransactionPaymentMethodEnum.CASH
-      ) {
-        setCashAccountLabel('');
-        return;
-      }
-
-      try {
-        setIsLoadingCashAccount(true);
-        const account =
-          await accountProfileApi.getAccountProfileById(cashControlAccountId);
-        if (!isActive || !account) {
-          return;
-        }
-
-        const label = formatPurchaseEntityLabel(
-          account.accountCode,
-          account.accountName
-        );
-        setCashAccountLabel(label);
-
-        if (
-          paymentMethod === TransactionPaymentMethodEnum.CASH &&
-          String(accountId || '') === String(cashControlAccountId)
-        ) {
-          form.setValue(`${arrayName}.${index}.accountName`, label, {
-            shouldDirty: true,
-            shouldTouch: true,
-            shouldValidate: false,
-          });
-        }
-      } catch (error) {
-        if (isActive) {
-          setCashAccountLabel('');
-        }
-        console.error('Failed to load cash control account:', error);
-      } finally {
-        if (isActive) {
-          setIsLoadingCashAccount(false);
-        }
-      }
-    };
-
-    void loadCashAccount();
-
-    return () => {
-      isActive = false;
-    };
-  }, [accountId, arrayName, canUseCheque, cashControlAccountId, form, index, paymentMethod]);
-
-  useEffect(() => {
     if (!paymentMethod) {
       return;
     }
@@ -346,20 +386,16 @@ const PaymentDetailRow = ({
     previousPaymentMethodRef.current = paymentMethod;
 
     if (paymentMethod === TransactionPaymentMethodEnum.CASH) {
-      if (cashControlAccountId) {
-        form.setValue(`${arrayName}.${index}.accountId`, cashControlAccountId, {
-          shouldDirty: true,
-          shouldTouch: true,
-          shouldValidate: true,
-        });
-        if (cashAccountLabel) {
-          form.setValue(`${arrayName}.${index}.accountName`, cashAccountLabel, {
-            shouldDirty: true,
-            shouldTouch: true,
-            shouldValidate: false,
-          });
-        }
-      }
+      form.setValue(`${arrayName}.${index}.accountId`, '', {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: true,
+      });
+      form.setValue(`${arrayName}.${index}.accountName`, '', {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: false,
+      });
 
       form.setValue(`${arrayName}.${index}.chequePageId`, '', {
         shouldDirty: true,
@@ -438,8 +474,6 @@ const PaymentDetailRow = ({
     }
   }, [
     arrayName,
-    cashAccountLabel,
-    cashControlAccountId,
     canUseCash,
     canUseCheque,
     form,
@@ -561,30 +595,16 @@ const PaymentDetailRow = ({
 
   const loadAccountOptions = useCallback(
     async (inputValue: string, page = 1): Promise<AsyncSelectResponse> => {
-      if (
-        paymentMethod === TransactionPaymentMethodEnum.CASH &&
-        cashControlAccountId
-      ) {
-        return {
-          options: cashAccountLabel
-            ? [
-                {
-                  value: cashControlAccountId,
-                  label: cashAccountLabel,
-                },
-              ]
-            : [],
-          hasMore: false,
-        };
-      }
-
       const response = await accountProfileApi.getAccountProfiles({
         ...accountQuery,
         page,
         limit: ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
         search: inputValue,
         active: true,
-        accountType: AccountProfileLedgerLabelEnum.BankLedger,
+        accountType:
+          paymentMethod === TransactionPaymentMethodEnum.CASH
+            ? AccountProfileLedgerLabelEnum.CashLedger
+            : AccountProfileLedgerLabelEnum.BankLedger,
         ...getPurchaseTransactionAccountFilter(
           transactionType ?? TransactionTypeEnum.PURCHASE
         ),
@@ -600,56 +620,82 @@ const PaymentDetailRow = ({
         hasMore: accounts.length === ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
       };
     },
-    [
-      accountQuery,
-      cashAccountLabel,
-      cashControlAccountId,
-      paymentMethod,
-      transactionType,
-    ]
+    [accountQuery, paymentMethod, transactionType]
   );
 
   const isCash = paymentMethod === TransactionPaymentMethodEnum.CASH;
   const isCheque = paymentMethod === TransactionPaymentMethodEnum.CHEQUE;
 
   return (
+    <>
     <div className="grid gap-4 rounded-sm border border-border-secondary bg-surface-primary p-4 md:grid-cols-2 xl:grid-cols-[1fr_1.3fr_1fr_1fr_1fr_1fr_1fr_1fr_auto]">
       <div className="md:col-span-2 xl:col-span-1">
         <FormFieldSelect
           name={`${arrayName}.${index}.settlementSource`}
-          label="Settlement Source"
-          loadOptions={async () => ({ options: [{ value: 'NORMAL', label: 'Normal' }, { value: 'ADVANCE', label: 'Advance' }] })}
-          defaultOptions={[{ value: 'NORMAL', label: 'Normal' }, { value: 'ADVANCE', label: 'Advance' }]}
+          label={TRANSACTION_PAYMENT_TEXT.settlementSource}
+          loadOptions={loadSettlementSourceOptions}
+          defaultOptions={SETTLEMENT_SOURCE_OPTIONS}
           disabled={disabled || Boolean(advanceVoucherId)}
+          onValueChange={value => {
+            if (String(value) === 'ADVANCE') {
+              setIsAdvanceModalOpen(true);
+            }
+          }}
         />
       </div>
-      {settlementSource === 'ADVANCE' ? <div className="md:col-span-2 xl:col-span-1">
-        <FormFieldSelect
-          name={`${arrayName}.${index}.advanceVoucherId`}
-          label={`${isSale ? 'Receipt' : 'Payment'} Advance`}
-          placeholder="Select available advance"
-          loadOptions={async input => ({ options: advanceOptions.filter(option => option.label.toLowerCase().includes(input.toLowerCase())) })}
-          defaultOptions={advanceOptions}
-          disabled={disabled || Boolean(advanceVoucherId) || isLoadingAdvances || !partyProfileId || !resolvedBranchId || !counterId || !transactionDate}
-          cacheOptions={false}
-        />
-      </div> : null}
+      {settlementSource === 'ADVANCE' ? (
+        <div className="md:col-span-2 xl:col-span-1">
+          <Label>{isSale ? TRANSACTION_PAYMENT_TEXT.receiptAdvance : TRANSACTION_PAYMENT_TEXT.paymentAdvance}</Label>
+          <Button
+            type="button"
+            variant="outline"
+            className="mt-1 h-8 w-full justify-between rounded-sm px-3 text-left font-normal"
+            disabled={
+              disabled || Boolean(advanceVoucherId) || !canLoadAdvances
+            }
+            onClick={() => setIsAdvanceModalOpen(true)}
+          >
+            <span className="truncate">
+              {advanceVoucherId
+                ? TRANSACTION_PAYMENT_TEXT.selectedAdvance(
+                    advanceVoucherNumber || advanceVoucherId,
+                    formatAmount(advanceAvailableAmount)
+                  )
+                : !canLoadAdvances
+                  ? TRANSACTION_PAYMENT_TEXT.missingAdvanceContext
+                  : isLoadingAdvances
+                    ? TRANSACTION_PAYMENT_TEXT.loadingAdvances
+                    : TRANSACTION_PAYMENT_TEXT.selectAdvance}
+            </span>
+          </Button>
+          <p className="mt-1 text-xs text-text-secondary">
+            {canLoadAdvances
+              ? TRANSACTION_PAYMENT_TEXT.availableCount(selectableAdvanceCount)
+              : TRANSACTION_PAYMENT_TEXT.missingAdvanceContext}
+          </p>
+          {advanceVoucherError?.message ? (
+            <p className="mt-1 text-sm text-error-600">
+              {advanceVoucherError.message}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
       <div className="md:col-span-2 xl:col-span-1">
         <FormFieldSelect
-          key={`account-${paymentMethod}-${cashControlAccountId || 'none'}-${accountId || 'empty'}`}
+          key={`account-${paymentMethod}-${accountId || 'empty'}`}
           name={`${arrayName}.${index}.accountId`}
           label="Account"
           placeholder={
             isCash
-              ? 'Cash control account'
+              ? 'Select cash ledger account'
               : isSale
               ? 'Select sell bank account'
                 : 'Select purchase bank account'
           }
           loadOptions={loadAccountOptions}
-          pagination={!isCash}
+          pagination
           pageSize={ACCOUNT_PROFILE_OPTION_PAGE_SIZE}
-          disabled={disabled || isCash || settlementSource === 'ADVANCE'}
+          disabled={disabled || settlementSource === 'ADVANCE'}
           isSearchable
           cacheOptions={false}
         />
@@ -768,7 +814,7 @@ const PaymentDetailRow = ({
         </p>
         {paymentMethod === TransactionPaymentMethodEnum.CASH ? (
           <p className="mt-1 text-xs text-text-tertiary">
-            Cash mode uses the configured cash control account.
+            Cash mode requires an active INR Cash Ledger account.
           </p>
         ) : isSale ? (
           <p className="mt-1 text-xs text-text-tertiary">
@@ -780,13 +826,21 @@ const PaymentDetailRow = ({
             filled automatically.
           </p>
         )}
-        {isLoadingCashAccount ? (
-          <p className="mt-1 text-xs text-text-tertiary">
-            Loading cash control account...
-          </p>
-        ) : null}
       </div>
     </div>
+    {isAdvanceModalOpen ? (
+      <SelectAvailableAdvances
+        open={isAdvanceModalOpen}
+        type={advanceType}
+        params={advanceQueryParams}
+        remainingAmount={availableAmount}
+        excludedVoucherIds={selectedAdvanceVoucherIds}
+        selectedVoucherIds={advanceVoucherId ? [advanceVoucherId] : []}
+        onContinue={applySelectedAdvances}
+        onClose={closeAdvanceModal}
+      />
+    ) : null}
+    </>
   );
 };
 
@@ -800,7 +854,6 @@ export const TransactionPaymentDetailsFieldArray = ({
   transactionType = TransactionTypeEnum.PURCHASE,
   branchId,
   selectablePagesUserId,
-  cashControlAccountId,
   allowCashPayment = true,
   allowedPaymentMethods,
   disabled = false,
@@ -810,7 +863,7 @@ export const TransactionPaymentDetailsFieldArray = ({
   const canUseCheque =
     !allowedPaymentMethods?.length ||
     allowedPaymentMethods.includes(TransactionPaymentMethodEnum.CHEQUE);
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, replace } = useFieldArray({
     control: form.control,
     name,
   });
@@ -847,45 +900,92 @@ export const TransactionPaymentDetailsFieldArray = ({
     .filter(row => row.settlementSource === 'ADVANCE' && Boolean(row.advanceVoucherId))
     .map(row => String(row.advanceVoucherId)), [paymentRows]);
 
-  const handleAdvanceSelected = useCallback((selectedIndex: number, voucherId: string, appliedAmount: string, paymentMethod: string) => {
-    const rows = (form.getValues(name) ?? []) as ITransactionPaymentDetailFormRow[];
-    if (rows.some((row, index) => index !== selectedIndex && row.advanceVoucherId === voucherId)) {
-      form.setError(`${name}.${selectedIndex}.advanceVoucherId`, { type: 'duplicate', message: 'This advance is already selected in this transaction' });
+  const handleAdvancesSelected = useCallback((
+    selectedIndex: number,
+    vouchers: AvailableAdvance[],
+    paymentMethod: string
+  ) => {
+    const rows = [...((form.getValues(name) ?? []) as ITransactionPaymentDetailFormRow[])];
+    const current = rows[selectedIndex];
+    if (!current) {
       return;
     }
 
-    const totalCents = amountCents(maxAmount);
-    const remainderIndex = rows.findIndex((row, index) => index !== selectedIndex && row.isAdvanceRemainder);
-    const usedCents = rows.reduce((sum, row, index) => {
-      if (index === remainderIndex) return sum;
-      return sum + (index === selectedIndex ? amountCents(appliedAmount) : amountCents(row.amount));
-    }, 0);
-    const remainderCents = Math.max(totalCents - usedCents, 0);
+    const usedVoucherIds = new Set(
+      rows
+        .filter((row, index) => index !== selectedIndex && row.settlementSource === 'ADVANCE' && Boolean(row.advanceVoucherId))
+        .map(row => String(row.advanceVoucherId))
+    );
+    const uniqueVouchers = vouchers.filter(voucher => !usedVoucherIds.has(voucher.id));
+    if (!uniqueVouchers.length) {
+      form.setError(`${name}.${selectedIndex}.advanceVoucherId`, {
+        type: 'duplicate',
+        message: TRANSACTION_PAYMENT_TEXT.duplicateAdvance,
+      });
+      return;
+    }
 
-    if (remainderIndex >= 0) {
-      if (remainderCents === 0 && rows.length > 1) {
-        remove(remainderIndex);
-      } else {
-        form.setValue(`${name}.${remainderIndex}.amount`, (remainderCents / 100).toFixed(2), { shouldDirty: true, shouldValidate: true });
-        form.setValue(`${name}.${remainderIndex}.paymentMethod`, paymentMethod, { shouldDirty: true, shouldValidate: true });
-        form.setValue(`${name}.${remainderIndex}.amountLocked`, true, { shouldDirty: true });
+    const remainderIndex = rows.findIndex(row => row.isAdvanceRemainder);
+    const rowsWithoutRemainder = remainderIndex >= 0
+      ? rows.filter((_, index) => index !== remainderIndex)
+      : rows;
+    const startIndex = remainderIndex >= 0 && remainderIndex < selectedIndex
+      ? selectedIndex - 1
+      : selectedIndex;
+    const baseRow = rowsWithoutRemainder[startIndex] ?? current;
+    const usedByOthersCents = rowsWithoutRemainder.reduce((sum, row, index) => {
+      if (index === startIndex) {
+        return sum;
       }
+      return sum + amountCents(row.amount);
+    }, 0);
+    let remainingCents = Math.max(amountCents(maxAmount) - usedByOthersCents, 0);
+    const advanceRows: ITransactionPaymentDetailFormRow[] = [];
+
+    uniqueVouchers.forEach(voucher => {
+      if (remainingCents <= 0) {
+        return;
+      }
+      const appliedCents = Math.min(remainingCents, amountCents(voucher.availableAmount));
+      if (appliedCents <= 0) {
+        return;
+      }
+      remainingCents -= appliedCents;
+      advanceRows.push(
+        buildAdvancePaymentRow(
+          baseRow,
+          voucher,
+          (appliedCents / 100).toFixed(2),
+          paymentMethod
+        )
+      );
+    });
+
+    if (!advanceRows.length) {
       return;
     }
 
-    if (remainderCents > 0) {
-      append(createEmptyPurchasePaymentRow({
+    const nextRows = [
+      ...rowsWithoutRemainder.slice(0, startIndex),
+      ...advanceRows,
+      ...rowsWithoutRemainder.slice(startIndex + 1),
+    ];
+    if (remainingCents > 0) {
+      nextRows.push(createEmptyPurchasePaymentRow({
         settlementSource: 'NORMAL',
         paymentMethod,
-        amount: (remainderCents / 100).toFixed(2),
+        amount: (remainingCents / 100).toFixed(2),
         isAdvanceRemainder: true,
         amountLocked: true,
-      }), { shouldFocus: false });
+      }));
     }
-  }, [append, form, maxAmount, name, remove]);
+
+    replace(nextRows);
+    form.clearErrors(`${name}.${startIndex}.advanceVoucherId`);
+  }, [form, maxAmount, name, replace]);
 
   useEffect(() => {
-    const rows = (paymentRows ?? []);
+    const rows = (form.getValues(name) ?? []) as ITransactionPaymentDetailFormRow[];
     const remainderIndex = rows.findIndex(row => row.isAdvanceRemainder);
     if (remainderIndex < 0) return;
     const desiredCents = Math.max(amountCents(maxAmount) - rows.reduce((sum, row, index) => index === remainderIndex ? sum : sum + amountCents(row.amount), 0), 0);
@@ -893,7 +993,7 @@ export const TransactionPaymentDetailsFieldArray = ({
     if (desiredCents === 0 && rows.length > 1) {
       remove(remainderIndex);
     } else if (currentCents !== desiredCents) {
-      form.setValue(`${name}.${remainderIndex}.amount`, (desiredCents / 100).toFixed(2), { shouldDirty: true, shouldValidate: true });
+      form.setValue(`${name}.${remainderIndex}.amount`, (desiredCents / 100).toFixed(2), { shouldDirty: true, shouldValidate: false });
     }
   }, [form, maxAmount, name, paymentRows, remove]);
 
@@ -990,11 +1090,16 @@ export const TransactionPaymentDetailsFieldArray = ({
         });
 
         if (method === TransactionPaymentMethodEnum.CASH) {
-          if (cashControlAccountId) {
-            form.setValue(`${name}.${index}.accountId`, cashControlAccountId, {
+          if (row.paymentMethod !== method) {
+            form.setValue(`${name}.${index}.accountId`, '', {
               shouldDirty: true,
               shouldTouch: true,
               shouldValidate: true,
+            });
+            form.setValue(`${name}.${index}.accountName`, '', {
+              shouldDirty: true,
+              shouldTouch: true,
+              shouldValidate: false,
             });
           }
           form.setValue(`${name}.${index}.chequePageId`, '', {
@@ -1030,7 +1135,7 @@ export const TransactionPaymentDetailsFieldArray = ({
           return;
         }
 
-        if (row.accountId === cashControlAccountId) {
+        if (row.paymentMethod !== method) {
           form.setValue(`${name}.${index}.accountId`, '', {
             shouldDirty: true,
             shouldTouch: true,
@@ -1039,7 +1144,7 @@ export const TransactionPaymentDetailsFieldArray = ({
         }
       });
     },
-    [append, cashControlAccountId, form, maxAmount, name]
+    [append, form, maxAmount, name]
   );
 
   return (
@@ -1059,7 +1164,7 @@ export const TransactionPaymentDetailsFieldArray = ({
                 ? 'default'
                 : 'outline'
             }
-            disabled={disabled || !cashControlAccountId || !canUseCash}
+            disabled={disabled || !canUseCash}
             onClick={() =>
               canUseCash
                 ? applyPaymentMethod(TransactionPaymentMethodEnum.CASH)
@@ -1085,11 +1190,7 @@ export const TransactionPaymentDetailsFieldArray = ({
           >
             Cheque
           </Button>
-          {!cashControlAccountId ? (
-            <span className="text-xs text-error-600">
-              Cash control account is not configured.
-            </span>
-          ) : !canUseCash ? (
+          {!canUseCash ? (
             <span className="text-xs text-error-600">
               Cash payment is not allowed for this transaction type.
             </span>
@@ -1112,14 +1213,13 @@ export const TransactionPaymentDetailsFieldArray = ({
                 transactionType={transactionType}
                 branchId={branchId}
                 selectablePagesUserId={selectablePagesUserId}
-                cashControlAccountId={cashControlAccountId}
                 allowCashPayment={allowCashPayment}
                 canUseCheque={canUseCheque}
                 disabled={disabled}
                 onRemove={remove}
                 canRemove={fields.length > 0}
                 selectedAdvanceVoucherIds={selectedAdvanceVoucherIds}
-                onAdvanceSelected={handleAdvanceSelected}
+                onAdvancesSelected={handleAdvancesSelected}
               />
             ))}
           </div>

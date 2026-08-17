@@ -107,6 +107,15 @@ export const partyProfileSchema = yup.object({
   rejectReason: yup.string().trim().optional().nullable(),
   ffmcRegNo: yup.string().trim().optional().nullable(),
   ffmcRegDate: yup.string().trim().optional().nullable(),
+  cardNumberLength: yup
+    .number()
+    .typeError('Card number length must be a number')
+    .integer('Card number length must be an integer')
+    .min(8, 'Card number length must be at least 8')
+    .max(19, 'Card number length must be at most 19')
+    .optional()
+    .nullable(),
+  allowCardNumberMasking: yup.boolean().default(false),
   divisionFactor: yup.number().typeError('Division Factor must be a number').optional().nullable(),
   commissionRules: yup
     .array()

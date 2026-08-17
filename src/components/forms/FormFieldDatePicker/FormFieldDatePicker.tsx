@@ -1,5 +1,6 @@
 import { useController } from 'react-hook-form';
 import { useFormContext } from 'react-hook-form';
+import type { KeyboardEventHandler } from 'react';
 import { DatePicker } from '../../ui';
 import { parseDateInput } from '@/utils';
 
@@ -14,6 +15,7 @@ interface FormFieldDatePickerProps {
   maxDate?: Date;
   onValueChange?: (value: string) => void;
   onBlur?: () => void;
+  onKeyDown?: KeyboardEventHandler<HTMLInputElement>;
 }
 
 const toDateString = (date: Date | null): string => {
@@ -34,11 +36,12 @@ export const FormFieldDatePicker = ({
   placeholder,
   disabled = false,
   className = '',
-  dateFormat,
+  dateFormat = 'dd/MM/yyyy',
   minDate,
   maxDate,
   onValueChange,
   onBlur,
+  onKeyDown,
 }: FormFieldDatePickerProps) => {
   const form = useFormContext();
 
@@ -69,6 +72,7 @@ export const FormFieldDatePicker = ({
       maxDate={maxDate}
       id={name}
       onBlur={onBlur}
+      onKeyDown={onKeyDown}
     />
   );
 };

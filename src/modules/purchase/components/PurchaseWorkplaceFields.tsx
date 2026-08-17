@@ -3,8 +3,9 @@ import { useFormContext, useWatch } from 'react-hook-form';
 import { FormFieldSelect } from '@/components/forms';
 import { useAuth } from '@/lib/AuthContext';
 import { useListBranchProfiles } from '@/modules/branchProfile/hooks';
-import { useListCounterProfiles } from '@/modules/counterProfile/hooks';
+import { useGetCounterProfile, useListCounterProfiles } from '@/modules/counterProfile/hooks';
 import type { AsyncSelectOption, AsyncSelectResponse } from '@/components/ui';
+import { PURCHASE_WORKPLACE_TEXT } from '../constants/purchaseConstants';
 
 interface WorkplaceFormValues {
   branchId: string;
@@ -14,6 +15,17 @@ interface WorkplaceFormValues {
 interface PurchaseWorkplaceFieldsProps {
   readOnly?: boolean;
 }
+
+const toCounterOption = (
+  id: string,
+  counterNo?: string | number | null,
+  name?: string | null,
+): AsyncSelectOption => ({
+  value: id,
+  label: counterNo != null && String(counterNo).trim()
+    ? `${counterNo} - ${name ?? ''}`.trim()
+    : name?.trim() || id,
+});
 
 export const PurchaseWorkplaceFields = ({
   readOnly = false,
@@ -26,13 +38,59 @@ export const PurchaseWorkplaceFields = ({
     user?.isAdmin || user?.isHo || user?.isHoStaff
   );
 
-  const { data: branches = [] } = useListBranchProfiles({ activeOnly: true });
-  const { data: counters = [] } = useListCounterProfiles(
-    { activeOnly: true },
-    canEditWorkplace
-  );
+  const { data: branches = [], isLoading: isBranchesLoading } =
+    useListBranchProfiles({ activeOnly: true });
+  const { data: counters = [], isLoading: isCountersLoading } =
+    useListCounterProfiles({ activeOnly: true }, canEditWorkplace);
+  const { data: activeCounter, isLoading: isActiveCounterLoading } =
+    useGetCounterProfile(activeCounterId ?? '');
 
   const previousBranchIdRef = useRef<string>('');
+
+  const sessionCounterOption = useMemo<AsyncSelectOption | null>(() => {
+    if (!activeCounterId) {
+      return null;
+    }
+
+    if (activeCounter) {
+      return toCounterOption(
+        activeCounter.id,
+        activeCounter.counterNo,
+        activeCounter.name,
+      );
+    }
+
+    const assignment = user?.assignments?.find(
+      item => item.counterId === activeCounterId
+    );
+    if (assignment) {
+      return toCounterOption(
+        assignment.counterId,
+        user?.counterNo,
+        assignment.counterName || user?.counterName,
+      );
+    }
+
+    if (user?.counterId === activeCounterId) {
+      return toCounterOption(activeCounterId, user.counterNo, user.counterName);
+    }
+
+    return toCounterOption(activeCounterId);
+  }, [activeCounter, activeCounterId, user]);
+
+  const branchCounters = useMemo(() => {
+    if (!branchId) {
+      return [];
+    }
+
+    const selectedBranch = branches.find(branch => branch.id === branchId);
+    const connectedCounterIds = new Set(selectedBranch?.connectCounterIds ?? []);
+
+    return counters.filter(
+      counter =>
+        connectedCounterIds.has(counter.id) || counter.branchId === branchId
+    );
+  }, [branchId, branches, counters]);
 
   useEffect(() => {
     if (previousBranchIdRef.current && previousBranchIdRef.current !== branchId) {
@@ -41,6 +99,23 @@ export const PurchaseWorkplaceFields = ({
 
     previousBranchIdRef.current = branchId || '';
   }, [branchId, form]);
+
+  useEffect(() => {
+    if (!canEditWorkplace) {
+      return;
+    }
+
+    if (!counterId || !branchId || counters.length === 0) {
+      return;
+    }
+
+    const belongsToBranch = branchCounters.some(
+      counter => counter.id === counterId
+    );
+    if (!belongsToBranch) {
+      form.setValue('counterId', '');
+    }
+  }, [branchCounters, branchId, canEditWorkplace, counterId, counters.length, form]);
 
   useEffect(() => {
     if (canEditWorkplace) {
@@ -67,30 +142,15 @@ export const PurchaseWorkplaceFields = ({
     [branches]
   );
 
-  const selectedBranch = useMemo(
-    () => branches.find(branch => branch.id === branchId) ?? null,
-    [branchId, branches]
-  );
+  const counterOptions = useMemo<AsyncSelectOption[]>(() => {
+    if (!canEditWorkplace) {
+      return sessionCounterOption ? [sessionCounterOption] : [];
+    }
 
-  const connectedCounterIds = useMemo(
-    () => selectedBranch?.connectCounterIds ?? [],
-    [selectedBranch]
-  );
-
-  const counterOptions = useMemo<AsyncSelectOption[]>(
-    () =>
-      counters
-        .filter(counter =>
-          connectedCounterIds.length === 0
-            ? false
-            : connectedCounterIds.includes(counter.id)
-        )
-        .map(counter => ({
-          value: counter.id,
-          label: `${counter.counterNo} - ${counter.name}`,
-        })),
-    [connectedCounterIds, counters]
-  );
+    return branchCounters.map(counter =>
+      toCounterOption(counter.id, counter.counterNo, counter.name)
+    );
+  }, [branchCounters, canEditWorkplace, sessionCounterOption]);
 
   const loadBranchOptions = useCallback(
     async (inputValue: string): Promise<AsyncSelectResponse> => {
@@ -129,26 +189,35 @@ export const PurchaseWorkplaceFields = ({
   );
 
   const disableSelection = readOnly || !canEditWorkplace;
-  const canSelectCounter = Boolean(branchId && connectedCounterIds.length > 0);
+  const hasCounterOptions = counterOptions.length > 0;
+  const counterPlaceholder = !branchId
+    ? PURCHASE_WORKPLACE_TEXT.selectBranchFirst
+    : hasCounterOptions
+      ? PURCHASE_WORKPLACE_TEXT.selectCounter
+      : PURCHASE_WORKPLACE_TEXT.noCountersForBranch;
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
       <FormFieldSelect
         name="branchId"
-        label="Branch"
-        placeholder="Select branch"
+        label={PURCHASE_WORKPLACE_TEXT.branchLabel}
+        placeholder={PURCHASE_WORKPLACE_TEXT.selectBranch}
         loadOptions={loadBranchOptions}
         defaultOptions={branchOptions}
+        isLoading={isBranchesLoading}
         disabled={disableSelection}
       />
       <FormFieldSelect
         key={branchId || 'counter-empty'}
         name="counterId"
-        label="Counter"
-        placeholder={branchId ? 'Select counter' : 'Select branch first'}
+        label={PURCHASE_WORKPLACE_TEXT.counterLabel}
+        placeholder={counterPlaceholder}
         loadOptions={loadCounterOptions}
         defaultOptions={counterOptions}
-        disabled={disableSelection || !canSelectCounter}
+        isLoading={
+          canEditWorkplace ? isCountersLoading : isActiveCounterLoading
+        }
+        disabled={disableSelection || (canEditWorkplace && !hasCounterOptions)}
       />
     </div>
   );

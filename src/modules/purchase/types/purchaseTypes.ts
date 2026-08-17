@@ -202,6 +202,8 @@ export interface IPurchaseSubmitPayload {
   transaction: {
     number?: string | null;
     slug: string;
+    branchId?: string | null;
+    counterId?: string | null;
     branchSnapshot: ITransactionReferenceSnapshot | null;
     requiresApproval: boolean;
     transactionDate?: string | null;

@@ -43,6 +43,8 @@ export interface VoucherFormValues {
   partyProfileId: string;
   partyCode: string;
   panNumber: string;
+  panName: string;
+  panDob: string;
   partyName: string;
   chequeNumber: string;
   chequeDate: string;

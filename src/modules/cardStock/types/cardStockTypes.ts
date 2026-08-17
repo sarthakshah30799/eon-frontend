@@ -22,7 +22,7 @@ export interface ICardStockFormValues {
   transactionNumber: string;
   receiptDate: string;
   issuerPartyProfileId: string;
-  hoBranchId: string;
+  branchId: string;
   totalFeAmount: string;
   items: ICardStockFormItem[];
 }

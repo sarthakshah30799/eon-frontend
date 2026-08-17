@@ -50,6 +50,21 @@ const EMPTY_MARGIN: ICurrencyRateMargin = {
 
 export const PURCHASE_RATE_DECIMALS = 7;
 export const PURCHASE_MONEY_DECIMALS = 2;
+export const CARD_PRODUCT_CODE = 'CC';
+
+export const isCardProductCode = (productCode?: string | null) =>
+  String(productCode ?? '').toUpperCase() === CARD_PRODUCT_CODE;
+
+export const PURCHASE_TRANSACTION_TEXT = {
+  quantityLabel: 'Quantity',
+  denominationLabel: 'Denomination',
+  feAmountLabel: 'FE Amount',
+  quantityRequired: 'Quantity is required',
+  feAmountRequired: 'FE Amount is required',
+  feAmountPositive: 'FE Amount must be greater than 0',
+  cardSaleHint: 'Select an issuer and eligible card before entering the FE amount.',
+  cardPurchaseHint: 'Select an issuer and eligible card before entering the denomination.',
+} as const;
 
 export const formatPurchaseDecimal = (
   value?: string | number | null,
@@ -275,6 +290,8 @@ export const mapPurchaseFormValuesToSubmitPayload = (
 
   return {
     transaction: {
+      branchId: values.branchId || null,
+      counterId: values.counterId || null,
       branchSnapshot: values.branchSnapshot,
       requiresApproval,
       slug: values.purchasePageType,

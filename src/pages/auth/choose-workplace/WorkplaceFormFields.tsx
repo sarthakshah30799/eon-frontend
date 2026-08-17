@@ -5,6 +5,7 @@ import { Button } from '../../../components/ui';
 import type { IUserAssignment } from '../../../modules/auth/types';
 import { useListBranchProfiles } from '@/modules/branchProfile/hooks';
 import { useListCounterProfiles } from '@/modules/counterProfile/hooks';
+import { CHOOSE_WORKPLACE_TEXT } from './chooseWorkplaceConstants';
 import type { IWorkplaceFormValues } from './chooseWorkplaceTypes';
 
 interface WorkplaceFormFieldsProps {
@@ -39,10 +40,8 @@ export const WorkplaceFormFields = ({
     canSelectAllBranches
   );
 
-  const { data: counterProfiles = [] } = useListCounterProfiles(
-    { activeOnly: true },
-    canSelectAllBranches
-  );
+  const { data: counterProfiles = [], isLoading: isCountersLoading } =
+    useListCounterProfiles({ activeOnly: true }, canSelectAllBranches);
 
   const visibleBranches = useMemo(() => {
     if (canSelectAllBranches) {
@@ -70,8 +69,17 @@ export const WorkplaceFormFields = ({
     }
 
     if (canSelectAllBranches) {
+      const selectedBranch = branchProfiles.find(
+        branch => branch.id === effectiveSelectedBranchId
+      );
+      const connectedCounterIds = new Set(selectedBranch?.connectCounterIds ?? []);
+
       return counterProfiles
-        .filter(counter => counter.branchId === effectiveSelectedBranchId)
+        .filter(
+          counter =>
+            connectedCounterIds.has(counter.id) ||
+            counter.branchId === effectiveSelectedBranchId
+        )
         .map(counter => ({
           value: counter.id,
           label: `${counter.counterNo} - ${counter.name}`,
@@ -96,6 +104,7 @@ export const WorkplaceFormFields = ({
       }));
   }, [
     assignmentsByBranch,
+    branchProfiles,
     canSelectAllBranches,
     counterProfiles,
     effectiveSelectedBranchId,
@@ -150,6 +159,7 @@ export const WorkplaceFormFields = ({
         label="Branch"
         className="!max-w-none"
         loadOptions={loadBranchOptions}
+        defaultOptions={true}
         disabled={!canSelectBranch}
         isSearchable
         menuPosition="absolute"
@@ -161,14 +171,15 @@ export const WorkplaceFormFields = ({
         className="!max-w-none"
         loadOptions={loadCounterOptions}
         placeholder={effectiveSelectedBranchId ? 'Select Counter' : 'Select Branch first'}
-        defaultOptions
+        defaultOptions={true}
+        isLoading={canSelectAllBranches && isCountersLoading}
         disabled={!effectiveSelectedBranchId}
         isSearchable
         menuPosition="absolute"
       />
       <div className="flex flex-wrap items-center justify-end gap-3 pt-2">
         <Button type="button" onClick={onLogout} variant="link">
-          Log Out / Switch Account
+          {CHOOSE_WORKPLACE_TEXT.logout}
         </Button>
       </div>
       <div className="pt-2">
@@ -178,7 +189,7 @@ export const WorkplaceFormFields = ({
           loading={isSubmitting}
           disabled={isSubmitting}
         >
-          Confirm & Continue
+          {CHOOSE_WORKPLACE_TEXT.confirm}
         </Button>
       </div>
     </div>

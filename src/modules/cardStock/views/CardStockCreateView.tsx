@@ -12,9 +12,9 @@ export const CardStockCreateView = () => {
   const { user, activeBranchId } = useAuth();
   const { data: branches = [], isLoading } = useListBranchProfiles({ activeOnly: true });
   const { createReceipt } = useCreateCardStockReceipt();
-  const hoBranch = useMemo(() => branches.find(branch => branch.isHeadOffice), [branches]);
-  const initialValues = useMemo(() => emptyForm(hoBranch?.id ?? activeBranchId ?? ''), [activeBranchId, hoBranch?.id]);
-  if (!user?.isAdmin && !user?.isHo && !user?.isHoStaff) return <div className="py-8 text-center text-error-600">Only HO/Admin users can create card stock receipts.</div>;
+  const canSelectBranch = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
+  const defaultBranch = useMemo(() => canSelectBranch ? branches.find(branch => branch.isHeadOffice) ?? branches[0] : branches.find(branch => branch.id === activeBranchId), [activeBranchId, branches, canSelectBranch]);
+  const initialValues = useMemo(() => emptyForm(defaultBranch?.id ?? activeBranchId ?? ''), [activeBranchId, defaultBranch?.id]);
   if (isLoading) return <Loader />;
   return <CardStockReceiptForm initialValues={initialValues} onSubmit={async values => { await createReceipt(values); navigate('/card-stock'); }} />;
 };

@@ -13,8 +13,10 @@ import {
   mapCategoryToFormValues,
 } from '../utils';
 import { ADDITIONAL_SETTINGS_TEXTS } from '../constants';
+import { getAdditionalSettingCategoryDefinition } from '../registry/additionalSettingsRegistry';
 import { AdditionalSettingsCategoryDetails } from '../components';
 import { AdditionalSettingsCategoryList } from '../components';
+import { useListAccountProfiles } from '@/modules/accountProfile/hooks';
 import type {
   IAdditionalSettingCategory,
   IAdditionalSettingCategoryFormValues,
@@ -72,6 +74,19 @@ export const AdditionalSettingsView = ({
       categories.find(category => category.id === activeCategoryId) ?? null
     );
   }, [activeCategoryId, categories]);
+  const activeCategoryUsesAccountProfiles = Boolean(
+    getAdditionalSettingCategoryDefinition(activeCategory?.code)?.subcategories.some(
+      subcategory => subcategory.optionsSource === 'account-profile'
+    )
+  );
+  const shouldLoadAccountProfiles =
+    activeCategoryUsesAccountProfiles || categoryModalMode !== null;
+  const { data: accountProfileResponse, isFetching: areAccountProfilesFetching } =
+    useListAccountProfiles(
+      { page: 1, limit: 100 },
+      shouldLoadAccountProfiles
+    );
+  const accountProfiles = accountProfileResponse?.data ?? [];
 
   const handleCreateSubmit = async (
     values: IAdditionalSettingCategoryFormValues
@@ -121,6 +136,8 @@ export const AdditionalSettingsView = ({
 
         <AdditionalSettingsCategoryDetails
           category={activeCategory}
+          accountProfiles={accountProfiles}
+          areAccountProfilesFetching={areAccountProfilesFetching}
           onOpenCreateCategory={() => {
             setEditingCategory(null);
             setCategoryModalMode('create');
@@ -161,6 +178,7 @@ export const AdditionalSettingsView = ({
         size="xl"
       >
         <AdditionalSettingsCreateForm
+          accountProfiles={accountProfiles}
           defaultValues={
             categoryModalMode === 'edit' && editingCategory
               ? mapCategoryToFormValues(editingCategory)

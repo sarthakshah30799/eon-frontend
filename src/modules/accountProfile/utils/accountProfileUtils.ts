@@ -1,5 +1,18 @@
 import type { ICreateAccountProfile } from '../types/accountProfileTypes';
 
+export const ACCOUNT_PROFILE_BASE_CURRENCY_CODE = 'INR';
+
+export const isAccountProfileCurrencyOption = (currency: {
+  active?: boolean;
+  currencyCode?: string;
+}) => {
+  const isBaseCurrency =
+    String(currency.currencyCode ?? '').trim().toUpperCase() ===
+    ACCOUNT_PROFILE_BASE_CURRENCY_CODE;
+
+  return currency.active !== false || isBaseCurrency;
+};
+
 export const createEmptyAccountProfileFormValues = (): ICreateAccountProfile => ({
   divisionDept: '',
   accountCode: '',

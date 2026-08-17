@@ -5,7 +5,6 @@ import type { Resolver } from 'react-hook-form';
 import { Button } from '@/components/ui/button1';
 import { CardSection, Checkbox } from '@/components/ui';
 import { Form, FormFieldInput, FormFieldSelect, FormFieldDatePicker, FormFieldTextarea } from '@/components/forms';
-import { accountProfileApi } from '@/api/accountProfile';
 import { currencyProfileApi } from '@/api/currencyProfile';
 import { additionalSettingsSchema } from '../schema';
 import {
@@ -23,9 +22,12 @@ import {
   getAdditionalSettingSubcategoryCodeOptions,
   getAdditionalSettingSubcategoryDefinition,
 } from '../registry/additionalSettingsRegistry';
+import { formatAccountProfileLabel } from '../utils/additionalSettingsUtils';
+import type { IAccountProfile } from '@/modules/accountProfile/types/accountProfileTypes';
 
 interface AdditionalSettingsCreateFormProps {
   defaultValues?: IAdditionalSettingCategoryFormValues;
+  accountProfiles?: IAccountProfile[];
   existingCategoryCodes?: string[];
   onSubmit: (values: IAdditionalSettingCategoryFormValues) => void | Promise<void>;
   isSubmitting?: boolean;
@@ -46,6 +48,8 @@ const SubcategoryRowFields = ({
   fieldsLength,
   isFixed = false,
   usedCodes,
+  loadAccountProfileOptions,
+  accountProfilesById,
 }: {
   index: number;
   categoryCode?: string;
@@ -55,6 +59,11 @@ const SubcategoryRowFields = ({
   fieldsLength: number;
   isFixed?: boolean;
   usedCodes: string[];
+  loadAccountProfileOptions: (
+    inputValue?: string,
+    page?: number
+  ) => Promise<{ options: { value: string; label: string }[]; hasMore: boolean }>;
+  accountProfilesById: Map<string, IAccountProfile>;
 }) => {
   const { control, setValue } = useFormContext<IAdditionalSettingCategoryFormValues>();
 
@@ -106,22 +115,32 @@ const SubcategoryRowFields = ({
     }
   }, [index, subcategoryDefinition, setValue]);
 
-  const loadAccountProfileOptions = useCallback(async (inputValue: string, page = 1) => {
-    const response = await accountProfileApi.getAccountProfiles({
-      page,
-      limit: 30,
-      search: inputValue,
-      active: true,
-    });
+  const loadAccountProfileOptionsForRow = useCallback(
+    async (inputValue = '') => {
+      const response = await loadAccountProfileOptions(inputValue);
+      const selectedAccount = accountProfilesById.get(String(subcategoryValue ?? ''));
 
-    return {
-      options: (response.data || []).map(account => ({
-        value: account.id,
-        label: `${account.accountCode} - ${account.accountName}`,
-      })),
-      hasMore: (response.data || []).length === 30,
-    };
-  }, []);
+      if (
+        inputValue.trim() ||
+        !selectedAccount ||
+        response.options.some(option => option.value === selectedAccount.id)
+      ) {
+        return response;
+      }
+
+      return {
+        ...response,
+        options: [
+          {
+            value: selectedAccount.id,
+            label: formatAccountProfileLabel(selectedAccount),
+          },
+          ...response.options,
+        ],
+      };
+    },
+    [accountProfilesById, loadAccountProfileOptions, subcategoryValue]
+  );
 
   const loadCurrencyProfileOptions = useCallback(async (inputValue: string, page = 1) => {
     const response = await currencyProfileApi.getCurrencyProfiles(inputValue);
@@ -147,7 +166,7 @@ const SubcategoryRowFields = ({
   const loadSelectValueOptions = useCallback(
     async (inputValue = '', page = 1) => {
       if (subcategoryDefinition?.optionsSource === 'account-profile') {
-        return loadAccountProfileOptions(inputValue, page);
+        return loadAccountProfileOptionsForRow(inputValue);
       }
 
       if (subcategoryDefinition?.optionsSource === 'currency-profile') {
@@ -164,7 +183,7 @@ const SubcategoryRowFields = ({
       };
     },
     [
-      loadAccountProfileOptions,
+      loadAccountProfileOptionsForRow,
       loadCurrencyProfileOptions,
       selectValueOptions,
       subcategoryDefinition?.optionsSource,
@@ -320,8 +339,10 @@ const SubcategoryRowFields = ({
 
 const SubcategoryFields = ({
   isSubmitting,
+  accountProfiles,
 }: {
   isSubmitting: boolean;
+  accountProfiles: IAccountProfile[];
 }) => {
   const { control, setValue } = useFormContext<IAdditionalSettingCategoryFormValues>();
   const { fields, append, remove, replace } = useFieldArray({
@@ -351,6 +372,35 @@ const SubcategoryFields = ({
     categoryCode?.trim().toUpperCase() ===
     AdditionalSettingsCodeEnum.TransactionSacCode;
   const isFixedCategory = isTransactionApprovalCategory || isTransactionSacCategory;
+  const accountProfilesById = useMemo(
+    () => new Map(accountProfiles.map(account => [account.id, account])),
+    [accountProfiles]
+  );
+  const accountProfileOptions = useMemo(
+    () =>
+      accountProfiles
+        .filter(account => account.active)
+        .map(account => ({
+          value: account.id,
+          label: formatAccountProfileLabel(account),
+        })),
+    [accountProfiles]
+  );
+  const loadAccountProfileOptions = useCallback(
+    async (inputValue = '') => {
+      const normalizedSearch = inputValue.trim().toLowerCase();
+
+      return {
+        options: normalizedSearch
+          ? accountProfileOptions.filter(option =>
+              option.label.toLowerCase().includes(normalizedSearch)
+            )
+          : accountProfileOptions,
+        hasMore: false,
+      };
+    },
+    [accountProfileOptions]
+  );
 
   useEffect(() => {
     if (!isFixedCategory) {
@@ -440,6 +490,8 @@ const SubcategoryFields = ({
               fieldsLength={fields.length}
               isFixed={isFixedCategory}
               usedCodes={selectedSubcategoryCodes}
+              loadAccountProfileOptions={loadAccountProfileOptions}
+              accountProfilesById={accountProfilesById}
             />
           ))}
         </div>
@@ -464,6 +516,7 @@ const SubcategoryFields = ({
 
 export const AdditionalSettingsCreateForm = ({
   defaultValues,
+  accountProfiles = [],
   existingCategoryCodes = [],
   onSubmit,
   isSubmitting = false,
@@ -530,7 +583,10 @@ export const AdditionalSettingsCreateForm = ({
       </CardSection>
 
       <CardSection heading={ADDITIONAL_SETTINGS_TEXTS.SUBCATEGORIES}>
-        <SubcategoryFields isSubmitting={isSubmitting} />
+        <SubcategoryFields
+          isSubmitting={isSubmitting}
+          accountProfiles={accountProfiles}
+        />
       </CardSection>
 
       <div className="flex justify-end border-t border-border-primary pt-4">

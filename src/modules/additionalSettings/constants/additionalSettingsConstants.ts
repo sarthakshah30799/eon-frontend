@@ -23,6 +23,11 @@ export const AdditionalSettingsCodeEnum = {
   PurchaseControlAccount: 'PURCHASE_CONTROL_ACCOUNT',
   SaleControlAccount: 'SALE_CONTROL_ACCOUNT',
   CashControlAccount: 'CASH_CONTROL_ACCOUNT',
+  CardSellControlAccount: 'CARD_SELL_CONTROL_ACCOUNT',
+  CardLoadControlAccount: 'CARD_LOAD_CONTROL_ACCOUNT',
+  CardControlAccount: 'CARD_CONTROL_ACCOUNT',
+  CardPurchaseControlAccount: 'CARD_PURCHASE_CONTROL_ACCOUNT',
+  CardProfitControlAccount: 'CARD_PROFIT_CONTROL_ACCOUNT',
   AdvanceControlAccount: 'ADVANCE_CONTROL_ACCOUNT',
   RoundOffAccount: 'ROUND_OFF_ACCOUNT',
   IgstControlAccount: 'IGST_CONTROL_ACCOUNT',
@@ -63,7 +68,6 @@ export const AdditionalSettingsCodeEnum = {
   FakeCurrencyNumberSeries: 'FAKE_CURRENCY',
   CardStockReceiptNumberSeries: TransactionTypeProfileEnum.CARD_STOCK_RECEIPT,
   CardTransferSellNumberSeries: TransactionTypeProfileEnum.CARD_TRANSFER_SELL,
-  CardStockNumberSeries: 'CARD_STOCK',
   CardTransferOutNumberSeries: 'CARD_TRANSFER_OUT',
   CardTransferInNumberSeries: 'CARD_TRANSFER_IN',
   CardStockLoadNumberSeries: 'CARD_STOCK_LOAD',
@@ -77,6 +81,8 @@ export const AdditionalSettingsCodeEnum = {
   TransferSettings: 'TRANSFER_SETTINGS',
   StockRevaluationSettings: 'STOCK_REVALUATION_SETTINGS',
   StockRevaluationFrequency: 'STOCK_REVALUATION_FREQUENCY',
+  CardSettings: 'CARD_SETTINGS',
+  CardAutoSettleWithHo: 'AUTO_SETTLE_CARD_WITH_HO',
 } as const;
 
 export const ADDITIONAL_SETTINGS_TEXTS = {

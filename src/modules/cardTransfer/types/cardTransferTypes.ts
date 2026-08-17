@@ -1,4 +1,5 @@
 import type { IBranchProfile } from '@/modules/branchProfile/types/branchProfileTypes';
+import type { ITransactionReferenceSnapshot } from '@/modules/transactions';
 
 export type CardTransferStatus = 'HELD' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED';
 export type CardTransferType = 'SELL' | 'PURCHASE';
@@ -18,16 +19,21 @@ export interface CardTransferCard {
 
 export interface CardTransferItem {
   currencyId: string;
+  currencySnapshot?: ITransactionReferenceSnapshot | null;
   per: string;
   productId: string;
+  productSnapshot?: ITransactionReferenceSnapshot | null;
   issuerPartyProfileId: string;
+  issuerPartyProfileSnapshot?: ITransactionReferenceSnapshot | null;
   feAmount: string;
   cards: CardTransferCard[];
 }
 
 export interface CardTransferFormValues {
   sourceBranchId: string;
+  sourceBranchSnapshot?: ITransactionReferenceSnapshot | null;
   destinationBranchId: string;
+  destinationBranchSnapshot?: ITransactionReferenceSnapshot | null;
   transactionDate: string;
   transactionNumber: string;
   remarks: string;

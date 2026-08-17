@@ -37,22 +37,36 @@ export const parseDateInput = (value: string): Date | null => {
 
   const normalized = value.trim();
 
-  const directParsed = new Date(normalized);
-  if (!Number.isNaN(directParsed.getTime())) {
-    return directParsed;
-  }
-
   if (/^\d{4}-\d{2}-\d{2}$/.test(normalized)) {
     const parsed = new Date(`${normalized}T00:00:00`);
     return Number.isNaN(parsed.getTime()) ? null : parsed;
   }
 
   const match = normalized.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-  if (!match) {
-    return null;
+  if (match) {
+    const [, day, month, year] = match;
+    const parsed = new Date(Number(year), Number(month) - 1, Number(day));
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
   }
 
-  const [, day, month, year] = match;
-  const parsed = new Date(Number(year), Number(month) - 1, Number(day));
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
+  const directParsed = new Date(normalized);
+  return Number.isNaN(directParsed.getTime()) ? null : directParsed;
+};
+
+export const toDisplayDate = (value?: string | number | readonly string[] | null): string => {
+  if (value === undefined || value === null || value === '') {
+    return '';
+  }
+
+  const normalized = String(value).trim();
+  if (!normalized) {
+    return '';
+  }
+
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(normalized)) {
+    return normalized;
+  }
+
+  const parsed = parseDateInput(normalized);
+  return parsed ? formatDateDisplayInput(parsed) : normalized;
 };

@@ -13,13 +13,14 @@ import {
   FormFieldCategoryOption,
 } from '@/components/forms';
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
-import { currencyProfileApi } from '@/api/currencyProfile';
 import { financialCodesApi } from '@/api/financialCodes/financialCodes.api';
 import { branchProfileApi } from '@/api/branchProfile/branchProfile.api';
 import { accountProfileApi } from '@/api/accountProfile';
 import { useGetFinancialCode } from '@/modules/financialCodes/hooks/useGetFinancialCode';
+import { useListCurrencyProfiles } from '@/modules/currencyProfile/hooks/useListCurrencyProfiles';
 import { accountProfileSchema } from '../schema/accountProfileSchema';
 import type { ICreateAccountProfile } from '../types/accountProfileTypes';
+import { isAccountProfileCurrencyOption } from '../utils/accountProfileUtils';
 import { normalizeCodeValue } from '@/utils';
 
 const ACCOUNT_PROFILE_OPTION_PAGE_SIZE = 30;
@@ -181,27 +182,31 @@ export const AccountProfileForm = ({
 }: AccountProfileFormProps) => {
   const navigate = useNavigate();
   const isDisabled = isSubmitting || readOnly;
+  const { data: currencies = [], isLoading: isCurrenciesLoading } = useListCurrencyProfiles({
+    activeOnly: false,
+  });
+  const currencyOptions = useMemo(
+    () =>
+      currencies
+        .filter(isAccountProfileCurrencyOption)
+        .map(currency => ({
+          value: currency.id,
+          label: `${currency.currencyCode} - ${currency.currencyName}`,
+        })),
+    [currencies]
+  );
 
   const onCancel = () => {
     navigate('/admin/accounts-profile');
   };
 
   const loadCurrencyOptions = useCallback(async (inputValue: string) => {
-    const data = (await currencyProfileApi.getCurrencyProfiles()).filter(
-      currency => currency.active !== false
-    );
-    const filtered = data.filter(
-      c =>
-        c.currencyCode.toLowerCase().includes(inputValue.toLowerCase()) ||
-        c.currencyName.toLowerCase().includes(inputValue.toLowerCase())
-    );
-    return {
-      options: filtered.map(c => ({
-        value: c.id,
-        label: `${c.currencyCode} - ${c.currencyName}`,
-      })),
-    };
-  }, []);
+    const query = inputValue.trim().toLowerCase();
+    const options = query
+      ? currencyOptions.filter(option => option.label.toLowerCase().includes(query))
+      : currencyOptions;
+    return { options };
+  }, [currencyOptions]);
 
   const loadBranchOptions = useCallback(async (inputValue: string) => {
     const data = await branchProfileApi.getBranchProfiles({
@@ -333,6 +338,8 @@ export const AccountProfileForm = ({
             placeholder="Select Currency"
             disabled={isDisabled}
             loadOptions={loadCurrencyOptions}
+            defaultOptions={currencyOptions}
+            isLoading={isCurrenciesLoading}
           />
         </div>
       </CardSection>

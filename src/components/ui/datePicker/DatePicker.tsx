@@ -24,6 +24,7 @@ export interface DatePickerProps {
   minDate?: Date;
   maxDate?: Date;
   id?: string;
+  onKeyDown?: React.KeyboardEventHandler<HTMLInputElement>;
 }
 
 const DatePickerInput = forwardRef<
@@ -32,8 +33,9 @@ const DatePickerInput = forwardRef<
     placeholder?: string;
     onParsedDateChange?: (date: Date | null) => void;
     onDateBlur?: () => void;
+    onInputKeyDown?: React.KeyboardEventHandler<HTMLInputElement>;
   }
->((({ className = '', value, placeholder, onParsedDateChange, onDateBlur, ...props }, ref) => {
+>((({ className = '', value, placeholder, onParsedDateChange, onDateBlur, onInputKeyDown, ...props }, ref) => {
   const [typedValue, setTypedValue] = useState<string | null>(null);
   const displayValue = typedValue ?? toDisplayDate(value);
 
@@ -41,6 +43,14 @@ const DatePickerInput = forwardRef<
     setTypedValue(null);
     props.onBlur?.(event);
     onDateBlur?.();
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    onInputKeyDown?.(event);
+    if (event.defaultPrevented) {
+      return;
+    }
+    props.onKeyDown?.(event);
   };
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -70,6 +80,7 @@ const DatePickerInput = forwardRef<
         placeholder={placeholder}
         onChange={handleChange}
         onBlur={handleBlur}
+        onKeyDown={handleKeyDown}
       />
       <span className="absolute right-3 flex items-center pointer-events-none text-slate-400">
         <CalendarIcon className="h-4 w-4" />
@@ -93,6 +104,7 @@ export const DatePicker = ({
   minDate,
   maxDate,
   id,
+  onKeyDown,
 }: DatePickerProps) => {
   const generatedId = useId();
   const inputId = id ?? generatedId;
@@ -123,6 +135,7 @@ export const DatePicker = ({
             onParsedDateChange={handleDateChange}
             onBlur={onBlur}
             onDateBlur={onBlur}
+            onInputKeyDown={onKeyDown}
           />
         }
         showYearDropdown

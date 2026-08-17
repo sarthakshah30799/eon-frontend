@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 import { ProtectedLayout, PublicLayout } from '../components/layouts';
 import { Loader } from '@/components/ui/loader';
@@ -340,6 +340,8 @@ const CardTransferListPage = lazy(() => import('../pages/card-transfer/CardTrans
 const CardTransferCreatePage = lazy(() => import('../pages/card-transfer/create/CardTransferCreatePage'));
 const CardTransferEditPage = lazy(() => import('../pages/card-transfer/edit/[id]/CardTransferEditPage'));
 const CardSettlementListPage = lazy(() => import('../pages/card-settlement/CardSettlementListPage'));
+const CardSettlementCreatePage = lazy(() => import('../pages/card-settlement/create/CardSettlementCreatePage'));
+const CardSettlementEditPage = lazy(() => import('../pages/card-settlement/edit/[id]/CardSettlementEditPage'));
 const CardSettlementDetailPage = lazy(() => import('../pages/card-settlement/[id]/CardSettlementDetailPage'));
 
 const router = createBrowserRouter([
@@ -560,6 +562,14 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <ReportsPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/reports/stock-revaluations',
+    element: (
+      <ProtectedLayout>
+        <StockRevaluationPage />
       </ProtectedLayout>
     ),
   },
@@ -942,11 +952,7 @@ const router = createBrowserRouter([
   },
   {
     path: '/stock-revaluations',
-    element: (
-      <ProtectedLayout>
-        <StockRevaluationPage />
-      </ProtectedLayout>
-    ),
+    element: <Navigate to="/reports/stock-revaluations" replace />,
   },
   {
     path: '/card-stock',
@@ -961,6 +967,22 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <CardSettlementListPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/card-settlement/create',
+    element: (
+      <ProtectedLayout>
+        <CardSettlementCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/card-settlement/edit/:id',
+    element: (
+      <ProtectedLayout>
+        <CardSettlementEditPage />
       </ProtectedLayout>
     ),
   },

@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Loader } from '@/components/ui/loader';
 import { useAuth } from '@/lib/AuthContext';
 import { useListAdditionalSettings } from '@/modules/additionalSettings/hooks';
@@ -14,14 +14,16 @@ import { PurchaseForm } from '../forms/PurchaseForm';
 import { type PurchasePageType } from '@/pages/purchase/[slug]/purchasePage.enum';
 import { getAdditionalSettingBooleanValue } from '@/modules/additionalSettings/utils';
 import {
+  getPurchasePageSlugFromType,
   getPurchasePageTitle,
   getPurchasePartyProfileTypes,
   getPurchaseTradeMode,
   getPurchaseTransactionType,
 } from '@/pages/purchase/[slug]/purchasePage.enum';
-import type {
-  ITransactionEntity,
-  ITransactionReferenceSnapshot,
+import {
+  TransactionTypeEnum,
+  type ITransactionEntity,
+  type ITransactionReferenceSnapshot,
 } from '@/modules/transactions';
 import { AdditionalSettingsCodeEnum } from '@/modules/additionalSettings/constants';
 import { getAdditionalSettingTextValue } from '@/modules/additionalSettings/utils';
@@ -36,6 +38,7 @@ export const PurchaseCreateView = ({
   purchasePageType,
 }: PurchaseCreateViewProps) => {
   const navigate = useNavigate();
+  const { slug } = useParams<{ slug?: string }>();
   const { user, activeBranchId, activeCounterId, policyContext } =
     useAuth();
   const canSelectWorkplace = Boolean(
@@ -161,8 +164,16 @@ export const PurchaseCreateView = ({
     );
     const created = await createPurchaseTransaction(payload);
     setSavedTransaction(created);
-    navigate(`/purchase/${purchasePageType?.toLowerCase()}`);
-  }, [createPurchaseTransaction, navigate, purchasePageType, requiresApproval]);
+    const listSlug = slug || getPurchasePageSlugFromType(purchasePageType);
+    if (!listSlug) {
+      return;
+    }
+    navigate(
+      getPurchaseTransactionType(purchasePageType) === TransactionTypeEnum.SALE
+        ? `/sell/${listSlug}`
+        : `/purchase/${listSlug}`
+    );
+  }, [createPurchaseTransaction, navigate, purchasePageType, requiresApproval, slug]);
 
   const isLoading =
     isBranchLoading || isPricingLoading || isAdditionalSettingsLoading;

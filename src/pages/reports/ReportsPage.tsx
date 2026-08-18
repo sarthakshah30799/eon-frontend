@@ -1,5 +1,7 @@
 import { Navigate, useLocation, useParams } from 'react-router-dom';
 import ReportSalePurchaseView, {
+  CardSettledReportView,
+  CardUnsettledReportView,
   CurrencyBalanceReportView,
   ProductProfitReportView,
   SpecialReportView,
@@ -37,6 +39,10 @@ const ReportsPage = () => {
       return <CurrencyBalanceReportView key={`${slug}${location.search}`} />;
     case ReportPageTypeEnum.PRODUCT_PROFIT:
       return <ProductProfitReportView key={`${slug}${location.search}`} />;
+    case ReportPageTypeEnum.CARD_UNSETTLED:
+      return <CardUnsettledReportView key={`${slug}${location.search}`} />;
+    case ReportPageTypeEnum.CARD_SETTLED:
+      return <CardSettledReportView key={`${slug}${location.search}`} />;
     case ReportPageTypeEnum.SALE_PURCHASE:
     default:
       return <ReportSalePurchaseView key={`${slug}${location.search}`} />;

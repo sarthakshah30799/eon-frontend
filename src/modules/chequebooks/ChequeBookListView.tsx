@@ -10,7 +10,7 @@ import {
   type AsyncSelectOption,
   type AsyncSelectResponse,
 } from '@/components/ui';
-import { useListChequeBooks } from './hooks';
+import { useListChequeBooks, useGetChequeBook } from './hooks';
 import { useListBranchProfiles } from '@/modules/branchProfile/hooks';
 import { ChequeBookTable } from './components';
 import { CashierChequeBookListView } from './components/CashierChequeBookListView';
@@ -28,7 +28,9 @@ const resolveAssignedToLabel = (assignedTo: IChequeBook['assignedTo']) => {
 /** Normalises status to uppercase for comparison — handles both old PascalCase and new UPPERCASE DB values */
 export const ChequeBookListView = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
+  const reviewId = searchParams.get('reviewId');
   const canSeeBranchFilter = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
   const isCashierOrDelivery = !!(user?.isCashier || user?.isDeliveryBoy);
   const isHoStaff = !!(user?.isHo || user?.isHoStaff) && !user?.isAdmin;
@@ -39,13 +41,11 @@ export const ChequeBookListView = () => {
   const [statusFilter, setStatusFilter] = useState<ChequeBookStatus | ''>('');
 
   // Review modal states
-  const [isReviewOpen, setIsReviewOpen] = useState(false);
   const [approvalStatus, setApprovalStatus] = useState<ChequeBookReviewStatus>(
     ChequeBookStatusEnum.APPROVE
   );
   const [approvalRemarks, setApprovalRemarks] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedBook, setSelectedBook] = useState<IChequeBook | null>(null);
 
   const reviewStatusOptions = useMemo<AsyncSelectOption[]>(
     () => [
@@ -162,14 +162,35 @@ export const ChequeBookListView = () => {
     status: statusFilter || undefined,
   });
 
-  const [searchParams] = useSearchParams();
-  const reviewId = searchParams.get('reviewId');
-  const reviewBookFromQuery = useMemo(
-    () => (reviewId ? books.find(book => book.id === reviewId) ?? null : null),
-    [books, reviewId]
+  const {
+    data: routedBook,
+    error: routedBookError,
+    isFetched: isRoutedBookFetched,
+  } = useGetChequeBook(reviewId ?? undefined);
+
+  const reviewBook = useMemo(
+    () =>
+      reviewId
+        ? books.find(book => book.id === reviewId) ?? routedBook ?? null
+        : null,
+    [books, reviewId, routedBook]
   );
-  const reviewBook = selectedBook ?? reviewBookFromQuery;
-  const isReviewModalOpen = isReviewOpen || Boolean(reviewBookFromQuery);
+  const isReviewModalOpen = Boolean(reviewBook);
+
+  const closeReview = useCallback(() => {
+    const nextSearchParams = new URLSearchParams(searchParams);
+    nextSearchParams.delete('reviewId');
+    navigate({ search: nextSearchParams.toString() });
+  }, [navigate, searchParams]);
+
+  const openReview = useCallback(
+    (bookId: string) => {
+      const nextSearchParams = new URLSearchParams(searchParams);
+      nextSearchParams.set('reviewId', bookId);
+      navigate({ search: nextSearchParams.toString() });
+    },
+    [navigate, searchParams]
+  );
 
   useEffect(() => {
     if (error) {
@@ -180,6 +201,25 @@ export const ChequeBookListView = () => {
       toast.error(message);
     }
   }, [error]);
+
+  useEffect(() => {
+    if (!reviewId || isLoading || !isRoutedBookFetched) return;
+    if (books.some(book => book.id === reviewId) || routedBook) return;
+    toast.error(
+      routedBookError instanceof Error
+        ? routedBookError.message
+        : 'Dispatch not found.'
+    );
+    closeReview();
+  }, [
+    books,
+    closeReview,
+    isLoading,
+    isRoutedBookFetched,
+    reviewId,
+    routedBook,
+    routedBookError,
+  ]);
 
   const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -194,14 +234,7 @@ export const ChequeBookListView = () => {
       toast.success(
         `Record has been successfully ${approvalStatus.toLowerCase()}.`
       );
-      if (reviewBookFromQuery) {
-        const nextSearchParams = new URLSearchParams(searchParams);
-        nextSearchParams.delete('reviewId');
-        navigate({ search: nextSearchParams.toString() });
-      } else {
-        setIsReviewOpen(false);
-      }
-      setSelectedBook(null);
+      closeReview();
       await refetchBooks();
     } catch (error: unknown) {
       toast.error(
@@ -294,8 +327,7 @@ export const ChequeBookListView = () => {
                 navigate(`/cheque-books/allocation?bookId=${book.id}`);
                 return;
               }
-              setSelectedBook(book);
-              setIsReviewOpen(true);
+              openReview(book.id);
             }}
           />
         </div>
@@ -306,19 +338,7 @@ export const ChequeBookListView = () => {
         <Modal
           open={isReviewModalOpen}
           onOpenChange={open => {
-            if (open) {
-              return;
-            }
-
-            if (reviewBookFromQuery) {
-              const nextSearchParams = new URLSearchParams(searchParams);
-              nextSearchParams.delete('reviewId');
-              navigate({ search: nextSearchParams.toString() });
-            } else {
-              setIsReviewOpen(false);
-            }
-
-            setSelectedBook(null);
+            if (!open) closeReview();
           }}
           title={
             reviewBook?.status === ChequeBookStatusEnum.PENDING
@@ -446,7 +466,7 @@ export const ChequeBookListView = () => {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => setIsReviewOpen(false)}
+                    onClick={closeReview}
                   >
                     Cancel
                   </Button>
@@ -499,7 +519,7 @@ export const ChequeBookListView = () => {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => setIsReviewOpen(false)}
+                    onClick={closeReview}
                   >
                     Close
                   </Button>

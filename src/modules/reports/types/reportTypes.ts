@@ -1,4 +1,5 @@
 export const ReportDatePresetEnum = {
+  ALL: 'ALL',
   TODAY: 'TODAY',
   YESTERDAY: 'YESTERDAY',
   CURRENT_WEEK: 'CURRENT_WEEK',
@@ -32,6 +33,8 @@ export const ReportPageTypeEnum = {
   PRODUCT_PROFIT: 'product-profit-report',
   SPECIAL: 'special-reports',
   CURRENCY_BALANCE: 'currency-balance-report',
+  CARD_UNSETTLED: 'card-unsettled-report',
+  CARD_SETTLED: 'card-settled-report',
 } as const;
 
 export type ReportPageType =
@@ -60,6 +63,8 @@ const REPORT_PAGE_TITLE_BY_TYPE: Record<ReportPageType, string> = {
   [ReportPageTypeEnum.PRODUCT_PROFIT]: 'Product Profit Reports',
   [ReportPageTypeEnum.SPECIAL]: 'Special Reports',
   [ReportPageTypeEnum.CURRENCY_BALANCE]: 'Currency Balance',
+  [ReportPageTypeEnum.CARD_UNSETTLED]: 'Unsettled CARD Report',
+  [ReportPageTypeEnum.CARD_SETTLED]: 'Settled CARD Report',
 };
 
 export const getReportPageTypeFromSlug = (
@@ -154,6 +159,7 @@ export interface ISalePurchaseReportRow {
   rowType: 'GROUP' | 'ITEM' | 'SUBTOTAL';
   transactionId: string;
   partyProfileId: string;
+  groupLabel?: string;
   sortPartyProfile?: string;
   sortDate?: string;
   sortBranch?: string;
@@ -250,6 +256,27 @@ export interface ICurrencyBalanceReportRequest {
   branchIds?: string[];
   counterIds?: string[];
   currencyIds?: string[];
+}
+
+export interface ICardSettlementReportFiltersState {
+  dateRange: IReportDateRange;
+  branchIds: string[];
+  productIds: string[];
+  currencyIds: string[];
+  issuerPartyProfileIds: string[];
+  sortBy: ReportSortBy;
+}
+
+export type ICardSettlementReportResponse = ISalePurchaseReportResponse;
+
+export interface ICardSettlementReportRequest {
+  startDate?: string;
+  endDate?: string;
+  branchIds?: string[];
+  productIds?: string[];
+  currencyIds?: string[];
+  issuerPartyProfileIds?: string[];
+  sortBy?: ReportSortBy;
 }
 
 export interface IReportTemplateOption {

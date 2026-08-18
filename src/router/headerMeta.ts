@@ -26,6 +26,8 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
   { path: '/fake-currencies/create', meta: { title: 'Create Fake Currency' } },
   { path: '/fake-currencies/edit/:id', meta: { title: 'Fake Currency Details' } },
   { path: '/reports/stock-revaluations', meta: { title: 'Stock Revaluation' } },
+  { path: '/reports/card-unsettled-report', meta: { title: 'Unsettled CARD Report' } },
+  { path: '/reports/card-settled-report', meta: { title: 'Settled CARD Report' } },
   { path: '/card-stock', meta: { title: 'Receipt Stock' } },
   { path: '/card-stock/create', meta: { title: 'Create Receipt Stock' } },
   { path: '/card-stock/edit/:id', meta: { title: 'Receipt Stock Details' } },

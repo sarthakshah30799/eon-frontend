@@ -32,6 +32,8 @@ const getCellClassName = (row: ISalePurchaseReportRow, key: string) => {
       'commissionRate',
       'commissionAmount',
       'netProfit',
+      'totalInr',
+      'profitLoss',
     ].includes(key) || key.toLowerCase().includes('amount') || key.toLowerCase().includes('rate');
 
   return [
@@ -97,9 +99,11 @@ export const SalePurchaseReportTable = ({
               >
                 {row.rowType === 'GROUP' ? (
                   <td colSpan={columns.length} className={getCellClassName(row, 'partyProfileName')}>
-                    {row.partyProfileName
-                      ? `Party Profile: ${row.partyProfileName}`
-                      : 'Party Profile'}
+                    {row.groupLabel
+                  ? row.groupLabel
+                  : row.partyProfileName
+                    ? `Party Profile: ${row.partyProfileName}`
+                    : 'Party Profile'}
                   </td>
                 ) : (
                   columns.map(column => {

@@ -12,6 +12,8 @@ interface CheckboxFilterGroupProps {
   helperText?: string;
   disabled?: boolean;
   compact?: boolean;
+  isLoading?: boolean;
+  loadingMessage?: string;
 }
 
 export const CheckboxFilterGroup = ({
@@ -25,6 +27,8 @@ export const CheckboxFilterGroup = ({
   helperText,
   disabled = false,
   compact = true,
+  isLoading = false,
+  loadingMessage = 'Loading options...',
 }: CheckboxFilterGroupProps) => {
   const selectedCount = selectedIds.length;
 
@@ -43,7 +47,7 @@ export const CheckboxFilterGroup = ({
         <Checkbox
           checked={allSelected}
           onChange={checked => onToggleAll(checked)}
-          disabled={disabled || options.length === 0}
+          disabled={disabled || isLoading || options.length === 0}
           id={`${heading}-select-all`}
         >
           Select all
@@ -53,7 +57,11 @@ export const CheckboxFilterGroup = ({
         )}
       </div>
 
-      {options.length === 0 ? (
+      {isLoading ? (
+        <div className="rounded-md border border-dashed border-slate-200 px-3 py-2 text-[11px] text-text-tertiary">
+          {loadingMessage}
+        </div>
+      ) : options.length === 0 ? (
         <div className="rounded-md border border-dashed border-slate-200 px-3 py-2 text-[11px] text-text-tertiary">
           {emptyMessage}
         </div>

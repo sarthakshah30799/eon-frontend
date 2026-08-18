@@ -299,6 +299,7 @@ export interface ITransactionItemEntity {
   profit: string | null;
   profitAmount: string | null;
   roundOff: string | null;
+  amount: string | null;
   currencySnapshot: ITransactionReferenceSnapshot | null;
   productSnapshot: ITransactionReferenceSnapshot | null;
   currencyRateSnapshot: ITransactionReferenceSnapshot | null;

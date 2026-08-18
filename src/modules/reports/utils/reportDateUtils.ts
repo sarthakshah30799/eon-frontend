@@ -101,6 +101,12 @@ export const buildReportDateRange = (
         startDate: formatDateInput(startOfDay(current)),
         endDate: formatDateInput(endOfDay(current)),
       };
+    case ReportDatePresetEnum.ALL:
+      return {
+        preset,
+        startDate: '',
+        endDate: '',
+      };
     case ReportDatePresetEnum.TODAY:
     default: {
       const day = startOfDay(current);
@@ -114,6 +120,9 @@ export const buildReportDateRange = (
 };
 
 export const formatReportDateRangeLabel = (range: IReportDateRange) => {
+  if (range.preset === ReportDatePresetEnum.ALL || (!range.startDate && !range.endDate)) {
+    return 'All dates';
+  }
   const fmt = (dateStr: string) => {
     if (!dateStr) return '-';
     const withTime = dateStr.match(/^\d{4}-\d{2}-\d{2}$/) ? `${dateStr}T00:00:00` : dateStr;

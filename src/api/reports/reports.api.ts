@@ -1,6 +1,8 @@
 import { apiClient } from '../api';
 import { buildQueryString } from '@/utils';
 import type {
+  ICardSettlementReportRequest,
+  ICardSettlementReportResponse,
   ICurrencyBalanceReportRequest,
   ICurrencyBalanceReportResponse,
   IProductProfitReportRequest,
@@ -211,6 +213,104 @@ export const reportsApi = {
     return {
       blob: res.data.blob,
       filename: res.data.filename || buildExportFilename('currency-balance-report', 'single', format),
+    };
+  },
+
+  getCardUnsettledReport: async (
+    params: ICardSettlementReportRequest,
+  ): Promise<ICardSettlementReportResponse> => {
+    const res = await apiClient.get<ICardSettlementReportResponse>(
+      `/reports/card-unsettled${buildQueryString(params)}`,
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      return {
+        columns: [],
+        rows: [],
+        layout: 'grouped',
+      };
+    }
+
+    return res.data;
+  },
+
+  getCardSettledReport: async (
+    params: ICardSettlementReportRequest,
+  ): Promise<ICardSettlementReportResponse> => {
+    const res = await apiClient.get<ICardSettlementReportResponse>(
+      `/reports/card-settled${buildQueryString(params)}`,
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      return {
+        columns: [],
+        rows: [],
+        layout: 'grouped',
+      };
+    }
+
+    return res.data;
+  },
+
+  downloadCardUnsettledReport: async (
+    params: ICardSettlementReportRequest,
+    format: ReportExportFormat,
+  ): Promise<{ blob: Blob; filename?: string }> => {
+    const query = buildQueryString({
+      ...params,
+      format,
+    });
+
+    const res = await apiClient.getDownload(
+      `/reports/card-unsettled/export${query}`,
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      throw new Error('Failed to download unsettled CARD report');
+    }
+
+    return {
+      blob: res.data.blob,
+      filename: res.data.filename || buildExportFilename('card-unsettled-report', 'grouped', format),
+    };
+  },
+
+  downloadCardSettledReport: async (
+    params: ICardSettlementReportRequest,
+    format: ReportExportFormat,
+  ): Promise<{ blob: Blob; filename?: string }> => {
+    const query = buildQueryString({
+      ...params,
+      format,
+    });
+
+    const res = await apiClient.getDownload(
+      `/reports/card-settled/export${query}`,
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      throw new Error('Failed to download settled CARD report');
+    }
+
+    return {
+      blob: res.data.blob,
+      filename: res.data.filename || buildExportFilename('card-settled-report', 'grouped', format),
     };
   },
 

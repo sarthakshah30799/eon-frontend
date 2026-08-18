@@ -7,3 +7,4 @@ export { default as SalePurchaseReportTable } from './SalePurchaseReportTable';
 export { default as SpecialReportFiltersSection } from './SpecialReportFiltersSection';
 export { default as CurrencyBalanceReportFiltersSection } from './CurrencyBalanceReportFiltersSection';
 export { default as CurrencyBalanceReportTable } from './CurrencyBalanceReportTable';
+export { default as CardSettlementReportFiltersSection } from './CardSettlementReportFiltersSection';

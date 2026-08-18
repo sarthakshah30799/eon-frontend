@@ -11,6 +11,7 @@ import { buildReportDateRange } from '../utils';
 interface ReportDatePresetFilterProps {
   value: IReportDateRange;
   onChange: (nextValue: IReportDateRange) => void;
+  showAllDates?: boolean;
 }
 
 const PRESET_BUTTONS: Array<{ value: ReportDatePreset; label: string }> = [
@@ -26,8 +27,12 @@ const PRESET_BUTTONS: Array<{ value: ReportDatePreset; label: string }> = [
 export const ReportDatePresetFilter = ({
   value,
   onChange,
+  showAllDates = false,
 }: ReportDatePresetFilterProps) => {
   const isCustom = value.preset === ReportDatePresetEnum.CUSTOM;
+  const presetButtons = showAllDates
+    ? [{ value: ReportDatePresetEnum.ALL, label: 'All Dates' }, ...PRESET_BUTTONS]
+    : PRESET_BUTTONS;
 
   const selectedStartDate = useMemo(
     () => parseDateInput(value.startDate),
@@ -49,7 +54,7 @@ export const ReportDatePresetFilter = ({
       </div>
 
       <div className="flex flex-wrap gap-1.5">
-        {PRESET_BUTTONS.map(button => (
+        {presetButtons.map(button => (
           <Button
             key={button.value}
             type="button"

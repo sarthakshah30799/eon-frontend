@@ -1,0 +1,33 @@
+export const CARD_SETTLEMENT_REPORT_TEXT = {
+  unsettledTitle: 'Unsettled CARD Report',
+  unsettledDescription:
+    'CARD sales waiting to be sent to HO or waiting for HO acceptance, grouped by selling branch.',
+  settledTitle: 'Settled CARD Report',
+  settledDescription:
+    'CARD sales whose branch to HO settlement is posted, grouped by selling branch.',
+  reportViewTitle: 'Report View',
+  reportViewDescription:
+    'Rows are grouped by selling branch. Group totals use stored quantity and amount values.',
+  download: 'Download',
+  reset: 'Reset',
+  viewReport: 'View Report',
+  loadError: 'Failed to load report data. Please try again.',
+  xlsx: 'XLSX',
+  csv: 'CSV',
+  appliedPrefix: 'Applied',
+  all: 'All',
+  sortBy: 'Sort By',
+  dateAsc: 'Date Asc',
+  dateDesc: 'Date Desc',
+  branchHeading: 'Branch',
+  productHeading: 'CARD Product',
+  currencyHeading: 'Currency',
+  issuerHeading: 'Issuer',
+  branchEmpty: 'No branch options available.',
+  productEmpty: 'No CARD product options available.',
+  currencyEmpty: 'No currency options available.',
+  issuerEmpty: 'No issuer options available.',
+  loadingOptions: 'Loading options...',
+  noOptions: 'No options available',
+  selectedOf: (count: number, total: number) => `${count} of ${total} selected`,
+} as const;

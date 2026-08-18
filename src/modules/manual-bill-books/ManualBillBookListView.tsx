@@ -19,6 +19,7 @@ import { Loader } from '@/components/ui/loader';
 import { ManualBillBookTable, CashierBillBookListView } from './components';
 import {
   useApproveRejectManualBillBook,
+  useGetManualBillBook,
   useListManualBillBooks,
 } from './hooks';
 import { useListBranchProfiles } from '@/modules/branchProfile/hooks';
@@ -47,7 +48,9 @@ const getStatusBadgeClass = (status: string) => {
 
 export const ManualBillBookListView = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
+  const reviewId = searchParams.get('reviewId');
   const canSeeBranchFilter = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
   const isUserHo = (user?.isHo || user?.isHoStaff) && !user?.isAdmin;
   const isCashierOrDelivery = !!(user?.isCashier || user?.isDeliveryBoy);
@@ -134,11 +137,13 @@ export const ManualBillBookListView = () => {
   );
 
   // Review modal states
-  const [isReviewOpen, setIsReviewOpen] = useState(false);
-  const [selectedBook, setSelectedBook] = useState<IManualBook | null>(null);
   const [approvalStatus, setApprovalStatus] =
     useState<ManualBillBookReviewStatus>(ManualBillBookStatusEnum.APPROVE);
   const [approvalRemarks, setApprovalRemarks] = useState('');
+  const [reassignUserId, setReassignUserId] = useState('');
+  const [reassignRemarks, setReassignRemarks] = useState('');
+  const [reassignUsers, setReassignUsers] = useState<Array<{ id: string; name: string }>>([]);
+  const [isReassigning, setIsReassigning] = useState(false);
 
   const reviewStatusOptions = useMemo<AsyncSelectOption[]>(
     () => [
@@ -170,8 +175,11 @@ export const ManualBillBookListView = () => {
   );
 
   const { approveOrReject, isSubmitting } = useApproveRejectManualBillBook();
-  const [searchParams] = useSearchParams();
-  const reviewId = searchParams.get('reviewId');
+  const {
+    data: routedBook,
+    error: routedBookError,
+    isFetched: isRoutedBookFetched,
+  } = useGetManualBillBook(reviewId ?? undefined);
 
   const {
     data: books = [],
@@ -184,11 +192,31 @@ export const ManualBillBookListView = () => {
     status: statusFilter || undefined,
   });
 
-  const reviewBookFromQuery = useMemo(
-    () => (reviewId ? books.find(book => book.id === reviewId) ?? null : null),
-    [books, reviewId]
+  const reviewBook = useMemo(
+    () =>
+      reviewId
+        ? books.find(book => book.id === reviewId) ?? routedBook ?? null
+        : null,
+    [books, reviewId, routedBook]
   );
-  const reviewBook = selectedBook ?? reviewBookFromQuery;
+  const isReviewModalOpen = Boolean(reviewBook);
+
+  const closeReview = useCallback(() => {
+    const nextSearchParams = new URLSearchParams(searchParams);
+    nextSearchParams.delete('reviewId');
+    navigate({ search: nextSearchParams.toString() });
+  }, [navigate, searchParams]);
+
+  const openReview = useCallback(
+    (bookId: string) => {
+      setReassignUserId('');
+      setReassignRemarks('');
+      const nextSearchParams = new URLSearchParams(searchParams);
+      nextSearchParams.set('reviewId', bookId);
+      navigate({ search: nextSearchParams.toString() });
+    },
+    [navigate, searchParams]
+  );
 
   useEffect(() => {
     if (error) {
@@ -199,6 +227,25 @@ export const ManualBillBookListView = () => {
       toast.error(message);
     }
   }, [error]);
+
+  useEffect(() => {
+    if (!reviewId || isLoading || !isRoutedBookFetched) return;
+    if (books.some(book => book.id === reviewId) || routedBook) return;
+    toast.error(
+      routedBookError instanceof Error
+        ? routedBookError.message
+        : 'Dispatch not found.'
+    );
+    closeReview();
+  }, [
+    books,
+    closeReview,
+    isLoading,
+    isRoutedBookFetched,
+    reviewId,
+    routedBook,
+    routedBookError,
+  ]);
 
   // Page Tracking allocation list & cashier list states
   const [allocations, setAllocations] = useState<IManualBookAllocation[]>([]);
@@ -322,14 +369,7 @@ export const ManualBillBookListView = () => {
       toast.success(
         `Record has been successfully ${approvalStatus.toLowerCase()}.`
       );
-      if (reviewBookFromQuery) {
-        const nextSearchParams = new URLSearchParams(searchParams);
-        nextSearchParams.delete('reviewId');
-        navigate({ search: nextSearchParams.toString() });
-      } else {
-        setIsReviewOpen(false);
-      }
-      setSelectedBook(null);
+      closeReview();
       await refetchBooks();
     } catch (err: unknown) {
       toast.error(
@@ -338,32 +378,24 @@ export const ManualBillBookListView = () => {
     }
   };
 
-  // Reassign state (HO reassigning a REJECTED dispatch)
-  const [reassignUserId, setReassignUserId] = useState('');
-  const [reassignRemarks, setReassignRemarks] = useState('');
-  const [reassignUsers, setReassignUsers] = useState<Array<{ id: string; name: string }>>([]);
-  const [isReassigning, setIsReassigning] = useState(false);
-
   useEffect(() => {
-    if (!selectedBook || selectedBook.status !== ManualBillBookStatusEnum.REJECT) return;
-    manualBillBookApi.getBranchManagers(selectedBook.branchId)
+    if (!reviewBook || reviewBook.status !== ManualBillBookStatusEnum.REJECT) return;
+    manualBillBookApi.getBranchManagers(reviewBook.branchId)
       .then(setReassignUsers)
       .catch(console.error);
-  }, [selectedBook]);
+  }, [reviewBook]);
 
   const handleReassignSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedBook || !reassignUserId) return;
+    if (!reviewBook || !reassignUserId) return;
     try {
       setIsReassigning(true);
-      await manualBillBookApi.reassignDispatch(selectedBook.id, {
+      await manualBillBookApi.reassignDispatch(reviewBook.id, {
         assignedTo: reassignUserId,
         remarks: reassignRemarks || undefined,
       });
       toast.success('Dispatch reassigned and reset to Pending.');
-      setIsReviewOpen(false);
-      setReassignUserId('');
-      setReassignRemarks('');
+      closeReview();
       await refetchBooks();
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Failed to reassign dispatch.');
@@ -462,12 +494,10 @@ export const ManualBillBookListView = () => {
                 } else if (canUnmap) {
                   navigate(`/manual-bill-books/dp-unmapping?bookId=${book.id}`);
                 } else {
-                  setSelectedBook(book);
-                  setIsReviewOpen(true);
+                  openReview(book.id);
                 }
               } else {
-                setSelectedBook(book);
-                setIsReviewOpen(true);
+                openReview(book.id);
               }
             }}
           />
@@ -477,10 +507,9 @@ export const ManualBillBookListView = () => {
       {/* Review / Details Modal */}
       {reviewBook && (
         <Modal
-          open={isReviewOpen}
+          open={isReviewModalOpen}
           onOpenChange={open => {
-            setIsReviewOpen(open);
-            if (!open) { setReassignUserId(''); setReassignRemarks(''); }
+            if (!open) closeReview();
           }}
           title={
             reviewBook?.status === ManualBillBookStatusEnum.PENDING
@@ -609,18 +638,7 @@ export const ManualBillBookListView = () => {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => {
-                      if (reviewBookFromQuery) {
-                        const nextSearchParams = new URLSearchParams(
-                          searchParams
-                        );
-                        nextSearchParams.delete('reviewId');
-                        navigate({ search: nextSearchParams.toString() });
-                      } else {
-                        setIsReviewOpen(false);
-                      }
-                      setSelectedBook(null);
-                    }}
+                    onClick={closeReview}
                   >
                     Cancel
                   </Button>
@@ -764,18 +782,7 @@ export const ManualBillBookListView = () => {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => {
-                      if (reviewBookFromQuery) {
-                        const nextSearchParams = new URLSearchParams(
-                          searchParams
-                        );
-                        nextSearchParams.delete('reviewId');
-                        navigate({ search: nextSearchParams.toString() });
-                      } else {
-                        setIsReviewOpen(false);
-                      }
-                      setSelectedBook(null);
-                    }}
+                    onClick={closeReview}
                   >
                     Close
                   </Button>

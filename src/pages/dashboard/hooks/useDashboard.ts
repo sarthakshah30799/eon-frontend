@@ -95,10 +95,10 @@ export const useDashboard = () => {
         navigate(`/transactions/${item.id}`);
         break;
       case 'chequebook':
-        navigate(`/chequebooks/${item.id}`);
+        navigate(`/cheque-books?reviewId=${item.id}`);
         break;
       case 'manual-book':
-        navigate(`/manual-bill-books/${item.id}`);
+        navigate(`/manual-bill-books?reviewId=${item.id}`);
         break;
       case 'transfer':
         navigate(`/transfer/${(item.subType ?? item.type).toLowerCase()}/edit/${item.id}`);

@@ -25,7 +25,10 @@ import {
 import { useListTransferCards } from '../hooks';
 import { CARD_TRANSFER_COPY } from '../constants';
 import { useCardStockReferences } from '@/modules/cardStock/hooks';
-import type { ITransactionReferenceSnapshot } from '@/modules/transactions';
+import type { IBranchProfile } from '@/modules/branchProfile/types/branchProfileTypes';
+import type { ICurrencyProfile } from '@/modules/currencyProfile/types';
+import type { IProductProfile } from '@/modules/productProfile/types';
+import type { IPartyProfile } from '@/modules/partyProfiles/types';
 
 interface Props {
   readOnly?: boolean;
@@ -54,36 +57,39 @@ const optionsFrom = (
     label: [item.code, item.counterNo, item.name].filter(Boolean).join(' - '),
   }));
 
+type CardTransferSnapshot =
+  | IBranchProfile
+  | ICurrencyProfile
+  | IProductProfile
+  | IPartyProfile;
+
 const snapshotOption = (
   id: string | undefined,
-  snapshot: ITransactionReferenceSnapshot | null | undefined
+  snapshot: CardTransferSnapshot | null | undefined
 ): AsyncSelectOption | null => {
   if (!id || !snapshot) return null;
-  const explicitLabel = [snapshot.label].find(
-    value => typeof value === 'string' && value.trim()
-  );
-  const code = [
-    snapshot.code,
-    snapshot.currencyCode,
-    snapshot.productCode,
-  ].find(value => typeof value === 'string' && value.trim());
-  const name = [
-    snapshot.currencyName,
-    snapshot.productDescription,
-    snapshot.name,
-  ].find(value => typeof value === 'string' && value.trim());
-  const label =
-    explicitLabel ||
-    [code, name].filter(Boolean).join(' - ') ||
-    snapshot.name ||
-    String(id);
-  return { value: id, label: String(label) };
+  if ('currencyCode' in snapshot) {
+    return {
+      value: id,
+      label: `${snapshot.currencyCode} - ${snapshot.currencyName}`,
+    };
+  }
+  if ('productCode' in snapshot) {
+    return {
+      value: id,
+      label: `${snapshot.productCode} - ${snapshot.productDescription}`,
+    };
+  }
+  return {
+    value: id,
+    label: `${snapshot.code} - ${snapshot.name}`,
+  };
 };
 
 const withSnapshotOption = (
   options: AsyncSelectOption[],
   id: string | undefined,
-  snapshot: ITransactionReferenceSnapshot | null | undefined
+  snapshot: CardTransferSnapshot | null | undefined
 ) => {
   if (!id || options.some(option => String(option.value) === id))
     return options;

@@ -17,6 +17,7 @@ interface ModalProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;
   footer?: ReactNode;
   size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  dismissible?: boolean;
 }
 
 const cn = (...classes: Array<string | false | null | undefined>) =>
@@ -38,6 +39,7 @@ export const Modal = ({
   children,
   footer,
   size = 'md',
+  dismissible = true,
   className,
   ...props
 }: ModalProps) => {
@@ -45,7 +47,7 @@ export const Modal = ({
   const descriptionId = useId();
 
   useEffect(() => {
-    if (!open) {
+    if (!open || !dismissible) {
       return;
     }
 
@@ -60,7 +62,7 @@ export const Modal = ({
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [open, onOpenChange]);
+  }, [dismissible, open, onOpenChange]);
 
   const modalNode = useMemo(() => {
     if (!open) {
@@ -70,7 +72,11 @@ export const Modal = ({
     return (
       <div
         className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
-        onMouseDown={() => onOpenChange(false)}
+        onMouseDown={() => {
+          if (dismissible) {
+            onOpenChange(false);
+          }
+        }}
       >
         <div
           role="dialog"
@@ -108,7 +114,12 @@ export const Modal = ({
               size="icon"
               className="rounded-sm"
               aria-label="Close modal"
-              onClick={() => onOpenChange(false)}
+              disabled={!dismissible}
+              onClick={() => {
+                if (dismissible) {
+                  onOpenChange(false);
+                }
+              }}
             >
               <svg
                 aria-hidden="true"
@@ -138,17 +149,18 @@ export const Modal = ({
       </div>
     );
   }, [
+    children,
     className,
     description,
     descriptionId,
+    dismissible,
     footer,
     onOpenChange,
     open,
     props,
     size,
-    titleId,
     title,
-    children,
+    titleId,
   ]);
 
   return open ? createPortal(modalNode, document.body) : null;

@@ -18,6 +18,7 @@ import {
   getLatestRateForCurrency,
 } from '@/modules/currencyRates/utils/currencyRatesUtils';
 import type { ITransactionReferenceSnapshot } from '@/modules/transactions';
+import type { IBranchProfile } from '@/modules/branchProfile/types';
 import {
   getPurchasePageEntityType,
   type PurchasePageType,
@@ -111,6 +112,23 @@ export const createEmptyPurchaseTransactionRow =
     cardSnapshot: null,
     isReload: false,
   });
+
+export const toFormBranchSnapshot = (
+  branch: IBranchProfile | ITransactionReferenceSnapshot | null | undefined,
+): ITransactionReferenceSnapshot | null => {
+  if (!branch?.id) {
+    return null;
+  }
+
+  const code = branch.code ?? '';
+  const name = branch.name ?? '';
+  return {
+    id: branch.id,
+    code,
+    name,
+    label: code && name ? `${code} - ${name}` : name || code || branch.id,
+  };
+};
 
 export const createEmptyPurchaseFormValues = (
   transactionType: TransactionType = TransactionTypeEnum.PURCHASE,
@@ -487,7 +505,7 @@ export const mapPurchaseTransactionToFormValues = (
   return {
   purchasePageType,
   branchId: transaction.branchId ?? '',
-  branchSnapshot: transaction.branchSnapshot ?? null,
+  branchSnapshot: toFormBranchSnapshot(transaction.branchSnapshot),
   counterId: transaction.counterId ?? '',
   transactionDate: transaction.transactionDate
     ? String(transaction.transactionDate).slice(0, 10)

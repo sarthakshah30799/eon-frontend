@@ -1,12 +1,25 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
+import { Button, CardSection } from '@/components/ui';
 import { Loader } from '@/components/ui/loader';
 import { useAuth } from '@/lib/AuthContext';
 import { transactionAd1Api } from '@/api/transactionAd1/transactionAd1.api';
 import { TransactionTypeEnum } from '@/modules/transactions';
 import { TransactionProfileType } from '../forms/ad1ProfileType';
 import { AD1Form } from '../forms/AD1Form';
+import { AD1_PRINT_TEXT } from '../constants/ad1Constants';
+import {
+  buildAd1PrintHtml,
+  getAd1PrintCopyLabel,
+  getAd1PrintCopyType,
+} from '../utils/ad1PrintUtils';
+import {
+  openPrintWindow,
+  toPrintBranch,
+  toPrintCompany,
+} from '@/modules/transactions/utils/printSnapshotUtils';
 
 const STATUS_LABEL: Record<string, string> = {
   DRAFT: 'Pending Approval',
@@ -29,6 +42,7 @@ export const AD1EditView = () => {
   const [showRejectInput, setShowRejectInput] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
   const [approvalRemarks, setApprovalRemarks] = useState('');
+  const [isPrinting, setIsPrinting] = useState(false);
 
   const { data: transaction, isLoading, error } = useQuery({
     queryKey: ['ad1', id],
@@ -127,6 +141,31 @@ export const AD1EditView = () => {
   }
 
   const status = transaction.status ?? 'APPROVED';
+  const copyType = getAd1PrintCopyType(transaction.printCount);
+
+  const handlePrintCopy = async () => {
+    if (isPrinting) {
+      return;
+    }
+
+    try {
+      setIsPrinting(true);
+      const html = buildAd1PrintHtml({
+        copyType,
+        transaction,
+        company: toPrintCompany(transaction.companySnapshot),
+        branch: toPrintBranch(transaction.branchSnapshot),
+      });
+      await transactionAd1Api.recordPrint(transaction.id);
+      await queryClient.invalidateQueries({ queryKey: ['ad1', id] });
+      openPrintWindow(html, AD1_PRINT_TEXT.popupBlocked);
+      toast.success(AD1_PRINT_TEXT.printed(getAd1PrintCopyLabel(copyType)));
+    } catch (printError) {
+      toast.error(printError instanceof Error ? printError.message : AD1_PRINT_TEXT.printFailed);
+    } finally {
+      setIsPrinting(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -287,6 +326,20 @@ export const AD1EditView = () => {
         }}
         onCancel={() => navigate('/ad1')}
       />
+
+      <CardSection heading={AD1_PRINT_TEXT.heading} className="space-y-4">
+        <p className="text-sm text-text-secondary">
+          {copyType === 'DUPLICATE_COPY' ? AD1_PRINT_TEXT.duplicateHint : AD1_PRINT_TEXT.originalHint}
+        </p>
+        <Button
+          type="button"
+          className="w-full sm:w-auto"
+          onClick={() => void handlePrintCopy()}
+          disabled={isPrinting}
+        >
+          {isPrinting ? AD1_PRINT_TEXT.preparing : AD1_PRINT_TEXT.printCopy}
+        </Button>
+      </CardSection>
     </div>
   );
 };

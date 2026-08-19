@@ -1,4 +1,9 @@
 import { apiClient } from '../api';
+import type { ICompanyProfile } from '@/modules/companyProfile/types';
+import type { IBranchProfile } from '@/modules/branchProfile/types';
+import type { ICurrencyProfile } from '@/modules/currencyProfile/types';
+import type { IProductProfile } from '@/modules/productProfile/types';
+import type { IPartyProfile } from '@/modules/partyProfiles/types';
 
 export interface CardStockSnapshot {
   id?: string;
@@ -70,9 +75,9 @@ export interface ICardStockCard extends CardStockCardPayload {
 
 export interface ICardStockReceiptItem extends Omit<CardStockItemPayload, 'cards'> {
   id: string;
-  currencySnapshot?: CardStockSnapshot | null;
-  productSnapshot?: CardStockSnapshot | null;
-  issuerPartyProfileSnapshot?: CardStockSnapshot | null;
+  currencySnapshot?: ICurrencyProfile | null;
+  productSnapshot?: IProductProfile | null;
+  issuerPartyProfileSnapshot?: IPartyProfile | null;
   cards: ICardStockCard[];
 }
 
@@ -81,13 +86,30 @@ export interface ICardStockReceipt {
   transactionNumber: string;
   receiptDate: string;
   issuerPartyProfileId: string;
-  issuerPartyProfileSnapshot?: CardStockSnapshot | null;
+  issuerPartyProfileSnapshot?: IPartyProfile | null;
   branchId: string;
-  branchSnapshot?: CardStockSnapshot | null;
+  branchSnapshot?: IBranchProfile | null;
+  companyId?: string | null;
+  companySnapshot?: ICompanyProfile | null;
   totalFeAmount: string;
   status: string;
   createdAt: string;
+  printCount?: number;
   items: ICardStockReceiptItem[];
+}
+
+export type CardStockPrintCopyType = 'CUSTOMER_COPY' | 'DUPLICATE_COPY';
+export type CardStockPrintKind = 'STOCK_IN' | 'STOCK_OUT';
+
+export interface CardStockPrintPayload {
+  copyType?: CardStockPrintCopyType;
+  kind?: CardStockPrintKind;
+  html?: string;
+}
+
+export interface CardStockPrintResponse {
+  copyType: CardStockPrintCopyType;
+  message: string;
 }
 
 export const cardStockApi = {
@@ -106,6 +128,12 @@ export const cardStockApi = {
   create: async (payload: CardStockReceiptPayload): Promise<ICardStockReceipt> => {
     const response = await apiClient.post<ICardStockReceipt>('/card-stock/receipts', payload);
     if (response.error || !response.data) throw new Error(response.error || 'Failed to create card stock receipt');
+    return response.data;
+  },
+
+  recordPrint: async (id: string, payload: CardStockPrintPayload): Promise<CardStockPrintResponse> => {
+    const response = await apiClient.post<CardStockPrintResponse>(`/card-stock/receipts/${id}/print`, payload);
+    if (response.error || !response.data) throw new Error(response.error || 'Failed to record CARD stock receipt print');
     return response.data;
   },
 

@@ -12,7 +12,7 @@ export const CardStockListView = () => {
   const columns: TableColumnDef<CardStockReceipt>[] = [
     { accessorKey: 'transactionNumber', header: 'Transaction Number' },
     { accessorKey: 'receiptDate', header: 'Transaction Date', cell: ({ row }) => formatDateTime(`${row.original.receiptDate?.slice(0, 10)}T00:00:00`, 'DD/MM/YYYY') },
-    { accessorKey: 'issuerPartyProfileId', header: 'Card Issuer', cell: ({ row }) => row.original.issuerPartyProfileSnapshot?.label ?? row.original.issuerPartyProfileSnapshot?.name ?? row.original.issuerPartyProfileId },
+    { accessorKey: 'issuerPartyProfileId', header: 'Card Issuer', cell: ({ row }) => row.original.issuerPartyProfileSnapshot?.name ?? row.original.issuerPartyProfileId },
     { accessorKey: 'totalFeAmount', header: 'Total FE Amount' },
     { accessorKey: 'status', header: 'Status' },
     { id: 'actions', header: 'Actions', cell: ({ row }) => <Button type="button" variant="outline" size="sm" onClick={() => navigate(`/card-stock/edit/${row.original.id}`)}>View</Button> },

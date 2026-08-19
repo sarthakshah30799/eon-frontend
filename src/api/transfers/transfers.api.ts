@@ -2,6 +2,7 @@ import { apiClient } from '../api';
 import type { ITransactionReferenceSnapshot } from '@/modules/transactions';
 import type { IBranchProfile } from '@/modules/branchProfile/types/branchProfileTypes';
 import type { ICounterProfile } from '@/modules/counterProfile/types/counterProfileTypes';
+import type { ICompanyProfile } from '@/modules/companyProfile/types';
 
 export type TransferType = 'COUNTER' | 'BRANCH';
 export type TransferStatus = 'HELD' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED';
@@ -32,16 +33,19 @@ export interface ICurrencyTransfer {
   billReference: string | null;
   sourceBranchId: string;
   sourceBranch?: IBranchProfile | null;
-  sourceBranchSnapshot?: ITransactionReferenceSnapshot | null;
+  sourceBranchSnapshot?: IBranchProfile | null;
   sourceCounterId: string;
   sourceCounter?: ICounterProfile | null;
   sourceCounterSnapshot?: ITransactionReferenceSnapshot | null;
   destinationBranchId: string;
   destinationBranch?: IBranchProfile | null;
-  destinationBranchSnapshot?: ITransactionReferenceSnapshot | null;
+  destinationBranchSnapshot?: IBranchProfile | null;
   destinationCounterId: string;
   destinationCounter?: ICounterProfile | null;
   destinationCounterSnapshot?: ITransactionReferenceSnapshot | null;
+  companyId?: string | null;
+  companySnapshot?: ICompanyProfile | null;
+  printCount?: number;
   sourceNumberSeriesCode: string | null;
   destinationNumberSeriesCode: string | null;
   sourceTransactionId: string | null;
@@ -145,8 +149,8 @@ export const transfersApi = {
   recordPrint: async (
     id: string,
     payload: IRecordTransferPrintPayload
-  ): Promise<{ message: string }> => {
-    const res = await apiClient.post<{ message: string }>(
+  ): Promise<{ message: string; copyType: ITransferPrintCopyType; printCount: number }> => {
+    const res = await apiClient.post<{ message: string; copyType: ITransferPrintCopyType; printCount: number }>(
       `/transfers/${id}/print`,
       payload
     );

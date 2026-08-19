@@ -18,7 +18,6 @@ import { PassengerAmlVerificationStepForm } from '../forms/PassengerAmlVerificat
 import { PassengerAmlDetailsStepForm } from '../forms/PassengerAmlDetailsStepForm';
 import { mapPassengerSnapshotToPurchaseFormValues } from '../utils/passengerAmlUtils';
 import { isPassengerOtherDocumentFilled } from '../utils/passengerOtherDocumentRules';
-import { passengersApi } from '@/api/passengers';
 
 interface PassengerAmlVerificationModalProps {
   open: boolean;
@@ -166,6 +165,9 @@ const getDetailsFieldNames = (mode: VerificationMode) => {
       ];
 };
 
+const PASSENGER_IDENTITY_LOOKUP_ERROR =
+  'Unable to look up passenger details. Please try again.';
+
 export const PassengerAmlVerificationModal = ({
   open,
   onOpenChange,
@@ -186,8 +188,16 @@ export const PassengerAmlVerificationModal = ({
   const hasAutoVerifiedRef = useRef(false);
   const verificationRunIdRef = useRef(0);
   const passportAutoFillInProgressRef = useRef(false);
-  const { verifyPan, verifyPassport } = usePassengerAmlVerification();
-  const { lookupPassport } = usePassengerPassportLookup();
+  const { verifyPan, verifyPassport, isVerifyingPan, isVerifyingPassport } =
+    usePassengerAmlVerification();
+  const {
+    lookupPassport,
+    lookupIdentity,
+    isLookingUpPassport,
+    isLookingUpIdentity,
+    lookupIdentityError,
+    resetIdentityLookup,
+  } = usePassengerPassportLookup();
   const { data: countryProfilesResponse } = useListCountryProfiles({
     page: 1,
     limit: 100,
@@ -430,7 +440,7 @@ export const PassengerAmlVerificationModal = ({
         );
 
         if (notifyOnSuccess) {
-          const identityLookup = await passengersApi.lookupIdentity({
+          const identityLookup = await lookupIdentity({
             panNumber: currentValues.panNumber || undefined,
             passportNumber: currentValues.passportNumber || undefined,
           });
@@ -466,7 +476,7 @@ export const PassengerAmlVerificationModal = ({
         return false;
       }
     },
-    [entityType, form, onVerified, verifyPan, verifyPassport, watchedTransactionDate]
+    [entityType, form, lookupIdentity, onVerified, verifyPan, verifyPassport, watchedTransactionDate]
   );
 
   const verifyIdentityOnBlur = useCallback(async (mode: VerificationMode) => {
@@ -590,6 +600,14 @@ export const PassengerAmlVerificationModal = ({
         ? 'Passport details changed. Please verify again before continuing.'
         : verificationMessage;
   const canProceed = displayedVerificationStatus === 'valid';
+  const isDetailsSubmitting =
+    isVerifyingPan || isVerifyingPassport || isLookingUpIdentity || isLookingUpPassport;
+  const detailsBlockingMessage =
+    displayedVerificationStatus === 'invalid'
+      ? displayedVerificationMessage
+      : lookupIdentityError
+        ? lookupIdentityError.message || PASSENGER_IDENTITY_LOOKUP_ERROR
+        : null;
 
   const handleNationalityChange = useCallback(
     (value: string | null) => {
@@ -651,12 +669,13 @@ export const PassengerAmlVerificationModal = ({
       if (!nextOpen) {
         verificationRunIdRef.current += 1;
         setInternalStep('verification');
+        resetIdentityLookup();
         clearVerificationState();
       }
 
       onOpenChange(nextOpen);
     },
-    [clearVerificationState, onOpenChange]
+    [clearVerificationState, onOpenChange, resetIdentityLookup]
   );
 
   const handleVerification = () => {
@@ -666,6 +685,10 @@ export const PassengerAmlVerificationModal = ({
   };
 
   const handleDetailsDone = async () => {
+    if (isDetailsSubmitting) {
+      return;
+    }
+
     const detailsValidationFields = getDetailsFieldNames(verificationMode);
     const isValid = await form.trigger(detailsValidationFields as never, {
       shouldFocus: true,
@@ -698,6 +721,7 @@ export const PassengerAmlVerificationModal = ({
     }
 
     form.clearErrors('otherDocuments' as never);
+    resetIdentityLookup();
 
     if (
       hasCompletePanValues(currentValues) &&
@@ -719,21 +743,26 @@ export const PassengerAmlVerificationModal = ({
       }
     }
 
-    const identityLookup = await passengersApi.lookupIdentity({
-      panNumber: currentValues.panNumber || undefined,
-      passportNumber: currentValues.passportNumber || undefined,
-    });
-    form.setValue('passengerId', identityLookup.passenger?.id ? String(identityLookup.passenger.id) : '', {
-      shouldDirty: false,
-      shouldTouch: false,
-      shouldValidate: false,
-    });
-    form.setValue('passengerInfoCaptured', true, {
-      shouldDirty: true,
-      shouldTouch: true,
-      shouldValidate: true,
-    });
-    handleModalOpenChange(false);
+    try {
+      const identityLookup = await lookupIdentity({
+        panNumber: currentValues.panNumber || undefined,
+        passportNumber: currentValues.passportNumber || undefined,
+      });
+
+      form.setValue('passengerId', identityLookup.passenger?.id ? String(identityLookup.passenger.id) : '', {
+        shouldDirty: false,
+        shouldTouch: false,
+        shouldValidate: false,
+      });
+      form.setValue('passengerInfoCaptured', true, {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: true,
+      });
+      handleModalOpenChange(false);
+    } catch {
+      return;
+    }
   };
 
   const verificationFooter = (
@@ -757,7 +786,11 @@ export const PassengerAmlVerificationModal = ({
         <Button
           type="button"
           variant="outline"
-          onClick={() => setInternalStep('verification')}
+          onClick={() => {
+            resetIdentityLookup();
+            setInternalStep('verification');
+          }}
+          disabled={isDetailsSubmitting}
         >
           Back
         </Button>
@@ -766,6 +799,7 @@ export const PassengerAmlVerificationModal = ({
         type="button"
         onClick={() => void handleDetailsDone()}
         disabled={!canProceed}
+        loading={isDetailsSubmitting}
       >
         Done
       </Button>
@@ -783,6 +817,7 @@ export const PassengerAmlVerificationModal = ({
           : 'Capture the passenger details that will be stored on the transaction.'
       }
       size="2xl"
+      dismissible={!isDetailsSubmitting}
       footer={currentStep === 'verification' ? verificationFooter : detailsFooter}
     >
       {currentStep === 'verification' ? (
@@ -819,23 +854,34 @@ export const PassengerAmlVerificationModal = ({
           />
         )
       ) : (
-      <PassengerAmlDetailsStepForm
-        entityType={(watchedEntityType || entityType) as PassengerEntityType}
-        showPanRelation={verificationMode === 'pan'}
-        onPanFieldBlur={() => {
-          void verifyIdentityOnBlur('pan');
-        }}
-        onPassportNumberBlur={() => {
-          void handlePassportNumberBlur();
-        }}
-        onPassportFieldBlur={() => {
-          void verifyIdentityOnBlur('passport');
-          }}
-          onNationalityChange={handleNationalityChange}
-          onDocumentChange={() => {
-            form.clearErrors('otherDocuments' as never);
-          }}
-        />
+        <div
+          className={
+            isDetailsSubmitting ? 'pointer-events-none space-y-4' : 'space-y-4'
+          }
+        >
+          <PassengerAmlDetailsStepForm
+            entityType={(watchedEntityType || entityType) as PassengerEntityType}
+            showPanRelation={verificationMode === 'pan'}
+            onPanFieldBlur={() => {
+              void verifyIdentityOnBlur('pan');
+            }}
+            onPassportNumberBlur={() => {
+              void handlePassportNumberBlur();
+            }}
+            onPassportFieldBlur={() => {
+              void verifyIdentityOnBlur('passport');
+            }}
+            onNationalityChange={handleNationalityChange}
+            onDocumentChange={() => {
+              form.clearErrors('otherDocuments' as never);
+            }}
+          />
+          {detailsBlockingMessage ? (
+            <div className="rounded-sm border border-error-200 bg-error-50 px-4 py-3 text-xs text-error-700">
+              <span className="font-medium">{detailsBlockingMessage}</span>
+            </div>
+          ) : null}
+        </div>
       )}
     </Modal>
   );

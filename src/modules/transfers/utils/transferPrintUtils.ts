@@ -1,4 +1,6 @@
 import type { ICompanyProfile } from '@/modules/companyProfile/types';
+import type { IBranchProfile } from '@/modules/branchProfile/types';
+import type { ITransactionReferenceSnapshot } from '@/modules/transactions';
 import type { ICurrencyTransfer } from '../types';
 
 type TransferPrintCopyType = 'CUSTOMER_COPY' | 'DUPLICATE_COPY';
@@ -134,19 +136,20 @@ const joinAddress = (...parts: Array<string | null | undefined>) =>
 const getCopyLabel = (copyType: TransferPrintCopyType) =>
   copyType === 'DUPLICATE_COPY' ? 'Duplicate Copy' : 'Original Copy';
 
-const getBranchDisplay = (branchSnapshot?: Record<string, unknown> | null) => {
+const getBranchDisplay = (branchSnapshot?: IBranchProfile | null) => {
   if (!branchSnapshot) {
     return '-';
   }
 
-  const name = String(branchSnapshot.name ?? branchSnapshot.label ?? branchSnapshot.code ?? '').trim();
-  const code = String(branchSnapshot.code ?? '').trim();
+  const name = branchSnapshot.name?.trim() || branchSnapshot.code?.trim() || '';
+  const code = branchSnapshot.code?.trim() || '';
   const address = joinAddress(
-    String(branchSnapshot.address1 ?? '').trim() || null,
-    String(branchSnapshot.address2 ?? '').trim() || null,
-    String(branchSnapshot.address3 ?? '').trim() || null,
-    String(branchSnapshot.city ?? '').trim() || null,
-    String(branchSnapshot.pinCode ?? '').trim() || null,
+    branchSnapshot.address1,
+    branchSnapshot.address2,
+    branchSnapshot.address3,
+    branchSnapshot.city,
+    branchSnapshot.gstState,
+    branchSnapshot.pinCode,
   );
 
   const heading = [name, code ? `(${code})` : ''].filter(Boolean).join(' ').trim();
@@ -154,8 +157,8 @@ const getBranchDisplay = (branchSnapshot?: Record<string, unknown> | null) => {
 };
 
 const getCounterDisplay = (
-  counterSnapshot?: Record<string, unknown> | null,
-  branchSnapshot?: Record<string, unknown> | null,
+  counterSnapshot?: ITransactionReferenceSnapshot | null,
+  branchSnapshot?: IBranchProfile | null,
 ) => {
   if (!counterSnapshot) {
     return getBranchDisplay(branchSnapshot);
@@ -172,10 +175,12 @@ export const buildTransferPrintHtml = ({
   copyType,
   transfer,
   company,
+  branch,
 }: {
   copyType: TransferPrintCopyType;
   transfer: ICurrencyTransfer;
   company: ICompanyProfile | null;
+  branch: IBranchProfile | null;
 }) => {
   const transferDate = transfer.transactionDate ? new Date(transfer.transactionDate) : new Date();
   const transferDateLabel = formatDate(transferDate);
@@ -278,6 +283,21 @@ export const buildTransferPrintHtml = ({
             color: #4b5563;
             margin-top: 3px;
           }
+          .info-list {
+            display: grid;
+            gap: 4px;
+            font-size: 12px;
+            line-height: 1.4;
+            margin-bottom: 16px;
+          }
+          .info-row {
+            display: flex;
+            gap: 8px;
+          }
+          .info-label {
+            min-width: 140px;
+            font-weight: 700;
+          }
           .copy-mark {
             border: 1px solid #111827;
             padding: 6px 10px;
@@ -379,8 +399,17 @@ export const buildTransferPrintHtml = ({
           </div>
 
           <div class="company-block">
-            <div class="company-title">${escapeHtml(company?.name || '')}</div>
-            <div class="company-subtitle">${escapeHtml(sourceDisplay)}</div>
+            <div class="company-title">${escapeHtml(company?.name || '-')}</div>
+            <div class="company-subtitle">${escapeHtml(branch?.name || sourceDisplay)}</div>
+          </div>
+
+          <div class="info-list">
+            <div class="info-row"><span class="info-label">Branch GST:</span><span>${escapeHtml(branch?.gstNo || '-')}</span></div>
+            <div class="info-row"><span class="info-label">RBI Lic No:</span><span>${escapeHtml(company?.aeonLicNo || '-')}</span></div>
+            <div class="info-row"><span class="info-label">PAN No:</span><span>${escapeHtml(company?.panNo || '-')}</span></div>
+            <div class="info-row"><span class="info-label">Address:</span><span>${escapeHtml(joinAddress(branch?.address1, branch?.address2, branch?.address3, branch?.city, branch?.gstState, branch?.pinCode) || '-')}</span></div>
+            <div class="info-row"><span class="info-label">Contact:</span><span>${escapeHtml(branch?.contactNo || '-')}</span></div>
+            <div class="info-row"><span class="info-label">Email:</span><span>${escapeHtml(branch?.branchEmail || company?.email || '-')}</span></div>
           </div>
 
           <div class="title">TRANSFER OUT TO BRANCH OR COUNTER</div>
@@ -440,6 +469,9 @@ export const buildTransferPrintHtml = ({
     </html>
   `;
 };
+
+export const getTransferPrintCopyType = (printCount?: number | null): TransferPrintCopyType =>
+  (printCount ?? 0) === 0 ? 'CUSTOMER_COPY' : 'DUPLICATE_COPY';
 
 export const getTransferPrintCopyLabel = (copyType: TransferPrintCopyType) =>
   getCopyLabel(copyType);

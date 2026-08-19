@@ -1,19 +1,24 @@
-import { useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Button } from '@/components/ui';
 import { Loader } from '@/components/ui/loader';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/lib/AuthContext';
-import { useListCompanyProfiles } from '@/modules/companyProfile/hooks';
 import { useAcceptTransfer, useGetTransfer, useRecordTransferPrint, useRejectTransfer } from '../hooks';
 import {
   buildTransferPrintHtml,
   getTransferPrintCopyLabel,
+  getTransferPrintCopyType,
 } from '../utils';
 import { canApproveTransfer } from '../utils';
 import { TransferFormView } from './TransferFormView';
 import { TransferApprovalActions } from '../components/TransferApprovalActions';
 import { mapTransferToFormValues } from '../utils/transferFormUtils';
+import { TRANSFER_PRINT_TEXT } from '../constants/transferConstants';
+import {
+  openPrintWindow,
+  toPrintBranch,
+  toPrintCompany,
+} from '@/modules/transactions/utils/printSnapshotUtils';
 
 const buildReferenceOption = (
   id: string,
@@ -34,9 +39,7 @@ const buildReferenceOption = (
 export const TransferDetailView = () => {
   const { id } = useParams<{ id: string }>();
   const { user, activeBranchId, activeCounterId } = useAuth();
-  const { data: companies = [] } = useListCompanyProfiles();
   const { data, isLoading, error } = useGetTransfer(id ?? '');
-  const [, setPrintRenderTick] = useState(0);
   const acceptTransfer = useAcceptTransfer();
   const rejectTransfer = useRejectTransfer();
   const recordTransferPrint = useRecordTransferPrint();
@@ -46,41 +49,13 @@ export const TransferDetailView = () => {
     activeCounterId,
     transfer: data,
   });
-  const currentCompany = useMemo(() => {
-    const now = new Date();
-
-    return (
-      companies.find(company => {
-        const fromDate = company.fromDate ? new Date(company.fromDate) : null;
-        const toDate = company.toDate ? new Date(company.toDate) : null;
-
-        if (fromDate && now < fromDate) {
-          return false;
-        }
-
-        if (toDate && now > toDate) {
-          return false;
-        }
-
-        return true;
-      }) ?? companies[0] ?? null
-    );
-  }, [companies]);
-  const storedPrintCount = data?.id && typeof window !== 'undefined'
-    ? window.localStorage.getItem(`transfer-print-count:${data.id}`)
-    : null;
-  const parsedPrintCount = Number(storedPrintCount ?? '0');
-  const transferPrintCount = Number.isFinite(parsedPrintCount) ? parsedPrintCount : 0;
-  const nextCopyType =
-    transferPrintCount === 0 ? 'CUSTOMER_COPY' : 'DUPLICATE_COPY';
-  const printButtonLabel = `Print ${getTransferPrintCopyLabel(nextCopyType)}`;
+  const nextCopyType = getTransferPrintCopyType(data?.printCount);
+  const printButtonLabel = recordTransferPrint.isPending
+    ? TRANSFER_PRINT_TEXT.preparing
+    : `Print ${getTransferPrintCopyLabel(nextCopyType)}`;
 
   const handlePrint = async () => {
-    if (!data) {
-      return;
-    }
-
-    if (data.status !== 'ACCEPTED') {
+    if (!data || data.status !== 'ACCEPTED') {
       return;
     }
 
@@ -88,7 +63,8 @@ export const TransferDetailView = () => {
       const html = buildTransferPrintHtml({
         copyType: nextCopyType,
         transfer: data,
-        company: currentCompany,
+        company: toPrintCompany(data.companySnapshot),
+        branch: toPrintBranch(data.sourceBranchSnapshot),
       });
 
       await recordTransferPrint.recordTransferPrint({
@@ -102,31 +78,10 @@ export const TransferDetailView = () => {
         },
       });
 
-      const printWindow = window.open('', '_blank', 'width=1200,height=900');
-      if (!printWindow) {
-        throw new Error('Unable to open print window. Please allow pop-ups and try again.');
-      }
-
-      printWindow.document.open();
-      printWindow.document.write(html);
-      printWindow.document.close();
-      printWindow.focus();
-      printWindow.onafterprint = () => {
-        printWindow.close();
-      };
-      window.setTimeout(() => {
-        printWindow.print();
-      }, 250);
-
-      if (data.id) {
-        window.localStorage.setItem(
-          `transfer-print-count:${data.id}`,
-          String(transferPrintCount + 1),
-        );
-        setPrintRenderTick(current => current + 1);
-      }
+      openPrintWindow(html, TRANSFER_PRINT_TEXT.popupBlocked);
+      toast.success(TRANSFER_PRINT_TEXT.printed(getTransferPrintCopyLabel(nextCopyType)));
     } catch (printError) {
-      const message = printError instanceof Error ? printError.message : 'Failed to print transfer copy';
+      const message = printError instanceof Error ? printError.message : TRANSFER_PRINT_TEXT.printFailed;
       toast.error(message);
     }
   };
@@ -174,7 +129,7 @@ export const TransferDetailView = () => {
           <Button
             type="button"
             variant="outline"
-            disabled={data.status !== 'ACCEPTED'}
+            disabled={data.status !== 'ACCEPTED' || recordTransferPrint.isPending}
             onClick={() => void handlePrint()}
           >
             {printButtonLabel}

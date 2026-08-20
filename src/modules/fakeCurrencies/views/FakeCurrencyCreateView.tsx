@@ -2,8 +2,10 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useWatch, useFormContext, type SubmitErrorHandler } from 'react-hook-form';
+import { useQueryClient } from '@tanstack/react-query';
 import * as yup from 'yup';
-import { CardSection } from '@/components/ui';
+import toast from 'react-hot-toast';
+import { Button, CardSection } from '@/components/ui';
 import { Loader } from '@/components/ui/loader';
 import {
   Form,
@@ -23,12 +25,29 @@ import { getAdditionalSettingBooleanValue } from '@/modules/additionalSettings/u
 import { AdditionalSettingsCodeEnum } from '@/modules/additionalSettings/constants';
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import { PurchaseTransactionTable } from '@/modules/purchase/components/PurchaseTransactionTable';
+import {
+  buildPurchasePrintHtml,
+  getPurchasePrintCopyLabel,
+} from '@/modules/purchase/utils/purchasePrintUtils';
 import { createEmptyPurchaseFormValues } from '@/modules/purchase/utils/purchaseUtils';
-import { TransactionTypeEnum, TradeModeEnum, TransactionTypeProfileEnum } from '@/modules/transactions';
+import { transactionsApi } from '@/api/transactions';
+import {
+  TransactionLogActionEnum,
+  TransactionTypeEnum,
+  TradeModeEnum,
+  TransactionTypeProfileEnum,
+  type ITransactionEntity,
+} from '@/modules/transactions';
 import type { IPurchaseFormValues } from '@/modules/purchase/types/purchaseTypes';
 import type { IPurchaseDraftDocumentAttachment } from '@/modules/purchase/types/purchaseTypes';
+import {
+  openPrintWindow,
+  toPrintBranch,
+  toPrintCompany,
+} from '@/modules/transactions/utils/printSnapshotUtils';
 import { useCreateFakeCurrency } from '../hooks';
 import { getTransactionDatePolicy } from '@/modules/transactionPolicies/utils/transactionDatePolicy';
+import { FAKE_CURRENCY_PRINT_TEXT } from '../constants/fakeCurrencyConstants';
 
 const fakeCurrencySchema = yup.object({
   transactionDate: yup.string().required('Transaction date is required'),
@@ -47,6 +66,7 @@ type FakeCurrencyFormValues = IPurchaseFormValues & { reasonId: string; remarks:
 interface FakeCurrencyCreateViewProps {
   initialValues?: FakeCurrencyFormValues;
   readOnly?: boolean;
+  savedTransaction?: ITransactionEntity | null;
 }
 
 const FakeCurrencyTotal = () => {
@@ -83,9 +103,83 @@ const FakeCurrencyPicker = ({
   );
 };
 
+const FakeCurrencyPrintSection = ({
+  savedTransaction,
+}: {
+  savedTransaction: ITransactionEntity;
+}) => {
+  const form = useFormContext<FakeCurrencyFormValues>();
+  const queryClient = useQueryClient();
+  const [isPrinting, setIsPrinting] = useState(false);
+  const hasPrintedHistory = Boolean(
+    savedTransaction.logs?.some(log => log.action === TransactionLogActionEnum.PRINT),
+  );
+  const [hasPrintedOnce, setHasPrintedOnce] = useState(false);
+  const copyType =
+    !hasPrintedOnce && !hasPrintedHistory ? 'CUSTOMER_COPY' : 'DUPLICATE_COPY';
+
+  const handlePrintCopy = async () => {
+    if (!savedTransaction.id || !savedTransaction.number) {
+      toast.error(FAKE_CURRENCY_PRINT_TEXT.saveBeforePrint);
+      return;
+    }
+    if (isPrinting) {
+      return;
+    }
+
+    try {
+      setIsPrinting(true);
+      const formValues = form.getValues();
+      const html = buildPurchasePrintHtml({
+        copyType,
+        transactionNumber: savedTransaction.number,
+        transactionDate: formValues.transactionDate || savedTransaction.transactionDate || '',
+        company: toPrintCompany(savedTransaction.companySnapshot),
+        branch: toPrintBranch(savedTransaction.branchSnapshot),
+        transaction: formValues,
+        sacCode: savedTransaction.sacCode ?? '',
+      });
+      await transactionsApi.recordPrint(savedTransaction.id, {
+        copyType,
+        subject: `${savedTransaction.number} - ${getPurchasePrintCopyLabel(copyType)}`,
+        text: `Printed ${getPurchasePrintCopyLabel(copyType).toLowerCase()} for transaction ${savedTransaction.number}.`,
+        html,
+        sendEmail: false,
+      });
+      await queryClient.invalidateQueries({ queryKey: ['fake-currency', savedTransaction.id] });
+      openPrintWindow(html, FAKE_CURRENCY_PRINT_TEXT.popupBlocked);
+      setHasPrintedOnce(true);
+      toast.success(FAKE_CURRENCY_PRINT_TEXT.printed(getPurchasePrintCopyLabel(copyType)));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : FAKE_CURRENCY_PRINT_TEXT.printFailed);
+    } finally {
+      setIsPrinting(false);
+    }
+  };
+
+  return (
+    <CardSection heading={FAKE_CURRENCY_PRINT_TEXT.heading} className="space-y-4">
+      <p className="text-sm text-text-secondary">
+        {hasPrintedOnce || hasPrintedHistory
+          ? FAKE_CURRENCY_PRINT_TEXT.duplicateHint
+          : FAKE_CURRENCY_PRINT_TEXT.originalHint}
+      </p>
+      <Button
+        type="button"
+        className="w-full sm:w-auto"
+        onClick={() => void handlePrintCopy()}
+        disabled={isPrinting}
+      >
+        {isPrinting ? FAKE_CURRENCY_PRINT_TEXT.preparing : FAKE_CURRENCY_PRINT_TEXT.printCopy}
+      </Button>
+    </CardSection>
+  );
+};
+
 export const FakeCurrencyCreateView = ({
   initialValues,
   readOnly = false,
+  savedTransaction = null,
 }: FakeCurrencyCreateViewProps) => {
   const navigate = useNavigate();
   const { activeBranchId, activeCounterId, policyContext } = useAuth();
@@ -154,7 +248,7 @@ export const FakeCurrencyCreateView = ({
         if (readOnly) {
           return;
         }
-        await createFakeCurrency({
+        const created = await createFakeCurrency({
           transaction: {
             slug: 'FAKE_CURRENCY',
             branchSnapshot: values.branchSnapshot,
@@ -182,7 +276,7 @@ export const FakeCurrencyCreateView = ({
           },
           attachments: draftDocumentAttachments,
         });
-        navigate('/fake-currencies');
+        navigate(`/fake-currencies/edit/${created.id}`);
       }}
       footer={readOnly ? undefined : {
         submitLabel: isPending ? 'Saving...' : 'Save Fake Currency',
@@ -241,6 +335,7 @@ export const FakeCurrencyCreateView = ({
             <p className="text-sm text-text-secondary">No active document profiles found.</p>
           )}
         </CardSection> : null}
+        {readOnly && savedTransaction ? <FakeCurrencyPrintSection savedTransaction={savedTransaction} /> : null}
       </div>
       {!readOnly ? <FakeCurrencyPicker rowIndex={currencyPickerRowIndex} onClose={() => setCurrencyPickerRowIndex(null)} /> : null}
     </Form>

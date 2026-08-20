@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { Loader } from '@/components/ui/loader';
-import { createEmptyPurchaseFormValues } from '@/modules/purchase/utils/purchaseUtils';
+import { createEmptyPurchaseFormValues, toFormBranchSnapshot } from '@/modules/purchase/utils/purchaseUtils';
 import { TransactionTypeEnum, TradeModeEnum, TransactionTypeProfileEnum } from '@/modules/transactions';
 import type { IPurchaseFormValues } from '@/modules/purchase/types/purchaseTypes';
 import { useGetFakeCurrency } from '@/modules/fakeCurrencies/hooks';
@@ -18,7 +18,7 @@ export default function FakeCurrencyEditPage() {
         TransactionTypeEnum.SALE,
         TradeModeEnum.RETAIL,
         TransactionTypeProfileEnum.FAKE_CURRENCY,
-        transaction.branchSnapshot ?? null,
+        toFormBranchSnapshot(transaction.branchSnapshot),
         transaction.branchId,
         transaction.counterId,
         transaction.transactionDate ? String(transaction.transactionDate).slice(0, 10) : '',
@@ -53,5 +53,5 @@ export default function FakeCurrencyEditPage() {
   if (isLoading) return <div className="flex min-h-[50vh] items-center justify-center"><Loader /></div>;
   if (error || !transaction || !initialValues) return <p className="text-sm text-error-600">Fake-currency transaction not found.</p>;
 
-  return <FakeCurrencyCreateView initialValues={initialValues} readOnly />;
+  return <FakeCurrencyCreateView initialValues={initialValues} savedTransaction={transaction} readOnly />;
 }

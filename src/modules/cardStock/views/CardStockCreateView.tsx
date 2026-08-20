@@ -16,7 +16,7 @@ export const CardStockCreateView = () => {
   const defaultBranch = useMemo(() => canSelectBranch ? branches.find(branch => branch.isHeadOffice) ?? branches[0] : branches.find(branch => branch.id === activeBranchId), [activeBranchId, branches, canSelectBranch]);
   const initialValues = useMemo(() => emptyForm(defaultBranch?.id ?? activeBranchId ?? ''), [activeBranchId, defaultBranch?.id]);
   if (isLoading) return <Loader />;
-  return <CardStockReceiptForm initialValues={initialValues} onSubmit={async values => { await createReceipt(values); navigate('/card-stock'); }} />;
+  return <CardStockReceiptForm initialValues={initialValues} onSubmit={async values => { const created = await createReceipt(values); navigate(`/card-stock/edit/${created.id}`); }} />;
 };
 
 export default CardStockCreateView;

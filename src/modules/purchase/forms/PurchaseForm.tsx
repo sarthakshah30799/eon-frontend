@@ -19,7 +19,6 @@ import { DocumentRequirementCard } from '@/modules/documentProfiles/components/D
 import type { IDocumentProfileFile } from '@/modules/documentProfiles/types';
 import { SelectCurrencyProfiles } from '@/modules/currencyProfile/components';
 import { useGetBranchProfile } from '@/modules/branchProfile/hooks/useGetBranchProfile';
-import { useListCompanyProfiles } from '@/modules/companyProfile/hooks';
 import { useGetPartyProfile } from '@/modules/partyProfiles/hooks';
 import type { PartyProfileType } from '@/modules/partyProfiles/types';
 import {
@@ -51,6 +50,11 @@ import {
   buildPurchasePrintHtml,
   getPurchasePrintCopyLabel,
 } from '../utils/purchasePrintUtils';
+import {
+  openPrintWindow,
+  toPrintBranch,
+  toPrintCompany,
+} from '@/modules/transactions/utils/printSnapshotUtils';
 import {
   formatPurchaseDecimal,
   mapPurchaseFormValuesToSubmitPayload,
@@ -268,7 +272,6 @@ const PurchaseFormBody = ({
     Boolean(partyProfileId)
   );
   const { data: branchProfile } = useGetBranchProfile(resolvedBranchId);
-  const { data: companies = [] } = useListCompanyProfiles();
   const { data: nextTransactionNumber } = useQuery({
     queryKey: ['purchase-next-transaction-number', resolvedBranchId, purchasePageType],
     queryFn: () =>
@@ -672,9 +675,7 @@ const PurchaseFormBody = ({
 
     const savedBranchStateName =
       String(
-        savedTransaction.branchSnapshot?.stateName ??
-          savedTransaction.branchSnapshot?.gstStateName ??
-          savedTransaction.branchSnapshot?.state ??
+        savedTransaction.branchSnapshot?.state?.name ??
           savedTransaction.branchSnapshot?.gstState ??
           ''
       ).trim() || null;
@@ -922,26 +923,6 @@ const PurchaseFormBody = ({
     () => getPurchasePageTitle(purchasePageType),
     [purchasePageType]
   );
-  const currentCompany = useMemo(() => {
-    const now = new Date();
-
-    const activeCompany = companies.find(company => {
-      const fromDate = company.fromDate ? new Date(company.fromDate) : null;
-      const toDate = company.toDate ? new Date(company.toDate) : null;
-
-      if (fromDate && now < fromDate) {
-        return false;
-      }
-
-      if (toDate && now > toDate) {
-        return false;
-      }
-
-      return true;
-    });
-
-    return activeCompany ?? companies[0] ?? null;
-  }, [companies]);
   const hasPrintedHistory = Boolean(
     savedTransaction?.logs?.some(log => log.action === TransactionLogActionEnum.PRINT)
   );
@@ -1070,8 +1051,8 @@ const PurchaseFormBody = ({
         transactionNumber: savedTransaction.number,
         transactionDate:
           formValues.transactionDate || savedTransaction.transactionDate || '',
-        company: currentCompany,
-        branch: branchProfile ?? null,
+        company: toPrintCompany(savedTransaction.companySnapshot),
+        branch: toPrintBranch(savedTransaction.branchSnapshot),
         transaction: formValues,
         sacCode,
       });
@@ -1084,21 +1065,10 @@ const PurchaseFormBody = ({
         sendEmail: false,
       });
 
-      const printWindow = window.open('', '_blank', 'width=1200,height=900');
-      if (!printWindow) {
-        throw new Error('Unable to open print window. Please allow pop-ups and try again.');
-      }
-
-      printWindow.document.open();
-      printWindow.document.write(html);
-      printWindow.document.close();
-      printWindow.focus();
-      printWindow.onafterprint = () => {
-        printWindow.close();
-      };
-      window.setTimeout(() => {
-        printWindow.print();
-      }, 250);
+      openPrintWindow(
+        html,
+        'Unable to open print window. Please allow pop-ups and try again.',
+      );
 
       setHasPrintedOnce(true);
       toast.success(`${getPurchasePrintCopyLabel(copyType)} sent to printer`);

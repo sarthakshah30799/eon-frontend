@@ -1,3 +1,6 @@
+import type { IBranchProfile } from '@/modules/branchProfile/types';
+import type { ICompanyProfile } from '@/modules/companyProfile/types';
+
 export const TransactionStatusEnum = {
   DRAFT: 'DRAFT',
   PENDING: 'PENDING',
@@ -163,11 +166,11 @@ export interface ITransactionEntity {
   slug: string | null;
   transactionDate: string | null;
   branchId: string;
-  branchSnapshot?: ITransactionReferenceSnapshot | null;
+  branchSnapshot?: IBranchProfile | null;
   counterId: string;
   counterSnapshot?: ITransactionReferenceSnapshot | null;
   companyId: string | null;
-  companySnapshot?: ITransactionReferenceSnapshot | null;
+  companySnapshot?: ICompanyProfile | null;
   sacCode: string | null;
   partyProfileId: string | null;
   partyProfileSnapshot?: ITransactionReferenceSnapshot | null;

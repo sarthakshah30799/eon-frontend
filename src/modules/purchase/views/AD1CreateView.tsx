@@ -104,7 +104,7 @@ export const AD1CreateView = () => {
         submitLabel={requiresApproval ? 'Submit for Approval' : 'Create'}
         onSubmit={async (values) => {
           await setWorkplace(values.branchId, values.counterId);
-          await transactionAd1Api.create({
+          const created = await transactionAd1Api.create({
             transactionType: values.transactionType as string,
             profileType: values.profileType as string,
             requiresApproval,
@@ -150,7 +150,7 @@ export const AD1CreateView = () => {
             rtgsImpsNeftRefNo: (values.rtgsImpsNeftRefNo as string) || null,
             remarks: (values.remarks as string) || null,
           });
-          navigate('/ad1');
+          navigate(`/ad1/edit/${created.id}`);
         }}
         onCancel={() => navigate('/ad1')}
       />

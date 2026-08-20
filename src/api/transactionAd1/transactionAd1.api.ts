@@ -1,4 +1,12 @@
 import { apiClient } from '../api';
+import type { ICompanyProfile } from '@/modules/companyProfile/types';
+import type { IBranchProfile } from '@/modules/branchProfile/types';
+import type { ICurrencyProfile } from '@/modules/currencyProfile/types';
+import type { IProductProfile } from '@/modules/productProfile/types';
+import type { IPartyProfile } from '@/modules/partyProfiles/types';
+import type { IAccountProfile } from '@/modules/accountProfile/types/accountProfileTypes';
+import type { IPurpose } from '@/modules/purpose/types';
+import type { ICategoryOption } from '@/types/categoryOptionTypes';
 
 export type Ad1TransactionStatus = 'DRAFT' | 'APPROVED' | 'REJECTED';
 
@@ -7,6 +15,9 @@ export interface ITransactionAd1 {
   number: string;
   branchId: string;
   companyId: string | null;
+  companySnapshot: ICompanyProfile | null;
+  branchSnapshot: IBranchProfile | null;
+  printCount: number;
   transactionType: string;
   profileType: string;
   status: Ad1TransactionStatus;
@@ -58,6 +69,14 @@ export interface ITransactionAd1 {
   bankNameId: string | null;
   rtgsImpsNeftRefNo: string | null;
   remarks: string | null;
+  currencySnapshot: ICurrencyProfile | null;
+  productSnapshot: IProductProfile | null;
+  agentSnapshot: IPartyProfile | null;
+  bankSnapshot: IAccountProfile | null;
+  marketingSnapshot: ICategoryOption | null;
+  segmentSnapshot: ICategoryOption | null;
+  purposeSnapshot: IPurpose | null;
+  relationshipSnapshot: ICategoryOption | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -151,6 +170,15 @@ export const transactionAd1Api = {
 
   reject: async (id: string, payload?: { rejectionReason?: string }): Promise<ITransactionAd1> => {
     const res = await apiClient.post<ITransactionAd1>(`/transactions/ad1/${id}/reject`, payload ?? {});
+    if (res.error) throw new Error(res.error);
+    return res.data!;
+  },
+
+  recordPrint: async (id: string): Promise<{ message: string; copyType: string; printCount: number }> => {
+    const res = await apiClient.post<{ message: string; copyType: string; printCount: number }>(
+      `/transactions/ad1/${id}/print`,
+      {},
+    );
     if (res.error) throw new Error(res.error);
     return res.data!;
   },

@@ -14,10 +14,16 @@ import {
   useCancelCardTransfer,
   useDeleteCardTransfer,
   useGetCardTransfer,
+  usePrintCardTransferStock,
   useRejectCardTransfer,
   useUpdateCardTransfer,
 } from '../hooks';
 import type { CardTransferFormValues } from '../types';
+import { CARD_STOCK_PRINT_TEXT } from '@/modules/cardStock/constants/cardStockConstants';
+import {
+  getCardStockPrintButtonLabel,
+  getCardStockPrintCopyType,
+} from '@/modules/cardStock/utils/cardStockPrintUtils';
 
 type ConfirmationAction = 'REJECT' | 'CANCEL' | null;
 
@@ -34,6 +40,7 @@ export const CardTransferEditView = () => {
   const rejectMutation = useRejectCardTransfer();
   const cancelMutation = useCancelCardTransfer();
   const deleteMutation = useDeleteCardTransfer();
+  const { printTransfer, isPrinting } = usePrintCardTransferStock();
   const initialValues = useMemo(() => request, [request]);
   const policy = useMemo(
     () => getTransactionDatePolicy(policyContext),
@@ -53,11 +60,18 @@ export const CardTransferEditView = () => {
 
   const hasHoAccess = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
   const isHeld = request.status === 'HELD';
+  const isAccepted = request.status === 'ACCEPTED';
   const isDestinationBranchReviewer =
     !hasHoAccess && activeBranchId === request.destinationBranchId;
   const canManageHeldRequest = isHeld && hasHoAccess;
   const canReviewHeldRequest =
     isHeld && (hasHoAccess || isDestinationBranchReviewer);
+  const canPrintStockOut =
+    isAccepted && (hasHoAccess || activeBranchId === request.sourceBranchId);
+  const canPrintStockIn =
+    isAccepted && (hasHoAccess || activeBranchId === request.destinationBranchId);
+  const stockOutCopyType = getCardStockPrintCopyType(request.sourcePrintCount);
+  const stockInCopyType = getCardStockPrintCopyType(request.destinationPrintCount);
   const readOnly = !canManageHeldRequest;
   const isConfirmationPending =
     confirmationAction === 'REJECT'
@@ -68,7 +82,8 @@ export const CardTransferEditView = () => {
     rejectMutation.isPending ||
     cancelMutation.isPending ||
     deleteMutation.isPending ||
-    updateMutation.isPending;
+    updateMutation.isPending ||
+    isPrinting;
 
   const run = async (action: Promise<unknown>, message: string) => {
     await action;
@@ -127,6 +142,34 @@ export const CardTransferEditView = () => {
           : () => navigate('/card-transfer'),
         actions: (
           <div className="flex flex-wrap gap-2">
+            {canPrintStockOut ? (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => void printTransfer(request, 'STOCK_OUT')}
+                disabled={isActionPending}
+              >
+                {isPrinting
+                  ? CARD_STOCK_PRINT_TEXT.preparing
+                  : getCardStockPrintButtonLabel('STOCK_OUT', stockOutCopyType, {
+                      transfer: true,
+                    })}
+              </Button>
+            ) : null}
+            {canPrintStockIn ? (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => void printTransfer(request, 'STOCK_IN')}
+                disabled={isActionPending}
+              >
+                {isPrinting
+                  ? CARD_STOCK_PRINT_TEXT.preparing
+                  : getCardStockPrintButtonLabel('STOCK_IN', stockInCopyType, {
+                      transfer: true,
+                    })}
+              </Button>
+            ) : null}
             {canReviewHeldRequest ? (
               <>
                 <Button

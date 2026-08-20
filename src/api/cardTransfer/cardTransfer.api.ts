@@ -1,4 +1,5 @@
 import { apiClient } from '../api';
+import type { CardStockPrintPayload, CardStockPrintResponse } from '@/api/cardStock';
 import type { CardTransferFormValues, CardTransferRequest, CardTransferCard } from '@/modules/cardTransfer/types';
 
 // Keep the route contract in one place until the backend controller is released.
@@ -21,6 +22,8 @@ export const cardTransferApi = {
   reject: (id: string, remarks: string) => request(apiClient.post<CardTransferRequest>(`${BASE_PATH}/${id}/reject`, { remarks }), 'Failed to reject CARD transfer request'),
   cancel: (id: string, remarks: string) => request(apiClient.post<CardTransferRequest>(`${BASE_PATH}/${id}/cancel`, { remarks }), 'Failed to cancel CARD transfer request'),
   remove: (id: string) => request(apiClient.delete<{ message: string }>(`${BASE_PATH}/${id}`), 'Failed to delete CARD transfer request'),
+  recordPrint: (id: string, payload: CardStockPrintPayload & { kind: NonNullable<CardStockPrintPayload['kind']> }) =>
+    request(apiClient.post<CardStockPrintResponse>(`${BASE_PATH}/${id}/print`, payload), 'Failed to record CARD transfer print'),
 };
 
 const toPayload = (values: CardTransferFormValues) => ({ sourceBranchId: values.sourceBranchId, destinationBranchId: values.destinationBranchId, transactionDate: values.transactionDate, remarks: values.remarks, items: values.items.map((item, index) => ({ lineNo: index + 1, currencyId: item.currencyId, per: item.per, productId: item.productId, issuerPartyProfileId: item.issuerPartyProfileId, cardIds: item.cards.map(card => card.id) })) });

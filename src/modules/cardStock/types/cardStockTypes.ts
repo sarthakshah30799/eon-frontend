@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { CardStockReceiptPayload, ICardStockReceipt } from '@/api/cardStock';
 
 export interface ICardStockFormCard {
@@ -30,6 +31,7 @@ export interface ICardStockFormValues {
 export interface CardStockFormProps {
   initialValues: ICardStockFormValues;
   readOnly?: boolean;
+  footerActions?: ReactNode;
   onSubmit: (values: CardStockReceiptPayload) => void | Promise<void>;
 }
 

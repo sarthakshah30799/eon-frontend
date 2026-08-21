@@ -84,7 +84,7 @@ export const Modal = ({
           aria-labelledby={titleId}
           aria-describedby={description ? descriptionId : undefined}
           className={cn(
-            'w-full overflow-hidden rounded-sm border border-border-primary bg-surface-primary shadow-2xl',
+            'flex w-full max-h-[90vh] flex-col overflow-hidden rounded-sm border border-border-primary bg-surface-primary shadow-2xl',
             sizeClasses[size],
             className
           )}
@@ -93,7 +93,7 @@ export const Modal = ({
           }}
           {...props}
         >
-          <div className="flex items-start justify-between gap-4 border-b border-border-primary px-5 py-4">
+          <div className="flex shrink-0 items-start justify-between gap-4 border-b border-border-primary px-5 py-4">
             <div className="space-y-1">
               <h2 id={titleId} className="text-lg font-semibold text-text-primary">
                 {title}
@@ -138,10 +138,10 @@ export const Modal = ({
             </Button>
           </div>
 
-          <div className="max-h-[75vh] overflow-y-auto px-5 py-4">{children}</div>
+          <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">{children}</div>
 
           {footer && (
-            <div className="border-t border-border-primary px-5 py-4">
+            <div className="shrink-0 border-t border-border-primary bg-surface-primary px-5 py-4">
               {footer}
             </div>
           )}

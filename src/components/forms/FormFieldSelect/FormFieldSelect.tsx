@@ -124,6 +124,29 @@ export const FormFieldSelect = ({
   useEffect(() => {
     let isActive = true;
 
+    const hasResolvedSingleOption = (value: unknown) =>
+      Boolean(
+        selectedOption &&
+          !isOptionArray(selectedOption) &&
+          getComparableOptionValues(selectedOption).includes(
+            getComparableFieldValue(value)
+          )
+      );
+
+    const hasResolvedMultiOptions = (selectedValues: unknown[]) => {
+      if (!isOptionArray(selectedOption) || selectedOption.length !== selectedValues.length) {
+        return false;
+      }
+
+      return selectedValues.every(selectedValue =>
+        selectedOption.some(option =>
+          getComparableOptionValues(option).includes(
+            getComparableFieldValue(selectedValue)
+          )
+        )
+      );
+    };
+
     const resolveSelectedOption = async () => {
       if (isMulti) {
         const selectedValues = Array.isArray(field.value) ? field.value : [];
@@ -134,6 +157,10 @@ export const FormFieldSelect = ({
               optionsAreEqual(current, []) ? current : []
             );
           }
+          return;
+        }
+
+        if (hasResolvedMultiOptions(selectedValues)) {
           return;
         }
 
@@ -180,6 +207,10 @@ export const FormFieldSelect = ({
         return;
       }
 
+      if (hasResolvedSingleOption(field.value)) {
+        return;
+      }
+
       try {
         const response = await loadOptions('');
         const loadedOptions = flattenOptions(response);
@@ -210,7 +241,7 @@ export const FormFieldSelect = ({
     return () => {
       isActive = false;
     };
-  }, [defaultOptions, field.value, isMulti, loadOptions]);
+  }, [defaultOptions, field.value, isMulti, loadOptions, selectedOption]);
 
   const handleCreateOption = async (inputValue: string) => {
     if (!onCreateOption) {

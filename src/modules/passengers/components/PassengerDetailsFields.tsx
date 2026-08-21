@@ -7,6 +7,7 @@ import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import type { IPurchaseFormValues } from '@/modules/purchase/types/purchaseTypes';
 import { TransactionTypeEnum } from '@/modules/transactions';
 import { PassengerEntityTypeEnum, PassengerNationalityTypeEnum, PassengerResidentStatusEnum } from '../types/passengerTypes';
+import { PASSENGER_IDENTITY_TEXT } from '../constants/passengerConstants';
 import { PassengerIdentityFields } from './PassengerIdentityFields';
 import { PassengerOtherDocumentsSection } from './PassengerOtherDocumentsSection';
 
@@ -22,13 +23,14 @@ interface PassengerDetailsFieldsProps {
 
 export const PassengerDetailsFields = ({
   entityType,
-  showPanRelation = false,
+  showPanRelation: _showPanRelation = false,
   onPanFieldBlur,
   onPassportNumberBlur,
   onPassportFieldBlur,
   onNationalityChange,
   onDocumentChange,
 }: PassengerDetailsFieldsProps) => {
+  void _showPanRelation;
   const form = useFormContext<IPurchaseFormValues>();
   const nationalityType = useWatch({
     control: form.control,
@@ -94,8 +96,7 @@ export const PassengerDetailsFields = ({
 
     return code === 'IN' || name === 'india';
   }, [selectedCountryProfile?.code, selectedCountryProfile?.name]);
-  const showPanRelationField =
-    showPanRelation && (isCorporateEntity || isIndianNationality);
+  const showPanRelationField = isCorporateEntity || isIndianNationality;
   const selfRelationOption = useMemo(
     () =>
       panRelationOptions.find(option => {
@@ -338,16 +339,6 @@ export const PassengerDetailsFields = ({
               placeholder="Select state"
               countryId={countryId || undefined}
             />
-            {showPanRelationField ? (
-              <FormFieldCategoryOption
-                name="panHolderRelationType"
-                label="PAN Holder Relation"
-                placeholder="Select relation"
-                code={CategoryOptionCodeEnum.PassengerPanHolderRelation}
-                useValueAsId
-                disabled={isCorporateEntity}
-              />
-            ) : null}
           </div>
 
           <PassengerIdentityFields
@@ -387,6 +378,16 @@ export const PassengerDetailsFields = ({
               placeholder="Select DOB"
               onBlur={onPanFieldBlur}
             />
+            {showPanRelationField ? (
+              <FormFieldCategoryOption
+                name="panHolderRelationType"
+                label="PAN Holder Relation"
+                placeholder="Select relation"
+                code={CategoryOptionCodeEnum.PassengerPanHolderRelation}
+                useValueAsId
+                disabled={isCorporateEntity}
+              />
+            ) : null}
             <FormFieldInput
               name="email"
               label="Email"
@@ -525,7 +526,7 @@ export const PassengerDetailsFields = ({
               Passport Details
             </h3>
             <p className="text-sm text-text-secondary">
-              Passport stays visible for every passenger and becomes required for NRI or foreign residents.
+              {PASSENGER_IDENTITY_TEXT.passportOptionalHelper}
             </p>
           </div>
 
@@ -623,7 +624,7 @@ export const PassengerDetailsFields = ({
               <p className="text-sm text-text-secondary">
                 {showTravelDetails
                   ? 'Add any supporting passenger documents for the sell flow.'
-                  : 'Add supporting documents for Indian passengers here.'}
+                  : PASSENGER_IDENTITY_TEXT.otherDocumentsOptional}
               </p>
             </div>
             <PassengerOtherDocumentsSection
@@ -631,7 +632,7 @@ export const PassengerDetailsFields = ({
               description={
                 showTravelDetails
                   ? 'Add any supporting passenger documents for the sell flow.'
-                  : 'Add supporting documents for Indian passengers here.'
+                  : PASSENGER_IDENTITY_TEXT.otherDocumentsOptional
               }
             />
           </section>

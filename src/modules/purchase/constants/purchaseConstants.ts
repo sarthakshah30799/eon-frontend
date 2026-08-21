@@ -28,3 +28,20 @@ export const PURCHASE_PRINT_TEXT = {
   noItems: 'No items',
   noCardItems: 'No CARD items',
 } as const;
+
+export const PURCHASE_RULE_TEXT = {
+  heading: 'Purchase Rule',
+  passed: 'Purchase rule check passed',
+  failedFallback: 'Purchase rule check failed',
+  fixBeforeSave: 'Fix these before saving:',
+  cannotPunchTransactions:
+    'Transactions cannot be punched for this date. Complete day start or check monthwise locking.',
+  cdfRequired: (threshold: string, currency: string) =>
+    `CDF declaration is required. This purchase, including history, has reached the CDF threshold of ${threshold} ${currency}. You will enter CDF details when you save.`,
+  convertedAmount: 'Converted amount:',
+  cashTotal: 'Cash total:',
+  chequeTotal: 'Cheque total:',
+  cashLimit: 'Cash limit:',
+  cdfThreshold: 'CDF threshold:',
+  historyAmount: 'History amount:',
+} as const;

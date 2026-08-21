@@ -147,6 +147,24 @@ export const SelectEntity = <T extends { id: string }>({
       title={title}
       description={description}
       size="xl"
+      footer={
+        <div className="flex items-center justify-between gap-3">
+          <div className="text-sm text-text-secondary">
+            {selectable
+              ? `${selectedRows.length} selected`
+              : 'Selection is disabled for this view'}
+          </div>
+
+          <div className="flex gap-3">
+            <Button type="button" variant="ghost" onClick={handleClose}>
+              {cancelLabel}
+            </Button>
+            <Button type="button" onClick={handleContinue}>
+              {continueLabel}
+            </Button>
+          </div>
+        </div>
+      }
     >
       <div className="space-y-5">
         {selectedSummary}
@@ -169,23 +187,6 @@ export const SelectEntity = <T extends { id: string }>({
           searchPlaceholder={searchPlaceholder}
           emptyMessage={emptyMessage}
         />
-
-        <div className="flex items-center justify-between gap-3">
-          <div className="text-sm text-text-secondary">
-            {selectable
-              ? `${selectedRows.length} selected`
-              : 'Selection is disabled for this view'}
-          </div>
-
-          <div className="flex gap-3">
-            <Button type="button" variant="ghost" onClick={handleClose}>
-              {cancelLabel}
-            </Button>
-            <Button type="button" onClick={handleContinue}>
-              {continueLabel}
-            </Button>
-          </div>
-        </div>
       </div>
     </Modal>
   );

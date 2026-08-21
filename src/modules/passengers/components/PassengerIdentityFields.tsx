@@ -26,7 +26,7 @@ export const PassengerIdentityFields = ({
   entityType,
   showNationality = false,
   showResident = false,
-  showPanRelation = false,
+  showPanRelation: _showPanRelation = false,
   showPan = true,
   showPassport = false,
   onPanFieldBlur,
@@ -34,6 +34,7 @@ export const PassengerIdentityFields = ({
   onPassportFieldBlur,
   onNationalityChange,
 }: PassengerIdentityFieldsProps) => {
+  void _showPanRelation;
   const form = useFormContext<IPurchaseFormValues>();
   const nationalityType = useWatch({
     control: form.control,
@@ -112,15 +113,6 @@ export const PassengerIdentityFields = ({
             placeholder="Select DOB"
             onBlur={onPanFieldBlur}
           />
-          {showPanRelation && isPanRequired ? (
-            <FormFieldCategoryOption
-              name="panHolderRelationType"
-              label="PAN Holder Relation"
-              placeholder="Select relation"
-              code={CategoryOptionCodeEnum.PassengerPanHolderRelation}
-              useValueAsId
-            />
-          ) : null}
         </div>
       ) : null}
 
@@ -149,12 +141,6 @@ export const PassengerIdentityFields = ({
             name="passportExpiryDate"
             label="Expiry Date"
             placeholder="Select expiry date"
-            onBlur={onPassportFieldBlur}
-          />
-          <FormFieldDatePicker
-            name="arrivalDate"
-            label="Arrival Date"
-            placeholder="Select arrival date"
             onBlur={onPassportFieldBlur}
           />
         </div>

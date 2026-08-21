@@ -13,6 +13,8 @@ export const PASSENGER_IDENTITY_TEXT = {
   passportIssueDateRequired: 'Passport issue date is required',
   passportExpiryDateRequired: 'Passport expiry date is required',
   arrivalDateRequired: 'Arrival date is required',
+  arrivalDateHelper:
+    'Required for NRI and foreign passengers. This is the date they entered India, not a passport detail.',
   passportOptionalHelper:
     'Passport stays visible for every passenger and is required for NRI or foreign residents.',
 } as const;

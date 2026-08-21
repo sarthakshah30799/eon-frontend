@@ -24,6 +24,7 @@ import {
   isPassengerPanHolderRelationRequired,
   isPassengerPanRequired,
   isPassengerPassportRequired,
+  isPassengerArrivalDateRequired,
 } from '@/modules/passengers/utils/passengerIdentityRules';
 import { PASSENGER_IDENTITY_TEXT } from '@/modules/passengers/constants/passengerConstants';
 import {
@@ -427,7 +428,7 @@ export const createPurchaseFormSchema = (
         'arrival-date-required',
         PASSENGER_IDENTITY_TEXT.arrivalDateRequired,
         function (value) {
-          if (!isPassengerPassportRequired({ ...this.parent, arrivalDate: value })) {
+          if (!isPassengerArrivalDateRequired({ ...this.parent, arrivalDate: value })) {
             return true;
           }
           return Boolean(String(value ?? '').trim());

@@ -361,6 +361,16 @@ export const PassengerDetailsFields = ({
 
           {showPanSection ? (
             <div className="grid gap-4 md:grid-cols-2">
+            {showPanRelationField ? (
+              <FormFieldCategoryOption
+                name="panHolderRelationType"
+                label="PAN Holder Relation"
+                placeholder="Select relation"
+                code={CategoryOptionCodeEnum.PassengerPanHolderRelation}
+                useValueAsId
+                disabled={isCorporateEntity}
+              />
+            ) : null}
             <FormFieldInput
               name="paidByPanNumber"
               label="Paid By PAN Number"
@@ -378,16 +388,6 @@ export const PassengerDetailsFields = ({
               placeholder="Select DOB"
               onBlur={onPanFieldBlur}
             />
-            {showPanRelationField ? (
-              <FormFieldCategoryOption
-                name="panHolderRelationType"
-                label="PAN Holder Relation"
-                placeholder="Select relation"
-                code={CategoryOptionCodeEnum.PassengerPanHolderRelation}
-                useValueAsId
-                disabled={isCorporateEntity}
-              />
-            ) : null}
             <FormFieldInput
               name="email"
               label="Email"
@@ -538,6 +538,26 @@ export const PassengerDetailsFields = ({
             onPassportFieldBlur={onPassportFieldBlur}
           />
         </section>
+
+        {!isIndianNationality && !isCorporateEntity ? (
+          <section className="space-y-4 rounded-sm border border-border-primary bg-surface-secondary p-4">
+            <div>
+              <h3 className="text-base font-semibold text-text-primary">
+                Arrival Date
+              </h3>
+              <p className="text-sm text-text-secondary">
+                {PASSENGER_IDENTITY_TEXT.arrivalDateHelper}
+              </p>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <FormFieldDatePicker
+                name="arrivalDate"
+                label="Arrival Date"
+                placeholder="Select arrival date"
+              />
+            </div>
+          </section>
+        ) : null}
 
         {showTravelDetails ? (
           <section className="space-y-4 rounded-sm border border-border-primary bg-surface-secondary p-4">

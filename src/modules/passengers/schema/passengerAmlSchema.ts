@@ -27,7 +27,6 @@ export const PASSENGER_PASSPORT_VERIFICATION_FIELDS = [
   'passportIssueAt',
   'passportIssueDate',
   'passportExpiryDate',
-  'arrivalDate',
   'countryId',
 ] as const;
 
@@ -147,12 +146,6 @@ export const createPassengerPassportVerificationSchema = () =>
 
             return new Date(value) >= new Date(issueDate);
           }),
-      otherwise: schema => schema.default(''),
-    }),
-    arrivalDate: yup.string().trim().when('nationalityType', {
-      is: (nationalityType: string) =>
-        isPassportValidationRequired({ nationalityType }),
-      then: schema => schema.required('Arrival date is required'),
       otherwise: schema => schema.default(''),
     }),
     isIndianNationality: yup.boolean().required(),

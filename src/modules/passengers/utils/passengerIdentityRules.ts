@@ -53,8 +53,7 @@ export const hasAnyPassengerPassportValue = (values: PassengerIdentityValues) =>
     trim(values.passportNumber) ||
       trim(values.passportIssueAt) ||
       trim(values.passportIssueDate) ||
-      trim(values.passportExpiryDate) ||
-      trim(values.arrivalDate)
+      trim(values.passportExpiryDate)
   );
 
 export const hasCompletePassengerOtherDocuments = (
@@ -95,6 +94,9 @@ export const isPassengerPassportRequired = (values: PassengerIdentityValues) => 
 
   return hasAnyPassengerPassportValue(values);
 };
+
+export const isPassengerArrivalDateRequired = (values: PassengerIdentityValues) =>
+  isForeignNationality(values);
 
 export const isPassengerOtherDocumentsRequired = (
   values: PassengerIdentityValues

@@ -1,10 +1,10 @@
 export const CARD_SETTLEMENT_REPORT_TEXT = {
   unsettledTitle: 'Unsettled CARD Report',
   unsettledDescription:
-    'CARD sales waiting to be sent to HO or waiting for HO acceptance, grouped by selling branch.',
+    'CARD sales in the selected period that were not yet branch-HO settled as of the period end, grouped by selling branch.',
   settledTitle: 'Settled CARD Report',
   settledDescription:
-    'CARD sales whose branch to HO settlement is posted, grouped by selling branch.',
+    'CARD series whose branch-HO settlement transaction date falls in the selected period. Sale values are the original sale even when the sale date is outside the period.',
   reportViewTitle: 'Report View',
   reportViewDescription:
     'Rows are grouped by selling branch. Group totals use stored quantity and amount values.',

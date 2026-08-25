@@ -623,12 +623,46 @@ const PaymentDetailRow = ({
     [accountQuery, paymentMethod, transactionType]
   );
 
+  const chequePageSnapshot = useWatch({
+    control: form.control,
+    name: `${arrayName}.${index}.chequePageSnapshot`,
+  }) as IChequeBookPageTracking | null | undefined;
+
+  const selectedChequePage = useMemo(
+    () =>
+      pageOptions.find(page => page.id === String(chequePageId || '')) ??
+      chequePageSnapshot ??
+      null,
+    [chequePageId, chequePageSnapshot, pageOptions]
+  );
+
+  const selectedBookLabel = useMemo(() => {
+    if (!selectedChequePage) return null;
+    // label format is "BookNo | Page X" -> split by '|' -> 1st element is book
+    const bookNo = selectedChequePage.checkBook?.no?.trim();
+    return bookNo || 'Book';
+  }, [selectedChequePage]);
+
+  const chequePageDefaultOptions = useMemo(() => {
+    if (!selectedChequePage?.id) return undefined;
+    // If the selected page is already in selectable pages, no need for fallback
+    if (pageOptions.some(page => String(page.id) === String(selectedChequePage.id))) {
+      return undefined;
+    }
+    return [
+      {
+        value: String(selectedChequePage.id),
+        label: `${selectedChequePage.checkBook?.no || 'Book'} | Page ${selectedChequePage.pageNo}`,
+      },
+    ];
+  }, [pageOptions, selectedChequePage]);
+
   const isCash = paymentMethod === TransactionPaymentMethodEnum.CASH;
   const isCheque = paymentMethod === TransactionPaymentMethodEnum.CHEQUE;
 
   return (
     <>
-    <div className="grid gap-4 rounded-sm border border-border-secondary bg-surface-primary p-4 md:grid-cols-2 xl:grid-cols-[1fr_1.3fr_1fr_1fr_1fr_1fr_1fr_1fr_auto]">
+    <div className="grid gap-4 rounded-sm border border-border-secondary bg-surface-primary p-4 md:grid-cols-2 xl:grid-cols-[1fr_1.3fr_1.5fr_1.25fr_1fr_1fr_1.25fr_auto]">
       <div className="md:col-span-2 xl:col-span-1">
         <FormFieldSelect
           name={`${arrayName}.${index}.settlementSource`}
@@ -704,7 +738,7 @@ const PaymentDetailRow = ({
       {isCheque && isPurchase && settlementSource !== 'ADVANCE' ? (
         <div className="md:col-span-2 xl:col-span-1">
           <FormFieldSelect
-            key={`cheque-page-${accountId || 'empty'}-${pageOptions.length}`}
+            key={`cheque-page-${accountId || 'empty'}-${pageOptions.length}-${String(chequePageId || 'empty')}`}
             name={`${arrayName}.${index}.chequePageId`}
             label="Cheque Page"
             placeholder="Select cheque page"
@@ -712,7 +746,13 @@ const PaymentDetailRow = ({
               inputValue: string
             ): Promise<AsyncSelectResponse> => {
               const normalized = inputValue.trim().toLowerCase();
-              const options = pageOptions
+              // In edit, selected page may not be in selectable pages (already used) - include snapshot for display/menu
+              const allPages =
+                selectedChequePage &&
+                !pageOptions.some(page => String(page.id) === String(selectedChequePage.id))
+                  ? [selectedChequePage, ...pageOptions]
+                  : pageOptions;
+              const options = allPages
                 .filter(page => {
                   if (!normalized) {
                     return true;
@@ -735,14 +775,28 @@ const PaymentDetailRow = ({
 
               return { options, hasMore: false };
             }}
+            defaultOptions={chequePageDefaultOptions}
+            // Show only 2nd element (Page ...) inside the input value; menu keeps full "Book | Page" label.
+            formatOptionLabel={(option, meta) => {
+              if (meta.context === 'value') {
+                const parts = String(option.label).split('|');
+                return parts[1]?.trim() || option.label;
+              }
+              return option.label;
+            }}
             disabled={disabled || !accountId || isLoadingPages}
             isSearchable
             cacheOptions={false}
           />
+          {selectedBookLabel ? (
+            <p className="mt-1 text-xs text-text-secondary">
+              Selected book: {selectedBookLabel}
+            </p>
+          ) : null}
         </div>
       ) : null}
 
-      <div className="md:col-span-2 xl:col-span-1">
+      {!isPurchase && <div className="md:col-span-2 xl:col-span-1">
         <FormFieldInput
           name={`${arrayName}.${index}.chequeNumber`}
           label="Cheque / Ref No"
@@ -755,7 +809,7 @@ const PaymentDetailRow = ({
           }
           disabled={disabled || isCash || settlementSource === 'ADVANCE'}
         />
-      </div>
+      </div>}
 
       <div className="md:col-span-2 xl:col-span-1">
         <FormFieldDatePicker

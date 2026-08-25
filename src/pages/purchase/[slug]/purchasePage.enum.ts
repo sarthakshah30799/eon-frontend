@@ -27,11 +27,17 @@ const PURCHASE_PAGE_TYPE_BY_SLUG: Record<string, PurchasePageType> = {
   'ffmc-ads': TransactionTypeProfileEnum.PURCHASE_FFMC,
   'corporate-individual': TransactionTypeProfileEnum.PURCHASE_CORPORATE_INDIVIDUAL,
   'sale-ffmc-ads': TransactionTypeProfileEnum.SALE_FFMC,
+  'sell-ffmc-ads': TransactionTypeProfileEnum.SALE_FFMC,
   'sale-rmc': TransactionTypeProfileEnum.SALE_RMC,
+  'sell-rmc': TransactionTypeProfileEnum.SALE_RMC,
   'sale-forex': TransactionTypeProfileEnum.SALE_FOREX,
+  'sell-forex': TransactionTypeProfileEnum.SALE_FOREX,
   'sale-foreign': TransactionTypeProfileEnum.SALE_FOREIGN,
+  'sell-foreign': TransactionTypeProfileEnum.SALE_FOREIGN,
   'sale-misc': TransactionTypeProfileEnum.SALE_MISC,
+  'sell-misc': TransactionTypeProfileEnum.SALE_MISC,
   'sale-franchise': TransactionTypeProfileEnum.SALE_FRANCHISE,
+  'sell-franchise': TransactionTypeProfileEnum.SALE_FRANCHISE,
   rmc: TransactionTypeProfileEnum.PURCHASE_RMC,
   forex: TransactionTypeProfileEnum.PURCHASE_FOREX,
   foreign: TransactionTypeProfileEnum.PURCHASE_FOREIGN,
@@ -45,11 +51,12 @@ const PURCHASE_PAGE_SLUG_BY_TYPE: Record<PurchasePageType, string> = {
   [TransactionTypeProfileEnum.PURCHASE_CORPORATE_INDIVIDUAL]: 'corporate-individual',
   [TransactionTypeProfileEnum.SALE_CORPORATE_INDIVIDUAL]: 'corporate-individual',
   [TransactionTypeProfileEnum.SALE_FFMC]: 'ffmc-ads',
-  [TransactionTypeProfileEnum.SALE_RMC]: 'sale-rmc',
-  [TransactionTypeProfileEnum.SALE_FOREX]: 'sale-forex',
-  [TransactionTypeProfileEnum.SALE_FOREIGN]: 'sale-foreign',
-  [TransactionTypeProfileEnum.SALE_MISC]: 'sale-misc',
-  [TransactionTypeProfileEnum.SALE_FRANCHISE]: 'sale-franchise',
+  // sell routes: stripped prefix (e.g. /sell/forex not /sell/sale-forex)
+  [TransactionTypeProfileEnum.SALE_RMC]: 'rmc',
+  [TransactionTypeProfileEnum.SALE_FOREX]: 'forex',
+  [TransactionTypeProfileEnum.SALE_FOREIGN]: 'foreign',
+  [TransactionTypeProfileEnum.SALE_MISC]: 'misc',
+  [TransactionTypeProfileEnum.SALE_FRANCHISE]: 'franchise',
   [TransactionTypeProfileEnum.PURCHASE_RMC]: 'rmc',
   [TransactionTypeProfileEnum.PURCHASE_FOREX]: 'forex',
   [TransactionTypeProfileEnum.PURCHASE_FOREIGN]: 'foreign',
@@ -139,7 +146,19 @@ export const getPurchasePageTypeFromSlug = (
     return null;
   }
 
-  return PURCHASE_PAGE_TYPE_BY_SLUG[slug] ?? null;
+  const normalized = slug.trim().toLowerCase();
+  const direct = PURCHASE_PAGE_TYPE_BY_SLUG[normalized];
+  if (direct) {
+    return direct;
+  }
+
+  // Alias: support `sell-*` as alias for `sale-*` (e.g. /sell/sell-forex)
+  if (normalized.startsWith('sell-')) {
+    const saleVariant = `sale-${normalized.slice(5)}`;
+    return PURCHASE_PAGE_TYPE_BY_SLUG[saleVariant] ?? null;
+  }
+
+  return null;
 };
 
 export const getPurchasePageTypeFromPath = (
@@ -148,12 +167,56 @@ export const getPurchasePageTypeFromPath = (
 ): PurchasePageType | null => {
   const normalizedPath = pathname?.trim().toLowerCase() ?? '';
   if (normalizedPath.startsWith('/sell/')) {
-    const normalizedSlug = slug?.trim().toLowerCase();
-    if (normalizedSlug === 'corporate-individual') {
-      return TransactionTypeProfileEnum.SALE_CORPORATE_INDIVIDUAL;
+    const normalizedSlug = slug?.trim().toLowerCase() ?? '';
+    // stripped slugs for sell routes (no sale-/sell- prefix)
+    const sellStrippedMap: Record<string, PurchasePageType> = {
+      'corporate-individual': TransactionTypeProfileEnum.SALE_CORPORATE_INDIVIDUAL,
+      'ffmc-ads': TransactionTypeProfileEnum.SALE_FFMC,
+      rmc: TransactionTypeProfileEnum.SALE_RMC,
+      forex: TransactionTypeProfileEnum.SALE_FOREX,
+      foreign: TransactionTypeProfileEnum.SALE_FOREIGN,
+      misc: TransactionTypeProfileEnum.SALE_MISC,
+      franchise: TransactionTypeProfileEnum.SALE_FRANCHISE,
+    };
+    if (sellStrippedMap[normalizedSlug]) {
+      return sellStrippedMap[normalizedSlug];
     }
-    if (normalizedSlug === 'ffmc-ads' || normalizedSlug === 'sale-ffmc-ads') {
+    // backward compat: keep prefixed variants working under /sell
+    if (
+      normalizedSlug === 'sale-ffmc-ads' ||
+      normalizedSlug === 'sell-ffmc-ads'
+    ) {
       return TransactionTypeProfileEnum.SALE_FFMC;
+    }
+    if (
+      normalizedSlug === 'sale-rmc' ||
+      normalizedSlug === 'sell-rmc'
+    ) {
+      return TransactionTypeProfileEnum.SALE_RMC;
+    }
+    if (
+      normalizedSlug === 'sale-forex' ||
+      normalizedSlug === 'sell-forex'
+    ) {
+      return TransactionTypeProfileEnum.SALE_FOREX;
+    }
+    if (
+      normalizedSlug === 'sale-foreign' ||
+      normalizedSlug === 'sell-foreign'
+    ) {
+      return TransactionTypeProfileEnum.SALE_FOREIGN;
+    }
+    if (
+      normalizedSlug === 'sale-misc' ||
+      normalizedSlug === 'sell-misc'
+    ) {
+      return TransactionTypeProfileEnum.SALE_MISC;
+    }
+    if (
+      normalizedSlug === 'sale-franchise' ||
+      normalizedSlug === 'sell-franchise'
+    ) {
+      return TransactionTypeProfileEnum.SALE_FRANCHISE;
     }
   }
 

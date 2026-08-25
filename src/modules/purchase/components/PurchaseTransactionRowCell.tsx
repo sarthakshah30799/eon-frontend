@@ -124,10 +124,6 @@ export const PurchaseTransactionRowCell = ({
     control: form.control,
     name: fieldPath('currencyCode'),
   });
-  const currencyName = useWatch({
-    control: form.control,
-    name: fieldPath('currencyName'),
-  });
   const productId = useWatch({
     control: form.control,
     name: fieldPath('productId'),
@@ -662,15 +658,11 @@ export const PurchaseTransactionRowCell = ({
       disabled={disabled}
       onRemove={() => onRemove(rowIndex)}
     >
-      <div className="grid gap-2 px-1 py-1 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1.4fr)_minmax(0,0.55fr)_minmax(0,0.65fr)_minmax(0,0.75fr)_minmax(0,0.55fr)_minmax(0,0.55fr)_minmax(0,0.55fr)_minmax(0,0.55fr)_44px]">
-        <div className="min-w-0">
+      <div className="flex flex-wrap gap-2 px-1 py-1 lg:flex-nowrap">
+        <div className={`min-w-0 basis-[46%] sm:basis-[31%] md:basis-[18%] lg:basis-0 lg:flex-1 ${currencyCode ? 'lg:max-w-[60px]' : ''}`}>
           <EntityPickerField
             label="Currency"
-            value={
-              currencyCode
-                ? `${currencyCode}${currencyName ? ` - ${currencyName}` : ''}`
-                : ''
-            }
+            value={currencyCode ? `${currencyCode}` : ''}
             placeholder="Select currency"
             onClick={() => onOpenCurrencyPicker(rowIndex)}
             disabled={disabled}
@@ -679,11 +671,11 @@ export const PurchaseTransactionRowCell = ({
           />
         </div>
         {isCardProduct ? (
-          <div className="min-w-0">
+          <div className="min-w-0 basis-[46%] sm:basis-[31%] md:basis-[18%] lg:basis-0 lg:flex-1">
             <EntityPickerField label="Issuer" value={String(issuerSnapshot?.name ?? issuerSnapshot?.code ?? '')} placeholder="Select issuer" disabled={disabled} onClick={() => setIssuerPickerOpen(true)} buttonPosition="bottom" />
           </div>
         ) : null}
-        <div className="min-w-0">
+        <div className={`min-w-0 basis-[46%] sm:basis-[31%] md:basis-[22%] lg:basis-0 lg:flex-1 ${productId ? 'lg:max-w-[130px]' : 'lg:max-w-[200px]'}`}>
           <FormFieldAsyncSelect
             name={fieldPath('productId')}
             label="Product"
@@ -692,10 +684,11 @@ export const PurchaseTransactionRowCell = ({
             disabled={disabled}
             size="sm"
             isSearchable
-            className="max-w-[220px]"
+            className="w-full"
+            displayValue="code"
           />
         </div>
-        <div className="relative min-w-0 pb-14">
+        <div className="relative min-w-0 basis-[46%] sm:basis-[31%] md:basis-[18%] lg:basis-auto lg:flex-none lg:w-[82px] lg:min-w-[82px] lg:max-w-[82px]">
           <FormFieldInput
             name={fieldPath('quantity')}
             label={
@@ -710,15 +703,15 @@ export const PurchaseTransactionRowCell = ({
             step={`0.${'0'.repeat(PURCHASE_RATE_DECIMALS - 1)}1`}
             maxDecimalPlaces={PURCHASE_RATE_DECIMALS}
             disabled={disabled}
-            classes={{ container: 'max-w-[90px]' }}
+            classes={{ container: 'w-full' }}
           />
         </div>
         {isCardProduct ? (
-          <div className="min-w-0">
+          <div className="min-w-0 basis-full sm:basis-[48%] md:basis-[22%] lg:basis-0 lg:flex-1 lg:min-w-0 lg:max-w-[120px] xl:max-w-[145px] min-[1464px]:max-w-[170px]">
             <EntityPickerField label="CARD" value={String(cardSnapshot?.maskedCardNumber ?? cardSnapshot?.series ?? '')} placeholder="Select card" disabled={disabled || !issuerPartyProfileId} onClick={() => setCardPickerOpen(true)} buttonPosition="bottom" />
           </div>
         ) : null}
-        <div className="relative min-w-0 pb-14">
+        <div className="relative min-w-[160px] basis-full sm:basis-[48%] md:basis-[30%] lg:basis-0 lg:flex-1 lg:min-w-0">
           <FormFieldInput
             name={fieldPath('rate')}
             label="Rate"
@@ -729,7 +722,7 @@ export const PurchaseTransactionRowCell = ({
             onChange={() => {
               hasManualRateChangeRef.current = true;
             }}
-            classes={{ container: 'max-w-[100px]' }}
+            classes={{ container: 'w-full' }}
           />
           {hasCurrencyProductSelection && (
             <div className="mt-1 space-y-0.5 text-[11px] leading-tight text-text-tertiary">
@@ -757,44 +750,44 @@ export const PurchaseTransactionRowCell = ({
             </div>
           )}
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 basis-[46%] sm:basis-[22%] md:basis-[14%] lg:basis-auto lg:flex-none lg:w-[40px] lg:min-w-[40px] lg:max-w-[40px]">
           <FormFieldInput
             name={fieldPath('per')}
             label="Per"
             readOnly
-            classes={{ container: 'max-w-[95px]' }}
+            classes={{ container: 'w-full' }}
           />
         </div>
-        <div className="min-w-0">
+        <div className="min-w-[160px] basis-full sm:basis-[48%] md:basis-[30%] lg:basis-0 lg:flex-1 lg:min-w-0">
           <FormFieldInput
             name={fieldPath('total')}
             label="Total"
             readOnly
-            classes={{ container: 'max-w-[95px]' }}
+            classes={{ container: 'w-full' }}
           />
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 basis-[46%] sm:basis-[22%] md:basis-[14%] lg:basis-auto lg:flex-none lg:w-[50px] lg:min-w-[50px] lg:max-w-[50px]">
           <FormFieldInput
             name={fieldPath('roundOff')}
             label="Round Off"
             readOnly
-            classes={{ container: 'max-w-[95px]' }}
+            classes={{ container: 'w-full' }}
           />
         </div>
-        <div className="min-w-0">
+        <div className="min-w-[160px] basis-full sm:basis-[48%] md:basis-[30%] lg:basis-0 lg:flex-1 lg:min-w-0">
           <FormFieldInput
             name={fieldPath('finalAmount')}
             label="Final Amount"
             readOnly
-            classes={{ container: 'max-w-[95px]' }}
+            classes={{ container: 'w-full' }}
           />
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 basis-[46%] sm:basis-[31%] md:basis-[18%] lg:basis-auto lg:flex-none lg:w-[80px] lg:min-w-[80px] lg:max-w-[80px]">
           <FormFieldInput
             name={fieldPath('commission')}
             label="Commission"
             readOnly
-            classes={{ container: 'max-w-[95px]' }}
+            classes={{ container: 'w-full' }}
           />
         </div>
       </div>

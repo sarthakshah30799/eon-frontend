@@ -21,6 +21,7 @@ interface FormFieldSelectProps extends Omit<
   disabled?: boolean;
   className?: string;
   isMulti?: boolean;
+  displayValue?: string;
   onValueChange?: (value: string | string[] | null) => void;
   onCreateOption?: (
     inputValue: string
@@ -105,6 +106,7 @@ export const FormFieldSelect = ({
   isCreatable = false,
   isSearchable = true,
   defaultOptions,
+  displayValue,
   ...props
 }: FormFieldSelectProps) => {
   const form = useFormContext();
@@ -181,8 +183,15 @@ export const FormFieldSelect = ({
             .filter((option): option is AsyncSelectOption => Boolean(option));
 
           if (isActive) {
+            const displayOptions =
+              displayValue === 'code'
+                ? nextOptions.map(opt => ({
+                    ...opt,
+                    label: opt.label.split('-')[0]?.trim() ?? opt.label,
+                  }))
+                : nextOptions;
             setSelectedOption(current =>
-              optionsAreEqual(current, nextOptions) ? current : nextOptions
+              optionsAreEqual(current, displayOptions) ? current : displayOptions
             );
           }
         } catch {
@@ -225,8 +234,15 @@ export const FormFieldSelect = ({
           ) ?? null;
 
         if (isActive) {
+          const displayOption =
+            nextOption && displayValue === 'code'
+              ? {
+                  ...nextOption,
+                  label: nextOption.label.split('-')[0]?.trim() ?? nextOption.label,
+                }
+              : nextOption;
           setSelectedOption(current =>
-            optionsAreEqual(current, nextOption) ? current : nextOption
+            optionsAreEqual(current, displayOption) ? current : displayOption
           );
         }
       } catch {
@@ -333,7 +349,14 @@ export const FormFieldSelect = ({
         ) => {
           if (isMulti) {
             const nextOptions = Array.isArray(option) ? option : [];
-            setSelectedOption(nextOptions);
+            const displayNextOptions =
+              displayValue === 'code'
+                ? nextOptions.map(opt => ({
+                    ...opt,
+                    label: opt.label.split('-')[0]?.trim() ?? opt.label,
+                  }))
+                : nextOptions;
+            setSelectedOption(displayNextOptions);
             const nextValues = nextOptions.map(
               selectedOptionItem => selectedOptionItem.value
             );
@@ -349,8 +372,15 @@ export const FormFieldSelect = ({
             return;
           }
 
-          const nextOption = option;
-          setSelectedOption(nextOption);
+          const nextOption = option as AsyncSelectOption;
+          const displayNextOption =
+            displayValue === 'code'
+              ? {
+                  ...nextOption,
+                  label: nextOption.label.split('-')[0]?.trim() ?? nextOption.label,
+                }
+              : nextOption;
+          setSelectedOption(displayNextOption);
           const nextValue = (nextOption as AsyncSelectOption).value;
           field.onChange(nextValue);
           onValueChange?.(String(nextValue));

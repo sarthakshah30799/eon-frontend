@@ -766,7 +766,7 @@ export const PurchaseTransactionRowCell = ({
             classes={{ container: 'w-full' }}
           />
         </div>
-        <div className="min-w-0 basis-[46%] sm:basis-[22%] md:basis-[14%] lg:basis-auto lg:flex-none lg:w-[50px] lg:min-w-[50px] lg:max-w-[50px]">
+        <div className="min-w-0 basis-[46%] sm:basis-[22%] md:basis-[14%] lg:basis-auto lg:flex-none lg:w-[55px] lg:min-w-[55px] lg:max-w-[55px]">
           <FormFieldInput
             name={fieldPath('roundOff')}
             label="Round Off"

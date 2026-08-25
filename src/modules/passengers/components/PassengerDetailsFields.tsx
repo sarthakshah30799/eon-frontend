@@ -637,7 +637,7 @@ export const PassengerDetailsFields = ({
 
         {(isIndianNationality || showTravelDetails) ? (
           <section className="space-y-4 rounded-sm border border-border-primary bg-surface-secondary p-4">
-            <div>
+            {/* <div>
               <h3 className="text-base font-semibold text-text-primary">
                 Other Documents
               </h3>
@@ -646,7 +646,7 @@ export const PassengerDetailsFields = ({
                   ? 'Add any supporting passenger documents for the sell flow.'
                   : PASSENGER_IDENTITY_TEXT.otherDocumentsOptional}
               </p>
-            </div>
+            </div> */}
             <PassengerOtherDocumentsSection
               onDocumentChange={onDocumentChange}
               description={

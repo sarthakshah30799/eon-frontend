@@ -255,7 +255,10 @@ const EditSubcategoryForm = ({
 
   const handleNumberingValueChange = (nextValue: string) => {
     setValueError('');
-    setValue(nextValue.replace(/\D/g, '').slice(0, 9));
+    // Keep display as backend value; allow up to 9 chars for existing data, slice to 8 for new input after migration
+    const sanitized = nextValue.replace(/\D/g, '');
+    // For now display full backend value (9 chars) without truncating to 8, will enforce 8 after DB migration
+    setValue(sanitized.slice(0, 9));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -275,8 +278,9 @@ const EditSubcategoryForm = ({
         return;
       }
 
-      if (cleanValue.length !== 9) {
-        setValueError('Series value must be exactly 9 digits');
+      // Transitional: allow 8 (new) or 9 (existing DB) to display backend as-is; will enforce exactly 8 after DB migration
+      if (cleanValue.length !== 8 && cleanValue.length !== 9) {
+        setValueError('Series value must be exactly 8 digits');
         return;
       }
     }
@@ -401,21 +405,21 @@ const EditSubcategoryForm = ({
                   : setValue(e.target.value)
               }
               required={isRequiredPolicyValue}
-              minLength={isTransactionNumberingCategory ? 9 : undefined}
+              minLength={isTransactionNumberingCategory ? 8 : undefined}
               min={subcategoryDefinition?.valueType === 'number' ? 0 : undefined}
               step={subcategoryDefinition?.valueType === 'number' ? '1' : 'any'}
               valueTransform="none"
               classes={{ container: 'max-w-none' }}
               placeholder={
                 isTransactionNumberingCategory
-                  ? 'Enter 9-digit series counter'
+                  ? 'Enter 8-digit series counter'
                   : subcategoryDefinition?.placeholder ??
                     (isRequiredPolicyValue ? 'Enter value' : 'Enter value or leave blank')
               }
             />
             {isTransactionNumberingCategory ? (
               <p className="text-[11px] leading-5 text-text-secondary">
-                Enter exactly 9 digits. The final number is branch code + financial year + series = 15 characters.
+                Enter exactly 8 digits. The final number is 5-digit branch code + 2-digit financial year + 8-digit series = 15 characters.
               </p>
             ) : null}
             {valueError ? (

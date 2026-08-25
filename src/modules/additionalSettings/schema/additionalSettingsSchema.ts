@@ -64,6 +64,32 @@ export const additionalSettingsSchema = yup.object({
             message: 'Subcategory value is required',
           });
         }
+
+        const isTransactionNumbering =
+          String(categoryCode ?? '').trim().toUpperCase() === 'TRANSACTION_NUMBERING';
+        if (isTransactionNumbering) {
+          const rawValue = String(subcategory?.value ?? '').trim();
+          if (rawValue) {
+            if (!/^\d+$/.test(rawValue)) {
+              return this.createError({
+                path: `subcategories[${index}].value`,
+                message: 'Only digits are allowed',
+              });
+            }
+            // Transitional: allow 8 (new, 5-digit branch) or 9 (existing DB) – display backend as-is, enforce 8 after migration
+            if (rawValue.length !== 8 && rawValue.length !== 9) {
+              return this.createError({
+                path: `subcategories[${index}].value`,
+                message: 'Series value must be exactly 8 digits',
+              });
+            }
+          } else if (registryEntry?.required) {
+            return this.createError({
+              path: `subcategories[${index}].value`,
+              message: 'Series value is required',
+            });
+          }
+        }
       }
 
       return true;

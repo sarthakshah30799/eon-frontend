@@ -93,6 +93,8 @@ const SubcategoryRowFields = ({
     subcategoryDefinition?.valueType === 'decimal' ||
     categoryType?.toLowerCase() === 'number' ||
     categoryType?.toLowerCase() === 'decimal';
+  const isTransactionNumbering =
+    categoryCode?.trim().toUpperCase() === 'TRANSACTION_NUMBERING';
 
   const prevTypeRef = useRef(categoryType);
   useEffect(() => {
@@ -114,6 +116,17 @@ const SubcategoryRowFields = ({
       );
     }
   }, [index, subcategoryDefinition, setValue]);
+
+  useEffect(() => {
+    if (!isTransactionNumbering || typeof subcategoryValue !== 'string') {
+      return;
+    }
+    // Display backend value as-is (currently 9 chars from DB). Only strip non-digits, don't truncate to 8 yet.
+    const sanitized = subcategoryValue.replace(/\D/g, '').slice(0, 9);
+    if (sanitized !== subcategoryValue) {
+      setValue(`subcategories.${index}.value`, sanitized);
+    }
+  }, [isTransactionNumbering, subcategoryValue, index, setValue]);
 
   const loadAccountProfileOptionsForRow = useCallback(
     async (inputValue = '') => {
@@ -310,15 +323,23 @@ const SubcategoryRowFields = ({
             <FormFieldInput
               name={`subcategories.${index}.value`}
               label="Value"
-              placeholder={subcategoryDefinition?.placeholder ?? 'Enter number value'}
-              type="number"
+              placeholder={
+                isTransactionNumbering
+                  ? 'Enter 8-digit series counter'
+                  : (subcategoryDefinition?.placeholder ?? 'Enter number value')
+              }
+              type={isTransactionNumbering ? 'text' : 'number'}
+              inputMode={isTransactionNumbering ? 'numeric' : undefined}
+              pattern={isTransactionNumbering ? '\\d*' : undefined}
+              maxLength={isTransactionNumbering ? 9 : undefined}
+              minLength={isTransactionNumbering ? 8 : undefined}
               disabled={isSubmitting}
               required={subcategoryDefinition?.required ?? true}
               {...noTransformInputProps}
             />
-            {categoryCode?.trim().toUpperCase() === 'TRANSACTION_NUMBERING' ? (
+            {isTransactionNumbering ? (
               <p className="text-[11px] leading-tight text-text-tertiary">
-                Enter the starting series counter. The backend fits the series width so the final number stays within 15 characters: branch code + financial year + series.
+                Enter exactly 8 digits. The final number is 5-digit branch code + 2-digit financial year + 8-digit series = 15 characters.
               </p>
             ) : null}
           </div>

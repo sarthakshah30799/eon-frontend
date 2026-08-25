@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Button, DatePicker } from '@/components/ui';
-import { parseDateInput } from '@/utils';
+import { formatDateInput, parseDateInput } from '@/utils';
 import {
   ReportDatePresetEnum,
   type IReportDateRange,
@@ -12,6 +12,7 @@ interface ReportDatePresetFilterProps {
   value: IReportDateRange;
   onChange: (nextValue: IReportDateRange) => void;
   showAllDates?: boolean;
+  singleDayOnly?: boolean;
 }
 
 const PRESET_BUTTONS: Array<{ value: ReportDatePreset; label: string }> = [
@@ -24,15 +25,24 @@ const PRESET_BUTTONS: Array<{ value: ReportDatePreset; label: string }> = [
   { value: ReportDatePresetEnum.CUSTOM, label: 'Custom Range' },
 ];
 
+const SINGLE_DAY_PRESET_BUTTONS: Array<{ value: ReportDatePreset; label: string }> = [
+  { value: ReportDatePresetEnum.TODAY, label: 'Today' },
+  { value: ReportDatePresetEnum.YESTERDAY, label: 'Yesterday' },
+  { value: ReportDatePresetEnum.CUSTOM, label: 'Date' },
+];
+
 export const ReportDatePresetFilter = ({
   value,
   onChange,
   showAllDates = false,
+  singleDayOnly = false,
 }: ReportDatePresetFilterProps) => {
   const isCustom = value.preset === ReportDatePresetEnum.CUSTOM;
-  const presetButtons = showAllDates
-    ? [{ value: ReportDatePresetEnum.ALL, label: 'All Dates' }, ...PRESET_BUTTONS]
-    : PRESET_BUTTONS;
+  const presetButtons = singleDayOnly
+    ? SINGLE_DAY_PRESET_BUTTONS
+    : showAllDates
+      ? [{ value: ReportDatePresetEnum.ALL, label: 'All Dates' }, ...PRESET_BUTTONS]
+      : PRESET_BUTTONS;
 
   const selectedStartDate = useMemo(
     () => parseDateInput(value.startDate),
@@ -68,7 +78,23 @@ export const ReportDatePresetFilter = ({
         ))}
       </div>
 
-      {isCustom && (
+      {isCustom && singleDayOnly && (
+        <DatePicker
+          label="Date"
+          selected={selectedStartDate}
+          onChange={date => {
+            const nextDate = date ? formatDateInput(date) : '';
+            onChange({
+              ...value,
+              startDate: nextDate,
+              endDate: nextDate,
+            });
+          }}
+          placeholder="Select date"
+        />
+      )}
+
+      {isCustom && !singleDayOnly && (
         <div className="grid gap-3 md:grid-cols-2">
           <DatePicker
             label="Start Date"
@@ -76,7 +102,7 @@ export const ReportDatePresetFilter = ({
             onChange={date => {
               onChange({
                 ...value,
-                startDate: date ? date.toISOString().slice(0, 10) : '',
+                startDate: date ? formatDateInput(date) : '',
               });
             }}
             placeholder="Select start date"
@@ -87,7 +113,7 @@ export const ReportDatePresetFilter = ({
             onChange={date => {
               onChange({
                 ...value,
-                endDate: date ? date.toISOString().slice(0, 10) : '',
+                endDate: date ? formatDateInput(date) : '',
               });
             }}
             placeholder="Select end date"

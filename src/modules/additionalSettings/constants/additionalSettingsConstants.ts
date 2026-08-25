@@ -83,6 +83,8 @@ export const AdditionalSettingsCodeEnum = {
   StockRevaluationFrequency: 'STOCK_REVALUATION_FREQUENCY',
   CardSettings: 'CARD_SETTINGS',
   CardAutoSettleWithHo: 'AUTO_SETTLE_CARD_WITH_HO',
+  Reports: 'REPORTS',
+  Flm1CurrencyColumnCount: 'FLM1_CURRENCY_COLUMN_COUNT',
 } as const;
 
 export const ADDITIONAL_SETTINGS_TEXTS = {

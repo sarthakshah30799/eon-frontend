@@ -550,6 +550,16 @@ const CARD_SETTING_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinitio
   },
 ];
 
+const REPORTS_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] = [
+  {
+    code: AdditionalSettingsCodeEnum.Flm1CurrencyColumnCount,
+    label: 'FLM1 CURRENCY COLUMNS PER BLOCK',
+    valueType: 'number',
+    required: true,
+    placeholder: 'Default 5',
+  },
+];
+
 const TRANSACTION_NUMBERING_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] =
   [
     ...TRANSACTION_TYPE_PROFILE_ORDER.flatMap(profileType => {
@@ -645,6 +655,13 @@ export const ADDITIONAL_SETTING_DEFINITIONS: readonly AdditionalSettingCategoryD
     rendererKey: 'default',
     titleLocked: true,
     subcategories: CARD_SETTING_SUBCATEGORIES,
+  },
+  {
+    code: AdditionalSettingsCodeEnum.Reports,
+    label: 'REPORTS',
+    rendererKey: 'default',
+    titleLocked: true,
+    subcategories: REPORTS_SUBCATEGORIES,
   },
 ];
 

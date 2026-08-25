@@ -13,6 +13,7 @@ export * from './backButton';
 export * from './phoneInput';
 export * from './tabs';
 export * from './modal';
+export * from './confirm-modal';
 export * from './toggleSwitch';
 export * from './fileUploader';
 export * from './pagination';

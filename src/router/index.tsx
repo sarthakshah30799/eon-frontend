@@ -305,6 +305,15 @@ const PurposeCreatePage = lazy(
 const PurposeEditPage = lazy(
   () => import('../pages/admin/purpose/edit/[id]/PurposeEditPage')
 );
+const PurposeGroupListPage = lazy(
+  () => import('../pages/admin/purpose-group/list/PurposeGroupListPage')
+);
+const PurposeGroupCreatePage = lazy(
+  () => import('../pages/admin/purpose-group/create/PurposeGroupCreatePage')
+);
+const PurposeGroupEditPage = lazy(
+  () => import('../pages/admin/purpose-group/edit/[id]/PurposeGroupEditPage')
+);
 
 const ExpenseBookingListPage = lazy(
   () =>
@@ -1247,6 +1256,30 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <PurposeEditPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/purpose-group',
+    element: (
+      <ProtectedLayout>
+        <PurposeGroupListPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/purpose-group/create',
+    element: (
+      <ProtectedLayout>
+        <PurposeGroupCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/admin/purpose-group/edit/:id',
+    element: (
+      <ProtectedLayout>
+        <PurposeGroupEditPage />
       </ProtectedLayout>
     ),
   },

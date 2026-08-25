@@ -112,5 +112,8 @@ export interface IPolicyContext {
   workflowState: string;
   activeMonthlyLock?: IMonthlyLockWindow | null;
   activeBackdateWindow?: ITransactionBackdateWindow | null;
+  transactionDataLock?: {
+    lockedThroughDate: string;
+  } | null;
   checklist: IPolicyChecklistItem[];
 }

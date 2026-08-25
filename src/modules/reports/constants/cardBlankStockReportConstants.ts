@@ -1,0 +1,21 @@
+export const CARD_BLANK_STOCK_REPORT_TEXT = {
+  title: 'Blank Stock CARD Report',
+  description:
+    'Currently blank CARD stock at the holding branch. Date is the original stock receipt date. Pending transfers and sold cards are excluded.',
+  reportViewTitle: 'Report View',
+  reportViewDescription:
+    'One row per blank card. The list is not grouped.',
+  download: 'Download',
+  loadError: 'Failed to load report data. Please try again.',
+  xlsx: 'XLSX',
+  csv: 'CSV',
+  appliedPrefix: 'Applied',
+  all: 'All',
+  sortBy: 'Sort By',
+  dateAsc: 'Date Asc',
+  dateDesc: 'Date Desc',
+  branchHeading: 'Branch',
+  productHeading: 'CARD Product',
+  currencyHeading: 'Currency',
+  issuerHeading: 'Issuer',
+} as const;

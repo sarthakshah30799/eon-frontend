@@ -14,9 +14,16 @@ import {
 } from '../types/passengerTypes';
 import type { IPurchaseFormValues } from '@/modules/purchase/types/purchaseTypes';
 import {
-  isPassengerOtherDocumentComplete,
   shouldShowPassengerOtherDocumentValidityFields,
 } from './passengerOtherDocumentRules';
+import {
+  getPassengerPanNumberError,
+  isPassengerPanHolderRelationRequired,
+  isPassengerPanRequired,
+  isPassengerPassportRequired,
+  isPassengerArrivalDateRequired,
+} from './passengerIdentityRules';
+import { PASSENGER_IDENTITY_TEXT } from '../constants/passengerConstants';
 
 export const createStaticPassengerSelectOptions = <
   T extends string,
@@ -312,22 +319,6 @@ export const createPassengerAmlVerificationSchema = () =>
     }),
   });
 
-const isPassengerPanValidationRequired = (values: {
-  entityType?: string;
-  nationalityType?: string;
-}) =>
-  values.entityType === PassengerEntityTypeEnum.CORPORATE ||
-  values.nationalityType === PassengerNationalityTypeEnum.INDIAN;
-
-const isPassengerPassportValidationRequired = (values: {
-  nationalityType?: string;
-}) =>
-  values.nationalityType === PassengerNationalityTypeEnum.NRI ||
-  values.nationalityType === PassengerNationalityTypeEnum.FOREIGNER;
-
-const isPassengerOtherDocumentsRequired = (nationalityType?: string) =>
-  nationalityType === PassengerNationalityTypeEnum.INDIAN;
-
 const passengerOtherDocumentSchema = yup
   .object({
     documentType: yup
@@ -371,89 +362,120 @@ export const createPassengerDetailsSchema = () =>
     address2: yup.string().trim().default(''),
     email: yup.string().trim().default(''),
     contactNo: yup.string().trim().default(''),
-    panNumber: optionalText().when(['entityType', 'nationalityType'], {
-      is: (entityType: string, nationalityType: string) =>
-        isPassengerPanValidationRequired({ entityType, nationalityType }),
-      then: () => requiredText('PAN number is required'),
-      otherwise: schema => schema.default(''),
-    }),
-    panHolderName: optionalText().when(['entityType', 'nationalityType'], {
-      is: (entityType: string, nationalityType: string) =>
-        isPassengerPanValidationRequired({ entityType, nationalityType }),
-      then: () => requiredText('PAN holder name is required'),
-      otherwise: schema => schema.default(''),
-    }),
-    panDob: yup.string().trim().when(['entityType', 'nationalityType'], {
-      is: (entityType: string, nationalityType: string) =>
-        isPassengerPanValidationRequired({ entityType, nationalityType }),
-      then: schema => schema.required('PAN holder DOB is required'),
-      otherwise: schema => schema.default(''),
-    }),
-    panHolderRelationType: yup.string().trim().when(['entityType', 'nationalityType'], {
-      is: (entityType: string, nationalityType: string) =>
-        isPassengerPanValidationRequired({ entityType, nationalityType }),
-      then: schema => schema.required('PAN holder relation is required'),
-      otherwise: schema => schema.default(''),
-    }),
+    panNumber: optionalText().test(
+      'pan-required',
+      PASSENGER_IDENTITY_TEXT.panNumberRequired,
+      function (value) {
+        const error = getPassengerPanNumberError({
+          ...this.parent,
+          panNumber: value,
+        });
+        if (!error) {
+          return true;
+        }
+        return this.createError({ message: error });
+      }
+    ),
+    panHolderName: optionalText().test(
+      'pan-holder-name-required',
+      PASSENGER_IDENTITY_TEXT.panHolderNameRequired,
+      function (value) {
+        if (!isPassengerPanRequired({ ...this.parent, panHolderName: value })) {
+          return true;
+        }
+        return Boolean(String(value ?? '').trim());
+      }
+    ),
+    panDob: yup.string().trim().test(
+      'pan-dob-required',
+      PASSENGER_IDENTITY_TEXT.panDobRequired,
+      function (value) {
+        if (!isPassengerPanRequired({ ...this.parent, panDob: value })) {
+          return true;
+        }
+        return Boolean(String(value ?? '').trim());
+      }
+    ),
+    panHolderRelationType: yup.string().trim().test(
+      'pan-relation-required',
+      PASSENGER_IDENTITY_TEXT.panHolderRelationRequired,
+      function (value) {
+        if (
+          !isPassengerPanHolderRelationRequired({
+            ...this.parent,
+            panHolderRelationType: value,
+          })
+        ) {
+          return true;
+        }
+        return Boolean(String(value ?? '').trim());
+      }
+    ),
     paidByPanNumber: optionalText(),
     paidByPanHolderName: optionalText(),
     paidByPanDob: yup.string().trim().default(''),
     gstNumber: yup.string().trim().default(''),
     gstStateId: yup.string().trim().default(''),
     isPep: yup.boolean().default(false),
-    passportNumber: optionalText().when('nationalityType', {
-      is: (nationalityType: string) =>
-        isPassengerPassportValidationRequired({ nationalityType }),
-      then: schema => schema.required('Passport number is required'),
-      otherwise: schema => schema.default(''),
-    }),
-    passportIssueAt: optionalText().when('nationalityType', {
-      is: (nationalityType: string) =>
-        isPassengerPassportValidationRequired({ nationalityType }),
-      then: schema => schema.required('Passport issue place is required'),
-      otherwise: schema => schema.default(''),
-    }),
-    passportIssueDate: yup.string().trim().when('nationalityType', {
-      is: (nationalityType: string) =>
-        isPassengerPassportValidationRequired({ nationalityType }),
-      then: schema => schema.required('Passport issue date is required'),
-      otherwise: schema => schema.default(''),
-    }),
-    passportExpiryDate: yup.string().trim().when('nationalityType', {
-      is: (nationalityType: string) =>
-        isPassengerPassportValidationRequired({ nationalityType }),
-      then: schema =>
-        schema
-          .required('Passport expiry date is required')
-          .test('passport-date-order', 'Passport expiry date must be after issue date', function (value) {
-            const issueDate = this.parent.passportIssueDate as string | undefined;
-            if (!issueDate || !value) {
-              return true;
-            }
-
-            return new Date(value) >= new Date(issueDate);
-          }),
-      otherwise: schema => schema.default(''),
-    }),
-    arrivalDate: yup.string().trim().when('nationalityType', {
-      is: (nationalityType: string) =>
-        isPassengerPassportValidationRequired({ nationalityType }),
-      then: schema => schema.required('Arrival date is required'),
-      otherwise: schema => schema.default(''),
-    }),
+    passportNumber: optionalText().test(
+      'passport-number-required',
+      PASSENGER_IDENTITY_TEXT.passportNumberRequired,
+      function (value) {
+        if (!isPassengerPassportRequired({ ...this.parent, passportNumber: value })) {
+          return true;
+        }
+        return Boolean(String(value ?? '').trim());
+      }
+    ),
+    passportIssueAt: optionalText().test(
+      'passport-issue-at-required',
+      PASSENGER_IDENTITY_TEXT.passportIssuePlaceRequired,
+      function (value) {
+        if (!isPassengerPassportRequired({ ...this.parent, passportIssueAt: value })) {
+          return true;
+        }
+        return Boolean(String(value ?? '').trim());
+      }
+    ),
+    passportIssueDate: yup.string().trim().test(
+      'passport-issue-date-required',
+      PASSENGER_IDENTITY_TEXT.passportIssueDateRequired,
+      function (value) {
+        if (!isPassengerPassportRequired({ ...this.parent, passportIssueDate: value })) {
+          return true;
+        }
+        return Boolean(String(value ?? '').trim());
+      }
+    ),
+    passportExpiryDate: yup.string().trim().test(
+      'passport-expiry-date-required',
+      PASSENGER_IDENTITY_TEXT.passportExpiryDateRequired,
+      function (value) {
+        if (!isPassengerPassportRequired({ ...this.parent, passportExpiryDate: value })) {
+          return true;
+        }
+        if (!String(value ?? '').trim()) {
+          return false;
+        }
+        const issueDate = this.parent.passportIssueDate as string | undefined;
+        if (!issueDate || !value) {
+          return true;
+        }
+        return new Date(value) >= new Date(issueDate);
+      }
+    ),
+    arrivalDate: yup.string().trim().test(
+      'arrival-date-required',
+      PASSENGER_IDENTITY_TEXT.arrivalDateRequired,
+      function (value) {
+        if (!isPassengerArrivalDateRequired({ ...this.parent, arrivalDate: value })) {
+          return true;
+        }
+        return Boolean(String(value ?? '').trim());
+      }
+    ),
     otherDocuments: yup
       .array()
       .of(passengerOtherDocumentSchema)
-      .when('nationalityType', {
-        is: (nationalityType: string) => isPassengerOtherDocumentsRequired(nationalityType),
-        then: schema =>
-          schema
-            .min(1, 'At least one other document is required')
-            .test(
-              'has-valid-other-document',
-              'At least one other document is required',
-              rows => (rows ?? []).some(row => isPassengerOtherDocumentComplete(row))
-            ),
-        otherwise: schema => schema.default([]),
-      }),
+      .default([]),
   });

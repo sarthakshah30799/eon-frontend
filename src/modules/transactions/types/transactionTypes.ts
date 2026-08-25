@@ -587,6 +587,7 @@ export interface IPurchaseRulePreviewResponse {
     | 'MISSING_PASSENGER'
     | 'MISSING_PAYMENT';
   blockingReason: string | null;
+  blockingReasons: string[];
   requiresCdf: boolean;
   cdfThresholdAmount: string;
   referenceCurrencyCode: string;

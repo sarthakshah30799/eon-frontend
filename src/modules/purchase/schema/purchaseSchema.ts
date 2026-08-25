@@ -20,6 +20,14 @@ import {
   shouldShowPassengerOtherDocumentValidityFields,
 } from '@/modules/passengers/utils/passengerOtherDocumentRules';
 import {
+  getPassengerPanNumberError,
+  isPassengerPanHolderRelationRequired,
+  isPassengerPanRequired,
+  isPassengerPassportRequired,
+  isPassengerArrivalDateRequired,
+} from '@/modules/passengers/utils/passengerIdentityRules';
+import { PASSENGER_IDENTITY_TEXT } from '@/modules/passengers/constants/passengerConstants';
+import {
   CARD_PRODUCT_CODE,
   PURCHASE_TRANSACTION_TEXT,
 } from '../utils/purchaseUtils';
@@ -303,40 +311,47 @@ export const createPurchaseFormSchema = (
     panNumber: yup
       .string()
       .trim()
-      .when(['entityType', 'nationalityType'], {
-        is: (entityType: string, nationalityType: string) =>
-          entityType === PassengerEntityTypeEnum.CORPORATE ||
-          nationalityType === PassengerNationalityTypeEnum.INDIAN,
-        then: schema => schema.required('PAN number is required'),
-        otherwise: schema => schema.default(''),
+      .test('pan-required', PASSENGER_IDENTITY_TEXT.panNumberRequired, function (value) {
+        const error = getPassengerPanNumberError({
+          ...this.parent,
+          panNumber: value,
+        });
+        if (!error) {
+          return true;
+        }
+        return this.createError({ message: error });
       }),
     panHolderName: yup
       .string()
       .trim()
-      .when(['entityType', 'nationalityType'], {
-        is: (entityType: string, nationalityType: string) =>
-          entityType === PassengerEntityTypeEnum.CORPORATE ||
-          nationalityType === PassengerNationalityTypeEnum.INDIAN,
-        then: schema => schema.required('PAN holder name is required'),
-        otherwise: schema => schema.default(''),
+      .test('pan-holder-name-required', PASSENGER_IDENTITY_TEXT.panHolderNameRequired, function (value) {
+        if (!isPassengerPanRequired({ ...this.parent, panHolderName: value })) {
+          return true;
+        }
+        return Boolean(String(value ?? '').trim());
       }),
     panDob: yup
       .string()
       .trim()
-      .when(['entityType', 'nationalityType'], {
-        is: (entityType: string, nationalityType: string) =>
-          entityType === PassengerEntityTypeEnum.CORPORATE ||
-          nationalityType === PassengerNationalityTypeEnum.INDIAN,
-        then: schema => schema.required('PAN holder DOB is required'),
-        otherwise: schema => schema.default(''),
+      .test('pan-dob-required', PASSENGER_IDENTITY_TEXT.panDobRequired, function (value) {
+        if (!isPassengerPanRequired({ ...this.parent, panDob: value })) {
+          return true;
+        }
+        return Boolean(String(value ?? '').trim());
       }),
-    panHolderRelationType: yup.string().trim().when(['entityType', 'nationalityType'], {
-      is: (entityType: string, nationalityType: string) =>
-        entityType === PassengerEntityTypeEnum.CORPORATE ||
-        nationalityType === PassengerNationalityTypeEnum.INDIAN,
-      then: schema => schema.required('PAN holder relation is required'),
-      otherwise: schema => schema.default(''),
-    }),
+    panHolderRelationType: yup
+      .string()
+      .trim()
+      .test(
+        'pan-relation-required',
+        PASSENGER_IDENTITY_TEXT.panHolderRelationRequired,
+        function (value) {
+          if (!isPassengerPanHolderRelationRequired({ ...this.parent, panHolderRelationType: value })) {
+            return true;
+          }
+          return Boolean(String(value ?? '').trim());
+        }
+      ),
     paidByPanNumber: yup.string().trim().default(''),
     paidByPanHolderName: yup.string().trim().default(''),
     paidByPanDob: yup.string().trim().default(''),
@@ -346,48 +361,79 @@ export const createPurchaseFormSchema = (
     passportNumber: yup
       .string()
       .trim()
-      .when(['entityType', 'nationalityType'], {
-        is: (_entityType: string, nationalityType: string) =>
-          nationalityType !== PassengerNationalityTypeEnum.INDIAN,
-        then: schema => schema.required('Passport number is required'),
-        otherwise: schema => schema.default(''),
-      }),
+      .test(
+        'passport-number-required',
+        PASSENGER_IDENTITY_TEXT.passportNumberRequired,
+        function (value) {
+          if (!isPassengerPassportRequired({ ...this.parent, passportNumber: value })) {
+            return true;
+          }
+          return Boolean(String(value ?? '').trim());
+        }
+      ),
     passportIssueAt: yup
       .string()
       .trim()
-      .when(['entityType', 'nationalityType'], {
-        is: (_entityType: string, nationalityType: string) =>
-          nationalityType !== PassengerNationalityTypeEnum.INDIAN,
-        then: schema => schema.required('Passport issue place is required'),
-        otherwise: schema => schema.default(''),
-      }),
+      .test(
+        'passport-issue-at-required',
+        PASSENGER_IDENTITY_TEXT.passportIssuePlaceRequired,
+        function (value) {
+          if (!isPassengerPassportRequired({ ...this.parent, passportIssueAt: value })) {
+            return true;
+          }
+          return Boolean(String(value ?? '').trim());
+        }
+      ),
     passportIssueDate: yup
       .string()
       .trim()
-      .when(['entityType', 'nationalityType'], {
-        is: (_entityType: string, nationalityType: string) =>
-          nationalityType !== PassengerNationalityTypeEnum.INDIAN,
-        then: schema => schema.required('Passport issue date is required'),
-        otherwise: schema => schema.default(''),
-      }),
+      .test(
+        'passport-issue-date-required',
+        PASSENGER_IDENTITY_TEXT.passportIssueDateRequired,
+        function (value) {
+          if (!isPassengerPassportRequired({ ...this.parent, passportIssueDate: value })) {
+            return true;
+          }
+          return Boolean(String(value ?? '').trim());
+        }
+      ),
     passportExpiryDate: yup
       .string()
       .trim()
-      .when(['entityType', 'nationalityType'], {
-        is: (_entityType: string, nationalityType: string) =>
-          nationalityType !== PassengerNationalityTypeEnum.INDIAN,
-        then: schema => schema.required('Passport expiry date is required'),
-        otherwise: schema => schema.default(''),
-      }),
+      .test(
+        'passport-expiry-date-required',
+        PASSENGER_IDENTITY_TEXT.passportExpiryDateRequired,
+        function (value) {
+          if (!isPassengerPassportRequired({ ...this.parent, passportExpiryDate: value })) {
+            return true;
+          }
+          return Boolean(String(value ?? '').trim());
+        }
+      )
+      .test(
+        'passport-date-order',
+        'Passport expiry date must be after issue date',
+        function (value) {
+          const issueDate = this.parent.passportIssueDate as string | undefined;
+          if (!issueDate || !value) {
+            return true;
+          }
+          return new Date(value) >= new Date(issueDate);
+        }
+      ),
     arrivalDate: yup
       .string()
       .trim()
-      .when(['entityType', 'nationalityType'], {
-        is: (_entityType: string, nationalityType: string) =>
-          nationalityType !== PassengerNationalityTypeEnum.INDIAN,
-        then: schema => schema.required('Arrival date is required'),
-        otherwise: schema => schema.default(''),
-      }),
+      .test(
+        'arrival-date-required',
+        PASSENGER_IDENTITY_TEXT.arrivalDateRequired,
+        function (value) {
+          if (!isPassengerArrivalDateRequired({ ...this.parent, arrivalDate: value })) {
+            return true;
+          }
+          return Boolean(String(value ?? '').trim());
+        }
+      ),
     travelAirlineId: yup.string().trim().default(''),
     travelTicketNo: yup.string().trim().default(''),
     travelRoute: yup.string().trim().default(''),

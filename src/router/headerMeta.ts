@@ -28,6 +28,15 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
   { path: '/reports/stock-revaluations', meta: { title: 'Stock Revaluation' } },
   { path: '/reports/card-unsettled-report', meta: { title: 'Unsettled CARD Report' } },
   { path: '/reports/card-settled-report', meta: { title: 'Settled CARD Report' } },
+  { path: '/reports/card-blank-stock-report', meta: { title: 'Blank Stock CARD Report' } },
+  { path: '/reports/flm1-daily-cn-summary', meta: { title: 'FLM1 Daily CN Summary' } },
+  { path: '/reports/flm2-daily-et-summary', meta: { title: 'Encashed TC Balance' } },
+  { path: '/reports/flm3-purchase-from-public', meta: { title: 'FLM 3 - Purchase from Public' } },
+  { path: '/reports/flm4-purchase-from-ffmc', meta: { title: 'FLM 4 - Purchase from FFMC' } },
+  { path: '/reports/flm5-sales-to-public', meta: { title: 'FLM 5 - Sales to Public' } },
+  { path: '/reports/flm6-sales-to-ffmc', meta: { title: 'FLM 6 - Sales to FFMC' } },
+  { path: '/reports/flm7-surrender-statement', meta: { title: 'FLM 7 - Surrender Statement' } },
+  { path: '/reports/flm8-cn-statement', meta: { title: 'FLM 8 - CN Statement' } },
   { path: '/card-stock', meta: { title: 'Receipt Stock' } },
   { path: '/card-stock/create', meta: { title: 'Create Receipt Stock' } },
   { path: '/card-stock/edit/:id', meta: { title: 'Receipt Stock Details' } },
@@ -440,6 +449,24 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
     path: '/admin/purpose/edit/:id',
     meta: {
       title: 'Edit Purpose',
+    },
+  },
+  {
+    path: '/admin/purpose-group',
+    meta: {
+      title: 'Purpose Group Master',
+    },
+  },
+  {
+    path: '/admin/purpose-group/create',
+    meta: {
+      title: 'Create Purpose Group',
+    },
+  },
+  {
+    path: '/admin/purpose-group/edit/:id',
+    meta: {
+      title: 'Edit Purpose Group',
     },
   },
 ];

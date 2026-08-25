@@ -17,7 +17,6 @@ import { usePassengerAmlVerification, usePassengerPassportLookup } from '../hook
 import { PassengerAmlVerificationStepForm } from '../forms/PassengerAmlVerificationStepForm';
 import { PassengerAmlDetailsStepForm } from '../forms/PassengerAmlDetailsStepForm';
 import { mapPassengerSnapshotToPurchaseFormValues } from '../utils/passengerAmlUtils';
-import { isPassengerOtherDocumentFilled } from '../utils/passengerOtherDocumentRules';
 
 interface PassengerAmlVerificationModalProps {
   open: boolean;
@@ -53,7 +52,6 @@ const getPassportSnapshot = (values: IPurchaseFormValues) =>
     passportIssueAt: values.passportIssueAt,
     passportIssueDate: values.passportIssueDate,
     passportExpiryDate: values.passportExpiryDate,
-    arrivalDate: values.arrivalDate,
   });
 
 const getVerificationSnapshot = (values: IPurchaseFormValues, mode: VerificationMode) =>
@@ -75,8 +73,7 @@ const hasCompletePassportValues = (values: IPurchaseFormValues) =>
     values.passportNumber &&
       values.passportIssueAt &&
       values.passportIssueDate &&
-      values.passportExpiryDate &&
-      values.arrivalDate
+      values.passportExpiryDate
   );
 
 const parseDateValue = (value?: string | null) => {
@@ -109,25 +106,8 @@ const isPassportExpiryValidForTransactionDate = (
   return expiry > addMonths(transaction, 3);
 };
 
-const isArrivalValidForTransactionDate = (
-  arrivalDate?: string | null,
-  transactionDate?: string | null
-) => {
-  const arrival = parseDateValue(arrivalDate);
-  const transaction = parseDateValue(transactionDate);
-
-  if (!arrival || !transaction) {
-    return true;
-  }
-
-  return arrival <= transaction;
-};
-
-const hasValidOtherDocuments = (values: IPurchaseFormValues) =>
-  (values.otherDocuments ?? []).some(row => isPassengerOtherDocumentFilled(row));
-
-const getDetailsFieldNames = (mode: VerificationMode) => {
-  const sharedFields = [
+const getDetailsFieldNames = () =>
+  [
     'entityType',
     'nationalityType',
     'residentStatus',
@@ -146,24 +126,16 @@ const getDetailsFieldNames = (mode: VerificationMode) => {
     'address1',
     'address2',
     'isPep',
+    'panNumber',
+    'panHolderName',
+    'panDob',
+    'passportNumber',
+    'passportIssueAt',
+    'passportIssueDate',
+    'passportExpiryDate',
+    'arrivalDate',
+    'otherDocuments',
   ] as const;
-
-  return mode === 'pan'
-    ? [
-        ...sharedFields,
-        'panNumber',
-        'panHolderName',
-        'panDob',
-      ]
-    : [
-        ...sharedFields,
-        'passportNumber',
-        'passportIssueAt',
-        'passportIssueDate',
-        'passportExpiryDate',
-        'arrivalDate',
-      ];
-};
 
 const PASSENGER_IDENTITY_LOOKUP_ERROR =
   'Unable to look up passenger details. Please try again.';
@@ -222,7 +194,7 @@ export const PassengerAmlVerificationModal = ({
   });
   const watchedPassportValues = useWatch({
     control: form.control,
-    name: ['passportNumber', 'passportIssueAt', 'passportIssueDate', 'passportExpiryDate', 'arrivalDate'] as const,
+    name: ['passportNumber', 'passportIssueAt', 'passportIssueDate', 'passportExpiryDate'] as const,
   });
   const watchedTransactionDate = useWatch({
     control: form.control,
@@ -383,17 +355,6 @@ export const PassengerAmlVerificationModal = ({
           setVerificationMessage(
             'Passport expiry date must be more than 3 months after the transaction date'
           );
-          return false;
-        }
-
-        if (
-          !isArrivalValidForTransactionDate(
-            currentValues.arrivalDate,
-            watchedTransactionDate
-          )
-        ) {
-          setVerificationStatus('invalid');
-          setVerificationMessage('Arrival date cannot be after the transaction date');
           return false;
         }
       }
@@ -578,7 +539,6 @@ export const PassengerAmlVerificationModal = ({
     passportIssueAt: watchedPassportValues[1] ?? '',
     passportIssueDate: watchedPassportValues[2] ?? '',
     passportExpiryDate: watchedPassportValues[3] ?? '',
-    arrivalDate: watchedPassportValues[4] ?? '',
   };
   const panVerificationChanged =
     verificationStatus === 'valid' &&
@@ -689,7 +649,7 @@ export const PassengerAmlVerificationModal = ({
       return;
     }
 
-    const detailsValidationFields = getDetailsFieldNames(verificationMode);
+    const detailsValidationFields = getDetailsFieldNames();
     const isValid = await form.trigger(detailsValidationFields as never, {
       shouldFocus: true,
     });
@@ -697,29 +657,12 @@ export const PassengerAmlVerificationModal = ({
       console.warn('[PassengerAmlVerificationModal] details validation failed', {
         errors: form.formState.errors,
         values: form.getValues(),
-        requiredFields: getDetailsFieldNames(verificationMode),
+        requiredFields: getDetailsFieldNames(),
       });
       return;
     }
 
     const currentValues = form.getValues() as IPurchaseFormValues;
-    if (
-      verificationMode === 'pan' &&
-      (currentValues.nationalityType || PassengerNationalityTypeEnum.INDIAN) ===
-        PassengerNationalityTypeEnum.INDIAN &&
-      !hasValidOtherDocuments(currentValues)
-    ) {
-      form.setError('otherDocuments' as never, {
-        type: 'manual',
-        message: 'At least one other document is required for Indian passengers',
-      });
-      console.warn('[PassengerAmlVerificationModal] missing other document for Indian passenger', {
-        errors: form.formState.errors,
-        values: currentValues,
-      });
-      return;
-    }
-
     form.clearErrors('otherDocuments' as never);
     resetIdentityLookup();
 

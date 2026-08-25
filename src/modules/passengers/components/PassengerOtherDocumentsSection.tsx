@@ -9,6 +9,7 @@ import {
 import type { IPurchaseFormValues } from '@/modules/purchase/types/purchaseTypes';
 import { usePassengerOtherDocumentTypes } from '../hooks';
 import { shouldShowPassengerOtherDocumentValidityFields } from '../utils/passengerOtherDocumentRules';
+import { PASSENGER_IDENTITY_TEXT } from '../constants/passengerConstants';
 
 interface PassengerOtherDocumentsSectionProps {
   onDocumentChange?: () => void;
@@ -170,7 +171,7 @@ export const PassengerOtherDocumentsSection = ({
           {(errors.otherDocuments as { root?: { message?: string }; message?: string })
             .root?.message ||
             (errors.otherDocuments as { message?: string }).message ||
-            'At least one other document is required'}
+            PASSENGER_IDENTITY_TEXT.otherDocumentsRequired}
         </div>
       ) : null}
     </div>

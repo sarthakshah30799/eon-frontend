@@ -1,6 +1,8 @@
 import { apiClient } from '../api';
 import { buildQueryString } from '@/utils';
 import type {
+  ICardBlankStockReportRequest,
+  ICardBlankStockReportResponse,
   ICardSettlementReportRequest,
   ICardSettlementReportResponse,
   ICurrencyBalanceReportRequest,
@@ -11,6 +13,20 @@ import type {
   ISpecialReportResponse,
   ISalePurchaseReportRequest,
   ISalePurchaseReportResponse,
+  IFlm1DailyCnSummaryRequest,
+  IFlm1DailyCnSummaryResponse,
+  IFlm3PurchaseFromPublicRequest,
+  IFlm3PurchaseFromPublicResponse,
+  IFlm4PurchaseFromFfmcRequest,
+  IFlm4PurchaseFromFfmcResponse,
+  IFlm5SalesToPublicRequest,
+  IFlm5SalesToPublicResponse,
+  IFlm6SalesToFfmcRequest,
+  IFlm6SalesToFfmcResponse,
+  IFlm8CnStatementRequest,
+  IFlm8CnStatementResponse,
+  IFlm8CnStatementLockDataRequest,
+  IFlm8CnStatementLockDataResponse,
   ReportExportFormat,
 } from '@/modules/reports/types';
 import { API_BASE_URL } from '@/config/api';
@@ -216,6 +232,371 @@ export const reportsApi = {
     };
   },
 
+  getFlm1DailyCnSummary: async (
+    params: IFlm1DailyCnSummaryRequest,
+  ): Promise<IFlm1DailyCnSummaryResponse> => {
+    const res = await apiClient.get<IFlm1DailyCnSummaryResponse>(
+      `/reports/flm1-daily-cn-summary${buildQueryString(params)}`,
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      return {
+        date: '',
+        productLabel: '',
+        currenciesPerBlock: 5,
+        groups: [],
+      };
+    }
+
+    return res.data;
+  },
+
+  downloadFlm1DailyCnSummary: async (
+    params: IFlm1DailyCnSummaryRequest,
+    format: ReportExportFormat,
+  ): Promise<{ blob: Blob; filename?: string }> => {
+    const query = buildQueryString({
+      ...params,
+      format,
+    });
+
+    const res = await apiClient.getDownload(
+      `/reports/flm1-daily-cn-summary/export${query}`,
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      throw new Error('Failed to download FLM1 daily CN summary');
+    }
+
+    return {
+      blob: res.data.blob,
+      filename: res.data.filename || buildExportFilename('flm1-daily-cn-summary', 'single', format),
+    };
+  },
+
+  getFlm3PurchaseFromPublic: async (
+    params: IFlm3PurchaseFromPublicRequest,
+  ): Promise<IFlm3PurchaseFromPublicResponse> => {
+    const res = await apiClient.get<IFlm3PurchaseFromPublicResponse>(
+      `/reports/flm3-purchase-from-public${buildQueryString(params)}`,
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      return {
+        view: params.view ?? 'normal',
+        columns: [],
+        rows: [],
+        totals: {
+          feAmount: '0.00',
+          rupeeEquivalent: '0.00',
+          netAmount: '0.00',
+          commissionAmount: '0.00',
+          byCash: '0.00',
+          byCheque: '0.00',
+          byOther: '0.00',
+        },
+      };
+    }
+
+    return res.data;
+  },
+
+  downloadFlm3PurchaseFromPublic: async (
+    params: IFlm3PurchaseFromPublicRequest,
+    format: ReportExportFormat,
+  ): Promise<{ blob: Blob; filename?: string }> => {
+    const query = buildQueryString({
+      ...params,
+      format,
+    });
+
+    const res = await apiClient.getDownload(
+      `/reports/flm3-purchase-from-public/export${query}`,
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      throw new Error('Failed to download FLM3 purchase from public');
+    }
+
+    return {
+      blob: res.data.blob,
+      filename:
+        res.data.filename ||
+        buildExportFilename('flm3-purchase-from-public', 'single', format),
+    };
+  },
+
+  getFlm4PurchaseFromFfmc: async (
+    params: IFlm4PurchaseFromFfmcRequest,
+  ): Promise<IFlm4PurchaseFromFfmcResponse> => {
+    const res = await apiClient.get<IFlm4PurchaseFromFfmcResponse>(
+      `/reports/flm4-purchase-from-ffmc${buildQueryString(params)}`,
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      return {
+        view: params.view ?? 'normal',
+        columns: [],
+        rows: [],
+        totals: {
+          feAmount: '0.00',
+          rupeeEquivalent: '0.00',
+          netAmount: '0.00',
+          commissionAmount: '0.00',
+          byCash: '0.00',
+          byCheque: '0.00',
+          byOther: '0.00',
+        },
+      };
+    }
+
+    return res.data;
+  },
+
+  downloadFlm4PurchaseFromFfmc: async (
+    params: IFlm4PurchaseFromFfmcRequest,
+    format: ReportExportFormat,
+  ): Promise<{ blob: Blob; filename?: string }> => {
+    const query = buildQueryString({
+      ...params,
+      format,
+    });
+
+    const res = await apiClient.getDownload(
+      `/reports/flm4-purchase-from-ffmc/export${query}`,
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      throw new Error('Failed to download FLM4 purchase from FFMC');
+    }
+
+    return {
+      blob: res.data.blob,
+      filename:
+        res.data.filename ||
+        buildExportFilename('flm4-purchase-from-ffmc', 'single', format),
+    };
+  },
+
+
+  getFlm5SalesToPublic: async (
+    params: IFlm5SalesToPublicRequest,
+  ): Promise<IFlm5SalesToPublicResponse> => {
+    const res = await apiClient.get<IFlm5SalesToPublicResponse>(
+      `/reports/flm5-sales-to-public${buildQueryString(params)}`,
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      return {
+        view: params.view ?? 'normal',
+        columns: [],
+        rows: [],
+        totals: {
+          feAmount: '0.00',
+          rupeeEquivalent: '0.00',
+          netAmount: '0.00',
+          commissionAmount: '0.00',
+          byCash: '0.00',
+          byCheque: '0.00',
+          byOther: '0.00',
+        },
+      };
+    }
+
+    return res.data;
+  },
+
+  downloadFlm5SalesToPublic: async (
+    params: IFlm5SalesToPublicRequest,
+    format: ReportExportFormat,
+  ): Promise<{ blob: Blob; filename?: string }> => {
+    const query = buildQueryString({
+      ...params,
+      format,
+    });
+
+    const res = await apiClient.getDownload(
+      `/reports/flm5-sales-to-public/export${query}`,
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      throw new Error('Failed to download FLM5 sales to public');
+    }
+
+    return {
+      blob: res.data.blob,
+      filename:
+        res.data.filename ||
+        buildExportFilename('flm5-sales-to-public', 'single', format),
+    };
+  },
+
+  getFlm6SalesToFfmc: async (
+    params: IFlm6SalesToFfmcRequest,
+  ): Promise<IFlm6SalesToFfmcResponse> => {
+    const res = await apiClient.get<IFlm6SalesToFfmcResponse>(
+      `/reports/flm6-sales-to-ffmc${buildQueryString(params)}`,
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      return {
+        view: params.view ?? 'normal',
+        columns: [],
+        rows: [],
+        totals: {
+          feAmount: '0.00',
+          rupeeEquivalent: '0.00',
+          netAmount: '0.00',
+          commissionAmount: '0.00',
+          byCash: '0.00',
+          byCheque: '0.00',
+          byOther: '0.00',
+        },
+      };
+    }
+
+    return res.data;
+  },
+
+  downloadFlm6SalesToFfmc: async (
+    params: IFlm6SalesToFfmcRequest,
+    format: ReportExportFormat,
+  ): Promise<{ blob: Blob; filename?: string }> => {
+    const query = buildQueryString({
+      ...params,
+      format,
+    });
+
+    const res = await apiClient.getDownload(
+      `/reports/flm6-sales-to-ffmc/export${query}`,
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      throw new Error('Failed to download FLM6 sales to FFMC');
+    }
+
+    return {
+      blob: res.data.blob,
+      filename:
+        res.data.filename ||
+        buildExportFilename('flm6-sales-to-ffmc', 'single', format),
+    };
+  },
+
+  getFlm8CnStatement: async (
+    params: IFlm8CnStatementRequest,
+  ): Promise<IFlm8CnStatementResponse> => {
+    const res = await apiClient.get<IFlm8CnStatementResponse>(
+      `/reports/flm8-cn-statement${buildQueryString(params)}`,
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      return {
+        view: params.view ?? 'vertical',
+        date: '',
+        startDate: params.startDate ?? '',
+        endDate: params.endDate ?? '',
+        productLabel: '',
+        currenciesPerBlock: 5,
+        groups: [],
+      };
+    }
+
+    return res.data;
+  },
+
+  downloadFlm8CnStatement: async (
+    params: IFlm8CnStatementRequest,
+    format: ReportExportFormat,
+  ): Promise<{ blob: Blob; filename?: string }> => {
+    const query = buildQueryString({
+      ...params,
+      format,
+    });
+
+    const res = await apiClient.getDownload(
+      `/reports/flm8-cn-statement/export${query}`,
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      throw new Error('Failed to download FLM8 CN statement');
+    }
+
+    return {
+      blob: res.data.blob,
+      filename:
+        res.data.filename ||
+        buildExportFilename('flm8-cn-statement', 'single', format),
+    };
+  },
+
+  lockFlm8CnStatementData: async (
+    payload: IFlm8CnStatementLockDataRequest,
+  ): Promise<IFlm8CnStatementLockDataResponse> => {
+    const res = await apiClient.post<IFlm8CnStatementLockDataResponse>(
+      '/reports/flm8-cn-statement/lock-data',
+      payload,
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      throw new Error('Failed to lock FLM 8 data');
+    }
+
+    return res.data;
+  },
+
   getCardUnsettledReport: async (
     params: ICardSettlementReportRequest,
   ): Promise<ICardSettlementReportResponse> => {
@@ -311,6 +692,55 @@ export const reportsApi = {
     return {
       blob: res.data.blob,
       filename: res.data.filename || buildExportFilename('card-settled-report', 'grouped', format),
+    };
+  },
+
+  getCardBlankStockReport: async (
+    params: ICardBlankStockReportRequest,
+  ): Promise<ICardBlankStockReportResponse> => {
+    const res = await apiClient.get<ICardBlankStockReportResponse>(
+      `/reports/card-blank-stock${buildQueryString(params)}`,
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      return {
+        columns: [],
+        rows: [],
+        layout: 'flat',
+      };
+    }
+
+    return res.data;
+  },
+
+  downloadCardBlankStockReport: async (
+    params: ICardBlankStockReportRequest,
+    format: ReportExportFormat,
+  ): Promise<{ blob: Blob; filename?: string }> => {
+    const query = buildQueryString({
+      ...params,
+      format,
+    });
+
+    const res = await apiClient.getDownload(
+      `/reports/card-blank-stock/export${query}`,
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      throw new Error('Failed to download blank CARD stock report');
+    }
+
+    return {
+      blob: res.data.blob,
+      filename: res.data.filename || buildExportFilename('card-blank-stock-report', 'flat', format),
     };
   },
 

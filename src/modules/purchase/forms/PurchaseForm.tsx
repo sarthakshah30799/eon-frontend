@@ -59,6 +59,7 @@ import {
   formatPurchaseDecimal,
   mapPurchaseFormValuesToSubmitPayload,
 } from '../utils/purchaseUtils';
+import { PURCHASE_RULE_TEXT } from '../constants/purchaseConstants';
 import { getTransactionDatePolicy } from '@/modules/transactionPolicies/utils/transactionDatePolicy';
 import {
   TransactionLogActionEnum,
@@ -138,6 +139,10 @@ interface PurchaseFormBodyProps {
   onPurchaseRuleMetaChange: (meta: {
     allowed: boolean;
     requiresCdf: boolean;
+    blockingReason: string | null;
+    blockingReasons: string[];
+    cdfThresholdAmount: string;
+    referenceCurrencyCode: string;
   }) => void;
   transactionDatePolicy: ReturnType<typeof getTransactionDatePolicy>;
 }
@@ -607,7 +612,14 @@ const PurchaseFormBody = ({
   useEffect(() => {
     if (!isPurchaseTransaction) {
       onPurchaseRuleBlockChange(false);
-      onPurchaseRuleMetaChange({ allowed: true, requiresCdf: false });
+      onPurchaseRuleMetaChange({
+        allowed: true,
+        requiresCdf: false,
+        blockingReason: null,
+        blockingReasons: [],
+        cdfThresholdAmount: '',
+        referenceCurrencyCode: '',
+      });
       return;
     }
 
@@ -617,6 +629,14 @@ const PurchaseFormBody = ({
     onPurchaseRuleMetaChange({
       allowed: Boolean(resolvedPurchaseRulePreview?.allowed ?? true),
       requiresCdf: Boolean(resolvedPurchaseRulePreview?.requiresCdf),
+      blockingReason: resolvedPurchaseRulePreview?.blockingReason ?? null,
+      blockingReasons: resolvedPurchaseRulePreview?.blockingReasons ?? (
+        resolvedPurchaseRulePreview?.blockingReason
+          ? [resolvedPurchaseRulePreview.blockingReason]
+          : []
+      ),
+      cdfThresholdAmount: resolvedPurchaseRulePreview?.cdfThresholdAmount ?? '',
+      referenceCurrencyCode: resolvedPurchaseRulePreview?.referenceCurrencyCode ?? '',
     });
   }, [
     isPurchaseTransaction,
@@ -1633,6 +1653,10 @@ export const PurchaseForm = ({
   const [purchaseRuleMeta, setPurchaseRuleMeta] = useState({
     allowed: true,
     requiresCdf: false,
+    blockingReason: null as string | null,
+    blockingReasons: [] as string[],
+    cdfThresholdAmount: '',
+    referenceCurrencyCode: '',
   });
   const [isCdfModalOpen, setIsCdfModalOpen] = useState(false);
   const [pendingSubmitPayload, setPendingSubmitPayload] =
@@ -1717,6 +1741,39 @@ export const PurchaseForm = ({
     setPendingSubmitPayload(null);
   };
 
+  const submitMessage = useMemo(() => {
+    const messages: string[] = [];
+
+    if (!transactionDatePolicy.canPunchTransactions) {
+      messages.push(PURCHASE_RULE_TEXT.cannotPunchTransactions);
+    }
+
+    if (isPurchaseRuleBlocked) {
+      const blockingMessages =
+        purchaseRuleMeta.blockingReasons.length > 0
+          ? purchaseRuleMeta.blockingReasons
+          : [purchaseRuleMeta.blockingReason || PURCHASE_RULE_TEXT.failedFallback];
+      messages.push(...blockingMessages);
+    } else if (purchaseRuleMeta.requiresCdf) {
+      messages.push(
+        PURCHASE_RULE_TEXT.cdfRequired(
+          purchaseRuleMeta.cdfThresholdAmount,
+          purchaseRuleMeta.referenceCurrencyCode
+        )
+      );
+    }
+
+    return messages.join(' ');
+  }, [
+    isPurchaseRuleBlocked,
+    purchaseRuleMeta.blockingReason,
+    purchaseRuleMeta.blockingReasons,
+    purchaseRuleMeta.cdfThresholdAmount,
+    purchaseRuleMeta.referenceCurrencyCode,
+    purchaseRuleMeta.requiresCdf,
+    transactionDatePolicy.canPunchTransactions,
+  ]);
+
   return (
       <Form<IPurchaseFormValues>
       id="purchase-form"
@@ -1737,6 +1794,7 @@ export const PurchaseForm = ({
           onCancel,
           showSubmit: !readOnly,
           isSubmitDisabled: isPurchaseRuleBlocked || !transactionDatePolicy.canPunchTransactions,
+          submitMessage: submitMessage || undefined,
         }}
     >
       <PurchaseFormBody

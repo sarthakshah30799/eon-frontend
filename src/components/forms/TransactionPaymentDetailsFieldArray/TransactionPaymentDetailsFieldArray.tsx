@@ -682,7 +682,7 @@ const PaymentDetailRow = ({
       ) : null}
       <div className="md:col-span-2 xl:col-span-1">
         <FormFieldSelect
-          key={`account-${paymentMethod}-${accountId || 'empty'}`}
+          key={`account-${paymentMethod || 'none'}`}
           name={`${arrayName}.${index}.accountId`}
           label="Account"
           placeholder={

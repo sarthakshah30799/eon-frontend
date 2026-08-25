@@ -37,6 +37,22 @@ const clampDate = (date: Date, min?: Date, max?: Date): Date => {
   return date;
 };
 
+const addDays = (date: Date, days: number): Date => {
+  const next = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  next.setDate(next.getDate() + days);
+  return next;
+};
+
+const maxOfDates = (left?: Date, right?: Date): Date | undefined => {
+  if (!left) {
+    return right;
+  }
+  if (!right) {
+    return left;
+  }
+  return left > right ? left : right;
+};
+
 export const getTransactionDatePolicy = (
   policyContext?: IPolicyContext | null
 ): TransactionDatePolicy => {
@@ -44,17 +60,32 @@ export const getTransactionDatePolicy = (
   const currentBusinessDate = policyContext?.currentBusinessDate ?? '';
   const openBusinessDate = policyContext?.openBusinessDate ?? '';
   const workflowState = policyContext?.workflowState ?? '';
-  const canPunchTransactions = Boolean(activeLock) || workflowState === 'PENDING_EOD';
-  const minDate = activeLock?.fromDate
+  const lockedThroughDate = policyContext?.transactionDataLock?.lockedThroughDate;
+  const dataLockMinDate = lockedThroughDate
+    ? (() => {
+        const lockedThrough = parseDateOnly(lockedThroughDate);
+        return lockedThrough ? addDays(lockedThrough, 1) : undefined;
+      })()
+    : undefined;
+
+  let canPunchTransactions = Boolean(activeLock) || workflowState === 'PENDING_EOD';
+  let minDate = activeLock?.fromDate
     ? parseDateOnly(activeLock.fromDate)
     : workflowState === 'PENDING_EOD'
       ? parseDateOnly(openBusinessDate || currentBusinessDate)
       : undefined;
+  minDate = maxOfDates(minDate, dataLockMinDate);
+
   const maxDate = activeLock?.toDate
     ? parseDateOnly(activeLock.toDate)
     : workflowState === 'PENDING_EOD'
       ? parseDateOnly(openBusinessDate || currentBusinessDate)
       : undefined;
+
+  if (minDate && maxDate && minDate > maxDate) {
+    canPunchTransactions = false;
+  }
+
   const baseDate = parseDateOnly(
     policyContext?.transactionDate || openBusinessDate || currentBusinessDate
   );
@@ -62,9 +93,13 @@ export const getTransactionDatePolicy = (
     ? formatDateOnly(clampDate(baseDate, minDate, maxDate))
     : '';
 
-  const helperText = workflowState === 'PENDING_EOD'
-    ? `EOD is pending for ${openBusinessDate || 'the previous business date'}. Transactions must use that date.`
-    : '';
+  const helperText = lockedThroughDate
+    ? `Data locked through ${lockedThroughDate}. Transaction dates must be on or after ${
+        dataLockMinDate ? formatDateOnly(dataLockMinDate) : lockedThroughDate
+      }.`
+    : workflowState === 'PENDING_EOD'
+      ? `EOD is pending for ${openBusinessDate || 'the previous business date'}. Transactions must use that date.`
+      : '';
 
   return {
     canPunchTransactions,

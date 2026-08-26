@@ -320,6 +320,12 @@ export const getPurchasePageBasePath = (
   }
 };
 
+export const isCorporateIndividualPurchasePage = (
+  pageType: PurchasePageType | null | undefined
+): boolean =>
+  pageType === TransactionTypeProfileEnum.PURCHASE_CORPORATE_INDIVIDUAL ||
+  pageType === TransactionTypeProfileEnum.SALE_CORPORATE_INDIVIDUAL;
+
 export const getPurchasePageEntityType = (
   pageType: PurchasePageType | null
 ): PassengerEntityType | null => {

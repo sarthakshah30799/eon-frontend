@@ -8,8 +8,8 @@ interface FunnelIconProps {
 
 export const FunnelIcon: React.FC<FunnelIconProps> = ({
   className = 'text-muted-foreground',
-  width = 13,
-  height = 13,
+  width = 15,
+  height = 15,
 }) => {
   return (
     <svg

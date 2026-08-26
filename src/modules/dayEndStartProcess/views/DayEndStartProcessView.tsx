@@ -55,7 +55,7 @@ const DayEndStartProcessForm = ({
 }: DayEndStartProcessFormProps) => {
   const { activeBranchId } = useAuth();
   const canSelectWorkplace = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
-  const { data: branches = [] } = useListBranchProfiles({ activeOnly: true }, canSelectWorkplace);
+  const { data: branches = [] } = useListBranchProfiles({ status: 'active' }, canSelectWorkplace);
   const [selectedBranchId, setSelectedBranchId] = useState(
     canSelectWorkplace ? '' : activeBranchId ?? '',
   );

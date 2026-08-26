@@ -25,8 +25,8 @@ export const useValidateBranchCode = (currentId?: string) => {
       }
 
       const branches = await queryClient.fetchQuery({
-        queryKey: ['branch-profiles', { activeOnly: true }],
-        queryFn: () => branchProfileApi.getBranchProfiles({ activeOnly: true }),
+        queryKey: ['branch-profiles', { status: 'active' }],
+        queryFn: () => branchProfileApi.getBranchProfiles({ status: 'active' }),
       });
       return branches.some(
         branch =>

@@ -38,6 +38,7 @@ export const transactionsApi = {
       status?: TransactionStatus;
       partyProfileId?: string;
       transactionType?: TransactionType;
+      tradeMode?: string;
     }
   ): Promise<ITransactionEntity[]> => {
     const query = new URLSearchParams();
@@ -48,6 +49,7 @@ export const transactionsApi = {
     if (params?.status) query.set('status', params.status);
     if (params?.partyProfileId) query.set('partyProfileId', params.partyProfileId);
     if (params?.transactionType) query.set('transactionType', params.transactionType);
+    if (params?.tradeMode) query.set('tradeMode', params.tradeMode);
 
     const suffix = query.toString() ? `?${query.toString()}` : '';
     const res = await apiClient.get<ITransactionEntity[]>(`/transactions${suffix}`);

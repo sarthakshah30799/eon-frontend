@@ -98,7 +98,7 @@ export const CardSettlementForm = ({
   const items = useWatch({ control: form.control, name: 'items' }) ?? [];
   const isIssuerKind = isHo || kind === CardStockSettlementDocumentKind.HO_ISSUER;
   const references = useCardStockReferences();
-  const branchesQuery = useListBranchProfiles({ activeOnly: true }, isIssuerKind);
+  const branchesQuery = useListBranchProfiles({ status: 'active' }, isIssuerKind);
   const canLoadUnsettled =
     Boolean(issuerPartyProfileId && currencyId) &&
     (!isIssuerKind || Boolean(hoBranchId)) &&

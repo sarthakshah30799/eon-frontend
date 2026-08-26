@@ -29,7 +29,7 @@ export const PartyProfileListView = () => {
   const canSeeBranchFilter = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
 
   const { data: typeOptions = [], isLoading: isTypesLoading } = usePartyProfileTypes();
-  const { data: branches = [] } = useListBranchProfiles({ activeOnly: true });
+  const { data: branches = [] } = useListBranchProfiles({ status: 'active' });
   const routeOptions = useMemo(
     () =>
       typeOptions.map(option => ({

@@ -359,7 +359,7 @@ export const CardTransferForm = ({
 }: Props) => {
   const form = useFormContext<CardTransferFormValues>();
   const { data: branches = [], isLoading: branchesLoading } =
-    useListBranchProfiles({ activeOnly: true });
+    useListBranchProfiles({ status: 'active' });
   const sourceBranchId = useWatch({
     control: form.control,
     name: 'sourceBranchId',

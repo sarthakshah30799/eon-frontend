@@ -210,7 +210,7 @@ export const CardStockReceiptForm = ({ initialValues, readOnly = false, footerAc
   const { user, policyContext, activeBranchId } = useAuth();
   const canSelectBranch = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
   const [selectedBranchId, setSelectedBranchId] = useState(initialValues.branchId);
-  const { data: branches = [], isLoading: branchesLoading } = useListBranchProfiles({ activeOnly: true });
+  const { data: branches = [], isLoading: branchesLoading } = useListBranchProfiles({ status: 'active' });
   const availableBranches = useMemo(() => branches.filter(branch => canSelectBranch || branch.id === activeBranchId).map(branch => ({ id: branch.id, code: branch.code, name: branch.name })), [activeBranchId, branches, canSelectBranch]);
   const selectedBranchPolicy = useQuery({
     queryKey: ['card-stock', 'transaction-date-policy', selectedBranchId],

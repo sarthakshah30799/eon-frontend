@@ -39,9 +39,9 @@ export const PurchaseWorkplaceFields = ({
   );
 
   const { data: branches = [], isLoading: isBranchesLoading } =
-    useListBranchProfiles({ activeOnly: true });
+    useListBranchProfiles({ status: 'active' });
   const { data: counters = [], isLoading: isCountersLoading } =
-    useListCounterProfiles({ activeOnly: true }, canEditWorkplace);
+    useListCounterProfiles({ status: 'active' }, canEditWorkplace);
   const { data: activeCounter, isLoading: isActiveCounterLoading } =
     useGetCounterProfile(activeCounterId ?? '');
 

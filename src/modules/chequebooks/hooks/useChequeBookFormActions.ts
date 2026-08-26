@@ -106,7 +106,7 @@ export const useLoadBranchOptions = () => {
     async (inputValue: string) => {
       const branches = await queryClient.fetchQuery({
         queryKey: ['branch-profiles', { search: inputValue || undefined, activeOnly: true }],
-        queryFn: () => branchProfileApi.getBranchProfiles({ search: inputValue || undefined, activeOnly: true }),
+        queryFn: () => branchProfileApi.getBranchProfiles({ search: inputValue || undefined, status: 'active' }),
       });
       return {
         options: branches.map(branch => ({

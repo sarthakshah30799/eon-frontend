@@ -14,7 +14,7 @@ export const FakeCurrencyListView = () => {
   const [branchId, setBranchId] = useState('');
   const canChooseBranch = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
   const effectiveBranchId = canChooseBranch ? branchId : activeBranchId ?? '';
-  const { data: branches = [] } = useListBranchProfiles({ activeOnly: true });
+  const { data: branches = [] } = useListBranchProfiles({ status: 'active' });
   const { data: transactions = [], isLoading, isFetching, error } = useListFakeCurrencies({
     search,
     branchId: effectiveBranchId,

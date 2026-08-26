@@ -36,12 +36,12 @@ export const WorkplaceFormFields = ({
   }, [userAssignments]);
 
   const { data: branchProfiles = [] } = useListBranchProfiles(
-    { activeOnly: true },
+    { status: 'active' },
     canSelectAllBranches
   );
 
   const { data: counterProfiles = [], isLoading: isCountersLoading } =
-    useListCounterProfiles({ activeOnly: true }, canSelectAllBranches);
+    useListCounterProfiles({ status: 'active' }, canSelectAllBranches);
 
   const visibleBranches = useMemo(() => {
     if (canSelectAllBranches) {

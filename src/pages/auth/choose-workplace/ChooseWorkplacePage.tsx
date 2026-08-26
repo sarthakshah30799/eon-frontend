@@ -35,12 +35,12 @@ const ChooseWorkplacePage: React.FC = () => {
   const userAssignments = useMemo(() => user?.assignments ?? [], [user?.assignments]);
 
   const { isLoading: isBranchesLoading } = useListBranchProfiles(
-    { activeOnly: true },
+    { status: 'active' },
     canSelectAllBranches
   );
 
   const { isLoading: isCountersLoading } = useListCounterProfiles(
-    { activeOnly: true },
+    { status: 'active' },
     canSelectAllBranches
   );
 

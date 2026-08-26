@@ -23,8 +23,8 @@ export const StockRevaluationView = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedTargets, setSelectedTargets] = useState<StockRevaluationTarget[]>(() => activeBranchId && activeCounterId ? [{ branchId: activeBranchId, counterId: activeCounterId }] : []);
   const [file, setFile] = useState<File | null>(null);
-  const { data: branches = [] } = useListBranchProfiles({ activeOnly: true });
-  const { data: counters = [] } = useListCounterProfiles({ activeOnly: true });
+  const { data: branches = [] } = useListBranchProfiles({ status: 'active' });
+  const { data: counters = [] } = useListCounterProfiles({ status: 'active' });
   const { data: settings = [] } = useListAdditionalSettings();
   const stockSetting = getAdditionalSettingTextValue(settings, 'STOCK_REVALUATION_SETTINGS', 'STOCK_REVALUATION_FREQUENCY');
   const isAllAccess = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);

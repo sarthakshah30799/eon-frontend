@@ -58,7 +58,7 @@ export const CardSettlementCreateView = () => {
   const kind = isHo
     ? CardStockSettlementDocumentKind.HO_ISSUER
     : CardStockSettlementDocumentKind.BRANCH_HO;
-  const branchesQuery = useListBranchProfiles({ activeOnly: true }, isHo);
+  const branchesQuery = useListBranchProfiles({ status: 'active' }, isHo);
   const defaultHoBranchId = useMemo(() => {
     const hoBranches = (branchesQuery.data ?? []).filter(branch => branch.isHeadOffice);
     return hoBranches.find(branch => branch.id === activeBranchId)?.id ?? hoBranches[0]?.id ?? '';

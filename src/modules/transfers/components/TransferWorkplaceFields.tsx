@@ -55,7 +55,7 @@ export const TransferWorkplaceFields = ({
     name: 'destinationBranchId',
   });
 
-  const { data: branches = [] } = useListBranchProfiles({ activeOnly: true });
+  const { data: branches = [] } = useListBranchProfiles({ status: 'active' });
   const { data: sourceCounters = [] } = useListCounterProfiles(
     { activeOnly: true, branchId: sourceBranchId || undefined },
     Boolean(sourceBranchId)

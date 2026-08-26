@@ -32,7 +32,7 @@ export const AD1ListView = () => {
   const [branchFilter, setBranchFilter] = useState('');
   const canSeeAllBranches = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
 
-  const { data: branches = [] } = useListBranchProfiles({ activeOnly: true });
+  const { data: branches = [] } = useListBranchProfiles({ status: 'active' });
   const branchOptions = useMemo<AsyncSelectOption[]>(
     () =>
       branches.map(branch => ({

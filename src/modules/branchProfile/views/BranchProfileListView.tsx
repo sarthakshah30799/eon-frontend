@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button1';
 import { Input } from '@/components/ui/input';
@@ -20,12 +20,10 @@ export const BranchProfileListView = () => {
   const search = searchParams.get('search') ?? '';
   const debouncedSearch = useDebounce(search, 400);
 
-  // Filter states — mirrors ChequeBookListView / ManualBillBookListView pattern
-  const [stateFilter, setStateFilter] = useState('');
-  const [cityFilter, setCityFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'' | 'Active' | 'Inactive'>(
-    ''
-  );
+  // Filters from routes (as in previous pages with search + filter via URL) — no local form state
+  const stateParam = searchParams.get('state') ?? '';
+  const cityParam = searchParams.get('city') ?? '';
+  const statusParam = searchParams.get('status') ?? ''; // "active" | "inactive" | ""
 
   const { data: stateResponse } = useListStateProfiles({ limit: 100 });
   const stateProfiles = stateResponse?.data ?? [];
@@ -48,14 +46,15 @@ export const BranchProfileListView = () => {
   );
 
   const selectedStateOption = useMemo<AsyncSelectOption | null>(
-    () =>
-      stateOptions.find(option => String(option.value) === stateFilter) ?? null,
-    [stateFilter, stateOptions]
+    () => stateOptions.find(option => option.label === stateParam) ?? null,
+    [stateParam, stateOptions]
   );
 
   const selectedStatusOption = useMemo<AsyncSelectOption | null>(
-    () => statusOptions.find(option => option.value === statusFilter) ?? null,
-    [statusFilter, statusOptions]
+    () =>
+      statusOptions.find(option => option.value.toLowerCase() === statusParam) ??
+      null,
+    [statusParam, statusOptions]
   );
 
   const loadStateOptions = useCallback(
@@ -85,17 +84,16 @@ export const BranchProfileListView = () => {
   );
 
   const query = useMemo(() => {
-    const stateName = selectedStateOption?.label;
-    const statusValue = statusFilter ? statusFilter.toLowerCase() : undefined; // "active" | "inactive"
+    const statusValue = statusParam ? statusParam.toLowerCase() : undefined; // "active" | "inactive"
     return {
       // Only keywords BE supports: city, state, status — e.g. GET /branches?city=Pune&state=Maharashtra&status=active
       // If status is undefined, no status filter is applied and BE returns both active/inactive
       search: debouncedSearch.trim() || undefined,
-      city: cityFilter || undefined,
-      state: stateName || undefined,
+      city: cityParam || undefined,
+      state: stateParam || undefined,
       status: statusValue,
     };
-  }, [debouncedSearch, selectedStateOption, cityFilter, statusFilter]);
+  }, [debouncedSearch, cityParam, stateParam, statusParam]);
 
   const {
     data: branches = [],
@@ -115,17 +113,16 @@ export const BranchProfileListView = () => {
       )
     ).sort((a, b) => a.localeCompare(b));
     // Ensure selected city stays visible even if filtered branches don't contain it (e.g. after status filter)
-    if (cityFilter && !cities.includes(cityFilter)) {
-      cities.push(cityFilter);
+    if (cityParam && !cities.includes(cityParam)) {
+      cities.push(cityParam);
       cities.sort((a, b) => a.localeCompare(b));
     }
     return cities.map(city => ({ value: city, label: city }));
-  }, [branches, cityFilter]);
+  }, [branches, cityParam]);
 
   const selectedCityOption = useMemo<AsyncSelectOption | null>(
-    () =>
-      cityOptions.find(option => String(option.value) === cityFilter) ?? null,
-    [cityFilter, cityOptions]
+    () => cityOptions.find(option => String(option.value) === cityParam) ?? null,
+    [cityParam, cityOptions]
   );
 
   const loadCityOptions = useCallback(
@@ -147,17 +144,15 @@ export const BranchProfileListView = () => {
     await deleteBranchProfile(id);
   };
 
-  const hasActiveFilters = Boolean(
-    search || stateFilter || cityFilter || statusFilter
-  );
+  const hasActiveFilters = Boolean(search || stateParam || cityParam || statusParam);
 
   const handleReset = useCallback(() => {
-    setStateFilter('');
-    setCityFilter('');
-    setStatusFilter('');
     setSearchParams(prev => {
       const nextParams = new URLSearchParams(prev);
       nextParams.delete('search');
+      nextParams.delete('state');
+      nextParams.delete('city');
+      nextParams.delete('status');
       return nextParams;
     });
   }, [setSearchParams]);
@@ -219,9 +214,15 @@ export const BranchProfileListView = () => {
               const selectedOption = Array.isArray(option)
                 ? (option[0] ?? null)
                 : option;
-              setStateFilter(
-                selectedOption?.value ? String(selectedOption.value) : ''
-              );
+              setSearchParams(prev => {
+                const nextParams = new URLSearchParams(prev);
+                if (selectedOption?.label) {
+                  nextParams.set('state', selectedOption.label);
+                } else {
+                  nextParams.delete('state');
+                }
+                return nextParams;
+              });
             }}
             isClearable
             isSearchable
@@ -239,9 +240,15 @@ export const BranchProfileListView = () => {
               const selectedOption = Array.isArray(option)
                 ? (option[0] ?? null)
                 : option;
-              setCityFilter(
-                selectedOption?.value ? String(selectedOption.value) : ''
-              );
+              setSearchParams(prev => {
+                const nextParams = new URLSearchParams(prev);
+                if (selectedOption?.value) {
+                  nextParams.set('city', String(selectedOption.value));
+                } else {
+                  nextParams.delete('city');
+                }
+                return nextParams;
+              });
             }}
             isClearable
             isSearchable
@@ -259,11 +266,15 @@ export const BranchProfileListView = () => {
               const selectedOption = Array.isArray(option)
                 ? (option[0] ?? null)
                 : option;
-              setStatusFilter(
-                selectedOption?.value
-                  ? (String(selectedOption.value) as 'Active' | 'Inactive')
-                  : ''
-              );
+              setSearchParams(prev => {
+                const nextParams = new URLSearchParams(prev);
+                if (selectedOption?.value) {
+                  nextParams.set('status', String(selectedOption.value).toLowerCase());
+                } else {
+                  nextParams.delete('status');
+                }
+                return nextParams;
+              });
             }}
             isClearable
             isSearchable

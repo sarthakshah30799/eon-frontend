@@ -10,6 +10,9 @@ export interface IBranchProfileOption {
 export interface IBranchProfileListQuery {
   activeOnly?: boolean;
   search?: string;
+  city?: string;
+  state?: string;
+  status?: string;
 }
 
 export interface IBranchProfile {

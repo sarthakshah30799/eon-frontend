@@ -10,3 +10,4 @@ export { UserIcon } from './UserIcon';
 export { AlertTriangleIcon } from './AlertTriangleIcon';
 export { CurrencyIcon } from './CurrencyIcon';
 export { LogoutIcon } from './LogoutIcon';
+export { FunnelIcon } from './FunnelIcon';

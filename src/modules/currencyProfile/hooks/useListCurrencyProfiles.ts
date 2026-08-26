@@ -4,12 +4,22 @@ import { useCallback } from 'react';
 import { normalizeCodeValue } from '@/utils';
 
 export const useListCurrencyProfiles = (
-  options?: string | { search?: string; activeOnly?: boolean },
-  activeOnlyParam = true
+  options?: string | { search?: string; activeOnly?: boolean; country?: string; group?: string; pricingGroup?: string; pricingGroupId?: string; status?: string; onlyStocking?: string; stocking?: string },
+  activeOnlyParam?: boolean
 ) => {
-  const queryParams = typeof options === 'string'
-    ? { search: options || undefined, activeOnly: activeOnlyParam }
-    : { ...options, activeOnly: options?.activeOnly ?? activeOnlyParam };
+  let queryParams: Record<string, unknown>;
+  if (typeof options === 'string') {
+    queryParams = { search: options || undefined };
+    if (activeOnlyParam !== undefined) queryParams.activeOnly = activeOnlyParam;
+  } else {
+    queryParams = { ...(options as Record<string, unknown>) };
+    if (queryParams.activeOnly === undefined && activeOnlyParam !== undefined) {
+      queryParams.activeOnly = activeOnlyParam;
+    }
+    if (queryParams.activeOnly === undefined) {
+      delete queryParams.activeOnly;
+    }
+  }
 
   return useQuery({
     queryKey: ['currency-profiles', queryParams],

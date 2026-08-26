@@ -20,7 +20,7 @@ const mapBackendToFrontend = (
 
 export const currencyProfileApi = {
   getCurrencyProfiles: async (
-    options?: string | { search?: string; activeOnly?: boolean }
+    options?: string | { search?: string; activeOnly?: boolean; country?: string; group?: string; pricingGroup?: string; pricingGroupId?: string; status?: string; onlyStocking?: string; stocking?: string }
   ): Promise<ICurrencyProfile[]> => {
     const queryObj = typeof options === 'string'
       ? { search: options || undefined }

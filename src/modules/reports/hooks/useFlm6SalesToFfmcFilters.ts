@@ -26,8 +26,9 @@ import {
 } from '../constants/flm6SalesToFfmcConstants';
 import {
   FLM_FFMC_PROFILE_IDS,
-  FLM_FFMC_PROFILE_OPTIONS,
+  normalizeFlmFfmcPartyProfileType,
 } from '../constants/flmFfmcProfileConstants';
+import { usePartyProfileTypes } from '@/modules/partyProfiles/hooks';
 import {
   ReportDatePresetEnum,
   type IReportDateRange,
@@ -72,11 +73,23 @@ const parseView = (value: string): Flm6ReportView =>
     ? Flm6ReportViewEnum.EXTENDED
     : Flm6ReportViewEnum.NORMAL;
 
-const parseProfileTypes = (values: string[]) => {
-  const selected = values.filter(value =>
-    FLM_FFMC_PROFILE_IDS.includes(value as (typeof FLM_FFMC_PROFILE_IDS)[number]),
+const normalizeProfileTypeList = (values: string[]) =>
+  [
+    ...new Set(
+      values
+        .map(value => normalizeFlmFfmcPartyProfileType(value))
+        .filter((value): value is NonNullable<typeof value> => Boolean(value)),
+    ),
+  ];
+
+const parseProfileTypes = (values: string[], availableIds: string[]) => {
+  const selected = normalizeProfileTypeList(values).filter(value =>
+    availableIds.length ? availableIds.includes(value) : true,
   );
-  return selected.length ? selected : [...FLM_FFMC_PROFILE_IDS];
+  if (selected.length) {
+    return selected;
+  }
+  return availableIds.length ? [...availableIds] : [...FLM_FFMC_PROFILE_IDS];
 };
 
 export const useFlm6SalesToFfmcFilters =
@@ -101,7 +114,7 @@ export const useFlm6SalesToFfmcFilters =
           ReportDatePresetEnum.TODAY,
         ),
         branchIds: readSearchParamList(parsedSearchParams, 'branchIds'),
-        profileTypes: parseProfileTypes(
+        profileTypes: normalizeProfileTypeList(
           readSearchParamList(parsedSearchParams, 'profileTypes'),
         ),
         productId: readSearchParamValue(parsedSearchParams, 'productId'),
@@ -116,7 +129,9 @@ export const useFlm6SalesToFfmcFilters =
       hydratedRouteState.branchIds,
     );
     const [profileTypes, setProfileTypes] = useState<string[]>(
-      hydratedRouteState.profileTypes,
+      hydratedRouteState.profileTypes.length
+        ? hydratedRouteState.profileTypes
+        : [...FLM_FFMC_PROFILE_IDS],
     );
     const [productId, setProductId] = useState(hydratedRouteState.productId);
     const [view, setViewState] = useState<Flm6ReportView>(hydratedRouteState.view);
@@ -127,7 +142,9 @@ export const useFlm6SalesToFfmcFilters =
         ? {
             dateRange: hydratedRouteState.dateRange,
             branchIds: hydratedRouteState.branchIds,
-            profileTypes: hydratedRouteState.profileTypes,
+            profileTypes: hydratedRouteState.profileTypes.length
+              ? hydratedRouteState.profileTypes
+              : [...FLM_FFMC_PROFILE_IDS],
             productId: hydratedRouteState.productId,
             view: hydratedRouteState.view,
           }
@@ -135,7 +152,7 @@ export const useFlm6SalesToFfmcFilters =
     );
 
     const { data: branchProfiles = [] } = useQuery({
-      queryKey: ['reports-flm4-branch-profiles'],
+      queryKey: ['reports-flm6-branch-profiles'],
       enabled: true,
       queryFn: async () =>
         branchProfileApi.getBranchProfiles({
@@ -144,6 +161,7 @@ export const useFlm6SalesToFfmcFilters =
     });
 
     const { data: productProfiles = [] } = useListProductProfiles(true);
+    const { data: partyProfileTypes = [] } = usePartyProfileTypes();
 
     const accessibleBranchProfiles = useMemo(
       () =>
@@ -198,19 +216,40 @@ export const useFlm6SalesToFfmcFilters =
       ? productId
       : defaultProductId;
 
-    const profileOptions = FLM_FFMC_PROFILE_OPTIONS.map(option =>
-      toOption(option.id, option.label),
+    const profileOptions = useMemo<IReportSelectOption[]>(
+      () =>
+        uniqueOptions(
+          partyProfileTypes
+            .map(option => {
+              const id = normalizeFlmFfmcPartyProfileType(option.value);
+              if (!id) {
+                return null;
+              }
+              return toOption(id, option.label);
+            })
+            .filter((option): option is IReportSelectOption => Boolean(option)),
+        ),
+      [partyProfileTypes],
     );
-    const selectedProfileTypes = profileTypes.filter(value =>
-      FLM_FFMC_PROFILE_IDS.includes(
-        value as (typeof FLM_FFMC_PROFILE_IDS)[number],
-      ),
+    const availableProfileIds = useMemo(
+      () => profileOptions.map(option => option.id),
+      [profileOptions],
     );
+    const selectedProfileTypes = useMemo(() => {
+      const filtered = profileTypes.filter(value =>
+        availableProfileIds.includes(value),
+      );
+      if (filtered.length || !availableProfileIds.length) {
+        return filtered.length ? filtered : profileTypes;
+      }
+      return [...availableProfileIds];
+    }, [availableProfileIds, profileTypes]);
 
     const branchAllSelected =
       branchOptions.length > 0 &&
       selectedBranchIds.length === branchOptions.length;
     const profileAllSelected =
+      profileOptions.length > 0 &&
       selectedProfileTypes.length === profileOptions.length;
 
     const toggleBranch = (id: string, checked: boolean) => {
@@ -226,7 +265,7 @@ export const useFlm6SalesToFfmcFilters =
     };
 
     const toggleAllProfiles = (checked: boolean) => {
-      setProfileTypes(checked ? [...FLM_FFMC_PROFILE_IDS] : []);
+      setProfileTypes(checked ? [...availableProfileIds] : []);
     };
 
     const writeSearchParams = (
@@ -237,7 +276,8 @@ export const useFlm6SalesToFfmcFilters =
       nextView: Flm6ReportView,
     ) => {
       const profileTypesForUrl =
-        nextProfileTypes.length === FLM_FFMC_PROFILE_IDS.length
+        availableProfileIds.length > 0 &&
+        nextProfileTypes.length === availableProfileIds.length
           ? []
           : nextProfileTypes;
       return buildSearchParams(undefined, next => {
@@ -275,7 +315,11 @@ export const useFlm6SalesToFfmcFilters =
     const resetFilters = () => {
       setDateRange(buildReportDateRange(ReportDatePresetEnum.TODAY));
       setBranchIds([]);
-      setProfileTypes([...FLM_FFMC_PROFILE_IDS]);
+      setProfileTypes(
+        availableProfileIds.length
+          ? [...availableProfileIds]
+          : [...FLM_FFMC_PROFILE_IDS],
+      );
       setProductId(defaultProductId);
       setViewState(Flm6ReportViewEnum.NORMAL);
       setAppliedFilters(null);
@@ -302,8 +346,14 @@ export const useFlm6SalesToFfmcFilters =
         setBranchIds(effectiveBranchIds);
       }
 
-      const effectiveProfileTypes = parseProfileTypes(selectedProfileTypes);
-      if (selectedProfileTypes.length === 0) {
+      const effectiveProfileTypes = parseProfileTypes(
+        selectedProfileTypes,
+        availableProfileIds,
+      );
+      if (
+        selectedProfileTypes.length === 0 ||
+        selectedProfileTypes.length !== effectiveProfileTypes.length
+      ) {
         setProfileTypes(effectiveProfileTypes);
       }
 

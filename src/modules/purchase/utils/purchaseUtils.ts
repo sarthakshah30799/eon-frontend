@@ -21,6 +21,7 @@ import type { ITransactionReferenceSnapshot } from '@/modules/transactions';
 import type { IBranchProfile } from '@/modules/branchProfile/types';
 import {
   getPurchasePageEntityType,
+  isCorporateIndividualPurchasePage,
   type PurchasePageType,
 } from '@/pages/purchase/[slug]/purchasePage.enum';
 import type { IPartyProfileCommissionRule } from '@/modules/partyProfiles/types';
@@ -146,10 +147,7 @@ export const createEmptyPurchaseFormValues = (
   transactionDate,
   transactionType,
   tradeMode,
-  transactionPartyProfileType:
-    purchasePageType ===
-      TransactionTypeProfileEnum.PURCHASE_CORPORATE_INDIVIDUAL ||
-    purchasePageType === TransactionTypeProfileEnum.SALE_CORPORATE_INDIVIDUAL
+  transactionPartyProfileType: isCorporateIndividualPurchasePage(purchasePageType)
       ? TransactionPartyProfileTypeEnum.CORPORATE
       : '',
   partyProfileId: '',
@@ -182,8 +180,12 @@ export const createEmptyPurchaseFormValues = (
   passportIssueAt: '',
   passportIssueDate: '',
   passportExpiryDate: '',
-  nationalityType: PassengerNationalityTypeEnum.INDIAN,
-  residentStatus: PassengerResidentStatusEnum.RESIDENT,
+  nationalityType: isCorporateIndividualPurchasePage(purchasePageType)
+    ? PassengerNationalityTypeEnum.INDIAN
+    : '',
+  residentStatus: isCorporateIndividualPurchasePage(purchasePageType)
+    ? PassengerResidentStatusEnum.RESIDENT
+    : '',
   countryId: '',
   stateId: '',
   locationId: '',

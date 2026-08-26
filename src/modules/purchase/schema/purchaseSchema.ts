@@ -6,7 +6,10 @@ import {
   TransactionPartyProfileTypeEnum,
 } from '@/modules/transactions';
 import type { TransactionType } from '@/modules/transactions';
-import type { PurchasePageType } from '@/pages/purchase/[slug]/purchasePage.enum';
+import {
+  isCorporateIndividualPurchasePage,
+  type PurchasePageType,
+} from '@/pages/purchase/[slug]/purchasePage.enum';
 import { TradeModeEnum } from '@/modules/transactions';
 import { PurposeRateTypeEnum } from '@/modules/purpose/types/purposeTypes';
 import {
@@ -31,6 +34,10 @@ import {
   CARD_PRODUCT_CODE,
   PURCHASE_TRANSACTION_TEXT,
 } from '../utils/purchaseUtils';
+
+const requiresCorporateIndividualPassenger = (
+  purchasePageType: PurchasePageType | null | undefined
+) => isCorporateIndividualPurchasePage(purchasePageType);
 
 const decimalStringSchema = yup
   .string()
@@ -202,10 +209,7 @@ const passengerOtherDocumentSchema = yup.object({
   documentFile: yup.string().trim().default(''),
 });
 
-export const createPurchaseFormSchema = (
-  transactionType: TransactionType,
-  purchasePageType: PurchasePageType | null = null
-) =>
+export const createPurchaseFormSchema = (transactionType: TransactionType) =>
   yup.object({
     purchasePageType: yup
       .mixed<PurchasePageType>()
@@ -249,18 +253,16 @@ export const createPurchaseFormSchema = (
       .oneOf([...Object.values(TransactionPartyProfileTypeEnum), ''] as const)
       .when('purchasePageType', {
         is: (value: PurchasePageType | null) =>
-          value === TransactionTypeProfileEnum.PURCHASE_CORPORATE_INDIVIDUAL ||
-          value === TransactionTypeProfileEnum.SALE_CORPORATE_INDIVIDUAL,
+          requiresCorporateIndividualPassenger(value),
         then: schema => schema.required('Entity selection is required'),
         otherwise: schema => schema.default(''),
       }),
     purposeId: yup
       .string()
       .trim()
-      .when([], {
-        is: () =>
-          purchasePageType === TransactionTypeProfileEnum.PURCHASE_CORPORATE_INDIVIDUAL ||
-          purchasePageType === TransactionTypeProfileEnum.SALE_CORPORATE_INDIVIDUAL,
+      .when('purchasePageType', {
+        is: (value: PurchasePageType | null) =>
+          requiresCorporateIndividualPassenger(value),
         then: schema => schema.required('Purpose is required'),
         otherwise: schema => schema.default(''),
       }),
@@ -270,21 +272,49 @@ export const createPurchaseFormSchema = (
     entityType: yup
       .mixed<(typeof PassengerEntityTypeEnum)[keyof typeof PassengerEntityTypeEnum] | ''>()
       .oneOf([...Object.values(PassengerEntityTypeEnum), ''] as const)
-      .required('Passenger entity type is required'),
+      .when('purchasePageType', {
+        is: (value: PurchasePageType | null) =>
+          requiresCorporateIndividualPassenger(value),
+        then: schema => schema.required('Passenger entity type is required'),
+        otherwise: schema => schema.default(''),
+      }),
     passengerInfoCaptured: yup
       .boolean()
       .default(false)
-      .oneOf([true], 'Passenger details are required'),
+      .when('purchasePageType', {
+        is: (value: PurchasePageType | null) =>
+          requiresCorporateIndividualPassenger(value),
+        then: schema => schema.oneOf([true], 'Passenger details are required'),
+        otherwise: schema => schema.default(false),
+      }),
     passengerId: yup.string().default(''),
     nationalityType: yup
       .mixed<(typeof PassengerNationalityTypeEnum)[keyof typeof PassengerNationalityTypeEnum] | ''>()
       .oneOf([...Object.values(PassengerNationalityTypeEnum), ''] as const)
-      .required('Nationality is required'),
+      .when('purchasePageType', {
+        is: (value: PurchasePageType | null) =>
+          requiresCorporateIndividualPassenger(value),
+        then: schema => schema.required('Nationality is required'),
+        otherwise: schema => schema.default(''),
+      }),
     residentStatus: yup
       .mixed<(typeof PassengerResidentStatusEnum)[keyof typeof PassengerResidentStatusEnum] | ''>()
       .oneOf([...Object.values(PassengerResidentStatusEnum), ''] as const)
-      .required('Resident status is required'),
-    countryId: yup.string().trim().required('Country is required'),
+      .when('purchasePageType', {
+        is: (value: PurchasePageType | null) =>
+          requiresCorporateIndividualPassenger(value),
+        then: schema => schema.required('Resident status is required'),
+        otherwise: schema => schema.default(''),
+      }),
+    countryId: yup
+      .string()
+      .trim()
+      .when('purchasePageType', {
+        is: (value: PurchasePageType | null) =>
+          requiresCorporateIndividualPassenger(value),
+        then: schema => schema.required('Country is required'),
+        otherwise: schema => schema.default(''),
+      }),
     stateId: yup.string().trim().default(''),
     locationId: yup.string().trim().default(''),
     city: yup.string().trim().default(''),
@@ -312,6 +342,9 @@ export const createPurchaseFormSchema = (
       .string()
       .trim()
       .test('pan-required', PASSENGER_IDENTITY_TEXT.panNumberRequired, function (value) {
+        if (!requiresCorporateIndividualPassenger(this.parent.purchasePageType)) {
+          return true;
+        }
         const error = getPassengerPanNumberError({
           ...this.parent,
           panNumber: value,
@@ -325,6 +358,9 @@ export const createPurchaseFormSchema = (
       .string()
       .trim()
       .test('pan-holder-name-required', PASSENGER_IDENTITY_TEXT.panHolderNameRequired, function (value) {
+        if (!requiresCorporateIndividualPassenger(this.parent.purchasePageType)) {
+          return true;
+        }
         if (!isPassengerPanRequired({ ...this.parent, panHolderName: value })) {
           return true;
         }
@@ -334,6 +370,9 @@ export const createPurchaseFormSchema = (
       .string()
       .trim()
       .test('pan-dob-required', PASSENGER_IDENTITY_TEXT.panDobRequired, function (value) {
+        if (!requiresCorporateIndividualPassenger(this.parent.purchasePageType)) {
+          return true;
+        }
         if (!isPassengerPanRequired({ ...this.parent, panDob: value })) {
           return true;
         }
@@ -346,6 +385,9 @@ export const createPurchaseFormSchema = (
         'pan-relation-required',
         PASSENGER_IDENTITY_TEXT.panHolderRelationRequired,
         function (value) {
+          if (!requiresCorporateIndividualPassenger(this.parent.purchasePageType)) {
+            return true;
+          }
           if (!isPassengerPanHolderRelationRequired({ ...this.parent, panHolderRelationType: value })) {
             return true;
           }
@@ -365,6 +407,9 @@ export const createPurchaseFormSchema = (
         'passport-number-required',
         PASSENGER_IDENTITY_TEXT.passportNumberRequired,
         function (value) {
+          if (!requiresCorporateIndividualPassenger(this.parent.purchasePageType)) {
+            return true;
+          }
           if (!isPassengerPassportRequired({ ...this.parent, passportNumber: value })) {
             return true;
           }
@@ -378,6 +423,9 @@ export const createPurchaseFormSchema = (
         'passport-issue-at-required',
         PASSENGER_IDENTITY_TEXT.passportIssuePlaceRequired,
         function (value) {
+          if (!requiresCorporateIndividualPassenger(this.parent.purchasePageType)) {
+            return true;
+          }
           if (!isPassengerPassportRequired({ ...this.parent, passportIssueAt: value })) {
             return true;
           }
@@ -391,6 +439,9 @@ export const createPurchaseFormSchema = (
         'passport-issue-date-required',
         PASSENGER_IDENTITY_TEXT.passportIssueDateRequired,
         function (value) {
+          if (!requiresCorporateIndividualPassenger(this.parent.purchasePageType)) {
+            return true;
+          }
           if (!isPassengerPassportRequired({ ...this.parent, passportIssueDate: value })) {
             return true;
           }
@@ -404,6 +455,9 @@ export const createPurchaseFormSchema = (
         'passport-expiry-date-required',
         PASSENGER_IDENTITY_TEXT.passportExpiryDateRequired,
         function (value) {
+          if (!requiresCorporateIndividualPassenger(this.parent.purchasePageType)) {
+            return true;
+          }
           if (!isPassengerPassportRequired({ ...this.parent, passportExpiryDate: value })) {
             return true;
           }
@@ -414,6 +468,9 @@ export const createPurchaseFormSchema = (
         'passport-date-order',
         'Passport expiry date must be after issue date',
         function (value) {
+          if (!requiresCorporateIndividualPassenger(this.parent.purchasePageType)) {
+            return true;
+          }
           const issueDate = this.parent.passportIssueDate as string | undefined;
           if (!issueDate || !value) {
             return true;
@@ -428,6 +485,9 @@ export const createPurchaseFormSchema = (
         'arrival-date-required',
         PASSENGER_IDENTITY_TEXT.arrivalDateRequired,
         function (value) {
+          if (!requiresCorporateIndividualPassenger(this.parent.purchasePageType)) {
+            return true;
+          }
           if (!isPassengerArrivalDateRequired({ ...this.parent, arrivalDate: value })) {
             return true;
           }

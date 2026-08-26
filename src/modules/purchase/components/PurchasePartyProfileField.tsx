@@ -5,9 +5,9 @@ import { SelectPartyProfiles } from '@/modules/partyProfiles/components';
 import { HighRiskPartyProfileWarningModal } from './HighRiskPartyProfileWarningModal';
 import type { PartyProfileType } from '@/modules/partyProfiles/types';
 import type { IPartyProfileListQuery, IPartyProfile } from '@/modules/partyProfiles/types';
-import { TransactionTypeProfileEnum } from '@/modules/transactions';
 import type { IPurchaseFormValues } from '../types/purchaseTypes';
 import type { PurchasePageType } from '@/pages/purchase/[slug]/purchasePage.enum';
+import { isCorporateIndividualPurchasePage } from '@/pages/purchase/[slug]/purchasePage.enum';
 import { PassengerEntityTypeEnum } from '@/modules/passengers/types/passengerTypes';
 import {
   formatPurchaseEntityLabel,
@@ -82,9 +82,7 @@ export const PurchasePartyProfileField = ({
     activeOnly: true,
   } satisfies Pick<IPartyProfileListQuery, 'sale' | 'purchase' | 'activeOnly' | 'isIndividual'>;
 
-  const isCombinedPartyProfilePage =
-    purchasePageType === TransactionTypeProfileEnum.PURCHASE_CORPORATE_INDIVIDUAL ||
-    purchasePageType === TransactionTypeProfileEnum.SALE_CORPORATE_INDIVIDUAL;
+  const isCombinedPartyProfilePage = isCorporateIndividualPurchasePage(purchasePageType);
 
   const proceedWithProfileSelection = (selectedProfile: IPartyProfile) => {
     form.setValue('partyProfileId', selectedProfile.id, {

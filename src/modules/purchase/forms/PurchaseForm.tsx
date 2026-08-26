@@ -25,6 +25,7 @@ import {
   getPurchasePageEntityType,
   getPurchasePageTitle,
   getPurchasePurposePartyProfileType,
+  isCorporateIndividualPurchasePage,
   type PurchasePageType,
 } from '@/pages/purchase/[slug]/purchasePage.enum';
 import type {
@@ -65,7 +66,6 @@ import {
   TransactionLogActionEnum,
   TransactionPartyProfileTypeEnum,
   TransactionTypeEnum,
-  TransactionTypeProfileEnum,
 } from '@/modules/transactions';
 import { PassengerAmlVerificationModal } from '@/modules/passengers/components';
 import {
@@ -179,9 +179,7 @@ const PurchaseFormBody = ({
   const [hasPrintedOnce, setHasPrintedOnce] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
   const isReadOnly = isSubmitting || readOnly;
-  const isCombinedPartyProfilePage =
-    purchasePageType === TransactionTypeProfileEnum.PURCHASE_CORPORATE_INDIVIDUAL ||
-    purchasePageType === TransactionTypeProfileEnum.SALE_CORPORATE_INDIVIDUAL;
+  const isCombinedPartyProfilePage = isCorporateIndividualPurchasePage(purchasePageType);
   const partyProfileApplyTax = useWatch({
     control: form.control,
     name: 'partyProfileApplyTax',
@@ -1110,17 +1108,19 @@ const PurchaseFormBody = ({
 
       <CardSection heading={pageTitle}>
         <div className="mb-4 grid gap-4 lg:grid-cols-2">
-          <FormFieldPurposeSelect
-            name="purposeId"
-            label="Purpose"
-            placeholder="Select purpose"
-            transactionType={transactionType}
-            partyProfileType={getPurchasePurposePartyProfileType(
-              purchasePageType,
-              resolvedTransactionPartyProfileType
-            )}
-            disabled={isReadOnly}
-          />
+          {isCombinedPartyProfilePage ? (
+            <FormFieldPurposeSelect
+              name="purposeId"
+              label="Purpose"
+              placeholder="Select purpose"
+              transactionType={transactionType}
+              partyProfileType={getPurchasePurposePartyProfileType(
+                purchasePageType,
+                resolvedTransactionPartyProfileType
+              )}
+              disabled={isReadOnly}
+            />
+          ) : null}
           <FormFieldDatePicker
             name="transactionDate"
             label="Transaction Date"
@@ -1197,7 +1197,7 @@ const PurchaseFormBody = ({
             partyProfileTypes={partyProfileTypes}
             purchasePageType={purchasePageType}
             disabled={isReadOnly}
-            showPassengerAction
+            showPassengerAction={isCombinedPartyProfilePage}
             onAddPassengerInfo={() => {
               setIsPassengerAmlModalOpen(true);
             }}
@@ -1591,29 +1591,31 @@ const PurchaseFormBody = ({
         </CardSection>
       ) : null}
 
-      <PassengerAmlVerificationModal
-        key={`${selectedPartyProfile?.id ?? 'none'}-${resolvedPassengerEntityType ?? 'none'}-${transactionPartyProfileType || 'none'}`}
-        open={isPassengerAmlModalOpen}
-        onOpenChange={setIsPassengerAmlModalOpen}
-        entityType={
-          resolvedPassengerEntityType ||
-          getPurchasePageEntityType(purchasePageType) ||
-          undefined
-        }
-        selectedPartyProfile={
-          resolvedPassengerEntityType === PassengerEntityTypeEnum.CORPORATE
-            ? (selectedPartyProfile ?? null)
-            : null
-        }
-        selectedPartyProfileLoading={
-          Boolean(partyProfileId) &&
-          resolvedPassengerEntityType === PassengerEntityTypeEnum.CORPORATE &&
-          (isSelectedPartyProfileLoading || isSelectedPartyProfileFetching)
-        }
-        onVerified={() => {
-          toast.success('AML verified successfully');
-        }}
-      />
+      {isCombinedPartyProfilePage ? (
+        <PassengerAmlVerificationModal
+          key={`${selectedPartyProfile?.id ?? 'none'}-${resolvedPassengerEntityType ?? 'none'}-${transactionPartyProfileType || 'none'}`}
+          open={isPassengerAmlModalOpen}
+          onOpenChange={setIsPassengerAmlModalOpen}
+          entityType={
+            resolvedPassengerEntityType ||
+            getPurchasePageEntityType(purchasePageType) ||
+            undefined
+          }
+          selectedPartyProfile={
+            resolvedPassengerEntityType === PassengerEntityTypeEnum.CORPORATE
+              ? (selectedPartyProfile ?? null)
+              : null
+          }
+          selectedPartyProfileLoading={
+            Boolean(partyProfileId) &&
+            resolvedPassengerEntityType === PassengerEntityTypeEnum.CORPORATE &&
+            (isSelectedPartyProfileLoading || isSelectedPartyProfileFetching)
+          }
+          onVerified={() => {
+            toast.success('AML verified successfully');
+          }}
+        />
+      ) : null}
 
       <SelectCurrencyProfiles
         open={currencyPickerRowIndex !== null}
@@ -1782,7 +1784,7 @@ export const PurchaseForm = ({
         console.warn('[PurchaseForm] submit validation failed', errors);
       }}
       resolver={yupResolver(
-        createPurchaseFormSchema(defaultValues.transactionType, defaultValues.purchasePageType),
+        createPurchaseFormSchema(defaultValues.transactionType),
       ) as unknown as Resolver<IPurchaseFormValues>}
       defaultValues={defaultValues}
       mode="onBlur"

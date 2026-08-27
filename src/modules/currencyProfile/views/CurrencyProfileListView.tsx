@@ -16,7 +16,10 @@ export const CurrencyProfileListView = () => {
     [debouncedSearch]
   );
   const { data: currencies = [], isLoading, isFetching, error } =
-    useListCurrencyProfiles(query, false);
+    useListCurrencyProfiles(
+      { search: query, activeOnly: false, includeOnlyStocking: true },
+      false
+    );
 
   if (error) {
     return (

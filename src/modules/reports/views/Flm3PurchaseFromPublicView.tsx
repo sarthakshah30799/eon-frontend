@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/AuthContext';
 import {
   Flm3PurchaseFromPublicFiltersSection,
   Flm3PurchaseFromPublicTable,
+  FlmReportLayoutToggle,
 } from '../components';
 import {
   FLM3_PURCHASE_FROM_PUBLIC_TEXT,
@@ -82,6 +83,11 @@ export const Flm3PurchaseFromPublicView = () => {
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
+              <FlmReportLayoutToggle
+                layout={reportState.filters.layout}
+                onChange={reportState.filters.setLayout}
+              />
+
               <div className="flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 p-1">
                 <Button
                   type="button"

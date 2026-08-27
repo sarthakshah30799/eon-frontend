@@ -31,7 +31,7 @@ import {
 } from '@/modules/passengers/utils/passengerIdentityRules';
 import { PASSENGER_IDENTITY_TEXT } from '@/modules/passengers/constants/passengerConstants';
 import {
-  CARD_PRODUCT_CODE,
+  isCardProductCode,
   PURCHASE_TRANSACTION_TEXT,
 } from '../utils/purchaseUtils';
 
@@ -86,7 +86,7 @@ const createPurchaseTransactionSchema = (transactionType: TransactionType) =>
     function (value) {
       const isCardSale =
         transactionType === TransactionTypeEnum.SALE &&
-        String(this.parent.productCode || '').toUpperCase() === CARD_PRODUCT_CODE;
+        isCardProductCode(this.parent.productCode);
       if (!String(value ?? '').trim()) {
         return this.createError({
           message: isCardSale
@@ -534,7 +534,37 @@ export const createPurchaseFormSchema = (transactionType: TransactionType) =>
       .array()
       .of(createPurchaseTransactionSchema(transactionType))
       .min(1, 'Add at least one transaction')
-      .required(),
+      .required()
+      .test(
+        'unique-card-currency',
+        'The same CARD cannot be selected more than once for the same currency',
+        rows => {
+          const keys = (rows ?? [])
+            .filter(
+              (row: { cardId?: string; currencyId?: string }) =>
+                Boolean(row?.cardId && row?.currencyId)
+            )
+            .map(
+              (row: { cardId?: string; currencyId?: string }) =>
+                `${row.cardId}:${row.currencyId}`
+            );
+          return new Set(keys).size === keys.length;
+        }
+      )
+      .test(
+        'unique-single-currency-card',
+        'Single-currency CARD (CC) cannot be selected more than once in one transaction',
+        rows => {
+          const ccCardIds = (rows ?? [])
+            .filter(
+              (row: { cardId?: string; productCode?: string }) =>
+                Boolean(row?.cardId) &&
+                String(row?.productCode ?? '').toUpperCase() === 'CC'
+            )
+            .map((row: { cardId?: string }) => String(row.cardId));
+          return new Set(ccCardIds).size === ccCardIds.length;
+        }
+      ),
     additionalCharges: yup.array().of(additionalChargeSchema).default([])
       .test(
         'charge-amount-exceeds-total',

@@ -86,9 +86,8 @@ export const PurchaseWorkplaceFields = ({
     const selectedBranch = branches.find(branch => branch.id === branchId);
     const connectedCounterIds = new Set(selectedBranch?.connectCounterIds ?? []);
 
-    return counters.filter(
-      counter =>
-        connectedCounterIds.has(counter.id) || counter.branchId === branchId
+    return counters.filter(counter =>
+      connectedCounterIds.has(counter.id)
     );
   }, [branchId, branches, counters]);
 

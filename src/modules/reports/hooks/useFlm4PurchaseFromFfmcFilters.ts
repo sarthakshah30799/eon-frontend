@@ -20,6 +20,11 @@ import {
   setSearchParamValue,
 } from '../utils/reportSearchParams';
 import {
+  DEFAULT_FLM_REPORT_LAYOUT,
+  parseFlmReportLayout,
+  type FlmReportLayout,
+} from '../constants/flmReportLayoutConstants';
+import {
   FLM4_DEFAULT_PRODUCT_CODE,
   Flm4ReportViewEnum,
   type Flm4ReportView,
@@ -41,6 +46,7 @@ export interface Flm4PurchaseFromFfmcFiltersState {
   profileTypes: string[];
   productId: string;
   view: Flm4ReportView;
+  layout: FlmReportLayout;
   branchOptions: IReportSelectOption[];
   profileOptions: IReportSelectOption[];
   productOptions: IReportSelectOption[];
@@ -49,6 +55,7 @@ export interface Flm4PurchaseFromFfmcFiltersState {
   setDateRange: (value: IReportDateRange) => void;
   setProductId: (value: string) => void;
   setView: (value: Flm4ReportView) => void;
+  setLayout: (value: FlmReportLayout) => void;
   toggleBranch: (id: string, checked: boolean) => void;
   toggleAllBranches: (checked: boolean) => void;
   toggleProfile: (id: string, checked: boolean) => void;
@@ -61,6 +68,7 @@ export interface Flm4PurchaseFromFfmcFiltersState {
     profileTypes: string[];
     productId: string;
     view: Flm4ReportView;
+    layout: FlmReportLayout;
   } | null;
   appliedDateRangeLabel: string;
   canView: boolean;
@@ -119,6 +127,10 @@ export const useFlm4PurchaseFromFfmcFilters =
         ),
         productId: readSearchParamValue(parsedSearchParams, 'productId'),
         view: parseView(readSearchParamValue(parsedSearchParams, 'view')),
+        layout: parseFlmReportLayout(
+          readSearchParamValue(parsedSearchParams, 'layout') ||
+            DEFAULT_FLM_REPORT_LAYOUT,
+        ),
       };
     }, [parsedSearchParams]);
 
@@ -135,6 +147,9 @@ export const useFlm4PurchaseFromFfmcFilters =
     );
     const [productId, setProductId] = useState(hydratedRouteState.productId);
     const [view, setViewState] = useState<Flm4ReportView>(hydratedRouteState.view);
+    const [layout, setLayoutState] = useState<FlmReportLayout>(
+      hydratedRouteState.layout,
+    );
     const [appliedFilters, setAppliedFilters] = useState<
       Flm4PurchaseFromFfmcFiltersState['appliedFilters']
     >(
@@ -147,6 +162,7 @@ export const useFlm4PurchaseFromFfmcFilters =
               : [...FLM_FFMC_PROFILE_IDS],
             productId: hydratedRouteState.productId,
             view: hydratedRouteState.view,
+            layout: hydratedRouteState.layout,
           }
         : null,
     );
@@ -274,6 +290,7 @@ export const useFlm4PurchaseFromFfmcFilters =
       nextProfileTypes: string[],
       nextProductId: string,
       nextView: Flm4ReportView,
+      nextLayout: FlmReportLayout,
     ) => {
       const profileTypesForUrl =
         availableProfileIds.length > 0 &&
@@ -288,6 +305,7 @@ export const useFlm4PurchaseFromFfmcFilters =
         setSearchParamList(next, 'profileTypes', profileTypesForUrl);
         setSearchParamValue(next, 'productId', nextProductId);
         setSearchParamValue(next, 'view', nextView);
+        setSearchParamValue(next, 'layout', nextLayout);
       });
     };
 
@@ -307,6 +325,29 @@ export const useFlm4PurchaseFromFfmcFilters =
           appliedFilters.profileTypes,
           appliedFilters.productId,
           nextView,
+          appliedFilters.layout,
+        ),
+        { replace: true },
+      );
+    };
+
+    const setLayout = (nextLayout: FlmReportLayout) => {
+      setLayoutState(nextLayout);
+      if (!appliedFilters) {
+        return;
+      }
+      setAppliedFilters({
+        ...appliedFilters,
+        layout: nextLayout,
+      });
+      setSearchParams(
+        writeSearchParams(
+          appliedFilters.dateRange,
+          appliedFilters.branchIds,
+          appliedFilters.profileTypes,
+          appliedFilters.productId,
+          appliedFilters.view,
+          nextLayout,
         ),
         { replace: true },
       );
@@ -322,6 +363,7 @@ export const useFlm4PurchaseFromFfmcFilters =
       );
       setProductId(defaultProductId);
       setViewState(Flm4ReportViewEnum.NORMAL);
+      setLayoutState(DEFAULT_FLM_REPORT_LAYOUT);
       setAppliedFilters(null);
       setSearchParams(new URLSearchParams(), { replace: true });
     };
@@ -363,6 +405,7 @@ export const useFlm4PurchaseFromFfmcFilters =
         profileTypes: effectiveProfileTypes,
         productId: selectedProductId,
         view,
+        layout,
       };
 
       setAppliedFilters(nextAppliedFilters);
@@ -373,6 +416,7 @@ export const useFlm4PurchaseFromFfmcFilters =
           effectiveProfileTypes,
           selectedProductId,
           view,
+          layout,
         ),
         { replace: true },
       );
@@ -388,6 +432,7 @@ export const useFlm4PurchaseFromFfmcFilters =
       profileTypes: selectedProfileTypes,
       productId: selectedProductId,
       view,
+      layout,
       branchOptions,
       profileOptions,
       productOptions,
@@ -396,6 +441,7 @@ export const useFlm4PurchaseFromFfmcFilters =
       setDateRange,
       setProductId,
       setView,
+      setLayout,
       toggleBranch,
       toggleAllBranches,
       toggleProfile,

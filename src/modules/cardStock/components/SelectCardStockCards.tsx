@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 interface SelectCardStockCardsProps {
   open: boolean;
   reload?: boolean;
+  multiCurrency?: boolean;
   branchId: string;
   passengerId?: string;
   currencyId: string;
@@ -19,6 +20,7 @@ interface SelectCardStockCardsProps {
 export const SelectCardStockCards = ({
   open,
   reload = false,
+  multiCurrency = false,
   branchId,
   passengerId = '',
   currencyId,
@@ -33,7 +35,7 @@ export const SelectCardStockCards = ({
       reload ? 'reload-cards' : 'available-cards',
       branchId,
       passengerId,
-      currencyId,
+      multiCurrency ? 'any-currency' : currencyId,
       productId,
       issuerPartyProfileId,
     ],
@@ -42,13 +44,13 @@ export const SelectCardStockCards = ({
         ? cardStockApi.listReloadCards({
             branchId,
             passengerId,
-            currencyId,
+            currencyId: multiCurrency ? '' : currencyId,
             productId,
             issuerPartyProfileId,
           })
         : cardStockApi.listAvailableCards({
             branchId,
-            currencyId,
+            currencyId: multiCurrency ? '' : currencyId,
             productId,
             issuerPartyProfileId,
           }),
@@ -56,9 +58,9 @@ export const SelectCardStockCards = ({
       open &&
       Boolean(
         branchId &&
-          currencyId &&
           productId &&
           issuerPartyProfileId &&
+          (multiCurrency || currencyId) &&
           (!reload || passengerId)
       ),
   });

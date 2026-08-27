@@ -20,11 +20,19 @@ const mapBackendToFrontend = (
 
 export const currencyProfileApi = {
   getCurrencyProfiles: async (
-    options?: string | { search?: string; activeOnly?: boolean }
+    options?:
+      | string
+      | {
+          search?: string;
+          activeOnly?: boolean;
+          includeOnlyStocking?: boolean;
+          productAllowed?: string;
+        }
   ): Promise<ICurrencyProfile[]> => {
-    const queryObj = typeof options === 'string'
-      ? { search: options || undefined }
-      : options;
+    const queryObj =
+      typeof options === 'string'
+        ? { search: options || undefined }
+        : options;
     const res = await apiClient.get<BackendCurrencyProfile[]>(
       `/currencies${buildQueryString(queryObj)}`
     );

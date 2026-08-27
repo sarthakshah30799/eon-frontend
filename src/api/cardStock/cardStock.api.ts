@@ -152,16 +152,40 @@ export const cardStockApi = {
     return response.data ?? [];
   },
 
-  listAvailableCards: async (params: { branchId: string; currencyId: string; productId: string; issuerPartyProfileId: string }): Promise<CardStockSelectableCard[]> => {
-    const query = new URLSearchParams(params).toString();
-    const response = await apiClient.get<CardStockSelectableCard[]>(`/card-stock/receipts/cards/available?${query}`);
+  listAvailableCards: async (params: {
+    branchId: string;
+    currencyId?: string;
+    productId: string;
+    issuerPartyProfileId: string;
+  }): Promise<CardStockSelectableCard[]> => {
+    const query = new URLSearchParams();
+    query.set('branchId', params.branchId);
+    query.set('productId', params.productId);
+    query.set('issuerPartyProfileId', params.issuerPartyProfileId);
+    if (params.currencyId) query.set('currencyId', params.currencyId);
+    const response = await apiClient.get<CardStockSelectableCard[]>(
+      `/card-stock/receipts/cards/available?${query.toString()}`
+    );
     if (response.error) throw new Error(response.error);
     return response.data ?? [];
   },
 
-  listReloadCards: async (params: { branchId: string; passengerId: string; currencyId: string; productId: string; issuerPartyProfileId: string }): Promise<CardStockSelectableCard[]> => {
-    const query = new URLSearchParams(params).toString();
-    const response = await apiClient.get<CardStockSelectableCard[]>(`/card-stock/receipts/cards/reload?${query}`);
+  listReloadCards: async (params: {
+    branchId: string;
+    passengerId: string;
+    currencyId?: string;
+    productId: string;
+    issuerPartyProfileId: string;
+  }): Promise<CardStockSelectableCard[]> => {
+    const query = new URLSearchParams();
+    query.set('branchId', params.branchId);
+    query.set('passengerId', params.passengerId);
+    query.set('productId', params.productId);
+    query.set('issuerPartyProfileId', params.issuerPartyProfileId);
+    if (params.currencyId) query.set('currencyId', params.currencyId);
+    const response = await apiClient.get<CardStockSelectableCard[]>(
+      `/card-stock/receipts/cards/reload?${query.toString()}`
+    );
     if (response.error) throw new Error(response.error);
     return response.data ?? [];
   },

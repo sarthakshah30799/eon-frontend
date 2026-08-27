@@ -21,6 +21,11 @@ import {
 } from '../utils/reportSearchParams';
 import { FLM1_DEFAULT_PRODUCT_CODE } from '../constants/flm1DailyCnSummaryConstants';
 import {
+  DEFAULT_FLM_REPORT_LAYOUT,
+  parseFlmReportLayout,
+  type FlmReportLayout,
+} from '../constants/flmReportLayoutConstants';
+import {
   ReportDatePresetEnum,
   type IReportDateRange,
   type IReportSelectOption,
@@ -30,11 +35,13 @@ export interface Flm1DailyCnSummaryFiltersState {
   dateRange: IReportDateRange;
   branchIds: string[];
   productId: string;
+  layout: FlmReportLayout;
   branchOptions: IReportSelectOption[];
   productOptions: IReportSelectOption[];
   branchAllSelected: boolean;
   setDateRange: (value: IReportDateRange) => void;
   setProductId: (value: string) => void;
+  setLayout: (value: FlmReportLayout) => void;
   toggleBranch: (id: string, checked: boolean) => void;
   toggleAllBranches: (checked: boolean) => void;
   resetFilters: () => void;
@@ -43,6 +50,7 @@ export interface Flm1DailyCnSummaryFiltersState {
     dateRange: IReportDateRange;
     branchIds: string[];
     productId: string;
+    layout: FlmReportLayout;
   } | null;
   appliedDateRangeLabel: string;
   canView: boolean;
@@ -69,6 +77,10 @@ export const useFlm1DailyCnSummaryFilters = (): Flm1DailyCnSummaryFiltersState =
       ),
       branchIds: readSearchParamList(parsedSearchParams, 'branchIds'),
       productId: readSearchParamValue(parsedSearchParams, 'productId'),
+      layout: parseFlmReportLayout(
+        readSearchParamValue(parsedSearchParams, 'layout') ||
+          DEFAULT_FLM_REPORT_LAYOUT,
+      ),
     };
   }, [parsedSearchParams]);
 
@@ -77,6 +89,7 @@ export const useFlm1DailyCnSummaryFilters = (): Flm1DailyCnSummaryFiltersState =
   );
   const [branchIds, setBranchIds] = useState<string[]>(hydratedRouteState.branchIds);
   const [productId, setProductId] = useState(hydratedRouteState.productId);
+  const [layout, setLayoutState] = useState<FlmReportLayout>(hydratedRouteState.layout);
   const [appliedFilters, setAppliedFilters] = useState<
     Flm1DailyCnSummaryFiltersState['appliedFilters']
   >(
@@ -85,6 +98,7 @@ export const useFlm1DailyCnSummaryFilters = (): Flm1DailyCnSummaryFiltersState =
           dateRange: hydratedRouteState.dateRange,
           branchIds: hydratedRouteState.branchIds,
           productId: hydratedRouteState.productId,
+          layout: hydratedRouteState.layout,
         }
       : null,
   );
@@ -164,8 +178,45 @@ export const useFlm1DailyCnSummaryFilters = (): Flm1DailyCnSummaryFiltersState =
     setDateRange(buildReportDateRange(ReportDatePresetEnum.TODAY));
     setBranchIds([]);
     setProductId(defaultProductId);
+    setLayoutState(DEFAULT_FLM_REPORT_LAYOUT);
     setAppliedFilters(null);
     setSearchParams(new URLSearchParams(), { replace: true });
+  };
+
+  const writeSearchParams = (
+    nextDateRange: IReportDateRange,
+    nextBranchIds: string[],
+    nextProductId: string,
+    nextLayout: FlmReportLayout,
+  ) =>
+    buildSearchParams(undefined, next => {
+      setSearchParamValue(next, 'datePreset', nextDateRange.preset);
+      setSearchParamValue(next, 'startDate', nextDateRange.startDate);
+      setSearchParamValue(next, 'endDate', nextDateRange.startDate);
+      setSearchParamList(next, 'branchIds', nextBranchIds);
+      setSearchParamValue(next, 'productId', nextProductId);
+      setSearchParamValue(next, 'layout', nextLayout);
+    });
+
+  const setLayout = (nextLayout: FlmReportLayout) => {
+    setLayoutState(nextLayout);
+    if (!appliedFilters) {
+      return;
+    }
+    const nextAppliedFilters = {
+      ...appliedFilters,
+      layout: nextLayout,
+    };
+    setAppliedFilters(nextAppliedFilters);
+    setSearchParams(
+      writeSearchParams(
+        appliedFilters.dateRange,
+        appliedFilters.branchIds,
+        appliedFilters.productId,
+        nextLayout,
+      ),
+      { replace: true },
+    );
   };
 
   const handleView = () => {
@@ -188,18 +239,19 @@ export const useFlm1DailyCnSummaryFilters = (): Flm1DailyCnSummaryFiltersState =
       dateRange,
       branchIds: effectiveBranchIds,
       productId: selectedProductId,
+      layout,
     };
 
-    const nextSearchParams = buildSearchParams(undefined, next => {
-      setSearchParamValue(next, 'datePreset', dateRange.preset);
-      setSearchParamValue(next, 'startDate', dateRange.startDate);
-      setSearchParamValue(next, 'endDate', dateRange.startDate);
-      setSearchParamList(next, 'branchIds', effectiveBranchIds);
-      setSearchParamValue(next, 'productId', selectedProductId);
-    });
-
     setAppliedFilters(nextAppliedFilters);
-    setSearchParams(nextSearchParams, { replace: true });
+    setSearchParams(
+      writeSearchParams(
+        dateRange,
+        effectiveBranchIds,
+        selectedProductId,
+        layout,
+      ),
+      { replace: true },
+    );
   };
 
   const appliedDateRangeLabel = appliedFilters
@@ -210,11 +262,13 @@ export const useFlm1DailyCnSummaryFilters = (): Flm1DailyCnSummaryFiltersState =
     dateRange,
     branchIds: selectedBranchIds,
     productId: selectedProductId,
+    layout,
     branchOptions,
     productOptions,
     branchAllSelected,
     setDateRange,
     setProductId,
+    setLayout,
     toggleBranch,
     toggleAllBranches,
     resetFilters,

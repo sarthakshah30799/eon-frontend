@@ -32,7 +32,15 @@ export const StockRevaluationView = () => {
     () => isAllAccess ? branches : branches.filter(branch => branch.id === activeBranchId),
     [activeBranchId, branches, isAllAccess],
   );
-  const counterOptions = useMemo(() => counters.filter(counter => visibleBranches.some(branch => branch.id === counter.branchId)), [counters, visibleBranches]);
+  const counterOptions = useMemo(
+    () =>
+      counters.filter(counter =>
+        visibleBranches.some(branch =>
+          (branch.connectCounterIds ?? []).includes(counter.id),
+        ),
+      ),
+    [counters, visibleBranches],
+  );
   const effectiveFrequency = (stockSetting?.toUpperCase() as StockRevaluationFrequency | undefined) || 'MONTHLY';
   const selected = useStockRevaluation(selectedTargets, effectiveFrequency);
 
@@ -88,7 +96,10 @@ export const StockRevaluationView = () => {
             {visibleBranches.map(branch => (
               <div key={branch.id} className="space-y-1">
                 <p className="text-xs font-medium text-text-secondary">{branch.code} - {branch.name}</p>
-                {counterOptions.filter(counter => counter.branchId === branch.id).map(counter => {
+                {(branch.connectCounterIds ?? [])
+                  .map(counterId => counters.find(counter => counter.id === counterId))
+                  .filter((counter): counter is (typeof counters)[number] => Boolean(counter))
+                  .map(counter => {
                   const checked = selectedTargets.some(target => target.branchId === branch.id && target.counterId === counter.id);
                   return <label key={counter.id} className="flex items-center gap-2 text-xs text-text-primary"><input type="checkbox" checked={checked} disabled={!isAllAccess && (branch.id !== activeBranchId || counter.id !== activeCounterId)} onChange={event => toggleTarget({ branchId: branch.id, counterId: counter.id }, event.target.checked)} />{counter.counterNo} - {counter.name}</label>;
                 })}

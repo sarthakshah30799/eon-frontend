@@ -17,6 +17,7 @@ import {
   getPurchaseTransactionPricingSide,
   getPurchaseTransactionPricingSideLabel,
   isCardProductCode,
+  isMultiCurrencyCardProduct,
   PURCHASE_TRANSACTION_TEXT,
   resolveAgentCommissionRule,
   resolvePurchaseTransactionPreview,
@@ -163,6 +164,9 @@ export const PurchaseTransactionRowCell = ({
     [pricingData.products, productId]
   );
   const isCardProduct = isCardProductCode(selectedProduct?.productCode);
+  const isMultiCurrencyCard = isMultiCurrencyCardProduct(
+    selectedProduct?.productCode
+  );
   const isSaleCardProduct =
     isCardProduct && transactionType === TransactionTypeEnum.SALE;
 
@@ -318,7 +322,9 @@ export const PurchaseTransactionRowCell = ({
   });
   const hasManualRateChangeRef = useRef(false);
   const selectionKey = `${currencyId || ''}:${productId || ''}`;
-  const cardSelectionContextKey = `${branchId}:${passengerId}:${currencyId || ''}:${productId || ''}:${issuerPartyProfileId || ''}`;
+  const cardSelectionContextKey = isMultiCurrencyCard
+    ? `${branchId}:${passengerId}:${productId || ''}:${issuerPartyProfileId || ''}`
+    : `${branchId}:${passengerId}:${currencyId || ''}:${productId || ''}:${issuerPartyProfileId || ''}`;
   const previousCardSelectionContextRef = useRef(cardSelectionContextKey);
 
   useEffect(() => {
@@ -793,7 +799,7 @@ export const PurchaseTransactionRowCell = ({
       </div>
       {isCardProduct ? <div className="mt-2 flex items-center gap-4 px-1"><FormFieldCheckbox name={fieldPath('isReload')} label="Reload" disabled={disabled} onChange={() => { form.setValue(fieldPath('cardId'), '', { shouldDirty: true, shouldValidate: true }); form.setValue(fieldPath('cardSnapshot'), null, { shouldDirty: true }); setCardPickerOpen(false); }} /><span className="text-xs text-text-tertiary">{isSaleCardProduct ? PURCHASE_TRANSACTION_TEXT.cardSaleHint : PURCHASE_TRANSACTION_TEXT.cardPurchaseHint}</span></div> : null}
       <SelectPartyProfiles open={issuerPickerOpen} types={PartyProfileTypeEnum.CARD_ISSUER_PROFILE} allowedProfileIds={selectedProduct?.cardIssuerProfileIds} selectable multiple={false} title="Select CARD issuer" description="Select an approved active CARD issuer linked to this CARD product." onClose={() => setIssuerPickerOpen(false)} onContinue={(profiles: IPartyProfile[]) => { const profile = profiles[0]; if (!profile) return; form.setValue(fieldPath('issuerPartyProfileId'), profile.id, { shouldDirty: true, shouldValidate: true }); form.setValue(fieldPath('issuerPartyProfileSnapshot'), { id: profile.id, code: profile.code, name: profile.name }, { shouldDirty: true }); form.setValue(fieldPath('cardId'), '', { shouldDirty: true, shouldValidate: true }); form.setValue(fieldPath('cardSnapshot'), null, { shouldDirty: true }); setCardPickerOpen(false); setIssuerPickerOpen(false); }} />
-      <SelectCardStockCards open={cardPickerOpen} reload={Boolean(isReload)} branchId={branchId} passengerId={passengerId} currencyId={String(currencyId || '')} productId={String(productId || '')} issuerPartyProfileId={String(issuerPartyProfileId || '')} onClose={() => setCardPickerOpen(false)} onContinue={(card: CardStockSelectableCard) => { form.setValue(fieldPath('cardId'), card.id, { shouldDirty: true, shouldValidate: true }); form.setValue(fieldPath('cardSnapshot'), { id: card.id, series: card.series, kitNumber: card.kitNumber, maskedCardNumber: card.maskedCardNumber, denomination: card.denomination, amount: card.amount, expirationDate: card.expirationDate }, { shouldDirty: true }); if (!isSaleCardProduct) { form.setValue(fieldPath('quantity'), card.denomination, { shouldDirty: true, shouldValidate: true }); } setCardPickerOpen(false); }} />
+      <SelectCardStockCards open={cardPickerOpen} reload={Boolean(isReload)} multiCurrency={isMultiCurrencyCard} branchId={branchId} passengerId={passengerId} currencyId={String(currencyId || '')} productId={String(productId || '')} issuerPartyProfileId={String(issuerPartyProfileId || '')} onClose={() => setCardPickerOpen(false)} onContinue={(card: CardStockSelectableCard) => { form.setValue(fieldPath('cardId'), card.id, { shouldDirty: true, shouldValidate: true }); form.setValue(fieldPath('cardSnapshot'), { id: card.id, series: card.series, kitNumber: card.kitNumber, maskedCardNumber: card.maskedCardNumber, denomination: card.denomination, amount: card.amount, expirationDate: card.expirationDate }, { shouldDirty: true }); if (!isSaleCardProduct) { form.setValue(fieldPath('quantity'), card.denomination, { shouldDirty: true, shouldValidate: true }); } setCardPickerOpen(false); }} />
     </TransactionItemRowShell>
   );
 };

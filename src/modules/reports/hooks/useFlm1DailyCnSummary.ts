@@ -19,6 +19,7 @@ export const useFlm1DailyCnSummary = () => {
       date: filters.appliedFilters?.dateRange.startDate,
       branchIds: filters.appliedFilters?.branchIds ?? [],
       productId: filters.appliedFilters?.productId,
+      layout: filters.appliedFilters?.layout,
     }),
     [filters.appliedFilters],
   );

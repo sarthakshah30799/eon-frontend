@@ -10,6 +10,8 @@ export { default as CurrencyBalanceReportTable } from './CurrencyBalanceReportTa
 export { default as CardSettlementReportFiltersSection } from './CardSettlementReportFiltersSection';
 export { default as Flm1DailyCnSummaryFiltersSection } from './Flm1DailyCnSummaryFiltersSection';
 export { default as Flm1DailyCnSummaryTable } from './Flm1DailyCnSummaryTable';
+export { default as FlmRegisterReportTable } from './FlmRegisterReportTable';
+export { default as FlmReportLayoutToggle } from './FlmReportLayoutToggle';
 export { default as Flm3PurchaseFromPublicFiltersSection } from './Flm3PurchaseFromPublicFiltersSection';
 export { default as Flm3PurchaseFromPublicTable } from './Flm3PurchaseFromPublicTable';
 export { default as Flm4PurchaseFromFfmcFiltersSection } from './Flm4PurchaseFromFfmcFiltersSection';

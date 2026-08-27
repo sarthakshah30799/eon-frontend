@@ -329,6 +329,7 @@ export interface IFlm1ReportGroup {
 }
 
 export interface IFlm1DailyCnSummaryResponse {
+  layout?: 'branch_wise' | 'consolidate';
   date: string;
   productLabel: string;
   currenciesPerBlock: number;
@@ -339,6 +340,7 @@ export interface IFlm1DailyCnSummaryRequest {
   date?: string;
   branchIds?: string[];
   productId?: string;
+  layout?: 'branch_wise' | 'consolidate';
 }
 
 export type IFlm8ReportColumn = IFlm1ReportColumn;
@@ -401,19 +403,33 @@ export interface IFlm3ReportRow {
   [key: string]: string;
 }
 
-export interface IFlm3PurchaseFromPublicResponse {
-  view: 'normal' | 'extended';
+export interface IFlm3ReportTotals {
+  feAmount: string;
+  rupeeEquivalent: string;
+  netAmount: string;
+  commissionAmount: string;
+  byCash: string;
+  byCheque: string;
+  byOther: string;
+}
+
+export interface IFlm3ReportGroup {
+  branchId: string;
+  branchLabel: string;
+  empty: boolean;
+  emptyMessage?: string;
   columns: IFlm3ReportColumn[];
   rows: IFlm3ReportRow[];
-  totals: {
-    feAmount: string;
-    rupeeEquivalent: string;
-    netAmount: string;
-    commissionAmount: string;
-    byCash: string;
-    byCheque: string;
-    byOther: string;
-  };
+  totals: IFlm3ReportTotals;
+}
+
+export interface IFlm3PurchaseFromPublicResponse {
+  view: 'normal' | 'extended';
+  layout?: 'branch_wise' | 'consolidate';
+  columns: IFlm3ReportColumn[];
+  rows: IFlm3ReportRow[];
+  totals: IFlm3ReportTotals;
+  groups?: IFlm3ReportGroup[];
 }
 
 export interface IFlm3PurchaseFromPublicRequest {
@@ -422,6 +438,7 @@ export interface IFlm3PurchaseFromPublicRequest {
   branchIds?: string[];
   productId?: string;
   view?: 'normal' | 'extended';
+  layout?: 'branch_wise' | 'consolidate';
 }
 
 export type IFlm4PurchaseFromFfmcResponse = IFlm3PurchaseFromPublicResponse;

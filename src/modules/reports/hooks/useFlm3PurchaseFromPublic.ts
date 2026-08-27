@@ -21,8 +21,9 @@ export const useFlm3PurchaseFromPublic = () => {
       branchIds: filters.appliedFilters?.branchIds ?? [],
       productId: filters.appliedFilters?.productId,
       view: filters.appliedFilters?.view ?? filters.view,
+      layout: filters.appliedFilters?.layout ?? filters.layout,
     }),
-    [filters.appliedFilters, filters.view],
+    [filters.appliedFilters, filters.view, filters.layout],
   );
 
   const reportQueryKey = useMemo(

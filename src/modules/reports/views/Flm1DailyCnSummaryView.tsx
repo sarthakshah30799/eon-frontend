@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/AuthContext';
 import {
   Flm1DailyCnSummaryFiltersSection,
   Flm1DailyCnSummaryTable,
+  FlmReportLayoutToggle,
 } from '../components';
 import { FLM1_DAILY_CN_SUMMARY_TEXT } from '../constants/flm1DailyCnSummaryConstants';
 import { useFlm1DailyCnSummary } from '../hooks';
@@ -79,6 +80,11 @@ export const Flm1DailyCnSummaryView = () => {
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
+              <FlmReportLayoutToggle
+                layout={reportState.filters.layout}
+                onChange={reportState.filters.setLayout}
+              />
+
               <div className="flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 p-1">
                 <Button
                   type="button"

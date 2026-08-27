@@ -22,8 +22,9 @@ export const useFlm4PurchaseFromFfmc = () => {
       profileTypes: filters.appliedFilters?.profileTypes ?? [],
       productId: filters.appliedFilters?.productId,
       view: filters.appliedFilters?.view ?? filters.view,
+      layout: filters.appliedFilters?.layout ?? filters.layout,
     }),
-    [filters.appliedFilters, filters.view],
+    [filters.appliedFilters, filters.view, filters.layout],
   );
 
   const reportQueryKey = useMemo(

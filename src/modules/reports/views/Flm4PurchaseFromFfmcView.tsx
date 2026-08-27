@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/AuthContext';
 import {
   Flm4PurchaseFromFfmcFiltersSection,
   Flm4PurchaseFromFfmcTable,
+  FlmReportLayoutToggle,
 } from '../components';
 import {
   FLM4_PURCHASE_FROM_FFMC_TEXT,
@@ -94,6 +95,11 @@ export const Flm4PurchaseFromFfmcView = () => {
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
+              <FlmReportLayoutToggle
+                layout={reportState.filters.layout}
+                onChange={reportState.filters.setLayout}
+              />
+
               <div className="flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 p-1">
                 <Button
                   type="button"

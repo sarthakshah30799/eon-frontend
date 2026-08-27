@@ -4,12 +4,20 @@ import { useCallback } from 'react';
 import { normalizeCodeValue } from '@/utils';
 
 export const useListCurrencyProfiles = (
-  options?: string | { search?: string; activeOnly?: boolean },
+  options?:
+    | string
+    | {
+        search?: string;
+        activeOnly?: boolean;
+        includeOnlyStocking?: boolean;
+        productAllowed?: string;
+      },
   activeOnlyParam = true
 ) => {
-  const queryParams = typeof options === 'string'
-    ? { search: options || undefined, activeOnly: activeOnlyParam }
-    : { ...options, activeOnly: options?.activeOnly ?? activeOnlyParam };
+  const queryParams =
+    typeof options === 'string'
+      ? { search: options || undefined, activeOnly: activeOnlyParam }
+      : { ...options, activeOnly: options?.activeOnly ?? activeOnlyParam };
 
   return useQuery({
     queryKey: ['currency-profiles', queryParams],
@@ -27,8 +35,15 @@ export const useValidateCurrencyCode = (currentId?: string) => {
       }
 
       const currencies = await queryClient.fetchQuery({
-        queryKey: ['currency-profiles', { activeOnly: true }],
-        queryFn: () => currencyProfileApi.getCurrencyProfiles({ activeOnly: true }),
+        queryKey: [
+          'currency-profiles',
+          { activeOnly: true, includeOnlyStocking: true },
+        ],
+        queryFn: () =>
+          currencyProfileApi.getCurrencyProfiles({
+            activeOnly: true,
+            includeOnlyStocking: true,
+          }),
       });
       return currencies.some(
         currency =>
@@ -45,8 +60,15 @@ export const useLoadCurrencyOptions = () => {
   return useCallback(
     async (inputValue: string) => {
       const currencies = await queryClient.fetchQuery({
-        queryKey: ['currency-profiles', { search: inputValue || undefined, activeOnly: true }],
-        queryFn: () => currencyProfileApi.getCurrencyProfiles({ search: inputValue || undefined, activeOnly: true }),
+        queryKey: [
+          'currency-profiles',
+          { search: inputValue || undefined, activeOnly: true },
+        ],
+        queryFn: () =>
+          currencyProfileApi.getCurrencyProfiles({
+            search: inputValue || undefined,
+            activeOnly: true,
+          }),
       });
       return {
         options: currencies.map(currency => ({

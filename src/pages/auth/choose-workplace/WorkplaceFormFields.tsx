@@ -75,11 +75,7 @@ export const WorkplaceFormFields = ({
       const connectedCounterIds = new Set(selectedBranch?.connectCounterIds ?? []);
 
       return counterProfiles
-        .filter(
-          counter =>
-            connectedCounterIds.has(counter.id) ||
-            counter.branchId === effectiveSelectedBranchId
-        )
+        .filter(counter => connectedCounterIds.has(counter.id))
         .map(counter => ({
           value: counter.id,
           label: `${counter.counterNo} - ${counter.name}`,

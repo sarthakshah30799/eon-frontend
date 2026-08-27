@@ -8,8 +8,7 @@ export interface CounterRecord {
   isRetail: boolean;
   isBulk: boolean;
   isCombine: boolean;
-  branchId?: string;
-  branchCode?: string;
+  branchIds?: string[];
   createdAt: string;
   updatedAt: string;
 }

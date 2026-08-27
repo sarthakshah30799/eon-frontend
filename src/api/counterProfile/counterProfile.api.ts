@@ -13,8 +13,7 @@ interface BackendCounter {
   isRetail: boolean;
   isBulk: boolean;
   isCombine: boolean;
-  branchId?: string;
-  branchCode?: string;
+  branchIds?: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -28,8 +27,7 @@ const mapBackendToFrontend = (counter: BackendCounter): ICounterProfile => {
     isRetail: counter.isRetail,
     isBulk: counter.isBulk,
     isCombine: counter.isCombine,
-    branchId: counter.branchId || '',
-    branchCode: counter.branchCode || '',
+    branchIds: counter.branchIds || [],
     createdAt: counter.createdAt,
     updatedAt: counter.updatedAt,
   };

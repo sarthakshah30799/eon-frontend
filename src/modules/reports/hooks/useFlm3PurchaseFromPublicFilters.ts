@@ -25,6 +25,11 @@ import {
   type Flm3ReportView,
 } from '../constants/flm3PurchaseFromPublicConstants';
 import {
+  DEFAULT_FLM_REPORT_LAYOUT,
+  parseFlmReportLayout,
+  type FlmReportLayout,
+} from '../constants/flmReportLayoutConstants';
+import {
   ReportDatePresetEnum,
   type IReportDateRange,
   type IReportSelectOption,
@@ -35,12 +40,14 @@ export interface Flm3PurchaseFromPublicFiltersState {
   branchIds: string[];
   productId: string;
   view: Flm3ReportView;
+  layout: FlmReportLayout;
   branchOptions: IReportSelectOption[];
   productOptions: IReportSelectOption[];
   branchAllSelected: boolean;
   setDateRange: (value: IReportDateRange) => void;
   setProductId: (value: string) => void;
   setView: (value: Flm3ReportView) => void;
+  setLayout: (value: FlmReportLayout) => void;
   toggleBranch: (id: string, checked: boolean) => void;
   toggleAllBranches: (checked: boolean) => void;
   resetFilters: () => void;
@@ -50,6 +57,7 @@ export interface Flm3PurchaseFromPublicFiltersState {
     branchIds: string[];
     productId: string;
     view: Flm3ReportView;
+    layout: FlmReportLayout;
   } | null;
   appliedDateRangeLabel: string;
   canView: boolean;
@@ -86,6 +94,10 @@ export const useFlm3PurchaseFromPublicFilters =
         branchIds: readSearchParamList(parsedSearchParams, 'branchIds'),
         productId: readSearchParamValue(parsedSearchParams, 'productId'),
         view: parseView(readSearchParamValue(parsedSearchParams, 'view')),
+        layout: parseFlmReportLayout(
+          readSearchParamValue(parsedSearchParams, 'layout') ||
+            DEFAULT_FLM_REPORT_LAYOUT,
+        ),
       };
     }, [parsedSearchParams]);
 
@@ -97,6 +109,9 @@ export const useFlm3PurchaseFromPublicFilters =
     );
     const [productId, setProductId] = useState(hydratedRouteState.productId);
     const [view, setViewState] = useState<Flm3ReportView>(hydratedRouteState.view);
+    const [layout, setLayoutState] = useState<FlmReportLayout>(
+      hydratedRouteState.layout,
+    );
     const [appliedFilters, setAppliedFilters] = useState<
       Flm3PurchaseFromPublicFiltersState['appliedFilters']
     >(
@@ -106,6 +121,7 @@ export const useFlm3PurchaseFromPublicFilters =
             branchIds: hydratedRouteState.branchIds,
             productId: hydratedRouteState.productId,
             view: hydratedRouteState.view,
+            layout: hydratedRouteState.layout,
           }
         : null,
     );
@@ -191,6 +207,7 @@ export const useFlm3PurchaseFromPublicFilters =
       nextBranchIds: string[],
       nextProductId: string,
       nextView: Flm3ReportView,
+      nextLayout: FlmReportLayout,
     ) => {
       return buildSearchParams(undefined, next => {
         setSearchParamValue(next, 'datePreset', nextDateRange.preset);
@@ -199,6 +216,7 @@ export const useFlm3PurchaseFromPublicFilters =
         setSearchParamList(next, 'branchIds', nextBranchIds);
         setSearchParamValue(next, 'productId', nextProductId);
         setSearchParamValue(next, 'view', nextView);
+        setSearchParamValue(next, 'layout', nextLayout);
       });
     };
 
@@ -217,6 +235,28 @@ export const useFlm3PurchaseFromPublicFilters =
           appliedFilters.branchIds,
           appliedFilters.productId,
           nextView,
+          appliedFilters.layout,
+        ),
+        { replace: true },
+      );
+    };
+
+    const setLayout = (nextLayout: FlmReportLayout) => {
+      setLayoutState(nextLayout);
+      if (!appliedFilters) {
+        return;
+      }
+      setAppliedFilters({
+        ...appliedFilters,
+        layout: nextLayout,
+      });
+      setSearchParams(
+        writeSearchParams(
+          appliedFilters.dateRange,
+          appliedFilters.branchIds,
+          appliedFilters.productId,
+          appliedFilters.view,
+          nextLayout,
         ),
         { replace: true },
       );
@@ -227,6 +267,7 @@ export const useFlm3PurchaseFromPublicFilters =
       setBranchIds([]);
       setProductId(defaultProductId);
       setViewState(Flm3ReportViewEnum.NORMAL);
+      setLayoutState(DEFAULT_FLM_REPORT_LAYOUT);
       setAppliedFilters(null);
       setSearchParams(new URLSearchParams(), { replace: true });
     };
@@ -256,11 +297,18 @@ export const useFlm3PurchaseFromPublicFilters =
         branchIds: effectiveBranchIds,
         productId: selectedProductId,
         view,
+        layout,
       };
 
       setAppliedFilters(nextAppliedFilters);
       setSearchParams(
-        writeSearchParams(dateRange, effectiveBranchIds, selectedProductId, view),
+        writeSearchParams(
+          dateRange,
+          effectiveBranchIds,
+          selectedProductId,
+          view,
+          layout,
+        ),
         { replace: true },
       );
     };
@@ -274,12 +322,14 @@ export const useFlm3PurchaseFromPublicFilters =
       branchIds: selectedBranchIds,
       productId: selectedProductId,
       view,
+      layout,
       branchOptions,
       productOptions,
       branchAllSelected,
       setDateRange,
       setProductId,
       setView,
+      setLayout,
       toggleBranch,
       toggleAllBranches,
       resetFilters,

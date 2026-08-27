@@ -53,9 +53,19 @@ const EMPTY_MARGIN: ICurrencyRateMargin = {
 export const PURCHASE_RATE_DECIMALS = 7;
 export const PURCHASE_MONEY_DECIMALS = 2;
 export const CARD_PRODUCT_CODE = 'CC';
+export const MULTI_CURRENCY_CARD_PRODUCT_CODE = 'CM';
+export const CARD_PRODUCT_CODES = [
+  CARD_PRODUCT_CODE,
+  MULTI_CURRENCY_CARD_PRODUCT_CODE,
+] as const;
 
 export const isCardProductCode = (productCode?: string | null) =>
-  String(productCode ?? '').toUpperCase() === CARD_PRODUCT_CODE;
+  CARD_PRODUCT_CODES.includes(
+    String(productCode ?? '').toUpperCase() as (typeof CARD_PRODUCT_CODES)[number]
+  );
+
+export const isMultiCurrencyCardProduct = (productCode?: string | null) =>
+  String(productCode ?? '').toUpperCase() === MULTI_CURRENCY_CARD_PRODUCT_CODE;
 
 export const PURCHASE_TRANSACTION_TEXT = {
   quantityLabel: 'Quantity',

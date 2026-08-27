@@ -7,7 +7,7 @@ import { useListCurrencyProfiles } from '@/modules/currencyProfile/hooks';
 import { useListPartyProfiles } from '@/modules/partyProfiles/hooks';
 import { PartyProfileTypeEnum } from '@/modules/partyProfiles/types';
 import { useListProductProfiles } from '@/modules/productProfile/hooks';
-import { CARD_PRODUCT_CODE } from '@/modules/purchase/utils/purchaseUtils';
+import { isCardProductCode } from '@/modules/purchase/utils/purchaseUtils';
 import {
   buildReportDateRange,
   formatReportDateRangeLabel,
@@ -145,7 +145,7 @@ export const useCardSettlementReportFilters = () => {
         productProfiles
           .filter(
             product =>
-              String(product.productCode ?? '').toUpperCase() === CARD_PRODUCT_CODE,
+              isCardProductCode(product.productCode),
           )
           .map(product =>
             toOption(

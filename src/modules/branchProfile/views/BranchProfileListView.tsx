@@ -84,10 +84,10 @@ export const BranchProfileListView = () => {
   );
 
   const query = useMemo(() => {
-    const statusValue = statusParam ? statusParam.toLowerCase() : undefined; // "active" | "inactive"
+    // Default to status=active for every branches API call (page load + every filter) — was activeOnly=false before
+    const statusValue = statusParam ? statusParam.toLowerCase() : 'active';
     return {
       // Only keywords BE supports: city, state, status — e.g. GET /branches?city=Pune&state=Maharashtra&status=active
-      // If status is undefined, no status filter is applied and BE returns both active/inactive
       search: debouncedSearch.trim() || undefined,
       city: cityParam || undefined,
       state: stateParam || undefined,

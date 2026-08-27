@@ -5,4 +5,3 @@ const StateProfileCreatePage = () => {
 };
 
 export default StateProfileCreatePage;
-

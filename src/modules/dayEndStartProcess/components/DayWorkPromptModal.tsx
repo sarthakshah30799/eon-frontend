@@ -19,18 +19,23 @@ export const DayWorkPromptModal = () => {
       return false;
     }
 
-    return window.sessionStorage.getItem(DAY_WORK_PROMPT_DISMISSED_STORAGE_KEY) === '1';
+    return (
+      window.sessionStorage.getItem(DAY_WORK_PROMPT_DISMISSED_STORAGE_KEY) ===
+      '1'
+    );
   });
 
-  const canBypassPrompt = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
+  const canBypassPrompt = Boolean(
+    user?.isAdmin || user?.isHo || user?.isHoStaff
+  );
 
   const shouldPrompt = Boolean(
     !isLoading &&
-      !canBypassPrompt &&
-      !isDismissed &&
-      policyContext?.workflowState &&
-      PROMPT_WORKFLOW_STATES.has(policyContext.workflowState) &&
-      !location.pathname.includes('/day-end-start-process')
+    !canBypassPrompt &&
+    !isDismissed &&
+    policyContext?.workflowState &&
+    PROMPT_WORKFLOW_STATES.has(policyContext.workflowState) &&
+    !location.pathname.includes('/day-end-start-process')
   );
 
   if (!shouldPrompt) {
@@ -39,7 +44,8 @@ export const DayWorkPromptModal = () => {
 
   const workflowState = policyContext?.workflowState ?? '';
   const currentBusinessDate = policyContext?.currentBusinessDate || 'today';
-  const openBusinessDate = policyContext?.openBusinessDate || currentBusinessDate;
+  const openBusinessDate =
+    policyContext?.openBusinessDate || currentBusinessDate;
   const isPendingEod = workflowState === 'PENDING_EOD';
 
   const title = isPendingEod ? 'Pending Day End' : 'Day Start Required';
@@ -76,8 +82,9 @@ export const DayWorkPromptModal = () => {
     >
       <div className="space-y-4">
         <div className="rounded-lg border border-warning-200 bg-warning-50 px-4 py-3 text-sm text-warning-800">
-          You can ignore this for now and continue browsing. If you need to punch a
-          transaction, the business date will still follow your current workflow rules.
+          You can ignore this for now and continue browsing. If you need to
+          punch a transaction, the business date will still follow your current
+          workflow rules.
         </div>
 
         <div className="flex flex-wrap items-center justify-end gap-3">

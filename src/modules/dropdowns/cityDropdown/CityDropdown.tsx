@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AsyncSelect, type AsyncSelectOption } from '@/components/ui';
 import { useCityDropdown } from './hooks';
-import type { CityDropdownOption, CityDropdownProps } from './types/cityDropdown.types';
+import type {
+  CityDropdownOption,
+  CityDropdownProps,
+} from './types/cityDropdown.types';
 
 export const CityDropdown = ({
   value,

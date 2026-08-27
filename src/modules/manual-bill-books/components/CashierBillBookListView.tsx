@@ -35,11 +35,15 @@ function mvToBookNo(
   pageNo: number,
   book: NonNullable<IManualBookPageTracking['manualBook']>
 ): number {
-  return book.bookNoFrom + Math.floor((pageNo - book.mvNoFrom) / book.vouchersPerBook);
+  return (
+    book.bookNoFrom +
+    Math.floor((pageNo - book.mvNoFrom) / book.vouchersPerBook)
+  );
 }
 
-
-function groupPagesIntoRows(pages: IManualBookPageTracking[]): ICashierBookRow[] {
+function groupPagesIntoRows(
+  pages: IManualBookPageTracking[]
+): ICashierBookRow[] {
   const byBook = new Map<string, IManualBookPageTracking[]>();
   for (const page of pages) {
     const list = byBook.get(page.manualBookId) ?? [];
@@ -66,9 +70,10 @@ function groupPagesIntoRows(pages: IManualBookPageTracking[]): ICashierBookRow[]
         key: `${sorted[0].manualBookId}-${mvFrom}-${mvTo}`,
         dispatchNo: book.no,
         txnType: book.transactionType,
-        assignedBookRange: startBookNo === endBookNo
-          ? String(startBookNo)
-          : `${startBookNo} - ${endBookNo}`,
+        assignedBookRange:
+          startBookNo === endBookNo
+            ? String(startBookNo)
+            : `${startBookNo} - ${endBookNo}`,
         assignedBookNoFrom: startBookNo,
         assignedBookNoTo: endBookNo,
         mvRange: `${mvFrom} - ${mvTo}`,
@@ -84,7 +89,10 @@ function groupPagesIntoRows(pages: IManualBookPageTracking[]): ICashierBookRow[]
     // Split into contiguous MV segments
     let segStart = 0;
     for (let i = 1; i <= sorted.length; i++) {
-      if (i === sorted.length || sorted[i].pageNo !== sorted[i - 1].pageNo + 1) {
+      if (
+        i === sorted.length ||
+        sorted[i].pageNo !== sorted[i - 1].pageNo + 1
+      ) {
         emitRow(sorted.slice(segStart, i));
         segStart = i;
       }
@@ -107,11 +115,17 @@ interface CashierBillBookListViewProps {
   onRowClick?: (row: ICashierBookRow) => void;
 }
 
-export const CashierBillBookListView = ({ onRowClick }: CashierBillBookListViewProps = {}) => {
+export const CashierBillBookListView = ({
+  onRowClick,
+}: CashierBillBookListViewProps = {}) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  const { data: pages = [], isLoading, isFetching } = useQuery<IManualBookPageTracking[]>({
+  const {
+    data: pages = [],
+    isLoading,
+    isFetching,
+  } = useQuery<IManualBookPageTracking[]>({
     queryKey: ['cashier-manual-bill-books', user?.id],
     queryFn: () => manualBillBookApi.getSelectablePages({ userId: user?.id }),
     enabled: !!user?.id,
@@ -137,14 +151,17 @@ export const CashierBillBookListView = ({ onRowClick }: CashierBillBookListViewP
 
   const closeModal = () => setReassign(null);
 
-  const validateRange = (fromStr: string, toStr: string, row: ICashierBookRow): string => {
+  const validateRange = (
+    fromStr: string,
+    toStr: string,
+    row: ICashierBookRow
+  ): string => {
     const from = parseInt(fromStr, 10);
     const to = parseInt(toStr, 10);
     if (isNaN(from) || isNaN(to)) return 'Please enter valid page numbers.';
     if (from < row.mvFrom)
       return `Page No From cannot be less than ${row.mvFrom}.`;
-    if (to > row.mvTo)
-      return `Page No To cannot be greater than ${row.mvTo}.`;
+    if (to > row.mvTo) return `Page No To cannot be greater than ${row.mvTo}.`;
     if (from > to) return 'Page No From must be ≤ Page No To.';
     return '';
   };
@@ -154,7 +171,7 @@ export const CashierBillBookListView = ({ onRowClick }: CashierBillBookListViewP
     const { row, pageNoFromStr, pageNoToStr } = reassign;
     const err = validateRange(pageNoFromStr, pageNoToStr, row);
     if (err) {
-      setReassign(prev => prev ? { ...prev, error: err } : null);
+      setReassign(prev => (prev ? { ...prev, error: err } : null));
       return;
     }
 
@@ -167,19 +184,34 @@ export const CashierBillBookListView = ({ onRowClick }: CashierBillBookListViewP
       .map(p => p.pageNo);
 
     if (pageNos.length === 0) {
-      setReassign(prev => prev ? { ...prev, error: 'No pages found for the selected range.' } : null);
+      setReassign(prev =>
+        prev
+          ? { ...prev, error: 'No pages found for the selected range.' }
+          : null
+      );
       return;
     }
 
-    setReassign(prev => prev ? { ...prev, isSubmitting: true, error: '' } : null);
+    setReassign(prev =>
+      prev ? { ...prev, isSubmitting: true, error: '' } : null
+    );
     try {
       await manualBillBookApi.returnPages(pageNos);
       toast.success('Pages returned to Branch Manager successfully.');
       closeModal();
-      await queryClient.invalidateQueries({ queryKey: ['cashier-manual-bill-books'] });
+      await queryClient.invalidateQueries({
+        queryKey: ['cashier-manual-bill-books'],
+      });
     } catch (err: unknown) {
       setReassign(prev =>
-        prev ? { ...prev, isSubmitting: false, error: err instanceof Error ? err.message : 'Failed to return pages.' } : null
+        prev
+          ? {
+              ...prev,
+              isSubmitting: false,
+              error:
+                err instanceof Error ? err.message : 'Failed to return pages.',
+            }
+          : null
       );
     }
   };
@@ -260,14 +292,18 @@ export const CashierBillBookListView = ({ onRowClick }: CashierBillBookListViewP
             onRowClick={openModal}
           />
         </div>
-        <p className="mt-2 text-xs text-slate-400">Click a row to return pages to the Branch Manager.</p>
+        <p className="mt-2 text-xs text-slate-400">
+          Click a row to return pages to the Branch Manager.
+        </p>
       </section>
 
       {/* Reassign Modal */}
       {reassign && (
         <Modal
           open
-          onOpenChange={open => { if (!open) closeModal(); }}
+          onOpenChange={open => {
+            if (!open) closeModal();
+          }}
           title="Return Pages to Branch Manager"
           size="md"
         >
@@ -275,31 +311,52 @@ export const CashierBillBookListView = ({ onRowClick }: CashierBillBookListViewP
             {/* Book details summary */}
             <div className="grid grid-cols-2 gap-3 text-xs bg-slate-50 border border-slate-200 rounded-md p-4">
               <div>
-                <span className="block text-slate-400 font-semibold mb-0.5">Dispatch No</span>
-                <span className="font-semibold text-slate-800">{reassign.row.dispatchNo}</span>
+                <span className="block text-slate-400 font-semibold mb-0.5">
+                  Dispatch No
+                </span>
+                <span className="font-semibold text-slate-800">
+                  {reassign.row.dispatchNo}
+                </span>
               </div>
               <div>
-                <span className="block text-slate-400 font-semibold mb-0.5">Transaction Type</span>
+                <span className="block text-slate-400 font-semibold mb-0.5">
+                  Transaction Type
+                </span>
                 <span className="text-slate-700">{reassign.row.txnType}</span>
               </div>
               <div>
-                <span className="block text-slate-400 font-semibold mb-0.5">Assigned Book Range</span>
-                <span className="font-semibold text-primary-700">{reassign.row.assignedBookRange}</span>
+                <span className="block text-slate-400 font-semibold mb-0.5">
+                  Assigned Book Range
+                </span>
+                <span className="font-semibold text-primary-700">
+                  {reassign.row.assignedBookRange}
+                </span>
               </div>
               <div>
-                <span className="block text-slate-400 font-semibold mb-0.5">MV Range (Assigned)</span>
-                <span className="font-semibold text-emerald-700">{reassign.row.mvRange}</span>
+                <span className="block text-slate-400 font-semibold mb-0.5">
+                  MV Range (Assigned)
+                </span>
+                <span className="font-semibold text-emerald-700">
+                  {reassign.row.mvRange}
+                </span>
               </div>
               <div className="col-span-2">
-                <span className="block text-slate-400 font-semibold mb-0.5">Assigned By (Branch Manager)</span>
-                <span className="font-semibold text-slate-800">{reassign.row.assignedByName || '—'}</span>
+                <span className="block text-slate-400 font-semibold mb-0.5">
+                  Assigned By (Branch Manager)
+                </span>
+                <span className="font-semibold text-slate-800">
+                  {reassign.row.assignedByName || '—'}
+                </span>
               </div>
             </div>
 
             {/* Range inputs */}
             <div>
               <p className="text-xs font-semibold text-slate-600 mb-3">
-                Enter the MV range to return <span className="text-slate-400 font-normal">(within {reassign.row.mvRange})</span>
+                Enter the MV range to return{' '}
+                <span className="text-slate-400 font-normal">
+                  (within {reassign.row.mvRange})
+                </span>
               </p>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -312,7 +369,15 @@ export const CashierBillBookListView = ({ onRowClick }: CashierBillBookListViewP
                     max={reassign.row.mvTo}
                     value={reassign.pageNoFromStr}
                     onChange={e =>
-                      setReassign(prev => prev ? { ...prev, pageNoFromStr: e.target.value, error: '' } : null)
+                      setReassign(prev =>
+                        prev
+                          ? {
+                              ...prev,
+                              pageNoFromStr: e.target.value,
+                              error: '',
+                            }
+                          : null
+                      )
                     }
                     className="w-full rounded border border-slate-300 px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500"
                   />
@@ -327,7 +392,11 @@ export const CashierBillBookListView = ({ onRowClick }: CashierBillBookListViewP
                     max={reassign.row.mvTo}
                     value={reassign.pageNoToStr}
                     onChange={e =>
-                      setReassign(prev => prev ? { ...prev, pageNoToStr: e.target.value, error: '' } : null)
+                      setReassign(prev =>
+                        prev
+                          ? { ...prev, pageNoToStr: e.target.value, error: '' }
+                          : null
+                      )
                     }
                     className="w-full rounded border border-slate-300 px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500"
                   />
@@ -335,7 +404,9 @@ export const CashierBillBookListView = ({ onRowClick }: CashierBillBookListViewP
               </div>
 
               {reassign.error && (
-                <p className="mt-2 text-xs font-medium text-rose-600">{reassign.error}</p>
+                <p className="mt-2 text-xs font-medium text-rose-600">
+                  {reassign.error}
+                </p>
               )}
             </div>
 

@@ -162,7 +162,12 @@ const CardPicker = ({
     { accessorKey: 'currencyCode', header: 'Currency' },
     { accessorKey: 'denomination', header: 'Denomination' },
     { accessorKey: 'amount', header: 'Amount' },
-    { accessorKey: 'expirationDate', header: 'Expiration', cell: ({ row }) => formatDateTime(`${row.original.expirationDate}T00:00:00`, 'DD/MM/YYYY') },
+    {
+      accessorKey: 'expirationDate',
+      header: 'Expiration',
+      cell: ({ row }) =>
+        formatDateTime(`${row.original.expirationDate}T00:00:00`, 'DD/MM/YYYY'),
+    },
   ];
 
   return (

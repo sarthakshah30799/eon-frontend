@@ -29,9 +29,8 @@ interface UserRightsTableProps {
   ) => void;
 }
 
-const getAllRowsSelected = (
-  rows: UserRightsTableRow[]
-): boolean => rows.length > 0 && rows.every(row => row.selected);
+const getAllRowsSelected = (rows: UserRightsTableRow[]): boolean =>
+  rows.length > 0 && rows.every(row => row.selected);
 
 export const UserRightsTable = ({
   rows,
@@ -47,16 +46,15 @@ export const UserRightsTable = ({
     return {
       ...row,
       selected: rowState?.selected ?? false,
-      permissions:
-        rowState?.permissions ?? {
-          add: false,
-          modify: false,
-          delete: false,
-          view: false,
-          export: false,
-          authorized: false,
-          rejected: false,
-        },
+      permissions: rowState?.permissions ?? {
+        add: false,
+        modify: false,
+        delete: false,
+        view: false,
+        export: false,
+        authorized: false,
+        rejected: false,
+      },
     };
   });
 

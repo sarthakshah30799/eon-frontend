@@ -12,7 +12,10 @@ import { formatDateTime, formatDateInput, parseDateInput } from '@/utils';
 import type { MultiValue, SingleValue } from 'react-select';
 import toast from 'react-hot-toast';
 import { ManualBillBookAcknowledgementChecklistTable } from '@/modules/manual-bill-books/components';
-import { ManualBillBookStatusEnum, type ManualBillBookReviewStatus } from '@/modules/manual-bill-books/types';
+import {
+  ManualBillBookStatusEnum,
+  type ManualBillBookReviewStatus,
+} from '@/modules/manual-bill-books/types';
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import { useCategoryOptions } from '@/hooks';
 
@@ -27,10 +30,8 @@ export const ManualBillBookAcknowledgementPage = () => {
   // Filter states for Detail View
   const [searchStatus, setSearchStatus] = useState('PENDING');
   const [searchTxnType, setSearchTxnType] = useState('ALL');
-  const {
-    defaultOptions: txnTypes,
-    loadOptions: loadTxnTypeOptions,
-  } = useCategoryOptions(CategoryOptionCodeEnum.Transaction, true);
+  const { defaultOptions: txnTypes, loadOptions: loadTxnTypeOptions } =
+    useCategoryOptions(CategoryOptionCodeEnum.Transaction, true);
 
   const getPastDate = (daysAgo: number) => {
     const d = new Date();
@@ -66,7 +67,11 @@ export const ManualBillBookAcknowledgementPage = () => {
 
       try {
         setIsLoadingList(true);
-        const res = await manualBillBookApi.findAll({ branchId: activeBranchId, limit: 1000, offset: 0 });
+        const res = await manualBillBookApi.findAll({
+          branchId: activeBranchId,
+          limit: 1000,
+          offset: 0,
+        });
         const data = res.data ?? [];
         if (cancelled) return;
         setDispatches(data);
@@ -294,12 +299,13 @@ export const ManualBillBookAcknowledgementPage = () => {
                       </td>
                       <td className="px-6 py-4">
                         <span
-                          className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold border ${book.status === ManualBillBookStatusEnum.APPROVE
+                          className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold border ${
+                            book.status === ManualBillBookStatusEnum.APPROVE
                               ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                               : book.status === ManualBillBookStatusEnum.REJECT
                                 ? 'bg-rose-50 text-rose-700 border-rose-200'
                                 : 'bg-amber-50 text-amber-700 border-amber-200'
-                            }`}
+                          }`}
                         >
                           {book.status}
                         </span>
@@ -328,10 +334,19 @@ export const ManualBillBookAcknowledgementPage = () => {
                     searchStatus === ''
                       ? { value: '', label: 'All' }
                       : [
-                        { value: ManualBillBookStatusEnum.PENDING, label: 'PENDING' },
-                        { value: ManualBillBookStatusEnum.APPROVE, label: 'APPROVED' },
-                        { value: ManualBillBookStatusEnum.REJECT, label: 'REJECTED' },
-                      ].find(o => o.value === searchStatus)
+                          {
+                            value: ManualBillBookStatusEnum.PENDING,
+                            label: 'PENDING',
+                          },
+                          {
+                            value: ManualBillBookStatusEnum.APPROVE,
+                            label: 'APPROVED',
+                          },
+                          {
+                            value: ManualBillBookStatusEnum.REJECT,
+                            label: 'REJECTED',
+                          },
+                        ].find(o => o.value === searchStatus)
                   }
                   onChange={(
                     option:
@@ -349,14 +364,27 @@ export const ManualBillBookAcknowledgementPage = () => {
                   }}
                   loadOptions={async (inputValue: string) => {
                     const opts = [
-                      { value: ManualBillBookStatusEnum.PENDING, label: 'PENDING' },
-                      { value: ManualBillBookStatusEnum.APPROVE, label: 'APPROVED' },
-                      { value: ManualBillBookStatusEnum.REJECT, label: 'REJECTED' },
+                      {
+                        value: ManualBillBookStatusEnum.PENDING,
+                        label: 'PENDING',
+                      },
+                      {
+                        value: ManualBillBookStatusEnum.APPROVE,
+                        label: 'APPROVED',
+                      },
+                      {
+                        value: ManualBillBookStatusEnum.REJECT,
+                        label: 'REJECTED',
+                      },
                       { value: '', label: 'All' },
                     ];
                     return {
                       options: inputValue
-                        ? opts.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+                        ? opts.filter(opt =>
+                            opt.label
+                              .toLowerCase()
+                              .includes(inputValue.toLowerCase())
+                          )
                         : opts,
                       hasMore: false,
                     };
@@ -396,7 +424,10 @@ export const ManualBillBookAcknowledgementPage = () => {
                   loadOptions={async (inputValue: string) => {
                     const response = await loadTxnTypeOptions(inputValue);
                     return {
-                      options: [{ value: 'ALL', label: 'ALL' }, ...response.options],
+                      options: [
+                        { value: 'ALL', label: 'ALL' },
+                        ...response.options,
+                      ],
                       hasMore: false,
                     };
                   }}

@@ -60,7 +60,7 @@ const buildRows = (
   books: IChequeBook[],
   allocations: IChequeBookAllocation[],
   fromVal: number,
-  toVal: number,
+  toVal: number
 ): IAllocationRow[] => {
   const rows: IAllocationRow[] = [];
 
@@ -71,12 +71,20 @@ const buildRows = (
 
     const bookNoToCashierId = new Map<number, string>();
     for (const a of allocations) {
-      if (a.checkBookId === book.id && a.bookNo >= bookStart && a.bookNo <= bookEnd) {
+      if (
+        a.checkBookId === book.id &&
+        a.bookNo >= bookStart &&
+        a.bookNo <= bookEnd
+      ) {
         bookNoToCashierId.set(a.bookNo, a.cashierId);
       }
     }
 
-    const emitSegment = (from: number, to: number, cashierId: string | null) => {
+    const emitSegment = (
+      from: number,
+      to: number,
+      cashierId: string | null
+    ) => {
       const totalBooks = to - from + 1;
       const totalQty = totalBooks * book.vouchersPerBook;
       const offsetFrom = from - book.bookNoFrom;
@@ -89,7 +97,11 @@ const buildRows = (
         bookId: book.id,
         requestNo: book.no,
         requestDate: formatDateTime(book.dispatchDate),
-        bankAccountCodeLabel: book.bankAccountCodeLabel || book.bankAccountCodeName || book.bankAccountCode || '-',
+        bankAccountCodeLabel:
+          book.bankAccountCodeLabel ||
+          book.bankAccountCodeName ||
+          book.bankAccountCode ||
+          '-',
         bookNoFrom: from,
         bookNoTo: to,
         mvNoFrom: segMvNoFrom,
@@ -129,13 +141,18 @@ export const ChequeBookAllocationPage = () => {
   const txnTypeForm = useForm<{ bankAccountCode: string }>({
     defaultValues: { bankAccountCode: 'ALL' },
   });
-  const watchedBankAccountCode = useWatch({ control: txnTypeForm.control, name: 'bankAccountCode' });
+  const watchedBankAccountCode = useWatch({
+    control: txnTypeForm.control,
+    name: 'bankAccountCode',
+  });
 
   const [bookNoFromStr, setBookNoFromStr] = useState('');
   const [bookNoToStr, setBookNoToStr] = useState('');
 
   const [rows, setRows] = useState<IAllocationRow[]>([]);
-  const [existingAllocations, setExistingAllocations] = useState<IChequeBookAllocation[]>([]);
+  const [existingAllocations, setExistingAllocations] = useState<
+    IChequeBookAllocation[]
+  >([]);
   const [hasProcessed, setHasProcessed] = useState(false);
   const [allocatedWarning, setAllocatedWarning] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -148,62 +165,86 @@ export const ChequeBookAllocationPage = () => {
     error: cashiersError,
   } = useListChequeBookCashiers(activeBranchId ?? null);
 
-
-
   useEffect(() => {
-    if (cashiersError) toast.error(getErrorMessage(cashiersError, 'Failed to load cashier list.'));
+    if (cashiersError)
+      toast.error(
+        getErrorMessage(cashiersError, 'Failed to load cashier list.')
+      );
   }, [cashiersError]);
 
-  const handleProcess = useCallback(async (
-    overrideFrom?: number,
-    overrideTo?: number,
-    overrideBankAccountCode?: string,
-  ) => {
-    if (!activeBranchId) return;
-    const fromVal = overrideFrom ?? parseInt(bookNoFromStr, 10);
-    const toVal = overrideTo ?? parseInt(bookNoToStr, 10);
-    const bankAccountCode = overrideBankAccountCode ?? watchedBankAccountCode ?? 'ALL';
+  const handleProcess = useCallback(
+    async (
+      overrideFrom?: number,
+      overrideTo?: number,
+      overrideBankAccountCode?: string
+    ) => {
+      if (!activeBranchId) return;
+      const fromVal = overrideFrom ?? parseInt(bookNoFromStr, 10);
+      const toVal = overrideTo ?? parseInt(bookNoToStr, 10);
+      const bankAccountCode =
+        overrideBankAccountCode ?? watchedBankAccountCode ?? 'ALL';
 
-    if (isNaN(fromVal) || isNaN(toVal) || fromVal < 1 || toVal < fromVal) {
-      toast.error('Please enter a valid ChequeBook range (From <= To).');
-      return;
-    }
-
-    try {
-      setIsProcessing(true);
-      setAllocatedWarning('');
-
-      const data = await chequebookApi.findAll(activeBranchId, ChequeBookStatusEnum.APPROVE);
-      const matched = data.filter(book => {
-        if (bankAccountCode !== 'ALL' && book.bankAccountCode !== bankAccountCode) return false;
-        return book.bookNoFrom <= toVal && book.bookNoTo >= fromVal;
-      });
-
-      const matchedIds = matched.map(b => b.id);
-      const allocations = matchedIds.length > 0 ? await chequebookApi.getAllocations(matchedIds) : [];
-      setExistingAllocations(allocations);
-
-      const generatedRows = buildRows(matched, allocations, fromVal, toVal);
-      setRows(generatedRows);
-      setHasProcessed(true);
-
-      const allAllocatedNos = allocations
-        .filter(a => matchedIds.includes(a.checkBookId) && a.bookNo >= fromVal && a.bookNo <= toVal)
-        .map(a => a.bookNo);
-      setAllocatedWarning(allAllocatedNos.length > 0 ? formatRanges(allAllocatedNos) : '');
-
-      const available = generatedRows.filter(r => !r.isAlreadyAssigned);
-      if (available.length > 0) {
-        toast.success(`Found ${available.length} available book range(s).`);
-      } else if (generatedRows.length === 0) {
-        toast.error('No matching approved chequebooks found in the specified range.');
+      if (isNaN(fromVal) || isNaN(toVal) || fromVal < 1 || toVal < fromVal) {
+        toast.error('Please enter a valid ChequeBook range (From <= To).');
+        return;
       }
-    } catch (error: unknown) {
-      toast.error(getErrorMessage(error, 'Failed to search allocations.'));
-    } finally {
-      setIsProcessing(false);
-    }
-  }, [activeBranchId, bookNoFromStr, bookNoToStr, watchedBankAccountCode]);
+
+      try {
+        setIsProcessing(true);
+        setAllocatedWarning('');
+
+        const data = await chequebookApi.findAll(
+          activeBranchId,
+          ChequeBookStatusEnum.APPROVE
+        );
+        const matched = data.filter(book => {
+          if (
+            bankAccountCode !== 'ALL' &&
+            book.bankAccountCode !== bankAccountCode
+          )
+            return false;
+          return book.bookNoFrom <= toVal && book.bookNoTo >= fromVal;
+        });
+
+        const matchedIds = matched.map(b => b.id);
+        const allocations =
+          matchedIds.length > 0
+            ? await chequebookApi.getAllocations(matchedIds)
+            : [];
+        setExistingAllocations(allocations);
+
+        const generatedRows = buildRows(matched, allocations, fromVal, toVal);
+        setRows(generatedRows);
+        setHasProcessed(true);
+
+        const allAllocatedNos = allocations
+          .filter(
+            a =>
+              matchedIds.includes(a.checkBookId) &&
+              a.bookNo >= fromVal &&
+              a.bookNo <= toVal
+          )
+          .map(a => a.bookNo);
+        setAllocatedWarning(
+          allAllocatedNos.length > 0 ? formatRanges(allAllocatedNos) : ''
+        );
+
+        const available = generatedRows.filter(r => !r.isAlreadyAssigned);
+        if (available.length > 0) {
+          toast.success(`Found ${available.length} available book range(s).`);
+        } else if (generatedRows.length === 0) {
+          toast.error(
+            'No matching approved chequebooks found in the specified range.'
+          );
+        }
+      } catch (error: unknown) {
+        toast.error(getErrorMessage(error, 'Failed to search allocations.'));
+      } finally {
+        setIsProcessing(false);
+      }
+    },
+    [activeBranchId, bookNoFromStr, bookNoToStr, watchedBankAccountCode]
+  );
 
   // Auto-populate and process when navigated from list view with bookId
   const autoProcessedRef = useRef(false);
@@ -211,57 +252,102 @@ export const ChequeBookAllocationPage = () => {
     if (!bookId || !activeBranchId || autoProcessedRef.current) return;
     autoProcessedRef.current = true;
 
-    chequebookApi.findById(bookId).then(book => {
-      txnTypeForm.setValue('bankAccountCode', book.bankAccountCode ?? 'ALL');
-      setBookNoFromStr(String(book.bookNoFrom));
-      setBookNoToStr(String(book.bookNoTo));
-      handleProcess(book.bookNoFrom, book.bookNoTo, book.bankAccountCode ?? 'ALL');
-    }).catch(() => {
-      toast.error('Failed to load cheque book details.');
-    });
+    chequebookApi
+      .findById(bookId)
+      .then(book => {
+        txnTypeForm.setValue('bankAccountCode', book.bankAccountCode ?? 'ALL');
+        setBookNoFromStr(String(book.bookNoFrom));
+        setBookNoToStr(String(book.bookNoTo));
+        handleProcess(
+          book.bookNoFrom,
+          book.bookNoTo,
+          book.bankAccountCode ?? 'ALL'
+        );
+      })
+      .catch(() => {
+        toast.error('Failed to load cheque book details.');
+      });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookId, activeBranchId]);
 
   const handleRowCheckbox = (rowId: string) =>
-    setRows(prev => prev.map(r => r.id === rowId ? { ...r, isCheck: !r.isCheck } : r));
+    setRows(prev =>
+      prev.map(r => (r.id === rowId ? { ...r, isCheck: !r.isCheck } : r))
+    );
 
   const handleHeaderCheckbox = (checked: boolean) =>
-    setRows(prev => prev.map(r => r.isAlreadyAssigned ? r : { ...r, isCheck: checked }));
+    setRows(prev =>
+      prev.map(r => (r.isAlreadyAssigned ? r : { ...r, isCheck: checked }))
+    );
 
   const handleRowCashier = (rowId: string, cashierId: string) =>
-    setRows(prev => prev.map(r => r.id === rowId ? { ...r, allocatedCashierId: cashierId } : r));
+    setRows(prev =>
+      prev.map(r =>
+        r.id === rowId ? { ...r, allocatedCashierId: cashierId } : r
+      )
+    );
 
   const handleRowRemarks = (rowId: string, val: string) =>
-    setRows(prev => prev.map(r => r.id === rowId ? { ...r, remarks: val } : r));
+    setRows(prev =>
+      prev.map(r => (r.id === rowId ? { ...r, remarks: val } : r))
+    );
 
   const handleApplyBulkCashier = () => {
-    if (!bulkCashierId) { toast.error('Please select a user first.'); return; }
+    if (!bulkCashierId) {
+      toast.error('Please select a user first.');
+      return;
+    }
     const checkedCount = rows.filter(r => r.isCheck).length;
-    if (checkedCount === 0) { toast.error('No rows selected to allocate.'); return; }
-    setRows(prev => prev.map(r => r.isCheck ? { ...r, allocatedCashierId: bulkCashierId } : r));
+    if (checkedCount === 0) {
+      toast.error('No rows selected to allocate.');
+      return;
+    }
+    setRows(prev =>
+      prev.map(r =>
+        r.isCheck ? { ...r, allocatedCashierId: bulkCashierId } : r
+      )
+    );
     toast.success(`Set user for ${checkedCount} selected rows.`);
   };
 
   const handleSaveAllocation = async () => {
     const checkedRows = rows.filter(r => r.isCheck);
-    if (checkedRows.length === 0) { toast.error('Please select at least one row to allocate.'); return; }
+    if (checkedRows.length === 0) {
+      toast.error('Please select at least one row to allocate.');
+      return;
+    }
     if (checkedRows.some(r => !r.allocatedCashierId)) {
-      toast.error('Please select a user for all checked allocations.'); return;
+      toast.error('Please select a user for all checked allocations.');
+      return;
     }
 
     try {
       setIsSaving(true);
-      const payload: Array<{ checkBookId: string; bookNo: number; userId: string; remarks?: string }> = [];
+      const payload: Array<{
+        checkBookId: string;
+        bookNo: number;
+        userId: string;
+        remarks?: string;
+      }> = [];
 
       for (const r of checkedRows) {
         for (let i = r.bookNoFrom; i <= r.bookNoTo; i++) {
-          const alreadyAssigned = existingAllocations.some(a => a.checkBookId === r.bookId && a.bookNo === i);
+          const alreadyAssigned = existingAllocations.some(
+            a => a.checkBookId === r.bookId && a.bookNo === i
+          );
           if (alreadyAssigned) continue;
-          payload.push({ checkBookId: r.bookId, bookNo: i, userId: r.allocatedCashierId, remarks: r.remarks || undefined });
+          payload.push({
+            checkBookId: r.bookId,
+            bookNo: i,
+            userId: r.allocatedCashierId,
+            remarks: r.remarks || undefined,
+          });
         }
       }
 
-      await chequebookApi.saveAllocations(payload.map(p => ({ ...p, userId: p.userId })));
+      await chequebookApi.saveAllocations(
+        payload.map(p => ({ ...p, userId: p.userId }))
+      );
       toast.success('Chequebook page allocations saved successfully.');
       await handleProcess();
     } catch (error: unknown) {
@@ -274,20 +360,27 @@ export const ChequeBookAllocationPage = () => {
   if (!activeBranchId) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
-        <p className="text-slate-500 font-medium">Please select your active branch workplace to proceed.</p>
+        <p className="text-slate-500 font-medium">
+          Please select your active branch workplace to proceed.
+        </p>
       </div>
     );
   }
 
   const availableRows = rows.filter(r => !r.isAlreadyAssigned);
-  const allChecked = availableRows.length > 0 && availableRows.every(r => r.isCheck);
+  const allChecked =
+    availableRows.length > 0 && availableRows.every(r => r.isCheck);
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-1.5 border-b border-slate-200 pb-5">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">ChequeBook Allocation</h1>
-        <p className="text-sm text-slate-500">Allocate individual chequebook pages to users at your branch.</p>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+          ChequeBook Allocation
+        </h1>
+        <p className="text-sm text-slate-500">
+          Allocate individual chequebook pages to users at your branch.
+        </p>
       </div>
 
       {/* Query Filter box */}
@@ -304,19 +397,33 @@ export const ChequeBookAllocationPage = () => {
                 placeholder="ALL"
                 loadOptions={async (inputValue: string, page = 1) => {
                   try {
-                    const response = await accountProfileApi.getAccountProfiles({
-                      page, limit: ACCOUNT_PROFILE_OPTION_PAGE_SIZE, search: inputValue, active: true,
-                    });
-                    const bankAccounts = (response.data || []).filter(acc =>
-                      (acc.bankNature && acc.bankNature.value !== 'NONE') ||
-                      (acc.accountType && acc.accountType.value === 'BANK LEDGER') ||
-                      (acc.financialCode && acc.financialCode === 'BANKBL')
+                    const response = await accountProfileApi.getAccountProfiles(
+                      {
+                        page,
+                        limit: ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
+                        search: inputValue,
+                        active: true,
+                      }
+                    );
+                    const bankAccounts = (response.data || []).filter(
+                      acc =>
+                        (acc.bankNature && acc.bankNature.value !== 'NONE') ||
+                        (acc.accountType &&
+                          acc.accountType.value === 'BANK LEDGER') ||
+                        (acc.financialCode && acc.financialCode === 'BANKBL')
                     );
                     return {
-                      options: bankAccounts.map(acc => ({ value: acc.id, label: `${acc.accountCode} - ${acc.accountName}` })),
-                      hasMore: (response.data || []).length === ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
+                      options: bankAccounts.map(acc => ({
+                        value: acc.id,
+                        label: `${acc.accountCode} - ${acc.accountName}`,
+                      })),
+                      hasMore:
+                        (response.data || []).length ===
+                        ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
                     };
-                  } catch { return { options: [], hasMore: false }; }
+                  } catch {
+                    return { options: [], hasMore: false };
+                  }
                 }}
                 pagination
                 pageSize={ACCOUNT_PROFILE_OPTION_PAGE_SIZE}
@@ -326,16 +433,26 @@ export const ChequeBookAllocationPage = () => {
 
           <div>
             <Input
-              type="number" label="Check Book No. From" min="1"
-              value={bookNoFromStr} onChange={e => setBookNoFromStr(e.target.value)}
-              placeholder="e.g. 11" valueTransform="none" classes={{ container: 'max-w-none' }}
+              type="number"
+              label="Check Book No. From"
+              min="1"
+              value={bookNoFromStr}
+              onChange={e => setBookNoFromStr(e.target.value)}
+              placeholder="e.g. 11"
+              valueTransform="none"
+              classes={{ container: 'max-w-none' }}
             />
           </div>
           <div>
             <Input
-              type="number" label="Check Book No. To" min="1"
-              value={bookNoToStr} onChange={e => setBookNoToStr(e.target.value)}
-              placeholder="e.g. 20" valueTransform="none" classes={{ container: 'max-w-none' }}
+              type="number"
+              label="Check Book No. To"
+              min="1"
+              value={bookNoToStr}
+              onChange={e => setBookNoToStr(e.target.value)}
+              placeholder="e.g. 20"
+              valueTransform="none"
+              classes={{ container: 'max-w-none' }}
             />
           </div>
         </div>
@@ -353,10 +470,12 @@ export const ChequeBookAllocationPage = () => {
           <ExclamationTriangleIcon className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-500" />
           <div>
             <p className="text-sm font-semibold text-amber-800">
-              Book range <span className="font-mono">{allocatedWarning}</span> already assigned.
+              Book range <span className="font-mono">{allocatedWarning}</span>{' '}
+              already assigned.
             </p>
             <p className="text-xs text-amber-700 mt-0.5">
-              The table below shows all ranges — already assigned rows are read-only.
+              The table below shows all ranges — already assigned rows are
+              read-only.
             </p>
           </div>
         </div>
@@ -366,11 +485,15 @@ export const ChequeBookAllocationPage = () => {
       {hasProcessed && rows.length > 0 && (
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="px-5 py-4 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50">
-            <h3 className="font-semibold text-slate-800 text-sm">Dispatches Checklist</h3>
+            <h3 className="font-semibold text-slate-800 text-sm">
+              Dispatches Checklist
+            </h3>
 
             {availableRows.length > 0 && (
               <div className="flex items-center gap-3">
-                <span className="text-xs font-semibold text-slate-600">Allocate User:</span>
+                <span className="text-xs font-semibold text-slate-600">
+                  Allocate User:
+                </span>
                 {isLoadingOptions ? (
                   <span className="text-xs text-slate-500">Loading...</span>
                 ) : (
@@ -380,7 +503,11 @@ export const ChequeBookAllocationPage = () => {
                     className="rounded border border-slate-300 px-2 py-1 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500"
                   >
                     <option value="">Select User</option>
-                    {cashiers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    {cashiers.map(c => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
                   </select>
                 )}
                 <button
@@ -399,7 +526,8 @@ export const ChequeBookAllocationPage = () => {
                 <tr className="border-b border-slate-200 bg-slate-50/50 text-slate-600 font-medium select-none text-xs uppercase tracking-wide">
                   <th className="px-4 py-3 text-center">
                     <input
-                      type="checkbox" checked={allChecked}
+                      type="checkbox"
+                      checked={allChecked}
                       onChange={e => handleHeaderCheckbox(e.target.checked)}
                       className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 cursor-pointer"
                     />
@@ -425,7 +553,8 @@ export const ChequeBookAllocationPage = () => {
                     <td className="px-4 py-4 text-center">
                       {!row.isAlreadyAssigned && (
                         <input
-                          type="checkbox" checked={row.isCheck}
+                          type="checkbox"
+                          checked={row.isCheck}
                           onChange={() => handleRowCheckbox(row.id)}
                           className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 cursor-pointer"
                         />
@@ -434,39 +563,68 @@ export const ChequeBookAllocationPage = () => {
                     <td className="px-4 py-4">
                       {row.isAlreadyAssigned ? (
                         <span className="text-xs font-medium text-slate-600">
-                          {cashiers.find(c => c.id === row.assignedToCashierId)?.name || row.assignedToCashierId || '—'}
+                          {cashiers.find(c => c.id === row.assignedToCashierId)
+                            ?.name ||
+                            row.assignedToCashierId ||
+                            '—'}
                         </span>
                       ) : (
                         <select
                           value={row.allocatedCashierId}
-                          onChange={e => handleRowCashier(row.id, e.target.value)}
+                          onChange={e =>
+                            handleRowCashier(row.id, e.target.value)
+                          }
                           className="rounded border border-slate-300 px-2 py-1 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 w-32"
                         >
                           <option value="">Select User</option>
-                          {cashiers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                          {cashiers.map(c => (
+                            <option key={c.id} value={c.id}>
+                              {c.name}
+                            </option>
+                          ))}
                         </select>
                       )}
                     </td>
                     <td className="px-4 py-4">
                       {!row.isAlreadyAssigned && (
                         <textarea
-                          rows={1} value={row.remarks}
-                          onChange={e => handleRowRemarks(row.id, e.target.value)}
+                          rows={1}
+                          value={row.remarks}
+                          onChange={e =>
+                            handleRowRemarks(row.id, e.target.value)
+                          }
                           placeholder="Note..."
                           className="w-full min-w-[120px] rounded border border-slate-300 px-2 py-1 text-xs focus:ring-1 focus:ring-sky-500 focus:border-sky-500 resize-none"
                         />
                       )}
                     </td>
-                    <td className="px-4 py-4 font-mono font-semibold text-slate-900">{row.requestNo}</td>
-                    <td className="px-4 py-4 text-xs whitespace-nowrap">{row.requestDate}</td>
-                    <td className="px-4 py-4 text-xs">{row.bankAccountCodeLabel}</td>
-                    <td className="px-4 py-4 font-semibold text-slate-800">
-                      {row.bookNoFrom === row.bookNoTo ? row.bookNoFrom : `${row.bookNoFrom} - ${row.bookNoTo}`}
+                    <td className="px-4 py-4 font-mono font-semibold text-slate-900">
+                      {row.requestNo}
                     </td>
-                    <td className="px-4 py-4 font-mono text-xs">{row.mvNoFrom}</td>
-                    <td className="px-4 py-4 font-mono text-xs">{row.mvNoTo}</td>
+                    <td className="px-4 py-4 text-xs whitespace-nowrap">
+                      {row.requestDate}
+                    </td>
+                    <td className="px-4 py-4 text-xs">
+                      {row.bankAccountCodeLabel}
+                    </td>
+                    <td className="px-4 py-4 font-semibold text-slate-800">
+                      {row.bookNoFrom === row.bookNoTo
+                        ? row.bookNoFrom
+                        : `${row.bookNoFrom} - ${row.bookNoTo}`}
+                    </td>
+                    <td className="px-4 py-4 font-mono text-xs">
+                      {row.mvNoFrom}
+                    </td>
+                    <td className="px-4 py-4 font-mono text-xs">
+                      {row.mvNoTo}
+                    </td>
                     <td className="px-4 py-4">{row.qty}</td>
-                    <td className="px-4 py-4 text-xs max-w-[120px] truncate" title={row.hoRemarks}>{row.hoRemarks}</td>
+                    <td
+                      className="px-4 py-4 text-xs max-w-[120px] truncate"
+                      title={row.hoRemarks}
+                    >
+                      {row.hoRemarks}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -476,7 +634,8 @@ export const ChequeBookAllocationPage = () => {
           {availableRows.length > 0 && (
             <div className="px-5 py-4 border-t border-slate-200 bg-slate-50 flex justify-end">
               <button
-                onClick={handleSaveAllocation} disabled={isSaving}
+                onClick={handleSaveAllocation}
+                disabled={isSaving}
                 className="cursor-pointer inline-flex items-center justify-center rounded-md bg-sky-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-500 transition disabled:opacity-50"
               >
                 {isSaving ? 'Saving...' : 'Save'}
@@ -488,7 +647,9 @@ export const ChequeBookAllocationPage = () => {
 
       {hasProcessed && rows.length === 0 && (
         <div className="py-12 text-center">
-          <p className="text-sm text-slate-500">No books found in the specified range to allocate.</p>
+          <p className="text-sm text-slate-500">
+            No books found in the specified range to allocate.
+          </p>
         </div>
       )}
     </div>

@@ -109,9 +109,7 @@ const mapBackendToFrontend = (user: BackendUser): IUserProfile => {
   };
 };
 
-const mapFrontendToBackend = (
-  form: ICreateUserProfile
-): BackendUserPayload => {
+const mapFrontendToBackend = (form: ICreateUserProfile): BackendUserPayload => {
   const payload: BackendUserPayload = {
     code: form.code,
     name: form.name,
@@ -148,8 +146,7 @@ export const userProfileApi = {
     roleFilter?: string;
   }): Promise<IUserProfile[]> => {
     const endpoint = `/users${buildQueryString({
-      activeOnly:
-        options?.activeOnly === false ? 'false' : undefined,
+      activeOnly: options?.activeOnly === false ? 'false' : undefined,
       search: options?.search?.trim() || undefined,
       branchId: options?.branchId?.trim() || undefined,
       roleFilter: options?.roleFilter?.trim() || undefined,

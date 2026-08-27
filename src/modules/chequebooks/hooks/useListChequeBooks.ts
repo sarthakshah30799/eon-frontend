@@ -14,7 +14,7 @@ export const useListChequeBooks = (params?: IChequeBookListQuery) => {
       const data = await chequebookApi.findAll(
         params?.branchId,
         params?.status,
-        params?.bankAccountCode,
+        params?.bankAccountCode
       );
       return data;
     },

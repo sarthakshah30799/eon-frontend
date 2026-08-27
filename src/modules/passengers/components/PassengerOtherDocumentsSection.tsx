@@ -1,4 +1,9 @@
-import { useFieldArray, useFormContext, useFormState, useWatch } from 'react-hook-form';
+import {
+  useFieldArray,
+  useFormContext,
+  useFormState,
+  useWatch,
+} from 'react-hook-form';
 import { Button } from '@/components/ui';
 import {
   FormFieldDatePicker,
@@ -32,7 +37,8 @@ export const PassengerOtherDocumentsSection = ({
     control: form.control,
     name: 'otherDocuments',
   });
-  const { data: documentTypes = [], loadOptions } = usePassengerOtherDocumentTypes();
+  const { data: documentTypes = [], loadOptions } =
+    usePassengerOtherDocumentTypes();
 
   return (
     <div className="space-y-4">
@@ -41,9 +47,7 @@ export const PassengerOtherDocumentsSection = ({
           <h3 className="text-base font-semibold text-text-primary">
             Other Documents
           </h3>
-          <p className="text-sm text-text-secondary">
-            {description}
-          </p>
+          <p className="text-sm text-text-secondary">{description}</p>
         </div>
 
         <Button
@@ -69,7 +73,8 @@ export const PassengerOtherDocumentsSection = ({
 
       <div className="space-y-4">
         {fields.map((field, index) => {
-          const documentType = watchedOtherDocuments?.[index]?.documentType ?? '';
+          const documentType =
+            watchedOtherDocuments?.[index]?.documentType ?? '';
 
           return (
             <div
@@ -145,7 +150,9 @@ export const PassengerOtherDocumentsSection = ({
                   placeholder="Enter ID number"
                   onBlur={onDocumentChange}
                 />
-                {shouldShowPassengerOtherDocumentValidityFields(documentType) ? (
+                {shouldShowPassengerOtherDocumentValidityFields(
+                  documentType
+                ) ? (
                   <FormFieldDatePicker
                     name={`otherDocuments.${index}.validTill`}
                     label="Valid Till"
@@ -168,8 +175,12 @@ export const PassengerOtherDocumentsSection = ({
 
       {errors.otherDocuments ? (
         <div className="rounded-sm border border-error-200 bg-error-50 px-4 py-3 text-sm text-error-700">
-          {(errors.otherDocuments as { root?: { message?: string }; message?: string })
-            .root?.message ||
+          {(
+            errors.otherDocuments as {
+              root?: { message?: string };
+              message?: string;
+            }
+          ).root?.message ||
             (errors.otherDocuments as { message?: string }).message ||
             PASSENGER_IDENTITY_TEXT.otherDocumentsRequired}
         </div>

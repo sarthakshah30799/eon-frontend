@@ -61,7 +61,9 @@ export const CARD_PRODUCT_CODES = [
 
 export const isCardProductCode = (productCode?: string | null) =>
   CARD_PRODUCT_CODES.includes(
-    String(productCode ?? '').toUpperCase() as (typeof CARD_PRODUCT_CODES)[number]
+    String(
+      productCode ?? ''
+    ).toUpperCase() as (typeof CARD_PRODUCT_CODES)[number]
   );
 
 export const isMultiCurrencyCardProduct = (productCode?: string | null) =>
@@ -74,8 +76,10 @@ export const PURCHASE_TRANSACTION_TEXT = {
   quantityRequired: 'Quantity is required',
   feAmountRequired: 'FE Amount is required',
   feAmountPositive: 'FE Amount must be greater than 0',
-  cardSaleHint: 'Select an issuer and eligible card before entering the FE amount.',
-  cardPurchaseHint: 'Select an issuer and eligible card before entering the denomination.',
+  cardSaleHint:
+    'Select an issuer and eligible card before entering the FE amount.',
+  cardPurchaseHint:
+    'Select an issuer and eligible card before entering the denomination.',
 } as const;
 
 export const formatPurchaseDecimal = (
@@ -93,9 +97,12 @@ export const formatPurchaseDecimal = (
 };
 
 export const createStaticLoadOptions =
-  (options: { value: string; label: string }[]) => async (inputValue: string) => ({
+  (options: { value: string; label: string }[]) =>
+  async (inputValue: string) => ({
     options: inputValue
-      ? options.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+      ? options.filter(opt =>
+          opt.label.toLowerCase().includes(inputValue.toLowerCase())
+        )
       : options,
     hasMore: false,
   });
@@ -125,7 +132,7 @@ export const createEmptyPurchaseTransactionRow =
   });
 
 export const toFormBranchSnapshot = (
-  branch: IBranchProfile | ITransactionReferenceSnapshot | null | undefined,
+  branch: IBranchProfile | ITransactionReferenceSnapshot | null | undefined
 ): ITransactionReferenceSnapshot | null => {
   if (!branch?.id) {
     return null;
@@ -157,9 +164,11 @@ export const createEmptyPurchaseFormValues = (
   transactionDate,
   transactionType,
   tradeMode,
-  transactionPartyProfileType: isCorporateIndividualPurchasePage(purchasePageType)
-      ? TransactionPartyProfileTypeEnum.CORPORATE
-      : '',
+  transactionPartyProfileType: isCorporateIndividualPurchasePage(
+    purchasePageType
+  )
+    ? TransactionPartyProfileTypeEnum.CORPORATE
+    : '',
   partyProfileId: '',
   partyProfileCode: '',
   partyProfileName: '',
@@ -403,7 +412,9 @@ export const mapPurchaseFormValuesToSubmitPayload = (
               noOfDays: values.travelNoOfDays
                 ? Number(values.travelNoOfDays)
                 : null,
-              noOfPax: values.travelNoOfPax ? Number(values.travelNoOfPax) : null,
+              noOfPax: values.travelNoOfPax
+                ? Number(values.travelNoOfPax)
+                : null,
               departureDate: values.travelDepartureDate || null,
               travelPnr: values.travelPnr || null,
               visa: values.travelVisa,
@@ -458,7 +469,7 @@ export const mapPurchaseFormValuesToSubmitPayload = (
         referenceNumber: row.chequeNumber,
         referenceDate:
           row.paymentMethod === TransactionPaymentMethodEnum.CHEQUE
-            ? (row.chequeDate || null)
+            ? row.chequeDate || null
             : null,
         branchName: row.branchName,
         drawnOn: row.drawnOn || null,
@@ -515,278 +526,269 @@ export const mapPurchaseTransactionToFormValues = (
     | undefined;
 
   return {
-  purchasePageType,
-  branchId: transaction.branchId ?? '',
-  branchSnapshot: toFormBranchSnapshot(transaction.branchSnapshot),
-  counterId: transaction.counterId ?? '',
-  transactionDate: transaction.transactionDate
-    ? String(transaction.transactionDate).slice(0, 10)
-    : '',
-  transactionType: transaction.transactionType,
-  tradeMode: transaction.tradeMode,
-  partyProfileId: transaction.partyProfileId ?? '',
-  partyProfileCode: transaction.partyProfileSnapshot?.code ?? '',
-  partyProfileName: transaction.partyProfileSnapshot?.name ?? '',
-  partyProfileEmail:
-    (transaction.partyProfileSnapshot?.email as string | undefined) ?? '',
-  partyProfilePhoneNo:
-    (transaction.partyProfileSnapshot?.phoneNo as string | undefined) ?? '',
-  partyProfileAddress1:
-    (transaction.partyProfileSnapshot?.address1 as string | undefined) ?? '',
-  partyProfileAddress2:
-    (transaction.partyProfileSnapshot?.address2 as string | undefined) ?? '',
-  partyProfileAddress3:
-    (transaction.partyProfileSnapshot?.address3 as string | undefined) ?? '',
-  partyProfileCity:
-    (transaction.partyProfileSnapshot?.city as string | undefined) ?? '',
-  partyProfilePinCode:
-    (transaction.partyProfileSnapshot?.pinCode as string | undefined) ?? '',
-  partyProfilePanNo:
-    (transaction.partyProfileSnapshot?.panNo as string | undefined) ?? '',
-  partyProfileGstNo:
-    (transaction.partyProfileSnapshot?.gstNo as string | undefined) ?? '',
-  partyProfileGstStateName:
-    (transaction.partyProfileSnapshot?.gstStateName as string | undefined) ??
-    '',
-  partyProfileStateName:
-    (transaction.partyProfileSnapshot?.stateName as string | undefined) ?? '',
-  partyProfileContactName:
-    (transaction.partyProfileSnapshot?.contactName as string | undefined) ?? '',
-  partyProfileApplyTax: Boolean(transaction.partyProfileSnapshot?.applyTax),
-  agentProfileId: transaction.agentProfileId ?? '',
-  agentProfileCode: transaction.agentProfileSnapshot?.code ?? '',
-  agentProfileName: transaction.agentProfileSnapshot?.name ?? '',
-  purposeId: transaction.purposeId ?? '',
-  transactionPartyProfileType: transaction.transactionPartyProfileType ?? '',
-  entityType: passengerSnapshot?.entityType
-    ? String(passengerSnapshot.entityType)
-    : '',
-  passengerInfoCaptured: Boolean(transaction.passengerId),
-  passengerId: transaction.passengerId ?? '',
-  panNumber:
-    (passengerSnapshot?.panNumber as string | undefined) ?? '',
-  panHolderName:
-    (passengerSnapshot?.panHolderName as string | undefined) ?? '',
-  panDob: (passengerSnapshot?.panDob as string | undefined) ?? '',
-  passportNumber:
-    (passengerSnapshot?.passportNumber as string | undefined) ?? '',
-  passportIssueAt:
-    (passengerSnapshot?.passportIssueAt as string | undefined) ?? '',
-  passportIssueDate:
-    (passengerSnapshot?.passportIssueDate as string | undefined) ?? '',
-  passportExpiryDate:
-    (passengerSnapshot?.passportExpiryDate as string | undefined) ?? '',
-  nationalityType:
-    (passengerSnapshot?.nationalityType as PassengerNationalityType) ??
-    PassengerNationalityTypeEnum.INDIAN,
-  residentStatus:
-    (passengerSnapshot?.residentStatus as PassengerResidentStatus) ??
-    PassengerResidentStatusEnum.RESIDENT,
-  countryId:
-    (passengerSnapshot?.countryId as string | undefined) ??
-    ((passengerSnapshot?.country as { id?: string } | null | undefined)?.id ??
-      ''),
-  stateId:
-    (passengerSnapshot?.stateId as string | undefined) ??
-    ((passengerSnapshot?.state as { id?: string } | null | undefined)?.id ??
-      ''),
-  locationId:
-    (passengerSnapshot?.locationId as string | undefined) ??
-    ((passengerSnapshot?.location as { id?: string } | null | undefined)?.id ??
-      ''),
-  city: (passengerSnapshot?.city as string | undefined) ?? '',
-  address1: (passengerSnapshot?.address1 as string | undefined) ?? '',
-  address2: (passengerSnapshot?.address2 as string | undefined) ?? '',
-  email: (passengerSnapshot?.email as string | undefined) ?? '',
-  contactNo:
-    (passengerSnapshot?.contactNo as string | undefined) ?? '',
-  loanAmount:
-    (transaction.loanAmount as string | undefined) ?? '',
-  declaredAmount:
-    (transaction.declaredAmount as string | undefined) ?? '',
-  preTcsFinalAmount:
-    (transaction.preTcsFinalAmount as string | undefined) ?? '',
-  tcsRatePercent:
-    (transaction.tcsRatePercent as string | undefined) ?? '',
-  tcsRateType:
-    (transaction.tcsRateType as PurposeRateType | undefined) ?? '',
-  tcsAmount: (transaction.tcsAmount as string | undefined) ?? '',
-  itrFiled: Boolean(transaction.itrFiled),
-  tcsDeclarationAccepted: Boolean(transaction.tcsDeclarationAccepted),
-  isProprietorship: Boolean(transaction.isProprietorship),
-  cdfNo: (transactionSnapshot.cdfNo as string | undefined) ?? '',
-  cdfIssuingAuthority:
-    (transactionSnapshot.cdfIssuingAuthority as string | undefined) ?? '',
-  cdfApprovedUsd: (transactionSnapshot.cdfApprovedUsd as string | undefined) ?? '',
-  cdfArrivalDate: (transactionSnapshot.cdfArrivalDate as string | undefined) ?? '',
-  panHolderRelationType:
-    (passengerSnapshot?.panHolderRelationType as string | undefined) ??
-    '',
-  paidByPanNumber:
-    (passengerSnapshot?.paidByPanNumber as string | undefined) ?? '',
-  paidByPanHolderName:
-    (passengerSnapshot?.paidByPanHolderName as string | undefined) ??
-    '',
-  paidByPanDob:
-    (passengerSnapshot?.paidByPanDob as string | undefined) ?? '',
-  gstNumber: (passengerSnapshot?.gstNumber as string | undefined) ?? '',
-  gstStateId:
-    (passengerSnapshot?.gstStateId as string | undefined) ??
-    ((passengerSnapshot?.gstState as { id?: string } | null | undefined)?.id ??
-      ''),
-  isPep: Boolean(passengerSnapshot?.isPep),
-  arrivalDate:
-    (passengerSnapshot?.arrivalDate as string | undefined) ?? '',
-  travelAirlineId:
-    (passengerTravelSnapshot?.airlineTt?.id as string | undefined) ??
-    '',
-  travelTicketNo:
-    (passengerTravelSnapshot?.ticketNo as string | undefined) ?? '',
-  travelRoute:
-    (passengerTravelSnapshot?.route as string | undefined) ?? '',
-  travelCountryId:
-    (passengerTravelSnapshot?.travellingCountry?.id as string | undefined) ??
-    '',
-  travelNoOfDays:
-    passengerTravelSnapshot?.noOfDays !== undefined &&
-    passengerTravelSnapshot?.noOfDays !== null
-      ? String(passengerTravelSnapshot.noOfDays)
+    purchasePageType,
+    branchId: transaction.branchId ?? '',
+    branchSnapshot: toFormBranchSnapshot(transaction.branchSnapshot),
+    counterId: transaction.counterId ?? '',
+    transactionDate: transaction.transactionDate
+      ? String(transaction.transactionDate).slice(0, 10)
       : '',
-  travelNoOfPax:
-    passengerTravelSnapshot?.noOfPax !== undefined &&
-    passengerTravelSnapshot?.noOfPax !== null
-      ? String(passengerTravelSnapshot.noOfPax)
-      : '',
-  travelDepartureDate:
-    (passengerTravelSnapshot?.departureDate as string | undefined) ?? '',
-  travelPnr:
-    (passengerTravelSnapshot?.travelPnr as string | undefined) ?? '',
-  travelVisa: Boolean(passengerTravelSnapshot?.visa),
-  travelIsCisCountry: Boolean(passengerTravelSnapshot?.isCisCountry),
-  otherDocuments: Array.isArray(passengerOtherDocuments)
-    ? passengerOtherDocuments.map(document => ({
-        documentType: document.documentType ?? '',
-        documentNumber: document.documentNumber ?? '',
-        validTill: document.validTill ?? '',
-        issueAt: document.issueAt ?? '',
-        issueDate: document.issueDate ?? '',
-        expiryDate: document.expiryDate ?? '',
-        documentFile: document.documentFile ?? '',
-      }))
-    : [
-        {
-          documentType: '',
-          documentNumber: '',
-          validTill: '',
-          issueAt: '',
-          issueDate: '',
-          expiryDate: '',
-          documentFile: '',
-        },
-      ],
-  manualBookReferenceType: 'CASHIER',
-  manualBookId: (
-    transaction.manualBookPageSnapshot as
-      | Record<string, unknown>
-      | null
-      | undefined
-  )?.manualBookId
-    ? String(
-        (transaction.manualBookPageSnapshot as Record<string, unknown>)
-          .manualBookId
-      )
-    : '',
-  manualBookNo: (() => {
-    const snapshot = transaction.manualBookPageSnapshot as
-      | { manualBook?: { no?: string } }
-      | null
-      | undefined;
-    return snapshot?.manualBook?.no ?? '';
-  })(),
-  manualBookPageId: transaction.manualBookPageId ?? '',
-  manualBookPageSnapshot: transaction.manualBookPageSnapshot ?? null,
-  cashierUserId: '',
-  cashierUserCode: '',
-  cashierUserName: '',
-  deliveryBoyUserId: '',
-  deliveryBoyUserCode: '',
-  deliveryBoyUserName: '',
-  number: transaction.number ?? '',
-  transactions: (transaction.items ?? []).map(item => ({
-    currencyId: item.currencyId,
-    currencyCode:
-      item.currencySnapshot?.label ?? item.currencySnapshot?.code ?? '',
-    currencyName: item.currencySnapshot?.name ?? '',
-    productId: item.productId,
-    productCode:
-      item.productSnapshot?.label ?? item.productSnapshot?.code ?? '',
-    productDescription: item.productSnapshot?.name ?? '',
-    quantity: item.quantity ?? '',
-    per: item.per ?? '',
-    rate: item.rate ?? '',
-    commission: item.commission ?? '',
-    commissionSnapshot: item.commissionSnapshot ?? null,
-    pricingRuleSnapshot: item.pricingRuleSnapshot ?? null,
-    total: '',
-    roundOff: '',
-    finalAmount: '',
-    cardId: item.cardId ?? '',
-    issuerPartyProfileId: item.issuerPartyProfileId ?? '',
-    issuerPartyProfileSnapshot: item.issuerPartyProfileSnapshot ?? null,
-    cardSnapshot: item.cardSnapshot ?? null,
-    isReload: Boolean(item.isReload),
-  })),
-  additionalCharges: (transaction.additionalCharges ?? []).map(charge => ({
-    accountId: charge.accountId,
-    accountName:
-      charge.accountSnapshot?.label ??
-      charge.accountSnapshot?.name ??
-      charge.accountSnapshot?.code ??
+    transactionType: transaction.transactionType,
+    tradeMode: transaction.tradeMode,
+    partyProfileId: transaction.partyProfileId ?? '',
+    partyProfileCode: transaction.partyProfileSnapshot?.code ?? '',
+    partyProfileName: transaction.partyProfileSnapshot?.name ?? '',
+    partyProfileEmail:
+      (transaction.partyProfileSnapshot?.email as string | undefined) ?? '',
+    partyProfilePhoneNo:
+      (transaction.partyProfileSnapshot?.phoneNo as string | undefined) ?? '',
+    partyProfileAddress1:
+      (transaction.partyProfileSnapshot?.address1 as string | undefined) ?? '',
+    partyProfileAddress2:
+      (transaction.partyProfileSnapshot?.address2 as string | undefined) ?? '',
+    partyProfileAddress3:
+      (transaction.partyProfileSnapshot?.address3 as string | undefined) ?? '',
+    partyProfileCity:
+      (transaction.partyProfileSnapshot?.city as string | undefined) ?? '',
+    partyProfilePinCode:
+      (transaction.partyProfileSnapshot?.pinCode as string | undefined) ?? '',
+    partyProfilePanNo:
+      (transaction.partyProfileSnapshot?.panNo as string | undefined) ?? '',
+    partyProfileGstNo:
+      (transaction.partyProfileSnapshot?.gstNo as string | undefined) ?? '',
+    partyProfileGstStateName:
+      (transaction.partyProfileSnapshot?.gstStateName as string | undefined) ??
       '',
-    amount: charge.amount ?? '',
-    gstRate: charge.gstRate ?? '',
-    gstAmount: charge.gstAmount ?? '',
-    totalAmount: (() => {
-      const amountValue = Number(charge.amount ?? 0);
-      const gstValue = Number(charge.gstAmount ?? 0);
-      const isSale = transaction.transactionType === TransactionTypeEnum.SALE;
-      const signedMultiplier = isSale ? 1 : -1;
-      if (!Number.isFinite(amountValue)) {
-        return '';
-      }
-      if (!Number.isFinite(gstValue)) {
-        return (amountValue * signedMultiplier).toFixed(
+    partyProfileStateName:
+      (transaction.partyProfileSnapshot?.stateName as string | undefined) ?? '',
+    partyProfileContactName:
+      (transaction.partyProfileSnapshot?.contactName as string | undefined) ??
+      '',
+    partyProfileApplyTax: Boolean(transaction.partyProfileSnapshot?.applyTax),
+    agentProfileId: transaction.agentProfileId ?? '',
+    agentProfileCode: transaction.agentProfileSnapshot?.code ?? '',
+    agentProfileName: transaction.agentProfileSnapshot?.name ?? '',
+    purposeId: transaction.purposeId ?? '',
+    transactionPartyProfileType: transaction.transactionPartyProfileType ?? '',
+    entityType: passengerSnapshot?.entityType
+      ? String(passengerSnapshot.entityType)
+      : '',
+    passengerInfoCaptured: Boolean(transaction.passengerId),
+    passengerId: transaction.passengerId ?? '',
+    panNumber: (passengerSnapshot?.panNumber as string | undefined) ?? '',
+    panHolderName:
+      (passengerSnapshot?.panHolderName as string | undefined) ?? '',
+    panDob: (passengerSnapshot?.panDob as string | undefined) ?? '',
+    passportNumber:
+      (passengerSnapshot?.passportNumber as string | undefined) ?? '',
+    passportIssueAt:
+      (passengerSnapshot?.passportIssueAt as string | undefined) ?? '',
+    passportIssueDate:
+      (passengerSnapshot?.passportIssueDate as string | undefined) ?? '',
+    passportExpiryDate:
+      (passengerSnapshot?.passportExpiryDate as string | undefined) ?? '',
+    nationalityType:
+      (passengerSnapshot?.nationalityType as PassengerNationalityType) ??
+      PassengerNationalityTypeEnum.INDIAN,
+    residentStatus:
+      (passengerSnapshot?.residentStatus as PassengerResidentStatus) ??
+      PassengerResidentStatusEnum.RESIDENT,
+    countryId:
+      (passengerSnapshot?.countryId as string | undefined) ??
+      (passengerSnapshot?.country as { id?: string } | null | undefined)?.id ??
+      '',
+    stateId:
+      (passengerSnapshot?.stateId as string | undefined) ??
+      (passengerSnapshot?.state as { id?: string } | null | undefined)?.id ??
+      '',
+    locationId:
+      (passengerSnapshot?.locationId as string | undefined) ??
+      (passengerSnapshot?.location as { id?: string } | null | undefined)?.id ??
+      '',
+    city: (passengerSnapshot?.city as string | undefined) ?? '',
+    address1: (passengerSnapshot?.address1 as string | undefined) ?? '',
+    address2: (passengerSnapshot?.address2 as string | undefined) ?? '',
+    email: (passengerSnapshot?.email as string | undefined) ?? '',
+    contactNo: (passengerSnapshot?.contactNo as string | undefined) ?? '',
+    loanAmount: (transaction.loanAmount as string | undefined) ?? '',
+    declaredAmount: (transaction.declaredAmount as string | undefined) ?? '',
+    preTcsFinalAmount:
+      (transaction.preTcsFinalAmount as string | undefined) ?? '',
+    tcsRatePercent: (transaction.tcsRatePercent as string | undefined) ?? '',
+    tcsRateType: (transaction.tcsRateType as PurposeRateType | undefined) ?? '',
+    tcsAmount: (transaction.tcsAmount as string | undefined) ?? '',
+    itrFiled: Boolean(transaction.itrFiled),
+    tcsDeclarationAccepted: Boolean(transaction.tcsDeclarationAccepted),
+    isProprietorship: Boolean(transaction.isProprietorship),
+    cdfNo: (transactionSnapshot.cdfNo as string | undefined) ?? '',
+    cdfIssuingAuthority:
+      (transactionSnapshot.cdfIssuingAuthority as string | undefined) ?? '',
+    cdfApprovedUsd:
+      (transactionSnapshot.cdfApprovedUsd as string | undefined) ?? '',
+    cdfArrivalDate:
+      (transactionSnapshot.cdfArrivalDate as string | undefined) ?? '',
+    panHolderRelationType:
+      (passengerSnapshot?.panHolderRelationType as string | undefined) ?? '',
+    paidByPanNumber:
+      (passengerSnapshot?.paidByPanNumber as string | undefined) ?? '',
+    paidByPanHolderName:
+      (passengerSnapshot?.paidByPanHolderName as string | undefined) ?? '',
+    paidByPanDob: (passengerSnapshot?.paidByPanDob as string | undefined) ?? '',
+    gstNumber: (passengerSnapshot?.gstNumber as string | undefined) ?? '',
+    gstStateId:
+      (passengerSnapshot?.gstStateId as string | undefined) ??
+      (passengerSnapshot?.gstState as { id?: string } | null | undefined)?.id ??
+      '',
+    isPep: Boolean(passengerSnapshot?.isPep),
+    arrivalDate: (passengerSnapshot?.arrivalDate as string | undefined) ?? '',
+    travelAirlineId:
+      (passengerTravelSnapshot?.airlineTt?.id as string | undefined) ?? '',
+    travelTicketNo:
+      (passengerTravelSnapshot?.ticketNo as string | undefined) ?? '',
+    travelRoute: (passengerTravelSnapshot?.route as string | undefined) ?? '',
+    travelCountryId:
+      (passengerTravelSnapshot?.travellingCountry?.id as string | undefined) ??
+      '',
+    travelNoOfDays:
+      passengerTravelSnapshot?.noOfDays !== undefined &&
+      passengerTravelSnapshot?.noOfDays !== null
+        ? String(passengerTravelSnapshot.noOfDays)
+        : '',
+    travelNoOfPax:
+      passengerTravelSnapshot?.noOfPax !== undefined &&
+      passengerTravelSnapshot?.noOfPax !== null
+        ? String(passengerTravelSnapshot.noOfPax)
+        : '',
+    travelDepartureDate:
+      (passengerTravelSnapshot?.departureDate as string | undefined) ?? '',
+    travelPnr: (passengerTravelSnapshot?.travelPnr as string | undefined) ?? '',
+    travelVisa: Boolean(passengerTravelSnapshot?.visa),
+    travelIsCisCountry: Boolean(passengerTravelSnapshot?.isCisCountry),
+    otherDocuments: Array.isArray(passengerOtherDocuments)
+      ? passengerOtherDocuments.map(document => ({
+          documentType: document.documentType ?? '',
+          documentNumber: document.documentNumber ?? '',
+          validTill: document.validTill ?? '',
+          issueAt: document.issueAt ?? '',
+          issueDate: document.issueDate ?? '',
+          expiryDate: document.expiryDate ?? '',
+          documentFile: document.documentFile ?? '',
+        }))
+      : [
+          {
+            documentType: '',
+            documentNumber: '',
+            validTill: '',
+            issueAt: '',
+            issueDate: '',
+            expiryDate: '',
+            documentFile: '',
+          },
+        ],
+    manualBookReferenceType: 'CASHIER',
+    manualBookId: (
+      transaction.manualBookPageSnapshot as
+        | Record<string, unknown>
+        | null
+        | undefined
+    )?.manualBookId
+      ? String(
+          (transaction.manualBookPageSnapshot as Record<string, unknown>)
+            .manualBookId
+        )
+      : '',
+    manualBookNo: (() => {
+      const snapshot = transaction.manualBookPageSnapshot as
+        | { manualBook?: { no?: string } }
+        | null
+        | undefined;
+      return snapshot?.manualBook?.no ?? '';
+    })(),
+    manualBookPageId: transaction.manualBookPageId ?? '',
+    manualBookPageSnapshot: transaction.manualBookPageSnapshot ?? null,
+    cashierUserId: '',
+    cashierUserCode: '',
+    cashierUserName: '',
+    deliveryBoyUserId: '',
+    deliveryBoyUserCode: '',
+    deliveryBoyUserName: '',
+    number: transaction.number ?? '',
+    transactions: (transaction.items ?? []).map(item => ({
+      currencyId: item.currencyId,
+      currencyCode:
+        item.currencySnapshot?.label ?? item.currencySnapshot?.code ?? '',
+      currencyName: item.currencySnapshot?.name ?? '',
+      productId: item.productId,
+      productCode:
+        item.productSnapshot?.label ?? item.productSnapshot?.code ?? '',
+      productDescription: item.productSnapshot?.name ?? '',
+      quantity: item.quantity ?? '',
+      per: item.per ?? '',
+      rate: item.rate ?? '',
+      commission: item.commission ?? '',
+      commissionSnapshot: item.commissionSnapshot ?? null,
+      pricingRuleSnapshot: item.pricingRuleSnapshot ?? null,
+      total: '',
+      roundOff: '',
+      finalAmount: '',
+      cardId: item.cardId ?? '',
+      issuerPartyProfileId: item.issuerPartyProfileId ?? '',
+      issuerPartyProfileSnapshot: item.issuerPartyProfileSnapshot ?? null,
+      cardSnapshot: item.cardSnapshot ?? null,
+      isReload: Boolean(item.isReload),
+    })),
+    additionalCharges: (transaction.additionalCharges ?? []).map(charge => ({
+      accountId: charge.accountId,
+      accountName:
+        charge.accountSnapshot?.label ??
+        charge.accountSnapshot?.name ??
+        charge.accountSnapshot?.code ??
+        '',
+      amount: charge.amount ?? '',
+      gstRate: charge.gstRate ?? '',
+      gstAmount: charge.gstAmount ?? '',
+      totalAmount: (() => {
+        const amountValue = Number(charge.amount ?? 0);
+        const gstValue = Number(charge.gstAmount ?? 0);
+        const isSale = transaction.transactionType === TransactionTypeEnum.SALE;
+        const signedMultiplier = isSale ? 1 : -1;
+        if (!Number.isFinite(amountValue)) {
+          return '';
+        }
+        if (!Number.isFinite(gstValue)) {
+          return (amountValue * signedMultiplier).toFixed(
+            PURCHASE_MONEY_DECIMALS
+          );
+        }
+        return ((amountValue + gstValue) * signedMultiplier).toFixed(
           PURCHASE_MONEY_DECIMALS
         );
-      }
-      return ((amountValue + gstValue) * signedMultiplier).toFixed(
-        PURCHASE_MONEY_DECIMALS
-      );
-    })(),
-    applyTax: Boolean(charge.applyTax),
-    remarks: charge.remarks ?? '',
-  })),
-  paymentDetails: (transaction.payments ?? []).map(payment => ({
-    settlementSource: payment.settlementSource ?? 'NORMAL',
-    advanceVoucherId: payment.advanceVoucherId ?? '',
-    advanceVoucherNumber: payment.advanceApplication?.voucher?.number ?? '',
-    advanceAvailableAmount: payment.advanceApplication?.amount ?? payment.amount ?? '',
-    paymentMethod: payment.paymentMethod,
-    accountId: payment.accountId,
-    accountName:
-      payment.accountSnapshot?.label ??
-      payment.accountSnapshot?.name ??
-      payment.accountSnapshot?.code ??
-      '',
-    amount: payment.amount ?? '',
-    chequeNumber: payment.referenceNumber ?? '',
-    chequeDate: payment.referenceDate ?? '',
-    branchName: payment.branchName ?? '',
-    drawnOn: payment.drawnOn ?? '',
-    chequePageId: payment.chequePageId ?? '',
-    chequePageSnapshot: payment.chequePageSnapshot ?? null,
-    remarks: payment.remarks ?? '',
-  })),
+      })(),
+      applyTax: Boolean(charge.applyTax),
+      remarks: charge.remarks ?? '',
+    })),
+    paymentDetails: (transaction.payments ?? []).map(payment => ({
+      settlementSource: payment.settlementSource ?? 'NORMAL',
+      advanceVoucherId: payment.advanceVoucherId ?? '',
+      advanceVoucherNumber: payment.advanceApplication?.voucher?.number ?? '',
+      advanceAvailableAmount:
+        payment.advanceApplication?.amount ?? payment.amount ?? '',
+      paymentMethod: payment.paymentMethod,
+      accountId: payment.accountId,
+      accountName:
+        payment.accountSnapshot?.label ??
+        payment.accountSnapshot?.name ??
+        payment.accountSnapshot?.code ??
+        '',
+      amount: payment.amount ?? '',
+      chequeNumber: payment.referenceNumber ?? '',
+      chequeDate: payment.referenceDate ?? '',
+      branchName: payment.branchName ?? '',
+      drawnOn: payment.drawnOn ?? '',
+      chequePageId: payment.chequePageId ?? '',
+      chequePageSnapshot: payment.chequePageSnapshot ?? null,
+      remarks: payment.remarks ?? '',
+    })),
   };
 };
 
@@ -972,7 +974,7 @@ export const calculateTransactionTotal = (
     return '';
   }
 
-  return (qty * parsedRate / parsedPer).toFixed(PURCHASE_MONEY_DECIMALS);
+  return ((qty * parsedRate) / parsedPer).toFixed(PURCHASE_MONEY_DECIMALS);
 };
 
 export const calculateRoundedTransactionAmount = (value?: string | null) => {
@@ -1020,17 +1022,15 @@ export const calculatePurchasePayableTotal = (
       sum + toNumericTotal(transaction.finalAmount || transaction.total),
     0
   );
-  const additionalChargeTotal = additionalCharges.reduce(
-    (sum, charge) => {
-      const rowTotal = toNumericTotal(charge.totalAmount || charge.amount);
-      return sum + (
-        transactionType === TransactionTypeEnum.PURCHASE
-          ? -Math.abs(rowTotal)
-          : Math.abs(rowTotal)
-      );
-    },
-    0
-  );
+  const additionalChargeTotal = additionalCharges.reduce((sum, charge) => {
+    const rowTotal = toNumericTotal(charge.totalAmount || charge.amount);
+    return (
+      sum +
+      (transactionType === TransactionTypeEnum.PURCHASE
+        ? -Math.abs(rowTotal)
+        : Math.abs(rowTotal))
+    );
+  }, 0);
 
   return (transactionTotal + additionalChargeTotal).toFixed(
     PURCHASE_MONEY_DECIMALS

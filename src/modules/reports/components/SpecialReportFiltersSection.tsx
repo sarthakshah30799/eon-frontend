@@ -11,8 +11,8 @@ export const SpecialReportFiltersSection = ({
   filters,
 }: SpecialReportFiltersSectionProps) => {
   const currentTemplateLabel =
-    filters.templateOptions.find(option => option.id === filters.template)?.label ??
-    'Account Posting';
+    filters.templateOptions.find(option => option.id === filters.template)
+      ?.label ?? 'Account Posting';
 
   return (
     <section className="space-y-3 rounded-xl border border-border-primary bg-white p-3 shadow-sm">
@@ -73,9 +73,14 @@ export const SpecialReportFiltersSection = ({
           label="Transaction Numbers"
           placeholder="Comma-separated numbers"
           value={filters.transactionNumbersText}
-          onChange={event => filters.setTransactionNumbersText(event.target.value)}
+          onChange={event =>
+            filters.setTransactionNumbersText(event.target.value)
+          }
         />
-        <ReportSortByFilter value={filters.sortBy} onChange={filters.setSortBy} />
+        <ReportSortByFilter
+          value={filters.sortBy}
+          onChange={filters.setSortBy}
+        />
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-2">

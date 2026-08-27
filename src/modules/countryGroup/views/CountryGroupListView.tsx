@@ -9,7 +9,9 @@ import { useDeleteCountryGroup, useListCountryGroups } from '../hooks';
 export const CountryGroupListView = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { canAdd, canModify, canDelete } = usePermission('/admin/country-group');
+  const { canAdd, canModify, canDelete } = usePermission(
+    '/admin/country-group'
+  );
   const search = searchParams.get('search') ?? '';
   const debouncedSearch = useDebounce(search, 400);
   const query = useMemo(
@@ -31,7 +33,9 @@ export const CountryGroupListView = () => {
     }
 
     return groups.filter(group =>
-      [group.code, group.name].some(value => value.toLowerCase().includes(query))
+      [group.code, group.name].some(value =>
+        value.toLowerCase().includes(query)
+      )
     );
   }, [groups, query]);
 

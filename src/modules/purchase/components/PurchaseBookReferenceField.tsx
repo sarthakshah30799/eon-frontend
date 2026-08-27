@@ -28,7 +28,9 @@ export const PurchaseBookReferenceField = ({
   const { user, activeBranchId } = useAuth();
   const [deliveryBoyPickerOpen, setDeliveryBoyPickerOpen] = useState(false);
   const [cashierPickerOpen, setCashierPickerOpen] = useState(false);
-  const canOverrideWorkplace = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
+  const canOverrideWorkplace = Boolean(
+    user?.isAdmin || user?.isHo || user?.isHoStaff
+  );
   const resolvedBranchId = branchId?.trim() || activeBranchId || undefined;
 
   const manualBookReferenceType = useWatch({
@@ -84,7 +86,8 @@ export const PurchaseBookReferenceField = ({
   const selectedReferenceUserId = isDeliveryBoyMode
     ? deliveryBoyAssigneeId
     : cashierAssigneeId;
-  const resolvedTransactionType = purchasePageType ?? (transactionType || undefined);
+  const resolvedTransactionType =
+    purchasePageType ?? (transactionType || undefined);
   const {
     data: pageOptions = [],
     isLoading: isLoadingPages,
@@ -96,14 +99,19 @@ export const PurchaseBookReferenceField = ({
     enabled:
       Boolean(resolvedBranchId) &&
       (!isDeliveryBoyMode || Boolean(deliveryBoyAssigneeId)) &&
-      (!canOverrideWorkplace || isDeliveryBoyMode || Boolean(cashierAssigneeId)),
+      (!canOverrideWorkplace ||
+        isDeliveryBoyMode ||
+        Boolean(cashierAssigneeId)),
   });
   const isBookPagesLoading = isLoadingPages || isFetchingPages;
-  const hasPageSelectionPrerequisites = Boolean(resolvedBranchId) &&
+  const hasPageSelectionPrerequisites =
+    Boolean(resolvedBranchId) &&
     (!isDeliveryBoyMode || Boolean(deliveryBoyAssigneeId)) &&
     (!canOverrideWorkplace || isDeliveryBoyMode || Boolean(cashierAssigneeId));
   const hasNoBookPagesAvailable =
-    hasPageSelectionPrerequisites && !isBookPagesLoading && pageOptions.length === 0;
+    hasPageSelectionPrerequisites &&
+    !isBookPagesLoading &&
+    pageOptions.length === 0;
 
   useEffect(() => {
     if (previousReferenceTypeRef.current === manualBookReferenceType) {
@@ -464,9 +472,9 @@ export const PurchaseBookReferenceField = ({
               ? 'Loading available bill book pages...'
               : hasNoBookPagesAvailable
                 ? 'No bill books available. Please ask your manager.'
-              : manualBookNo
-                ? `Selected book: ${manualBookNo}`
-                : 'Choose a page from the filtered list.'}
+                : manualBookNo
+                  ? `Selected book: ${manualBookNo}`
+                  : 'Choose a page from the filtered list.'}
           </p>
         </div>
       </div>

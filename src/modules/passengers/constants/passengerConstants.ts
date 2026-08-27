@@ -3,10 +3,8 @@ export const PASSENGER_IDENTITY_TEXT = {
   panHolderNameRequired: 'PAN holder name is required',
   panDobRequired: 'PAN holder DOB is required',
   panHolderRelationRequired: 'PAN holder relation is required',
-  indianIdentityRequired:
-    'Enter PAN, passport, or at least one other document',
-  otherDocumentsOptional:
-    'Required only if PAN and passport are not provided.',
+  indianIdentityRequired: 'Enter PAN, passport, or at least one other document',
+  otherDocumentsOptional: 'Required only if PAN and passport are not provided.',
   otherDocumentsRequired: 'At least one other document is required',
   passportNumberRequired: 'Passport number is required',
   passportIssuePlaceRequired: 'Passport issue place is required',

@@ -6,7 +6,8 @@ export const useRevokeBackdateWindow = () => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: (windowId: string) => transactionPoliciesApi.revokeBackdateWindow(windowId),
+    mutationFn: (windowId: string) =>
+      transactionPoliciesApi.revokeBackdateWindow(windowId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['monthly-lock-windows'] });
       toast.success('Monthwise lock revoked');

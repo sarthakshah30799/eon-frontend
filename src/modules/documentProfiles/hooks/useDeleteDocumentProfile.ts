@@ -22,4 +22,3 @@ export const useDeleteDocumentProfile = () => {
     isPending: mutation.isPending,
   };
 };
-

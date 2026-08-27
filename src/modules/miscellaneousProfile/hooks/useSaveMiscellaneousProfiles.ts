@@ -16,7 +16,10 @@ export const useSaveMiscellaneousProfiles = () => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: async ({ updates, creates }: SaveMiscellaneousProfilesPayload) => {
+    mutationFn: async ({
+      updates,
+      creates,
+    }: SaveMiscellaneousProfilesPayload) => {
       const updatedOptions = await Promise.all(
         updates.map(item =>
           categoryOptionsApi.updateCategoryOption(item.id, item.data)

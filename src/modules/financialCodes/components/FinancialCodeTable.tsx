@@ -65,7 +65,9 @@ export const FinancialCodeTable = ({
           <div className="flex items-center gap-2">
             <Button
               type="button"
-              aria-label={canModify ? 'Edit financial code' : 'View financial code'}
+              aria-label={
+                canModify ? 'Edit financial code' : 'View financial code'
+              }
               variant="ghost"
               size="icon"
               className="rounded-sm bg-transparent text-text-secondary hover:bg-surface-secondary hover:text-text-primary"

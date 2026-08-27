@@ -43,7 +43,8 @@ export const CurrencyRatesRatesSection = ({
       header: 'Buy',
       cell: ({ row }) => (
         <div className="text-text-primary">
-          {getSideBaseRate(row.original, 'buy') || getStoredBaseRateLabel(row.original)}
+          {getSideBaseRate(row.original, 'buy') ||
+            getStoredBaseRateLabel(row.original)}
         </div>
       ),
     },
@@ -52,7 +53,8 @@ export const CurrencyRatesRatesSection = ({
       header: 'Sell',
       cell: ({ row }) => (
         <div className="text-text-primary">
-          {getSideBaseRate(row.original, 'sale') || getStoredBaseRateLabel(row.original)}
+          {getSideBaseRate(row.original, 'sale') ||
+            getStoredBaseRateLabel(row.original)}
         </div>
       ),
     },
@@ -75,7 +77,8 @@ export const CurrencyRatesRatesSection = ({
     <CardSection heading="Current Rates" className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm text-text-secondary">
-          TICKER, FOREX, and MANUAL entries are stored here. Click a row to inspect the details.
+          TICKER, FOREX, and MANUAL entries are stored here. Click a row to
+          inspect the details.
         </p>
         {refreshing ? (
           <span className="text-xs font-semibold uppercase tracking-wider text-text-tertiary">

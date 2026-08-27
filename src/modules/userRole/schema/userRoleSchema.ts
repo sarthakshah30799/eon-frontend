@@ -1,8 +1,16 @@
 import * as yup from 'yup';
 
 export const userRoleSchema = yup.object({
-  code: yup.string().trim().required('Role Code is required').max(20, 'Role Code must be at most 20 characters'),
-  name: yup.string().trim().required('Role Name is required').max(250, 'Role Name must be at most 250 characters'),
+  code: yup
+    .string()
+    .trim()
+    .required('Role Code is required')
+    .max(20, 'Role Code must be at most 20 characters'),
+  name: yup
+    .string()
+    .trim()
+    .required('Role Name is required')
+    .max(250, 'Role Name must be at most 250 characters'),
 
   isAdmin: yup.boolean().default(false),
   isMd: yup.boolean().default(false),

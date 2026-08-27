@@ -21,7 +21,9 @@ export const FinancialCodeEditView = () => {
   if (!code) {
     return (
       <div className="rounded-sm border border-border-primary bg-surface-primary p-6 shadow-sm">
-        <p className="text-center text-text-secondary">Financial Code not found</p>
+        <p className="text-center text-text-secondary">
+          Financial Code not found
+        </p>
       </div>
     );
   }
@@ -33,8 +35,14 @@ export const FinancialCodeEditView = () => {
 
   return (
     <FinancialCodeEditorView
-      heading={canModify ? FINANCIAL_CODE_TEXTS.EDIT_CODE : "View Financial Code"}
-      description={canModify ? "Update the financial code details." : "View the financial code details."}
+      heading={
+        canModify ? FINANCIAL_CODE_TEXTS.EDIT_CODE : 'View Financial Code'
+      }
+      description={
+        canModify
+          ? 'Update the financial code details.'
+          : 'View the financial code details.'
+      }
       submitLabel={FINANCIAL_CODE_TEXTS.SAVE_CHANGES}
       defaultValues={
         code

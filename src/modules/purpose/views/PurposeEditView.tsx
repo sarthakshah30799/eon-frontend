@@ -3,7 +3,10 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Loader } from '@/components/ui/loader';
 import { PURPOSE_TEXTS } from '../constants/purposeConstants';
 import { useGetPurpose, useUpdatePurpose } from '../hooks';
-import { mapPurposeToFormValues, sanitizePurposeFormValues } from '../utils/purposeUtils';
+import {
+  mapPurposeToFormValues,
+  sanitizePurposeFormValues,
+} from '../utils/purposeUtils';
 import { PurposeEditorView } from './PurposeEditorView';
 import type { ICreatePurpose } from '../types/purposeTypes';
 

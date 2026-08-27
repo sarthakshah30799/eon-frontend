@@ -1,11 +1,18 @@
-import { PassengerOtherIdProofTypeEnum, type PassengerOtherIdProofType } from '../types/passengerTypes';
+import {
+  PassengerOtherIdProofTypeEnum,
+  type PassengerOtherIdProofType,
+} from '../types/passengerTypes';
 
 const normalizeDocumentType = (documentType?: string | null) =>
-  String(documentType ?? '').trim().toUpperCase();
+  String(documentType ?? '')
+    .trim()
+    .toUpperCase();
 
 export const shouldShowPassengerOtherDocumentValidityFields = (
   documentType?: string | null
-) => normalizeDocumentType(documentType) === PassengerOtherIdProofTypeEnum.DRIVING_LICENSE;
+) =>
+  normalizeDocumentType(documentType) ===
+  PassengerOtherIdProofTypeEnum.DRIVING_LICENSE;
 
 export const isPassengerOtherDocumentFilled = (
   row:

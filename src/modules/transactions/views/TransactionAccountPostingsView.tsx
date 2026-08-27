@@ -59,7 +59,9 @@ export const TransactionAccountPostingsView = () => {
   };
 
   if (!canView) {
-    return <AccessDeniedState message={PAGE_STATUS_TEXTS.ACCESS_DENIED_MESSAGE} />;
+    return (
+      <AccessDeniedState message={PAGE_STATUS_TEXTS.ACCESS_DENIED_MESSAGE} />
+    );
   }
 
   if (error) {
@@ -77,7 +79,8 @@ export const TransactionAccountPostingsView = () => {
           Transaction Account Postings
         </h1>
         <p className="text-sm text-text-secondary">
-          Search transactions, filter by party profile or transaction type, then queue a manual account posting rebuild.
+          Search transactions, filter by party profile or transaction type, then
+          queue a manual account posting rebuild.
         </p>
       </div>
 
@@ -141,7 +144,9 @@ export const TransactionAccountPostingsView = () => {
           actionLabel="Queue account posting rebuild"
           actionMode="custom"
           actionIcon={<ArrowPathIcon className="h-5 w-5" />}
-          isActionDisabled={row => row.status !== TransactionStatusEnum.APPROVED}
+          isActionDisabled={row =>
+            row.status !== TransactionStatusEnum.APPROVED
+          }
           isActionLoading={row =>
             activeTransactionId === row.id && isRebuildPending
           }

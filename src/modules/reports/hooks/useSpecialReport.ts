@@ -18,12 +18,12 @@ export const useSpecialReport = () => {
       transactionNumbers: filters.appliedFilters?.transactionNumbers ?? [],
       sortBy: filters.appliedFilters?.sortBy,
     }),
-    [filters.appliedFilters],
+    [filters.appliedFilters]
   );
 
   const reportQueryKey = useMemo(
     () => ['special-reports', filters.appliedFilters],
-    [filters.appliedFilters],
+    [filters.appliedFilters]
   );
 
   const reportQuery = useQuery<ISpecialReportResponse>({
@@ -48,15 +48,15 @@ export const useSpecialReport = () => {
       {
         ...requestParams,
       },
-      exportFormat,
+      exportFormat
     );
 
-      downloadBlob(
+    downloadBlob(
       payload.blob,
       payload.filename ||
         (exportFormat === ReportExportFormatEnum.CSV
           ? 'special-reports-account-posting.csv'
-          : 'special-reports-account-posting.xlsx'),
+          : 'special-reports-account-posting.xlsx')
     );
   }, [exportFormat, filters.appliedFilters, requestParams]);
 

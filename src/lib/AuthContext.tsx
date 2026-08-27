@@ -44,7 +44,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [activeBranchId, setActiveBranchId] = useState<string | null>(null);
   const [activeCounterId, setActiveCounterId] = useState<string | null>(null);
-  const [policyContext, setPolicyContext] = useState<IPolicyContext | null>(null);
+  const [policyContext, setPolicyContext] = useState<IPolicyContext | null>(
+    null
+  );
 
   const isAuthenticated = !!user;
 
@@ -56,18 +58,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     window.sessionStorage.removeItem(DAY_WORK_PROMPT_DISMISSED_STORAGE_KEY);
   }, []);
 
-  const handleSessionExpired = useCallback((message?: string) => {
-    void clearQueryCache();
-    clearSessionState();
+  const handleSessionExpired = useCallback(
+    (message?: string) => {
+      void clearQueryCache();
+      clearSessionState();
 
-    const publicPaths = ['/login', '/forgot-password', '/reset-password', '/mail-console'];
-    if (publicPaths.includes(window.location.pathname)) {
-      return;
-    }
+      const publicPaths = [
+        '/login',
+        '/forgot-password',
+        '/reset-password',
+        '/mail-console',
+      ];
+      if (publicPaths.includes(window.location.pathname)) {
+        return;
+      }
 
-    toast.error(message || AUTH_CONSTANTS.MESSAGES.SESSION_EXPIRED);
-    window.location.replace('/login');
-  }, [clearSessionState]);
+      toast.error(message || AUTH_CONSTANTS.MESSAGES.SESSION_EXPIRED);
+      window.location.replace('/login');
+    },
+    [clearSessionState]
+  );
 
   const checkAuth = async () => {
     try {
@@ -76,7 +86,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         activeBranchId: null,
         activeCounterId: null,
       }));
-      const nextPolicyContext = await authApi.getPolicyContext().catch(() => null);
+      const nextPolicyContext = await authApi
+        .getPolicyContext()
+        .catch(() => null);
       const nextUser = {
         ...currentUser,
         isHo: currentUser.isHo || currentUser.isHoStaff,
@@ -149,7 +161,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     const onSessionExpired = (event: Event) => {
-      const customEvent = event as CustomEvent<{ message?: string; status?: number }>;
+      const customEvent = event as CustomEvent<{
+        message?: string;
+        status?: number;
+      }>;
       handleSessionExpired(customEvent.detail?.message);
     };
 

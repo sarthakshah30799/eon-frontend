@@ -60,7 +60,9 @@ export const financialCodesApi = {
   getFinancialCodeByCode: async (
     code: string
   ): Promise<IFinancialCode | undefined> => {
-    const res = await apiClient.get<IFinancialCode>(`/financial-codes/by-code/${code}`);
+    const res = await apiClient.get<IFinancialCode>(
+      `/financial-codes/by-code/${code}`
+    );
     if (res.error) throw new Error(res.error);
     return res.data;
   },
@@ -77,7 +79,10 @@ export const financialCodesApi = {
       ...values,
       subProfiles: sanitizedSubProfiles,
     };
-    const res = await apiClient.post<IFinancialCode>('/financial-codes', payload);
+    const res = await apiClient.post<IFinancialCode>(
+      '/financial-codes',
+      payload
+    );
     if (res.error) throw new Error(res.error);
     if (!res.data) throw new Error('Failed to create financial code');
     return res.data;
@@ -97,15 +102,18 @@ export const financialCodesApi = {
       ...values,
       subProfiles: sanitizedSubProfiles,
     };
-    const res = await apiClient.put<IFinancialCode>(`/financial-codes/${id}`, payload);
+    const res = await apiClient.put<IFinancialCode>(
+      `/financial-codes/${id}`,
+      payload
+    );
     if (res.error) throw new Error(res.error);
     return res.data;
   },
 
-  deleteFinancialCode: async (
-    id: string
-  ): Promise<{ message: string }> => {
-    const res = await apiClient.delete<{ message: string }>(`/financial-codes/${id}`);
+  deleteFinancialCode: async (id: string): Promise<{ message: string }> => {
+    const res = await apiClient.delete<{ message: string }>(
+      `/financial-codes/${id}`
+    );
     if (res.error) throw new Error(res.error);
     if (!res.data) throw new Error('Failed to delete financial code');
     return res.data;

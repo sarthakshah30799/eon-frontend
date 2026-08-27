@@ -34,7 +34,9 @@ const getCellClassName = (row: ISalePurchaseReportRow, key: string) => {
       'netProfit',
       'totalInr',
       'profitLoss',
-    ].includes(key) || key.toLowerCase().includes('amount') || key.toLowerCase().includes('rate');
+    ].includes(key) ||
+    key.toLowerCase().includes('amount') ||
+    key.toLowerCase().includes('rate');
 
   return [
     'border-b border-slate-100 px-2 py-1.5 text-[11px] align-top',
@@ -98,18 +100,24 @@ export const SalePurchaseReportTable = ({
                 ].join(' ')}
               >
                 {row.rowType === 'GROUP' ? (
-                  <td colSpan={columns.length} className={getCellClassName(row, 'partyProfileName')}>
+                  <td
+                    colSpan={columns.length}
+                    className={getCellClassName(row, 'partyProfileName')}
+                  >
                     {row.groupLabel
-                  ? row.groupLabel
-                  : row.partyProfileName
-                    ? `Party Profile: ${row.partyProfileName}`
-                    : 'Party Profile'}
+                      ? row.groupLabel
+                      : row.partyProfileName
+                        ? `Party Profile: ${row.partyProfileName}`
+                        : 'Party Profile'}
                   </td>
                 ) : (
                   columns.map(column => {
                     const value = row[column.key] ?? '';
                     return (
-                      <td key={column.key} className={getCellClassName(row, column.key)}>
+                      <td
+                        key={column.key}
+                        className={getCellClassName(row, column.key)}
+                      >
                         {value || <span className="text-slate-300">-</span>}
                       </td>
                     );

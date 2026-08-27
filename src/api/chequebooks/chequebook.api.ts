@@ -1,12 +1,16 @@
 import { apiClient } from '../api';
 import type { IUserReference } from '../sharedTypes';
-import { ChequeBookStatusEnum, type ChequeBookStatus } from '@/modules/chequebooks/types';
+import {
+  ChequeBookStatusEnum,
+  type ChequeBookStatus,
+} from '@/modules/chequebooks/types';
 
 export const AuthorizedUserRole = {
   CASHIER: 'is_cashier',
 } as const;
 
-export type AuthorizedUserRole = (typeof AuthorizedUserRole)[keyof typeof AuthorizedUserRole];
+export type AuthorizedUserRole =
+  (typeof AuthorizedUserRole)[keyof typeof AuthorizedUserRole];
 export interface IChequeBook {
   id: string;
   dispatchDate: string;
@@ -41,7 +45,9 @@ export interface ICreateChequeBook {
 }
 
 export interface IApproveRejectChequeBook {
-  status: typeof ChequeBookStatusEnum.APPROVE | typeof ChequeBookStatusEnum.REJECT;
+  status:
+    | typeof ChequeBookStatusEnum.APPROVE
+    | typeof ChequeBookStatusEnum.REJECT;
   approvalRemarks?: string;
 }
 
@@ -86,7 +92,10 @@ export interface IChequeBookCashierReturnGroup {
 
 export const chequebookApi = {
   create: async (data: ICreateChequeBook): Promise<IChequeBook> => {
-    const res = await apiClient.post<IChequeBook>('/chequebooks/dispatch', data);
+    const res = await apiClient.post<IChequeBook>(
+      '/chequebooks/dispatch',
+      data
+    );
     if (res.error) throw new Error(res.error);
     if (!res.data) throw new Error('Failed to create chequebook dispatch');
     return res.data;
@@ -95,13 +104,14 @@ export const chequebookApi = {
   findAll: async (
     branchId?: string,
     status?: string,
-    bankAccountCode?: string,
+    bankAccountCode?: string
   ): Promise<IChequeBook[]> => {
     let url = '/chequebooks/dispatches';
     const params: string[] = [];
     if (branchId) params.push(`branchId=${encodeURIComponent(branchId)}`);
     if (status) params.push(`status=${encodeURIComponent(status)}`);
-    if (bankAccountCode) params.push(`bankAccountCode=${encodeURIComponent(bankAccountCode)}`);
+    if (bankAccountCode)
+      params.push(`bankAccountCode=${encodeURIComponent(bankAccountCode)}`);
     if (params.length > 0) {
       url += `?${params.join('&')}`;
     }
@@ -110,20 +120,34 @@ export const chequebookApi = {
     return res.data || [];
   },
 
-  approveOrReject: async (id: string, data: IApproveRejectChequeBook): Promise<IChequeBook> => {
-    const res = await apiClient.put<IChequeBook>(`/chequebooks/dispatches/${id}/approve`, data);
+  approveOrReject: async (
+    id: string,
+    data: IApproveRejectChequeBook
+  ): Promise<IChequeBook> => {
+    const res = await apiClient.put<IChequeBook>(
+      `/chequebooks/dispatches/${id}/approve`,
+      data
+    );
     if (res.error) throw new Error(res.error);
     if (!res.data) throw new Error('Failed to approve/reject dispatch');
     return res.data;
   },
 
-  bulkReview: async (reviews: Array<{ id: string; status: string; approvalRemarks?: string }>): Promise<IChequeBook[]> => {
-    const res = await apiClient.put<IChequeBook[]>('/chequebooks/dispatches/bulk-review', { reviews });
+  bulkReview: async (
+    reviews: Array<{ id: string; status: string; approvalRemarks?: string }>
+  ): Promise<IChequeBook[]> => {
+    const res = await apiClient.put<IChequeBook[]>(
+      '/chequebooks/dispatches/bulk-review',
+      { reviews }
+    );
     if (res.error) throw new Error(res.error);
     return res.data || [];
   },
 
-  getNextNumber: async (branchId: string, dispatchDate: string): Promise<{ nextNumber: string }> => {
+  getNextNumber: async (
+    branchId: string,
+    dispatchDate: string
+  ): Promise<{ nextNumber: string }> => {
     const res = await apiClient.get<{ nextNumber: string }>(
       `/chequebooks/next-number?branchId=${encodeURIComponent(branchId)}&dispatchDate=${encodeURIComponent(dispatchDate)}`
     );
@@ -154,7 +178,11 @@ export const chequebookApi = {
     return res.data || { valid: true };
   },
 
-  getAuthorizedUsers: async (branchId: string, role?: AuthorizedUserRole, search?: string): Promise<Array<{ id: string; name: string }>> => {
+  getAuthorizedUsers: async (
+    branchId: string,
+    role?: AuthorizedUserRole,
+    search?: string
+  ): Promise<Array<{ id: string; name: string }>> => {
     const params = new URLSearchParams({ branchId });
     if (role) params.set('role', role);
     if (search?.trim()) params.set('search', search.trim());
@@ -165,7 +193,10 @@ export const chequebookApi = {
     return res.data || [];
   },
 
-  getBranchManagers: async (branchId: string, search?: string): Promise<Array<{ id: string; name: string }>> => {
+  getBranchManagers: async (
+    branchId: string,
+    search?: string
+  ): Promise<Array<{ id: string; name: string }>> => {
     const params = new URLSearchParams({ branchId });
     if (search?.trim()) params.set('search', search.trim());
     const res = await apiClient.get<Array<{ id: string; name: string }>>(
@@ -265,7 +296,8 @@ export const chequebookApi = {
     const res = await apiClient.get<IChequeBookCashierReturnGroup[]>(
       `/chequebooks/cashier-return/search?bankAccountCode=${encodeURIComponent(
         params.bankAccountCode
-      )}&bookNo=${params.bookNo}&chequeNoFrom=${params.chequeNoFrom}&chequeNoTo=${params.chequeNoTo
+      )}&bookNo=${params.bookNo}&chequeNoFrom=${params.chequeNoFrom}&chequeNoTo=${
+        params.chequeNoTo
       }`
     );
     if (res.error) throw new Error(res.error);
@@ -273,14 +305,22 @@ export const chequebookApi = {
   },
 
   findById: async (id: string): Promise<IChequeBook> => {
-    const res = await apiClient.get<IChequeBook>(`/chequebooks/dispatches/${id}`);
+    const res = await apiClient.get<IChequeBook>(
+      `/chequebooks/dispatches/${id}`
+    );
     if (res.error) throw new Error(res.error);
     if (!res.data) throw new Error(`Chequebook dispatch ${id} not found`);
     return res.data;
   },
 
-  reassignDispatch: async (id: string, data: IReassignChequeBook): Promise<IChequeBook> => {
-    const res = await apiClient.put<IChequeBook>(`/chequebooks/dispatches/${id}/reassign`, data);
+  reassignDispatch: async (
+    id: string,
+    data: IReassignChequeBook
+  ): Promise<IChequeBook> => {
+    const res = await apiClient.put<IChequeBook>(
+      `/chequebooks/dispatches/${id}/reassign`,
+      data
+    );
     if (res.error) throw new Error(res.error);
     if (!res.data) throw new Error('Failed to reassign dispatch');
     return res.data;

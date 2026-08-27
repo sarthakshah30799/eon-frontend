@@ -39,9 +39,7 @@ export const FileUploader = ({
   const inputRef = useRef<HTMLInputElement | null>(null);
   const hasPreview = value.trim().length > 0 || Boolean(fileName);
 
-  const handleFileChange = (
-    event: ChangeEvent<HTMLInputElement>
-  ): void => {
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>): void => {
     const file = event.target.files?.[0];
 
     if (!file) {
@@ -69,7 +67,9 @@ export const FileUploader = ({
   };
 
   return (
-    <div className={`${previewType === 'file' ? 'w-full space-y-2' : 'max-w-[350px] space-y-2'} ${className}`}>
+    <div
+      className={`${previewType === 'file' ? 'w-full space-y-2' : 'max-w-[350px] space-y-2'} ${className}`}
+    >
       {label && (
         <label
           htmlFor={inputId}
@@ -89,9 +89,13 @@ export const FileUploader = ({
         onChange={handleFileChange}
       />
 
-      <div className={`flex gap-4 rounded-sm border border-dashed border-border-primary bg-surface-primary p-4 ${previewType === 'file' ? 'items-center' : 'flex-col sm:flex-row sm:items-center sm:justify-between'}`}>
+      <div
+        className={`flex gap-4 rounded-sm border border-dashed border-border-primary bg-surface-primary p-4 ${previewType === 'file' ? 'items-center' : 'flex-col sm:flex-row sm:items-center sm:justify-between'}`}
+      >
         <div className="flex items-center gap-4">
-          <div className={`flex items-center justify-center overflow-hidden rounded-sm border border-border-primary bg-surface-secondary ${previewType === 'file' ? 'h-12 w-12 shrink-0' : 'h-20 w-20'}`}>
+          <div
+            className={`flex items-center justify-center overflow-hidden rounded-sm border border-border-primary bg-surface-secondary ${previewType === 'file' ? 'h-12 w-12 shrink-0' : 'h-20 w-20'}`}
+          >
             {hasPreview && previewType === 'image' ? (
               <img
                 src={value}
@@ -99,7 +103,9 @@ export const FileUploader = ({
                 className="h-full w-full object-cover"
               />
             ) : hasPreview ? (
-              <span className="px-1 text-center text-[10px] font-semibold uppercase tracking-wide text-text-secondary">{previewType === 'file' ? 'FILE' : fileName ?? value}</span>
+              <span className="px-1 text-center text-[10px] font-semibold uppercase tracking-wide text-text-secondary">
+                {previewType === 'file' ? 'FILE' : (fileName ?? value)}
+              </span>
             ) : (
               <span className="text-xs font-medium uppercase tracking-[0.2em] text-text-tertiary">
                 Preview
@@ -109,7 +115,11 @@ export const FileUploader = ({
 
           <div className="space-y-1">
             <p className="text-sm font-medium text-text-primary">
-              {hasPreview ? (previewType === 'file' ? 'File selected' : 'Logo selected') : 'No file selected'}
+              {hasPreview
+                ? previewType === 'file'
+                  ? 'File selected'
+                  : 'Logo selected'
+                : 'No file selected'}
             </p>
             {helperText && (
               <p className="text-sm text-text-secondary">{helperText}</p>

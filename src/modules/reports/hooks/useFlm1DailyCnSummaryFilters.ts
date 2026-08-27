@@ -56,227 +56,257 @@ export interface Flm1DailyCnSummaryFiltersState {
   canView: boolean;
 }
 
-const toOption = (id: string, label: string): IReportSelectOption => ({ id, label });
+const toOption = (id: string, label: string): IReportSelectOption => ({
+  id,
+  label,
+});
 
-export const useFlm1DailyCnSummaryFilters = (): Flm1DailyCnSummaryFiltersState => {
-  const { user } = useAuth();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const isRestrictedUser = !user?.isAdmin && !user?.isHo && !user?.isHoStaff;
-  const userAssignments = useMemo(() => user?.assignments ?? [], [user?.assignments]);
-  const searchParamsKey = searchParams.toString();
-  const parsedSearchParams = useMemo(
-    () => new URLSearchParams(searchParamsKey),
-    [searchParamsKey],
-  );
-
-  const hydratedRouteState = useMemo(() => {
-    return {
-      dateRange: readDateRangeSearchParams(
-        parsedSearchParams,
-        ReportDatePresetEnum.TODAY,
-      ),
-      branchIds: readSearchParamList(parsedSearchParams, 'branchIds'),
-      productId: readSearchParamValue(parsedSearchParams, 'productId'),
-      layout: parseFlmReportLayout(
-        readSearchParamValue(parsedSearchParams, 'layout') ||
-          DEFAULT_FLM_REPORT_LAYOUT,
-      ),
-    };
-  }, [parsedSearchParams]);
-
-  const [dateRange, setDateRange] = useState<IReportDateRange>(
-    hydratedRouteState.dateRange,
-  );
-  const [branchIds, setBranchIds] = useState<string[]>(hydratedRouteState.branchIds);
-  const [productId, setProductId] = useState(hydratedRouteState.productId);
-  const [layout, setLayoutState] = useState<FlmReportLayout>(hydratedRouteState.layout);
-  const [appliedFilters, setAppliedFilters] = useState<
-    Flm1DailyCnSummaryFiltersState['appliedFilters']
-  >(
-    searchParamsKey
-      ? {
-          dateRange: hydratedRouteState.dateRange,
-          branchIds: hydratedRouteState.branchIds,
-          productId: hydratedRouteState.productId,
-          layout: hydratedRouteState.layout,
-        }
-      : null,
-  );
-
-  const { data: branchProfiles = [] } = useQuery({
-    queryKey: ['reports-flm1-branch-profiles'],
-    enabled: true,
-    queryFn: async () =>
-      branchProfileApi.getBranchProfiles({
-        activeOnly: true,
-      }),
-  });
-
-  const { data: productProfiles = [] } = useListProductProfiles(true);
-
-  const accessibleBranchProfiles = useMemo(
-    () =>
-      isRestrictedUser
-        ? branchProfiles.filter(branch =>
-            userAssignments.some(assignment => assignment.branchId === branch.id),
-          )
-        : branchProfiles,
-    [branchProfiles, isRestrictedUser, userAssignments],
-  );
-
-  const branchOptions = useMemo<IReportSelectOption[]>(
-    () =>
-      uniqueOptions(
-        accessibleBranchProfiles.map(branch =>
-          toOption(branch.id, buildReportOptionLabel(branch.code, branch.name)),
-        ),
-      ),
-    [accessibleBranchProfiles],
-  );
-
-  const productOptions = useMemo<IReportSelectOption[]>(
-    () =>
-      uniqueOptions(
-        productProfiles.map(product =>
-          toOption(
-            product.id,
-            buildReportOptionLabel(product.productCode, product.productDescription),
-          ),
-        ),
-      ),
-    [productProfiles],
-  );
-
-  const defaultProductId = useMemo(() => {
-    const cnProduct = productProfiles.find(
-      product =>
-        String(product.productCode ?? '').toUpperCase() === FLM1_DEFAULT_PRODUCT_CODE,
+export const useFlm1DailyCnSummaryFilters =
+  (): Flm1DailyCnSummaryFiltersState => {
+    const { user } = useAuth();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const isRestrictedUser = !user?.isAdmin && !user?.isHo && !user?.isHoStaff;
+    const userAssignments = useMemo(
+      () => user?.assignments ?? [],
+      [user?.assignments]
     );
-    return cnProduct?.id ?? productOptions[0]?.id ?? '';
-  }, [productOptions, productProfiles]);
+    const searchParamsKey = searchParams.toString();
+    const parsedSearchParams = useMemo(
+      () => new URLSearchParams(searchParamsKey),
+      [searchParamsKey]
+    );
 
-  const selectedBranchIds = useMemo(
-    () => branchIds.filter(branchId => branchOptions.some(option => option.id === branchId)),
-    [branchIds, branchOptions],
-  );
-  const selectedProductId = productOptions.some(option => option.id === productId)
-    ? productId
-    : defaultProductId;
+    const hydratedRouteState = useMemo(() => {
+      return {
+        dateRange: readDateRangeSearchParams(
+          parsedSearchParams,
+          ReportDatePresetEnum.TODAY
+        ),
+        branchIds: readSearchParamList(parsedSearchParams, 'branchIds'),
+        productId: readSearchParamValue(parsedSearchParams, 'productId'),
+        layout: parseFlmReportLayout(
+          readSearchParamValue(parsedSearchParams, 'layout') ||
+            DEFAULT_FLM_REPORT_LAYOUT
+        ),
+      };
+    }, [parsedSearchParams]);
 
-  const branchAllSelected =
-    branchOptions.length > 0 && selectedBranchIds.length === branchOptions.length;
+    const [dateRange, setDateRange] = useState<IReportDateRange>(
+      hydratedRouteState.dateRange
+    );
+    const [branchIds, setBranchIds] = useState<string[]>(
+      hydratedRouteState.branchIds
+    );
+    const [productId, setProductId] = useState(hydratedRouteState.productId);
+    const [layout, setLayoutState] = useState<FlmReportLayout>(
+      hydratedRouteState.layout
+    );
+    const [appliedFilters, setAppliedFilters] = useState<
+      Flm1DailyCnSummaryFiltersState['appliedFilters']
+    >(
+      searchParamsKey
+        ? {
+            dateRange: hydratedRouteState.dateRange,
+            branchIds: hydratedRouteState.branchIds,
+            productId: hydratedRouteState.productId,
+            layout: hydratedRouteState.layout,
+          }
+        : null
+    );
 
-  const toggleBranch = (id: string, checked: boolean) => {
-    setBranchIds(current => toggleId(current, id, checked));
-  };
-
-  const toggleAllBranches = (checked: boolean) => {
-    setBranchIds(checked ? branchOptions.map(option => option.id) : []);
-  };
-
-  const resetFilters = () => {
-    setDateRange(buildReportDateRange(ReportDatePresetEnum.TODAY));
-    setBranchIds([]);
-    setProductId(defaultProductId);
-    setLayoutState(DEFAULT_FLM_REPORT_LAYOUT);
-    setAppliedFilters(null);
-    setSearchParams(new URLSearchParams(), { replace: true });
-  };
-
-  const writeSearchParams = (
-    nextDateRange: IReportDateRange,
-    nextBranchIds: string[],
-    nextProductId: string,
-    nextLayout: FlmReportLayout,
-  ) =>
-    buildSearchParams(undefined, next => {
-      setSearchParamValue(next, 'datePreset', nextDateRange.preset);
-      setSearchParamValue(next, 'startDate', nextDateRange.startDate);
-      setSearchParamValue(next, 'endDate', nextDateRange.startDate);
-      setSearchParamList(next, 'branchIds', nextBranchIds);
-      setSearchParamValue(next, 'productId', nextProductId);
-      setSearchParamValue(next, 'layout', nextLayout);
+    const { data: branchProfiles = [] } = useQuery({
+      queryKey: ['reports-flm1-branch-profiles'],
+      enabled: true,
+      queryFn: async () =>
+        branchProfileApi.getBranchProfiles({
+          activeOnly: true,
+        }),
     });
 
-  const setLayout = (nextLayout: FlmReportLayout) => {
-    setLayoutState(nextLayout);
-    if (!appliedFilters) {
-      return;
-    }
-    const nextAppliedFilters = {
-      ...appliedFilters,
-      layout: nextLayout,
-    };
-    setAppliedFilters(nextAppliedFilters);
-    setSearchParams(
-      writeSearchParams(
-        appliedFilters.dateRange,
-        appliedFilters.branchIds,
-        appliedFilters.productId,
-        nextLayout,
-      ),
-      { replace: true },
+    const { data: productProfiles = [] } = useListProductProfiles(true);
+
+    const accessibleBranchProfiles = useMemo(
+      () =>
+        isRestrictedUser
+          ? branchProfiles.filter(branch =>
+              userAssignments.some(
+                assignment => assignment.branchId === branch.id
+              )
+            )
+          : branchProfiles,
+      [branchProfiles, isRestrictedUser, userAssignments]
     );
-  };
 
-  const handleView = () => {
-    if (!selectedProductId || !dateRange.startDate) {
-      return;
-    }
+    const branchOptions = useMemo<IReportSelectOption[]>(
+      () =>
+        uniqueOptions(
+          accessibleBranchProfiles.map(branch =>
+            toOption(
+              branch.id,
+              buildReportOptionLabel(branch.code, branch.name)
+            )
+          )
+        ),
+      [accessibleBranchProfiles]
+    );
 
-    const accessibleBranchIds = branchOptions.map(option => option.id);
-    const effectiveBranchIds = isRestrictedUser
-      ? selectedBranchIds.length > 0
-        ? selectedBranchIds
-        : accessibleBranchIds
-      : selectedBranchIds;
+    const productOptions = useMemo<IReportSelectOption[]>(
+      () =>
+        uniqueOptions(
+          productProfiles.map(product =>
+            toOption(
+              product.id,
+              buildReportOptionLabel(
+                product.productCode,
+                product.productDescription
+              )
+            )
+          )
+        ),
+      [productProfiles]
+    );
 
-    if (isRestrictedUser && selectedBranchIds.length === 0 && effectiveBranchIds.length > 0) {
-      setBranchIds(effectiveBranchIds);
-    }
+    const defaultProductId = useMemo(() => {
+      const cnProduct = productProfiles.find(
+        product =>
+          String(product.productCode ?? '').toUpperCase() ===
+          FLM1_DEFAULT_PRODUCT_CODE
+      );
+      return cnProduct?.id ?? productOptions[0]?.id ?? '';
+    }, [productOptions, productProfiles]);
 
-    const nextAppliedFilters = {
+    const selectedBranchIds = useMemo(
+      () =>
+        branchIds.filter(branchId =>
+          branchOptions.some(option => option.id === branchId)
+        ),
+      [branchIds, branchOptions]
+    );
+    const selectedProductId = productOptions.some(
+      option => option.id === productId
+    )
+      ? productId
+      : defaultProductId;
+
+    const branchAllSelected =
+      branchOptions.length > 0 &&
+      selectedBranchIds.length === branchOptions.length;
+
+    const toggleBranch = (id: string, checked: boolean) => {
+      setBranchIds(current => toggleId(current, id, checked));
+    };
+
+    const toggleAllBranches = (checked: boolean) => {
+      setBranchIds(checked ? branchOptions.map(option => option.id) : []);
+    };
+
+    const resetFilters = () => {
+      setDateRange(buildReportDateRange(ReportDatePresetEnum.TODAY));
+      setBranchIds([]);
+      setProductId(defaultProductId);
+      setLayoutState(DEFAULT_FLM_REPORT_LAYOUT);
+      setAppliedFilters(null);
+      setSearchParams(new URLSearchParams(), { replace: true });
+    };
+
+    const writeSearchParams = (
+      nextDateRange: IReportDateRange,
+      nextBranchIds: string[],
+      nextProductId: string,
+      nextLayout: FlmReportLayout
+    ) =>
+      buildSearchParams(undefined, next => {
+        setSearchParamValue(next, 'datePreset', nextDateRange.preset);
+        setSearchParamValue(next, 'startDate', nextDateRange.startDate);
+        setSearchParamValue(next, 'endDate', nextDateRange.startDate);
+        setSearchParamList(next, 'branchIds', nextBranchIds);
+        setSearchParamValue(next, 'productId', nextProductId);
+        setSearchParamValue(next, 'layout', nextLayout);
+      });
+
+    const setLayout = (nextLayout: FlmReportLayout) => {
+      setLayoutState(nextLayout);
+      if (!appliedFilters) {
+        return;
+      }
+      const nextAppliedFilters = {
+        ...appliedFilters,
+        layout: nextLayout,
+      };
+      setAppliedFilters(nextAppliedFilters);
+      setSearchParams(
+        writeSearchParams(
+          appliedFilters.dateRange,
+          appliedFilters.branchIds,
+          appliedFilters.productId,
+          nextLayout
+        ),
+        { replace: true }
+      );
+    };
+
+    const handleView = () => {
+      if (!selectedProductId || !dateRange.startDate) {
+        return;
+      }
+
+      const accessibleBranchIds = branchOptions.map(option => option.id);
+      const effectiveBranchIds = isRestrictedUser
+        ? selectedBranchIds.length > 0
+          ? selectedBranchIds
+          : accessibleBranchIds
+        : selectedBranchIds;
+
+      if (
+        isRestrictedUser &&
+        selectedBranchIds.length === 0 &&
+        effectiveBranchIds.length > 0
+      ) {
+        setBranchIds(effectiveBranchIds);
+      }
+
+      const nextAppliedFilters = {
+        dateRange,
+        branchIds: effectiveBranchIds,
+        productId: selectedProductId,
+        layout,
+      };
+
+      setAppliedFilters(nextAppliedFilters);
+      setSearchParams(
+        writeSearchParams(
+          dateRange,
+          effectiveBranchIds,
+          selectedProductId,
+          layout
+        ),
+        { replace: true }
+      );
+    };
+
+    const appliedDateRangeLabel = appliedFilters
+      ? formatReportDateRangeLabel(appliedFilters.dateRange)
+      : formatReportDateRangeLabel(dateRange);
+
+    return {
       dateRange,
-      branchIds: effectiveBranchIds,
+      branchIds: selectedBranchIds,
       productId: selectedProductId,
       layout,
+      branchOptions,
+      productOptions,
+      branchAllSelected,
+      setDateRange,
+      setProductId,
+      setLayout,
+      toggleBranch,
+      toggleAllBranches,
+      resetFilters,
+      handleView,
+      appliedFilters,
+      appliedDateRangeLabel,
+      canView: Boolean(selectedProductId && dateRange.startDate),
     };
-
-    setAppliedFilters(nextAppliedFilters);
-    setSearchParams(
-      writeSearchParams(
-        dateRange,
-        effectiveBranchIds,
-        selectedProductId,
-        layout,
-      ),
-      { replace: true },
-    );
   };
-
-  const appliedDateRangeLabel = appliedFilters
-    ? formatReportDateRangeLabel(appliedFilters.dateRange)
-    : formatReportDateRangeLabel(dateRange);
-
-  return {
-    dateRange,
-    branchIds: selectedBranchIds,
-    productId: selectedProductId,
-    layout,
-    branchOptions,
-    productOptions,
-    branchAllSelected,
-    setDateRange,
-    setProductId,
-    setLayout,
-    toggleBranch,
-    toggleAllBranches,
-    resetFilters,
-    handleView,
-    appliedFilters,
-    appliedDateRangeLabel,
-    canView: Boolean(selectedProductId && dateRange.startDate),
-  };
-};
 
 export default useFlm1DailyCnSummaryFilters;

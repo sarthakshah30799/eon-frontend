@@ -69,9 +69,12 @@ export const CardTransferEditView = () => {
   const canPrintStockOut =
     isAccepted && (hasHoAccess || activeBranchId === request.sourceBranchId);
   const canPrintStockIn =
-    isAccepted && (hasHoAccess || activeBranchId === request.destinationBranchId);
+    isAccepted &&
+    (hasHoAccess || activeBranchId === request.destinationBranchId);
   const stockOutCopyType = getCardStockPrintCopyType(request.sourcePrintCount);
-  const stockInCopyType = getCardStockPrintCopyType(request.destinationPrintCount);
+  const stockInCopyType = getCardStockPrintCopyType(
+    request.destinationPrintCount
+  );
   const readOnly = !canManageHeldRequest;
   const isConfirmationPending =
     confirmationAction === 'REJECT'
@@ -151,9 +154,13 @@ export const CardTransferEditView = () => {
               >
                 {isPrinting
                   ? CARD_STOCK_PRINT_TEXT.preparing
-                  : getCardStockPrintButtonLabel('STOCK_OUT', stockOutCopyType, {
-                      transfer: true,
-                    })}
+                  : getCardStockPrintButtonLabel(
+                      'STOCK_OUT',
+                      stockOutCopyType,
+                      {
+                        transfer: true,
+                      }
+                    )}
               </Button>
             ) : null}
             {canPrintStockIn ? (

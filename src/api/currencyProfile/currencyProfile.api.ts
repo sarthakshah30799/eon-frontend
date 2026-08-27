@@ -30,9 +30,7 @@ export const currencyProfileApi = {
         }
   ): Promise<ICurrencyProfile[]> => {
     const queryObj =
-      typeof options === 'string'
-        ? { search: options || undefined }
-        : options;
+      typeof options === 'string' ? { search: options || undefined } : options;
     const res = await apiClient.get<BackendCurrencyProfile[]>(
       `/currencies${buildQueryString(queryObj)}`
     );
@@ -43,7 +41,9 @@ export const currencyProfileApi = {
   getCurrencyProfileById: async (
     id: string
   ): Promise<ICurrencyProfile | undefined> => {
-    const res = await apiClient.get<BackendCurrencyProfile>(`/currencies/${id}`);
+    const res = await apiClient.get<BackendCurrencyProfile>(
+      `/currencies/${id}`
+    );
     if (res.error) throw new Error(res.error);
     return res.data ? mapBackendToFrontend(res.data) : undefined;
   },
@@ -51,7 +51,10 @@ export const currencyProfileApi = {
   createCurrencyProfile: async (
     data: ICreateCurrencyProfile
   ): Promise<ICurrencyProfile> => {
-    const res = await apiClient.post<BackendCurrencyProfile>('/currencies', data);
+    const res = await apiClient.post<BackendCurrencyProfile>(
+      '/currencies',
+      data
+    );
     if (res.error) throw new Error(res.error);
     if (!res.data) throw new Error('Failed to create currency');
     return mapBackendToFrontend(res.data);
@@ -70,7 +73,9 @@ export const currencyProfileApi = {
   },
 
   deleteCurrencyProfile: async (id: string): Promise<boolean> => {
-    const res = await apiClient.delete<{ message: string }>(`/currencies/${id}`);
+    const res = await apiClient.delete<{ message: string }>(
+      `/currencies/${id}`
+    );
     if (res.error) throw new Error(res.error);
     return true;
   },

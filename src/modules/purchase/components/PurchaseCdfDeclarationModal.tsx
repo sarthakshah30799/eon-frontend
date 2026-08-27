@@ -40,9 +40,9 @@ export const PurchaseCdfDeclarationModal = ({
     () =>
       Boolean(
         values.cdfNo.trim() &&
-          values.cdfIssuingAuthority.trim() &&
-          values.cdfArrivalDate.trim() &&
-          values.cdfApprovedUsd.trim()
+        values.cdfIssuingAuthority.trim() &&
+        values.cdfArrivalDate.trim() &&
+        values.cdfApprovedUsd.trim()
       ),
     [values]
   );
@@ -70,7 +70,10 @@ export const PurchaseCdfDeclarationModal = ({
             label="Issuing Authority"
             value={values.cdfIssuingAuthority}
             onChange={event =>
-              setValues(prev => ({ ...prev, cdfIssuingAuthority: event.target.value }))
+              setValues(prev => ({
+                ...prev,
+                cdfIssuingAuthority: event.target.value,
+              }))
             }
             placeholder="Enter issuing authority"
           />
@@ -91,7 +94,10 @@ export const PurchaseCdfDeclarationModal = ({
             inputMode="decimal"
             value={values.cdfApprovedUsd}
             onChange={event =>
-              setValues(prev => ({ ...prev, cdfApprovedUsd: event.target.value }))
+              setValues(prev => ({
+                ...prev,
+                cdfApprovedUsd: event.target.value,
+              }))
             }
             placeholder="Enter approved USD"
             valueTransform="none"
@@ -99,7 +105,11 @@ export const PurchaseCdfDeclarationModal = ({
         </div>
 
         <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+          >
             Cancel
           </Button>
           <Button

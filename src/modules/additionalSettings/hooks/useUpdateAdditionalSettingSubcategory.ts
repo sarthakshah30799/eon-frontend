@@ -13,10 +13,14 @@ export const useUpdateAdditionalSettingSubcategory = () => {
       description: string;
       value: string;
     }) =>
-      additionalSettingsApi.updateSubcategory(payload.categoryId, payload.subcategoryId, {
-        description: payload.description,
-        value: payload.value,
-      }),
+      additionalSettingsApi.updateSubcategory(
+        payload.categoryId,
+        payload.subcategoryId,
+        {
+          description: payload.description,
+          value: payload.value,
+        }
+      ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['additional-settings'] });
       queryClient.invalidateQueries({ queryKey: ['password-policy'] });

@@ -14,4 +14,3 @@ if (!rawApiBaseUrl && import.meta.env.PROD) {
     'VITE_API_BASE_URL is not set. Production requests will use the current origin.'
   );
 }
-

@@ -16,9 +16,7 @@ const UserDetailPage = () => {
   }
 
   if (isLoading) {
-    return (
-      <Loader />
-    );
+    return <Loader />;
   }
 
   if (!user) {
@@ -37,12 +35,10 @@ const UserDetailPage = () => {
           <strong>Email:</strong> {user.email}
         </div>
         <div>
-          <strong>Created:</strong>{' '}
-          {formatDateTime(user.createdAt)}
+          <strong>Created:</strong> {formatDateTime(user.createdAt)}
         </div>
         <div>
-          <strong>Updated:</strong>{' '}
-          {formatDateTime(user.updatedAt)}
+          <strong>Updated:</strong> {formatDateTime(user.updatedAt)}
         </div>
       </div>
     </div>

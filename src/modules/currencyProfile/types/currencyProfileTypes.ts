@@ -13,8 +13,7 @@ export const CurrencyGroup = {
   GULF: 'GULF',
 } as const;
 
-export type CurrencyGroup =
-  (typeof CurrencyGroup)[keyof typeof CurrencyGroup];
+export type CurrencyGroup = (typeof CurrencyGroup)[keyof typeof CurrencyGroup];
 
 export const CurrencyProductAllowed = {
   CN: 'CN',

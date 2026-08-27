@@ -32,15 +32,18 @@ import type {
 import { API_BASE_URL } from '@/config/api';
 import type { ReportLayout } from '@/modules/reports/types';
 
-const buildExportFilename = (prefix: string, layout: ReportLayout, format: ReportExportFormat) =>
-  `${prefix}-${layout}.${format}`;
+const buildExportFilename = (
+  prefix: string,
+  layout: ReportLayout,
+  format: ReportExportFormat
+) => `${prefix}-${layout}.${format}`;
 
 export const reportsApi = {
   getSalePurchaseReport: async (
-    params: ISalePurchaseReportRequest,
+    params: ISalePurchaseReportRequest
   ): Promise<ISalePurchaseReportResponse> => {
     const res = await apiClient.get<ISalePurchaseReportResponse>(
-      `/reports/sale-purchase${buildQueryString(params)}`,
+      `/reports/sale-purchase${buildQueryString(params)}`
     );
 
     if (res.error) {
@@ -59,10 +62,10 @@ export const reportsApi = {
   },
 
   getProductProfitReport: async (
-    params: IProductProfitReportRequest,
+    params: IProductProfitReportRequest
   ): Promise<IProductProfitReportResponse> => {
     const res = await apiClient.get<IProductProfitReportResponse>(
-      `/reports/product-profit${buildQueryString(params)}`,
+      `/reports/product-profit${buildQueryString(params)}`
     );
 
     if (res.error) {
@@ -81,10 +84,10 @@ export const reportsApi = {
   },
 
   getSpecialReport: async (
-    params: ISpecialReportRequest,
+    params: ISpecialReportRequest
   ): Promise<ISpecialReportResponse> => {
     const res = await apiClient.get<ISpecialReportResponse>(
-      `/reports/special-report${buildQueryString(params)}`,
+      `/reports/special-report${buildQueryString(params)}`
     );
 
     if (res.error) {
@@ -102,10 +105,10 @@ export const reportsApi = {
   },
 
   getCurrencyBalanceReport: async (
-    params: ICurrencyBalanceReportRequest,
+    params: ICurrencyBalanceReportRequest
   ): Promise<ICurrencyBalanceReportResponse> => {
     const res = await apiClient.get<ICurrencyBalanceReportResponse>(
-      `/reports/currency-balance${buildQueryString(params)}`,
+      `/reports/currency-balance${buildQueryString(params)}`
     );
 
     if (res.error) {
@@ -125,7 +128,7 @@ export const reportsApi = {
   downloadSalePurchaseReport: async (
     params: ISalePurchaseReportRequest,
     format: ReportExportFormat,
-    layout: ReportLayout,
+    layout: ReportLayout
   ): Promise<{ blob: Blob; filename?: string }> => {
     const query = buildQueryString({
       ...params,
@@ -134,7 +137,7 @@ export const reportsApi = {
     });
 
     const res = await apiClient.getDownload(
-      `/reports/sale-purchase/export${query}`,
+      `/reports/sale-purchase/export${query}`
     );
 
     if (res.error) {
@@ -147,13 +150,15 @@ export const reportsApi = {
 
     return {
       blob: res.data.blob,
-      filename: res.data.filename || buildExportFilename('sale-purchase-report', layout, format),
+      filename:
+        res.data.filename ||
+        buildExportFilename('sale-purchase-report', layout, format),
     };
   },
 
   downloadProductProfitReport: async (
     params: IProductProfitReportRequest,
-    format: ReportExportFormat,
+    format: ReportExportFormat
   ): Promise<{ blob: Blob; filename?: string }> => {
     const query = buildQueryString({
       ...params,
@@ -161,7 +166,7 @@ export const reportsApi = {
     });
 
     const res = await apiClient.getDownload(
-      `/reports/product-profit/export${query}`,
+      `/reports/product-profit/export${query}`
     );
 
     if (res.error) {
@@ -174,13 +179,15 @@ export const reportsApi = {
 
     return {
       blob: res.data.blob,
-      filename: res.data.filename || buildExportFilename('product-profit-report', 'single', format),
+      filename:
+        res.data.filename ||
+        buildExportFilename('product-profit-report', 'single', format),
     };
   },
 
   downloadSpecialReport: async (
     params: ISpecialReportRequest,
-    format: ReportExportFormat,
+    format: ReportExportFormat
   ): Promise<{ blob: Blob; filename?: string }> => {
     const query = buildQueryString({
       ...params,
@@ -188,7 +195,7 @@ export const reportsApi = {
     });
 
     const res = await apiClient.getDownload(
-      `/reports/special-report/export${query}`,
+      `/reports/special-report/export${query}`
     );
 
     if (res.error) {
@@ -201,13 +208,19 @@ export const reportsApi = {
 
     return {
       blob: res.data.blob,
-      filename: res.data.filename || buildExportFilename('special-reports-account-posting', 'single', format),
+      filename:
+        res.data.filename ||
+        buildExportFilename(
+          'special-reports-account-posting',
+          'single',
+          format
+        ),
     };
   },
 
   downloadCurrencyBalanceReport: async (
     params: ICurrencyBalanceReportRequest,
-    format: ReportExportFormat,
+    format: ReportExportFormat
   ): Promise<{ blob: Blob; filename?: string }> => {
     const query = buildQueryString({
       ...params,
@@ -215,7 +228,7 @@ export const reportsApi = {
     });
 
     const res = await apiClient.getDownload(
-      `/reports/currency-balance/export${query}`,
+      `/reports/currency-balance/export${query}`
     );
 
     if (res.error) {
@@ -228,15 +241,17 @@ export const reportsApi = {
 
     return {
       blob: res.data.blob,
-      filename: res.data.filename || buildExportFilename('currency-balance-report', 'single', format),
+      filename:
+        res.data.filename ||
+        buildExportFilename('currency-balance-report', 'single', format),
     };
   },
 
   getFlm1DailyCnSummary: async (
-    params: IFlm1DailyCnSummaryRequest,
+    params: IFlm1DailyCnSummaryRequest
   ): Promise<IFlm1DailyCnSummaryResponse> => {
     const res = await apiClient.get<IFlm1DailyCnSummaryResponse>(
-      `/reports/flm1-daily-cn-summary${buildQueryString(params)}`,
+      `/reports/flm1-daily-cn-summary${buildQueryString(params)}`
     );
 
     if (res.error) {
@@ -257,7 +272,7 @@ export const reportsApi = {
 
   downloadFlm1DailyCnSummary: async (
     params: IFlm1DailyCnSummaryRequest,
-    format: ReportExportFormat,
+    format: ReportExportFormat
   ): Promise<{ blob: Blob; filename?: string }> => {
     const query = buildQueryString({
       ...params,
@@ -265,7 +280,7 @@ export const reportsApi = {
     });
 
     const res = await apiClient.getDownload(
-      `/reports/flm1-daily-cn-summary/export${query}`,
+      `/reports/flm1-daily-cn-summary/export${query}`
     );
 
     if (res.error) {
@@ -278,15 +293,17 @@ export const reportsApi = {
 
     return {
       blob: res.data.blob,
-      filename: res.data.filename || buildExportFilename('flm1-daily-cn-summary', 'single', format),
+      filename:
+        res.data.filename ||
+        buildExportFilename('flm1-daily-cn-summary', 'single', format),
     };
   },
 
   getFlm3PurchaseFromPublic: async (
-    params: IFlm3PurchaseFromPublicRequest,
+    params: IFlm3PurchaseFromPublicRequest
   ): Promise<IFlm3PurchaseFromPublicResponse> => {
     const res = await apiClient.get<IFlm3PurchaseFromPublicResponse>(
-      `/reports/flm3-purchase-from-public${buildQueryString(params)}`,
+      `/reports/flm3-purchase-from-public${buildQueryString(params)}`
     );
 
     if (res.error) {
@@ -315,7 +332,7 @@ export const reportsApi = {
 
   downloadFlm3PurchaseFromPublic: async (
     params: IFlm3PurchaseFromPublicRequest,
-    format: ReportExportFormat,
+    format: ReportExportFormat
   ): Promise<{ blob: Blob; filename?: string }> => {
     const query = buildQueryString({
       ...params,
@@ -323,7 +340,7 @@ export const reportsApi = {
     });
 
     const res = await apiClient.getDownload(
-      `/reports/flm3-purchase-from-public/export${query}`,
+      `/reports/flm3-purchase-from-public/export${query}`
     );
 
     if (res.error) {
@@ -343,10 +360,10 @@ export const reportsApi = {
   },
 
   getFlm4PurchaseFromFfmc: async (
-    params: IFlm4PurchaseFromFfmcRequest,
+    params: IFlm4PurchaseFromFfmcRequest
   ): Promise<IFlm4PurchaseFromFfmcResponse> => {
     const res = await apiClient.get<IFlm4PurchaseFromFfmcResponse>(
-      `/reports/flm4-purchase-from-ffmc${buildQueryString(params)}`,
+      `/reports/flm4-purchase-from-ffmc${buildQueryString(params)}`
     );
 
     if (res.error) {
@@ -375,7 +392,7 @@ export const reportsApi = {
 
   downloadFlm4PurchaseFromFfmc: async (
     params: IFlm4PurchaseFromFfmcRequest,
-    format: ReportExportFormat,
+    format: ReportExportFormat
   ): Promise<{ blob: Blob; filename?: string }> => {
     const query = buildQueryString({
       ...params,
@@ -383,7 +400,7 @@ export const reportsApi = {
     });
 
     const res = await apiClient.getDownload(
-      `/reports/flm4-purchase-from-ffmc/export${query}`,
+      `/reports/flm4-purchase-from-ffmc/export${query}`
     );
 
     if (res.error) {
@@ -402,12 +419,11 @@ export const reportsApi = {
     };
   },
 
-
   getFlm5SalesToPublic: async (
-    params: IFlm5SalesToPublicRequest,
+    params: IFlm5SalesToPublicRequest
   ): Promise<IFlm5SalesToPublicResponse> => {
     const res = await apiClient.get<IFlm5SalesToPublicResponse>(
-      `/reports/flm5-sales-to-public${buildQueryString(params)}`,
+      `/reports/flm5-sales-to-public${buildQueryString(params)}`
     );
 
     if (res.error) {
@@ -436,7 +452,7 @@ export const reportsApi = {
 
   downloadFlm5SalesToPublic: async (
     params: IFlm5SalesToPublicRequest,
-    format: ReportExportFormat,
+    format: ReportExportFormat
   ): Promise<{ blob: Blob; filename?: string }> => {
     const query = buildQueryString({
       ...params,
@@ -444,7 +460,7 @@ export const reportsApi = {
     });
 
     const res = await apiClient.getDownload(
-      `/reports/flm5-sales-to-public/export${query}`,
+      `/reports/flm5-sales-to-public/export${query}`
     );
 
     if (res.error) {
@@ -464,10 +480,10 @@ export const reportsApi = {
   },
 
   getFlm6SalesToFfmc: async (
-    params: IFlm6SalesToFfmcRequest,
+    params: IFlm6SalesToFfmcRequest
   ): Promise<IFlm6SalesToFfmcResponse> => {
     const res = await apiClient.get<IFlm6SalesToFfmcResponse>(
-      `/reports/flm6-sales-to-ffmc${buildQueryString(params)}`,
+      `/reports/flm6-sales-to-ffmc${buildQueryString(params)}`
     );
 
     if (res.error) {
@@ -496,7 +512,7 @@ export const reportsApi = {
 
   downloadFlm6SalesToFfmc: async (
     params: IFlm6SalesToFfmcRequest,
-    format: ReportExportFormat,
+    format: ReportExportFormat
   ): Promise<{ blob: Blob; filename?: string }> => {
     const query = buildQueryString({
       ...params,
@@ -504,7 +520,7 @@ export const reportsApi = {
     });
 
     const res = await apiClient.getDownload(
-      `/reports/flm6-sales-to-ffmc/export${query}`,
+      `/reports/flm6-sales-to-ffmc/export${query}`
     );
 
     if (res.error) {
@@ -524,10 +540,10 @@ export const reportsApi = {
   },
 
   getFlm8CnStatement: async (
-    params: IFlm8CnStatementRequest,
+    params: IFlm8CnStatementRequest
   ): Promise<IFlm8CnStatementResponse> => {
     const res = await apiClient.get<IFlm8CnStatementResponse>(
-      `/reports/flm8-cn-statement${buildQueryString(params)}`,
+      `/reports/flm8-cn-statement${buildQueryString(params)}`
     );
 
     if (res.error) {
@@ -551,7 +567,7 @@ export const reportsApi = {
 
   downloadFlm8CnStatement: async (
     params: IFlm8CnStatementRequest,
-    format: ReportExportFormat,
+    format: ReportExportFormat
   ): Promise<{ blob: Blob; filename?: string }> => {
     const query = buildQueryString({
       ...params,
@@ -559,7 +575,7 @@ export const reportsApi = {
     });
 
     const res = await apiClient.getDownload(
-      `/reports/flm8-cn-statement/export${query}`,
+      `/reports/flm8-cn-statement/export${query}`
     );
 
     if (res.error) {
@@ -579,11 +595,11 @@ export const reportsApi = {
   },
 
   lockFlm8CnStatementData: async (
-    payload: IFlm8CnStatementLockDataRequest,
+    payload: IFlm8CnStatementLockDataRequest
   ): Promise<IFlm8CnStatementLockDataResponse> => {
     const res = await apiClient.post<IFlm8CnStatementLockDataResponse>(
       '/reports/flm8-cn-statement/lock-data',
-      payload,
+      payload
     );
 
     if (res.error) {
@@ -598,10 +614,10 @@ export const reportsApi = {
   },
 
   getCardUnsettledReport: async (
-    params: ICardSettlementReportRequest,
+    params: ICardSettlementReportRequest
   ): Promise<ICardSettlementReportResponse> => {
     const res = await apiClient.get<ICardSettlementReportResponse>(
-      `/reports/card-unsettled${buildQueryString(params)}`,
+      `/reports/card-unsettled${buildQueryString(params)}`
     );
 
     if (res.error) {
@@ -620,10 +636,10 @@ export const reportsApi = {
   },
 
   getCardSettledReport: async (
-    params: ICardSettlementReportRequest,
+    params: ICardSettlementReportRequest
   ): Promise<ICardSettlementReportResponse> => {
     const res = await apiClient.get<ICardSettlementReportResponse>(
-      `/reports/card-settled${buildQueryString(params)}`,
+      `/reports/card-settled${buildQueryString(params)}`
     );
 
     if (res.error) {
@@ -643,7 +659,7 @@ export const reportsApi = {
 
   downloadCardUnsettledReport: async (
     params: ICardSettlementReportRequest,
-    format: ReportExportFormat,
+    format: ReportExportFormat
   ): Promise<{ blob: Blob; filename?: string }> => {
     const query = buildQueryString({
       ...params,
@@ -651,7 +667,7 @@ export const reportsApi = {
     });
 
     const res = await apiClient.getDownload(
-      `/reports/card-unsettled/export${query}`,
+      `/reports/card-unsettled/export${query}`
     );
 
     if (res.error) {
@@ -664,13 +680,15 @@ export const reportsApi = {
 
     return {
       blob: res.data.blob,
-      filename: res.data.filename || buildExportFilename('card-unsettled-report', 'grouped', format),
+      filename:
+        res.data.filename ||
+        buildExportFilename('card-unsettled-report', 'grouped', format),
     };
   },
 
   downloadCardSettledReport: async (
     params: ICardSettlementReportRequest,
-    format: ReportExportFormat,
+    format: ReportExportFormat
   ): Promise<{ blob: Blob; filename?: string }> => {
     const query = buildQueryString({
       ...params,
@@ -678,7 +696,7 @@ export const reportsApi = {
     });
 
     const res = await apiClient.getDownload(
-      `/reports/card-settled/export${query}`,
+      `/reports/card-settled/export${query}`
     );
 
     if (res.error) {
@@ -691,15 +709,17 @@ export const reportsApi = {
 
     return {
       blob: res.data.blob,
-      filename: res.data.filename || buildExportFilename('card-settled-report', 'grouped', format),
+      filename:
+        res.data.filename ||
+        buildExportFilename('card-settled-report', 'grouped', format),
     };
   },
 
   getCardBlankStockReport: async (
-    params: ICardBlankStockReportRequest,
+    params: ICardBlankStockReportRequest
   ): Promise<ICardBlankStockReportResponse> => {
     const res = await apiClient.get<ICardBlankStockReportResponse>(
-      `/reports/card-blank-stock${buildQueryString(params)}`,
+      `/reports/card-blank-stock${buildQueryString(params)}`
     );
 
     if (res.error) {
@@ -719,7 +739,7 @@ export const reportsApi = {
 
   downloadCardBlankStockReport: async (
     params: ICardBlankStockReportRequest,
-    format: ReportExportFormat,
+    format: ReportExportFormat
   ): Promise<{ blob: Blob; filename?: string }> => {
     const query = buildQueryString({
       ...params,
@@ -727,7 +747,7 @@ export const reportsApi = {
     });
 
     const res = await apiClient.getDownload(
-      `/reports/card-blank-stock/export${query}`,
+      `/reports/card-blank-stock/export${query}`
     );
 
     if (res.error) {
@@ -740,13 +760,15 @@ export const reportsApi = {
 
     return {
       blob: res.data.blob,
-      filename: res.data.filename || buildExportFilename('card-blank-stock-report', 'flat', format),
+      filename:
+        res.data.filename ||
+        buildExportFilename('card-blank-stock-report', 'flat', format),
     };
   },
 
   getProductProfitReportFileUrl: (
     params: IProductProfitReportRequest,
-    format: ReportExportFormat,
+    format: ReportExportFormat
   ) => {
     const query = buildQueryString({
       ...params,
@@ -759,7 +781,7 @@ export const reportsApi = {
   getReportFileUrl: (
     params: ISalePurchaseReportRequest,
     format: ReportExportFormat,
-    layout: ReportLayout,
+    layout: ReportLayout
   ) => {
     const query = buildQueryString({
       ...params,
@@ -772,7 +794,7 @@ export const reportsApi = {
 
   getSpecialReportFileUrl: (
     params: ISpecialReportRequest,
-    format: ReportExportFormat,
+    format: ReportExportFormat
   ) => {
     const query = buildQueryString({
       ...params,
@@ -784,7 +806,7 @@ export const reportsApi = {
 
   getCurrencyBalanceReportFileUrl: (
     params: ICurrencyBalanceReportRequest,
-    format: ReportExportFormat,
+    format: ReportExportFormat
   ) => {
     const query = buildQueryString({
       ...params,

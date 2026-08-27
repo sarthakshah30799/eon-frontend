@@ -14,7 +14,8 @@ export const DOCUMENT_PROFILE_TEXTS = {
   UPDATE_ERROR: 'Failed to update document profile',
   DELETE_ERROR: 'Failed to delete document profile',
   FORM_TITLE: 'Document Profile',
-  FORM_SUBTITLE: 'Define profile-, entity-, and field-specific document requirements.',
+  FORM_SUBTITLE:
+    'Define profile-, entity-, and field-specific document requirements.',
   SAVE_CHANGES: 'Save Changes',
 };
 
@@ -44,7 +45,8 @@ const SPECIFICATION_TYPE_TO_DOCUMENT_CODE: Record<string, string> = {
 export const loadDocumentProfileTypeOptions = async (
   specificationType: string
 ): Promise<AsyncSelectResponse> => {
-  const documentCode = SPECIFICATION_TYPE_TO_DOCUMENT_CODE[specificationType.trim().toUpperCase()];
+  const documentCode =
+    SPECIFICATION_TYPE_TO_DOCUMENT_CODE[specificationType.trim().toUpperCase()];
 
   return {
     options: documentCode

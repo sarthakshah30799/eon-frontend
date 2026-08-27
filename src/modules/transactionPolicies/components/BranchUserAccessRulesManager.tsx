@@ -31,7 +31,14 @@ interface BranchUserAccessRulesManagerProps {
   loading?: boolean;
   isSubmitting?: boolean;
   showDateRange?: boolean;
-  onCreateRules: (rules: Array<{ branchId: string; userId: string; fromDate?: string; toDate?: string }>) => Promise<unknown>;
+  onCreateRules: (
+    rules: Array<{
+      branchId: string;
+      userId: string;
+      fromDate?: string;
+      toDate?: string;
+    }>
+  ) => Promise<unknown>;
   onRevokeRule: (ruleId: string) => Promise<unknown>;
   emptyMessage?: string;
 }
@@ -52,23 +59,27 @@ export const BranchUserAccessRulesManager = ({
   onRevokeRule,
   emptyMessage = 'No records found.',
 }: BranchUserAccessRulesManagerProps) => {
-  const [selectedBranch, setSelectedBranch] = useState<AsyncSelectOption | null>(null);
+  const [selectedBranch, setSelectedBranch] =
+    useState<AsyncSelectOption | null>(null);
   const [selectedUsers, setSelectedUsers] = useState<IUserProfile[]>([]);
   const [usersModalOpen, setUsersModalOpen] = useState(false);
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [formError, setFormError] = useState('');
 
-  const loadBranchOptions = useCallback(async (inputValue: string): Promise<AsyncSelectResponse> => {
-    const branches = await branchProfileApi.getBranchProfiles({
-      activeOnly: true,
-      search: inputValue.trim() || undefined,
-    });
+  const loadBranchOptions = useCallback(
+    async (inputValue: string): Promise<AsyncSelectResponse> => {
+      const branches = await branchProfileApi.getBranchProfiles({
+        activeOnly: true,
+        search: inputValue.trim() || undefined,
+      });
 
-    return {
-      options: branches.map(mapBranchToOption),
-    };
-  }, []);
+      return {
+        options: branches.map(mapBranchToOption),
+      };
+    },
+    []
+  );
 
   const columns = useMemo<TableColumnDef<BranchUserAccessRuleRow>[]>(() => {
     const nextColumns: TableColumnDef<BranchUserAccessRuleRow>[] = [
@@ -79,7 +90,7 @@ export const BranchUserAccessRulesManager = ({
     if (showDateRange) {
       nextColumns.push(
         { accessorKey: 'fromDate', header: 'From Date' },
-        { accessorKey: 'toDate', header: 'To Date' },
+        { accessorKey: 'toDate', header: 'To Date' }
       );
     }
 
@@ -139,7 +150,9 @@ export const BranchUserAccessRulesManager = ({
     setToDate('');
   };
 
-  const selectedUserSummary = selectedUsers.map(user => `${user.code} - ${user.name}`);
+  const selectedUserSummary = selectedUsers.map(
+    user => `${user.code} - ${user.name}`
+  );
 
   return (
     <section className="space-y-4 rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm">
@@ -148,7 +161,9 @@ export const BranchUserAccessRulesManager = ({
           <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-text-tertiary">
             {title}
           </h3>
-          {description ? <p className="mt-1 text-sm text-text-secondary">{description}</p> : null}
+          {description ? (
+            <p className="mt-1 text-sm text-text-secondary">{description}</p>
+          ) : null}
         </div>
       </div>
 
@@ -156,7 +171,9 @@ export const BranchUserAccessRulesManager = ({
         <div className="space-y-4 rounded-sm border border-border-primary bg-surface-secondary p-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-1">
-              <label className="block text-xs font-semibold text-text-secondary">Branch</label>
+              <label className="block text-xs font-semibold text-text-secondary">
+                Branch
+              </label>
               <AsyncSelect
                 loadOptions={loadBranchOptions}
                 value={selectedBranch}
@@ -179,7 +196,9 @@ export const BranchUserAccessRulesManager = ({
                   disabled={isSubmitting}
                   selected={fromDate ? new Date(`${fromDate}T00:00:00`) : null}
                   onChange={date => {
-                    const nextValue = date ? date.toISOString().slice(0, 10) : '';
+                    const nextValue = date
+                      ? date.toISOString().slice(0, 10)
+                      : '';
                     setFromDate(nextValue);
                   }}
                 />
@@ -188,7 +207,9 @@ export const BranchUserAccessRulesManager = ({
                   disabled={isSubmitting}
                   selected={toDate ? new Date(`${toDate}T00:00:00`) : null}
                   onChange={date => {
-                    const nextValue = date ? date.toISOString().slice(0, 10) : '';
+                    const nextValue = date
+                      ? date.toISOString().slice(0, 10)
+                      : '';
                     setToDate(nextValue);
                   }}
                 />
@@ -208,7 +229,9 @@ export const BranchUserAccessRulesManager = ({
               </Button>
               <Button
                 type="button"
-                disabled={!selectedBranch || selectedUsers.length === 0 || isSubmitting}
+                disabled={
+                  !selectedBranch || selectedUsers.length === 0 || isSubmitting
+                }
                 onClick={() => void handleAddRules()}
               >
                 Add Access Rules

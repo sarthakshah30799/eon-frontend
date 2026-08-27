@@ -15,7 +15,8 @@ export const PURPOSE_TEXTS = {
   LIST_ERROR: 'Error loading purposes',
   EMPTY_STATE: 'No purposes found. Create your first purpose.',
   SLABS_TITLE: 'Slabs',
-  SLABS_SUBTITLE: 'Add one or more slab rows when the purpose uses bracket-based TCS.',
+  SLABS_SUBTITLE:
+    'Add one or more slab rows when the purpose uses bracket-based TCS.',
   ADD_SLAB: 'Add Slab',
 } as const;
 

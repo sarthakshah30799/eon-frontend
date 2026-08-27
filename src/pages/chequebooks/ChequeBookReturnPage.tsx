@@ -76,18 +76,20 @@ export const ChequeBookReturnPage = () => {
         chequeNoTo: toVal,
       });
 
-      const matchedRows: IReturnRow[] = data.map((item: IChequeBookCashierReturnGroup) => ({
-        checkBookId: item.checkBookId,
-        bookNo: item.bookNo,
-        bankAccountCode: item.bankAccountCode,
-        mvNoFrom: item.mvNoFrom,
-        mvNoTo: item.mvNoTo,
-        qty: item.qty,
-        pageIds: item.pageIds,
-        pageNos: item.pageNos,
-        remarks: item.remarks || '',
-        isCheck: false,
-      }));
+      const matchedRows: IReturnRow[] = data.map(
+        (item: IChequeBookCashierReturnGroup) => ({
+          checkBookId: item.checkBookId,
+          bookNo: item.bookNo,
+          bankAccountCode: item.bankAccountCode,
+          mvNoFrom: item.mvNoFrom,
+          mvNoTo: item.mvNoTo,
+          qty: item.qty,
+          pageIds: item.pageIds,
+          pageNos: item.pageNos,
+          remarks: item.remarks || '',
+          isCheck: false,
+        })
+      );
 
       setRows(matchedRows);
       setHasProcessed(true);
@@ -123,10 +125,10 @@ export const ChequeBookReturnPage = () => {
     try {
       setIsSaving(true);
       const allPageNos = checkedRows.flatMap(r => r.pageNos);
-      
+
       await chequebookApi.returnPages(allPageNos);
       toast.success('Cashier leaves returned to Manager successfully.');
-      
+
       await handleProcess();
     } catch (err: unknown) {
       toast.error(getErrorMessage(err, 'Failed to return pages.'));
@@ -138,7 +140,9 @@ export const ChequeBookReturnPage = () => {
   if (!activeBranchId) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
-        <p className="text-slate-500 font-medium">Please select your active branch workplace to proceed.</p>
+        <p className="text-slate-500 font-medium">
+          Please select your active branch workplace to proceed.
+        </p>
       </div>
     );
   }
@@ -149,9 +153,12 @@ export const ChequeBookReturnPage = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-1.5 border-b border-slate-200 pb-5">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Return Cashier To Manager</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+          Return Cashier To Manager
+        </h1>
         <p className="text-sm text-slate-500">
-          Return allocated chequebook leaves from Cashier back to Manager (Stock).
+          Return allocated chequebook leaves from Cashier back to Manager
+          (Stock).
         </p>
       </div>
 
@@ -169,16 +176,19 @@ export const ChequeBookReturnPage = () => {
                 placeholder="ALL"
                 loadOptions={async (inputValue: string, page = 1) => {
                   try {
-                    const response = await accountProfileApi.getAccountProfiles({
-                      page,
-                      limit: ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
-                      search: inputValue,
-                      active: true,
-                    });
+                    const response = await accountProfileApi.getAccountProfiles(
+                      {
+                        page,
+                        limit: ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
+                        search: inputValue,
+                        active: true,
+                      }
+                    );
                     const bankAccounts = (response.data || []).filter(acc => {
                       return (
                         (acc.bankNature && acc.bankNature.value !== 'NONE') ||
-                        (acc.accountType && acc.accountType.value === 'BANK LEDGER') ||
+                        (acc.accountType &&
+                          acc.accountType.value === 'BANK LEDGER') ||
                         (acc.financialCode && acc.financialCode === 'BANKBL')
                       );
                     });
@@ -187,7 +197,9 @@ export const ChequeBookReturnPage = () => {
                         value: acc.id,
                         label: `${acc.accountCode} - ${acc.accountName}`,
                       })),
-                      hasMore: (response.data || []).length === ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
+                      hasMore:
+                        (response.data || []).length ===
+                        ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
                     };
                   } catch {
                     return {
@@ -243,11 +255,7 @@ export const ChequeBookReturnPage = () => {
         </div>
 
         <div className="flex gap-3 mt-6">
-          <Button
-            onClick={handleProcess}
-            disabled={isProcessing}
-            size="sm"
-          >
+          <Button onClick={handleProcess} disabled={isProcessing} size="sm">
             {isProcessing ? 'Processing...' : 'Process'}
           </Button>
         </div>
@@ -257,12 +265,16 @@ export const ChequeBookReturnPage = () => {
       {hasProcessed && (
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="px-5 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
-            <h3 className="font-semibold text-slate-800 text-sm">Leaves Checklist</h3>
+            <h3 className="font-semibold text-slate-800 text-sm">
+              Leaves Checklist
+            </h3>
           </div>
 
           {rows.length === 0 ? (
             <div className="py-12 text-center">
-              <p className="text-sm text-slate-500">No leaves found to return.</p>
+              <p className="text-sm text-slate-500">
+                No leaves found to return.
+              </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -291,11 +303,20 @@ export const ChequeBookReturnPage = () => {
                           onChange={() => handleRowCheckbox(idx)}
                         />
                       </td>
-                      <td className="px-4 py-4 font-semibold text-slate-800">{row.bookNo}</td>
-                      <td className="px-4 py-4 font-mono text-xs">{row.mvNoFrom}</td>
-                      <td className="px-4 py-4 font-mono text-xs">{row.mvNoTo}</td>
+                      <td className="px-4 py-4 font-semibold text-slate-800">
+                        {row.bookNo}
+                      </td>
+                      <td className="px-4 py-4 font-mono text-xs">
+                        {row.mvNoFrom}
+                      </td>
+                      <td className="px-4 py-4 font-mono text-xs">
+                        {row.mvNoTo}
+                      </td>
                       <td className="px-4 py-4">{row.qty}</td>
-                      <td className="px-4 py-4 text-slate-500 truncate max-w-[200px]" title={row.remarks}>
+                      <td
+                        className="px-4 py-4 text-slate-500 truncate max-w-[200px]"
+                        title={row.remarks}
+                      >
                         {row.remarks || '-'}
                       </td>
                     </tr>
@@ -307,11 +328,7 @@ export const ChequeBookReturnPage = () => {
 
           {rows.length > 0 && (
             <div className="px-5 py-4 border-t border-slate-200 bg-slate-50 flex justify-end">
-              <Button
-                onClick={handleSaveReturn}
-                disabled={isSaving}
-                size="sm"
-              >
+              <Button onClick={handleSaveReturn} disabled={isSaving} size="sm">
                 {isSaving ? 'Processing...' : 'Return'}
               </Button>
             </div>

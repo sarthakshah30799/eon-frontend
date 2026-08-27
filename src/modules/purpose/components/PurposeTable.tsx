@@ -52,8 +52,14 @@ export const PurposeTable = ({
         threshold: Number(purpose.threshold || 0).toFixed(2),
         rate: Number(purpose.rate || 0).toFixed(2),
         rateType: purpose.rateType,
-        partyScope: formatPurposeScopeLabel(purpose.corporate, purpose.individual),
-        transactionScope: formatPurposeTransactionScopeLabel(purpose.sell, purpose.purchase),
+        partyScope: formatPurposeScopeLabel(
+          purpose.corporate,
+          purpose.individual
+        ),
+        transactionScope: formatPurposeTransactionScopeLabel(
+          purpose.sell,
+          purpose.purchase
+        ),
         slabCount: purpose.slabs?.length ?? 0,
       })),
     [purposes]
@@ -68,15 +74,21 @@ export const PurposeTable = ({
     {
       accessorKey: 'rate',
       header: 'Rate',
-      cell: ({ row }) => formatPurposeRateLabel(Number(row.original.rate), row.original.rateType),
+      cell: ({ row }) =>
+        formatPurposeRateLabel(
+          Number(row.original.rate),
+          row.original.rateType
+        ),
     },
     { accessorKey: 'slabCount', header: 'Slabs' },
     {
       id: 'actions',
       header: 'Actions',
       meta: {
-        headerClassName: 'sticky right-0 z-20 border-l border-border-primary bg-surface-secondary',
-        cellClassName: 'sticky right-0 z-10 border-l border-border-primary bg-surface-primary',
+        headerClassName:
+          'sticky right-0 z-20 border-l border-border-primary bg-surface-secondary',
+        cellClassName:
+          'sticky right-0 z-10 border-l border-border-primary bg-surface-primary',
       },
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
@@ -102,7 +114,9 @@ export const PurposeTable = ({
             disabled={isDeleting}
             onClick={async event => {
               event.stopPropagation();
-              if (window.confirm('Are you sure you want to delete this purpose?')) {
+              if (
+                window.confirm('Are you sure you want to delete this purpose?')
+              ) {
                 await onDelete(row.original.id);
               }
             }}

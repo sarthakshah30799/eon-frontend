@@ -15,7 +15,9 @@ export interface IStaticCategoryOption {
 
 export const categoryOptionsApi = {
   getCategoryOptions: async (search?: string): Promise<ICategoryOption[]> => {
-    const query = search?.trim() ? `?search=${encodeURIComponent(search.trim())}` : '';
+    const query = search?.trim()
+      ? `?search=${encodeURIComponent(search.trim())}`
+      : '';
     const res = await apiClient.get<ICategoryOption[]>(
       `/select-options/all${query}`
     );
@@ -33,7 +35,9 @@ export const categoryOptionsApi = {
       return [];
     }
 
-    const query = search?.trim() ? `?search=${encodeURIComponent(search.trim())}` : '';
+    const query = search?.trim()
+      ? `?search=${encodeURIComponent(search.trim())}`
+      : '';
     const res = await apiClient.get<ICategoryOption[]>(
       `/select-options/${encodeURIComponent(normalizedCode)}${query}`
     );
@@ -84,7 +88,9 @@ export const categoryOptionsApi = {
   },
 
   getCategoryOptionById: async (id: string): Promise<ICategoryOption> => {
-    const res = await apiClient.get<ICategoryOption>(`/select-options/item/${id}`);
+    const res = await apiClient.get<ICategoryOption>(
+      `/select-options/item/${id}`
+    );
 
     if (res.error) throw new Error(res.error);
     if (!res.data) {

@@ -20,7 +20,8 @@ export const toPartyProfileRouteType = (value?: string | null): string => {
   }
 
   const normalizedValue = value.trim();
-  const mappedRouteType = PARTY_PROFILE_ROUTE_TYPE_MAP[normalizedValue.toUpperCase()];
+  const mappedRouteType =
+    PARTY_PROFILE_ROUTE_TYPE_MAP[normalizedValue.toUpperCase()];
   if (mappedRouteType) {
     return mappedRouteType;
   }
@@ -42,23 +43,15 @@ export const toPartyProfileApiType = (value?: string | null): string => {
     return mappedApiType;
   }
 
-  return value
-    .trim()
-    .replace(/-/g, '_')
-    .replace(/\s+/g, '_')
-    .toUpperCase();
+  return value.trim().replace(/-/g, '_').replace(/\s+/g, '_').toUpperCase();
 };
 
-export const toPartyProfileDisplayLabel = (
-  value?: string | null
-): string => {
+export const toPartyProfileDisplayLabel = (value?: string | null): string => {
   const normalized = value?.trim().replace(/[_-]+/g, ' ');
   return normalized ? normalized.toUpperCase() : 'PARTY PROFILE';
 };
 
-export const formatPartyProfileLabel = (
-  value?: string | null
-): string => {
+export const formatPartyProfileLabel = (value?: string | null): string => {
   const normalized = value?.trim().replace(/[-_]+/g, ' ');
 
   if (!normalized) {

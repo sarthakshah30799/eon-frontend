@@ -112,7 +112,9 @@ export const transfersApi = {
     status?: TransferStatus;
     search?: string;
   }) => {
-    const res = await apiClient.get<ICurrencyTransfer[]>(`/transfers${buildQuery(params)}`);
+    const res = await apiClient.get<ICurrencyTransfer[]>(
+      `/transfers${buildQuery(params)}`
+    );
     if (res.error) throw new Error(res.error);
     return res.data ?? [];
   },
@@ -122,26 +124,41 @@ export const transfersApi = {
     if (!res.data) throw new Error('Failed to load transfer');
     return res.data;
   },
-  createCounterTransfer: async (payload: Omit<ICreateTransferPayload, 'transferType'>) => {
-    const res = await apiClient.post<ICurrencyTransfer>('/transfers/counter', payload);
+  createCounterTransfer: async (
+    payload: Omit<ICreateTransferPayload, 'transferType'>
+  ) => {
+    const res = await apiClient.post<ICurrencyTransfer>(
+      '/transfers/counter',
+      payload
+    );
     if (res.error) throw new Error(res.error);
     if (!res.data) throw new Error('Failed to create transfer');
     return res.data;
   },
-  createBranchTransfer: async (payload: Omit<ICreateTransferPayload, 'transferType'>) => {
-    const res = await apiClient.post<ICurrencyTransfer>('/transfers/branch', payload);
+  createBranchTransfer: async (
+    payload: Omit<ICreateTransferPayload, 'transferType'>
+  ) => {
+    const res = await apiClient.post<ICurrencyTransfer>(
+      '/transfers/branch',
+      payload
+    );
     if (res.error) throw new Error(res.error);
     if (!res.data) throw new Error('Failed to create transfer');
     return res.data;
   },
   acceptTransfer: async (id: string) => {
-    const res = await apiClient.post<ICurrencyTransfer>(`/transfers/${id}/accept`);
+    const res = await apiClient.post<ICurrencyTransfer>(
+      `/transfers/${id}/accept`
+    );
     if (res.error) throw new Error(res.error);
     if (!res.data) throw new Error('Failed to accept transfer');
     return res.data;
   },
   rejectTransfer: async (id: string, remarks?: string | null) => {
-    const res = await apiClient.post<ICurrencyTransfer>(`/transfers/${id}/reject`, { remarks: remarks ?? null });
+    const res = await apiClient.post<ICurrencyTransfer>(
+      `/transfers/${id}/reject`,
+      { remarks: remarks ?? null }
+    );
     if (res.error) throw new Error(res.error);
     if (!res.data) throw new Error('Failed to reject transfer');
     return res.data;
@@ -149,11 +166,16 @@ export const transfersApi = {
   recordPrint: async (
     id: string,
     payload: IRecordTransferPrintPayload
-  ): Promise<{ message: string; copyType: ITransferPrintCopyType; printCount: number }> => {
-    const res = await apiClient.post<{ message: string; copyType: ITransferPrintCopyType; printCount: number }>(
-      `/transfers/${id}/print`,
-      payload
-    );
+  ): Promise<{
+    message: string;
+    copyType: ITransferPrintCopyType;
+    printCount: number;
+  }> => {
+    const res = await apiClient.post<{
+      message: string;
+      copyType: ITransferPrintCopyType;
+      printCount: number;
+    }>(`/transfers/${id}/print`, payload);
     if (res.error) throw new Error(res.error);
     if (!res.data) throw new Error('Failed to record transfer print');
     return res.data;

@@ -25,10 +25,15 @@ function mvToBookNo(
   pageNo: number,
   book: NonNullable<IChequeBookPageTracking['checkBook']>
 ): number {
-  return book.bookNoFrom + Math.floor((pageNo - book.mvNoFrom) / book.vouchersPerBook);
+  return (
+    book.bookNoFrom +
+    Math.floor((pageNo - book.mvNoFrom) / book.vouchersPerBook)
+  );
 }
 
-function groupPagesIntoRows(pages: IChequeBookPageTracking[]): ICashierChequeBookRow[] {
+function groupPagesIntoRows(
+  pages: IChequeBookPageTracking[]
+): ICashierChequeBookRow[] {
   const byBook = new Map<string, IChequeBookPageTracking[]>();
   for (const page of pages) {
     const list = byBook.get(page.checkBookId) ?? [];
@@ -69,7 +74,10 @@ function groupPagesIntoRows(pages: IChequeBookPageTracking[]): ICashierChequeBoo
     // Split into contiguous page segments
     let segStart = 0;
     for (let i = 1; i <= sorted.length; i++) {
-      if (i === sorted.length || sorted[i].pageNo !== sorted[i - 1].pageNo + 1) {
+      if (
+        i === sorted.length ||
+        sorted[i].pageNo !== sorted[i - 1].pageNo + 1
+      ) {
         emitRow(sorted.slice(segStart, i));
         segStart = i;
       }
@@ -91,7 +99,11 @@ export const CashierChequeBookListView = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  const { data: pages = [], isLoading, isFetching } = useQuery<IChequeBookPageTracking[]>({
+  const {
+    data: pages = [],
+    isLoading,
+    isFetching,
+  } = useQuery<IChequeBookPageTracking[]>({
     queryKey: ['cashier-chequebooks', user?.id],
     queryFn: () => chequebookApi.getSelectablePages({ userId: user?.id }),
     enabled: !!user?.id,
@@ -113,12 +125,18 @@ export const CashierChequeBookListView = () => {
 
   const closeModal = () => setReturnState(null);
 
-  const validateRange = (fromStr: string, toStr: string, row: ICashierChequeBookRow): string => {
+  const validateRange = (
+    fromStr: string,
+    toStr: string,
+    row: ICashierChequeBookRow
+  ): string => {
     const from = parseInt(fromStr, 10);
     const to = parseInt(toStr, 10);
     if (isNaN(from) || isNaN(to)) return 'Please enter valid cheque numbers.';
-    if (from < row.mvFrom) return `Cheque No From cannot be less than ${row.mvFrom}.`;
-    if (to > row.mvTo) return `Cheque No To cannot be greater than ${row.mvTo}.`;
+    if (from < row.mvFrom)
+      return `Cheque No From cannot be less than ${row.mvFrom}.`;
+    if (to > row.mvTo)
+      return `Cheque No To cannot be greater than ${row.mvTo}.`;
     if (from > to) return 'Cheque No From must be ≤ Cheque No To.';
     return '';
   };
@@ -128,7 +146,7 @@ export const CashierChequeBookListView = () => {
     const { row, pageNoFromStr, pageNoToStr } = returnState;
     const err = validateRange(pageNoFromStr, pageNoToStr, row);
     if (err) {
-      setReturnState(prev => prev ? { ...prev, error: err } : null);
+      setReturnState(prev => (prev ? { ...prev, error: err } : null));
       return;
     }
 
@@ -140,20 +158,33 @@ export const CashierChequeBookListView = () => {
       .map(p => p.pageNo);
 
     if (pageNos.length === 0) {
-      setReturnState(prev => prev ? { ...prev, error: 'No pages found for the selected range.' } : null);
+      setReturnState(prev =>
+        prev
+          ? { ...prev, error: 'No pages found for the selected range.' }
+          : null
+      );
       return;
     }
 
-    setReturnState(prev => prev ? { ...prev, isSubmitting: true, error: '' } : null);
+    setReturnState(prev =>
+      prev ? { ...prev, isSubmitting: true, error: '' } : null
+    );
     try {
       await chequebookApi.returnPages(pageNos);
       toast.success('Pages returned to Branch Manager successfully.');
       closeModal();
-      await queryClient.invalidateQueries({ queryKey: ['cashier-chequebooks'] });
+      await queryClient.invalidateQueries({
+        queryKey: ['cashier-chequebooks'],
+      });
     } catch (err: unknown) {
       setReturnState(prev =>
         prev
-          ? { ...prev, isSubmitting: false, error: err instanceof Error ? err.message : 'Failed to return pages.' }
+          ? {
+              ...prev,
+              isSubmitting: false,
+              error:
+                err instanceof Error ? err.message : 'Failed to return pages.',
+            }
           : null
       );
     }
@@ -235,14 +266,18 @@ export const CashierChequeBookListView = () => {
             onRowClick={openModal}
           />
         </div>
-        <p className="mt-2 text-xs text-slate-400">Click a row to return pages to the Branch Manager.</p>
+        <p className="mt-2 text-xs text-slate-400">
+          Click a row to return pages to the Branch Manager.
+        </p>
       </section>
 
       {/* Return Modal */}
       {returnState && (
         <Modal
           open
-          onOpenChange={open => { if (!open) closeModal(); }}
+          onOpenChange={open => {
+            if (!open) closeModal();
+          }}
           title="Return Cheque Pages to Branch Manager"
           size="md"
         >
@@ -250,24 +285,44 @@ export const CashierChequeBookListView = () => {
             {/* Book details summary */}
             <div className="grid grid-cols-2 gap-3 text-xs bg-slate-50 border border-slate-200 rounded-md p-4">
               <div>
-                <span className="block text-slate-400 font-semibold mb-0.5">Dispatch No</span>
-                <span className="font-semibold text-slate-800">{returnState.row.dispatchNo}</span>
+                <span className="block text-slate-400 font-semibold mb-0.5">
+                  Dispatch No
+                </span>
+                <span className="font-semibold text-slate-800">
+                  {returnState.row.dispatchNo}
+                </span>
               </div>
               <div>
-                <span className="block text-slate-400 font-semibold mb-0.5">Bank Account</span>
-                <span className="text-slate-700">{returnState.row.bankAccountCodeLabel || '—'}</span>
+                <span className="block text-slate-400 font-semibold mb-0.5">
+                  Bank Account
+                </span>
+                <span className="text-slate-700">
+                  {returnState.row.bankAccountCodeLabel || '—'}
+                </span>
               </div>
               <div>
-                <span className="block text-slate-400 font-semibold mb-0.5">Book No</span>
-                <span className="font-semibold text-primary-700">{returnState.row.bookNo}</span>
+                <span className="block text-slate-400 font-semibold mb-0.5">
+                  Book No
+                </span>
+                <span className="font-semibold text-primary-700">
+                  {returnState.row.bookNo}
+                </span>
               </div>
               <div>
-                <span className="block text-slate-400 font-semibold mb-0.5">Cheque Range (Assigned)</span>
-                <span className="font-semibold text-emerald-700">{returnState.row.chequeRange}</span>
+                <span className="block text-slate-400 font-semibold mb-0.5">
+                  Cheque Range (Assigned)
+                </span>
+                <span className="font-semibold text-emerald-700">
+                  {returnState.row.chequeRange}
+                </span>
               </div>
               <div className="col-span-2">
-                <span className="block text-slate-400 font-semibold mb-0.5">Assigned By (Branch Manager)</span>
-                <span className="font-semibold text-slate-800">{returnState.row.assignedByName || '—'}</span>
+                <span className="block text-slate-400 font-semibold mb-0.5">
+                  Assigned By (Branch Manager)
+                </span>
+                <span className="font-semibold text-slate-800">
+                  {returnState.row.assignedByName || '—'}
+                </span>
               </div>
             </div>
 
@@ -275,31 +330,49 @@ export const CashierChequeBookListView = () => {
             <div>
               <p className="text-xs font-semibold text-slate-600 mb-3">
                 Enter the cheque range to return{' '}
-                <span className="text-slate-400 font-normal">(within {returnState.row.chequeRange})</span>
+                <span className="text-slate-400 font-normal">
+                  (within {returnState.row.chequeRange})
+                </span>
               </p>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">Cheque No From</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">
+                    Cheque No From
+                  </label>
                   <input
                     type="number"
                     min={returnState.row.mvFrom}
                     max={returnState.row.mvTo}
                     value={returnState.pageNoFromStr}
                     onChange={e =>
-                      setReturnState(prev => prev ? { ...prev, pageNoFromStr: e.target.value, error: '' } : null)
+                      setReturnState(prev =>
+                        prev
+                          ? {
+                              ...prev,
+                              pageNoFromStr: e.target.value,
+                              error: '',
+                            }
+                          : null
+                      )
                     }
                     className="w-full rounded border border-slate-300 px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">Cheque No To</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">
+                    Cheque No To
+                  </label>
                   <input
                     type="number"
                     min={returnState.row.mvFrom}
                     max={returnState.row.mvTo}
                     value={returnState.pageNoToStr}
                     onChange={e =>
-                      setReturnState(prev => prev ? { ...prev, pageNoToStr: e.target.value, error: '' } : null)
+                      setReturnState(prev =>
+                        prev
+                          ? { ...prev, pageNoToStr: e.target.value, error: '' }
+                          : null
+                      )
                     }
                     className="w-full rounded border border-slate-300 px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500"
                   />
@@ -307,7 +380,9 @@ export const CashierChequeBookListView = () => {
               </div>
 
               {returnState.error && (
-                <p className="mt-2 text-xs font-medium text-rose-600">{returnState.error}</p>
+                <p className="mt-2 text-xs font-medium text-rose-600">
+                  {returnState.error}
+                </p>
               )}
             </div>
 

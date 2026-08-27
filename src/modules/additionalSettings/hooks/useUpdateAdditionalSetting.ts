@@ -8,7 +8,10 @@ export const useUpdateAdditionalSetting = () => {
 
   const mutation = useMutation({
     mutationFn: (payload: { categoryId: string; title: string }) =>
-      additionalSettingsApi.updateCategoryTitle(payload.categoryId, payload.title),
+      additionalSettingsApi.updateCategoryTitle(
+        payload.categoryId,
+        payload.title
+      ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['additional-settings'] });
       queryClient.invalidateQueries({ queryKey: ['password-policy'] });

@@ -6,7 +6,7 @@ import { normalizeCodeValue } from '@/utils';
 
 export const useListBranchProfiles = (
   options?: IBranchProfileListQuery,
-  enabled = true,
+  enabled = true
 ) => {
   return useQuery({
     queryKey: ['branch-profiles', options],

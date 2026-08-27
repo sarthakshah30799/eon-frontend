@@ -1,8 +1,5 @@
 import { apiClient } from '../api';
-import type {
-  ICreateUserRole,
-  IUserRole,
-} from '@/modules/userRole/types';
+import type { ICreateUserRole, IUserRole } from '@/modules/userRole/types';
 
 interface BackendRole {
   id: string;
@@ -58,7 +55,9 @@ const mapBackendToFrontend = (role: BackendRole): IUserRole => {
 
 export const userRoleApi = {
   getUserRoles: async (search?: string): Promise<IUserRole[]> => {
-    const query = search?.trim() ? `?search=${encodeURIComponent(search.trim())}` : '';
+    const query = search?.trim()
+      ? `?search=${encodeURIComponent(search.trim())}`
+      : '';
     const res = await apiClient.get<BackendRole[]>(`/roles${query}`);
     if (res.error) throw new Error(res.error);
     return (res.data || []).map(mapBackendToFrontend);
@@ -103,8 +102,12 @@ export const userRoleApi = {
     return true;
   },
 
-  getRolePermissions: async (id: string): Promise<Record<string, Record<string, boolean>>> => {
-    const res = await apiClient.get<Record<string, Record<string, boolean>>>(`/roles/${id}/permissions`);
+  getRolePermissions: async (
+    id: string
+  ): Promise<Record<string, Record<string, boolean>>> => {
+    const res = await apiClient.get<Record<string, Record<string, boolean>>>(
+      `/roles/${id}/permissions`
+    );
     if (res.error) throw new Error(res.error);
     return res.data || {};
   },
@@ -113,7 +116,10 @@ export const userRoleApi = {
     id: string,
     permissions: Record<string, Record<string, boolean>>
   ): Promise<boolean> => {
-    const res = await apiClient.post<{ message: string }>(`/roles/${id}/permissions`, permissions);
+    const res = await apiClient.post<{ message: string }>(
+      `/roles/${id}/permissions`,
+      permissions
+    );
     if (res.error) throw new Error(res.error);
     return true;
   },

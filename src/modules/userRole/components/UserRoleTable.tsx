@@ -82,7 +82,7 @@ export const UserRoleTable = ({
               type="button"
               aria-label="Edit role"
               size="sm"
-              className='border-0! bg-transparent! text-black!'
+              className="border-0! bg-transparent! text-black!"
               onClick={event => {
                 event.stopPropagation();
                 navigate(`/admin/user-role/edit/${roleId}`);

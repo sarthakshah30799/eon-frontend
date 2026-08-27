@@ -51,7 +51,8 @@ const mapBackendToFrontend = (branch: BackendBranch): IBranchProfile => {
     state: branch.state || null,
     code: branch.code || '',
     name: branch.name || '',
-    branchNumber: branch.branchNumber !== undefined ? String(branch.branchNumber) : '',
+    branchNumber:
+      branch.branchNumber !== undefined ? String(branch.branchNumber) : '',
     address1: branch.address1 || '',
     address2: branch.address2 || '',
     address3: branch.address3 || '',
@@ -67,9 +68,11 @@ const mapBackendToFrontend = (branch: BackendBranch): IBranchProfile => {
     aeonBranchLic: branch.aeonBranchLic || '',
     locationType: branch.locationType || null,
     cashHolding: branch.cashHolding !== null ? String(branch.cashHolding) : '0',
-    cashHoldingTemp: branch.cashHoldingTemp !== null ? String(branch.cashHoldingTemp) : '0',
+    cashHoldingTemp:
+      branch.cashHoldingTemp !== null ? String(branch.cashHoldingTemp) : '0',
     currHolding: branch.currHolding !== null ? String(branch.currHolding) : '0',
-    currHoldingTemp: branch.currHoldingTemp !== null ? String(branch.currHoldingTemp) : '0',
+    currHoldingTemp:
+      branch.currHoldingTemp !== null ? String(branch.currHoldingTemp) : '0',
     isHeadOffice: !!branch.isHeadOffice,
     isActive: branch.isActive !== false,
     connectCounterIds: branch.counterIds || [],
@@ -104,9 +107,13 @@ const mapFrontendToBackend = (
     aeonBranchLic: form.aeonBranchLic || undefined,
     locationType: form.locationType || undefined,
     cashHolding: form.cashHolding ? parseFloat(form.cashHolding) : undefined,
-    cashHoldingTemp: form.cashHoldingTemp ? parseFloat(form.cashHoldingTemp) : undefined,
+    cashHoldingTemp: form.cashHoldingTemp
+      ? parseFloat(form.cashHoldingTemp)
+      : undefined,
     currHolding: form.currHolding ? parseFloat(form.currHolding) : undefined,
-    currHoldingTemp: form.currHoldingTemp ? parseFloat(form.currHoldingTemp) : undefined,
+    currHoldingTemp: form.currHoldingTemp
+      ? parseFloat(form.currHoldingTemp)
+      : undefined,
     isHeadOffice: form.isHeadOffice,
     isActive: form.isActive,
     counterIds: form.connectCounterIds || [],
@@ -114,7 +121,9 @@ const mapFrontendToBackend = (
 };
 
 export const branchProfileApi = {
-  getBranchProfiles: async (options?: IBranchProfileListQuery): Promise<IBranchProfile[]> => {
+  getBranchProfiles: async (
+    options?: IBranchProfileListQuery
+  ): Promise<IBranchProfile[]> => {
     const endpoint = `/branches${buildQueryString(options)}`;
     const res = await apiClient.get<BackendBranch[]>(endpoint);
     if (res.error) throw new Error(res.error);

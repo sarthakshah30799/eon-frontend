@@ -5,7 +5,7 @@ import { useCallback } from 'react';
 
 export const useListCounterProfiles = (
   options?: ICounterProfileListQuery,
-  enabled = true,
+  enabled = true
 ) => {
   return useQuery({
     queryKey: ['counter-profiles', options],
@@ -19,8 +19,15 @@ export const useLoadCounterOptions = () => {
   return useCallback(
     async (inputValue: string) => {
       const counters = await queryClient.fetchQuery({
-        queryKey: ['counter-profiles', { search: inputValue || undefined, activeOnly: true }],
-        queryFn: () => counterProfileApi.getCounterProfiles({ search: inputValue || undefined, activeOnly: true }),
+        queryKey: [
+          'counter-profiles',
+          { search: inputValue || undefined, activeOnly: true },
+        ],
+        queryFn: () =>
+          counterProfileApi.getCounterProfiles({
+            search: inputValue || undefined,
+            activeOnly: true,
+          }),
       });
       return {
         options: counters.map(counter => ({

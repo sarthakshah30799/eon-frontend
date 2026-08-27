@@ -24,4 +24,3 @@ export const useCreateCountryProfile = () => {
     submitCountryProfile: mutation.mutateAsync,
   };
 };
-

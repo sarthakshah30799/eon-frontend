@@ -13,17 +13,16 @@ const formatDateForInput = (value?: string | Date | null): string => {
   return date.toISOString().split('T')[0];
 };
 
-export const createEmptyTdsProfileFormValues =
-  (): ICreateTdsProfile => ({
-    code: '',
-    name: '',
-    description: '',
-    active: true,
-    sortOrder: 0,
-    from: '',
-    to: '',
-    value: 0,
-  });
+export const createEmptyTdsProfileFormValues = (): ICreateTdsProfile => ({
+  code: '',
+  name: '',
+  description: '',
+  active: true,
+  sortOrder: 0,
+  from: '',
+  to: '',
+  value: 0,
+});
 
 export const mapTdsProfileToFormValues = (
   profile: ITdsProfile

@@ -3,7 +3,10 @@ import type { ICompanyProfile } from '@/modules/companyProfile/types';
 import { TransactionTypeEnum } from '@/modules/transactions';
 import { toDisplayDate } from '@/utils';
 import { PURCHASE_PRINT_TEXT } from '../constants/purchaseConstants';
-import type { IPurchaseFormValues, IPurchaseTransactionFormRow } from '../types/purchaseTypes';
+import type {
+  IPurchaseFormValues,
+  IPurchaseTransactionFormRow,
+} from '../types/purchaseTypes';
 import { isCardProductCode, PURCHASE_RATE_DECIMALS } from './purchaseUtils';
 const PURCHASE_QUANTITY_DECIMALS = 7;
 
@@ -121,7 +124,10 @@ const numberToWords = (input: number) => {
 };
 
 const joinAddress = (...parts: Array<string | null | undefined>) =>
-  parts.map(part => part?.trim()).filter(Boolean).join(', ');
+  parts
+    .map(part => part?.trim())
+    .filter(Boolean)
+    .join(', ');
 
 const formatReferenceValue = (value?: string | null) => value?.trim() || '-';
 
@@ -212,7 +218,8 @@ export const buildPurchasePrintHtml = ({
   transaction: IPurchaseFormValues;
   sacCode: string;
 }) => {
-  const isPurchase = transaction.transactionType === TransactionTypeEnum.PURCHASE;
+  const isPurchase =
+    transaction.transactionType === TransactionTypeEnum.PURCHASE;
   const totalAmount = transaction.transactions.reduce((sum, row) => {
     const rowTotal = Number(row.finalAmount || row.total || 0);
     return sum + (Number.isFinite(rowTotal) ? rowTotal : 0);
@@ -220,15 +227,16 @@ export const buildPurchasePrintHtml = ({
   const additionalCharges = transaction.additionalCharges.reduce((sum, row) => {
     const rowTotal = Number(row.totalAmount || row.amount || 0);
     const normalizedTotal = Number.isFinite(rowTotal) ? rowTotal : 0;
-    return sum + (
-      isPurchase
-        ? -Math.abs(normalizedTotal)
-        : Math.abs(normalizedTotal)
+    return (
+      sum +
+      (isPurchase ? -Math.abs(normalizedTotal) : Math.abs(normalizedTotal))
     );
   }, 0);
   const payableAmount = totalAmount + additionalCharges;
   const amountInWords = numberToWords(payableAmount);
-  const currencyRows = transaction.transactions.filter(row => !isCardTransactionRow(row));
+  const currencyRows = transaction.transactions.filter(
+    row => !isCardTransactionRow(row)
+  );
   const cardRows = transaction.transactions.filter(isCardTransactionRow);
   const itemRows = buildCurrencyItemRows(currencyRows);
   const cardItemRows = buildCardItemRows(cardRows);
@@ -240,13 +248,15 @@ export const buildPurchasePrintHtml = ({
           <td>${index + 1}</td>
           <td>${escapeHtml(row.accountName || formatReferenceValue(row.accountId))}</td>
           <td class="right">${escapeHtml(formatAmount(row.gstAmount))}</td>
-          <td class="right">${escapeHtml(formatSignedAmount(
-            String(
-              isPurchase
-                ? -Math.abs(Number(row.totalAmount || row.amount || 0))
-                : Number(row.totalAmount || row.amount || 0),
-            ),
-          ))}</td>
+          <td class="right">${escapeHtml(
+            formatSignedAmount(
+              String(
+                isPurchase
+                  ? -Math.abs(Number(row.totalAmount || row.amount || 0))
+                  : Number(row.totalAmount || row.amount || 0)
+              )
+            )
+          )}</td>
         </tr>`
     )
     .join('');
@@ -491,7 +501,9 @@ export const buildPurchasePrintHtml = ({
             </div>
           </div>
 
-          ${currencyRows.length || !cardRows.length ? `
+          ${
+            currencyRows.length || !cardRows.length
+              ? `
           <div class="section">
             <h2>${escapeHtml(PURCHASE_PRINT_TEXT.transactionDetails)}</h2>
             <table>
@@ -511,9 +523,13 @@ export const buildPurchasePrintHtml = ({
               </tbody>
             </table>
           </div>
-          ` : ''}
+          `
+              : ''
+          }
 
-          ${cardRows.length ? `
+          ${
+            cardRows.length
+              ? `
           <div class="section">
             <h2>${escapeHtml(PURCHASE_PRINT_TEXT.cardDetails)}</h2>
             <table class="nowrap-table">
@@ -535,7 +551,9 @@ export const buildPurchasePrintHtml = ({
               </tbody>
             </table>
           </div>
-          ` : ''}
+          `
+              : ''
+          }
 
           <div class="section">
             <h2>Additional Charges</h2>

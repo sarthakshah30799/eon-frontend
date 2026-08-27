@@ -3,10 +3,7 @@ import { DOCUMENT_TYPE_OPTIONS } from '../constants/documentProfileConstants';
 import { DocumentSpecificationTypeEnum } from '../hooks';
 
 export const documentProfileSchema = yup.object({
-  documentCode: yup
-    .string()
-    .trim()
-    .required('Document code is required'),
+  documentCode: yup.string().trim().required('Document code is required'),
   documentDescription: yup
     .string()
     .trim()
@@ -42,7 +39,10 @@ export const documentProfileSchema = yup.object({
     .string()
     .uuid('Select a valid document group')
     .required('Document Group is required'),
-  entitySelection: yup.string().uuid('Select a valid entity type').required('Entity Type is required'),
+  entitySelection: yup
+    .string()
+    .uuid('Select a valid entity type')
+    .required('Entity Type is required'),
   financialYearSelection: yup
     .string()
     .uuid('Select a valid financial year')

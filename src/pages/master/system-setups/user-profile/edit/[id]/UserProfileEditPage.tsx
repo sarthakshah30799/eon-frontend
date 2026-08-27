@@ -5,4 +5,3 @@ const UserProfileEditPage = () => {
 };
 
 export default UserProfileEditPage;
-

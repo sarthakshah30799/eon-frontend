@@ -16,7 +16,10 @@ const toAsyncSelectOption = (purpose: {
   label: `${purpose.code} - ${purpose.description}`,
 });
 
-const filterOptions = (options: AsyncSelectOption[], inputValue: string): AsyncSelectOption[] => {
+const filterOptions = (
+  options: AsyncSelectOption[],
+  inputValue: string
+): AsyncSelectOption[] => {
   const normalized = inputValue.trim().toLowerCase();
 
   if (!normalized) {
@@ -24,8 +27,12 @@ const filterOptions = (options: AsyncSelectOption[], inputValue: string): AsyncS
   }
 
   return options.filter(option => {
-    const value = String(option.value ?? '').trim().toLowerCase();
-    const label = String(option.label ?? '').trim().toLowerCase();
+    const value = String(option.value ?? '')
+      .trim()
+      .toLowerCase();
+    const label = String(option.label ?? '')
+      .trim()
+      .toLowerCase();
     return value.includes(normalized) || label.includes(normalized);
   });
 };
@@ -34,12 +41,7 @@ const createQueryKey = (
   transactionType: TransactionType | null | undefined,
   partyProfileType: PurposePartyProfileType | null | undefined,
   search: string
-) => [
-  'purposes',
-  transactionType ?? '',
-  partyProfileType ?? '',
-  search,
-];
+) => ['purposes', transactionType ?? '', partyProfileType ?? '', search];
 
 export const usePurposeOptions = (
   transactionType?: TransactionType | null,
@@ -49,7 +51,8 @@ export const usePurposeOptions = (
   const normalizedPartyProfileType = partyProfileType ?? null;
   const queryClient = useQueryClient();
   const queryKey = useMemo(
-    () => createQueryKey(normalizedTransactionType, normalizedPartyProfileType, ''),
+    () =>
+      createQueryKey(normalizedTransactionType, normalizedPartyProfileType, ''),
     [normalizedPartyProfileType, normalizedTransactionType]
   );
 
@@ -68,7 +71,11 @@ export const usePurposeOptions = (
   const loadOptions = useCallback(
     async (inputValue: string): Promise<AsyncSelectResponse> => {
       const search = inputValue.trim();
-      const cacheKey = createQueryKey(normalizedTransactionType, normalizedPartyProfileType, search);
+      const cacheKey = createQueryKey(
+        normalizedTransactionType,
+        normalizedPartyProfileType,
+        search
+      );
       const purposes = await queryClient.fetchQuery({
         queryKey: cacheKey,
         queryFn: () =>
@@ -89,7 +96,10 @@ export const usePurposeOptions = (
   );
 
   return {
-    defaultOptions: useMemo(() => (query.data ?? []).map(toAsyncSelectOption), [query.data]),
+    defaultOptions: useMemo(
+      () => (query.data ?? []).map(toAsyncSelectOption),
+      [query.data]
+    ),
     loadOptions,
     isLoading: query.isLoading,
   };

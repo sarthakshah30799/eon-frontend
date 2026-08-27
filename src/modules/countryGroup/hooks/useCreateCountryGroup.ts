@@ -8,7 +8,8 @@ export const useCreateCountryGroup = () => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: (data: ICreateCountryGroup) => countryGroupApi.createCountryGroup(data),
+    mutationFn: (data: ICreateCountryGroup) =>
+      countryGroupApi.createCountryGroup(data),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['country-groups'] });
       toast.success(COUNTRY_GROUP_TEXTS.CREATE_SUCCESS);

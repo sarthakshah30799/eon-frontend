@@ -19,8 +19,12 @@ export const UserProfileListView = () => {
     }),
     [debouncedSearch]
   );
-  const { data: profiles = [], isLoading, isFetching, error } =
-    useListUserProfiles(query);
+  const {
+    data: profiles = [],
+    isLoading,
+    isFetching,
+    error,
+  } = useListUserProfiles(query);
   const { deleteUserProfile, isPending: isDeleting } = useDeleteUserProfile();
   const { canAdd } = usePermission('/user-profile');
 
@@ -46,9 +50,7 @@ export const UserProfileListView = () => {
         <div className="flex justify-end">
           <Button
             type="button"
-            onClick={() =>
-              navigate('/user-profile/create')
-            }
+            onClick={() => navigate('/user-profile/create')}
           >
             {USER_PROFILE_TEXTS.CREATE_USER}
           </Button>
@@ -78,6 +80,6 @@ export const UserProfileListView = () => {
           searchPlaceholder="Search user code, name, email, contact no, or designation"
         />
       </section>
-    </div >
+    </div>
   );
 };

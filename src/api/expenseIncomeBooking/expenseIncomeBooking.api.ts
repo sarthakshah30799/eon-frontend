@@ -70,9 +70,7 @@ export const expenseIncomeBookingApi = {
     return res.data;
   },
 
-  deleteBookingMaster: async (
-    id: string
-  ): Promise<{ message: string }> => {
+  deleteBookingMaster: async (id: string): Promise<{ message: string }> => {
     const res = await apiClient.delete<{ message: string }>(
       `/expense-income-booking-masters/${id}`
     );

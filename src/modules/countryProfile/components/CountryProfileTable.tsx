@@ -29,9 +29,7 @@ export const CountryProfileTable = ({
   searchPlaceholder = 'Search',
 }: CountryProfileTableProps) => {
   const navigate = useNavigate();
-  const { canModify, canView } = usePermission(
-    '/admin/country-profile'
-  );
+  const { canModify, canView } = usePermission('/admin/country-profile');
 
   const rows: CountryProfileTableRow[] = countries.map(country => ({
     id: country.id,
@@ -99,8 +97,7 @@ export const CountryProfileTable = ({
       searchPlaceholder={searchPlaceholder}
       onRowClick={
         canModify || canView
-          ? row =>
-              navigate(`/admin/country-profile/edit/${row.id}`)
+          ? row => navigate(`/admin/country-profile/edit/${row.id}`)
           : undefined
       }
       emptyMessage="No countries found. Create your first country."

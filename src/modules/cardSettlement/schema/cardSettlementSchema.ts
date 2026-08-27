@@ -22,7 +22,11 @@ export const cardSettlementSchema = yup.object({
         rate: yup
           .string()
           .required('Rate is required')
-          .test('positive', 'Rate must be greater than zero', value => Number(value) > 0),
+          .test(
+            'positive',
+            'Rate must be greater than zero',
+            value => Number(value) > 0
+          ),
         amount: yup.string().required(),
       })
     )

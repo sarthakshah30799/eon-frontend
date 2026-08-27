@@ -8,7 +8,8 @@ export const TransferTypeEnum = {
   BRANCH: 'BRANCH',
 } as const;
 
-export type TransferType = (typeof TransferTypeEnum)[keyof typeof TransferTypeEnum];
+export type TransferType =
+  (typeof TransferTypeEnum)[keyof typeof TransferTypeEnum];
 export type TransferStatus = 'HELD' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED';
 
 export interface ITransferItem {

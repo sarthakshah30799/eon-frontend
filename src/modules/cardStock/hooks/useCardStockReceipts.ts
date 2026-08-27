@@ -1,12 +1,29 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { cardStockApi } from '@/api/cardStock';
 
-export const useListCardStockReceipts = () => useQuery({ queryKey: ['card-stock', 'receipts'], queryFn: cardStockApi.list });
+export const useListCardStockReceipts = () =>
+  useQuery({
+    queryKey: ['card-stock', 'receipts'],
+    queryFn: cardStockApi.list,
+  });
 
-export const useGetCardStockReceipt = (id: string) => useQuery({ queryKey: ['card-stock', 'receipts', id], queryFn: () => cardStockApi.get(id), enabled: Boolean(id) });
+export const useGetCardStockReceipt = (id: string) =>
+  useQuery({
+    queryKey: ['card-stock', 'receipts', id],
+    queryFn: () => cardStockApi.get(id),
+    enabled: Boolean(id),
+  });
 
 export const usePreviewCardStockUpload = () => {
-  const mutation = useMutation({ mutationFn: ({ file, issuerPartyProfileId }: { file: File; issuerPartyProfileId?: string }) => cardStockApi.previewUpload(file, issuerPartyProfileId) });
+  const mutation = useMutation({
+    mutationFn: ({
+      file,
+      issuerPartyProfileId,
+    }: {
+      file: File;
+      issuerPartyProfileId?: string;
+    }) => cardStockApi.previewUpload(file, issuerPartyProfileId),
+  });
   return { previewUpload: mutation.mutateAsync, isPending: mutation.isPending };
 };
 
@@ -22,11 +39,18 @@ export const useDownloadCardStockTemplate = () => {
       URL.revokeObjectURL(url);
     },
   });
-  return { downloadTemplate: mutation.mutateAsync, isPending: mutation.isPending };
+  return {
+    downloadTemplate: mutation.mutateAsync,
+    isPending: mutation.isPending,
+  };
 };
 
 export const useCreateCardStockReceipt = () => {
   const queryClient = useQueryClient();
-  const mutation = useMutation({ mutationFn: cardStockApi.create, onSuccess: () => queryClient.invalidateQueries({ queryKey: ['card-stock', 'receipts'] }) });
+  const mutation = useMutation({
+    mutationFn: cardStockApi.create,
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ['card-stock', 'receipts'] }),
+  });
   return { createReceipt: mutation.mutateAsync, isPending: mutation.isPending };
 };

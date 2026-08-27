@@ -8,11 +8,18 @@ export const useUpdateFinancialCode = () => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: ({ id, values }: { id: string; values: ICreateFinancialCode }) =>
-      financialCodesApi.updateFinancialCode(id, values),
+    mutationFn: ({
+      id,
+      values,
+    }: {
+      id: string;
+      values: ICreateFinancialCode;
+    }) => financialCodesApi.updateFinancialCode(id, values),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['financial-codes'] });
-      queryClient.invalidateQueries({ queryKey: ['financial-code', variables.id] });
+      queryClient.invalidateQueries({
+        queryKey: ['financial-code', variables.id],
+      });
       toast.success(FINANCIAL_CODE_TEXTS.UPDATE_SUCCESS);
     },
     onError: () => {

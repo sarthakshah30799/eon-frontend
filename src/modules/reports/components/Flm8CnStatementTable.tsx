@@ -1,5 +1,9 @@
 import { FLM8_CN_STATEMENT_TEXT } from '../constants/flm8CnStatementConstants';
-import type { IFlm8CnStatementResponse, IFlm8ReportColumn, IFlm8ReportRow } from '../types';
+import type {
+  IFlm8CnStatementResponse,
+  IFlm8ReportColumn,
+  IFlm8ReportRow,
+} from '../types';
 import {
   clusterFlm8HeaderColumns,
   hasFlm8GroupedHeader,
@@ -29,10 +33,7 @@ const getHeaderClassName = (highlight?: boolean, grouped = false) =>
     highlight ? 'text-red-600' : '',
   ].join(' ');
 
-const getCellClassName = (
-  column: IFlm8ReportColumn,
-  row: IFlm8ReportRow,
-) => {
+const getCellClassName = (column: IFlm8ReportColumn, row: IFlm8ReportRow) => {
   const isParticulars = column.key === 'particulars';
   return [
     'border border-slate-100 px-2 py-1.5 text-[11px] align-top',
@@ -73,7 +74,7 @@ const Flm8GroupedHeader = ({ columns }: { columns: IFlm8ReportColumn[] }) => {
                   {column.label}
                 </th>
               ))
-            : [],
+            : []
         )}
       </tr>
     </>
@@ -104,7 +105,9 @@ export const Flm8CnStatementTable = ({
     <div className="space-y-4">
       {report.groups.map(group => (
         <div key={group.branchId} className="space-y-2">
-          <h3 className="text-sm font-semibold text-text-primary">{group.branchLabel}</h3>
+          <h3 className="text-sm font-semibold text-text-primary">
+            {group.branchLabel}
+          </h3>
           {group.empty ? (
             <div className="rounded-md border border-slate-200 bg-white px-3 py-4 text-[11px] text-text-secondary">
               {group.emptyMessage || FLM8_CN_STATEMENT_TEXT.emptyMessage}

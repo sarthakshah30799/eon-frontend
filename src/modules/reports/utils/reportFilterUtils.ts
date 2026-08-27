@@ -1,6 +1,10 @@
 import type { IReportSelectOption } from '../types';
 
-export const toggleId = (currentIds: string[], id: string, checked: boolean) => {
+export const toggleId = (
+  currentIds: string[],
+  id: string,
+  checked: boolean
+) => {
   if (checked) {
     return currentIds.includes(id) ? currentIds : [...currentIds, id];
   }
@@ -19,7 +23,10 @@ export const uniqueOptions = (options: IReportSelectOption[]) => {
   });
 };
 
-export const buildReportOptionLabel = (code?: string | null, name?: string | null) => {
+export const buildReportOptionLabel = (
+  code?: string | null,
+  name?: string | null
+) => {
   const normalizedCode = String(code ?? '').trim();
   const normalizedName = String(name ?? '').trim();
   if (normalizedCode && normalizedName) {
@@ -30,5 +37,8 @@ export const buildReportOptionLabel = (code?: string | null, name?: string | nul
 
 export const summarizeReportSelection = (
   values: string[],
-  labels: Array<{ id: string; label: string }>,
-) => labels.filter(option => values.includes(option.id)).map(option => option.label);
+  labels: Array<{ id: string; label: string }>
+) =>
+  labels
+    .filter(option => values.includes(option.id))
+    .map(option => option.label);

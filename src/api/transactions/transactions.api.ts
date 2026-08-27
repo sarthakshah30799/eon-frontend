@@ -16,11 +16,7 @@ import type {
 } from '@/modules/transactions';
 import { API_BASE_URL } from '@/config/api';
 
-const appendJsonPart = (
-  formData: FormData,
-  key: string,
-  value: unknown
-) => {
+const appendJsonPart = (formData: FormData, key: string, value: unknown) => {
   formData.append(key, JSON.stringify(value));
 };
 
@@ -28,29 +24,32 @@ export const transactionsApi = {
   getTransactionDocumentDownloadUrl: (
     transactionId: string,
     documentId: string
-  ) => `${API_BASE_URL}/transactions/${transactionId}/documents/${documentId}/download`,
+  ) =>
+    `${API_BASE_URL}/transactions/${transactionId}/documents/${documentId}/download`,
 
-  getTransactions: async (
-    params?: {
-      slug?: string;
-      branchId?: string;
-      search?: string;
-      status?: TransactionStatus;
-      partyProfileId?: string;
-      transactionType?: TransactionType;
-    }
-  ): Promise<ITransactionEntity[]> => {
+  getTransactions: async (params?: {
+    slug?: string;
+    branchId?: string;
+    search?: string;
+    status?: TransactionStatus;
+    partyProfileId?: string;
+    transactionType?: TransactionType;
+  }): Promise<ITransactionEntity[]> => {
     const query = new URLSearchParams();
 
     if (params?.slug) query.set('slug', params.slug);
     if (params?.branchId) query.set('branchId', params.branchId);
     if (params?.search) query.set('search', params.search);
     if (params?.status) query.set('status', params.status);
-    if (params?.partyProfileId) query.set('partyProfileId', params.partyProfileId);
-    if (params?.transactionType) query.set('transactionType', params.transactionType);
+    if (params?.partyProfileId)
+      query.set('partyProfileId', params.partyProfileId);
+    if (params?.transactionType)
+      query.set('transactionType', params.transactionType);
 
     const suffix = query.toString() ? `?${query.toString()}` : '';
-    const res = await apiClient.get<ITransactionEntity[]>(`/transactions${suffix}`);
+    const res = await apiClient.get<ITransactionEntity[]>(
+      `/transactions${suffix}`
+    );
 
     if (res.error) {
       throw new Error(res.error);
@@ -59,15 +58,13 @@ export const transactionsApi = {
     return res.data || [];
   },
 
-  getQuantityAvailability: async (
-    params: {
-      branchId: string;
-      counterId: string;
-      currencyId: string;
-      productId: string;
-      excludeTransactionId?: string;
-    }
-  ): Promise<ITransactionQuantityAvailability> => {
+  getQuantityAvailability: async (params: {
+    branchId: string;
+    counterId: string;
+    currencyId: string;
+    productId: string;
+    excludeTransactionId?: string;
+  }): Promise<ITransactionQuantityAvailability> => {
     const query = new URLSearchParams();
     query.set('branchId', params.branchId);
     query.set('counterId', params.counterId);
@@ -93,16 +90,28 @@ export const transactionsApi = {
     return res.data;
   },
 
-  getAverageSellPrice: async (params: { productId: string; currencyId: string }) => {
-    const query = new URLSearchParams({ productId: params.productId, currencyId: params.currencyId });
-    const res = await apiClient.get<{ productId: string; currencyId: string; averageSellRate: string }>(
-      `/transactions/average-sell-price?${query.toString()}`,
-    );
+  getAverageSellPrice: async (params: {
+    productId: string;
+    currencyId: string;
+  }) => {
+    const query = new URLSearchParams({
+      productId: params.productId,
+      currencyId: params.currencyId,
+    });
+    const res = await apiClient.get<{
+      productId: string;
+      currencyId: string;
+      averageSellRate: string;
+    }>(`/transactions/average-sell-price?${query.toString()}`);
     if (res.error) throw new Error(res.error);
     return res.data ?? { ...params, averageSellRate: '0.00' };
   },
 
-  getCounterHoldCost: async (params: { branchId: string; counterId: string; currencyId: string }) => {
+  getCounterHoldCost: async (params: {
+    branchId: string;
+    counterId: string;
+    currencyId: string;
+  }) => {
     const query = new URLSearchParams(params);
     const res = await apiClient.get<{
       branchId: string;
@@ -136,7 +145,9 @@ export const transactionsApi = {
     return res.data;
   },
 
-  getTransactionById: async (id: string): Promise<ITransactionEntity | null> => {
+  getTransactionById: async (
+    id: string
+  ): Promise<ITransactionEntity | null> => {
     const res = await apiClient.get<ITransactionEntity>(`/transactions/${id}`);
 
     if (res.error) {
@@ -146,9 +157,10 @@ export const transactionsApi = {
     return res.data || null;
   },
 
-  getNextNumber: async (
-    params: { slug: string; branchId: string }
-  ): Promise<{ nextNumber: string }> => {
+  getNextNumber: async (params: {
+    slug: string;
+    branchId: string;
+  }): Promise<{ nextNumber: string }> => {
     const query = new URLSearchParams();
     query.set('slug', params.slug);
     query.set('branchId', params.branchId);

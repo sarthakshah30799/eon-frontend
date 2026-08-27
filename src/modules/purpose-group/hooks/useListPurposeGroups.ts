@@ -4,7 +4,7 @@ import type { PurposeGroupProfileType } from '../types/purposeGroupTypes';
 
 export const useListPurposeGroups = (
   search?: string,
-  profileType?: PurposeGroupProfileType,
+  profileType?: PurposeGroupProfileType
 ) => {
   return useQuery({
     queryKey: ['purpose-groups', search?.trim() || '', profileType || ''],

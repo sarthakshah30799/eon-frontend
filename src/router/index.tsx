@@ -1,4 +1,8 @@
-import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
+import {
+  createBrowserRouter,
+  Navigate,
+  RouterProvider,
+} from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 import { ProtectedLayout, PublicLayout } from '../components/layouts';
 import { Loader } from '@/components/ui/loader';
@@ -22,8 +26,12 @@ const PaymentListPage = lazy(() => import('../pages/payments'));
 const PaymentCreatePage = lazy(() => import('../pages/payments/create'));
 const PaymentEditPage = lazy(() => import('../pages/payments/edit'));
 const JournalVoucherListPage = lazy(() => import('../pages/journal-vouchers'));
-const JournalVoucherCreatePage = lazy(() => import('../pages/journal-vouchers/create'));
-const JournalVoucherEditPage = lazy(() => import('../pages/journal-vouchers/edit'));
+const JournalVoucherCreatePage = lazy(
+  () => import('../pages/journal-vouchers/create')
+);
+const JournalVoucherEditPage = lazy(
+  () => import('../pages/journal-vouchers/edit')
+);
 
 const UserCreatePage = lazy(
   () => import('../pages/users/create/UserCreatePage')
@@ -171,7 +179,8 @@ const MonthwiseLockingPage = lazy(
   () => import('../pages/admin/monthwise-locking')
 );
 const TransactionAccountPostingsPage = lazy(
-  () => import('../pages/admin/transaction-account-postings/TransactionAccountPostingsPage')
+  () =>
+    import('../pages/admin/transaction-account-postings/TransactionAccountPostingsPage')
 );
 const MigrationsPage = lazy(() => import('../pages/admin/migrations'));
 const CurrencyRatesPage = lazy(() => import('../pages/admin/currency-rates'));
@@ -213,19 +222,27 @@ const PurchaseCreatePage = lazy(
 const PurchaseEditPage = lazy(
   () => import('../pages/purchase/[slug]/edit/[id]')
 );
-const TransferListPage = lazy(
-  () => import('../pages/transfers/[type]')
-);
+const TransferListPage = lazy(() => import('../pages/transfers/[type]'));
 const TransferCreatePage = lazy(
   () => import('../pages/transfers/[type]/create')
 );
 const TransferEditPage = lazy(
   () => import('../pages/transfers/[type]/edit/[id]')
 );
-const FakeCurrencyListPage = lazy(() => import('../pages/fake-currencies/FakeCurrencyListPage'));
-const FakeCurrencyCreatePage = lazy(() => import('../pages/fake-currencies/create/FakeCurrencyCreatePage'));
-const FakeCurrencyEditPage = lazy(() => import('../pages/fake-currencies/edit/[id]/FakeCurrencyEditPage'));
-const AD1ListPage = lazy(() => import('../modules/purchase/views/AD1ListView').then(m => ({ default: m.AD1ListView })));
+const FakeCurrencyListPage = lazy(
+  () => import('../pages/fake-currencies/FakeCurrencyListPage')
+);
+const FakeCurrencyCreatePage = lazy(
+  () => import('../pages/fake-currencies/create/FakeCurrencyCreatePage')
+);
+const FakeCurrencyEditPage = lazy(
+  () => import('../pages/fake-currencies/edit/[id]/FakeCurrencyEditPage')
+);
+const AD1ListPage = lazy(() =>
+  import('../modules/purchase/views/AD1ListView').then(m => ({
+    default: m.AD1ListView,
+  }))
+);
 const AD1CreatePage = lazy(() => import('../pages/ad1/create'));
 const AD1EditPage = lazy(() => import('../pages/ad1/edit/[id]'));
 
@@ -342,16 +359,36 @@ const IncomeBookingEditPage = lazy(
 );
 const ReportsPage = lazy(() => import('../pages/reports'));
 const StockRevaluationPage = lazy(() => import('../pages/stock-revaluations'));
-const CardStockListPage = lazy(() => import('../pages/card-stock/CardStockListPage'));
-const CardStockCreatePage = lazy(() => import('../pages/card-stock/create/CardStockCreatePage'));
-const CardStockEditPage = lazy(() => import('../pages/card-stock/edit/[id]/CardStockEditPage'));
-const CardTransferListPage = lazy(() => import('../pages/card-transfer/CardTransferListPage'));
-const CardTransferCreatePage = lazy(() => import('../pages/card-transfer/create/CardTransferCreatePage'));
-const CardTransferEditPage = lazy(() => import('../pages/card-transfer/edit/[id]/CardTransferEditPage'));
-const CardSettlementListPage = lazy(() => import('../pages/card-settlement/CardSettlementListPage'));
-const CardSettlementCreatePage = lazy(() => import('../pages/card-settlement/create/CardSettlementCreatePage'));
-const CardSettlementEditPage = lazy(() => import('../pages/card-settlement/edit/[id]/CardSettlementEditPage'));
-const CardSettlementDetailPage = lazy(() => import('../pages/card-settlement/[id]/CardSettlementDetailPage'));
+const CardStockListPage = lazy(
+  () => import('../pages/card-stock/CardStockListPage')
+);
+const CardStockCreatePage = lazy(
+  () => import('../pages/card-stock/create/CardStockCreatePage')
+);
+const CardStockEditPage = lazy(
+  () => import('../pages/card-stock/edit/[id]/CardStockEditPage')
+);
+const CardTransferListPage = lazy(
+  () => import('../pages/card-transfer/CardTransferListPage')
+);
+const CardTransferCreatePage = lazy(
+  () => import('../pages/card-transfer/create/CardTransferCreatePage')
+);
+const CardTransferEditPage = lazy(
+  () => import('../pages/card-transfer/edit/[id]/CardTransferEditPage')
+);
+const CardSettlementListPage = lazy(
+  () => import('../pages/card-settlement/CardSettlementListPage')
+);
+const CardSettlementCreatePage = lazy(
+  () => import('../pages/card-settlement/create/CardSettlementCreatePage')
+);
+const CardSettlementEditPage = lazy(
+  () => import('../pages/card-settlement/edit/[id]/CardSettlementEditPage')
+);
+const CardSettlementDetailPage = lazy(
+  () => import('../pages/card-settlement/[id]/CardSettlementDetailPage')
+);
 
 const router = createBrowserRouter([
   {
@@ -1340,15 +1377,78 @@ const router = createBrowserRouter([
     ),
   },
 
-  { path: '/receipts', element: <ProtectedLayout><ReceiptListPage /></ProtectedLayout> },
-  { path: '/receipts/create', element: <ProtectedLayout><ReceiptCreatePage /></ProtectedLayout> },
-  { path: '/receipts/edit/:id', element: <ProtectedLayout><ReceiptEditPage /></ProtectedLayout> },
-  { path: '/payments', element: <ProtectedLayout><PaymentListPage /></ProtectedLayout> },
-  { path: '/payments/create', element: <ProtectedLayout><PaymentCreatePage /></ProtectedLayout> },
-  { path: '/payments/edit/:id', element: <ProtectedLayout><PaymentEditPage /></ProtectedLayout> },
-  { path: '/journal-vouchers', element: <ProtectedLayout><JournalVoucherListPage /></ProtectedLayout> },
-  { path: '/journal-vouchers/create', element: <ProtectedLayout><JournalVoucherCreatePage /></ProtectedLayout> },
-  { path: '/journal-vouchers/edit/:id', element: <ProtectedLayout><JournalVoucherEditPage /></ProtectedLayout> },
+  {
+    path: '/receipts',
+    element: (
+      <ProtectedLayout>
+        <ReceiptListPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/receipts/create',
+    element: (
+      <ProtectedLayout>
+        <ReceiptCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/receipts/edit/:id',
+    element: (
+      <ProtectedLayout>
+        <ReceiptEditPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/payments',
+    element: (
+      <ProtectedLayout>
+        <PaymentListPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/payments/create',
+    element: (
+      <ProtectedLayout>
+        <PaymentCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/payments/edit/:id',
+    element: (
+      <ProtectedLayout>
+        <PaymentEditPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/journal-vouchers',
+    element: (
+      <ProtectedLayout>
+        <JournalVoucherListPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/journal-vouchers/create',
+    element: (
+      <ProtectedLayout>
+        <JournalVoucherCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/journal-vouchers/edit/:id',
+    element: (
+      <ProtectedLayout>
+        <JournalVoucherEditPage />
+      </ProtectedLayout>
+    ),
+  },
   {
     path: '*',
     handle: { isCatchAll: true },

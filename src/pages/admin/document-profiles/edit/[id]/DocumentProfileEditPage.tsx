@@ -5,4 +5,3 @@ const DocumentProfileEditPage = () => {
 };
 
 export default DocumentProfileEditPage;
-

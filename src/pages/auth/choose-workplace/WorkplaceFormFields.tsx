@@ -60,7 +60,8 @@ export const WorkplaceFormFields = ({
   }, [assignmentsByBranch, branchProfiles, canSelectAllBranches]);
 
   const canSelectBranch = canSelectAllBranches || visibleBranches.length > 1;
-  const effectiveSelectedBranchId = branchId || visibleBranches[0]?.value?.toString() || '';
+  const effectiveSelectedBranchId =
+    branchId || visibleBranches[0]?.value?.toString() || '';
   const previousBranchIdRef = useRef<string>('');
 
   const visibleCounters = useMemo(() => {
@@ -72,7 +73,9 @@ export const WorkplaceFormFields = ({
       const selectedBranch = branchProfiles.find(
         branch => branch.id === effectiveSelectedBranchId
       );
-      const connectedCounterIds = new Set(selectedBranch?.connectCounterIds ?? []);
+      const connectedCounterIds = new Set(
+        selectedBranch?.connectCounterIds ?? []
+      );
 
       return counterProfiles
         .filter(counter => connectedCounterIds.has(counter.id))
@@ -111,7 +114,10 @@ export const WorkplaceFormFields = ({
       return;
     }
 
-    if (previousBranchIdRef.current && previousBranchIdRef.current !== branchId) {
+    if (
+      previousBranchIdRef.current &&
+      previousBranchIdRef.current !== branchId
+    ) {
       form.setValue('counterId', '');
     }
 
@@ -166,7 +172,9 @@ export const WorkplaceFormFields = ({
         label="Counter"
         className="!max-w-none"
         loadOptions={loadCounterOptions}
-        placeholder={effectiveSelectedBranchId ? 'Select Counter' : 'Select Branch first'}
+        placeholder={
+          effectiveSelectedBranchId ? 'Select Counter' : 'Select Branch first'
+        }
         defaultOptions={true}
         isLoading={canSelectAllBranches && isCountersLoading}
         disabled={!effectiveSelectedBranchId}

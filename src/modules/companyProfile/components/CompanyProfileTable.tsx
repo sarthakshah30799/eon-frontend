@@ -89,7 +89,11 @@ export const CompanyProfileTable = ({
               disabled={isDeleting}
               onClick={async event => {
                 event.stopPropagation();
-                if (window.confirm('Are you sure you want to delete this company?')) {
+                if (
+                  window.confirm(
+                    'Are you sure you want to delete this company?'
+                  )
+                ) {
                   await onDelete(companyId);
                 }
               }}

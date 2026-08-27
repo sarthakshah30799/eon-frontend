@@ -77,10 +77,9 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
 
         if (typeof maxDecimalPlaces === 'number' && maxDecimalPlaces >= 0) {
           const [integerPart = '', fractionPart = ''] = cleanedValue.split('.');
-          cleanedValue =
-            cleanedValue.includes('.')
-              ? `${integerPart}.${fractionPart.slice(0, maxDecimalPlaces)}`
-              : integerPart;
+          cleanedValue = cleanedValue.includes('.')
+            ? `${integerPart}.${fractionPart.slice(0, maxDecimalPlaces)}`
+            : integerPart;
         }
 
         event.currentTarget.value = cleanedValue;

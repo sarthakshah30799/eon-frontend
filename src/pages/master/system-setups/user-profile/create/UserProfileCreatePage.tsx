@@ -5,4 +5,3 @@ const UserProfileCreatePage = () => {
 };
 
 export default UserProfileCreatePage;
-

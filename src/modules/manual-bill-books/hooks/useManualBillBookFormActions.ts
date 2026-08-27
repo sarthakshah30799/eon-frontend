@@ -27,10 +27,21 @@ export const useGetNextManualBillBookNumber = () => {
 export const useLoadManualBillBookBranchManagers = () => {
   const queryClient = useQueryClient();
   return useCallback(
-    async (branchId: string, inputValue: string): Promise<AsyncSelectResponse> => {
+    async (
+      branchId: string,
+      inputValue: string
+    ): Promise<AsyncSelectResponse> => {
       const managers = await queryClient.fetchQuery({
-        queryKey: ['manual-bill-book-branch-managers', branchId, inputValue || undefined],
-        queryFn: () => manualBillBookApi.getBranchManagers(branchId, inputValue || undefined),
+        queryKey: [
+          'manual-bill-book-branch-managers',
+          branchId,
+          inputValue || undefined,
+        ],
+        queryFn: () =>
+          manualBillBookApi.getBranchManagers(
+            branchId,
+            inputValue || undefined
+          ),
       });
       return {
         options: managers.map(m => ({ value: m.id, label: m.name })),
@@ -58,8 +69,15 @@ export const useLoadManualBillBookBranchOptions = () => {
   return useCallback(
     async (inputValue: string) => {
       const branches = await queryClient.fetchQuery({
-        queryKey: ['branch-profiles', { search: inputValue || undefined, activeOnly: true }],
-        queryFn: () => branchProfileApi.getBranchProfiles({ search: inputValue || undefined, activeOnly: true }),
+        queryKey: [
+          'branch-profiles',
+          { search: inputValue || undefined, activeOnly: true },
+        ],
+        queryFn: () =>
+          branchProfileApi.getBranchProfiles({
+            search: inputValue || undefined,
+            activeOnly: true,
+          }),
       });
       return {
         options: branches.map(branch => ({
@@ -79,7 +97,8 @@ export const useLoadManualBillBookCounterProfiles = () => {
     async (branchId: string) => {
       return queryClient.fetchQuery({
         queryKey: ['counter-profiles', { branchId, activeOnly: true }],
-        queryFn: () => counterProfileApi.getCounterProfiles({ branchId, activeOnly: true }),
+        queryFn: () =>
+          counterProfileApi.getCounterProfiles({ branchId, activeOnly: true }),
       });
     },
     [queryClient]
@@ -91,8 +110,13 @@ export const useValidateManualBillBookBookRange = () => {
   return useCallback(
     async (bookNoFrom: number, bookNoTo: number) => {
       return queryClient.fetchQuery({
-        queryKey: ['manual-bill-books-validate-book-range', bookNoFrom, bookNoTo],
-        queryFn: () => manualBillBookApi.validateBookRange({ bookNoFrom, bookNoTo }),
+        queryKey: [
+          'manual-bill-books-validate-book-range',
+          bookNoFrom,
+          bookNoTo,
+        ],
+        queryFn: () =>
+          manualBillBookApi.validateBookRange({ bookNoFrom, bookNoTo }),
       });
     },
     [queryClient]
@@ -105,7 +129,8 @@ export const useValidateManualBillBookPageRange = () => {
     async (mvNoFrom: number, mvNoTo: number) => {
       return queryClient.fetchQuery({
         queryKey: ['manual-bill-books-validate-page-range', mvNoFrom, mvNoTo],
-        queryFn: () => manualBillBookApi.validatePageRange({ mvNoFrom, mvNoTo }),
+        queryFn: () =>
+          manualBillBookApi.validatePageRange({ mvNoFrom, mvNoTo }),
       });
     },
     [queryClient]

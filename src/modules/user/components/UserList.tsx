@@ -14,9 +14,7 @@ export const UserList: React.FC<UserListProps> = ({
   error,
 }) => {
   if (isLoading) {
-    return (
-      <Loader />
-    );
+    return <Loader />;
   }
 
   if (error) {

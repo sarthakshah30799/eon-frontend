@@ -5,16 +5,19 @@ import type {
 } from '@/modules/partyProfileDocuments/types/partyProfileDocumentTypes';
 import { API_BASE_URL } from '@/config/api';
 
-const buildDownloadUrl = (partyProfileId: string, documentProfileId: string) => {
+const buildDownloadUrl = (
+  partyProfileId: string,
+  documentProfileId: string
+) => {
   return `${API_BASE_URL}/party-profiles/${partyProfileId}/documents/${documentProfileId}/download`;
 };
 
 export const partyProfileDocumentsApi = {
   getPartyProfileDocuments: async (
-    partyProfileId: string,
+    partyProfileId: string
   ): Promise<IPartyProfileDocumentsResponse> => {
     const res = await apiClient.get<IPartyProfileDocumentsResponse>(
-      `/party-profiles/${partyProfileId}/documents`,
+      `/party-profiles/${partyProfileId}/documents`
     );
 
     if (res.error) {
@@ -29,14 +32,14 @@ export const partyProfileDocumentsApi = {
   },
 
   uploadPartyProfileDocument: async (
-    payload: IUploadPartyProfileDocumentPayload,
+    payload: IUploadPartyProfileDocumentPayload
   ): Promise<IPartyProfileDocumentsResponse> => {
     const formData = new FormData();
     formData.append('file', payload.file);
 
     const res = await apiClient.postFormData<IPartyProfileDocumentsResponse>(
       `/party-profiles/${payload.partyProfileId}/documents/${payload.documentProfileId}`,
-      formData,
+      formData
     );
 
     if (res.error) {

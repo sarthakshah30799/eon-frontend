@@ -44,7 +44,11 @@ export const AD1EditView = () => {
   const [approvalRemarks, setApprovalRemarks] = useState('');
   const [isPrinting, setIsPrinting] = useState(false);
 
-  const { data: transaction, isLoading, error } = useQuery({
+  const {
+    data: transaction,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ['ad1', id],
     queryFn: () => transactionAd1Api.getById(id!),
     enabled: Boolean(id),
@@ -55,7 +59,9 @@ export const AD1EditView = () => {
 
   const approveMutation = useMutation({
     mutationFn: () =>
-      transactionAd1Api.approve(id!, { approvalRemarks: approvalRemarks || undefined }),
+      transactionAd1Api.approve(id!, {
+        approvalRemarks: approvalRemarks || undefined,
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ad1', id] });
       queryClient.invalidateQueries({ queryKey: ['ad1'] });
@@ -64,7 +70,9 @@ export const AD1EditView = () => {
 
   const rejectMutation = useMutation({
     mutationFn: () =>
-      transactionAd1Api.reject(id!, { rejectionReason: rejectionReason || undefined }),
+      transactionAd1Api.reject(id!, {
+        rejectionReason: rejectionReason || undefined,
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ad1', id] });
       queryClient.invalidateQueries({ queryKey: ['ad1'] });
@@ -75,13 +83,16 @@ export const AD1EditView = () => {
   const defaultValues = useMemo(() => {
     if (!transaction) return {};
     return {
-      transactionType: transaction.transactionType ?? TransactionTypeEnum.PURCHASE,
+      transactionType:
+        transaction.transactionType ?? TransactionTypeEnum.PURCHASE,
       profileType: transaction.profileType ?? TransactionProfileType.AD1,
       branchId: transaction.branchId ?? '',
       counterId: '',
       dealId: transaction.dealId ?? '',
       docNo: transaction.docNo ?? '',
-      transactionDate: transaction.transactionDate ? transaction.transactionDate.split('T')[0] : '',
+      transactionDate: transaction.transactionDate
+        ? transaction.transactionDate.split('T')[0]
+        : '',
       marketingId: transaction.marketingId ?? '',
       segmentId: transaction.segmentId ?? '',
       servicedBy: transaction.servicedBy ?? '',
@@ -91,7 +102,9 @@ export const AD1EditView = () => {
       email: transaction.email ?? '',
       address: transaction.address ?? '',
       pan: transaction.pan ?? '',
-      dateOfBirth: transaction.dateOfBirth ? transaction.dateOfBirth.split('T')[0] : '',
+      dateOfBirth: transaction.dateOfBirth
+        ? transaction.dateOfBirth.split('T')[0]
+        : '',
       productId: transaction.productId ?? '',
       beneficiaryName: transaction.beneficiaryName ?? '',
       beniAddress: transaction.beniAddress ?? '',
@@ -161,7 +174,11 @@ export const AD1EditView = () => {
       openPrintWindow(html, AD1_PRINT_TEXT.popupBlocked);
       toast.success(AD1_PRINT_TEXT.printed(getAd1PrintCopyLabel(copyType)));
     } catch (printError) {
-      toast.error(printError instanceof Error ? printError.message : AD1_PRINT_TEXT.printFailed);
+      toast.error(
+        printError instanceof Error
+          ? printError.message
+          : AD1_PRINT_TEXT.printFailed
+      );
     } finally {
       setIsPrinting(false);
     }
@@ -204,10 +221,14 @@ export const AD1EditView = () => {
       {/* Reviewer action panel */}
       {canReview && (
         <div className="rounded-lg border border-border bg-surface-secondary p-4 space-y-3">
-          <p className="text-sm font-medium text-text-primary">Review this transaction</p>
+          <p className="text-sm font-medium text-text-primary">
+            Review this transaction
+          </p>
 
           <div>
-            <label className="block text-xs text-text-secondary mb-1">Remarks (optional)</label>
+            <label className="block text-xs text-text-secondary mb-1">
+              Remarks (optional)
+            </label>
             <input
               type="text"
               value={approvalRemarks}
@@ -254,7 +275,10 @@ export const AD1EditView = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => { setShowRejectInput(false); setRejectionReason(''); }}
+                  onClick={() => {
+                    setShowRejectInput(false);
+                    setRejectionReason('');
+                  }}
                   className="rounded-md border border-border px-3 py-2 text-sm text-text-secondary hover:bg-surface-secondary"
                 >
                   Cancel
@@ -265,7 +289,8 @@ export const AD1EditView = () => {
 
           {(approveMutation.error || rejectMutation.error) && (
             <p className="text-xs text-red-600">
-              {(approveMutation.error as Error)?.message || (rejectMutation.error as Error)?.message}
+              {(approveMutation.error as Error)?.message ||
+                (rejectMutation.error as Error)?.message}
             </p>
           )}
         </div>
@@ -276,7 +301,7 @@ export const AD1EditView = () => {
         allowWorkplaceSelection={false}
         submitLabel="Save"
         enforceTransactionDatePolicy={false}
-        onSubmit={async (values) => {
+        onSubmit={async values => {
           await transactionAd1Api.update(transaction.id, {
             transactionType: values.transactionType as string,
             profileType: values.profileType as string,
@@ -329,7 +354,9 @@ export const AD1EditView = () => {
 
       <CardSection heading={AD1_PRINT_TEXT.heading} className="space-y-4">
         <p className="text-sm text-text-secondary">
-          {copyType === 'DUPLICATE_COPY' ? AD1_PRINT_TEXT.duplicateHint : AD1_PRINT_TEXT.originalHint}
+          {copyType === 'DUPLICATE_COPY'
+            ? AD1_PRINT_TEXT.duplicateHint
+            : AD1_PRINT_TEXT.originalHint}
         </p>
         <Button
           type="button"

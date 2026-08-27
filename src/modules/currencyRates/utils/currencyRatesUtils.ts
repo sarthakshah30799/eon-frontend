@@ -17,7 +17,7 @@ const isPresent = (value: string | null | undefined) =>
 
 export const formatMarginValue = (
   marginType: CurrencyRateMarginType | '' | null | undefined,
-  value: string | null | undefined,
+  value: string | null | undefined
 ) => {
   if (!isPresent(value)) {
     return '';
@@ -28,14 +28,16 @@ export const formatMarginValue = (
 
 export const getLatestRateForCurrency = (
   rates: ICurrencyRate[] = [],
-  currencyId: string,
+  currencyId: string
 ) => rates.find(rate => rate.currencyId === currencyId) ?? null;
 
 export const getCurrencyPricingGroup = (
   currencies: ICurrencyProfile[] = [],
-  currencyId: string,
+  currencyId: string
 ): ICurrencyRateGroup | null => {
-  const pricingGroup = currencies.find(currency => currency.id === currencyId)?.pricingGroup ?? null;
+  const pricingGroup =
+    currencies.find(currency => currency.id === currencyId)?.pricingGroup ??
+    null;
 
   if (!pricingGroup) {
     return null;
@@ -46,9 +48,11 @@ export const getCurrencyPricingGroup = (
     code: pricingGroup.code,
     name: pricingGroup.name,
     description: pricingGroup.description ?? null,
-    buyMarginType: (pricingGroup.buyMarginType as CurrencyRateMarginType | null) ?? null,
+    buyMarginType:
+      (pricingGroup.buyMarginType as CurrencyRateMarginType | null) ?? null,
     buyMarginValue: pricingGroup.buyMarginValue ?? null,
-    saleMarginType: (pricingGroup.saleMarginType as CurrencyRateMarginType | null) ?? null,
+    saleMarginType:
+      (pricingGroup.saleMarginType as CurrencyRateMarginType | null) ?? null,
     saleMarginValue: pricingGroup.saleMarginValue ?? null,
     isActive: pricingGroup.isActive,
     createdAt: pricingGroup.createdAt || '',
@@ -58,7 +62,7 @@ export const getCurrencyPricingGroup = (
 
 export const getSideBaseRate = (
   rate: ICurrencyRate | null,
-  side: CurrencyRateSide,
+  side: CurrencyRateSide
 ) => {
   if (!rate) {
     return null;
@@ -89,7 +93,7 @@ export const getStoredBaseRateLabel = (rate: ICurrencyRate | null) => {
 export const calculateMarginAmount = (
   baseRate: string | null | undefined,
   marginType: CurrencyRateMarginType | '' | null | undefined,
-  marginValue: string | null | undefined,
+  marginValue: string | null | undefined
 ) => {
   if (!isPresent(baseRate) || !marginType || !isPresent(marginValue)) {
     return null;
@@ -109,7 +113,7 @@ export const calculateFinalRate = (
   baseRate: string | null | undefined,
   marginType: CurrencyRateMarginType | '' | null | undefined,
   marginValue: string | null | undefined,
-  direction: 'add' | 'subtract',
+  direction: 'add' | 'subtract'
 ) => {
   if (!isPresent(baseRate)) {
     return null;
@@ -139,16 +143,18 @@ const resolveAppliedRate = (
   groupFinalRate: string | null,
   overrideFinalRate: string | null,
   overrideMarginType: CurrencyRateMarginType | '' | null | undefined,
-  overrideMarginValue: string | null,
+  overrideMarginValue: string | null
 ) => {
   const hasOverride = Boolean(
-    overrideMarginType || isPresent(overrideMarginValue),
+    overrideMarginType || isPresent(overrideMarginValue)
   );
 
   if (hasOverride) {
     return {
       appliedFinalRate: overrideFinalRate,
-      appliedSource: overrideFinalRate ? ('override' as const) : ('none' as const),
+      appliedSource: overrideFinalRate
+        ? ('override' as const)
+        : ('none' as const),
     };
   }
 
@@ -178,65 +184,65 @@ export const buildCurrencyRateComparisonPreview = ({
   const buyGroupMarginAmount = calculateMarginAmount(
     baseBuyRate,
     pricingGroup?.buyMarginType,
-    pricingGroup?.buyMarginValue,
+    pricingGroup?.buyMarginValue
   );
   const saleGroupMarginAmount = calculateMarginAmount(
     baseSaleRate,
     pricingGroup?.saleMarginType,
-    pricingGroup?.saleMarginValue,
+    pricingGroup?.saleMarginValue
   );
   const buyGroupFinalRate = calculateFinalRate(
     baseBuyRate,
     pricingGroup?.buyMarginType,
     pricingGroup?.buyMarginValue,
-    'subtract',
+    'subtract'
   );
   const saleGroupFinalRate = calculateFinalRate(
     baseSaleRate,
     pricingGroup?.saleMarginType,
     pricingGroup?.saleMarginValue,
-    'add',
+    'add'
   );
   const buyOverrideMarginAmount = calculateMarginAmount(
     baseBuyRate,
     overrideBuy.marginType,
-    overrideBuy.marginValue,
+    overrideBuy.marginValue
   );
   const saleOverrideMarginAmount = calculateMarginAmount(
     baseSaleRate,
     overrideSale.marginType,
-    overrideSale.marginValue,
+    overrideSale.marginValue
   );
   const buyOverrideFinalRate = calculateFinalRate(
     baseBuyRate,
     overrideBuy.marginType,
     overrideBuy.marginValue,
-    'subtract',
+    'subtract'
   );
   const saleOverrideFinalRate = calculateFinalRate(
     baseSaleRate,
     overrideSale.marginType,
     overrideSale.marginValue,
-    'add',
+    'add'
   );
 
   const buyApplied = resolveAppliedRate(
     buyGroupFinalRate,
     buyOverrideFinalRate,
     overrideBuy.marginType,
-    overrideBuy.marginValue,
+    overrideBuy.marginValue
   );
   const saleApplied = resolveAppliedRate(
     saleGroupFinalRate,
     saleOverrideFinalRate,
     overrideSale.marginType,
-    overrideSale.marginValue,
+    overrideSale.marginValue
   );
   const hasOverride = Boolean(
     overrideBuy.marginType ||
-      isPresent(overrideBuy.marginValue) ||
-      overrideSale.marginType ||
-      isPresent(overrideSale.marginValue),
+    isPresent(overrideBuy.marginValue) ||
+    overrideSale.marginType ||
+    isPresent(overrideSale.marginValue)
   );
 
   return {
@@ -283,7 +289,7 @@ export const buildCurrencyRateComparisonPreview = ({
 
 export const getRuleBaseRate = (
   rate: IProductCurrencyRate,
-  side: CurrencyRateSide,
+  side: CurrencyRateSide
 ) => {
   const margin = side === 'buy' ? rate.buy : rate.sale;
   return {

@@ -60,7 +60,9 @@ const createEmptyRuleForm = (): IProductCurrencyRateFormValues => ({
   isActive: true,
 });
 
-const mapGroupToForm = (group: ICurrencyRateGroup): ICurrencyRateGroupFormValues => ({
+const mapGroupToForm = (
+  group: ICurrencyRateGroup
+): ICurrencyRateGroupFormValues => ({
   id: group.id,
   code: group.code,
   name: group.name,
@@ -81,7 +83,9 @@ const mapRateToForm = (rate: ICurrencyRate): ICurrencyRateEntryFormValues => ({
   notes: rate.notes || '',
 });
 
-const mapRuleToForm = (rule: IProductCurrencyRate): IProductCurrencyRateFormValues => ({
+const mapRuleToForm = (
+  rule: IProductCurrencyRate
+): IProductCurrencyRateFormValues => ({
   id: rule.id,
   productId: rule.productId,
   currencyId: rule.currencyId,
@@ -101,12 +105,22 @@ export const CurrencyRatesView = () => {
   const productCurrencyRates = data?.productCurrencyRates ?? [];
 
   const [activeModal, setActiveModal] = useState<ActiveModal>(null);
-  const [selectedGroup, setSelectedGroup] = useState<ICurrencyRateGroup | null>(null);
+  const [selectedGroup, setSelectedGroup] = useState<ICurrencyRateGroup | null>(
+    null
+  );
   const [selectedRate, setSelectedRate] = useState<ICurrencyRate | null>(null);
-  const [selectedRule, setSelectedRule] = useState<IProductCurrencyRate | null>(null);
-  const [groupForm, setGroupForm] = useState<ICurrencyRateGroupFormValues>(createEmptyGroupForm());
-  const [rateForm, setRateForm] = useState<ICurrencyRateEntryFormValues>(createEmptyRateForm());
-  const [ruleForm, setRuleForm] = useState<IProductCurrencyRateFormValues>(createEmptyRuleForm());
+  const [selectedRule, setSelectedRule] = useState<IProductCurrencyRate | null>(
+    null
+  );
+  const [groupForm, setGroupForm] = useState<ICurrencyRateGroupFormValues>(
+    createEmptyGroupForm()
+  );
+  const [rateForm, setRateForm] = useState<ICurrencyRateEntryFormValues>(
+    createEmptyRateForm()
+  );
+  const [ruleForm, setRuleForm] = useState<IProductCurrencyRateFormValues>(
+    createEmptyRuleForm()
+  );
   const [savingTarget, setSavingTarget] = useState<ActiveModal>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
@@ -188,7 +202,9 @@ export const CurrencyRatesView = () => {
       await refetch();
       closeModal();
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : 'Failed to save group');
+      setActionError(
+        err instanceof Error ? err.message : 'Failed to save group'
+      );
     } finally {
       setSavingTarget(null);
     }
@@ -221,7 +237,9 @@ export const CurrencyRatesView = () => {
       await refetch();
       closeModal();
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : 'Failed to save rate');
+      setActionError(
+        err instanceof Error ? err.message : 'Failed to save rate'
+      );
     } finally {
       setSavingTarget(null);
     }
@@ -250,7 +268,7 @@ export const CurrencyRatesView = () => {
       closeModal();
     } catch (err) {
       setActionError(
-        err instanceof Error ? err.message : 'Failed to save product override',
+        err instanceof Error ? err.message : 'Failed to save product override'
       );
     } finally {
       setSavingTarget(null);
@@ -269,7 +287,8 @@ export const CurrencyRatesView = () => {
             Currency Rates
           </h1>
           <p className="max-w-3xl text-sm text-text-secondary">
-            Manage group pricing, manual rate entries, and product-currency overrides from one place.
+            Manage group pricing, manual rate entries, and product-currency
+            overrides from one place.
           </p>
           {isRefreshing ? (
             <div className="text-xs font-semibold uppercase tracking-wider text-text-tertiary">
@@ -296,7 +315,10 @@ export const CurrencyRatesView = () => {
 
       {error || actionError ? (
         <div className="rounded-sm border border-error-200 bg-error-50 px-4 py-3 text-sm text-error-700">
-          {actionError || (error instanceof Error ? error.message : 'Failed to load currency rate data')}
+          {actionError ||
+            (error instanceof Error
+              ? error.message
+              : 'Failed to load currency rate data')}
         </div>
       ) : null}
 

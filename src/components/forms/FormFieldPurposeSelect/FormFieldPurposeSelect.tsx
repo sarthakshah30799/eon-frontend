@@ -29,7 +29,10 @@ export const FormFieldPurposeSelect = ({
     control: form.control,
     name,
   });
-  const { defaultOptions, loadOptions, isLoading } = usePurposeOptions(transactionType, partyProfileType);
+  const { defaultOptions, loadOptions, isLoading } = usePurposeOptions(
+    transactionType,
+    partyProfileType
+  );
 
   useEffect(() => {
     if (!purposeId || isLoading) {
@@ -37,7 +40,9 @@ export const FormFieldPurposeSelect = ({
     }
 
     const normalizedPurposeId = String(purposeId);
-    const exists = defaultOptions.some(option => String(option.value) === normalizedPurposeId);
+    const exists = defaultOptions.some(
+      option => String(option.value) === normalizedPurposeId
+    );
 
     if (!exists) {
       form.setValue(name, '', {

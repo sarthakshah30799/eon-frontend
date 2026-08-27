@@ -19,26 +19,32 @@ export const useSalePurchaseReport = () => {
 
   const hasExplicitPartyProfileSelection = Boolean(
     filters.appliedFilters?.partyProfileSelection.allSelected ||
-      filters.appliedFilters?.partyProfileSelection.selectedIds.length,
+    filters.appliedFilters?.partyProfileSelection.selectedIds.length
   );
 
   const requestParams = useMemo(
     () => ({
       startDate: filters.appliedFilters?.dateRange.startDate,
       endDate: filters.appliedFilters?.dateRange.endDate,
-      branchIds: hasExplicitPartyProfileSelection ? [] : filters.appliedFilters?.branchIds ?? [],
-      stateIds: hasExplicitPartyProfileSelection ? [] : filters.appliedFilters?.stateIds ?? [],
-      counterIds: hasExplicitPartyProfileSelection ? [] : filters.appliedFilters?.counterIds ?? [],
+      branchIds: hasExplicitPartyProfileSelection
+        ? []
+        : (filters.appliedFilters?.branchIds ?? []),
+      stateIds: hasExplicitPartyProfileSelection
+        ? []
+        : (filters.appliedFilters?.stateIds ?? []),
+      counterIds: hasExplicitPartyProfileSelection
+        ? []
+        : (filters.appliedFilters?.counterIds ?? []),
       partyTypeCodes: filters.appliedFilters?.partyTypeCodes ?? [],
       transactionTypes: filters.appliedFilters?.transactionTypes ?? [],
       sortBy: filters.appliedFilters?.sortBy,
     }),
-    [filters.appliedFilters, hasExplicitPartyProfileSelection],
+    [filters.appliedFilters, hasExplicitPartyProfileSelection]
   );
 
   const reportQueryKey = useMemo(
     () => ['sale-purchase-report', filters.appliedFilters],
-    [filters.appliedFilters],
+    [filters.appliedFilters]
   );
 
   const reportQuery = useQuery<ISalePurchaseReportResponse>({
@@ -46,7 +52,10 @@ export const useSalePurchaseReport = () => {
     enabled: Boolean(filters.appliedFilters),
     queryFn: async () => {
       const partyProfileIds = await resolvePartyProfileIds();
-      if (hasExplicitPartyProfileSelection && (!partyProfileIds || partyProfileIds.length === 0)) {
+      if (
+        hasExplicitPartyProfileSelection &&
+        (!partyProfileIds || partyProfileIds.length === 0)
+      ) {
         return {
           columns: [],
           rows: [],
@@ -66,13 +75,18 @@ export const useSalePurchaseReport = () => {
   const reportRows = reportQuery.data?.rows ?? [];
 
   const downloadReport = useCallback(
-    async (layout: typeof ReportLayoutEnum.GROUPED | typeof ReportLayoutEnum.FLAT) => {
+    async (
+      layout: typeof ReportLayoutEnum.GROUPED | typeof ReportLayoutEnum.FLAT
+    ) => {
       if (!filters.appliedFilters) {
         return;
       }
 
       const partyProfileIds = await resolvePartyProfileIds();
-      if (hasExplicitPartyProfileSelection && (!partyProfileIds || partyProfileIds.length === 0)) {
+      if (
+        hasExplicitPartyProfileSelection &&
+        (!partyProfileIds || partyProfileIds.length === 0)
+      ) {
         return;
       }
 
@@ -82,10 +96,13 @@ export const useSalePurchaseReport = () => {
           ...(partyProfileIds ? { partyProfileIds } : {}),
         },
         exportFormat,
-        layout,
+        layout
       );
 
-      downloadBlob(payload.blob, payload.filename || 'sale-purchase-report.xlsx');
+      downloadBlob(
+        payload.blob,
+        payload.filename || 'sale-purchase-report.xlsx'
+      );
     },
     [
       exportFormat,
@@ -93,7 +110,7 @@ export const useSalePurchaseReport = () => {
       hasExplicitPartyProfileSelection,
       requestParams,
       resolvePartyProfileIds,
-    ],
+    ]
   );
 
   const isReady = Boolean(filters.appliedFilters);

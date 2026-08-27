@@ -84,17 +84,15 @@ const MenuTreeRow = ({
 
       {menu.children && menu.children.length > 0 && (
         <ul className="space-y-2">
-          {menu.children
-            .slice()
-            .map(child => (
-              <MenuTreeRow
-                key={child.id}
-                menu={child}
-                depth={depth + 1}
-                onEdit={onEdit}
-                onDelete={onDelete}
-              />
-            ))}
+          {menu.children.slice().map(child => (
+            <MenuTreeRow
+              key={child.id}
+              menu={child}
+              depth={depth + 1}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
+          ))}
         </ul>
       )}
     </li>

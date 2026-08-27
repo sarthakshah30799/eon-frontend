@@ -116,9 +116,7 @@ export const CurrencyProfileTable = ({
       onSearch={onSearch}
       searchValue={searchValue}
       searchPlaceholder={searchPlaceholder}
-      onRowClick={row =>
-        navigate(`/currency-profile/edit/${row.id}`)
-      }
+      onRowClick={row => navigate(`/currency-profile/edit/${row.id}`)}
       emptyMessage="No currencies found. Create your first currency."
     />
   );

@@ -58,8 +58,10 @@ export const CountryGroupTable = ({
       id: 'actions',
       header: 'Actions',
       meta: {
-        headerClassName: 'sticky right-0 z-20 border-l border-border-primary bg-surface-secondary',
-        cellClassName: 'sticky right-0 z-10 border-l border-border-primary bg-surface-primary',
+        headerClassName:
+          'sticky right-0 z-20 border-l border-border-primary bg-surface-secondary',
+        cellClassName:
+          'sticky right-0 z-10 border-l border-border-primary bg-surface-primary',
       },
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
@@ -88,7 +90,11 @@ export const CountryGroupTable = ({
               disabled={isDeleting}
               onClick={async event => {
                 event.stopPropagation();
-                if (window.confirm('Are you sure you want to delete this country group?')) {
+                if (
+                  window.confirm(
+                    'Are you sure you want to delete this country group?'
+                  )
+                ) {
                   await onDelete(row.original.id);
                 }
               }}

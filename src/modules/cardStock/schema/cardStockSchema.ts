@@ -17,35 +17,92 @@ const issuerRule = (issuers: IPartyProfile[], issuerId?: string) => {
   };
 };
 
-export const createCardStockSchema = (issuers: IPartyProfile[] = []) => yup.object({
-  transactionNumber: yup.string().optional(),
-  receiptDate: yup.string().required('Receipt date is required'),
-  issuerPartyProfileId: yup.string().required('Card issuer is required'),
-  branchId: yup.string().required('Branch is required'),
-  totalFeAmount: yup.string().required(),
-  items: yup.array().of(yup.object({
-    currencyId: yup.string().required('Currency is required'),
-    per: yup.string().required('Per is required').test('positive', 'Per must be greater than zero', value => Number(value) > 0),
-    productId: yup.string().required('Product is required'),
-    issuerPartyProfileId: yup.string().required('Issuer is required'),
-    feAmount: yup.string().required(),
-    cards: yup.array().of(yup.object({
-      series: yup.string().matches(/^[A-Za-z0-9]{1,4}$/, CARD_STOCK_VALIDATION_TEXT.series).required('Series prefix is required'),
-      kitNumber: yup.string().trim().required(CARD_STOCK_VALIDATION_TEXT.kitNumber),
-      cardNumber: yup.string().trim().required('Card number is required').test(
-        'issuer-card-number',
-        CARD_STOCK_VALIDATION_TEXT.digits(16),
-        function validateIssuerCardNumber(value) {
-          const item = this.from?.[1]?.value as { issuerPartyProfileId?: string } | undefined;
-          const result = validateCardNumber(value ?? '', issuerRule(issuers, item?.issuerPartyProfileId));
-          return result.valid ? true : this.createError({ message: result.message });
-        },
-      ),
-      denomination: yup.string().test('positive', CARD_STOCK_VALIDATION_TEXT.denomination, value => Number(value) > 0).required('Denomination is required'),
-      amount: yup.string().required(),
-      expirationDate: yup.string().required('Expiration date is required').test('future', CARD_STOCK_VALIDATION_TEXT.expirationFuture, value => Boolean(value && new Date(`${value}T00:00:00`) > futureDate())),
-    })).min(1, 'At least one card is required').required(),
-  })).min(1, 'At least one item is required').required(),
-});
+export const createCardStockSchema = (issuers: IPartyProfile[] = []) =>
+  yup.object({
+    transactionNumber: yup.string().optional(),
+    receiptDate: yup.string().required('Receipt date is required'),
+    issuerPartyProfileId: yup.string().required('Card issuer is required'),
+    branchId: yup.string().required('Branch is required'),
+    totalFeAmount: yup.string().required(),
+    items: yup
+      .array()
+      .of(
+        yup.object({
+          currencyId: yup.string().required('Currency is required'),
+          per: yup
+            .string()
+            .required('Per is required')
+            .test(
+              'positive',
+              'Per must be greater than zero',
+              value => Number(value) > 0
+            ),
+          productId: yup.string().required('Product is required'),
+          issuerPartyProfileId: yup.string().required('Issuer is required'),
+          feAmount: yup.string().required(),
+          cards: yup
+            .array()
+            .of(
+              yup.object({
+                series: yup
+                  .string()
+                  .matches(
+                    /^[A-Za-z0-9]{1,4}$/,
+                    CARD_STOCK_VALIDATION_TEXT.series
+                  )
+                  .required('Series prefix is required'),
+                kitNumber: yup
+                  .string()
+                  .trim()
+                  .required(CARD_STOCK_VALIDATION_TEXT.kitNumber),
+                cardNumber: yup
+                  .string()
+                  .trim()
+                  .required('Card number is required')
+                  .test(
+                    'issuer-card-number',
+                    CARD_STOCK_VALIDATION_TEXT.digits(16),
+                    function validateIssuerCardNumber(value) {
+                      const item = this.from?.[1]?.value as
+                        | { issuerPartyProfileId?: string }
+                        | undefined;
+                      const result = validateCardNumber(
+                        value ?? '',
+                        issuerRule(issuers, item?.issuerPartyProfileId)
+                      );
+                      return result.valid
+                        ? true
+                        : this.createError({ message: result.message });
+                    }
+                  ),
+                denomination: yup
+                  .string()
+                  .test(
+                    'positive',
+                    CARD_STOCK_VALIDATION_TEXT.denomination,
+                    value => Number(value) > 0
+                  )
+                  .required('Denomination is required'),
+                amount: yup.string().required(),
+                expirationDate: yup
+                  .string()
+                  .required('Expiration date is required')
+                  .test(
+                    'future',
+                    CARD_STOCK_VALIDATION_TEXT.expirationFuture,
+                    value =>
+                      Boolean(
+                        value && new Date(`${value}T00:00:00`) > futureDate()
+                      )
+                  ),
+              })
+            )
+            .min(1, 'At least one card is required')
+            .required(),
+        })
+      )
+      .min(1, 'At least one item is required')
+      .required(),
+  });
 
 export const cardStockSchema = createCardStockSchema();

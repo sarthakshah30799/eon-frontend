@@ -1,4 +1,7 @@
-import type { ICurrencyRate, IProductCurrencyRate } from '../types/currencyRatesTypes';
+import type {
+  ICurrencyRate,
+  IProductCurrencyRate,
+} from '../types/currencyRatesTypes';
 import {
   buildCurrencyRateComparisonPreview,
   formatMarginValue,
@@ -38,9 +41,12 @@ const MarginPreview = ({
         {title}
       </div>
       <div className="text-text-primary">{value}</div>
-      <div className="text-xs text-text-tertiary">Calculated: {result || '-'}</div>
       <div className="text-xs text-text-tertiary">
-        Applied: {applied || '-'} {appliedSource !== 'none' ? `(${appliedSource})` : ''}
+        Calculated: {result || '-'}
+      </div>
+      <div className="text-xs text-text-tertiary">
+        Applied: {applied || '-'}{' '}
+        {appliedSource !== 'none' ? `(${appliedSource})` : ''}
       </div>
     </div>
   );
@@ -89,7 +95,7 @@ export const CurrencyRateOverridesSection = ({
       cell: ({ row }) => {
         const latestRate = getLatestRateForCurrency(
           rates,
-          row.original.currencyId,
+          row.original.currencyId
         );
 
         return (
@@ -105,11 +111,11 @@ export const CurrencyRateOverridesSection = ({
       cell: ({ row }) => {
         const latestRate = getLatestRateForCurrency(
           rates,
-          row.original.currencyId,
+          row.original.currencyId
         );
         const pricingGroup = getCurrencyPricingGroup(
           currencies,
-          row.original.currencyId,
+          row.original.currencyId
         );
         const preview = buildCurrencyRateComparisonPreview({
           latestRate,
@@ -124,7 +130,7 @@ export const CurrencyRateOverridesSection = ({
               Group: {pricingGroup?.buyMarginType || 'EMPTY'}{' '}
               {formatMarginValue(
                 pricingGroup?.buyMarginType,
-                pricingGroup?.buyMarginValue,
+                pricingGroup?.buyMarginValue
               )}
             </div>
             <div className="text-xs text-text-tertiary">
@@ -134,7 +140,7 @@ export const CurrencyRateOverridesSection = ({
               title="Override"
               value={`${row.original.buy.marginType || 'EMPTY'} ${formatMarginValue(
                 row.original.buy.marginType,
-                row.original.buy.marginValue,
+                row.original.buy.marginValue
               )}`.trim()}
               result={preview?.buy.overrideFinalRate ?? null}
               applied={preview?.buy.appliedFinalRate ?? null}
@@ -150,11 +156,11 @@ export const CurrencyRateOverridesSection = ({
       cell: ({ row }) => {
         const latestRate = getLatestRateForCurrency(
           rates,
-          row.original.currencyId,
+          row.original.currencyId
         );
         const pricingGroup = getCurrencyPricingGroup(
           currencies,
-          row.original.currencyId,
+          row.original.currencyId
         );
         const preview = buildCurrencyRateComparisonPreview({
           latestRate,
@@ -169,7 +175,7 @@ export const CurrencyRateOverridesSection = ({
               Group: {pricingGroup?.saleMarginType || 'EMPTY'}{' '}
               {formatMarginValue(
                 pricingGroup?.saleMarginType,
-                pricingGroup?.saleMarginValue,
+                pricingGroup?.saleMarginValue
               )}
             </div>
             <div className="text-xs text-text-tertiary">
@@ -179,7 +185,7 @@ export const CurrencyRateOverridesSection = ({
               title="Override"
               value={`${row.original.sale.marginType || 'EMPTY'} ${formatMarginValue(
                 row.original.sale.marginType,
-                row.original.sale.marginValue,
+                row.original.sale.marginValue
               )}`.trim()}
               result={preview?.sale.overrideFinalRate ?? null}
               applied={preview?.sale.appliedFinalRate ?? null}
@@ -208,7 +214,8 @@ export const CurrencyRateOverridesSection = ({
     <CardSection heading="Product Currency Overrides" className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm text-text-secondary">
-          Each product-currency row can replace the group margin rules and still show you the group comparison for review.
+          Each product-currency row can replace the group margin rules and still
+          show you the group comparison for review.
         </p>
         {refreshing ? (
           <span className="text-xs font-semibold uppercase tracking-wider text-text-tertiary">

@@ -11,10 +11,12 @@ export const useCounterHoldCost = ({
   counterId: string;
   currencyId: string;
   enabled?: boolean;
-}) => useQuery({
-  queryKey: ['counter-hold-cost', branchId, counterId, currencyId],
-  queryFn: () => transactionsApi.getCounterHoldCost({ branchId, counterId, currencyId }),
-  enabled: enabled && Boolean(branchId && counterId && currencyId),
-});
+}) =>
+  useQuery({
+    queryKey: ['counter-hold-cost', branchId, counterId, currencyId],
+    queryFn: () =>
+      transactionsApi.getCounterHoldCost({ branchId, counterId, currencyId }),
+    enabled: enabled && Boolean(branchId && counterId && currencyId),
+  });
 
 export default useCounterHoldCost;

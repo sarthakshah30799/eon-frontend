@@ -15,18 +15,20 @@ const normalizeCompanyProfilePayload = (values: ICreateCompanyProfile) => ({
 
 export const companyProfileApi = {
   getCompanyProfiles: async (params?: ICompanyProfileListQuery) => {
-    return apiClient.get<ICompanyProfile[]>(`/companies${buildQueryString(params)}`);
+    return apiClient.get<ICompanyProfile[]>(
+      `/companies${buildQueryString(params)}`
+    );
   },
   getCompanyProfileById: async (id: string) => {
     return apiClient.get<ICompanyProfile>(`/companies/${id}`);
   },
   createCompanyProfile: async (values: ICreateCompanyProfile) => {
-    return apiClient.post<ICompanyProfile>('/companies', normalizeCompanyProfilePayload(values));
+    return apiClient.post<ICompanyProfile>(
+      '/companies',
+      normalizeCompanyProfilePayload(values)
+    );
   },
-  updateCompanyProfile: async (
-    id: string,
-    values: ICreateCompanyProfile
-  ) => {
+  updateCompanyProfile: async (id: string, values: ICreateCompanyProfile) => {
     return apiClient.put<ICompanyProfile>(
       `/companies/${id}`,
       normalizeCompanyProfilePayload(values)

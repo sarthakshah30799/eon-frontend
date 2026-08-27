@@ -13,7 +13,8 @@ import type { ICategoryOptionsFormValues } from '../utils';
 
 export const MiscellaneousProfileCreateView = () => {
   const navigate = useNavigate();
-  const { submitCategoryOptions, isPending } = useBulkCreateMiscellaneousProfiles();
+  const { submitCategoryOptions, isPending } =
+    useBulkCreateMiscellaneousProfiles();
   const { data: existingOptions = [] } = useListMiscellaneousProfiles();
 
   const availableCodeOptions = useMemo(() => {
@@ -21,7 +22,9 @@ export const MiscellaneousProfileCreateView = () => {
       existingOptions.map(option => option.code.trim().toUpperCase())
     );
 
-    return CATEGORY_OPTION_CODE_OPTIONS.filter(option => !existingCodes.has(option.value));
+    return CATEGORY_OPTION_CODE_OPTIONS.filter(
+      option => !existingCodes.has(option.value)
+    );
   }, [existingOptions]);
 
   const handleSubmit = async (values: ICategoryOptionsFormValues) => {

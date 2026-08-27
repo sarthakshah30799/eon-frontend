@@ -20,8 +20,8 @@ export const Flm4PurchaseFromFfmcFiltersSection = ({
   filters,
 }: Flm4PurchaseFromFfmcFiltersSectionProps) => {
   const currentProductLabel =
-    filters.productOptions.find(option => option.id === filters.productId)?.label ??
-    FLM4_PURCHASE_FROM_FFMC_TEXT.selectProduct;
+    filters.productOptions.find(option => option.id === filters.productId)
+      ?.label ?? FLM4_PURCHASE_FROM_FFMC_TEXT.selectProduct;
 
   return (
     <section className="space-y-3 rounded-xl border border-border-primary bg-white p-3 shadow-sm">
@@ -41,7 +41,7 @@ export const Flm4PurchaseFromFfmcFiltersSection = ({
           emptyMessage="No branch options available."
           helperText={buildSelectionDescription(
             filters.branchIds.length,
-            filters.branchOptions.length,
+            filters.branchOptions.length
           )}
         />
 
@@ -58,7 +58,7 @@ export const Flm4PurchaseFromFfmcFiltersSection = ({
               ? FLM4_PURCHASE_FROM_FFMC_TEXT.all
               : buildSelectionDescription(
                   filters.profileTypes.length,
-                  filters.profileOptions.length,
+                  filters.profileOptions.length
                 )
           }
         />

@@ -4,14 +4,15 @@ import type {
   ICreateCountryGroup,
 } from '../types';
 
-export const createEmptyCountryGroupFormValues = (): ICountryGroupFormValues => ({
-  name: '',
-  code: '',
-  sellLimitAmount: '',
-  sellLimitCurrencyId: '',
-  minTravelDays: '',
-  maxTravelDays: '',
-});
+export const createEmptyCountryGroupFormValues =
+  (): ICountryGroupFormValues => ({
+    name: '',
+    code: '',
+    sellLimitAmount: '',
+    sellLimitCurrencyId: '',
+    minTravelDays: '',
+    maxTravelDays: '',
+  });
 
 export const mapCountryGroupToFormValues = (
   group: ICountryGroup
@@ -33,9 +34,7 @@ export const mapCountryGroupToFormValues = (
       : String(group.maxTravelDays),
 });
 
-const parseNullableNumber = (
-  value: string
-): number | null => {
+const parseNullableNumber = (value: string): number | null => {
   const trimmedValue = value.trim();
   if (!trimmedValue) {
     return null;
@@ -68,5 +67,6 @@ export const formatCountryGroupSellLimit = (group: ICountryGroup): string => {
   return `${Number(group.sellLimitAmount).toFixed(2)} ${group.sellLimitCurrency.currencyCode}`;
 };
 
-export const formatNullableInteger = (value: number | null | undefined): string =>
-  value === null || value === undefined ? '—' : String(value);
+export const formatNullableInteger = (
+  value: number | null | undefined
+): string => (value === null || value === undefined ? '—' : String(value));

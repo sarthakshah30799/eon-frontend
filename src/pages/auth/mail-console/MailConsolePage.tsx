@@ -52,7 +52,9 @@ const MailConsolePage: React.FC = () => {
   const handleTestConnection = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!host || !port || !username) {
-      toast.error('Please fill in SMTP Host, Port, and Username to test connection.');
+      toast.error(
+        'Please fill in SMTP Host, Port, and Username to test connection.'
+      );
       return;
     }
 
@@ -67,7 +69,11 @@ const MailConsolePage: React.FC = () => {
       });
       toast.success('SMTP connection verified successfully!');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'SMTP connection verification failed.');
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'SMTP connection verification failed.'
+      );
     } finally {
       setIsTesting(false);
     }
@@ -98,7 +104,9 @@ const MailConsolePage: React.FC = () => {
       setIsLoading(true);
       setReloadToken(token => token + 1);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to save configuration.');
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to save configuration.'
+      );
     } finally {
       setIsSaving(false);
     }
@@ -109,7 +117,9 @@ const MailConsolePage: React.FC = () => {
     setPort(2525);
     setUsername('');
     setPassword('');
-    toast.success('Mailtrap Sandbox preset filled. Please provide your sandbox username and password.');
+    toast.success(
+      'Mailtrap Sandbox preset filled. Please provide your sandbox username and password.'
+    );
   };
 
   const applyMailtrapSendingPreset = () => {
@@ -117,7 +127,9 @@ const MailConsolePage: React.FC = () => {
     setPort(587);
     setUsername('api');
     setPassword('');
-    toast.success('Mailtrap Sending preset filled. Please enter your Mailtrap API token as the password.');
+    toast.success(
+      'Mailtrap Sending preset filled. Please enter your Mailtrap API token as the password.'
+    );
   };
 
   if (isLoading) {
@@ -131,20 +143,27 @@ const MailConsolePage: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="bg-surface-primary border border-border-primary rounded-sm p-4 shadow-sm">
-        <h2 className="text-xl font-bold text-text-primary">SMTP Mail Configuration</h2>
-        <p className="text-sm text-text-secondary">Configure global SMTP settings for password recovery and notifications.</p>
+        <h2 className="text-xl font-bold text-text-primary">
+          SMTP Mail Configuration
+        </h2>
+        <p className="text-sm text-text-secondary">
+          Configure global SMTP settings for password recovery and
+          notifications.
+        </p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-[1fr_280px]">
         {/* Main SMTP Form */}
         <div className="bg-surface-primary border border-border-primary rounded-sm p-6 shadow-sm space-y-6">
-          <h3 className="text-lg font-semibold text-text-primary">SMTP Server Connection</h3>
+          <h3 className="text-lg font-semibold text-text-primary">
+            SMTP Server Connection
+          </h3>
           <form onSubmit={handleSaveConfig} className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
               <Input
                 label="SMTP Server Host *"
                 value={host}
-                onChange={(e) => setHost(e.target.value)}
+                onChange={e => setHost(e.target.value)}
                 valueTransform="none"
                 placeholder="smtp.gmail.com"
                 required
@@ -154,7 +173,7 @@ const MailConsolePage: React.FC = () => {
                 label="SMTP Server Port *"
                 type="number"
                 value={String(port)}
-                onChange={(e) => setPort(Number(e.target.value))}
+                onChange={e => setPort(Number(e.target.value))}
                 valueTransform="none"
                 placeholder="587"
                 required
@@ -167,17 +186,21 @@ const MailConsolePage: React.FC = () => {
                 label="SMTP Username *"
                 type="text"
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                onChange={e => setUsername(e.target.value)}
                 valueTransform="none"
                 placeholder="user@example.com"
                 required
                 classes={{ container: 'max-w-none' }}
               />
               <Input
-                label={hasPassword ? "SMTP Password (already saved, fill to change)" : "SMTP Password *"}
+                label={
+                  hasPassword
+                    ? 'SMTP Password (already saved, fill to change)'
+                    : 'SMTP Password *'
+                }
                 type="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={e => setPassword(e.target.value)}
                 valueTransform="none"
                 placeholder="SMTP server password"
                 required={!hasPassword}
@@ -190,7 +213,7 @@ const MailConsolePage: React.FC = () => {
                 label="Sender Email (Fallback if not specified)"
                 type="email"
                 value={senderEmail}
-                onChange={(e) => setSenderEmail(e.target.value)}
+                onChange={e => setSenderEmail(e.target.value)}
                 valueTransform="none"
                 placeholder="no-reply@yourdomain.com"
                 classes={{ container: 'max-w-none' }}
@@ -206,10 +229,7 @@ const MailConsolePage: React.FC = () => {
               >
                 {isTesting ? 'Verifying...' : 'Test Connection'}
               </Button>
-              <Button
-                type="submit"
-                disabled={isTesting || isSaving}
-              >
+              <Button type="submit" disabled={isTesting || isSaving}>
                 {isSaving ? 'Saving...' : 'Save Settings'}
               </Button>
             </div>
@@ -219,8 +239,12 @@ const MailConsolePage: React.FC = () => {
         {/* Quick presets & Info Sidebar */}
         <div className="space-y-6">
           <div className="bg-surface-primary border border-border-primary rounded-sm p-4 shadow-sm space-y-4">
-            <h4 className="font-bold text-sm text-text-primary uppercase tracking-wider">Mailtrap Presets</h4>
-            <p className="text-xs text-text-secondary">Quickly set up mock SMTP testing using your Mailtrap accounts.</p>
+            <h4 className="font-bold text-sm text-text-primary uppercase tracking-wider">
+              Mailtrap Presets
+            </h4>
+            <p className="text-xs text-text-secondary">
+              Quickly set up mock SMTP testing using your Mailtrap accounts.
+            </p>
             <div className="space-y-2">
               <Button
                 onClick={applyMailtrapSandboxPreset}
@@ -242,11 +266,19 @@ const MailConsolePage: React.FC = () => {
           </div>
 
           <div className="bg-surface-secondary/50 rounded-sm border border-border-primary/50 p-4 space-y-3">
-            <h4 className="font-bold text-xs text-text-secondary uppercase tracking-wider">Quick Info</h4>
+            <h4 className="font-bold text-xs text-text-secondary uppercase tracking-wider">
+              Quick Info
+            </h4>
             <ul className="text-xs text-text-secondary space-y-2 list-disc list-inside">
-              <li>Use port <strong>465</strong> for <strong>SSL/TLS</strong>.</li>
-              <li>Use port <strong>587</strong> for <strong>STARTTLS</strong>.</li>
-              <li>Use port <strong>2525</strong> for Mailtrap sandbox testing.</li>
+              <li>
+                Use port <strong>465</strong> for <strong>SSL/TLS</strong>.
+              </li>
+              <li>
+                Use port <strong>587</strong> for <strong>STARTTLS</strong>.
+              </li>
+              <li>
+                Use port <strong>2525</strong> for Mailtrap sandbox testing.
+              </li>
             </ul>
           </div>
         </div>

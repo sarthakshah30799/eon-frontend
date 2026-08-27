@@ -5,4 +5,3 @@ const StateProfileListPage = () => {
 };
 
 export default StateProfileListPage;
-

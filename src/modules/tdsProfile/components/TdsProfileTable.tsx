@@ -28,7 +28,6 @@ interface TdsProfileTableRow {
   active: boolean;
 }
 
-
 export const TdsProfileTable = ({
   tdsProfiles,
   onDelete,
@@ -110,7 +109,11 @@ export const TdsProfileTable = ({
             disabled={isDeleting}
             onClick={async event => {
               event.stopPropagation();
-              if (window.confirm('Are you sure you want to delete this TDS profile?')) {
+              if (
+                window.confirm(
+                  'Are you sure you want to delete this TDS profile?'
+                )
+              ) {
                 await onDelete(row.original.id);
               }
             }}

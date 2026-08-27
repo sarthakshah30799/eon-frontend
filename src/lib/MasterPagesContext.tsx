@@ -47,9 +47,7 @@ const readStoredPages = (): IMasterPage[] => {
 };
 
 export const MasterPagesProvider = ({ children }: MasterPagesProviderProps) => {
-  const [pages, setPages] = useState<IMasterPage[]>(() =>
-    readStoredPages()
-  );
+  const [pages, setPages] = useState<IMasterPage[]>(() => readStoredPages());
 
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(pages));

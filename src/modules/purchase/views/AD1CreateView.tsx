@@ -12,8 +12,11 @@ import { getTransactionDatePolicy } from '@/modules/transactionPolicies/utils/tr
 
 export const AD1CreateView = () => {
   const navigate = useNavigate();
-  const { user, activeBranchId, activeCounterId, setWorkplace, policyContext } = useAuth();
-  const canSelectWorkplace = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
+  const { user, activeBranchId, activeCounterId, setWorkplace, policyContext } =
+    useAuth();
+  const canSelectWorkplace = Boolean(
+    user?.isAdmin || user?.isHo || user?.isHoStaff
+  );
 
   const { data: additionalSettings = [] } = useListAdditionalSettings();
   const transactionDatePolicy = useMemo(
@@ -27,21 +30,20 @@ export const AD1CreateView = () => {
         additionalSettings,
         AdditionalSettingsCodeEnum.TransactionApprovalPolicy,
         AdditionalSettingsCodeEnum.PurchaseAd1,
-        false,
+        false
       ),
-    [additionalSettings],
+    [additionalSettings]
   );
 
   const defaultValues = useMemo(() => {
     return {
       transactionType: TransactionTypeEnum.PURCHASE,
       profileType: TransactionProfileType.AD1,
-      branchId: canSelectWorkplace ? '' : activeBranchId ?? '',
-      counterId: canSelectWorkplace ? '' : activeCounterId ?? '',
+      branchId: canSelectWorkplace ? '' : (activeBranchId ?? ''),
+      counterId: canSelectWorkplace ? '' : (activeCounterId ?? ''),
       dealId: '',
       docNo: '',
-      transactionDate:
-        transactionDatePolicy.defaultTransactionDate,
+      transactionDate: transactionDatePolicy.defaultTransactionDate,
       marketingId: '',
       segmentId: '',
       servicedBy: '',
@@ -92,7 +94,9 @@ export const AD1CreateView = () => {
   return (
     <div className="space-y-6">
       <div className="space-y-1">
-        <h1 className="text-2xl font-semibold text-text-primary">Create AD1 Transaction</h1>
+        <h1 className="text-2xl font-semibold text-text-primary">
+          Create AD1 Transaction
+        </h1>
         <p className="text-sm text-text-secondary">
           Capture all remitter, beneficiary, settlement and commission details.
         </p>
@@ -102,7 +106,7 @@ export const AD1CreateView = () => {
         defaultValues={defaultValues}
         allowWorkplaceSelection={canSelectWorkplace}
         submitLabel={requiresApproval ? 'Submit for Approval' : 'Create'}
-        onSubmit={async (values) => {
+        onSubmit={async values => {
           await setWorkplace(values.branchId, values.counterId);
           const created = await transactionAd1Api.create({
             transactionType: values.transactionType as string,

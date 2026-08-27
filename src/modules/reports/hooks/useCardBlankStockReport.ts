@@ -24,7 +24,7 @@ export const useCardBlankStockReport = () => {
       issuerPartyProfileIds: appliedFilters?.issuerPartyProfileIds ?? [],
       sortBy: appliedFilters?.sortBy,
     }),
-    [appliedFilters],
+    [appliedFilters]
   );
 
   const reportQuery = useQuery<ICardBlankStockReportResponse>({
@@ -40,11 +40,11 @@ export const useCardBlankStockReport = () => {
 
     const payload = await reportsApi.downloadCardBlankStockReport(
       requestParams,
-      exportFormat,
+      exportFormat
     );
     downloadBlob(
       payload.blob,
-      payload.filename || 'card-blank-stock-report.xlsx',
+      payload.filename || 'card-blank-stock-report.xlsx'
     );
   }, [exportFormat, filters.appliedFilters, requestParams]);
 

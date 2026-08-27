@@ -14,7 +14,9 @@ const LiveRates = ({ rates }: LiveRatesProps) => (
       </span>
     </div>
     {rates.length === 0 ? (
-      <div className="py-6 text-center text-xs text-text-tertiary">No rates available</div>
+      <div className="py-6 text-center text-xs text-text-tertiary">
+        No rates available
+      </div>
     ) : (
       <div className="max-h-[300px] space-y-1.5 overflow-y-auto">
         {rates.slice(0, 8).map((rate: ICurrencyRate) => {
@@ -22,12 +24,20 @@ const LiveRates = ({ rates }: LiveRatesProps) => (
           const sale = parseFloat(rate.baseSaleRate || '0');
           const mid = ((buy + sale) / 2).toFixed(4);
           return (
-            <div key={rate.id} className="flex items-center justify-between border-b border-border-primary py-1.5 last:border-b-0">
+            <div
+              key={rate.id}
+              className="flex items-center justify-between border-b border-border-primary py-1.5 last:border-b-0"
+            >
               <span className="font-mono text-xs font-medium text-text-primary">
-                {rate.currency?.currencyCode || rate.currencyId?.slice(0, 8) || '\u2014'}/MYR
+                {rate.currency?.currencyCode ||
+                  rate.currencyId?.slice(0, 8) ||
+                  '\u2014'}
+                /MYR
               </span>
               <div className="text-right">
-                <span className="font-mono text-xs text-text-primary">{mid}</span>
+                <span className="font-mono text-xs text-text-primary">
+                  {mid}
+                </span>
               </div>
             </div>
           );

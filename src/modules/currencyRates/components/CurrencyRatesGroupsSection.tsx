@@ -23,7 +23,9 @@ export const CurrencyRatesGroupsSection = ({
       accessorKey: 'code',
       header: 'Code',
       cell: info => (
-        <div className="font-semibold text-text-primary">{info.getValue<string>()}</div>
+        <div className="font-semibold text-text-primary">
+          {info.getValue<string>()}
+        </div>
       ),
     },
     {
@@ -39,7 +41,7 @@ export const CurrencyRatesGroupsSection = ({
             {row.original.buyMarginType || 'EMPTY'}{' '}
             {formatMarginValue(
               row.original.buyMarginType,
-              row.original.buyMarginValue,
+              row.original.buyMarginValue
             )}
           </div>
         </div>
@@ -54,7 +56,7 @@ export const CurrencyRatesGroupsSection = ({
             {row.original.saleMarginType || 'EMPTY'}{' '}
             {formatMarginValue(
               row.original.saleMarginType,
-              row.original.saleMarginValue,
+              row.original.saleMarginValue
             )}
           </div>
         </div>
@@ -76,13 +78,11 @@ export const CurrencyRatesGroupsSection = ({
   ];
 
   return (
-    <CardSection
-      heading="Currency Rate Groups"
-      className="space-y-4"
-    >
+    <CardSection heading="Currency Rate Groups" className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm text-text-secondary">
-          Group defaults are used only when a product-currency override is not present.
+          Group defaults are used only when a product-currency override is not
+          present.
         </p>
         <div className="flex items-center gap-3">
           {refreshing ? (

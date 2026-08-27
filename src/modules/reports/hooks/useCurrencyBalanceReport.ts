@@ -24,12 +24,12 @@ export const useCurrencyBalanceReport = () => {
         ? [filters.appliedFilters.currencyId]
         : [],
     }),
-    [filters.appliedFilters],
+    [filters.appliedFilters]
   );
 
   const reportQueryKey = useMemo(
     () => ['currency-balance-report', filters.appliedFilters],
-    [filters.appliedFilters],
+    [filters.appliedFilters]
   );
 
   const reportQuery = useQuery<ICurrencyBalanceReportResponse>({
@@ -53,10 +53,13 @@ export const useCurrencyBalanceReport = () => {
       {
         ...requestParams,
       },
-      exportFormat,
+      exportFormat
     );
 
-    downloadBlob(payload.blob, payload.filename || 'currency-balance-report.xlsx');
+    downloadBlob(
+      payload.blob,
+      payload.filename || 'currency-balance-report.xlsx'
+    );
   }, [exportFormat, filters.appliedFilters, requestParams]);
 
   return {

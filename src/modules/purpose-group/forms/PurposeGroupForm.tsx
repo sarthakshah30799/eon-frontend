@@ -20,7 +20,7 @@ const createStaticLoadOptions =
   async (inputValue: string): Promise<AsyncSelectResponse> => ({
     options: inputValue
       ? options.filter(option =>
-          option.label.toLowerCase().includes(inputValue.toLowerCase()),
+          option.label.toLowerCase().includes(inputValue.toLowerCase())
         )
       : options,
   });
@@ -49,7 +49,7 @@ export const PurposeGroupForm = ({
   const navigate = useNavigate();
   const { data: purposes = [], isLoading: isLoadingPurposes } = useListPurposes(
     undefined,
-    TransactionTypeEnum.SALE,
+    TransactionTypeEnum.SALE
   );
 
   const purposeOptions: AsyncSelectOption[] = useMemo(
@@ -58,15 +58,17 @@ export const PurposeGroupForm = ({
         value: purpose.id,
         label: `${purpose.code} - ${purpose.description}`,
       })),
-    [purposes],
+    [purposes]
   );
 
   const loadPurposeOptions = useMemo(
     () => createStaticLoadOptions(purposeOptions),
-    [purposeOptions],
+    [purposeOptions]
   );
 
-  const handleSubmitErrors: SubmitErrorHandler<ICreatePurposeGroup> = errors => {
+  const handleSubmitErrors: SubmitErrorHandler<
+    ICreatePurposeGroup
+  > = errors => {
     console.log('PurposeGroupForm submit errors:', errors);
   };
 
@@ -75,7 +77,9 @@ export const PurposeGroupForm = ({
       id="purpose-group-form"
       onSubmit={onSubmit}
       onError={handleSubmitErrors}
-      resolver={yupResolver(purposeGroupSchema) as Resolver<ICreatePurposeGroup>}
+      resolver={
+        yupResolver(purposeGroupSchema) as Resolver<ICreatePurposeGroup>
+      }
       defaultValues={{
         ...createEmptyPurposeGroupFormValues(),
         ...defaultValues,

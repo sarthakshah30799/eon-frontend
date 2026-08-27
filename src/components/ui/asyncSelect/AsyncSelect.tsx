@@ -52,15 +52,15 @@ export interface AsyncSelectResponse {
 
 export interface AsyncSelectProps<IsMulti extends boolean = false>
   extends
-  Omit<
-    AsyncCreatableProps<
-      AsyncSelectOption,
-      IsMulti,
-      GroupBase<AsyncSelectOption>
+    Omit<
+      AsyncCreatableProps<
+        AsyncSelectOption,
+        IsMulti,
+        GroupBase<AsyncSelectOption>
+      >,
+      'loadOptions'
     >,
-    'loadOptions'
-  >,
-  VariantProps<typeof asyncSelectVariants> {
+    VariantProps<typeof asyncSelectVariants> {
   label?: string;
   error?: string;
   loadOptions: (
@@ -102,7 +102,9 @@ const AsyncSelectComponent = React.forwardRef<
     ref
   ) => {
     const [currentPage, setCurrentPage] = useState(1);
-    const [isLoadingMore, setIsLoadingMore] = useState(props.isLoading ?? false);
+    const [isLoadingMore, setIsLoadingMore] = useState(
+      props.isLoading ?? false
+    );
     const [hasMore, setHasMore] = useState(true);
     const [inputValue, setInputValue] = useState('');
     const allOptionsRef = useRef<AsyncSelectOption[]>([]);

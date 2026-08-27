@@ -32,7 +32,10 @@ const ChooseWorkplacePage: React.FC = () => {
   const canSelectAllBranches = Boolean(
     user?.isAdmin || user?.isHo || user?.isHoStaff
   );
-  const userAssignments = useMemo(() => user?.assignments ?? [], [user?.assignments]);
+  const userAssignments = useMemo(
+    () => user?.assignments ?? [],
+    [user?.assignments]
+  );
 
   const { isLoading: isBranchesLoading } = useListBranchProfiles(
     { activeOnly: true },

@@ -8,4 +8,3 @@ export const usePasswordPolicy = () => {
     staleTime: 0,
   });
 };
-

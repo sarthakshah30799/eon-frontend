@@ -14,11 +14,17 @@ export interface IMenu {
   children?: IMenu[];
 }
 
-export interface ICreateMenu
-  extends Omit<
-    IMenu,
-    'id' | 'path' | 'icon' | 'createdAt' | 'updatedAt' | 'createdBy' | 'updatedBy' | 'children'
-  > {
+export interface ICreateMenu extends Omit<
+  IMenu,
+  | 'id'
+  | 'path'
+  | 'icon'
+  | 'createdAt'
+  | 'updatedAt'
+  | 'createdBy'
+  | 'updatedBy'
+  | 'children'
+> {
   isAdmin: boolean;
   path: string;
   icon: string;

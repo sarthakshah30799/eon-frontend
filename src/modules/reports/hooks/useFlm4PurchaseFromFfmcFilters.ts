@@ -74,25 +74,27 @@ export interface Flm4PurchaseFromFfmcFiltersState {
   canView: boolean;
 }
 
-const toOption = (id: string, label: string): IReportSelectOption => ({ id, label });
+const toOption = (id: string, label: string): IReportSelectOption => ({
+  id,
+  label,
+});
 
 const parseView = (value: string): Flm4ReportView =>
   value === Flm4ReportViewEnum.EXTENDED
     ? Flm4ReportViewEnum.EXTENDED
     : Flm4ReportViewEnum.NORMAL;
 
-const normalizeProfileTypeList = (values: string[]) =>
-  [
-    ...new Set(
-      values
-        .map(value => normalizeFlmFfmcPartyProfileType(value))
-        .filter((value): value is NonNullable<typeof value> => Boolean(value)),
-    ),
-  ];
+const normalizeProfileTypeList = (values: string[]) => [
+  ...new Set(
+    values
+      .map(value => normalizeFlmFfmcPartyProfileType(value))
+      .filter((value): value is NonNullable<typeof value> => Boolean(value))
+  ),
+];
 
 const parseProfileTypes = (values: string[], availableIds: string[]) => {
   const selected = normalizeProfileTypeList(values).filter(value =>
-    availableIds.length ? availableIds.includes(value) : true,
+    availableIds.length ? availableIds.includes(value) : true
   );
   if (selected.length) {
     return selected;
@@ -107,48 +109,50 @@ export const useFlm4PurchaseFromFfmcFilters =
     const isRestrictedUser = !user?.isAdmin && !user?.isHo && !user?.isHoStaff;
     const userAssignments = useMemo(
       () => user?.assignments ?? [],
-      [user?.assignments],
+      [user?.assignments]
     );
     const searchParamsKey = searchParams.toString();
     const parsedSearchParams = useMemo(
       () => new URLSearchParams(searchParamsKey),
-      [searchParamsKey],
+      [searchParamsKey]
     );
 
     const hydratedRouteState = useMemo(() => {
       return {
         dateRange: readDateRangeSearchParams(
           parsedSearchParams,
-          ReportDatePresetEnum.TODAY,
+          ReportDatePresetEnum.TODAY
         ),
         branchIds: readSearchParamList(parsedSearchParams, 'branchIds'),
         profileTypes: normalizeProfileTypeList(
-          readSearchParamList(parsedSearchParams, 'profileTypes'),
+          readSearchParamList(parsedSearchParams, 'profileTypes')
         ),
         productId: readSearchParamValue(parsedSearchParams, 'productId'),
         view: parseView(readSearchParamValue(parsedSearchParams, 'view')),
         layout: parseFlmReportLayout(
           readSearchParamValue(parsedSearchParams, 'layout') ||
-            DEFAULT_FLM_REPORT_LAYOUT,
+            DEFAULT_FLM_REPORT_LAYOUT
         ),
       };
     }, [parsedSearchParams]);
 
     const [dateRange, setDateRange] = useState<IReportDateRange>(
-      hydratedRouteState.dateRange,
+      hydratedRouteState.dateRange
     );
     const [branchIds, setBranchIds] = useState<string[]>(
-      hydratedRouteState.branchIds,
+      hydratedRouteState.branchIds
     );
     const [profileTypes, setProfileTypes] = useState<string[]>(
       hydratedRouteState.profileTypes.length
         ? hydratedRouteState.profileTypes
-        : [...FLM_FFMC_PROFILE_IDS],
+        : [...FLM_FFMC_PROFILE_IDS]
     );
     const [productId, setProductId] = useState(hydratedRouteState.productId);
-    const [view, setViewState] = useState<Flm4ReportView>(hydratedRouteState.view);
+    const [view, setViewState] = useState<Flm4ReportView>(
+      hydratedRouteState.view
+    );
     const [layout, setLayoutState] = useState<FlmReportLayout>(
-      hydratedRouteState.layout,
+      hydratedRouteState.layout
     );
     const [appliedFilters, setAppliedFilters] = useState<
       Flm4PurchaseFromFfmcFiltersState['appliedFilters']
@@ -164,7 +168,7 @@ export const useFlm4PurchaseFromFfmcFilters =
             view: hydratedRouteState.view,
             layout: hydratedRouteState.layout,
           }
-        : null,
+        : null
     );
 
     const { data: branchProfiles = [] } = useQuery({
@@ -183,20 +187,25 @@ export const useFlm4PurchaseFromFfmcFilters =
       () =>
         isRestrictedUser
           ? branchProfiles.filter(branch =>
-              userAssignments.some(assignment => assignment.branchId === branch.id),
+              userAssignments.some(
+                assignment => assignment.branchId === branch.id
+              )
             )
           : branchProfiles,
-      [branchProfiles, isRestrictedUser, userAssignments],
+      [branchProfiles, isRestrictedUser, userAssignments]
     );
 
     const branchOptions = useMemo<IReportSelectOption[]>(
       () =>
         uniqueOptions(
           accessibleBranchProfiles.map(branch =>
-            toOption(branch.id, buildReportOptionLabel(branch.code, branch.name)),
-          ),
+            toOption(
+              branch.id,
+              buildReportOptionLabel(branch.code, branch.name)
+            )
+          )
         ),
-      [accessibleBranchProfiles],
+      [accessibleBranchProfiles]
     );
 
     const productOptions = useMemo<IReportSelectOption[]>(
@@ -205,18 +214,21 @@ export const useFlm4PurchaseFromFfmcFilters =
           productProfiles.map(product =>
             toOption(
               product.id,
-              buildReportOptionLabel(product.productCode, product.productDescription),
-            ),
-          ),
+              buildReportOptionLabel(
+                product.productCode,
+                product.productDescription
+              )
+            )
+          )
         ),
-      [productProfiles],
+      [productProfiles]
     );
 
     const defaultProductId = useMemo(() => {
       const cnProduct = productProfiles.find(
         product =>
           String(product.productCode ?? '').toUpperCase() ===
-          FLM4_DEFAULT_PRODUCT_CODE,
+          FLM4_DEFAULT_PRODUCT_CODE
       );
       return cnProduct?.id ?? productOptions[0]?.id ?? '';
     }, [productOptions, productProfiles]);
@@ -224,11 +236,13 @@ export const useFlm4PurchaseFromFfmcFilters =
     const selectedBranchIds = useMemo(
       () =>
         branchIds.filter(branchId =>
-          branchOptions.some(option => option.id === branchId),
+          branchOptions.some(option => option.id === branchId)
         ),
-      [branchIds, branchOptions],
+      [branchIds, branchOptions]
     );
-    const selectedProductId = productOptions.some(option => option.id === productId)
+    const selectedProductId = productOptions.some(
+      option => option.id === productId
+    )
       ? productId
       : defaultProductId;
 
@@ -243,17 +257,17 @@ export const useFlm4PurchaseFromFfmcFilters =
               }
               return toOption(id, option.label);
             })
-            .filter((option): option is IReportSelectOption => Boolean(option)),
+            .filter((option): option is IReportSelectOption => Boolean(option))
         ),
-      [partyProfileTypes],
+      [partyProfileTypes]
     );
     const availableProfileIds = useMemo(
       () => profileOptions.map(option => option.id),
-      [profileOptions],
+      [profileOptions]
     );
     const selectedProfileTypes = useMemo(() => {
       const filtered = profileTypes.filter(value =>
-        availableProfileIds.includes(value),
+        availableProfileIds.includes(value)
       );
       if (filtered.length || !availableProfileIds.length) {
         return filtered.length ? filtered : profileTypes;
@@ -290,7 +304,7 @@ export const useFlm4PurchaseFromFfmcFilters =
       nextProfileTypes: string[],
       nextProductId: string,
       nextView: Flm4ReportView,
-      nextLayout: FlmReportLayout,
+      nextLayout: FlmReportLayout
     ) => {
       const profileTypesForUrl =
         availableProfileIds.length > 0 &&
@@ -325,9 +339,9 @@ export const useFlm4PurchaseFromFfmcFilters =
           appliedFilters.profileTypes,
           appliedFilters.productId,
           nextView,
-          appliedFilters.layout,
+          appliedFilters.layout
         ),
-        { replace: true },
+        { replace: true }
       );
     };
 
@@ -347,9 +361,9 @@ export const useFlm4PurchaseFromFfmcFilters =
           appliedFilters.profileTypes,
           appliedFilters.productId,
           appliedFilters.view,
-          nextLayout,
+          nextLayout
         ),
-        { replace: true },
+        { replace: true }
       );
     };
 
@@ -359,7 +373,7 @@ export const useFlm4PurchaseFromFfmcFilters =
       setProfileTypes(
         availableProfileIds.length
           ? [...availableProfileIds]
-          : [...FLM_FFMC_PROFILE_IDS],
+          : [...FLM_FFMC_PROFILE_IDS]
       );
       setProductId(defaultProductId);
       setViewState(Flm4ReportViewEnum.NORMAL);
@@ -390,7 +404,7 @@ export const useFlm4PurchaseFromFfmcFilters =
 
       const effectiveProfileTypes = parseProfileTypes(
         selectedProfileTypes,
-        availableProfileIds,
+        availableProfileIds
       );
       if (
         selectedProfileTypes.length === 0 ||
@@ -416,9 +430,9 @@ export const useFlm4PurchaseFromFfmcFilters =
           effectiveProfileTypes,
           selectedProductId,
           view,
-          layout,
+          layout
         ),
-        { replace: true },
+        { replace: true }
       );
     };
 
@@ -451,7 +465,7 @@ export const useFlm4PurchaseFromFfmcFilters =
       appliedFilters,
       appliedDateRangeLabel,
       canView: Boolean(
-        selectedProductId && dateRange.startDate && dateRange.endDate,
+        selectedProductId && dateRange.startDate && dateRange.endDate
       ),
     };
   };

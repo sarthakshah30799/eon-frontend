@@ -2,7 +2,8 @@ import type { AsyncSelectOption } from '@/components/ui';
 
 export const COUNTRY_GROUP_TEXTS = {
   LIST_TITLE: 'Country Group Master',
-  LIST_SUBTITLE: 'Manage sell limits and travel-day controls for country groups.',
+  LIST_SUBTITLE:
+    'Manage sell limits and travel-day controls for country groups.',
   CREATE_TITLE: 'Create Country Group',
   EDIT_TITLE: 'Edit Country Group',
   CREATE_BUTTON: 'Create Country Group',
@@ -30,7 +31,9 @@ export const COUNTRY_GROUP_LIST_COLUMNS = {
   ACTIONS: 'Actions',
 } as const;
 
-export const createCurrencyOptionLabel = (currencyCode: string, currencyName: string) =>
-  `${currencyCode} - ${currencyName}`;
+export const createCurrencyOptionLabel = (
+  currencyCode: string,
+  currencyName: string
+) => `${currencyCode} - ${currencyName}`;
 
 export const countryGroupNumericHintOptions: AsyncSelectOption[] = [];

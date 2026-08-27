@@ -3,7 +3,10 @@ import { useFormContext, useWatch } from 'react-hook-form';
 import { FormFieldSelect } from '@/components/forms';
 import { useAuth } from '@/lib/AuthContext';
 import { useListBranchProfiles } from '@/modules/branchProfile/hooks';
-import { useGetCounterProfile, useListCounterProfiles } from '@/modules/counterProfile/hooks';
+import {
+  useGetCounterProfile,
+  useListCounterProfiles,
+} from '@/modules/counterProfile/hooks';
 import type { AsyncSelectOption, AsyncSelectResponse } from '@/components/ui';
 import { PURCHASE_WORKPLACE_TEXT } from '../constants/purchaseConstants';
 
@@ -19,12 +22,13 @@ interface PurchaseWorkplaceFieldsProps {
 const toCounterOption = (
   id: string,
   counterNo?: string | number | null,
-  name?: string | null,
+  name?: string | null
 ): AsyncSelectOption => ({
   value: id,
-  label: counterNo != null && String(counterNo).trim()
-    ? `${counterNo} - ${name ?? ''}`.trim()
-    : name?.trim() || id,
+  label:
+    counterNo != null && String(counterNo).trim()
+      ? `${counterNo} - ${name ?? ''}`.trim()
+      : name?.trim() || id,
 });
 
 export const PurchaseWorkplaceFields = ({
@@ -56,7 +60,7 @@ export const PurchaseWorkplaceFields = ({
       return toCounterOption(
         activeCounter.id,
         activeCounter.counterNo,
-        activeCounter.name,
+        activeCounter.name
       );
     }
 
@@ -67,7 +71,7 @@ export const PurchaseWorkplaceFields = ({
       return toCounterOption(
         assignment.counterId,
         user?.counterNo,
-        assignment.counterName || user?.counterName,
+        assignment.counterName || user?.counterName
       );
     }
 
@@ -84,15 +88,18 @@ export const PurchaseWorkplaceFields = ({
     }
 
     const selectedBranch = branches.find(branch => branch.id === branchId);
-    const connectedCounterIds = new Set(selectedBranch?.connectCounterIds ?? []);
-
-    return counters.filter(counter =>
-      connectedCounterIds.has(counter.id)
+    const connectedCounterIds = new Set(
+      selectedBranch?.connectCounterIds ?? []
     );
+
+    return counters.filter(counter => connectedCounterIds.has(counter.id));
   }, [branchId, branches, counters]);
 
   useEffect(() => {
-    if (previousBranchIdRef.current && previousBranchIdRef.current !== branchId) {
+    if (
+      previousBranchIdRef.current &&
+      previousBranchIdRef.current !== branchId
+    ) {
       form.setValue('counterId', '');
     }
 
@@ -114,7 +121,14 @@ export const PurchaseWorkplaceFields = ({
     if (!belongsToBranch) {
       form.setValue('counterId', '');
     }
-  }, [branchCounters, branchId, canEditWorkplace, counterId, counters.length, form]);
+  }, [
+    branchCounters,
+    branchId,
+    canEditWorkplace,
+    counterId,
+    counters.length,
+    form,
+  ]);
 
   useEffect(() => {
     if (canEditWorkplace) {

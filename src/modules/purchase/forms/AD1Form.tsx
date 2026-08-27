@@ -1,9 +1,7 @@
 import { useCallback, useEffect, useRef, useMemo, useState } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import {
-  CardSection,
-} from '@/components/ui';
+import { CardSection } from '@/components/ui';
 import {
   Form,
   FormFieldInput,
@@ -23,7 +21,10 @@ import { currencyRatesApi } from '@/api/currencyRates/currencyRates.api';
 import { partyProfileApi } from '@/api/partyProfile';
 import { accountProfileApi } from '@/api/accountProfile';
 import { productProfileApi } from '@/api/productProfile/productProfile.api';
-import { PartyProfileCommissionTypeEnum, type PartyProfileCommissionType } from '@/modules/partyProfiles/types/partyProfileTypes';
+import {
+  PartyProfileCommissionTypeEnum,
+  type PartyProfileCommissionType,
+} from '@/modules/partyProfiles/types/partyProfileTypes';
 import type { ICurrencyProfile } from '@/modules/currencyProfile/types';
 import { TransactionTypeEnum } from '@/modules/transactions';
 import type { AsyncSelectResponse } from '@/components/ui';
@@ -32,9 +33,7 @@ import type { IAd1FormValues } from '../types';
 import type { TransactionType } from '@/modules/transactions';
 import { useAuth } from '@/lib/AuthContext';
 import { getTransactionDatePolicy } from '@/modules/transactionPolicies/utils/transactionDatePolicy';
-import {
-  getPurchaseTransactionAccountFilter,
-} from '../utils/purchaseUtils';
+import { getPurchaseTransactionAccountFilter } from '../utils/purchaseUtils';
 import { PurchaseWorkplaceFields } from '../components/PurchaseWorkplaceFields';
 export { TransactionProfileType } from './ad1ProfileType';
 
@@ -123,16 +122,32 @@ const AD1FormBody = ({
   const watchedAgentComm = useWatch({ name: 'agentComm', control });
   const tds = useWatch({ name: 'tds', control });
   const tcs = useWatch({ name: 'tcs', control });
-  const [productProfiles, setProductProfiles] = useState<import('@/modules/productProfile/types').IProductProfile[]>([]);
+  const [productProfiles, setProductProfiles] = useState<
+    import('@/modules/productProfile/types').IProductProfile[]
+  >([]);
   const [currencies, setCurrencies] = useState<ICurrencyProfile[]>([]);
-  const agentRuleRef = useRef<{ type: PartyProfileCommissionType; value: number } | null>(null);
+  const agentRuleRef = useRef<{
+    type: PartyProfileCommissionType;
+    value: number;
+  } | null>(null);
   // Cache of full agent data (with commissionRules) keyed by agent ID
-  const agentCacheRef = useRef<Map<string, import('@/modules/partyProfiles/types/partyProfileTypes').IPartyProfile>>(new Map());
+  const agentCacheRef = useRef<
+    Map<
+      string,
+      import('@/modules/partyProfiles/types/partyProfileTypes').IPartyProfile
+    >
+  >(new Map());
 
   // Load product profiles and currencies on mount
   useEffect(() => {
-    productProfileApi.getProductProfiles({ otherTransaction: true }).then(setProductProfiles).catch(console.error);
-    currencyProfileApi.getCurrencyProfiles().then(res => setCurrencies(res.filter(c => c.active))).catch(console.error);
+    productProfileApi
+      .getProductProfiles({ otherTransaction: true })
+      .then(setProductProfiles)
+      .catch(console.error);
+    currencyProfileApi
+      .getCurrencyProfiles()
+      .then(res => setCurrencies(res.filter(c => c.active)))
+      .catch(console.error);
   }, []);
 
   // Fetch and apply agent's commission rule
@@ -154,9 +169,10 @@ const AD1FormBody = ({
         // The agents list endpoint omits commissionRules, so always fall back to
         // the full party profile fetch which includes them via relations.
         const cached = agentCacheRef.current.get(agentId);
-        const agent = cached?.commissionRules !== undefined
-          ? cached
-          : await partyProfileApi.getPartyProfileById(agentId);
+        const agent =
+          cached?.commissionRules !== undefined
+            ? cached
+            : await partyProfileApi.getPartyProfileById(agentId);
         if (!agent) {
           agentRuleRef.current = null;
           return;
@@ -165,7 +181,9 @@ const AD1FormBody = ({
         // productId is now a product profile UUID — get productCode directly
         const productProfile = productProfiles.find(p => p.id === productId);
         const productVal = productProfile?.productCode;
-        const currencyVal = currencies.find(c => c.id === currencyId)?.currencyCode;
+        const currencyVal = currencies.find(
+          c => c.id === currencyId
+        )?.currencyCode;
 
         if (!productVal || !currencyVal) {
           agentRuleRef.current = null;
@@ -174,28 +192,50 @@ const AD1FormBody = ({
 
         const rule = agent.commissionRules?.find(
           r =>
-            String(r.productCode).toUpperCase() === String(productVal).toUpperCase() &&
-            String(r.currencyCode).toUpperCase() === String(currencyVal).toUpperCase()
+            String(r.productCode).toUpperCase() ===
+              String(productVal).toUpperCase() &&
+            String(r.currencyCode).toUpperCase() ===
+              String(currencyVal).toUpperCase()
         );
 
         if (rule) {
           const ruleVal = parseFloat(rule.commissionValue) || 0;
 
-          if (rule.commissionType === PartyProfileCommissionTypeEnum.PERCENTAGE) {
-            agentRuleRef.current = { type: PartyProfileCommissionTypeEnum.PERCENTAGE, value: ruleVal };
-            setValue('commGiven', PartyProfileCommissionTypeEnum.PERCENTAGE, { shouldValidate: false });
-            setValue('commPercentOnFe', rule.commissionValue, { shouldValidate: false });
-          } else if (rule.commissionType === PartyProfileCommissionTypeEnum.PAISA) {
-            agentRuleRef.current = { type: PartyProfileCommissionTypeEnum.PAISA, value: ruleVal };
-            setValue('commGiven', PartyProfileCommissionTypeEnum.PAISA, { shouldValidate: false });
+          if (
+            rule.commissionType === PartyProfileCommissionTypeEnum.PERCENTAGE
+          ) {
+            agentRuleRef.current = {
+              type: PartyProfileCommissionTypeEnum.PERCENTAGE,
+              value: ruleVal,
+            };
+            setValue('commGiven', PartyProfileCommissionTypeEnum.PERCENTAGE, {
+              shouldValidate: false,
+            });
+            setValue('commPercentOnFe', rule.commissionValue, {
+              shouldValidate: false,
+            });
+          } else if (
+            rule.commissionType === PartyProfileCommissionTypeEnum.PAISA
+          ) {
+            agentRuleRef.current = {
+              type: PartyProfileCommissionTypeEnum.PAISA,
+              value: ruleVal,
+            };
+            setValue('commGiven', PartyProfileCommissionTypeEnum.PAISA, {
+              shouldValidate: false,
+            });
             setValue('commPercentOnFe', '0', { shouldValidate: false });
             const fc = parseFloat(String(fcVolume)) || 0;
-            setValue('agentComm', ((ruleVal / 100) * fc).toFixed(2), { shouldValidate: false });
+            setValue('agentComm', ((ruleVal / 100) * fc).toFixed(2), {
+              shouldValidate: false,
+            });
           }
         } else {
           // No matching rule — default to PAISA
           agentRuleRef.current = null;
-          setValue('commGiven', PartyProfileCommissionTypeEnum.PAISA, { shouldValidate: false });
+          setValue('commGiven', PartyProfileCommissionTypeEnum.PAISA, {
+            shouldValidate: false,
+          });
           setValue('commPercentOnFe', '0', { shouldValidate: false });
           setValue('agentComm', '0', { shouldValidate: false });
         }
@@ -206,14 +246,25 @@ const AD1FormBody = ({
     };
 
     void fetchAgentRule();
-  }, [agentId, productId, currencyId, productProfiles, currencies, setValue, readOnly, fcVolume]);
+  }, [
+    agentId,
+    productId,
+    currencyId,
+    productProfiles,
+    currencies,
+    setValue,
+    readOnly,
+    fcVolume,
+  ]);
 
   // Auto-calculate Total INR Amt = FC Volume × Sell Rate
   useEffect(() => {
     const fc = parseFloat(String(fcVolume)) || 0;
     const rate = parseFloat(String(saleRate)) || 0;
     const total = fc * rate;
-    setValue('totalInrAmt', total === 0 ? '' : total.toFixed(2), { shouldValidate: false });
+    setValue('totalInrAmt', total === 0 ? '' : total.toFixed(2), {
+      shouldValidate: false,
+    });
   }, [fcVolume, saleRate, setValue]);
 
   // Auto-fill sale rate from currency's latest rate when currency changes
@@ -252,17 +303,32 @@ const AD1FormBody = ({
     } else {
       final = totalInr + charges + income + tcsVal;
     }
-    setValue('finalAmount', final === 0 ? '' : final.toFixed(2), { shouldValidate: false });
-  }, [fcVolume, saleRate, bankCharges, otherIncome, tcs, transactionType, setValue]);
+    setValue('finalAmount', final === 0 ? '' : final.toFixed(2), {
+      shouldValidate: false,
+    });
+  }, [
+    fcVolume,
+    saleRate,
+    bankCharges,
+    otherIncome,
+    tcs,
+    transactionType,
+    setValue,
+  ]);
 
   // Auto-calculate Agent Comm = Final Amount × Comm% / 100 (PERCENTAGE type only)
   useEffect(() => {
     if (readOnly) return;
-    if (agentRuleRef.current?.type !== PartyProfileCommissionTypeEnum.PERCENTAGE) return;
+    if (
+      agentRuleRef.current?.type !== PartyProfileCommissionTypeEnum.PERCENTAGE
+    )
+      return;
     const finalAmt = parseFloat(String(watchedFinalAmount)) || 0;
     const pct = parseFloat(String(commPercentOnFe)) || 0;
     const comm = (finalAmt * pct) / 100;
-    setValue('agentComm', comm === 0 ? '0' : comm.toFixed(2), { shouldValidate: false });
+    setValue('agentComm', comm === 0 ? '0' : comm.toFixed(2), {
+      shouldValidate: false,
+    });
   }, [watchedFinalAmount, commPercentOnFe, readOnly, setValue]);
 
   // Auto-calculate Commission Payable = Agent Comm − TDS
@@ -271,7 +337,9 @@ const AD1FormBody = ({
     const comm = parseFloat(String(watchedAgentComm)) || 0;
     const tdsVal = parseFloat(String(tds)) || 0;
     const payable = comm - tdsVal;
-    setValue('commissionPayable', payable === 0 ? '0' : payable.toFixed(2), { shouldValidate: false });
+    setValue('commissionPayable', payable === 0 ? '0' : payable.toFixed(2), {
+      shouldValidate: false,
+    });
   }, [watchedAgentComm, tds, readOnly, setValue]);
 
   // Reset Bank field if Type changes
@@ -292,75 +360,93 @@ const AD1FormBody = ({
     }
   }, [branchId, setValue]);
 
-  const loadCurrencies = useCallback(async (search: string): Promise<AsyncSelectResponse> => {
-    const currencies = await currencyProfileApi.getCurrencyProfiles(search);
-    return {
-      options: currencies
-        .filter(c => c.active)
-        .map(c => ({
-          value: c.id,
-          label: `${c.currencyCode} - ${c.currencyName}`,
-        }))
-    };
-  }, []);
+  const loadCurrencies = useCallback(
+    async (search: string): Promise<AsyncSelectResponse> => {
+      const currencies = await currencyProfileApi.getCurrencyProfiles(search);
+      return {
+        options: currencies
+          .filter(c => c.active)
+          .map(c => ({
+            value: c.id,
+            label: `${c.currencyCode} - ${c.currencyName}`,
+          })),
+      };
+    },
+    []
+  );
 
-  const loadAgents = useCallback(async (search: string): Promise<AsyncSelectResponse> => {
-    if (!branchId) return { options: [] };
-    const res = await partyProfileApi.getAd1Agents({
-      search: search || undefined,
-      branchId,
-    });
-    // Cache full agent data (including commissionRules) for use when agent is selected
-    res.forEach(a => agentCacheRef.current.set(a.id, a));
-    return {
-      options: res.map(a => ({
-        value: a.id,
-        label: `${a.code} - ${a.name}`,
-      }))
-    };
-  }, [branchId]);
+  const loadAgents = useCallback(
+    async (search: string): Promise<AsyncSelectResponse> => {
+      if (!branchId) return { options: [] };
+      const res = await partyProfileApi.getAd1Agents({
+        search: search || undefined,
+        branchId,
+      });
+      // Cache full agent data (including commissionRules) for use when agent is selected
+      res.forEach(a => agentCacheRef.current.set(a.id, a));
+      return {
+        options: res.map(a => ({
+          value: a.id,
+          label: `${a.code} - ${a.name}`,
+        })),
+      };
+    },
+    [branchId]
+  );
 
-  const loadProducts = useCallback(async (search: string): Promise<AsyncSelectResponse> => {
-    const products = await productProfileApi.getProductProfiles(
-      { otherTransaction: true }
-    );
-    const filtered = search
-      ? products.filter(p =>
-          p.productCode.toLowerCase().includes(search.toLowerCase()) ||
-          (p.productDescription ?? '').toLowerCase().includes(search.toLowerCase())
-        )
-      : products;
-    return {
-      options: filtered
-        .filter(p => p.isActiveProduct)
-        .map(p => ({
-          value: p.id,
-          label: `${p.productCode} - ${p.productDescription ?? p.productCode}`,
-        }))
-    };
-  }, [transactionType]);
+  const loadProducts = useCallback(
+    async (search: string): Promise<AsyncSelectResponse> => {
+      const products = await productProfileApi.getProductProfiles({
+        otherTransaction: true,
+      });
+      const filtered = search
+        ? products.filter(
+            p =>
+              p.productCode.toLowerCase().includes(search.toLowerCase()) ||
+              (p.productDescription ?? '')
+                .toLowerCase()
+                .includes(search.toLowerCase())
+          )
+        : products;
+      return {
+        options: filtered
+          .filter(p => p.isActiveProduct)
+          .map(p => ({
+            value: p.id,
+            label: `${p.productCode} - ${p.productDescription ?? p.productCode}`,
+          })),
+      };
+    },
+    [transactionType]
+  );
 
-  const loadBanks = useCallback(async (search: string): Promise<AsyncSelectResponse> => {
-    const params: IAccountProfileListQuery = {
-      search: search || undefined,
-      limit: 100,
-      active: true,
-    };
-    Object.assign(params, getPurchaseTransactionAccountFilter(transactionType));
+  const loadBanks = useCallback(
+    async (search: string): Promise<AsyncSelectResponse> => {
+      const params: IAccountProfileListQuery = {
+        search: search || undefined,
+        limit: 100,
+        active: true,
+      };
+      Object.assign(
+        params,
+        getPurchaseTransactionAccountFilter(transactionType)
+      );
 
-    const res = await accountProfileApi.getAccountProfiles(params);
-    // Filter only Bank Ledger accounts
-    const filtered = res.data.filter(
-      b => b.accountType?.value === AccountProfileLedgerLabelEnum.BankLedger
-    );
+      const res = await accountProfileApi.getAccountProfiles(params);
+      // Filter only Bank Ledger accounts
+      const filtered = res.data.filter(
+        b => b.accountType?.value === AccountProfileLedgerLabelEnum.BankLedger
+      );
 
-    return {
-      options: filtered.map(b => ({
-        value: b.id,
-        label: `${b.accountCode} - ${b.accountName}`,
-      }))
-    };
-  }, [transactionType]);
+      return {
+        options: filtered.map(b => ({
+          value: b.id,
+          label: `${b.accountCode} - ${b.accountName}`,
+        })),
+      };
+    },
+    [transactionType]
+  );
 
   const typeOptions = Object.values(TransactionTypeEnum).map(val => ({
     value: val,
@@ -374,13 +460,19 @@ const AD1FormBody = ({
 
   const maxDob = useMemo(() => {
     const today = new Date();
-    return new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+    return new Date(
+      today.getFullYear() - 18,
+      today.getMonth(),
+      today.getDate()
+    );
   }, []);
 
   return (
     <div className="space-y-6">
       <CardSection heading="Workplace">
-        <PurchaseWorkplaceFields readOnly={readOnly || !allowWorkplaceSelection} />
+        <PurchaseWorkplaceFields
+          readOnly={readOnly || !allowWorkplaceSelection}
+        />
       </CardSection>
 
       {/* Header section */}
@@ -392,7 +484,9 @@ const AD1FormBody = ({
             defaultOptions={typeOptions}
             loadOptions={async (inputValue: string) => ({
               options: inputValue
-                ? typeOptions.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+                ? typeOptions.filter(opt =>
+                    opt.label.toLowerCase().includes(inputValue.toLowerCase())
+                  )
                 : typeOptions,
             })}
             disabled={readOnly}
@@ -403,13 +497,25 @@ const AD1FormBody = ({
             defaultOptions={profileTypeOptions}
             loadOptions={async (inputValue: string) => ({
               options: inputValue
-                ? profileTypeOptions.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+                ? profileTypeOptions.filter(opt =>
+                    opt.label.toLowerCase().includes(inputValue.toLowerCase())
+                  )
                 : profileTypeOptions,
             })}
             disabled={readOnly}
           />
-          <FormFieldInput name="dealId" label="Deal ID" placeholder="Deal ID" disabled={readOnly} />
-          <FormFieldInput name="docNo" label="Doc No." placeholder="Doc No." disabled={readOnly} />
+          <FormFieldInput
+            name="dealId"
+            label="Deal ID"
+            placeholder="Deal ID"
+            disabled={readOnly}
+          />
+          <FormFieldInput
+            name="docNo"
+            label="Doc No."
+            placeholder="Doc No."
+            disabled={readOnly}
+          />
           <FormFieldDatePicker
             name="transactionDate"
             label="Transaction Date"
@@ -417,9 +523,24 @@ const AD1FormBody = ({
             minDate={transactionDatePolicy.minDate}
             maxDate={transactionDatePolicy.maxDate}
           />
-          <FormFieldCategoryOption name="marketingId" code={CategoryOptionCodeEnum.Marketing} label="Marketing" disabled={readOnly} />
-          <FormFieldCategoryOption name="segmentId" code={CategoryOptionCodeEnum.Segment} label="Segment" disabled={readOnly} />
-          <FormFieldInput name="servicedBy" label="Serviced By" placeholder="Serviced By" disabled={readOnly} />
+          <FormFieldCategoryOption
+            name="marketingId"
+            code={CategoryOptionCodeEnum.Marketing}
+            label="Marketing"
+            disabled={readOnly}
+          />
+          <FormFieldCategoryOption
+            name="segmentId"
+            code={CategoryOptionCodeEnum.Segment}
+            label="Segment"
+            disabled={readOnly}
+          />
+          <FormFieldInput
+            name="servicedBy"
+            label="Serviced By"
+            placeholder="Serviced By"
+            disabled={readOnly}
+          />
           <FormFieldPurposeSelect
             name="purposeId"
             label="Purpose"
@@ -432,29 +553,100 @@ const AD1FormBody = ({
       {/* Remitter section */}
       <CardSection heading="Remitter Details">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <FormFieldInput name="remitterName" label="Remitter Name" placeholder="Remitter Name" disabled={readOnly} />
-          <FormFieldInput name="contactNo" label="Contact No." placeholder="Contact No." disabled={readOnly} />
-          <FormFieldInput name="email" label="E-mail" placeholder="E-mail" disabled={readOnly} />
+          <FormFieldInput
+            name="remitterName"
+            label="Remitter Name"
+            placeholder="Remitter Name"
+            disabled={readOnly}
+          />
+          <FormFieldInput
+            name="contactNo"
+            label="Contact No."
+            placeholder="Contact No."
+            disabled={readOnly}
+          />
+          <FormFieldInput
+            name="email"
+            label="E-mail"
+            placeholder="E-mail"
+            disabled={readOnly}
+          />
           <div className="md:col-span-2 lg:col-span-3">
-            <FormFieldTextarea name="address" label="Address" placeholder="Address" disabled={readOnly} />
+            <FormFieldTextarea
+              name="address"
+              label="Address"
+              placeholder="Address"
+              disabled={readOnly}
+            />
           </div>
-          <FormFieldInput name="pan" label="Pan" placeholder="PAN (e.g. ABCDE1234F)" disabled={readOnly} />
-          <FormFieldDatePicker name="dateOfBirth" label="Date of Birth" maxDate={maxDob} disabled={readOnly} />
+          <FormFieldInput
+            name="pan"
+            label="Pan"
+            placeholder="PAN (e.g. ABCDE1234F)"
+            disabled={readOnly}
+          />
+          <FormFieldDatePicker
+            name="dateOfBirth"
+            label="Date of Birth"
+            maxDate={maxDob}
+            disabled={readOnly}
+          />
         </div>
       </CardSection>
 
       {/* Beneficiary section */}
       <CardSection heading="Beneficiary & Product Details">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <FormFieldSelect key={`product-${transactionType}`} name="productId" label="Product" loadOptions={loadProducts} disabled={readOnly} />
-          <FormFieldInput name="beneficiaryName" label="Beneficiary Name" placeholder="Beneficiary Name" disabled={readOnly} />
-          <FormFieldInput name="beneAccountNumber" label="Bene. Account Number" placeholder="Bene. Account Number" disabled={readOnly} />
-          <FormFieldInput name="beneBankName" label="Bene Bank Name" placeholder="Bene. Bank Name" disabled={readOnly} />
-          <FormFieldInput name="swiftCode" label="Swift Code" placeholder="Swift Code" disabled={readOnly} />
-          <FormFieldCategoryOption name="relationshipId" code={CategoryOptionCodeEnum.Relationship} label="Relationship" disabled={readOnly} />
-          <FormFieldSelect name="currencyId" label="Currency Code" loadOptions={loadCurrencies} disabled={readOnly} />
+          <FormFieldSelect
+            key={`product-${transactionType}`}
+            name="productId"
+            label="Product"
+            loadOptions={loadProducts}
+            disabled={readOnly}
+          />
+          <FormFieldInput
+            name="beneficiaryName"
+            label="Beneficiary Name"
+            placeholder="Beneficiary Name"
+            disabled={readOnly}
+          />
+          <FormFieldInput
+            name="beneAccountNumber"
+            label="Bene. Account Number"
+            placeholder="Bene. Account Number"
+            disabled={readOnly}
+          />
+          <FormFieldInput
+            name="beneBankName"
+            label="Bene Bank Name"
+            placeholder="Bene. Bank Name"
+            disabled={readOnly}
+          />
+          <FormFieldInput
+            name="swiftCode"
+            label="Swift Code"
+            placeholder="Swift Code"
+            disabled={readOnly}
+          />
+          <FormFieldCategoryOption
+            name="relationshipId"
+            code={CategoryOptionCodeEnum.Relationship}
+            label="Relationship"
+            disabled={readOnly}
+          />
+          <FormFieldSelect
+            name="currencyId"
+            label="Currency Code"
+            loadOptions={loadCurrencies}
+            disabled={readOnly}
+          />
           <div className="md:col-span-2 lg:col-span-3">
-            <FormFieldTextarea name="beniAddress" label="Beni. Address" placeholder="Beneficiary Address" disabled={readOnly} />
+            <FormFieldTextarea
+              name="beniAddress"
+              label="Beni. Address"
+              placeholder="Beneficiary Address"
+              disabled={readOnly}
+            />
           </div>
         </div>
       </CardSection>
@@ -462,44 +654,197 @@ const AD1FormBody = ({
       {/* Pricing calculations section */}
       <CardSection heading="Pricing & Calculations">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <FormFieldInput name="fcVolume" label="Quantity" type="number" step="any" placeholder="0.0000000" valueTransform="none" disabled={readOnly} />
-          <FormFieldInput name="saleRate" label="Sell Rate" type="number" step="any" placeholder="0.0000000" valueTransform="none" disabled={readOnly} />
-          <FormFieldInput name="totalInrAmt" label="Total INR Amt." type="number" step="any" valueTransform="none" disabled placeholder="0.00" />
-          <FormFieldInput name="gst" label="GST" type="number" step="any" placeholder="0.00" valueTransform="none" disabled />
-          <FormFieldInput name="bankCharges" label="Bank Charges" type="number" step="any" placeholder="0.00" valueTransform="none" disabled={readOnly} />
-          <FormFieldInput name="tcs" label="TCS" type="number" step="any" placeholder="0.00" valueTransform="none" disabled={readOnly} />
-          <FormFieldInput name="otherIncome" label="Other Income" type="number" step="any" placeholder="0.00" valueTransform="none" disabled={readOnly} />
-          <FormFieldInput name="finalAmount" label="Final Amount" type="number" step="any" valueTransform="none" disabled placeholder="0.00" />
-          <FormFieldInput name="settlementRate" label="Settlement Rate" type="number" step="any" placeholder="0.00" valueTransform="none" disabled={readOnly} />
-          <FormFieldInput name="grossRevenue" label="Gross Revenue" type="number" step="any" valueTransform="none" disabled={readOnly} placeholder="0.00" />
-          <FormFieldInput name="revenueReceivable" label="Revenue Receivable" type="number" step="any" placeholder="0.00" valueTransform="none" disabled={readOnly} />
+          <FormFieldInput
+            name="fcVolume"
+            label="Quantity"
+            type="number"
+            step="any"
+            placeholder="0.0000000"
+            valueTransform="none"
+            disabled={readOnly}
+          />
+          <FormFieldInput
+            name="saleRate"
+            label="Sell Rate"
+            type="number"
+            step="any"
+            placeholder="0.0000000"
+            valueTransform="none"
+            disabled={readOnly}
+          />
+          <FormFieldInput
+            name="totalInrAmt"
+            label="Total INR Amt."
+            type="number"
+            step="any"
+            valueTransform="none"
+            disabled
+            placeholder="0.00"
+          />
+          <FormFieldInput
+            name="gst"
+            label="GST"
+            type="number"
+            step="any"
+            placeholder="0.00"
+            valueTransform="none"
+            disabled
+          />
+          <FormFieldInput
+            name="bankCharges"
+            label="Bank Charges"
+            type="number"
+            step="any"
+            placeholder="0.00"
+            valueTransform="none"
+            disabled={readOnly}
+          />
+          <FormFieldInput
+            name="tcs"
+            label="TCS"
+            type="number"
+            step="any"
+            placeholder="0.00"
+            valueTransform="none"
+            disabled={readOnly}
+          />
+          <FormFieldInput
+            name="otherIncome"
+            label="Other Income"
+            type="number"
+            step="any"
+            placeholder="0.00"
+            valueTransform="none"
+            disabled={readOnly}
+          />
+          <FormFieldInput
+            name="finalAmount"
+            label="Final Amount"
+            type="number"
+            step="any"
+            valueTransform="none"
+            disabled
+            placeholder="0.00"
+          />
+          <FormFieldInput
+            name="settlementRate"
+            label="Settlement Rate"
+            type="number"
+            step="any"
+            placeholder="0.00"
+            valueTransform="none"
+            disabled={readOnly}
+          />
+          <FormFieldInput
+            name="grossRevenue"
+            label="Gross Revenue"
+            type="number"
+            step="any"
+            valueTransform="none"
+            disabled={readOnly}
+            placeholder="0.00"
+          />
+          <FormFieldInput
+            name="revenueReceivable"
+            label="Revenue Receivable"
+            type="number"
+            step="any"
+            placeholder="0.00"
+            valueTransform="none"
+            disabled={readOnly}
+          />
         </div>
       </CardSection>
 
       {/* Agent Commissions section */}
       <CardSection heading="Agent Commissions">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <FormFieldSelect key={`agent-${branchId || ''}`} name="agentId" label="Agent" loadOptions={loadAgents} disabled={readOnly} />
-          <FormFieldInput name="commGiven" label="Comm. Given" placeholder="—" disabled />
-          <FormFieldInput name="commPercentOnFe" label="Comm % on FE" type="number" step="any" placeholder="0.0000" valueTransform="none" disabled />
-          <FormFieldInput name="agentComm" label="Agent Comm." type="number" step="any" placeholder="0.00" valueTransform="none" disabled />
-          <FormFieldInput name="tds" label="TDS" type="number" step="any" placeholder="0.00" valueTransform="none" disabled={readOnly} />
-          <FormFieldInput name="commissionPayable" label="Commission Payable" type="number" step="any" valueTransform="none" disabled placeholder="0.00" />
-          <FormFieldInput name="netRevenue" label="Net Revenue" type="number" step="any" valueTransform="none" disabled={readOnly} placeholder="0.00" />
+          <FormFieldSelect
+            key={`agent-${branchId || ''}`}
+            name="agentId"
+            label="Agent"
+            loadOptions={loadAgents}
+            disabled={readOnly}
+          />
+          <FormFieldInput
+            name="commGiven"
+            label="Comm. Given"
+            placeholder="—"
+            disabled
+          />
+          <FormFieldInput
+            name="commPercentOnFe"
+            label="Comm % on FE"
+            type="number"
+            step="any"
+            placeholder="0.0000"
+            valueTransform="none"
+            disabled
+          />
+          <FormFieldInput
+            name="agentComm"
+            label="Agent Comm."
+            type="number"
+            step="any"
+            placeholder="0.00"
+            valueTransform="none"
+            disabled
+          />
+          <FormFieldInput
+            name="tds"
+            label="TDS"
+            type="number"
+            step="any"
+            placeholder="0.00"
+            valueTransform="none"
+            disabled={readOnly}
+          />
+          <FormFieldInput
+            name="commissionPayable"
+            label="Commission Payable"
+            type="number"
+            step="any"
+            valueTransform="none"
+            disabled
+            placeholder="0.00"
+          />
+          <FormFieldInput
+            name="netRevenue"
+            label="Net Revenue"
+            type="number"
+            step="any"
+            valueTransform="none"
+            disabled={readOnly}
+            placeholder="0.00"
+          />
         </div>
       </CardSection>
 
       {/* Settlement section */}
       <CardSection heading="Bank & Settlement Reference">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <FormFieldSelect name="bankNameId" label="Bank Name" loadOptions={loadBanks} disabled={readOnly} />
-          <FormFieldInput name="rtgsImpsNeftRefNo" label="RTGS/IMPS/NEFT/Ref No" placeholder="RTGS/IMPS/NEFT/Ref No" disabled={readOnly} />
+          <FormFieldSelect
+            name="bankNameId"
+            label="Bank Name"
+            loadOptions={loadBanks}
+            disabled={readOnly}
+          />
+          <FormFieldInput
+            name="rtgsImpsNeftRefNo"
+            label="RTGS/IMPS/NEFT/Ref No"
+            placeholder="RTGS/IMPS/NEFT/Ref No"
+            disabled={readOnly}
+          />
           <div className="md:col-span-2 lg:col-span-3">
-            <FormFieldTextarea name="remarks" label="Remarks" placeholder="Remarks..." disabled={readOnly} />
+            <FormFieldTextarea
+              name="remarks"
+              label="Remarks"
+              placeholder="Remarks..."
+              disabled={readOnly}
+            />
           </div>
         </div>
       </CardSection>
-
     </div>
   );
 };

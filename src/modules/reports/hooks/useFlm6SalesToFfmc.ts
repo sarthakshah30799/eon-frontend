@@ -24,12 +24,12 @@ export const useFlm6SalesToFfmc = () => {
       view: filters.appliedFilters?.view ?? filters.view,
       layout: filters.appliedFilters?.layout ?? filters.layout,
     }),
-    [filters.appliedFilters, filters.view, filters.layout],
+    [filters.appliedFilters, filters.view, filters.layout]
   );
 
   const reportQueryKey = useMemo(
     () => ['flm6-sales-to-ffmc', requestParams],
-    [requestParams],
+    [requestParams]
   );
 
   const reportQuery = useQuery<IFlm6SalesToFfmcResponse>({
@@ -50,7 +50,7 @@ export const useFlm6SalesToFfmc = () => {
       {
         ...requestParams,
       },
-      exportFormat,
+      exportFormat
     );
 
     downloadBlob(payload.blob, payload.filename || 'flm6-sales-to-ffmc.xlsx');

@@ -25,7 +25,8 @@ export const PaginationControls = ({
   const safeTotalPages = Math.max(totalPages, 1);
   const safePage = Math.min(Math.max(page, 1), safeTotalPages);
   const startItem = totalItems === 0 ? 0 : (safePage - 1) * pageSize + 1;
-  const endItem = totalItems === 0 ? 0 : Math.min(safePage * pageSize, totalItems);
+  const endItem =
+    totalItems === 0 ? 0 : Math.min(safePage * pageSize, totalItems);
 
   return (
     <div className="flex flex-col gap-4 border-t border-border-primary pt-4 md:flex-row md:items-center md:justify-between">

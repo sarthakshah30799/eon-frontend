@@ -12,8 +12,10 @@ const resolveAssignedToLabel = (assignedTo: IManualBook['assignedTo']) => {
 };
 
 const getStatusBadgeClass = (status: string) => {
-  if (status === ManualBillBookStatusEnum.APPROVE) return 'bg-emerald-100 text-emerald-800';
-  if (status === ManualBillBookStatusEnum.REJECT) return 'bg-rose-100 text-rose-800';
+  if (status === ManualBillBookStatusEnum.APPROVE)
+    return 'bg-emerald-100 text-emerald-800';
+  if (status === ManualBillBookStatusEnum.REJECT)
+    return 'bg-rose-100 text-rose-800';
   return 'bg-amber-100 text-amber-800';
 };
 

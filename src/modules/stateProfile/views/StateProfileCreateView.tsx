@@ -10,9 +10,7 @@ export const StateProfileCreateView = () => {
   const { submitStateProfile, isPending } = useCreateStateProfile();
 
   const handleSubmit = async (values: ICreateStateProfile) => {
-    const {
-      ...payload
-    } = values;
+    const { ...payload } = values;
     await submitStateProfile(payload);
     navigate('/admin/state-profile');
   };

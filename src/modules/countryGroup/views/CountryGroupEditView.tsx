@@ -3,7 +3,10 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Loader } from '@/components/ui/loader';
 import { COUNTRY_GROUP_TEXTS } from '../constants';
 import { useGetCountryGroup, useUpdateCountryGroup } from '../hooks';
-import { createEmptyCountryGroupFormValues, mapCountryGroupToFormValues } from '../utils';
+import {
+  createEmptyCountryGroupFormValues,
+  mapCountryGroupToFormValues,
+} from '../utils';
 import { CountryGroupEditorView } from './CountryGroupEditorView';
 import type { ICountryGroupFormValues, ICreateCountryGroup } from '../types';
 

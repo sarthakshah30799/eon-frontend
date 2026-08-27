@@ -8,7 +8,9 @@ export const Flm2DailyEtSummaryView = () => {
   const canView = Boolean(user);
 
   if (!canView) {
-    return <AccessDeniedState message={PAGE_STATUS_TEXTS.ACCESS_DENIED_MESSAGE} />;
+    return (
+      <AccessDeniedState message={PAGE_STATUS_TEXTS.ACCESS_DENIED_MESSAGE} />
+    );
   }
 
   return (

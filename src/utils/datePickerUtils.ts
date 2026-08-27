@@ -53,7 +53,9 @@ export const parseDateInput = (value: string): Date | null => {
   return Number.isNaN(directParsed.getTime()) ? null : directParsed;
 };
 
-export const toDisplayDate = (value?: string | number | readonly string[] | null): string => {
+export const toDisplayDate = (
+  value?: string | number | readonly string[] | null
+): string => {
   if (value === undefined || value === null || value === '') {
     return '';
   }

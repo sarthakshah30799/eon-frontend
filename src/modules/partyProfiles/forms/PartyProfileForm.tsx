@@ -25,7 +25,10 @@ import {
   toPartyProfileDisplayLabel,
   toPartyProfileApiType,
 } from '../constants';
-import { PartyProfileTypeEnum, type PartyProfileType } from '../types/partyProfileTypes';
+import {
+  PartyProfileTypeEnum,
+  type PartyProfileType,
+} from '../types/partyProfileTypes';
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import type { IReviewPartyProfilePayload } from '../types';
 import { PartyProfileReviewActionPanel } from '../components';
@@ -72,13 +75,17 @@ const PartyProfileFormFields = ({
   const { user } = useAuth();
   const isSubmitting = isSubmittingProp || disabled || reviewMode;
   const reviewActionsDisabled = isSubmittingProp;
-  const canEditBranch = allowBranchSelection && Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
+  const canEditBranch =
+    allowBranchSelection &&
+    Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
   const effectiveProfileType = profileType;
   const panNo = useWatch({ name: 'panNo' });
   const gstStateId = useWatch({ name: 'gstStateId' });
   const gstNo = useWatch({ name: 'gstNo' });
   const isTdsDeducted = useWatch({ name: 'isTdsDeducted' });
-  const { data: selectedGstState } = useGetStateProfile(String(gstStateId || ''));
+  const { data: selectedGstState } = useGetStateProfile(
+    String(gstStateId || '')
+  );
   const lastAutoFilledGstNoRef = useRef('');
   const adultDobMaxDate = useMemo(() => {
     const date = new Date();
@@ -116,10 +123,17 @@ const PartyProfileFormFields = ({
   }, [form, showTdsGroup]);
 
   useEffect(() => {
-    const normalizedPan = String(panNo || '').trim().toUpperCase();
-    const currentGstNo = String(gstNo || '').trim().toUpperCase();
-    const gstStateCode = String(selectedGstState?.gstStateCode || '').trim().toUpperCase();
-    const nextAutoFilledGstNo = gstStateCode && normalizedPan ? `${gstStateCode}${normalizedPan}` : '';
+    const normalizedPan = String(panNo || '')
+      .trim()
+      .toUpperCase();
+    const currentGstNo = String(gstNo || '')
+      .trim()
+      .toUpperCase();
+    const gstStateCode = String(selectedGstState?.gstStateCode || '')
+      .trim()
+      .toUpperCase();
+    const nextAutoFilledGstNo =
+      gstStateCode && normalizedPan ? `${gstStateCode}${normalizedPan}` : '';
 
     if (!nextAutoFilledGstNo) {
       if (!currentGstNo || currentGstNo === lastAutoFilledGstNoRef.current) {
@@ -669,15 +683,15 @@ export const PartyProfileForm = ({
       }
       defaultValues={defaultValues}
       className="space-y-6"
-        footer={{
-          submitLabel,
-          onBackClick: () => {
-            void onCancel?.();
-          },
-          onCancel,
-          showSubmit,
-        }}
-      >
+      footer={{
+        submitLabel,
+        onBackClick: () => {
+          void onCancel?.();
+        },
+        onCancel,
+        showSubmit,
+      }}
+    >
       <PartyProfileFormFields
         isSubmitting={isSubmitting}
         disabled={disabled}

@@ -53,7 +53,9 @@ export const DocumentProfileEditView = () => {
     );
   }
 
-  const handleSubmit = async (values: ReturnType<typeof createEmptyDocumentProfileFormValues>) => {
+  const handleSubmit = async (
+    values: ReturnType<typeof createEmptyDocumentProfileFormValues>
+  ) => {
     if (!id) {
       return;
     }

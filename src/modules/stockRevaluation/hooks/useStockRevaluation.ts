@@ -1,7 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { stockRevaluationApi, type StockRevaluationFrequency, type StockRevaluationTarget } from '@/api/stockRevaluation';
+import {
+  stockRevaluationApi,
+  type StockRevaluationFrequency,
+  type StockRevaluationTarget,
+} from '@/api/stockRevaluation';
 
-export const useStockRevaluation = (targets: StockRevaluationTarget[], frequency: StockRevaluationFrequency) => {
+export const useStockRevaluation = (
+  targets: StockRevaluationTarget[],
+  frequency: StockRevaluationFrequency
+) => {
   const queryClient = useQueryClient();
   const listQuery = useQuery({
     queryKey: ['stock-revaluations', targets, frequency],
@@ -9,19 +16,29 @@ export const useStockRevaluation = (targets: StockRevaluationTarget[], frequency
     enabled: targets.length > 0,
   });
   const processMutation = useMutation({
-    mutationFn: (payload: { targets: StockRevaluationTarget[]; frequency: StockRevaluationFrequency; file: File }) =>
-      stockRevaluationApi.process(payload),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['stock-revaluations'] }),
+    mutationFn: (payload: {
+      targets: StockRevaluationTarget[];
+      frequency: StockRevaluationFrequency;
+      file: File;
+    }) => stockRevaluationApi.process(payload),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ['stock-revaluations'] }),
   });
   const processUploadedMutation = useMutation({
-    mutationFn: (payload: { targets: StockRevaluationTarget[]; frequency: StockRevaluationFrequency }) =>
-      stockRevaluationApi.processUploaded(payload),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['stock-revaluations'] }),
+    mutationFn: (payload: {
+      targets: StockRevaluationTarget[];
+      frequency: StockRevaluationFrequency;
+    }) => stockRevaluationApi.processUploaded(payload),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ['stock-revaluations'] }),
   });
-  const templateMutation = useMutation({ mutationFn: stockRevaluationApi.getTemplate });
+  const templateMutation = useMutation({
+    mutationFn: stockRevaluationApi.getTemplate,
+  });
   const deleteMutation = useMutation({
     mutationFn: stockRevaluationApi.delete,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['stock-revaluations'] }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ['stock-revaluations'] }),
   });
 
   const uploads = listQuery.data ?? [];

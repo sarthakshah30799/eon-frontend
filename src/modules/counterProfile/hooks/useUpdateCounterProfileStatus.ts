@@ -50,7 +50,10 @@ export const useUpdateCounterProfileStatus = () => {
       });
 
       if (context?.previousCounter) {
-        queryClient.setQueryData(['counter-profile', variables.id], context.previousCounter);
+        queryClient.setQueryData(
+          ['counter-profile', variables.id],
+          context.previousCounter
+        );
       }
 
       toast.error(COUNTER_PROFILE_TEXTS.UPDATE_ERROR);

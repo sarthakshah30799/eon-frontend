@@ -6,7 +6,8 @@ import { createEmptyCompanyProfileFormValues } from '../utils';
 
 export const CompanyProfileCreateView = () => {
   const navigate = useNavigate();
-  const { createCompanyProfile, isPending: isSaving } = useCreateCompanyProfile();
+  const { createCompanyProfile, isPending: isSaving } =
+    useCreateCompanyProfile();
 
   const handleSubmit = async (values: ICreateCompanyProfile) => {
     await createCompanyProfile(values);

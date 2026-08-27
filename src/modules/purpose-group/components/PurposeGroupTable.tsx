@@ -51,7 +51,7 @@ export const PurposeGroupTable = ({
           .map(purpose => purpose.code)
           .join(', '),
       })),
-    [purposeGroups],
+    [purposeGroups]
   );
 
   const columns: TableColumnDef<PurposeGroupTableRow>[] = [
@@ -94,7 +94,11 @@ export const PurposeGroupTable = ({
             disabled={isDeleting}
             onClick={async event => {
               event.stopPropagation();
-              if (window.confirm('Are you sure you want to delete this purpose group?')) {
+              if (
+                window.confirm(
+                  'Are you sure you want to delete this purpose group?'
+                )
+              ) {
                 await onDelete(row.original.id);
               }
             }}

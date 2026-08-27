@@ -31,7 +31,8 @@ export const TransferApprovalActions = ({
   if (!canApprove) {
     return (
       <span className="rounded-md border border-border-primary bg-surface-secondary px-3 py-2 text-xs text-text-secondary">
-        Approval is available only to the destination branch/counter or admin/HO users.
+        Approval is available only to the destination branch/counter or admin/HO
+        users.
       </span>
     );
   }
@@ -85,7 +86,9 @@ export const TransferApprovalActions = ({
               variant="default"
               disabled={rejecting}
               onClick={() => {
-                const remarks = String(form.getValues('rejectionReason') ?? '').trim();
+                const remarks = String(
+                  form.getValues('rejectionReason') ?? ''
+                ).trim();
                 if (!remarks) {
                   toast.error('Rejection reason is required');
                   return;

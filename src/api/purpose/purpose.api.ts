@@ -15,7 +15,10 @@ interface BackendPurposeSlab {
   updatedAt: string;
 }
 
-interface BackendPurpose extends Omit<IPurpose, 'threshold' | 'rate' | 'slabs'> {
+interface BackendPurpose extends Omit<
+  IPurpose,
+  'threshold' | 'rate' | 'slabs'
+> {
   threshold: string;
   rate: string;
   slabs: BackendPurposeSlab[];
@@ -88,13 +91,18 @@ export const purposeApi = {
   },
 
   getPurposeByCode: async (code: string): Promise<IPurpose | undefined> => {
-    const res = await apiClient.get<BackendPurpose>(`/purposes/code/${encodeURIComponent(code)}`);
+    const res = await apiClient.get<BackendPurpose>(
+      `/purposes/code/${encodeURIComponent(code)}`
+    );
     if (res.error) throw new Error(res.error);
     return res.data ? mapBackendToFrontend(res.data) : undefined;
   },
 
   createPurpose: async (values: ICreatePurpose): Promise<IPurpose> => {
-    const res = await apiClient.post<BackendPurpose>('/purposes', preparePayload(values));
+    const res = await apiClient.post<BackendPurpose>(
+      '/purposes',
+      preparePayload(values)
+    );
     if (res.error) throw new Error(res.error);
     if (!res.data) {
       throw new Error('Failed to create purpose');
@@ -102,8 +110,14 @@ export const purposeApi = {
     return mapBackendToFrontend(res.data);
   },
 
-  updatePurpose: async (id: string, values: ICreatePurpose): Promise<IPurpose | undefined> => {
-    const res = await apiClient.put<BackendPurpose>(`/purposes/${id}`, preparePayload(values));
+  updatePurpose: async (
+    id: string,
+    values: ICreatePurpose
+  ): Promise<IPurpose | undefined> => {
+    const res = await apiClient.put<BackendPurpose>(
+      `/purposes/${id}`,
+      preparePayload(values)
+    );
     if (res.error) throw new Error(res.error);
     return res.data ? mapBackendToFrontend(res.data) : undefined;
   },

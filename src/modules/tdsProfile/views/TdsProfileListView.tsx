@@ -17,8 +17,12 @@ export const TdsProfileListView = () => {
     () => debouncedSearch.trim() || undefined,
     [debouncedSearch]
   );
-  const { data: tdsProfiles = [], isLoading, isFetching, error } =
-    useListTdsProfiles(query);
+  const {
+    data: tdsProfiles = [],
+    isLoading,
+    isFetching,
+    error,
+  } = useListTdsProfiles(query);
   const { deleteTdsProfile, isPending: isDeleting } = useDeleteTdsProfile();
 
   const handleDelete = async (id: string) => {

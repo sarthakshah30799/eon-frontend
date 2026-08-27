@@ -3,7 +3,10 @@ import { Button } from '@/components/ui';
 import { AccessDeniedState } from '@/components/ui/access-denied-state';
 import { PAGE_STATUS_TEXTS } from '@/constants';
 import { useAuth } from '@/lib/AuthContext';
-import { CurrencyBalanceReportFiltersSection, CurrencyBalanceReportTable } from '../components';
+import {
+  CurrencyBalanceReportFiltersSection,
+  CurrencyBalanceReportTable,
+} from '../components';
 import { useCurrencyBalanceReport } from '../hooks';
 import { ReportExportFormatEnum } from '../types';
 import { summarizeReportSelection } from '../utils';
@@ -16,15 +19,16 @@ export const CurrencyBalanceReportView = () => {
   const currentSummary = useMemo(() => {
     const branchLabels = summarizeReportSelection(
       report.filters.branchIds,
-      report.filters.branchOptions,
+      report.filters.branchOptions
     );
     const counterLabels = summarizeReportSelection(
       report.filters.counterIds,
-      report.filters.counterOptions,
+      report.filters.counterOptions
     );
     const currencyLabel =
-      report.filters.currencyOptions.find(option => option.id === report.filters.currencyId)?.label ??
-      'All';
+      report.filters.currencyOptions.find(
+        option => option.id === report.filters.currencyId
+      )?.label ?? 'All';
     const sortLabel = 'Date Asc';
 
     return {
@@ -44,7 +48,9 @@ export const CurrencyBalanceReportView = () => {
   ]);
 
   if (!canView) {
-    return <AccessDeniedState message={PAGE_STATUS_TEXTS.ACCESS_DENIED_MESSAGE} />;
+    return (
+      <AccessDeniedState message={PAGE_STATUS_TEXTS.ACCESS_DENIED_MESSAGE} />
+    );
   }
 
   return (
@@ -54,7 +60,8 @@ export const CurrencyBalanceReportView = () => {
           Currency Balance
         </h1>
         <p className="max-w-3xl text-[11px] text-text-secondary">
-          Daily branch and counter INR balance summary with bulk and retail split plus CSV/XLSX export.
+          Daily branch and counter INR balance summary with bulk and retail
+          split plus CSV/XLSX export.
         </p>
       </div>
 
@@ -63,9 +70,15 @@ export const CurrencyBalanceReportView = () => {
       {report.filters.appliedFilters && (
         <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-[11px] text-text-secondary">
           Applied: {report.appliedDateRangeLabel} | Branches{' '}
-          {currentSummary.branches.length ? currentSummary.branches.join(', ') : 'All'} | Counters{' '}
-          {currentSummary.counters.length ? currentSummary.counters.join(', ') : 'All'} | Currency{' '}
-          {currentSummary.currency} | Sort By {currentSummary.sortLabel}
+          {currentSummary.branches.length
+            ? currentSummary.branches.join(', ')
+            : 'All'}{' '}
+          | Counters{' '}
+          {currentSummary.counters.length
+            ? currentSummary.counters.join(', ')
+            : 'All'}{' '}
+          | Currency {currentSummary.currency} | Sort By{' '}
+          {currentSummary.sortLabel}
         </div>
       )}
 
@@ -73,9 +86,12 @@ export const CurrencyBalanceReportView = () => {
         <section className="space-y-3 rounded-xl border border-border-primary bg-white p-3 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="space-y-0.5">
-              <h2 className="text-sm font-semibold text-text-primary">Report View</h2>
+              <h2 className="text-sm font-semibold text-text-primary">
+                Report View
+              </h2>
               <p className="text-[11px] text-text-secondary">
-                Each date, branch, and counter combination is summarized into a single row using INR values.
+                Each date, branch, and counter combination is summarized into a
+                single row using INR values.
               </p>
             </div>
 
@@ -90,7 +106,9 @@ export const CurrencyBalanceReportView = () => {
                       : 'outline'
                   }
                   className="h-7 rounded-full px-3 text-[11px]"
-                  onClick={() => report.setExportFormat(ReportExportFormatEnum.XLSX)}
+                  onClick={() =>
+                    report.setExportFormat(ReportExportFormatEnum.XLSX)
+                  }
                 >
                   XLSX
                 </Button>
@@ -103,7 +121,9 @@ export const CurrencyBalanceReportView = () => {
                       : 'outline'
                   }
                   className="h-7 rounded-full px-3 text-[11px]"
-                  onClick={() => report.setExportFormat(ReportExportFormatEnum.CSV)}
+                  onClick={() =>
+                    report.setExportFormat(ReportExportFormatEnum.CSV)
+                  }
                 >
                   CSV
                 </Button>

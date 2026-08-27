@@ -13,7 +13,11 @@ export const useCreateFakeCurrency = () => {
       toast.success('Fake currency transaction saved successfully');
     },
     onError: error => {
-      toast.error(error instanceof Error ? error.message : 'Failed to save fake currency transaction');
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'Failed to save fake currency transaction'
+      );
     },
   });
 

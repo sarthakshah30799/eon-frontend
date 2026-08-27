@@ -62,11 +62,10 @@ export const flattenRightsLeafRows = (
 export const filterSelectableRightsTreeNodes = (
   nodes: UserRightsTreeNode[]
 ): UserRightsTreeNode[] => {
-  return nodes
-    .map(node => ({
-      ...node,
-      children: filterSelectableRightsTreeNodes(node.children),
-    }));
+  return nodes.map(node => ({
+    ...node,
+    children: filterSelectableRightsTreeNodes(node.children),
+  }));
 };
 
 export const findDefaultSelectableRightsNode = (

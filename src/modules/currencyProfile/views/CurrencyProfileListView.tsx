@@ -15,11 +15,15 @@ export const CurrencyProfileListView = () => {
     () => debouncedSearch.trim() || undefined,
     [debouncedSearch]
   );
-  const { data: currencies = [], isLoading, isFetching, error } =
-    useListCurrencyProfiles(
-      { search: query, activeOnly: false, includeOnlyStocking: true },
-      false
-    );
+  const {
+    data: currencies = [],
+    isLoading,
+    isFetching,
+    error,
+  } = useListCurrencyProfiles(
+    { search: query, activeOnly: false, includeOnlyStocking: true },
+    false
+  );
 
   if (error) {
     return (
@@ -35,9 +39,7 @@ export const CurrencyProfileListView = () => {
         <Button
           type="button"
           className="rounded-sm"
-          onClick={() =>
-            navigate('/currency-profile/create')
-          }
+          onClick={() => navigate('/currency-profile/create')}
         >
           {CURRENCY_PROFILE_TEXTS.CREATE_CURRENCY}
         </Button>

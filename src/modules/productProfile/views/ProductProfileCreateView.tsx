@@ -3,7 +3,10 @@ import { ProductProfileEditorView } from './ProductProfileEditorView';
 import { PRODUCT_PROFILE_TEXTS } from '../constants';
 import { createEmptyProductProfileFormValues } from '../utils';
 import { useCreateProductProfile } from '../hooks';
-import type { ICreateProductProfile, IUpdateProductProfilePayload } from '../types';
+import type {
+  ICreateProductProfile,
+  IUpdateProductProfilePayload,
+} from '../types';
 
 export const ProductProfileCreateView = () => {
   const navigate = useNavigate();

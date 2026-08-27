@@ -8,11 +8,18 @@ export const useUpdateDocumentProfile = () => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: ({ id, values }: { id: string; values: ICreateDocumentProfile }) =>
-      documentProfileApi.updateDocumentProfile(id, values),
+    mutationFn: ({
+      id,
+      values,
+    }: {
+      id: string;
+      values: ICreateDocumentProfile;
+    }) => documentProfileApi.updateDocumentProfile(id, values),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['document-profiles'] });
-      queryClient.invalidateQueries({ queryKey: ['document-profile', variables.id] });
+      queryClient.invalidateQueries({
+        queryKey: ['document-profile', variables.id],
+      });
       toast.success(DOCUMENT_PROFILE_TEXTS.UPDATE_SUCCESS);
     },
     onError: (error: Error) => {
@@ -25,4 +32,3 @@ export const useUpdateDocumentProfile = () => {
     isPending: mutation.isPending,
   };
 };
-

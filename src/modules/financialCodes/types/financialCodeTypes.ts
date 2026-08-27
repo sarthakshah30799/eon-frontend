@@ -23,7 +23,13 @@ export interface IFinancialCode {
 
 export type ICreateFinancialCode = Omit<
   IFinancialCode,
-  'id' | 'financialType' | 'defaultSign' | 'createdAt' | 'updatedAt' | 'createdBy' | 'updatedBy'
+  | 'id'
+  | 'financialType'
+  | 'defaultSign'
+  | 'createdAt'
+  | 'updatedAt'
+  | 'createdBy'
+  | 'updatedBy'
 > & {
   financialType?: string;
   defaultSign?: string;

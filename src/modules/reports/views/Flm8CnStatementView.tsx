@@ -28,11 +28,11 @@ export const Flm8CnStatementView = () => {
   const currentSummary = useMemo(() => {
     const branchLabels = summarizeReportSelection(
       reportState.filters.branchIds,
-      reportState.filters.branchOptions,
+      reportState.filters.branchOptions
     );
     const productLabel =
       reportState.filters.productOptions.find(
-        option => option.id === reportState.filters.productId,
+        option => option.id === reportState.filters.productId
       )?.label ?? FLM8_CN_STATEMENT_TEXT.all;
     const profileTypeLabel =
       reportState.filters.profileType === Flm8ProfileTypeEnum.AD
@@ -50,7 +50,8 @@ export const Flm8CnStatementView = () => {
       profileType: profileTypeLabel,
       apConnect: apConnectLabel,
       showApConnect:
-        reportState.filters.appliedFilters?.profileType === Flm8ProfileTypeEnum.AD,
+        reportState.filters.appliedFilters?.profileType ===
+        Flm8ProfileTypeEnum.AD,
     };
   }, [
     reportState.filters.appliedFilters,
@@ -62,7 +63,9 @@ export const Flm8CnStatementView = () => {
   ]);
 
   if (!canView) {
-    return <AccessDeniedState message={PAGE_STATUS_TEXTS.ACCESS_DENIED_MESSAGE} />;
+    return (
+      <AccessDeniedState message={PAGE_STATUS_TEXTS.ACCESS_DENIED_MESSAGE} />
+    );
   }
 
   return (
@@ -80,13 +83,15 @@ export const Flm8CnStatementView = () => {
 
       {reportState.filters.appliedFilters && (
         <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-[11px] text-text-secondary">
-          {FLM8_CN_STATEMENT_TEXT.appliedPrefix}: {reportState.appliedDateRangeLabel} |{' '}
+          {FLM8_CN_STATEMENT_TEXT.appliedPrefix}:{' '}
+          {reportState.appliedDateRangeLabel} |{' '}
           {FLM8_CN_STATEMENT_TEXT.branchHeading}{' '}
           {currentSummary.branches.length
             ? currentSummary.branches.join(', ')
             : FLM8_CN_STATEMENT_TEXT.all}{' '}
-          | {FLM8_CN_STATEMENT_TEXT.productHeading} {currentSummary.product}{' '}
-          | {FLM8_CN_STATEMENT_TEXT.profileTypeHeading} {currentSummary.profileType}
+          | {FLM8_CN_STATEMENT_TEXT.productHeading} {currentSummary.product} |{' '}
+          {FLM8_CN_STATEMENT_TEXT.profileTypeHeading}{' '}
+          {currentSummary.profileType}
           {currentSummary.showApConnect
             ? ` | ${FLM8_CN_STATEMENT_TEXT.apConnectHeading} ${currentSummary.apConnect}`
             : ''}
@@ -116,7 +121,9 @@ export const Flm8CnStatementView = () => {
                       : 'outline'
                   }
                   className="h-7 rounded-full px-3 text-[11px]"
-                  onClick={() => reportState.filters.setView(Flm8ReportViewEnum.VERTICAL)}
+                  onClick={() =>
+                    reportState.filters.setView(Flm8ReportViewEnum.VERTICAL)
+                  }
                 >
                   {FLM8_CN_STATEMENT_TEXT.verticalView}
                 </Button>
@@ -147,7 +154,9 @@ export const Flm8CnStatementView = () => {
                       : 'outline'
                   }
                   className="h-7 rounded-full px-3 text-[11px]"
-                  onClick={() => reportState.setExportFormat(ReportExportFormatEnum.XLSX)}
+                  onClick={() =>
+                    reportState.setExportFormat(ReportExportFormatEnum.XLSX)
+                  }
                 >
                   {FLM8_CN_STATEMENT_TEXT.xlsx}
                 </Button>
@@ -160,7 +169,9 @@ export const Flm8CnStatementView = () => {
                       : 'outline'
                   }
                   className="h-7 rounded-full px-3 text-[11px]"
-                  onClick={() => reportState.setExportFormat(ReportExportFormatEnum.CSV)}
+                  onClick={() =>
+                    reportState.setExportFormat(ReportExportFormatEnum.CSV)
+                  }
                 >
                   {FLM8_CN_STATEMENT_TEXT.csv}
                 </Button>
@@ -201,7 +212,9 @@ export const Flm8CnStatementView = () => {
 
           <Flm8CnStatementTable
             report={reportState.report}
-            loading={reportState.isLoadingReport || reportState.isFetchingReport}
+            loading={
+              reportState.isLoadingReport || reportState.isFetchingReport
+            }
           />
         </section>
       )}
@@ -240,7 +253,8 @@ export const Flm8CnStatementView = () => {
             <p>
               {FLM8_CN_STATEMENT_TEXT.lockDataThroughPrefix}{' '}
               <span className="font-semibold">
-                {toDisplayDate(lockData.lockedThroughDate) || lockData.lockedThroughDate}
+                {toDisplayDate(lockData.lockedThroughDate) ||
+                  lockData.lockedThroughDate}
               </span>
               . {FLM8_CN_STATEMENT_TEXT.lockDataThroughSuffix}
             </p>

@@ -67,10 +67,9 @@ export const PhoneInput = ({
           disabled={disabled}
           maxLength={10}
           onInput={event => {
-            event.currentTarget.value = event.currentTarget.value.replace(
-              /[^0-9]/g,
-              ''
-            ).slice(0, 10);
+            event.currentTarget.value = event.currentTarget.value
+              .replace(/[^0-9]/g, '')
+              .slice(0, 10);
           }}
         />
       </div>

@@ -1,5 +1,8 @@
 import { apiClient } from '../api';
-import type { ICreateTdsProfile, ITdsProfile } from '@/modules/tdsProfile/types';
+import type {
+  ICreateTdsProfile,
+  ITdsProfile,
+} from '@/modules/tdsProfile/types';
 import { normalizeCodeValue } from '@/utils';
 
 interface BackendTdsProfile extends Omit<ITdsProfile, 'from' | 'to'> {
@@ -26,8 +29,12 @@ const preparePayload = (values: ICreateTdsProfile): ICreateTdsProfile => ({
 
 export const tdsProfileApi = {
   getTdsProfiles: async (search?: string): Promise<ITdsProfile[]> => {
-    const query = search?.trim() ? `?search=${encodeURIComponent(search.trim())}` : '';
-    const res = await apiClient.get<BackendTdsProfile[]>(`/tds-profiles${query}`);
+    const query = search?.trim()
+      ? `?search=${encodeURIComponent(search.trim())}`
+      : '';
+    const res = await apiClient.get<BackendTdsProfile[]>(
+      `/tds-profiles${query}`
+    );
 
     if (res.error) throw new Error(res.error);
     return (res.data || []).map(mapBackendToFrontend);
@@ -68,7 +75,9 @@ export const tdsProfileApi = {
   },
 
   deleteTdsProfile: async (id: string): Promise<{ message: string }> => {
-    const res = await apiClient.delete<{ message: string }>(`/tds-profiles/${id}`);
+    const res = await apiClient.delete<{ message: string }>(
+      `/tds-profiles/${id}`
+    );
 
     if (res.error) throw new Error(res.error);
     if (!res.data) {

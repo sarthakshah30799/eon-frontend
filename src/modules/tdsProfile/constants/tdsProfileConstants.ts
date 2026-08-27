@@ -1,6 +1,7 @@
 export const TDS_PROFILE_TEXTS = {
   LIST_TITLE: 'TDS Profile',
-  LIST_SUBTITLE: 'Manage reusable TDS profiles with date ranges and percentage values.',
+  LIST_SUBTITLE:
+    'Manage reusable TDS profiles with date ranges and percentage values.',
   CREATE_TITLE: 'Create TDS Profile',
   EDIT_TITLE: 'Edit TDS Profile',
   FORM_SUBTITLE: 'Enter the code, name, active period, and percentage value.',

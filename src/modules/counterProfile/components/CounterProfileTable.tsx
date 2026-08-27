@@ -53,14 +53,14 @@ export const CounterProfileTable = ({
         const isActive = row.original.isActive;
 
         return (
-            <ToggleSwitch
-              checked={isActive}
-              onCheckedChange={nextChecked => {
-                onToggleStatus(counterId, nextChecked);
-              }}
-              disabled={isUpdatingStatus}
-              loading={isUpdatingStatus}
-            />
+          <ToggleSwitch
+            checked={isActive}
+            onCheckedChange={nextChecked => {
+              onToggleStatus(counterId, nextChecked);
+            }}
+            disabled={isUpdatingStatus}
+            loading={isUpdatingStatus}
+          />
         );
       },
     },

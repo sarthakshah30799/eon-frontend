@@ -28,10 +28,18 @@ export const useGetNextChequeBookNumber = () => {
 export const useLoadChequeBookBranchManagers = () => {
   const queryClient = useQueryClient();
   return useCallback(
-    async (branchId: string, inputValue: string): Promise<AsyncSelectResponse> => {
+    async (
+      branchId: string,
+      inputValue: string
+    ): Promise<AsyncSelectResponse> => {
       const managers = await queryClient.fetchQuery({
-        queryKey: ['cheque-book-branch-managers', branchId, inputValue || undefined],
-        queryFn: () => chequebookApi.getBranchManagers(branchId, inputValue || undefined),
+        queryKey: [
+          'cheque-book-branch-managers',
+          branchId,
+          inputValue || undefined,
+        ],
+        queryFn: () =>
+          chequebookApi.getBranchManagers(branchId, inputValue || undefined),
       });
       return {
         options: managers.map(m => ({ value: m.id, label: m.name })),
@@ -47,7 +55,10 @@ export const useLoadBankAccounts = () => {
   return useCallback(
     async (inputValue: string, page = 1) => {
       const response = await queryClient.fetchQuery({
-        queryKey: ['account-profiles', { page, limit: 30, search: inputValue || undefined, active: true }],
+        queryKey: [
+          'account-profiles',
+          { page, limit: 30, search: inputValue || undefined, active: true },
+        ],
         queryFn: () =>
           accountProfileApi.getAccountProfiles({
             page,
@@ -105,8 +116,15 @@ export const useLoadBranchOptions = () => {
   return useCallback(
     async (inputValue: string) => {
       const branches = await queryClient.fetchQuery({
-        queryKey: ['branch-profiles', { search: inputValue || undefined, activeOnly: true }],
-        queryFn: () => branchProfileApi.getBranchProfiles({ search: inputValue || undefined, activeOnly: true }),
+        queryKey: [
+          'branch-profiles',
+          { search: inputValue || undefined, activeOnly: true },
+        ],
+        queryFn: () =>
+          branchProfileApi.getBranchProfiles({
+            search: inputValue || undefined,
+            activeOnly: true,
+          }),
       });
       return {
         options: branches.map(branch => ({
@@ -126,7 +144,8 @@ export const useLoadCounterProfilesForBranch = () => {
     async (branchId: string) => {
       return queryClient.fetchQuery({
         queryKey: ['counter-profiles', { branchId, activeOnly: true }],
-        queryFn: () => counterProfileApi.getCounterProfiles({ branchId, activeOnly: true }),
+        queryFn: () =>
+          counterProfileApi.getCounterProfiles({ branchId, activeOnly: true }),
       });
     },
     [queryClient]

@@ -19,9 +19,7 @@ export const useCreatePurchaseTransaction = () => {
     },
     onError: error => {
       toast.error(
-        error instanceof Error
-          ? error.message
-          : 'Failed to save transaction'
+        error instanceof Error ? error.message : 'Failed to save transaction'
       );
     },
   });

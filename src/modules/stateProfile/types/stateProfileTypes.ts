@@ -15,7 +15,13 @@ export interface IStateProfile {
 
 export type ICreateStateProfile = Omit<
   IStateProfile,
-  'id' | 'countryCode' | 'countryName' | 'createdAt' | 'updatedAt' | 'createdBy' | 'updatedBy'
+  | 'id'
+  | 'countryCode'
+  | 'countryName'
+  | 'createdAt'
+  | 'updatedAt'
+  | 'createdBy'
+  | 'updatedBy'
 >;
 
 export type IUpdateStateProfile = Partial<ICreateStateProfile>;

@@ -59,23 +59,23 @@ const buildCurrencyColumns = (
       header: ({ table }) => (
         <div className="flex justify-center">
           <Checkbox
-          checked={table.getIsAllRowsSelected()}
-          onChange={checked => {
-            table.toggleAllRowsSelected(checked);
-          }}
-          disabled={!multiple}
-          aria-label="Select all currencies"
-          className="shrink-0"
+            checked={table.getIsAllRowsSelected()}
+            onChange={checked => {
+              table.toggleAllRowsSelected(checked);
+            }}
+            disabled={!multiple}
+            aria-label="Select all currencies"
+            className="shrink-0"
           />
         </div>
       ),
       cell: ({ row }) => (
         <div className="flex justify-center">
           <Checkbox
-          checked={row.getIsSelected()}
-          onChange={checked => row.toggleSelected(checked)}
-          aria-label={`Select ${row.original.currencyCode}`}
-          className="shrink-0"
+            checked={row.getIsSelected()}
+            onChange={checked => row.toggleSelected(checked)}
+            aria-label={`Select ${row.original.currencyCode}`}
+            className="shrink-0"
           />
         </div>
       ),
@@ -100,8 +100,11 @@ export const SelectCurrencyProfiles = ({
 }: SelectCurrencyProfilesProps) => {
   const [search, setSearch] = useState('');
 
-  const { data: currencies = [], isLoading, isFetching } =
-    useListCurrencyProfiles(search);
+  const {
+    data: currencies = [],
+    isLoading,
+    isFetching,
+  } = useListCurrencyProfiles(search);
 
   const rows = useMemo<SelectableCurrencyProfileRow[]>(
     () =>

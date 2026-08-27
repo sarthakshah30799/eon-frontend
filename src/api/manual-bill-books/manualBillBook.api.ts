@@ -1,10 +1,14 @@
 import { apiClient } from '../api';
 import type { IUserReference } from '../sharedTypes';
-import type { IPaginatedResponse, IOffsetPaginationParams } from '@/types/pagination';
+import type {
+  IPaginatedResponse,
+  IOffsetPaginationParams,
+} from '@/types/pagination';
 import { ManualBillBookStatusEnum } from '@/modules/manual-bill-books/types';
 import { PAGINATION_DEFAULTS } from '@/constants/paginationConstants';
 
-export type ManualBookStatus = typeof ManualBillBookStatusEnum[keyof typeof ManualBillBookStatusEnum];
+export type ManualBookStatus =
+  (typeof ManualBillBookStatusEnum)[keyof typeof ManualBillBookStatusEnum];
 
 export interface IManualBook {
   id: string;
@@ -94,14 +98,19 @@ export type IManualBillBookListResponse = IPaginatedResponse<IManualBook>;
 
 export const manualBillBookApi = {
   create: async (data: ICreateManualBook): Promise<IManualBook> => {
-    const res = await apiClient.post<IManualBook>('/manual-bill-books/dispatch', data);
+    const res = await apiClient.post<IManualBook>(
+      '/manual-bill-books/dispatch',
+      data
+    );
     if (res.error) throw new Error(res.error);
     if (!res.data) throw new Error('Failed to create manual book dispatch');
     return res.data;
   },
 
   findById: async (id: string): Promise<IManualBook> => {
-    const res = await apiClient.get<IManualBook>(`/manual-bill-books/dispatches/${id}`);
+    const res = await apiClient.get<IManualBook>(
+      `/manual-bill-books/dispatches/${id}`
+    );
     if (res.error) throw new Error(res.error);
     if (!res.data) throw new Error('Dispatch not found');
     return res.data;
@@ -110,7 +119,7 @@ export const manualBillBookApi = {
   findAll: async (
     params?: IManualBillBookListQuery | string,
     status?: string,
-    transactionType?: string,
+    transactionType?: string
   ): Promise<IManualBillBookListResponse> => {
     // Backward compat: findAll(branchId, status, transactionType)
     let query: IManualBillBookListQuery = {};
@@ -122,58 +131,104 @@ export const manualBillBookApi = {
     const search = new URLSearchParams();
     if (query.branchId) search.set('branchId', query.branchId);
     if (query.status) search.set('status', query.status);
-    if (query.transactionType) search.set('transactionType', query.transactionType);
-    if (query.limit !== undefined && query.limit !== null) search.set('limit', String(query.limit));
-    if (query.offset !== undefined && query.offset !== null) search.set('offset', String(query.offset));
+    if (query.transactionType)
+      search.set('transactionType', query.transactionType);
+    if (query.limit !== undefined && query.limit !== null)
+      search.set('limit', String(query.limit));
+    if (query.offset !== undefined && query.offset !== null)
+      search.set('offset', String(query.offset));
     const suffix = search.toString() ? `?${search.toString()}` : '';
-    const res = await apiClient.get<IManualBillBookListResponse>(`/manual-bill-books/dispatches${suffix}`);
+    const res = await apiClient.get<IManualBillBookListResponse>(
+      `/manual-bill-books/dispatches${suffix}`
+    );
     if (res.error) throw new Error(res.error);
     if (!res.data) {
-      return { data: [], total: 0, totalItems: 0, totalPages: 0, limit: query.limit ?? PAGINATION_DEFAULTS.LIMIT, offset: query.offset ?? PAGINATION_DEFAULTS.OFFSET, hasMore: false };
+      return {
+        data: [],
+        total: 0,
+        totalItems: 0,
+        totalPages: 0,
+        limit: query.limit ?? PAGINATION_DEFAULTS.LIMIT,
+        offset: query.offset ?? PAGINATION_DEFAULTS.OFFSET,
+        hasMore: false,
+      };
     }
     // BE always returns paginated object { data, total, hasMore, limit, offset }
     const obj = res.data as unknown as Record<string, unknown>;
     const dataArr = (obj.data as IManualBook[]) ?? [];
-    const total = (obj.total as number) ?? (obj.totalItems as number) ?? dataArr.length;
+    const total =
+      (obj.total as number) ?? (obj.totalItems as number) ?? dataArr.length;
     const totalItems = (obj.totalItems as number) ?? total;
-    const limitVal = (obj.limit as number) ?? query.limit ?? PAGINATION_DEFAULTS.LIMIT;
-    const offsetVal = (obj.offset as number) ?? query.offset ?? PAGINATION_DEFAULTS.OFFSET;
-    const hasMore = (obj.hasMore as boolean) ?? (offsetVal + limitVal < total);
-    const totalPages = (obj.totalPages as number) ?? (limitVal > 0 ? Math.ceil(total / limitVal) : 1);
-    return { data: dataArr, total, totalItems, totalPages, limit: limitVal, offset: offsetVal, hasMore };
+    const limitVal =
+      (obj.limit as number) ?? query.limit ?? PAGINATION_DEFAULTS.LIMIT;
+    const offsetVal =
+      (obj.offset as number) ?? query.offset ?? PAGINATION_DEFAULTS.OFFSET;
+    const hasMore = (obj.hasMore as boolean) ?? offsetVal + limitVal < total;
+    const totalPages =
+      (obj.totalPages as number) ??
+      (limitVal > 0 ? Math.ceil(total / limitVal) : 1);
+    return {
+      data: dataArr,
+      total,
+      totalItems,
+      totalPages,
+      limit: limitVal,
+      offset: offsetVal,
+      hasMore,
+    };
   },
 
-  approveOrReject: async (id: string, data: IApproveRejectManualBook): Promise<IManualBook> => {
-    const res = await apiClient.put<IManualBook>(`/manual-bill-books/dispatches/${id}/approve`, data);
+  approveOrReject: async (
+    id: string,
+    data: IApproveRejectManualBook
+  ): Promise<IManualBook> => {
+    const res = await apiClient.put<IManualBook>(
+      `/manual-bill-books/dispatches/${id}/approve`,
+      data
+    );
     if (res.error) throw new Error(res.error);
     if (!res.data) throw new Error('Failed to approve/reject dispatch');
     return res.data;
   },
 
-  reassignDispatch: async (id: string, data: {
-    assignedTo: string;
-    remarks?: string;
-    dispatchDate?: string;
-    transactionType?: string;
-    bookNoFrom?: number;
-    bookNoTo?: number;
-    vouchersPerBook?: number;
-    mvNoFrom?: number;
-    mvNoTo?: number;
-  }): Promise<IManualBook> => {
-    const res = await apiClient.put<IManualBook>(`/manual-bill-books/dispatches/${id}/reassign`, data);
+  reassignDispatch: async (
+    id: string,
+    data: {
+      assignedTo: string;
+      remarks?: string;
+      dispatchDate?: string;
+      transactionType?: string;
+      bookNoFrom?: number;
+      bookNoTo?: number;
+      vouchersPerBook?: number;
+      mvNoFrom?: number;
+      mvNoTo?: number;
+    }
+  ): Promise<IManualBook> => {
+    const res = await apiClient.put<IManualBook>(
+      `/manual-bill-books/dispatches/${id}/reassign`,
+      data
+    );
     if (res.error) throw new Error(res.error);
     if (!res.data) throw new Error('Failed to reassign dispatch');
     return res.data;
   },
 
-  bulkReview: async (reviews: Array<{ id: string; status: string; approvalRemarks?: string }>): Promise<IManualBook[]> => {
-    const res = await apiClient.put<IManualBook[]>('/manual-bill-books/dispatches/bulk-review', { reviews });
+  bulkReview: async (
+    reviews: Array<{ id: string; status: string; approvalRemarks?: string }>
+  ): Promise<IManualBook[]> => {
+    const res = await apiClient.put<IManualBook[]>(
+      '/manual-bill-books/dispatches/bulk-review',
+      { reviews }
+    );
     if (res.error) throw new Error(res.error);
     return res.data || [];
   },
 
-  getNextNumber: async (branchId: string, dispatchDate: string): Promise<{ nextNumber: string }> => {
+  getNextNumber: async (
+    branchId: string,
+    dispatchDate: string
+  ): Promise<{ nextNumber: string }> => {
     const res = await apiClient.get<{ nextNumber: string }>(
       `/manual-bill-books/next-number?branchId=${encodeURIComponent(branchId)}&dispatchDate=${encodeURIComponent(dispatchDate)}`
     );
@@ -204,8 +259,12 @@ export const manualBillBookApi = {
     return res.data || { valid: true };
   },
 
-  getAuthorizedUsers: async (search?: string): Promise<Array<{ id: string; name: string }>> => {
-    const params = search?.trim() ? `?search=${encodeURIComponent(search.trim())}` : '';
+  getAuthorizedUsers: async (
+    search?: string
+  ): Promise<Array<{ id: string; name: string }>> => {
+    const params = search?.trim()
+      ? `?search=${encodeURIComponent(search.trim())}`
+      : '';
     const res = await apiClient.get<Array<{ id: string; name: string }>>(
       `/manual-bill-books/users${params}`
     );
@@ -213,7 +272,10 @@ export const manualBillBookApi = {
     return res.data || [];
   },
 
-  getBranchManagers: async (branchId: string, search?: string): Promise<Array<{ id: string; name: string }>> => {
+  getBranchManagers: async (
+    branchId: string,
+    search?: string
+  ): Promise<Array<{ id: string; name: string }>> => {
     const params = new URLSearchParams({ branchId });
     if (search?.trim()) params.set('search', search.trim());
     const res = await apiClient.get<Array<{ id: string; name: string }>>(
@@ -263,7 +325,8 @@ export const manualBillBookApi = {
   }): Promise<IManualBookPageTracking[]> => {
     const query = new URLSearchParams();
     if (params?.userId) query.set('userId', params.userId);
-    if (params?.transactionType) query.set('transactionType', params.transactionType);
+    if (params?.transactionType)
+      query.set('transactionType', params.transactionType);
 
     const suffix = query.toString() ? `?${query.toString()}` : '';
     const res = await apiClient.get<IManualBookPageTracking[]>(
@@ -326,7 +389,8 @@ export const manualBillBookApi = {
     const res = await apiClient.get<IManualBookDPMappingGroup[]>(
       `/manual-bill-books/dp-mapping/search?transactionType=${encodeURIComponent(
         params.transactionType
-      )}&bookNo=${params.bookNo}&mvNoFrom=${params.mvNoFrom}&mvNoTo=${params.mvNoTo
+      )}&bookNo=${params.bookNo}&mvNoFrom=${params.mvNoFrom}&mvNoTo=${
+        params.mvNoTo
       }&actionType=${params.actionType}`
     );
     if (res.error) throw new Error(res.error);
@@ -343,7 +407,8 @@ export const manualBillBookApi = {
       data
     );
     if (res.error) throw new Error(res.error);
-    if (!res.data) throw new Error('Failed to allocate pages to delivery person');
+    if (!res.data)
+      throw new Error('Failed to allocate pages to delivery person');
     return res.data;
   },
 
@@ -356,11 +421,14 @@ export const manualBillBookApi = {
       data
     );
     if (res.error) throw new Error(res.error);
-    if (!res.data) throw new Error('Failed to deallocate pages from delivery person');
+    if (!res.data)
+      throw new Error('Failed to deallocate pages from delivery person');
     return res.data;
   },
 
-  getDeliveryPersons: async (): Promise<Array<{ id: string; name: string }>> => {
+  getDeliveryPersons: async (): Promise<
+    Array<{ id: string; name: string }>
+  > => {
     const res = await apiClient.get<Array<{ id: string; name: string }>>(
       '/manual-bill-books/dp-mapping/delivery-persons'
     );
@@ -368,10 +436,12 @@ export const manualBillBookApi = {
     return res.data || [];
   },
 
-  getBranchUsersForDP: async (): Promise<Array<{ id: string; name: string; isDeliveryPerson: boolean }>> => {
-    const res = await apiClient.get<Array<{ id: string; name: string; isDeliveryPerson: boolean }>>(
-      '/manual-bill-books/dp-management/users'
-    );
+  getBranchUsersForDP: async (): Promise<
+    Array<{ id: string; name: string; isDeliveryPerson: boolean }>
+  > => {
+    const res = await apiClient.get<
+      Array<{ id: string; name: string; isDeliveryPerson: boolean }>
+    >('/manual-bill-books/dp-management/users');
     if (res.error) throw new Error(res.error);
     return res.data || [];
   },
@@ -385,7 +455,9 @@ export const manualBillBookApi = {
     return res.data || { success: false };
   },
 
-  removeDeliveryPerson: async (userId: string): Promise<{ success: boolean }> => {
+  removeDeliveryPerson: async (
+    userId: string
+  ): Promise<{ success: boolean }> => {
     const res = await apiClient.post<{ success: boolean }>(
       '/manual-bill-books/dp-management/remove',
       { userId }
@@ -395,7 +467,9 @@ export const manualBillBookApi = {
   },
 
   getDPAllocatedPages: async (): Promise<IDPAllocatedPageRow[]> => {
-    const res = await apiClient.get<IDPAllocatedPageRow[]>('/manual-bill-books/dp-unmap/pages');
+    const res = await apiClient.get<IDPAllocatedPageRow[]>(
+      '/manual-bill-books/dp-unmap/pages'
+    );
     if (res.error) throw new Error(res.error);
     return res.data || [];
   },

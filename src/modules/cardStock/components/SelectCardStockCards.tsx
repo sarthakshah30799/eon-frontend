@@ -58,10 +58,10 @@ export const SelectCardStockCards = ({
       open &&
       Boolean(
         branchId &&
-          productId &&
-          issuerPartyProfileId &&
-          (multiCurrency || currencyId) &&
-          (!reload || passengerId)
+        productId &&
+        issuerPartyProfileId &&
+        (multiCurrency || currencyId) &&
+        (!reload || passengerId)
       ),
   });
 

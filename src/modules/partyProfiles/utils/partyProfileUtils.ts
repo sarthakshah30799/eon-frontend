@@ -37,7 +37,9 @@ export const syncPartyProfileCache = (
             profile.id === updatedProfile.id ? updatedProfile : profile
           )
           .filter(profile =>
-            shouldRemoveFromReviewQueue ? profile.id !== updatedProfile.id : true
+            shouldRemoveFromReviewQueue
+              ? profile.id !== updatedProfile.id
+              : true
           );
 
         return nextProfiles;

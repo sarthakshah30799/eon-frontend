@@ -20,7 +20,7 @@ type UseListOptions = {
 
 export const useListManualBillBooks = (
   params?: IManualBillBookListQuery,
-  options?: UseListOptions,
+  options?: UseListOptions
 ) => {
   const withRoute = options?.withRoutePagination ?? false;
   const [searchParams, setSearchParams] = useSearchParams();
@@ -31,17 +31,25 @@ export const useListManualBillBooks = (
   const routeLimit = (() => {
     if (!withRoute) return params?.limit;
     const parsed = parseInt(rawLimit ?? String(PAGINATION_DEFAULTS.LIMIT), 10);
-    return Number.isFinite(parsed) && parsed > 0 ? parsed : PAGINATION_DEFAULTS.LIMIT;
+    return Number.isFinite(parsed) && parsed > 0
+      ? parsed
+      : PAGINATION_DEFAULTS.LIMIT;
   })();
   const routeOffset = (() => {
     if (!withRoute) return params?.offset;
-    const parsed = parseInt(rawOffset ?? String(PAGINATION_DEFAULTS.OFFSET), 10);
-    return Number.isFinite(parsed) && parsed >= 0 ? parsed : PAGINATION_DEFAULTS.OFFSET;
+    const parsed = parseInt(
+      rawOffset ?? String(PAGINATION_DEFAULTS.OFFSET),
+      10
+    );
+    return Number.isFinite(parsed) && parsed >= 0
+      ? parsed
+      : PAGINATION_DEFAULTS.OFFSET;
   })();
 
   const limit = withRoute ? (routeLimit as number) : params?.limit;
   const offset = withRoute ? (routeOffset as number) : params?.offset;
-  const page = withRoute && limit ? Math.floor((offset as number) / limit) + 1 : 1;
+  const page =
+    withRoute && limit ? Math.floor((offset as number) / limit) + 1 : 1;
 
   // Ensure route always contains defaults when pagination is enabled
   useEffect(() => {
@@ -52,11 +60,13 @@ export const useListManualBillBooks = (
       setSearchParams(
         prev => {
           const next = new URLSearchParams(prev);
-          if (!next.has('limit')) next.set('limit', String(PAGINATION_DEFAULTS.LIMIT));
-          if (!next.has('offset')) next.set('offset', String(PAGINATION_DEFAULTS.OFFSET));
+          if (!next.has('limit'))
+            next.set('limit', String(PAGINATION_DEFAULTS.LIMIT));
+          if (!next.has('offset'))
+            next.set('offset', String(PAGINATION_DEFAULTS.OFFSET));
           return next;
         },
-        { replace: true },
+        { replace: true }
       );
     }
   }, [withRoute, searchParams, setSearchParams]);
@@ -87,7 +97,10 @@ export const useListManualBillBooks = (
   const setRoutePagination = useCallback(
     (nextPage: number, nextLimit: number) => {
       if (!withRoute) return;
-      const safeLimit = Number.isFinite(nextLimit) && nextLimit > 0 ? nextLimit : (limit as number);
+      const safeLimit =
+        Number.isFinite(nextLimit) && nextLimit > 0
+          ? nextLimit
+          : (limit as number);
       const safePage = Number.isFinite(nextPage) && nextPage > 0 ? nextPage : 1;
       const nextOffset = (safePage - 1) * safeLimit;
       setSearchParams(prev => {
@@ -97,17 +110,17 @@ export const useListManualBillBooks = (
         return next;
       });
     },
-    [withRoute, limit, setSearchParams],
+    [withRoute, limit, setSearchParams]
   );
 
   const handlePageChange = useCallback(
     (nextPage: number) => setRoutePagination(nextPage, limit as number),
-    [limit, setRoutePagination],
+    [limit, setRoutePagination]
   );
 
   const handlePageSizeChange = useCallback(
     (nextLimit: number) => setRoutePagination(1, nextLimit),
-    [setRoutePagination],
+    [setRoutePagination]
   );
 
   const resetOffsetInRoute = useCallback(() => {
@@ -121,7 +134,9 @@ export const useListManualBillBooks = (
   }, [withRoute, limit, setSearchParams]);
 
   const totalItems = query.data?.total ?? query.data?.totalItems ?? 0;
-  const totalPages = query.data?.totalPages ?? (limit ? Math.ceil(totalItems / (limit as number)) : 0);
+  const totalPages =
+    query.data?.totalPages ??
+    (limit ? Math.ceil(totalItems / (limit as number)) : 0);
 
   return {
     ...query,

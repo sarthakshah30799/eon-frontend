@@ -19,7 +19,9 @@ export const useUpdateBookingMaster = () => {
       expenseIncomeBookingApi.updateBookingMaster(id, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['booking-masters'] });
-      queryClient.invalidateQueries({ queryKey: ['booking-master', variables.id] });
+      queryClient.invalidateQueries({
+        queryKey: ['booking-master', variables.id],
+      });
       toast.success('Booking Master updated successfully');
     },
     onError: (err: unknown) => {

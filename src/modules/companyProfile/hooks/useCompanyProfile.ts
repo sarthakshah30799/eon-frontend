@@ -20,7 +20,9 @@ export const useCompanyProfile = (id: string | undefined) => {
         throw new Error(response.error);
       }
 
-      return response.data ? mapCompanyProfileToFormValues(response.data) : undefined;
+      return response.data
+        ? mapCompanyProfileToFormValues(response.data)
+        : undefined;
     },
     enabled: Boolean(id),
   });
@@ -37,7 +39,9 @@ export const useCompanyProfile = (id: string | undefined) => {
         throw new Error(response.error);
       }
 
-      return response.data ? mapCompanyProfileToFormValues(response.data) : undefined;
+      return response.data
+        ? mapCompanyProfileToFormValues(response.data)
+        : undefined;
     },
     onSuccess: updatedProfile => {
       if (!id) {

@@ -4,7 +4,10 @@ import { FormFieldSelect } from '@/components/forms';
 import { CardSection } from '@/components/ui';
 import { useAuth } from '@/lib/AuthContext';
 import { useListBranchProfiles } from '@/modules/branchProfile/hooks';
-import { useGetCounterProfile, useListCounterProfiles } from '@/modules/counterProfile/hooks';
+import {
+  useGetCounterProfile,
+  useListCounterProfiles,
+} from '@/modules/counterProfile/hooks';
 import type { ITransferFormValues, TransferType } from '../types';
 
 interface TransferWorkplaceFieldsProps {
@@ -61,10 +64,15 @@ export const TransferWorkplaceFields = ({
     Boolean(sourceBranchId)
   );
   const { data: destinationCounters = [] } = useListCounterProfiles(
-    { activeOnly: true, branchId: destinationBranchId || sourceBranchId || undefined },
+    {
+      activeOnly: true,
+      branchId: destinationBranchId || sourceBranchId || undefined,
+    },
     Boolean(destinationBranchId || sourceBranchId)
   );
-  const { data: activeCounterProfile } = useGetCounterProfile(activeCounterId || '');
+  const { data: activeCounterProfile } = useGetCounterProfile(
+    activeCounterId || ''
+  );
 
   useEffect(() => {
     if (readOnly) {
@@ -96,7 +104,14 @@ export const TransferWorkplaceFields = ({
         });
       }
     }
-  }, [activeBranchId, activeCounterId, form, isAdminOrHo, isCounterTransfer, readOnly]);
+  }, [
+    activeBranchId,
+    activeCounterId,
+    form,
+    isAdminOrHo,
+    isCounterTransfer,
+    readOnly,
+  ]);
 
   useEffect(() => {
     if (readOnly) {
@@ -118,7 +133,9 @@ export const TransferWorkplaceFields = ({
     }
 
     if (sourceBranchId && sourceCounterId && sourceCounters.length > 0) {
-      const selectedSourceCounter = sourceCounters.find(counter => counter.id === sourceCounterId);
+      const selectedSourceCounter = sourceCounters.find(
+        counter => counter.id === sourceCounterId
+      );
       if (!selectedSourceCounter) {
         form.setValue('sourceCounterId', '', {
           shouldDirty: false,
@@ -135,7 +152,9 @@ export const TransferWorkplaceFields = ({
     }
 
     if (isBranchTransfer && sourceCounterId) {
-      const sourceCounter = sourceCounters.find(counter => counter.id === sourceCounterId);
+      const sourceCounter = sourceCounters.find(
+        counter => counter.id === sourceCounterId
+      );
       const destinationCounter = destinationCounters.find(
         counter => counter.counterNo === sourceCounter?.counterNo
       );
@@ -148,14 +167,25 @@ export const TransferWorkplaceFields = ({
         });
       }
     }
-  }, [destinationCounters, form, isBranchTransfer, readOnly, sourceCounterId, sourceCounters]);
+  }, [
+    destinationCounters,
+    form,
+    isBranchTransfer,
+    readOnly,
+    sourceCounterId,
+    sourceCounters,
+  ]);
 
   useEffect(() => {
     if (readOnly) {
       return;
     }
 
-    if (destinationBranchId && isCounterTransfer && destinationCounters.length > 0) {
+    if (
+      destinationBranchId &&
+      isCounterTransfer &&
+      destinationCounters.length > 0
+    ) {
       const selectedDestinationCounter = destinationCounters.find(
         counter => counter.id === form.getValues('destinationCounterId')
       );
@@ -167,96 +197,115 @@ export const TransferWorkplaceFields = ({
         });
       }
     }
-  }, [destinationBranchId, destinationCounters, form, isCounterTransfer, readOnly]);
+  }, [
+    destinationBranchId,
+    destinationCounters,
+    form,
+    isCounterTransfer,
+    readOnly,
+  ]);
 
   const branchOptions = useMemo(() => {
     const options = branches.map(branch => ({
-        value: branch.id,
-        label: buildBranchLabel(branch),
-      }));
+      value: branch.id,
+      label: buildBranchLabel(branch),
+    }));
 
-    for (const option of [readOnlyOptions?.sourceBranch, readOnlyOptions?.destinationBranch]) {
-      if (option && !options.some(existing => existing.value === option.value)) {
+    for (const option of [
+      readOnlyOptions?.sourceBranch,
+      readOnlyOptions?.destinationBranch,
+    ]) {
+      if (
+        option &&
+        !options.some(existing => existing.value === option.value)
+      ) {
         options.push(option);
       }
     }
 
     return options;
-  }, [branches, readOnlyOptions?.destinationBranch, readOnlyOptions?.sourceBranch]);
+  }, [
+    branches,
+    readOnlyOptions?.destinationBranch,
+    readOnlyOptions?.sourceBranch,
+  ]);
 
-  const sourceCounterOptions = useMemo(
-    () => {
-      const mergedCounters = [...sourceCounters];
+  const sourceCounterOptions = useMemo(() => {
+    const mergedCounters = [...sourceCounters];
 
-      if (
-        activeCounterProfile &&
-        !mergedCounters.some(counter => counter.id === activeCounterProfile.id)
-      ) {
-        mergedCounters.push(activeCounterProfile);
-      }
+    if (
+      activeCounterProfile &&
+      !mergedCounters.some(counter => counter.id === activeCounterProfile.id)
+    ) {
+      mergedCounters.push(activeCounterProfile);
+    }
 
-      if (
-        readOnlyOptions?.sourceCounter &&
-        !mergedCounters.some(counter => counter.id === readOnlyOptions.sourceCounter?.value)
-      ) {
-        mergedCounters.push({
-          id: readOnlyOptions.sourceCounter.value,
-          counterNo: readOnlyOptions.sourceCounter.label.split(' - ')[0],
-          name: readOnlyOptions.sourceCounter.label.split(' - ').slice(1).join(' - '),
-        } as (typeof mergedCounters)[number]);
-      }
+    if (
+      readOnlyOptions?.sourceCounter &&
+      !mergedCounters.some(
+        counter => counter.id === readOnlyOptions.sourceCounter?.value
+      )
+    ) {
+      mergedCounters.push({
+        id: readOnlyOptions.sourceCounter.value,
+        counterNo: readOnlyOptions.sourceCounter.label.split(' - ')[0],
+        name: readOnlyOptions.sourceCounter.label
+          .split(' - ')
+          .slice(1)
+          .join(' - '),
+      } as (typeof mergedCounters)[number]);
+    }
 
-      return mergedCounters.map(counter => ({
-        value: counter.id,
-        label: buildCounterLabel(counter),
-      }));
-    },
-    [activeCounterProfile, readOnlyOptions, sourceCounters]
-  );
+    return mergedCounters.map(counter => ({
+      value: counter.id,
+      label: buildCounterLabel(counter),
+    }));
+  }, [activeCounterProfile, readOnlyOptions, sourceCounters]);
 
   const sourceCounter = useMemo(
-    () => sourceCounters.find(counter => counter.id === sourceCounterId) ?? null,
+    () =>
+      sourceCounters.find(counter => counter.id === sourceCounterId) ?? null,
     [sourceCounterId, sourceCounters]
   );
 
   const matchingDestinationCounter = useMemo(
     () =>
       isBranchTransfer && sourceCounter
-        ? destinationCounters.find(
+        ? (destinationCounters.find(
             counter => counter.counterNo === sourceCounter.counterNo
-          ) ?? null
+          ) ?? null)
         : null,
     [destinationCounters, isBranchTransfer, sourceCounter]
   );
 
-  const destinationCounterOptions = useMemo(
-    () => {
-      const availableCounters = isBranchTransfer && matchingDestinationCounter
+  const destinationCounterOptions = useMemo(() => {
+    const availableCounters =
+      isBranchTransfer && matchingDestinationCounter
         ? [matchingDestinationCounter]
         : destinationCounters.filter(counter => counter.id !== sourceCounterId);
 
-      const options = availableCounters.map(counter => ({
-        value: counter.id,
-        label: buildCounterLabel(counter),
-      }));
+    const options = availableCounters.map(counter => ({
+      value: counter.id,
+      label: buildCounterLabel(counter),
+    }));
 
-      if (
-        readOnlyOptions?.destinationCounter &&
-        !options.some(option => option.value === readOnlyOptions.destinationCounter?.value)
-      ) {
-        options.push(readOnlyOptions.destinationCounter);
-      }
+    if (
+      readOnlyOptions?.destinationCounter &&
+      !options.some(
+        option => option.value === readOnlyOptions.destinationCounter?.value
+      )
+    ) {
+      options.push(readOnlyOptions.destinationCounter);
+    }
 
-      return options;
-    },
-    [
-      destinationCounters,
-      isBranchTransfer,
-      matchingDestinationCounter,
-      readOnlyOptions,
-      sourceCounterId,
-    ]
-  );
+    return options;
+  }, [
+    destinationCounters,
+    isBranchTransfer,
+    matchingDestinationCounter,
+    readOnlyOptions,
+    sourceCounterId,
+  ]);
 
   const canEditWorkplace = isAdminOrHo && !readOnly;
   const canEditDestination = !readOnly;
@@ -314,7 +363,11 @@ export const TransferWorkplaceFields = ({
             key={`source-counter-${sourceBranchId || 'empty'}`}
             name="sourceCounterId"
             label="Source Counter"
-            placeholder={sourceBranchId ? 'Select source counter' : 'Select source branch first'}
+            placeholder={
+              sourceBranchId
+                ? 'Select source counter'
+                : 'Select source branch first'
+            }
             loadOptions={async inputValue => {
               const search = inputValue.trim().toLowerCase();
               return {
@@ -329,7 +382,9 @@ export const TransferWorkplaceFields = ({
         </div>
 
         <div className="space-y-4 rounded-lg border border-border-secondary bg-surface-primary p-4">
-          <h3 className="text-sm font-semibold text-text-primary">Destination</h3>
+          <h3 className="text-sm font-semibold text-text-primary">
+            Destination
+          </h3>
           {isBranchTransfer ? (
             <FormFieldSelect
               name="destinationBranchId"
@@ -362,7 +417,8 @@ export const TransferWorkplaceFields = ({
             />
           ) : (
             <div className="rounded-md border border-dashed border-border-secondary bg-surface-secondary px-3 py-2 text-sm text-text-secondary">
-              Destination branch is fixed to the source branch for counter transfers.
+              Destination branch is fixed to the source branch for counter
+              transfers.
             </div>
           )}
 
@@ -393,9 +449,12 @@ export const TransferWorkplaceFields = ({
               (isCounterTransfer && !destinationBranchId)
             }
           />
-          {isBranchTransfer && sourceCounterId && !matchingDestinationCounter ? (
+          {isBranchTransfer &&
+          sourceCounterId &&
+          !matchingDestinationCounter ? (
             <p className="text-sm text-amber-700">
-              The same counter is not available on the destination branch. Select a destination counter manually.
+              The same counter is not available on the destination branch.
+              Select a destination counter manually.
             </p>
           ) : null}
         </div>

@@ -79,7 +79,10 @@ export const counterProfileApi = {
     values: ICreateCounterProfile
   ): Promise<ICounterProfile | undefined> => {
     const backendData = mapFrontendToBackend(values);
-    const res = await apiClient.put<BackendCounter>(`/counters/${id}`, backendData);
+    const res = await apiClient.put<BackendCounter>(
+      `/counters/${id}`,
+      backendData
+    );
     if (res.error) throw new Error(res.error);
     return res.data ? mapBackendToFrontend(res.data) : undefined;
   },

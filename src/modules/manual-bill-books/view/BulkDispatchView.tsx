@@ -5,7 +5,10 @@ interface BulkDispatchViewProps {
   reassignId?: string;
 }
 
-export const BulkDispatchView = ({ onSuccess, reassignId }: BulkDispatchViewProps) => {
+export const BulkDispatchView = ({
+  onSuccess,
+  reassignId,
+}: BulkDispatchViewProps) => {
   const isReassign = !!reassignId;
 
   return (

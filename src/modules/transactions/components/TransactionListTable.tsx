@@ -108,11 +108,12 @@ export const TransactionListTable = ({
                   onActionClick(row.original);
                 }}
               >
-                {actionIcon ?? (actionMode === 'view' ? (
-                  <EyeIcon className="h-5 w-5" />
-                ) : (
-                  <PencilSquareIcon className="h-5 w-5" />
-                ))}
+                {actionIcon ??
+                  (actionMode === 'view' ? (
+                    <EyeIcon className="h-5 w-5" />
+                  ) : (
+                    <PencilSquareIcon className="h-5 w-5" />
+                  ))}
               </Button>
             ) : null}
           </div>

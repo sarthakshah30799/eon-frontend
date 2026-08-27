@@ -4,7 +4,9 @@ interface ChevronDownIconProps {
   className?: string;
 }
 
-export const ChevronDownIcon: React.FC<ChevronDownIconProps> = ({ className = 'h-5 w-5' }) => {
+export const ChevronDownIcon: React.FC<ChevronDownIconProps> = ({
+  className = 'h-5 w-5',
+}) => {
   return (
     <svg
       aria-hidden="true"

@@ -18,27 +18,33 @@ export const useProductProfitReport = () => {
 
   const hasExplicitPartyProfileSelection = Boolean(
     filters.appliedFilters?.partyProfileSelection.allSelected ||
-      filters.appliedFilters?.partyProfileSelection.selectedIds.length,
+    filters.appliedFilters?.partyProfileSelection.selectedIds.length
   );
 
   const requestParams = useMemo(
     () => ({
       startDate: filters.appliedFilters?.dateRange.startDate,
       endDate: filters.appliedFilters?.dateRange.endDate,
-      branchIds: hasExplicitPartyProfileSelection ? [] : filters.appliedFilters?.branchIds ?? [],
-      stateIds: hasExplicitPartyProfileSelection ? [] : filters.appliedFilters?.stateIds ?? [],
-      counterIds: hasExplicitPartyProfileSelection ? [] : filters.appliedFilters?.counterIds ?? [],
+      branchIds: hasExplicitPartyProfileSelection
+        ? []
+        : (filters.appliedFilters?.branchIds ?? []),
+      stateIds: hasExplicitPartyProfileSelection
+        ? []
+        : (filters.appliedFilters?.stateIds ?? []),
+      counterIds: hasExplicitPartyProfileSelection
+        ? []
+        : (filters.appliedFilters?.counterIds ?? []),
       partyTypeCodes: filters.appliedFilters?.partyTypeCodes ?? [],
       currencyIds: filters.appliedFilters?.currencyIds ?? [],
       productIds: filters.appliedFilters?.productIds ?? [],
       sortBy: filters.appliedFilters?.sortBy,
     }),
-    [filters.appliedFilters, hasExplicitPartyProfileSelection],
+    [filters.appliedFilters, hasExplicitPartyProfileSelection]
   );
 
   const reportQueryKey = useMemo(
     () => ['product-profit-report', filters.appliedFilters],
-    [filters.appliedFilters],
+    [filters.appliedFilters]
   );
 
   const reportQuery = useQuery<IProductProfitReportResponse>({
@@ -46,7 +52,10 @@ export const useProductProfitReport = () => {
     enabled: Boolean(filters.appliedFilters),
     queryFn: async () => {
       const partyProfileIds = await resolvePartyProfileIds();
-      if (hasExplicitPartyProfileSelection && (!partyProfileIds || partyProfileIds.length === 0)) {
+      if (
+        hasExplicitPartyProfileSelection &&
+        (!partyProfileIds || partyProfileIds.length === 0)
+      ) {
         return {
           columns: [],
           rows: [],
@@ -70,7 +79,10 @@ export const useProductProfitReport = () => {
     }
 
     const partyProfileIds = await resolvePartyProfileIds();
-    if (hasExplicitPartyProfileSelection && (!partyProfileIds || partyProfileIds.length === 0)) {
+    if (
+      hasExplicitPartyProfileSelection &&
+      (!partyProfileIds || partyProfileIds.length === 0)
+    ) {
       return;
     }
 
@@ -79,10 +91,13 @@ export const useProductProfitReport = () => {
         ...requestParams,
         ...(partyProfileIds ? { partyProfileIds } : {}),
       },
-      exportFormat,
+      exportFormat
     );
 
-    downloadBlob(payload.blob, payload.filename || 'product-profit-report.xlsx');
+    downloadBlob(
+      payload.blob,
+      payload.filename || 'product-profit-report.xlsx'
+    );
   }, [
     exportFormat,
     filters.appliedFilters,

@@ -24,9 +24,7 @@ export const BranchProfileEditView = () => {
   );
 
   if (isLoading) {
-    return (
-      <Loader />
-    );
+    return <Loader />;
   }
 
   if (!branchProfile) {

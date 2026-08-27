@@ -24,4 +24,3 @@ export const useDeleteUserProfile = () => {
     deleteUserProfile: mutation.mutateAsync,
   };
 };
-

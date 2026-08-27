@@ -47,9 +47,7 @@ export const CountryProfileListView = () => {
           <Button
             type="button"
             className="rounded-sm"
-            onClick={() =>
-              navigate('/admin/country-profile/create')
-            }
+            onClick={() => navigate('/admin/country-profile/create')}
           >
             {COUNTRY_PROFILE_TEXTS.CREATE_COUNTRY}
           </Button>

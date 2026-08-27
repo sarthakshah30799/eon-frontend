@@ -11,12 +11,13 @@ export const MiscellaneousProfileListView = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const search = searchParams.get('search') ?? '';
   const debouncedSearch = useDebounce(search, 400);
-  const query = useMemo(
-    () => debouncedSearch.trim(),
-    [debouncedSearch]
-  );
-  const { data: options = [], isLoading, isFetching, error } =
-    useListMiscellaneousProfiles(query);
+  const query = useMemo(() => debouncedSearch.trim(), [debouncedSearch]);
+  const {
+    data: options = [],
+    isLoading,
+    isFetching,
+    error,
+  } = useListMiscellaneousProfiles(query);
 
   if (error) {
     return (

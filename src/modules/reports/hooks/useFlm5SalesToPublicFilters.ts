@@ -57,13 +57,16 @@ export interface Flm5SalesToPublicFiltersState {
     branchIds: string[];
     productId: string;
     view: Flm5ReportView;
-  layout: FlmReportLayout;
+    layout: FlmReportLayout;
   } | null;
   appliedDateRangeLabel: string;
   canView: boolean;
 }
 
-const toOption = (id: string, label: string): IReportSelectOption => ({ id, label });
+const toOption = (id: string, label: string): IReportSelectOption => ({
+  id,
+  label,
+});
 
 const parseView = (value: string): Flm5ReportView =>
   value === Flm5ReportViewEnum.EXTENDED
@@ -77,40 +80,42 @@ export const useFlm5SalesToPublicFilters =
     const isRestrictedUser = !user?.isAdmin && !user?.isHo && !user?.isHoStaff;
     const userAssignments = useMemo(
       () => user?.assignments ?? [],
-      [user?.assignments],
+      [user?.assignments]
     );
     const searchParamsKey = searchParams.toString();
     const parsedSearchParams = useMemo(
       () => new URLSearchParams(searchParamsKey),
-      [searchParamsKey],
+      [searchParamsKey]
     );
 
     const hydratedRouteState = useMemo(() => {
       return {
         dateRange: readDateRangeSearchParams(
           parsedSearchParams,
-          ReportDatePresetEnum.TODAY,
+          ReportDatePresetEnum.TODAY
         ),
         branchIds: readSearchParamList(parsedSearchParams, 'branchIds'),
         productId: readSearchParamValue(parsedSearchParams, 'productId'),
         view: parseView(readSearchParamValue(parsedSearchParams, 'view')),
         layout: parseFlmReportLayout(
           readSearchParamValue(parsedSearchParams, 'layout') ||
-            DEFAULT_FLM_REPORT_LAYOUT,
+            DEFAULT_FLM_REPORT_LAYOUT
         ),
       };
     }, [parsedSearchParams]);
 
     const [dateRange, setDateRange] = useState<IReportDateRange>(
-      hydratedRouteState.dateRange,
+      hydratedRouteState.dateRange
     );
     const [branchIds, setBranchIds] = useState<string[]>(
-      hydratedRouteState.branchIds,
+      hydratedRouteState.branchIds
     );
     const [productId, setProductId] = useState(hydratedRouteState.productId);
-    const [view, setViewState] = useState<Flm5ReportView>(hydratedRouteState.view);
+    const [view, setViewState] = useState<Flm5ReportView>(
+      hydratedRouteState.view
+    );
     const [layout, setLayoutState] = useState<FlmReportLayout>(
-      hydratedRouteState.layout,
+      hydratedRouteState.layout
     );
     const [appliedFilters, setAppliedFilters] = useState<
       Flm5SalesToPublicFiltersState['appliedFilters']
@@ -123,7 +128,7 @@ export const useFlm5SalesToPublicFilters =
             view: hydratedRouteState.view,
             layout: hydratedRouteState.layout,
           }
-        : null,
+        : null
     );
 
     const { data: branchProfiles = [] } = useQuery({
@@ -141,20 +146,25 @@ export const useFlm5SalesToPublicFilters =
       () =>
         isRestrictedUser
           ? branchProfiles.filter(branch =>
-              userAssignments.some(assignment => assignment.branchId === branch.id),
+              userAssignments.some(
+                assignment => assignment.branchId === branch.id
+              )
             )
           : branchProfiles,
-      [branchProfiles, isRestrictedUser, userAssignments],
+      [branchProfiles, isRestrictedUser, userAssignments]
     );
 
     const branchOptions = useMemo<IReportSelectOption[]>(
       () =>
         uniqueOptions(
           accessibleBranchProfiles.map(branch =>
-            toOption(branch.id, buildReportOptionLabel(branch.code, branch.name)),
-          ),
+            toOption(
+              branch.id,
+              buildReportOptionLabel(branch.code, branch.name)
+            )
+          )
         ),
-      [accessibleBranchProfiles],
+      [accessibleBranchProfiles]
     );
 
     const productOptions = useMemo<IReportSelectOption[]>(
@@ -163,18 +173,21 @@ export const useFlm5SalesToPublicFilters =
           productProfiles.map(product =>
             toOption(
               product.id,
-              buildReportOptionLabel(product.productCode, product.productDescription),
-            ),
-          ),
+              buildReportOptionLabel(
+                product.productCode,
+                product.productDescription
+              )
+            )
+          )
         ),
-      [productProfiles],
+      [productProfiles]
     );
 
     const defaultProductId = useMemo(() => {
       const cnProduct = productProfiles.find(
         product =>
           String(product.productCode ?? '').toUpperCase() ===
-          FLM5_DEFAULT_PRODUCT_CODE,
+          FLM5_DEFAULT_PRODUCT_CODE
       );
       return cnProduct?.id ?? productOptions[0]?.id ?? '';
     }, [productOptions, productProfiles]);
@@ -182,11 +195,13 @@ export const useFlm5SalesToPublicFilters =
     const selectedBranchIds = useMemo(
       () =>
         branchIds.filter(branchId =>
-          branchOptions.some(option => option.id === branchId),
+          branchOptions.some(option => option.id === branchId)
         ),
-      [branchIds, branchOptions],
+      [branchIds, branchOptions]
     );
-    const selectedProductId = productOptions.some(option => option.id === productId)
+    const selectedProductId = productOptions.some(
+      option => option.id === productId
+    )
       ? productId
       : defaultProductId;
 
@@ -207,7 +222,7 @@ export const useFlm5SalesToPublicFilters =
       nextBranchIds: string[],
       nextProductId: string,
       nextView: Flm5ReportView,
-      nextLayout: FlmReportLayout,
+      nextLayout: FlmReportLayout
     ) => {
       return buildSearchParams(undefined, next => {
         setSearchParamValue(next, 'datePreset', nextDateRange.preset);
@@ -235,9 +250,9 @@ export const useFlm5SalesToPublicFilters =
           appliedFilters.branchIds,
           appliedFilters.productId,
           nextView,
-          appliedFilters.layout,
+          appliedFilters.layout
         ),
-        { replace: true },
+        { replace: true }
       );
     };
 
@@ -256,9 +271,9 @@ export const useFlm5SalesToPublicFilters =
           appliedFilters.branchIds,
           appliedFilters.productId,
           appliedFilters.view,
-          nextLayout,
+          nextLayout
         ),
-        { replace: true },
+        { replace: true }
       );
     };
 
@@ -307,9 +322,9 @@ export const useFlm5SalesToPublicFilters =
           effectiveBranchIds,
           selectedProductId,
           view,
-          layout,
+          layout
         ),
-        { replace: true },
+        { replace: true }
       );
     };
 
@@ -337,7 +352,7 @@ export const useFlm5SalesToPublicFilters =
       appliedFilters,
       appliedDateRangeLabel,
       canView: Boolean(
-        selectedProductId && dateRange.startDate && dateRange.endDate,
+        selectedProductId && dateRange.startDate && dateRange.endDate
       ),
     };
   };

@@ -18,12 +18,14 @@ export const usePassengerAmlVerification = () => {
   const panMutation = useVerificationMutation<IPassengerPanVerificationRequest>(
     passengersApi.verifyPan
   );
-  const passportMutation = useVerificationMutation<IPassengerPassportVerificationRequest>(
-    passengersApi.verifyPassport
-  );
-  const otherDocumentMutation = useVerificationMutation<IPassengerOtherDocumentVerificationRequest>(
-    passengersApi.verifyOtherDocument
-  );
+  const passportMutation =
+    useVerificationMutation<IPassengerPassportVerificationRequest>(
+      passengersApi.verifyPassport
+    );
+  const otherDocumentMutation =
+    useVerificationMutation<IPassengerOtherDocumentVerificationRequest>(
+      passengersApi.verifyOtherDocument
+    );
 
   return {
     verifyPan: panMutation.mutateAsync,

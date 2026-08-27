@@ -1,5 +1,8 @@
 import { ProductProfileForm } from '../forms';
-import type { ICreateProductProfile, IUpdateProductProfilePayload } from '../types';
+import type {
+  ICreateProductProfile,
+  IUpdateProductProfilePayload,
+} from '../types';
 
 interface ProductProfileEditorViewProps {
   heading: string;

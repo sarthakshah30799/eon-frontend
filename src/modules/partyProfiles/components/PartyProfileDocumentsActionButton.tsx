@@ -31,7 +31,9 @@ export const PartyProfileDocumentsActionButton = ({
       aria-label={label}
       onClick={event => {
         event.stopPropagation();
-        navigate(buildPartyProfileDocumentsPath(partyProfileType, partyProfileId));
+        navigate(
+          buildPartyProfileDocumentsPath(partyProfileType, partyProfileId)
+        );
       }}
     >
       <DocumentTextIcon className="h-5 w-5" />

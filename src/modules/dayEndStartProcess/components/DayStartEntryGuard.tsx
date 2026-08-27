@@ -22,14 +22,16 @@ export const DayStartEntryGuard = ({ children }: DayStartEntryGuardProps) => {
     );
   }
 
-  const canBypassDayStart = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
+  const canBypassDayStart = Boolean(
+    user?.isAdmin || user?.isHo || user?.isHoStaff
+  );
   if (canBypassDayStart) {
     return <>{children}</>;
   }
 
   const requiresDayStart = Boolean(
     policyContext?.workflowState &&
-      BLOCKED_WORKFLOW_STATES.has(policyContext.workflowState)
+    BLOCKED_WORKFLOW_STATES.has(policyContext.workflowState)
   );
 
   if (!requiresDayStart) {
@@ -37,7 +39,8 @@ export const DayStartEntryGuard = ({ children }: DayStartEntryGuardProps) => {
   }
 
   const currentBusinessDate = policyContext?.currentBusinessDate || 'today';
-  const openBusinessDate = policyContext?.openBusinessDate || currentBusinessDate;
+  const openBusinessDate =
+    policyContext?.openBusinessDate || currentBusinessDate;
 
   return (
     <Modal
@@ -52,16 +55,12 @@ export const DayStartEntryGuard = ({ children }: DayStartEntryGuardProps) => {
     >
       <div className="space-y-4">
         <div className="rounded-lg border border-warning-200 bg-warning-50 px-4 py-3 text-sm text-warning-800">
-          You can still view lists and details, but transaction punching is blocked until
-          the day is started.
+          You can still view lists and details, but transaction punching is
+          blocked until the day is started.
         </div>
 
         <div className="flex flex-wrap items-center justify-end gap-3">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => navigate(-1)}
-          >
+          <Button type="button" variant="outline" onClick={() => navigate(-1)}>
             Back
           </Button>
           <Button

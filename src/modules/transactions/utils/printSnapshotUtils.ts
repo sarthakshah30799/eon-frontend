@@ -6,25 +6,32 @@ export type ICompanySnapshot = ICompanyProfile;
 export type IBranchSnapshot = IBranchProfile;
 
 export const snapshotAddress = (
-  snapshot: IBranchProfile | IPartyProfile | null | undefined,
+  snapshot: IBranchProfile | IPartyProfile | null | undefined
 ) => {
   if (!snapshot) {
     return '';
   }
 
   const gstState = 'gstState' in snapshot ? snapshot.gstState : undefined;
-  return [snapshot.address1, snapshot.address2, snapshot.address3, snapshot.city, gstState, snapshot.pinCode]
+  return [
+    snapshot.address1,
+    snapshot.address2,
+    snapshot.address3,
+    snapshot.city,
+    gstState,
+    snapshot.pinCode,
+  ]
     .map(part => part?.trim())
     .filter(Boolean)
     .join(', ');
 };
 
 export const toPrintCompany = (
-  snapshot: ICompanyProfile | null | undefined,
+  snapshot: ICompanyProfile | null | undefined
 ): ICompanyProfile | null => snapshot ?? null;
 
 export const toPrintBranch = (
-  snapshot: IBranchProfile | null | undefined,
+  snapshot: IBranchProfile | null | undefined
 ): IBranchProfile | null => snapshot ?? null;
 
 export const openPrintWindow = (html: string, popupBlockedMessage: string) => {

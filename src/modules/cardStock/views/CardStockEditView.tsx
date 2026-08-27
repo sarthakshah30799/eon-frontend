@@ -4,7 +4,10 @@ import { Loader } from '@/components/ui/loader';
 import { CardStockReceiptForm } from '../forms';
 import { CARD_STOCK_PRINT_TEXT } from '../constants/cardStockConstants';
 import { useGetCardStockReceipt, usePrintCardStockReceipt } from '../hooks';
-import { getCardStockPrintButtonLabel, getCardStockPrintCopyType } from '../utils/cardStockPrintUtils';
+import {
+  getCardStockPrintButtonLabel,
+  getCardStockPrintCopyType,
+} from '../utils/cardStockPrintUtils';
 import { mapReceiptToForm } from '../utils/cardStockUtils';
 
 export const CardStockEditView = () => {
@@ -13,7 +16,14 @@ export const CardStockEditView = () => {
   const { data, isLoading, error } = useGetCardStockReceipt(id);
   const { printReceipt, isPrinting } = usePrintCardStockReceipt();
   if (isLoading) return <Loader />;
-  if (error || !data) return <div className="py-8 text-center text-error-600">{error instanceof Error ? error.message : 'Card stock receipt not found'}</div>;
+  if (error || !data)
+    return (
+      <div className="py-8 text-center text-error-600">
+        {error instanceof Error
+          ? error.message
+          : 'Card stock receipt not found'}
+      </div>
+    );
   const copyType = getCardStockPrintCopyType(data.printCount);
   return (
     <CardStockReceiptForm
@@ -26,7 +36,9 @@ export const CardStockEditView = () => {
           onClick={() => void printReceipt(data)}
           disabled={isPrinting}
         >
-          {isPrinting ? CARD_STOCK_PRINT_TEXT.preparing : getCardStockPrintButtonLabel('STOCK_IN', copyType)}
+          {isPrinting
+            ? CARD_STOCK_PRINT_TEXT.preparing
+            : getCardStockPrintButtonLabel('STOCK_IN', copyType)}
         </Button>
       }
     />

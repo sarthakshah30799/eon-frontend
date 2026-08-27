@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { Button, AsyncSelect, type AsyncSelectOption, type AsyncSelectResponse } from '@/components/ui';
+import {
+  Button,
+  AsyncSelect,
+  type AsyncSelectOption,
+  type AsyncSelectResponse,
+} from '@/components/ui';
 import { NotFoundState } from '@/components/ui/not-found-state';
 import { AccessDeniedState } from '@/components/ui/access-denied-state';
 import { useDebounce, usePermission } from '@/hooks';
@@ -26,9 +31,12 @@ export const PartyProfileListView = () => {
   const search = searchParams.get('search') ?? '';
   const debouncedSearch = useDebounce(search, 400);
   const [branchFilter, setBranchFilter] = useState('');
-  const canSeeBranchFilter = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
+  const canSeeBranchFilter = Boolean(
+    user?.isAdmin || user?.isHo || user?.isHoStaff
+  );
 
-  const { data: typeOptions = [], isLoading: isTypesLoading } = usePartyProfileTypes();
+  const { data: typeOptions = [], isLoading: isTypesLoading } =
+    usePartyProfileTypes();
   const { data: branches = [] } = useListBranchProfiles({ activeOnly: true });
   const routeOptions = useMemo(
     () =>
@@ -52,7 +60,9 @@ export const PartyProfileListView = () => {
   const { canAdd } = usePermission(
     selectedType ? `/party-profiles/${selectedType}` : '/party-profiles'
   );
-  const isInvalidTypeRoute = Boolean(routeType) && !routeOptions.some(option => option.value === selectedType);
+  const isInvalidTypeRoute =
+    Boolean(routeType) &&
+    !routeOptions.some(option => option.value === selectedType);
   const canLoadList = Boolean(selectedApiType) && !isInvalidTypeRoute;
   const branchOptions = useMemo<AsyncSelectOption[]>(
     () =>
@@ -67,16 +77,17 @@ export const PartyProfileListView = () => {
     [branchFilter, branchOptions]
   );
   const loadBranchOptions = useMemo(
-    () => async (inputValue: string): Promise<AsyncSelectResponse> => {
-      const normalizedInput = inputValue.trim().toLowerCase();
-      const filteredOptions = normalizedInput
-        ? branchOptions.filter(option =>
-            option.label.toLowerCase().includes(normalizedInput)
-          )
-        : branchOptions;
+    () =>
+      async (inputValue: string): Promise<AsyncSelectResponse> => {
+        const normalizedInput = inputValue.trim().toLowerCase();
+        const filteredOptions = normalizedInput
+          ? branchOptions.filter(option =>
+              option.label.toLowerCase().includes(normalizedInput)
+            )
+          : branchOptions;
 
-      return { options: filteredOptions };
-    },
+        return { options: filteredOptions };
+      },
     [branchOptions]
   );
 
@@ -170,7 +181,9 @@ export const PartyProfileListView = () => {
                 const selectedOption = Array.isArray(option)
                   ? (option[0] ?? null)
                   : option;
-                setBranchFilter(selectedOption?.value ? String(selectedOption.value) : '');
+                setBranchFilter(
+                  selectedOption?.value ? String(selectedOption.value) : ''
+                );
               }}
             />
           </div>

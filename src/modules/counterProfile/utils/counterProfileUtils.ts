@@ -1,8 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query';
-import type {
-  ICreateCounterProfile,
-  ICounterProfile,
-} from '../types';
+import type { ICreateCounterProfile, ICounterProfile } from '../types';
 
 export const createEmptyCounterProfileFormValues =
   (): ICreateCounterProfile => ({

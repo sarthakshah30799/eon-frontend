@@ -20,9 +20,12 @@ interface MenuFormProps {
 }
 
 const createStaticLoadOptions =
-  (options: AsyncSelectOption[]) => async (inputValue: string): Promise<AsyncSelectResponse> => ({
+  (options: AsyncSelectOption[]) =>
+  async (inputValue: string): Promise<AsyncSelectResponse> => ({
     options: inputValue
-      ? options.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+      ? options.filter(opt =>
+          opt.label.toLowerCase().includes(inputValue.toLowerCase())
+        )
       : options,
     hasMore: false,
   });

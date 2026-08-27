@@ -107,7 +107,11 @@ const TransferFormBody = ({
       <div className="space-y-6">
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold">
-            {readOnly ? 'Transfer Approval' : transferType === 'COUNTER' ? 'Counter Transfer' : 'Branch Transfer'}
+            {readOnly
+              ? 'Transfer Approval'
+              : transferType === 'COUNTER'
+                ? 'Counter Transfer'
+                : 'Branch Transfer'}
           </h1>
           <p className="text-sm text-muted-foreground">
             {readOnly
@@ -131,8 +135,8 @@ const TransferFormBody = ({
                 readOnly
                   ? 'Source transaction number. The destination purchase number is generated from the configured purchase series when accepted.'
                   : nextTransferNumberError instanceof Error
-                  ? nextTransferNumberError.message
-                  : 'Preview only. The number is reserved when the transfer is submitted.'
+                    ? nextTransferNumberError.message
+                    : 'Preview only. The number is reserved when the transfer is submitted.'
               }
             />
             <FormFieldDatePicker
@@ -207,27 +211,29 @@ export const TransferFormView = ({
   const transferPermission = usePermission(pathname);
   const { data: pricingData, isLoading, error } = useCurrencyRatesViewData();
   const { data: additionalSettings = [] } = useListAdditionalSettings();
-  const [currencyPickerRowIndex, setCurrencyPickerRowIndex] = useState<number | null>(null);
+  const [currencyPickerRowIndex, setCurrencyPickerRowIndex] = useState<
+    number | null
+  >(null);
   const createCounterTransfer = useCreateCounterTransfer();
   const createBranchTransfer = useCreateBranchTransfer();
 
   const canSubmit = Boolean(
     user &&
-      (user.isAdmin ||
-        user.isHo ||
-        user.isHoStaff ||
-        transferPermission.canAdd ||
-        transferPermission.canModify)
+    (user.isAdmin ||
+      user.isHo ||
+      user.isHoStaff ||
+      transferPermission.canAdd ||
+      transferPermission.canModify)
   );
   const transferRateEditable = getAdditionalSettingBooleanValue(
     additionalSettings,
     AdditionalSettingsCodeEnum.TransferSettings,
     AdditionalSettingsCodeEnum.TransferRateEditable,
-    false,
+    false
   );
   const transactionDatePolicy = useMemo(
     () => getTransactionDatePolicy(policyContext),
-    [policyContext],
+    [policyContext]
   );
 
   const defaultValues = useMemo(
@@ -237,10 +243,16 @@ export const TransferFormView = ({
         transactionDate: transactionDatePolicy.defaultTransactionDate,
         sourceBranchId: activeBranchId ?? '',
         sourceCounterId: activeCounterId ?? '',
-        destinationBranchId: transferType === 'COUNTER' ? (activeBranchId ?? '') : '',
+        destinationBranchId:
+          transferType === 'COUNTER' ? (activeBranchId ?? '') : '',
         destinationCounterId: '',
       }),
-    [activeBranchId, activeCounterId, transferType, transactionDatePolicy.defaultTransactionDate]
+    [
+      activeBranchId,
+      activeCounterId,
+      transferType,
+      transactionDatePolicy.defaultTransactionDate,
+    ]
   );
 
   if (isLoading) {
@@ -271,13 +283,20 @@ export const TransferFormView = ({
     <Form<ITransferFormValues>
       id="transfer-form"
       defaultValues={initialValues ?? defaultValues}
-      resolver={yupResolver(transferRequestSchema) as Resolver<ITransferFormValues>}
+      resolver={
+        yupResolver(transferRequestSchema) as Resolver<ITransferFormValues>
+      }
       mode="onChange"
       footer={{
         submitLabel:
-          transferType === 'COUNTER' ? 'Create Counter Transfer' : 'Create Branch Transfer',
-        onCancel: onCancel ?? (() => navigate(`/transfer/${transferType.toLowerCase()}`)),
-        isSubmitDisabled: !canSubmit || readOnly || !transactionDatePolicy.canPunchTransactions,
+          transferType === 'COUNTER'
+            ? 'Create Counter Transfer'
+            : 'Create Branch Transfer',
+        onCancel:
+          onCancel ??
+          (() => navigate(`/transfer/${transferType.toLowerCase()}`)),
+        isSubmitDisabled:
+          !canSubmit || readOnly || !transactionDatePolicy.canPunchTransactions,
         showSubmit: showSubmit && !readOnly,
         actions: footerActions,
       }}

@@ -19,8 +19,12 @@ export const StateProfileListView = () => {
     }),
     [debouncedSearch]
   );
-  const { data: stateResponse, isLoading, isFetching, error } =
-    useListStateProfiles(query);
+  const {
+    data: stateResponse,
+    isLoading,
+    isFetching,
+    error,
+  } = useListStateProfiles(query);
   const states = stateResponse?.data ?? [];
 
   if (isLoading) {
@@ -42,9 +46,7 @@ export const StateProfileListView = () => {
           <Button
             type="button"
             className="rounded-sm"
-            onClick={() =>
-              navigate('/admin/state-profile/create')
-            }
+            onClick={() => navigate('/admin/state-profile/create')}
           >
             {STATE_PROFILE_TEXTS.CREATE_STATE}
           </Button>

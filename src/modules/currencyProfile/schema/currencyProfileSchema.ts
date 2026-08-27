@@ -49,9 +49,9 @@ export const currencyProfileSchema = yup.object({
     .when('onlyStocking', {
       is: true,
       then: schema =>
-        schema.oneOf(Object.values(CurrencyProductAllowed)).required(
-          'Product Allowed is required'
-        ),
+        schema
+          .oneOf(Object.values(CurrencyProductAllowed))
+          .required('Product Allowed is required'),
       otherwise: schema => schema.default('').defined(),
     }),
 });

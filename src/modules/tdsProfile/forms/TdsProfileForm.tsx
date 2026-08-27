@@ -120,11 +120,7 @@ export const TdsProfileForm = ({
             label="From"
             disabled={isSubmitting}
           />
-          <FormFieldDatePicker
-            name="to"
-            label="To"
-            disabled={isSubmitting}
-          />
+          <FormFieldDatePicker name="to" label="To" disabled={isSubmitting} />
         </div>
       </CardSection>
 

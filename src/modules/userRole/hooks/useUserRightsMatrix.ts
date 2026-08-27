@@ -49,9 +49,7 @@ interface UseUserRightsMatrixResult {
   isSaving: boolean;
 }
 
-const defaultState = (
-  checked: boolean
-): UserRightsPermissionState => ({
+const defaultState = (checked: boolean): UserRightsPermissionState => ({
   add: checked,
   modify: checked,
   delete: checked,
@@ -74,7 +72,9 @@ const isExcludedProfile = (name: string, path?: string) => {
   );
 };
 
-export const useUserRightsMatrix = (roleId: string | null): UseUserRightsMatrixResult => {
+export const useUserRightsMatrix = (
+  roleId: string | null
+): UseUserRightsMatrixResult => {
   const { tree: createdPages } = useMasterPages();
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [rowStateOverridesByRole, setRowStateOverridesByRole] = useState<
@@ -112,19 +112,16 @@ export const useUserRightsMatrix = (roleId: string | null): UseUserRightsMatrixR
     enabled: !!roleId,
   });
 
-  const treeNodes = useMemo<UserRightsTreeNode[]>(
-    () => {
-      const filteredPages = (createdPages as IMasterPageTreeNode[]).filter(
-        p => !isExcludedProfile(p.pageName, p.slug)
-      );
+  const treeNodes = useMemo<UserRightsTreeNode[]>(() => {
+    const filteredPages = (createdPages as IMasterPageTreeNode[]).filter(
+      p => !isExcludedProfile(p.pageName, p.slug)
+    );
 
-      return [
-        ...(menuTree as IMenu[]).map(mapMenuRecordToRightsTreeNode),
-        ...filteredPages.map(mapMasterPageTreeNodeToRightsTreeNode),
-      ];
-    },
-    [createdPages, menuTree]
-  );
+    return [
+      ...(menuTree as IMenu[]).map(mapMenuRecordToRightsTreeNode),
+      ...filteredPages.map(mapMasterPageTreeNodeToRightsTreeNode),
+    ];
+  }, [createdPages, menuTree]);
 
   const selectableTreeNodes = useMemo(
     () => filterSelectableRightsTreeNodes(treeNodes),
@@ -165,7 +162,7 @@ export const useUserRightsMatrix = (roleId: string | null): UseUserRightsMatrixR
   const selectedNodePathIds = useMemo(
     () =>
       selectedNode
-        ? findRightsTreeNodePathIds(treeNodes, selectedNode.id) ?? []
+        ? (findRightsTreeNodePathIds(treeNodes, selectedNode.id) ?? [])
         : [],
     [selectedNode, treeNodes]
   );
@@ -195,10 +192,7 @@ export const useUserRightsMatrix = (roleId: string | null): UseUserRightsMatrixR
       return [];
     }
 
-    const descendantRows = flattenRightsLeafRowsFromNode(
-      selectedNode,
-      []
-    );
+    const descendantRows = flattenRightsLeafRowsFromNode(selectedNode, []);
 
     return descendantRows.length > 0 ? descendantRows : [];
   }, [selectedNode]);
@@ -226,7 +220,10 @@ export const useUserRightsMatrix = (roleId: string | null): UseUserRightsMatrixR
       for (const [menuId, state] of Object.entries(rowStateById)) {
         const hasAnyActive = Object.values(state.permissions).some(v => v);
         if (hasAnyActive) {
-          grid[menuId] = state.permissions as unknown as Record<string, boolean>;
+          grid[menuId] = state.permissions as unknown as Record<
+            string,
+            boolean
+          >;
         }
       }
       await userRoleApi.saveRolePermissions(roleId, grid);
@@ -289,11 +286,10 @@ export const useUserRightsMatrix = (roleId: string | null): UseUserRightsMatrixR
   ) => {
     setRowStateOverridesByRole(previousState => {
       const previousRoleState = previousState[currentRoleKey] ?? {};
-      const previousRow =
-        previousRoleState[rowId] ?? {
-          selected: false,
-          permissions: defaultState(false),
-        };
+      const previousRow = previousRoleState[rowId] ?? {
+        selected: false,
+        permissions: defaultState(false),
+      };
 
       const nextPermissions = {
         ...previousRow.permissions,
@@ -329,8 +325,7 @@ export const useUserRightsMatrix = (roleId: string | null): UseUserRightsMatrixR
 
       currentVisibleRows.forEach(row => {
         const previousRow = previousRoleState[row.id];
-        const basePermissions =
-          previousRow?.permissions ?? defaultState(false);
+        const basePermissions = previousRow?.permissions ?? defaultState(false);
         const nextPermissions = {
           ...basePermissions,
           [permission]: checked,

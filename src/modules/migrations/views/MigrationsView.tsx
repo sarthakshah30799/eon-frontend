@@ -20,7 +20,11 @@ type MigrationTable = {
 };
 
 type ConnectionMode = 'string' | 'options';
-type ConnectionSlot = 'currentMaster' | 'currentTransaction' | 'oldMaster' | 'oldTransaction';
+type ConnectionSlot =
+  | 'currentMaster'
+  | 'currentTransaction'
+  | 'oldMaster'
+  | 'oldTransaction';
 
 type ConnectionProfileState = {
   connectionMode: ConnectionMode;
@@ -39,26 +43,52 @@ const MIGRATION_TABLE_GROUPS: MigrationTableGroup[] = [
     title: 'Core Masters',
     description: 'Source tables that define the main company hierarchy.',
     tables: [
-      { id: 'mstcompanyrecord', name: 'mstcompanyrecord', note: 'Old company master.' },
+      {
+        id: 'mstcompanyrecord',
+        name: 'mstcompanyrecord',
+        note: 'Old company master.',
+      },
       { id: 'mstcompany', name: 'mstcompany', note: 'Old branch master.' },
       { id: 'mstcounter', name: 'mstcounter', note: 'Old counter master.' },
     ],
   },
   {
     title: 'Users & Roles',
-    description: 'User data plus role mapping derived from the old access flags.',
+    description:
+      'User data plus role mapping derived from the old access flags.',
     tables: [
-      { id: 'mstuser', name: 'mstuser', note: 'Old user master and role source.' },
-      { id: 'user_roles', name: 'user_roles', note: 'Generated join table in the new db.' },
+      {
+        id: 'mstuser',
+        name: 'mstuser',
+        note: 'Old user master and role source.',
+      },
+      {
+        id: 'user_roles',
+        name: 'user_roles',
+        note: 'Generated join table in the new db.',
+      },
     ],
   },
   {
     title: 'Relations',
-    description: 'Parent-child assignment tables used to resolve branch, counter, and user links.',
+    description:
+      'Parent-child assignment tables used to resolve branch, counter, and user links.',
     tables: [
-      { id: 'mstBranchCounterLink', name: 'mstBranchCounterLink', note: 'Branch to counter relation source.' },
-      { id: 'mstBranchUserLink', name: 'mstBranchUserLink', note: 'Branch to user relation source.' },
-      { id: 'mstCounterUserLink', name: 'mstCounterUserLink', note: 'Counter to user relation source.' },
+      {
+        id: 'mstBranchCounterLink',
+        name: 'mstBranchCounterLink',
+        note: 'Branch to counter relation source.',
+      },
+      {
+        id: 'mstBranchUserLink',
+        name: 'mstBranchUserLink',
+        note: 'Branch to user relation source.',
+      },
+      {
+        id: 'mstCounterUserLink',
+        name: 'mstCounterUserLink',
+        note: 'Counter to user relation source.',
+      },
     ],
   },
 ];
@@ -86,7 +116,10 @@ const CONNECTION_GROUPS: Array<{
   },
 ];
 
-const CONNECTION_LABELS: Record<ConnectionSlot, { title: string; description: string }> = {
+const CONNECTION_LABELS: Record<
+  ConnectionSlot,
+  { title: string; description: string }
+> = {
   currentMaster: {
     title: 'Current master connection',
     description: 'Optional override for the new master database.',
@@ -101,7 +134,8 @@ const CONNECTION_LABELS: Record<ConnectionSlot, { title: string; description: st
   },
   oldTransaction: {
     title: 'Old transaction / branch connection',
-    description: 'Source branch database used for branch, counter, and user relations.',
+    description:
+      'Source branch database used for branch, counter, and user relations.',
   },
 };
 
@@ -120,7 +154,10 @@ const createEmptyConnectionProfile = (): ConnectionProfileState => ({
   verified: false,
 });
 
-const createInitialProfiles = (): Record<ConnectionSlot, ConnectionProfileState> => ({
+const createInitialProfiles = (): Record<
+  ConnectionSlot,
+  ConnectionProfileState
+> => ({
   currentMaster: createEmptyConnectionProfile(),
   currentTransaction: createEmptyConnectionProfile(),
   oldMaster: createEmptyConnectionProfile(),
@@ -167,10 +204,16 @@ const buildMigrationPayload = (
   profiles: Record<ConnectionSlot, ConnectionProfileState>,
   selectedTables: string[] = []
 ): MigrationPayload => {
-  const currentMasterConnection = buildConnectionPayload(profiles.currentMaster);
-  const currentTransactionConnection = buildConnectionPayload(profiles.currentTransaction);
+  const currentMasterConnection = buildConnectionPayload(
+    profiles.currentMaster
+  );
+  const currentTransactionConnection = buildConnectionPayload(
+    profiles.currentTransaction
+  );
   const oldMasterConnection = buildConnectionPayload(profiles.oldMaster);
-  const oldTransactionConnection = buildConnectionPayload(profiles.oldTransaction);
+  const oldTransactionConnection = buildConnectionPayload(
+    profiles.oldTransaction
+  );
 
   const payload: MigrationPayload = {
     currentMasterConnection,
@@ -186,7 +229,10 @@ const buildMigrationPayload = (
   return payload;
 };
 
-const validateConnectionProfile = (profile: ConnectionProfileState, label: string) => {
+const validateConnectionProfile = (
+  profile: ConnectionProfileState,
+  label: string
+) => {
   if (!hasConnectionValues(profile)) {
     return;
   }
@@ -200,9 +246,12 @@ const validateConnectionProfile = (profile: ConnectionProfileState, label: strin
 
   if (!profile.host.trim()) throw new Error(`Please enter the ${label} host.`);
   if (!profile.port.trim()) throw new Error(`Please enter the ${label} port.`);
-  if (!profile.username.trim()) throw new Error(`Please enter the ${label} username.`);
-  if (!profile.password.trim()) throw new Error(`Please enter the ${label} password.`);
-  if (!profile.database.trim()) throw new Error(`Please enter the ${label} database.`);
+  if (!profile.username.trim())
+    throw new Error(`Please enter the ${label} username.`);
+  if (!profile.password.trim())
+    throw new Error(`Please enter the ${label} password.`);
+  if (!profile.database.trim())
+    throw new Error(`Please enter the ${label} database.`);
 
   const port = Number(profile.port);
   if (!Number.isInteger(port) || port < 1 || port > 65535) {
@@ -221,9 +270,9 @@ const downloadBlob = (blob: Blob, filename: string) => {
 
 export const MigrationsView = () => {
   const { user, isLoading } = useAuth();
-  const [profiles, setProfiles] = useState<Record<ConnectionSlot, ConnectionProfileState>>(
-    createInitialProfiles
-  );
+  const [profiles, setProfiles] = useState<
+    Record<ConnectionSlot, ConnectionProfileState>
+  >(createInitialProfiles);
   const [selectedTableIds, setSelectedTableIds] = useState<string[]>([]);
   const [isVerifying, setIsVerifying] = useState(false);
   const [isRunningSchema, setIsRunningSchema] = useState(false);
@@ -248,11 +297,14 @@ export const MigrationsView = () => {
 
   const updateProfile = (
     slot: ConnectionSlot,
-    next: Partial<ConnectionProfileState> | ((current: ConnectionProfileState) => ConnectionProfileState)
+    next:
+      | Partial<ConnectionProfileState>
+      | ((current: ConnectionProfileState) => ConnectionProfileState)
   ) => {
     setProfiles(prev => {
       const current = prev[slot];
-      const resolved = typeof next === 'function' ? next(current) : { ...current, ...next };
+      const resolved =
+        typeof next === 'function' ? next(current) : { ...current, ...next };
       return {
         ...prev,
         [slot]: {
@@ -290,7 +342,9 @@ export const MigrationsView = () => {
 
   const validateConfiguredConnections = () => {
     if (configuredSlots.length === 0) {
-      throw new Error('Please enter at least one database connection before verifying.');
+      throw new Error(
+        'Please enter at least one database connection before verifying.'
+      );
     }
 
     configuredSlots.forEach(slot => {
@@ -303,7 +357,9 @@ export const MigrationsView = () => {
       validateConfiguredConnections();
       setIsVerifying(true);
       setStatusMessage('');
-      const result = await migrationsApi.verifyConnection(buildMigrationPayload(profiles));
+      const result = await migrationsApi.verifyConnection(
+        buildMigrationPayload(profiles)
+      );
       setIsConnectionVerified(result.verified);
       setProfiles(prev => {
         const next = { ...prev };
@@ -320,14 +376,20 @@ export const MigrationsView = () => {
       setMessage(result.message);
     } catch (error) {
       setIsConnectionVerified(false);
-      setMessage(error instanceof Error ? error.message : 'Failed to verify connections.');
+      setMessage(
+        error instanceof Error ? error.message : 'Failed to verify connections.'
+      );
     } finally {
       setIsVerifying(false);
     }
   };
 
   const ensureReady = () => {
-    if (!configuredSlots.some(slot => slot === 'oldMaster' || slot === 'oldTransaction')) {
+    if (
+      !configuredSlots.some(
+        slot => slot === 'oldMaster' || slot === 'oldTransaction'
+      )
+    ) {
       throw new Error('Please enter at least one old source connection first.');
     }
 
@@ -345,7 +407,9 @@ export const MigrationsView = () => {
       ensureReady();
       setIsRunningMock(true);
       setStatusMessage('');
-      const result = await migrationsApi.runMock(buildMigrationPayload(profiles, selectedTableIds));
+      const result = await migrationsApi.runMock(
+        buildMigrationPayload(profiles, selectedTableIds)
+      );
       downloadBlob(result.blob, result.filename || 'migration-soft-run.xlsx');
       setMessage(
         `Soft run completed for ${selectedTableIds.length} table(s). Review the XLSX before real migration.`
@@ -360,7 +424,9 @@ export const MigrationsView = () => {
   const handleApplyCurrentSchema = async (slot: ConnectionSlot) => {
     try {
       if (!isCurrentConnectionSlot(slot)) {
-        throw new Error('Schema migration can only be run for current databases.');
+        throw new Error(
+          'Schema migration can only be run for current databases.'
+        );
       }
       if (!isConnectionVerified) {
         throw new Error('Please verify the configured connections first.');
@@ -384,7 +450,11 @@ export const MigrationsView = () => {
         `${result.message}. Current DB setup completed for ${CONNECTION_LABELS[slot].title.toLowerCase()}.`
       );
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Current DB schema migration failed.');
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : 'Current DB schema migration failed.'
+      );
     } finally {
       setIsRunningSchema(false);
     }
@@ -399,7 +469,9 @@ export const MigrationsView = () => {
         buildMigrationPayload(profiles, selectedTableIds)
       );
       downloadBlob(result.blob, result.filename || 'migration-real.xlsx');
-      setMessage(`Migration completed for ${selectedTableIds.length} table(s).`);
+      setMessage(
+        `Migration completed for ${selectedTableIds.length} table(s).`
+      );
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Migration failed.');
     } finally {
@@ -413,10 +485,15 @@ export const MigrationsView = () => {
     const allowSchemaMigration = isCurrentConnectionSlot(slot);
 
     return (
-      <div key={slot} className="rounded-sm border border-border-secondary bg-surface-secondary/40 p-4">
+      <div
+        key={slot}
+        className="rounded-sm border border-border-secondary bg-surface-secondary/40 p-4"
+      >
         <div className="mb-4 flex items-start justify-between gap-4">
           <div>
-            <h3 className="text-sm font-semibold text-text-primary">{label.title}</h3>
+            <h3 className="text-sm font-semibold text-text-primary">
+              {label.title}
+            </h3>
             <p className="text-xs text-text-secondary">{label.description}</p>
           </div>
           <div
@@ -437,7 +514,9 @@ export const MigrationsView = () => {
                 type="radio"
                 name={`${slot}-connection-mode`}
                 checked={profile.connectionMode === 'string'}
-                onChange={() => updateProfile(slot, { connectionMode: 'string' })}
+                onChange={() =>
+                  updateProfile(slot, { connectionMode: 'string' })
+                }
               />
               Connection string
             </label>
@@ -446,7 +525,9 @@ export const MigrationsView = () => {
                 type="radio"
                 name={`${slot}-connection-mode`}
                 checked={profile.connectionMode === 'options'}
-                onChange={() => updateProfile(slot, { connectionMode: 'options' })}
+                onChange={() =>
+                  updateProfile(slot, { connectionMode: 'options' })
+                }
               />
               Host / Port / Username / Password / SSL
             </label>
@@ -461,10 +542,16 @@ export const MigrationsView = () => {
                 value={profile.connectionString}
                 valueTransform="none"
                 classes={{ container: 'max-w-none' }}
-                onChange={event => updateProfile(slot, { connectionString: event.target.value })}
+                onChange={event =>
+                  updateProfile(slot, { connectionString: event.target.value })
+                }
               />
               <div className="space-y-2">
-                <Button onClick={verifyConnectionSet} loading={isVerifying} className="lg:min-w-40">
+                <Button
+                  onClick={verifyConnectionSet}
+                  loading={isVerifying}
+                  className="lg:min-w-40"
+                >
                   Verify Connections
                 </Button>
                 {allowSchemaMigration ? (
@@ -488,7 +575,9 @@ export const MigrationsView = () => {
                   value={profile.host}
                   valueTransform="none"
                   classes={{ container: 'max-w-none' }}
-                  onChange={event => updateProfile(slot, { host: event.target.value })}
+                  onChange={event =>
+                    updateProfile(slot, { host: event.target.value })
+                  }
                 />
                 <Input
                   label="Port"
@@ -496,21 +585,27 @@ export const MigrationsView = () => {
                   value={profile.port}
                   valueTransform="none"
                   classes={{ container: 'max-w-none' }}
-                  onChange={event => updateProfile(slot, { port: event.target.value })}
+                  onChange={event =>
+                    updateProfile(slot, { port: event.target.value })
+                  }
                 />
                 <Input
                   label="Database"
                   value={profile.database}
                   valueTransform="none"
                   classes={{ container: 'max-w-none' }}
-                  onChange={event => updateProfile(slot, { database: event.target.value })}
+                  onChange={event =>
+                    updateProfile(slot, { database: event.target.value })
+                  }
                 />
                 <Input
                   label="Username"
                   value={profile.username}
                   valueTransform="none"
                   classes={{ container: 'max-w-none' }}
-                  onChange={event => updateProfile(slot, { username: event.target.value })}
+                  onChange={event =>
+                    updateProfile(slot, { username: event.target.value })
+                  }
                 />
                 <Input
                   label="Password"
@@ -518,13 +613,17 @@ export const MigrationsView = () => {
                   value={profile.password}
                   valueTransform="none"
                   classes={{ container: 'max-w-none' }}
-                  onChange={event => updateProfile(slot, { password: event.target.value })}
+                  onChange={event =>
+                    updateProfile(slot, { password: event.target.value })
+                  }
                 />
                 <div className="flex items-end">
                   <label className="flex items-center gap-2 text-sm text-text-secondary">
                     <Checkbox
                       checked={profile.ssl}
-                      onChange={checked => updateProfile(slot, { ssl: checked })}
+                      onChange={checked =>
+                        updateProfile(slot, { ssl: checked })
+                      }
                     />
                     SSL / Trust server certificate
                   </label>
@@ -533,7 +632,11 @@ export const MigrationsView = () => {
 
               <div className="flex justify-end">
                 <div className="space-y-2">
-                  <Button onClick={verifyConnectionSet} loading={isVerifying} className="min-w-40">
+                  <Button
+                    onClick={verifyConnectionSet}
+                    loading={isVerifying}
+                    className="min-w-40"
+                  >
                     Verify Connections
                   </Button>
                   {allowSchemaMigration ? (
@@ -570,19 +673,24 @@ export const MigrationsView = () => {
 
   return (
     <section className="space-y-6">
-      <CardSection heading="Database Connections" className="border-border-primary bg-surface-primary">
+      <CardSection
+        heading="Database Connections"
+        className="border-border-primary bg-surface-primary"
+      >
         <div className="space-y-5">
           <p className="text-sm text-text-secondary">
-            Fill the current and old database profiles you want to use. Current master and current
-            transaction are optional overrides. Old master and old transaction are the source
-            connections used for migration.
+            Fill the current and old database profiles you want to use. Current
+            master and current transaction are optional overrides. Old master
+            and old transaction are the source connections used for migration.
           </p>
 
           <div className="grid gap-4 lg:grid-cols-2">
             {CONNECTION_GROUPS.map(group => (
               <div key={group.title} className="space-y-4">
                 <div className="rounded-sm border border-border-secondary bg-surface-secondary/30 px-4 py-3">
-                  <h3 className="text-sm font-semibold text-text-primary">{group.title}</h3>
+                  <h3 className="text-sm font-semibold text-text-primary">
+                    {group.title}
+                  </h3>
                 </div>
                 <div className="space-y-4">
                   {group.slots.map(slot => renderConnectionCard(slot))}
@@ -593,10 +701,15 @@ export const MigrationsView = () => {
         </div>
       </CardSection>
 
-      <CardSection heading="Select Tables" className="border-border-primary bg-surface-primary">
+      <CardSection
+        heading="Select Tables"
+        className="border-border-primary bg-surface-primary"
+      >
         <div className="space-y-5">
           {MIGRATION_TABLE_GROUPS.map(group => {
-            const groupChecked = group.tables.every(table => selectedTableIds.includes(table.id));
+            const groupChecked = group.tables.every(table =>
+              selectedTableIds.includes(table.id)
+            );
 
             return (
               <div
@@ -605,8 +718,12 @@ export const MigrationsView = () => {
               >
                 <div className="mb-3 flex items-start justify-between gap-4">
                   <div>
-                    <h3 className="text-sm font-semibold text-text-primary">{group.title}</h3>
-                    <p className="text-xs text-text-secondary">{group.description}</p>
+                    <h3 className="text-sm font-semibold text-text-primary">
+                      {group.title}
+                    </h3>
+                    <p className="text-xs text-text-secondary">
+                      {group.description}
+                    </p>
                   </div>
                   <label className="flex items-center gap-2 text-xs text-text-secondary">
                     <Checkbox
@@ -628,8 +745,12 @@ export const MigrationsView = () => {
                         onChange={checked => toggleTable(table.id, checked)}
                       />
                       <span className="space-y-1">
-                        <span className="block font-medium text-text-primary">{table.name}</span>
-                        <span className="block text-xs text-text-secondary">{table.note}</span>
+                        <span className="block font-medium text-text-primary">
+                          {table.name}
+                        </span>
+                        <span className="block text-xs text-text-secondary">
+                          {table.note}
+                        </span>
                       </span>
                     </label>
                   ))}
@@ -640,27 +761,38 @@ export const MigrationsView = () => {
         </div>
       </CardSection>
 
-      <CardSection heading="Run Migration" className="border-border-primary bg-surface-primary">
+      <CardSection
+        heading="Run Migration"
+        className="border-border-primary bg-surface-primary"
+      >
         <div className="space-y-4">
           <p className="text-sm text-text-secondary">
-            First apply the schema migration from the current database card you want to target,
-            then run the soft test to download the XLSX review sheet, and only after review run
-            the real migration.
+            First apply the schema migration from the current database card you
+            want to target, then run the soft test to download the XLSX review
+            sheet, and only after review run the real migration.
           </p>
           <div className="flex flex-wrap gap-3">
             <Button onClick={handleMockTest} loading={isRunningMock}>
               Run Soft Run
             </Button>
-            <Button onClick={handleRunMigration} loading={isRunningReal} variant="secondary">
+            <Button
+              onClick={handleRunMigration}
+              loading={isRunningReal}
+              variant="secondary"
+            >
               Run Migration
             </Button>
           </div>
           <div className="space-y-1 text-xs text-text-muted">
             <p>
-              Configured connections: {configuredSlots.length > 0 ? configuredSlots.join(', ') : 'none'}
+              Configured connections:{' '}
+              {configuredSlots.length > 0 ? configuredSlots.join(', ') : 'none'}
             </p>
             {selectedTables.length > 0 ? (
-              <p>Selected tables: {selectedTables.map(table => table.name).join(', ')}</p>
+              <p>
+                Selected tables:{' '}
+                {selectedTables.map(table => table.name).join(', ')}
+              </p>
             ) : null}
           </div>
         </div>

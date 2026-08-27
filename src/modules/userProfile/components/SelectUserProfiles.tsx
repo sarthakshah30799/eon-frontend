@@ -123,7 +123,11 @@ export const SelectUserProfiles = ({
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 350);
 
-  const { data: users = [], isLoading, isFetching } = useListUserProfiles({
+  const {
+    data: users = [],
+    isLoading,
+    isFetching,
+  } = useListUserProfiles({
     activeOnly: true,
     search: debouncedSearch.trim() || undefined,
     branchId: branchId?.trim() || undefined,

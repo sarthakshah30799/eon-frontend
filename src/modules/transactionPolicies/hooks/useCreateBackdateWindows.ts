@@ -7,7 +7,12 @@ export const useCreateBackdateWindows = () => {
 
   const mutation = useMutation({
     mutationFn: (
-      rules: Array<{ branchId: string; userId: string; fromDate?: string; toDate?: string }>
+      rules: Array<{
+        branchId: string;
+        userId: string;
+        fromDate?: string;
+        toDate?: string;
+      }>
     ) =>
       transactionPoliciesApi.createBackdateWindows({
         rules: rules.map(rule => ({

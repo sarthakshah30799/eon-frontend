@@ -56,11 +56,15 @@ const maxOfDates = (left?: Date, right?: Date): Date | undefined => {
 export const getTransactionDatePolicy = (
   policyContext?: IPolicyContext | null
 ): TransactionDatePolicy => {
-  const activeLock = policyContext?.activeMonthlyLock ?? policyContext?.activeBackdateWindow ?? null;
+  const activeLock =
+    policyContext?.activeMonthlyLock ??
+    policyContext?.activeBackdateWindow ??
+    null;
   const currentBusinessDate = policyContext?.currentBusinessDate ?? '';
   const openBusinessDate = policyContext?.openBusinessDate ?? '';
   const workflowState = policyContext?.workflowState ?? '';
-  const lockedThroughDate = policyContext?.transactionDataLock?.lockedThroughDate;
+  const lockedThroughDate =
+    policyContext?.transactionDataLock?.lockedThroughDate;
   const dataLockMinDate = lockedThroughDate
     ? (() => {
         const lockedThrough = parseDateOnly(lockedThroughDate);
@@ -68,7 +72,8 @@ export const getTransactionDatePolicy = (
       })()
     : undefined;
 
-  let canPunchTransactions = Boolean(activeLock) || workflowState === 'PENDING_EOD';
+  let canPunchTransactions =
+    Boolean(activeLock) || workflowState === 'PENDING_EOD';
   let minDate = activeLock?.fromDate
     ? parseDateOnly(activeLock.fromDate)
     : workflowState === 'PENDING_EOD'

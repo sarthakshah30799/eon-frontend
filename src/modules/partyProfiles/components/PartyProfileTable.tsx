@@ -98,7 +98,9 @@ export const PartyProfileTable = ({
             />
             <Button
               type="button"
-              aria-label={canEditThisProfile ? 'Edit party profile' : 'View party profile'}
+              aria-label={
+                canEditThisProfile ? 'Edit party profile' : 'View party profile'
+              }
               variant="ghost"
               size="icon"
               className="rounded-sm bg-transparent text-black! hover:bg-surface-secondary hover:text-text-primary"

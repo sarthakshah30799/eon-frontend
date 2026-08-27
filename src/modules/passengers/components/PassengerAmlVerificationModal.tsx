@@ -11,9 +11,20 @@ import type {
   IPassengerPanVerificationRequest,
   IPassengerPassportVerificationRequest,
 } from '../types/passengerTypes';
-import { PassengerEntityTypeEnum, PassengerNationalityTypeEnum } from '../types/passengerTypes';
-import { createPassengerAmlDefaultValues, createPassengerDetailsDefaultValues, PASSENGER_PAN_VERIFICATION_FIELDS, PASSENGER_PASSPORT_VERIFICATION_FIELDS } from '../schema/passengerAmlSchema';
-import { usePassengerAmlVerification, usePassengerPassportLookup } from '../hooks';
+import {
+  PassengerEntityTypeEnum,
+  PassengerNationalityTypeEnum,
+} from '../types/passengerTypes';
+import {
+  createPassengerAmlDefaultValues,
+  createPassengerDetailsDefaultValues,
+  PASSENGER_PAN_VERIFICATION_FIELDS,
+  PASSENGER_PASSPORT_VERIFICATION_FIELDS,
+} from '../schema/passengerAmlSchema';
+import {
+  usePassengerAmlVerification,
+  usePassengerPassportLookup,
+} from '../hooks';
 import { PassengerAmlVerificationStepForm } from '../forms/PassengerAmlVerificationStepForm';
 import { PassengerAmlDetailsStepForm } from '../forms/PassengerAmlDetailsStepForm';
 import { mapPassengerSnapshotToPurchaseFormValues } from '../utils/passengerAmlUtils';
@@ -39,31 +50,33 @@ const getVerificationMode = (
     ? 'pan'
     : 'passport';
 
-const getPanSnapshot = (values: IPurchaseFormValues) =>
-  ({
-    panNumber: values.panNumber,
-    panHolderName: values.panHolderName,
-    panDob: values.panDob,
-  });
+const getPanSnapshot = (values: IPurchaseFormValues) => ({
+  panNumber: values.panNumber,
+  panHolderName: values.panHolderName,
+  panDob: values.panDob,
+});
 
-const getPassportSnapshot = (values: IPurchaseFormValues) =>
-  ({
-    passportNumber: values.passportNumber,
-    passportIssueAt: values.passportIssueAt,
-    passportIssueDate: values.passportIssueDate,
-    passportExpiryDate: values.passportExpiryDate,
-  });
+const getPassportSnapshot = (values: IPurchaseFormValues) => ({
+  passportNumber: values.passportNumber,
+  passportIssueAt: values.passportIssueAt,
+  passportIssueDate: values.passportIssueDate,
+  passportExpiryDate: values.passportExpiryDate,
+});
 
-const getVerificationSnapshot = (values: IPurchaseFormValues, mode: VerificationMode) =>
-  mode === 'pan'
-    ? getPanSnapshot(values)
-    : getPassportSnapshot(values);
+const getVerificationSnapshot = (
+  values: IPurchaseFormValues,
+  mode: VerificationMode
+) => (mode === 'pan' ? getPanSnapshot(values) : getPassportSnapshot(values));
 
-const isSameSnapshot = (left: Record<string, unknown> | null, right: Record<string, unknown>) =>
-  Boolean(left) && JSON.stringify(left) === JSON.stringify(right);
+const isSameSnapshot = (
+  left: Record<string, unknown> | null,
+  right: Record<string, unknown>
+) => Boolean(left) && JSON.stringify(left) === JSON.stringify(right);
 
 const getVerificationFields = (mode: VerificationMode) =>
-  mode === 'pan' ? PASSENGER_PAN_VERIFICATION_FIELDS : PASSENGER_PASSPORT_VERIFICATION_FIELDS;
+  mode === 'pan'
+    ? PASSENGER_PAN_VERIFICATION_FIELDS
+    : PASSENGER_PASSPORT_VERIFICATION_FIELDS;
 
 const hasCompletePanValues = (values: IPurchaseFormValues) =>
   Boolean(values.panNumber && values.panHolderName && values.panDob);
@@ -71,9 +84,9 @@ const hasCompletePanValues = (values: IPurchaseFormValues) =>
 const hasCompletePassportValues = (values: IPurchaseFormValues) =>
   Boolean(
     values.passportNumber &&
-      values.passportIssueAt &&
-      values.passportIssueDate &&
-      values.passportExpiryDate
+    values.passportIssueAt &&
+    values.passportIssueDate &&
+    values.passportExpiryDate
   );
 
 const parseDateValue = (value?: string | null) => {
@@ -149,13 +162,20 @@ export const PassengerAmlVerificationModal = ({
   onVerified,
 }: PassengerAmlVerificationModalProps) => {
   const form = useFormContext<IPurchaseFormValues>();
-  const [internalStep, setInternalStep] = useState<PassengerModalStep>('verification');
+  const [internalStep, setInternalStep] =
+    useState<PassengerModalStep>('verification');
   const [verificationStatus, setVerificationStatus] = useState<
     'idle' | 'checking' | 'valid' | 'invalid'
   >('idle');
-  const [verificationMessage, setVerificationMessage] = useState<string | null>(null);
-  const [verifiedPanSnapshot, setVerifiedPanSnapshot] = useState<Record<string, unknown> | null>(null);
-  const [verifiedPassportSnapshot, setVerifiedPassportSnapshot] = useState<Record<string, unknown> | null>(null);
+  const [verificationMessage, setVerificationMessage] = useState<string | null>(
+    null
+  );
+  const [verifiedPanSnapshot, setVerifiedPanSnapshot] = useState<Record<
+    string,
+    unknown
+  > | null>(null);
+  const [verifiedPassportSnapshot, setVerifiedPassportSnapshot] =
+    useState<Record<string, unknown> | null>(null);
   const hasInitializedRef = useRef(false);
   const hasAutoVerifiedRef = useRef(false);
   const verificationRunIdRef = useRef(0);
@@ -194,7 +214,12 @@ export const PassengerAmlVerificationModal = ({
   });
   const watchedPassportValues = useWatch({
     control: form.control,
-    name: ['passportNumber', 'passportIssueAt', 'passportIssueDate', 'passportExpiryDate'] as const,
+    name: [
+      'passportNumber',
+      'passportIssueAt',
+      'passportIssueDate',
+      'passportExpiryDate',
+    ] as const,
   });
   const watchedTransactionDate = useWatch({
     control: form.control,
@@ -205,10 +230,12 @@ export const PassengerAmlVerificationModal = ({
     name: 'passengerInfoCaptured',
   });
 
-  const isCorporate = (watchedEntityType || entityType) === PassengerEntityTypeEnum.CORPORATE;
+  const isCorporate =
+    (watchedEntityType || entityType) === PassengerEntityTypeEnum.CORPORATE;
   const verificationMode = getVerificationMode(
     (watchedEntityType || entityType) as PassengerEntityType,
-    (watchedNationalityType || PassengerNationalityTypeEnum.INDIAN) as PassengerNationalityType
+    (watchedNationalityType ||
+      PassengerNationalityTypeEnum.INDIAN) as PassengerNationalityType
   );
   const syncIndiaCountry = useCallback(() => {
     const indiaCountry =
@@ -244,7 +271,7 @@ export const PassengerAmlVerificationModal = ({
           continue;
         }
 
-      form.setValue(fieldName as never, fieldValue as never, {
+        form.setValue(fieldName as never, fieldValue as never, {
           shouldDirty: false,
           shouldTouch: false,
           shouldValidate: false,
@@ -275,7 +302,10 @@ export const PassengerAmlVerificationModal = ({
     [clearVerificationState, form, syncIndiaCountry]
   );
   const initializeValues = useCallback(() => {
-    const amlDefaults = createPassengerAmlDefaultValues(entityType, selectedPartyProfile);
+    const amlDefaults = createPassengerAmlDefaultValues(
+      entityType,
+      selectedPartyProfile
+    );
     const detailsDefaults = createPassengerDetailsDefaultValues(
       entityType,
       amlDefaults,
@@ -339,7 +369,9 @@ export const PassengerAmlVerificationModal = ({
 
         if (!schemaValid) {
           setVerificationStatus('invalid');
-          setVerificationMessage('Please complete the required fields before verifying.');
+          setVerificationMessage(
+            'Please complete the required fields before verifying.'
+          );
           return false;
         }
       }
@@ -363,14 +395,17 @@ export const PassengerAmlVerificationModal = ({
         const verificationResult =
           mode === 'pan'
             ? await verifyPan({
-                entityType: (currentValues.entityType || entityType) as PassengerEntityType,
-                nationalityType: (currentValues.nationalityType || PassengerNationalityTypeEnum.INDIAN) as PassengerNationalityType,
+                entityType: (currentValues.entityType ||
+                  entityType) as PassengerEntityType,
+                nationalityType: (currentValues.nationalityType ||
+                  PassengerNationalityTypeEnum.INDIAN) as PassengerNationalityType,
                 panNumber: currentValues.panNumber,
                 panHolderName: currentValues.panHolderName,
                 panDob: currentValues.panDob,
               } satisfies IPassengerPanVerificationRequest)
             : await verifyPassport({
-                nationalityType: (currentValues.nationalityType || PassengerNationalityTypeEnum.NRI) as PassengerNationalityType,
+                nationalityType: (currentValues.nationalityType ||
+                  PassengerNationalityTypeEnum.NRI) as PassengerNationalityType,
                 passportNumber: currentValues.passportNumber,
                 passportIssueAt: currentValues.passportIssueAt,
                 passportIssueDate: currentValues.passportIssueDate,
@@ -386,7 +421,9 @@ export const PassengerAmlVerificationModal = ({
 
         if (!verificationResult.verified) {
           setVerificationStatus('invalid');
-          setVerificationMessage(verificationResult.message || 'Verification failed.');
+          setVerificationMessage(
+            verificationResult.message || 'Verification failed.'
+          );
           return false;
         }
 
@@ -397,7 +434,8 @@ export const PassengerAmlVerificationModal = ({
         }
         setVerificationStatus('valid');
         setVerificationMessage(
-          verificationResult.message || 'Passenger AML details verified successfully'
+          verificationResult.message ||
+            'Passenger AML details verified successfully'
         );
 
         if (notifyOnSuccess) {
@@ -405,15 +443,23 @@ export const PassengerAmlVerificationModal = ({
             panNumber: currentValues.panNumber || undefined,
             passportNumber: currentValues.passportNumber || undefined,
           });
-          form.setValue('passengerId', identityLookup.passenger?.id ? String(identityLookup.passenger.id) : '', {
-            shouldDirty: false,
-            shouldTouch: false,
-            shouldValidate: false,
-          });
+          form.setValue(
+            'passengerId',
+            identityLookup.passenger?.id
+              ? String(identityLookup.passenger.id)
+              : '',
+            {
+              shouldDirty: false,
+              shouldTouch: false,
+              shouldValidate: false,
+            }
+          );
           onVerified({
-            entityType: (currentValues.entityType || entityType) as PassengerEntityType,
+            entityType: (currentValues.entityType ||
+              entityType) as PassengerEntityType,
             isIndianNationality:
-              (currentValues.nationalityType || PassengerNationalityTypeEnum.INDIAN) ===
+              (currentValues.nationalityType ||
+                PassengerNationalityTypeEnum.INDIAN) ===
               PassengerNationalityTypeEnum.INDIAN,
             panNumber: currentValues.panNumber || '',
             panHolderName: currentValues.panHolderName || '',
@@ -432,43 +478,62 @@ export const PassengerAmlVerificationModal = ({
 
         setVerificationStatus('invalid');
         setVerificationMessage(
-          error instanceof Error ? error.message : 'Unable to verify passenger details.'
+          error instanceof Error
+            ? error.message
+            : 'Unable to verify passenger details.'
         );
         return false;
       }
     },
-    [entityType, form, lookupIdentity, onVerified, verifyPan, verifyPassport, watchedTransactionDate]
+    [
+      entityType,
+      form,
+      lookupIdentity,
+      onVerified,
+      verifyPan,
+      verifyPassport,
+      watchedTransactionDate,
+    ]
   );
 
-  const verifyIdentityOnBlur = useCallback(async (mode: VerificationMode) => {
-    if (passportAutoFillInProgressRef.current) {
-      return false;
-    }
+  const verifyIdentityOnBlur = useCallback(
+    async (mode: VerificationMode) => {
+      if (passportAutoFillInProgressRef.current) {
+        return false;
+      }
 
-    if (verificationStatus === 'checking') {
-      return false;
-    }
+      if (verificationStatus === 'checking') {
+        return false;
+      }
 
-    const currentValues = form.getValues() as IPurchaseFormValues;
-    if (mode === 'pan' && !hasCompletePanValues(currentValues)) {
-      return false;
-    }
-    if (mode === 'passport' && !hasCompletePassportValues(currentValues)) {
-      return false;
-    }
+      const currentValues = form.getValues() as IPurchaseFormValues;
+      if (mode === 'pan' && !hasCompletePanValues(currentValues)) {
+        return false;
+      }
+      if (mode === 'passport' && !hasCompletePassportValues(currentValues)) {
+        return false;
+      }
 
-    const currentSnapshot = getVerificationSnapshot(currentValues, mode);
-    const verifiedSnapshot =
-      mode === 'pan' ? verifiedPanSnapshot : verifiedPassportSnapshot;
-    if (
-      verificationStatus === 'valid' &&
-      isSameSnapshot(verifiedSnapshot, currentSnapshot)
-    ) {
-      return true;
-    }
+      const currentSnapshot = getVerificationSnapshot(currentValues, mode);
+      const verifiedSnapshot =
+        mode === 'pan' ? verifiedPanSnapshot : verifiedPassportSnapshot;
+      if (
+        verificationStatus === 'valid' &&
+        isSameSnapshot(verifiedSnapshot, currentSnapshot)
+      ) {
+        return true;
+      }
 
-    return verifyIdentity(mode, false, false, false);
-  }, [form, verifiedPanSnapshot, verifiedPassportSnapshot, verifyIdentity, verificationStatus]);
+      return verifyIdentity(mode, false, false, false);
+    },
+    [
+      form,
+      verifiedPanSnapshot,
+      verifiedPassportSnapshot,
+      verifyIdentity,
+      verificationStatus,
+    ]
+  );
 
   useEffect(() => {
     if (!open) {
@@ -527,7 +592,8 @@ export const PassengerAmlVerificationModal = ({
   const currentStep: PassengerModalStep = passengerInfoCaptured
     ? 'details'
     : internalStep;
-  const reopenedCapturedSession = passengerInfoCaptured && currentStep === 'details';
+  const reopenedCapturedSession =
+    passengerInfoCaptured && currentStep === 'details';
 
   const currentPanSnapshot = {
     panNumber: watchedPanValues[0] ?? '',
@@ -548,20 +614,27 @@ export const PassengerAmlVerificationModal = ({
     verificationStatus === 'valid' &&
     Boolean(verifiedPassportSnapshot) &&
     !isSameSnapshot(verifiedPassportSnapshot, currentPassportSnapshot);
-  const verificationIsStale = panVerificationChanged || passportVerificationChanged;
+  const verificationIsStale =
+    panVerificationChanged || passportVerificationChanged;
   const displayedVerificationStatus: 'idle' | 'checking' | 'valid' | 'invalid' =
-    reopenedCapturedSession ? 'valid' : verificationIsStale ? 'invalid' : verificationStatus;
-  const displayedVerificationMessage =
     reopenedCapturedSession
-      ? 'Passenger details already captured. Review or edit as needed.'
-      : panVerificationChanged
+      ? 'valid'
+      : verificationIsStale
+        ? 'invalid'
+        : verificationStatus;
+  const displayedVerificationMessage = reopenedCapturedSession
+    ? 'Passenger details already captured. Review or edit as needed.'
+    : panVerificationChanged
       ? 'PAN details changed. Please verify again before continuing.'
       : passportVerificationChanged
         ? 'Passport details changed. Please verify again before continuing.'
         : verificationMessage;
   const canProceed = displayedVerificationStatus === 'valid';
   const isDetailsSubmitting =
-    isVerifyingPan || isVerifyingPassport || isLookingUpIdentity || isLookingUpPassport;
+    isVerifyingPan ||
+    isVerifyingPassport ||
+    isLookingUpIdentity ||
+    isLookingUpPassport;
   const detailsBlockingMessage =
     displayedVerificationStatus === 'invalid'
       ? displayedVerificationMessage
@@ -586,7 +659,9 @@ export const PassengerAmlVerificationModal = ({
   );
 
   const handlePassportNumberBlur = useCallback(async () => {
-    const passportNumber = String(form.getValues('passportNumber') ?? '').trim();
+    const passportNumber = String(
+      form.getValues('passportNumber') ?? ''
+    ).trim();
 
     if (!passportNumber) {
       return;
@@ -594,7 +669,9 @@ export const PassengerAmlVerificationModal = ({
 
     if (/test/i.test(passportNumber)) {
       setVerificationStatus('invalid');
-      setVerificationMessage('Verification failed. Please review the entered details.');
+      setVerificationMessage(
+        'Verification failed. Please review the entered details.'
+      );
       return;
     }
 
@@ -607,16 +684,23 @@ export const PassengerAmlVerificationModal = ({
       if (lookupResult.found && lookupResult.passenger) {
         applyPassengerLookupSnapshot(lookupResult.passenger);
         setVerificationStatus('valid');
-        setVerificationMessage('Passenger details loaded successfully. You can continue.');
+        setVerificationMessage(
+          'Passenger details loaded successfully. You can continue.'
+        );
         return;
       }
 
       setVerificationStatus('valid');
       setVerificationMessage('Passport lookup not found. You can continue.');
     } catch (error) {
-      console.warn('[PassengerAmlVerificationModal] passport lookup failed', error);
+      console.warn(
+        '[PassengerAmlVerificationModal] passport lookup failed',
+        error
+      );
       setVerificationStatus('valid');
-      setVerificationMessage('Passport lookup is unavailable right now. You can continue.');
+      setVerificationMessage(
+        'Passport lookup is unavailable right now. You can continue.'
+      );
     } finally {
       window.setTimeout(() => {
         passportAutoFillInProgressRef.current = false;
@@ -654,11 +738,14 @@ export const PassengerAmlVerificationModal = ({
       shouldFocus: true,
     });
     if (!isValid) {
-      console.warn('[PassengerAmlVerificationModal] details validation failed', {
-        errors: form.formState.errors,
-        values: form.getValues(),
-        requiredFields: getDetailsFieldNames(),
-      });
+      console.warn(
+        '[PassengerAmlVerificationModal] details validation failed',
+        {
+          errors: form.formState.errors,
+          values: form.getValues(),
+          requiredFields: getDetailsFieldNames(),
+        }
+      );
       return;
     }
 
@@ -678,9 +765,17 @@ export const PassengerAmlVerificationModal = ({
 
     if (
       hasCompletePassportValues(currentValues) &&
-      !isSameSnapshot(verifiedPassportSnapshot, getPassportSnapshot(currentValues))
+      !isSameSnapshot(
+        verifiedPassportSnapshot,
+        getPassportSnapshot(currentValues)
+      )
     ) {
-      const reverifiedPassport = await verifyIdentity('passport', true, false, false);
+      const reverifiedPassport = await verifyIdentity(
+        'passport',
+        true,
+        false,
+        false
+      );
       if (!reverifiedPassport) {
         return;
       }
@@ -692,11 +787,15 @@ export const PassengerAmlVerificationModal = ({
         passportNumber: currentValues.passportNumber || undefined,
       });
 
-      form.setValue('passengerId', identityLookup.passenger?.id ? String(identityLookup.passenger.id) : '', {
-        shouldDirty: false,
-        shouldTouch: false,
-        shouldValidate: false,
-      });
+      form.setValue(
+        'passengerId',
+        identityLookup.passenger?.id ? String(identityLookup.passenger.id) : '',
+        {
+          shouldDirty: false,
+          shouldTouch: false,
+          shouldValidate: false,
+        }
+      );
       form.setValue('passengerInfoCaptured', true, {
         shouldDirty: true,
         shouldTouch: true,
@@ -710,14 +809,14 @@ export const PassengerAmlVerificationModal = ({
 
   const verificationFooter = (
     <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-      <Button type="button" variant="outline" onClick={() => handleModalOpenChange(false)}>
-        Cancel
-      </Button>
       <Button
         type="button"
-        onClick={handleVerification}
-        disabled={!canProceed}
+        variant="outline"
+        onClick={() => handleModalOpenChange(false)}
       >
+        Cancel
+      </Button>
+      <Button type="button" onClick={handleVerification} disabled={!canProceed}>
         Next
       </Button>
     </div>
@@ -753,7 +852,11 @@ export const PassengerAmlVerificationModal = ({
     <Modal
       open={open}
       onOpenChange={handleModalOpenChange}
-      title={currentStep === 'verification' ? 'AML Verification' : 'Passenger Details'}
+      title={
+        currentStep === 'verification'
+          ? 'AML Verification'
+          : 'Passenger Details'
+      }
       description={
         currentStep === 'verification'
           ? 'Verify identity details before moving to the passenger information step.'
@@ -761,7 +864,9 @@ export const PassengerAmlVerificationModal = ({
       }
       size="2xl"
       dismissible={!isDetailsSubmitting}
-      footer={currentStep === 'verification' ? verificationFooter : detailsFooter}
+      footer={
+        currentStep === 'verification' ? verificationFooter : detailsFooter
+      }
     >
       {currentStep === 'verification' ? (
         isCorporate && selectedPartyProfileLoading ? (
@@ -778,7 +883,9 @@ export const PassengerAmlVerificationModal = ({
           </div>
         ) : (
           <PassengerAmlVerificationStepForm
-            entityType={(watchedEntityType || entityType) as PassengerEntityType}
+            entityType={
+              (watchedEntityType || entityType) as PassengerEntityType
+            }
             isCorporate={isCorporate}
             selectedPartyProfile={selectedPartyProfile}
             isSelectedPartyProfileLoading={selectedPartyProfileLoading}
@@ -803,7 +910,9 @@ export const PassengerAmlVerificationModal = ({
           }
         >
           <PassengerAmlDetailsStepForm
-            entityType={(watchedEntityType || entityType) as PassengerEntityType}
+            entityType={
+              (watchedEntityType || entityType) as PassengerEntityType
+            }
             showPanRelation={verificationMode === 'pan'}
             onPanFieldBlur={() => {
               void verifyIdentityOnBlur('pan');

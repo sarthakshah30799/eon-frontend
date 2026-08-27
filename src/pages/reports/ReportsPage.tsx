@@ -28,17 +28,29 @@ const ReportsPage = () => {
   const reportPageType = getReportPageTypeFromSlug(slug);
 
   if (!slug) {
-    return <Navigate replace to={`/reports/${REPORT_PAGE_DEFAULT_TYPE}${location.search}`} />;
+    return (
+      <Navigate
+        replace
+        to={`/reports/${REPORT_PAGE_DEFAULT_TYPE}${location.search}`}
+      />
+    );
   }
 
   if (!reportPageType) {
-    return <Navigate replace to={`/reports/${REPORT_PAGE_DEFAULT_TYPE}${location.search}`} />;
+    return (
+      <Navigate
+        replace
+        to={`/reports/${REPORT_PAGE_DEFAULT_TYPE}${location.search}`}
+      />
+    );
   }
 
   const canonicalSlug = getReportPageCanonicalSlug(slug);
 
   if (canonicalSlug && slug.trim().toLowerCase() !== canonicalSlug) {
-    return <Navigate replace to={`/reports/${canonicalSlug}${location.search}`} />;
+    return (
+      <Navigate replace to={`/reports/${canonicalSlug}${location.search}`} />
+    );
   }
 
   switch (reportPageType) {

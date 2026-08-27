@@ -14,7 +14,11 @@ import { useListChequeBooks, useGetChequeBook } from './hooks';
 import { useListBranchProfiles } from '@/modules/branchProfile/hooks';
 import { ChequeBookTable } from './components';
 import { CashierChequeBookListView } from './components/CashierChequeBookListView';
-import { ChequeBookStatusEnum, type ChequeBookStatus, type ChequeBookReviewStatus } from './types';
+import {
+  ChequeBookStatusEnum,
+  type ChequeBookStatus,
+  type ChequeBookReviewStatus,
+} from './types';
 import { useAuth } from '@/lib/AuthContext';
 
 const resolveAssignedToLabel = (assignedTo: IChequeBook['assignedTo']) => {
@@ -31,7 +35,9 @@ export const ChequeBookListView = () => {
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const reviewId = searchParams.get('reviewId');
-  const canSeeBranchFilter = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
+  const canSeeBranchFilter = Boolean(
+    user?.isAdmin || user?.isHo || user?.isHoStaff
+  );
   const isCashierOrDelivery = !!(user?.isCashier || user?.isDeliveryBoy);
   const isHoStaff = !!(user?.isHo || user?.isHoStaff) && !user?.isAdmin;
   const isBranchManager = !user?.isAdmin && !isHoStaff && !isCashierOrDelivery;
@@ -171,7 +177,7 @@ export const ChequeBookListView = () => {
   const reviewBook = useMemo(
     () =>
       reviewId
-        ? books.find(book => book.id === reviewId) ?? routedBook ?? null
+        ? (books.find(book => book.id === reviewId) ?? routedBook ?? null)
         : null,
     [books, reviewId, routedBook]
   );
@@ -323,7 +329,10 @@ export const ChequeBookListView = () => {
                 navigate(`/cheque-books/create?reassignId=${book.id}`);
                 return;
               }
-              if (isBranchManager && book.status === ChequeBookStatusEnum.APPROVE) {
+              if (
+                isBranchManager &&
+                book.status === ChequeBookStatusEnum.APPROVE
+              ) {
                 navigate(`/cheque-books/allocation?bookId=${book.id}`);
                 return;
               }
@@ -463,11 +472,7 @@ export const ChequeBookListView = () => {
                 </div>
 
                 <div className="flex justify-end gap-2 pt-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={closeReview}
-                  >
+                  <Button type="button" variant="outline" onClick={closeReview}>
                     Cancel
                   </Button>
                   <Button
@@ -516,11 +521,7 @@ export const ChequeBookListView = () => {
                 </div>
 
                 <div className="flex justify-end pt-2 border-t border-slate-100">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={closeReview}
-                  >
+                  <Button type="button" variant="outline" onClick={closeReview}>
                     Close
                   </Button>
                 </div>
@@ -529,7 +530,6 @@ export const ChequeBookListView = () => {
           </form>
         </Modal>
       )}
-
     </div>
   );
 };

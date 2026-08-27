@@ -95,7 +95,10 @@ export const Modal = ({
         >
           <div className="flex shrink-0 items-start justify-between gap-4 border-b border-border-primary px-5 py-4">
             <div className="space-y-1">
-              <h2 id={titleId} className="text-lg font-semibold text-text-primary">
+              <h2
+                id={titleId}
+                className="text-lg font-semibold text-text-primary"
+              >
                 {title}
               </h2>
               {description && (
@@ -138,7 +141,9 @@ export const Modal = ({
             </Button>
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">{children}</div>
+          <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+            {children}
+          </div>
 
           {footer && (
             <div className="shrink-0 border-t border-border-primary bg-surface-primary px-5 py-4">

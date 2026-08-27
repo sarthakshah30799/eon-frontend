@@ -4,31 +4,41 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { PlusIcon } from '@heroicons/react/24/outline';
 import { useNavigate } from 'react-router-dom';
 import { Button, CardSection } from '@/components/ui';
-import { Form, FormFieldCheckbox, FormFieldInput, FormFieldSelect } from '@/components/forms';
+import {
+  Form,
+  FormFieldCheckbox,
+  FormFieldInput,
+  FormFieldSelect,
+} from '@/components/forms';
 import type { AsyncSelectOption, AsyncSelectResponse } from '@/components/ui';
 import { purposeSchema } from '../schema/purposeSchema';
-import { PURPOSE_RATE_TYPE_OPTIONS, PURPOSE_TEXTS } from '../constants/purposeConstants';
+import {
+  PURPOSE_RATE_TYPE_OPTIONS,
+  PURPOSE_TEXTS,
+} from '../constants/purposeConstants';
 import { type ICreatePurpose } from '../types/purposeTypes';
 import { createEmptyPurposeFormValues } from '../utils/purposeUtils';
 
-const createStaticLoadOptions = (options: AsyncSelectOption[]) => async (inputValue: string): Promise<AsyncSelectResponse> => ({
-  options: inputValue
-    ? options.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
-    : options,
-});
+const createStaticLoadOptions =
+  (options: AsyncSelectOption[]) =>
+  async (inputValue: string): Promise<AsyncSelectResponse> => ({
+    options: inputValue
+      ? options.filter(opt =>
+          opt.label.toLowerCase().includes(inputValue.toLowerCase())
+        )
+      : options,
+  });
 
-const rateTypeOptions: AsyncSelectOption[] = PURPOSE_RATE_TYPE_OPTIONS.map(option => ({
-  value: option.value,
-  label: option.label,
-}));
+const rateTypeOptions: AsyncSelectOption[] = PURPOSE_RATE_TYPE_OPTIONS.map(
+  option => ({
+    value: option.value,
+    label: option.label,
+  })
+);
 
 const loadRateTypeOptions = createStaticLoadOptions(rateTypeOptions);
 
-const PurposeSlabsSection = ({
-  isSubmitting,
-}: {
-  isSubmitting: boolean;
-}) => {
+const PurposeSlabsSection = ({ isSubmitting }: { isSubmitting: boolean }) => {
   const form = useFormContext<ICreatePurpose>();
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -39,8 +49,12 @@ const PurposeSlabsSection = ({
     <div className="space-y-4">
       <div className="flex items-center justify-between border-b border-border-primary pb-3">
         <div>
-          <p className="text-sm font-semibold text-text-primary">{PURPOSE_TEXTS.SLABS_TITLE}</p>
-          <p className="text-xs text-text-tertiary">{PURPOSE_TEXTS.SLABS_SUBTITLE}</p>
+          <p className="text-sm font-semibold text-text-primary">
+            {PURPOSE_TEXTS.SLABS_TITLE}
+          </p>
+          <p className="text-xs text-text-tertiary">
+            {PURPOSE_TEXTS.SLABS_SUBTITLE}
+          </p>
         </div>
         <Button
           type="button"
@@ -70,7 +84,10 @@ const PurposeSlabsSection = ({
         ) : null}
 
         {fields.map((field, index) => (
-          <div key={field.id} className="relative rounded-sm border border-border-primary bg-surface-secondary p-4">
+          <div
+            key={field.id}
+            className="relative rounded-sm border border-border-primary bg-surface-secondary p-4"
+          >
             <Button
               type="button"
               aria-label={`Remove slab ${index + 1}`}
@@ -80,8 +97,19 @@ const PurposeSlabsSection = ({
               disabled={isSubmitting}
               onClick={() => remove(index)}
             >
-              <svg aria-hidden="true" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              <svg
+                aria-hidden="true"
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </Button>
 
@@ -219,14 +247,34 @@ export const PurposeForm = ({
       <CardSection heading="Purpose Scope">
         <div className="grid gap-6 md:grid-cols-2">
           <div className="space-y-3">
-            <p className="text-sm font-semibold text-text-primary">Party Profile Type</p>
-            <FormFieldCheckbox name="corporate" label="Corporate" disabled={isSubmitting} />
-            <FormFieldCheckbox name="individual" label="Individual" disabled={isSubmitting} />
+            <p className="text-sm font-semibold text-text-primary">
+              Party Profile Type
+            </p>
+            <FormFieldCheckbox
+              name="corporate"
+              label="Corporate"
+              disabled={isSubmitting}
+            />
+            <FormFieldCheckbox
+              name="individual"
+              label="Individual"
+              disabled={isSubmitting}
+            />
           </div>
           <div className="space-y-3">
-            <p className="text-sm font-semibold text-text-primary">Transaction Type</p>
-            <FormFieldCheckbox name="sell" label="Sell" disabled={isSubmitting} />
-            <FormFieldCheckbox name="purchase" label="Purchase" disabled={isSubmitting} />
+            <p className="text-sm font-semibold text-text-primary">
+              Transaction Type
+            </p>
+            <FormFieldCheckbox
+              name="sell"
+              label="Sell"
+              disabled={isSubmitting}
+            />
+            <FormFieldCheckbox
+              name="purchase"
+              label="Purchase"
+              disabled={isSubmitting}
+            />
           </div>
         </div>
       </CardSection>

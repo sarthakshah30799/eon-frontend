@@ -34,28 +34,37 @@ import {
 
 const ISSUER_PAGE_SIZE = 200;
 
-const toOption = (id: string, label: string): IReportSelectOption => ({ id, label });
+const toOption = (id: string, label: string): IReportSelectOption => ({
+  id,
+  label,
+});
 
 export const useCardSettlementReportFilters = () => {
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const isRestrictedUser = !user?.isAdmin && !user?.isHo && !user?.isHoStaff;
-  const userAssignments = useMemo(() => user?.assignments ?? [], [user?.assignments]);
+  const userAssignments = useMemo(
+    () => user?.assignments ?? [],
+    [user?.assignments]
+  );
   const searchParamsKey = searchParams.toString();
   const parsedSearchParams = useMemo(
     () => new URLSearchParams(searchParamsKey),
-    [searchParamsKey],
+    [searchParamsKey]
   );
 
   const hydratedRouteState = useMemo(() => {
     return {
-      dateRange: readDateRangeSearchParams(parsedSearchParams, ReportDatePresetEnum.ALL),
+      dateRange: readDateRangeSearchParams(
+        parsedSearchParams,
+        ReportDatePresetEnum.ALL
+      ),
       branchIds: readSearchParamList(parsedSearchParams, 'branchIds'),
       productIds: readSearchParamList(parsedSearchParams, 'productIds'),
       currencyIds: readSearchParamList(parsedSearchParams, 'currencyIds'),
       issuerPartyProfileIds: readSearchParamList(
         parsedSearchParams,
-        'issuerPartyProfileIds',
+        'issuerPartyProfileIds'
       ),
       sortBy:
         (readSearchParamValue(parsedSearchParams, 'sortBy') as ReportSortBy) ||
@@ -63,12 +72,20 @@ export const useCardSettlementReportFilters = () => {
     };
   }, [parsedSearchParams]);
 
-  const [dateRange, setDateRange] = useState<IReportDateRange>(hydratedRouteState.dateRange);
-  const [branchIds, setBranchIds] = useState<string[]>(hydratedRouteState.branchIds);
-  const [productIds, setProductIds] = useState<string[]>(hydratedRouteState.productIds);
-  const [currencyIds, setCurrencyIds] = useState<string[]>(hydratedRouteState.currencyIds);
+  const [dateRange, setDateRange] = useState<IReportDateRange>(
+    hydratedRouteState.dateRange
+  );
+  const [branchIds, setBranchIds] = useState<string[]>(
+    hydratedRouteState.branchIds
+  );
+  const [productIds, setProductIds] = useState<string[]>(
+    hydratedRouteState.productIds
+  );
+  const [currencyIds, setCurrencyIds] = useState<string[]>(
+    hydratedRouteState.currencyIds
+  );
   const [issuerPartyProfileIds, setIssuerPartyProfileIds] = useState<string[]>(
-    hydratedRouteState.issuerPartyProfileIds,
+    hydratedRouteState.issuerPartyProfileIds
   );
   const [sortBy, setSortBy] = useState<ReportSortBy>(hydratedRouteState.sortBy);
   const [appliedFilters, setAppliedFilters] =
@@ -82,7 +99,7 @@ export const useCardSettlementReportFilters = () => {
             issuerPartyProfileIds: hydratedRouteState.issuerPartyProfileIds,
             sortBy: hydratedRouteState.sortBy,
           }
-        : null,
+        : null
     );
 
   const {
@@ -116,45 +133,47 @@ export const useCardSettlementReportFilters = () => {
     isFetching: isFetchingIssuers,
   } = useListPartyProfiles(
     { page: 1, limit: ISSUER_PAGE_SIZE, activeOnly: true },
-    PartyProfileTypeEnum.CARD_ISSUER_PROFILE,
+    PartyProfileTypeEnum.CARD_ISSUER_PROFILE
   );
 
   const accessibleBranchProfiles = useMemo(
     () =>
       isRestrictedUser
         ? branchProfiles.filter(branch =>
-            userAssignments.some(assignment => assignment.branchId === branch.id),
+            userAssignments.some(
+              assignment => assignment.branchId === branch.id
+            )
           )
         : branchProfiles,
-    [branchProfiles, isRestrictedUser, userAssignments],
+    [branchProfiles, isRestrictedUser, userAssignments]
   );
 
   const branchOptions = useMemo<IReportSelectOption[]>(
     () =>
       uniqueOptions(
         accessibleBranchProfiles.map(branch =>
-          toOption(branch.id, buildReportOptionLabel(branch.code, branch.name)),
-        ),
+          toOption(branch.id, buildReportOptionLabel(branch.code, branch.name))
+        )
       ),
-    [accessibleBranchProfiles],
+    [accessibleBranchProfiles]
   );
 
   const productOptions = useMemo<IReportSelectOption[]>(
     () =>
       uniqueOptions(
         productProfiles
-          .filter(
-            product =>
-              isCardProductCode(product.productCode),
-          )
+          .filter(product => isCardProductCode(product.productCode))
           .map(product =>
             toOption(
               product.id,
-              buildReportOptionLabel(product.productCode, product.productDescription),
-            ),
-          ),
+              buildReportOptionLabel(
+                product.productCode,
+                product.productDescription
+              )
+            )
+          )
       ),
-    [productProfiles],
+    [productProfiles]
   );
 
   const currencyOptions = useMemo<IReportSelectOption[]>(
@@ -163,52 +182,64 @@ export const useCardSettlementReportFilters = () => {
         currencyProfiles.map(currency =>
           toOption(
             currency.id,
-            buildReportOptionLabel(currency.currencyCode, currency.currencyName),
-          ),
-        ),
+            buildReportOptionLabel(currency.currencyCode, currency.currencyName)
+          )
+        )
       ),
-    [currencyProfiles],
+    [currencyProfiles]
   );
 
   const issuerOptions = useMemo<IReportSelectOption[]>(
     () =>
       uniqueOptions(
         (issuerResponse?.data ?? []).map(issuer =>
-          toOption(issuer.id, buildReportOptionLabel(issuer.code, issuer.name)),
-        ),
+          toOption(issuer.id, buildReportOptionLabel(issuer.code, issuer.name))
+        )
       ),
-    [issuerResponse?.data],
+    [issuerResponse?.data]
   );
 
   const selectedBranchIds = useMemo(
-    () => branchIds.filter(branchId => branchOptions.some(option => option.id === branchId)),
-    [branchIds, branchOptions],
+    () =>
+      branchIds.filter(branchId =>
+        branchOptions.some(option => option.id === branchId)
+      ),
+    [branchIds, branchOptions]
   );
   const selectedProductIds = useMemo(
-    () => productIds.filter(productId => productOptions.some(option => option.id === productId)),
-    [productIds, productOptions],
+    () =>
+      productIds.filter(productId =>
+        productOptions.some(option => option.id === productId)
+      ),
+    [productIds, productOptions]
   );
   const selectedCurrencyIds = useMemo(
     () =>
-      currencyIds.filter(currencyId => currencyOptions.some(option => option.id === currencyId)),
-    [currencyIds, currencyOptions],
+      currencyIds.filter(currencyId =>
+        currencyOptions.some(option => option.id === currencyId)
+      ),
+    [currencyIds, currencyOptions]
   );
   const selectedIssuerIds = useMemo(
     () =>
       issuerPartyProfileIds.filter(issuerId =>
-        issuerOptions.some(option => option.id === issuerId),
+        issuerOptions.some(option => option.id === issuerId)
       ),
-    [issuerOptions, issuerPartyProfileIds],
+    [issuerOptions, issuerPartyProfileIds]
   );
 
   const branchAllSelected =
-    branchOptions.length > 0 && selectedBranchIds.length === branchOptions.length;
+    branchOptions.length > 0 &&
+    selectedBranchIds.length === branchOptions.length;
   const productAllSelected =
-    productOptions.length > 0 && selectedProductIds.length === productOptions.length;
+    productOptions.length > 0 &&
+    selectedProductIds.length === productOptions.length;
   const currencyAllSelected =
-    currencyOptions.length > 0 && selectedCurrencyIds.length === currencyOptions.length;
+    currencyOptions.length > 0 &&
+    selectedCurrencyIds.length === currencyOptions.length;
   const issuerAllSelected =
-    issuerOptions.length > 0 && selectedIssuerIds.length === issuerOptions.length;
+    issuerOptions.length > 0 &&
+    selectedIssuerIds.length === issuerOptions.length;
 
   const toggleBranch = (id: string, checked: boolean) => {
     setBranchIds(current => toggleId(current, id, checked));
@@ -232,7 +263,9 @@ export const useCardSettlementReportFilters = () => {
     setIssuerPartyProfileIds(current => toggleId(current, id, checked));
   };
   const toggleAllIssuers = (checked: boolean) => {
-    setIssuerPartyProfileIds(checked ? issuerOptions.map(option => option.id) : []);
+    setIssuerPartyProfileIds(
+      checked ? issuerOptions.map(option => option.id) : []
+    );
   };
 
   const resetFilters = () => {
@@ -313,4 +346,6 @@ export const useCardSettlementReportFilters = () => {
   };
 };
 
-export type CardSettlementReportFilters = ReturnType<typeof useCardSettlementReportFilters>;
+export type CardSettlementReportFilters = ReturnType<
+  typeof useCardSettlementReportFilters
+>;

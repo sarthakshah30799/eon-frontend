@@ -1,5 +1,8 @@
 import { apiClient } from '@/api/api';
-import type { CityDropdownOption, CityRecord } from '../../modules/dropdowns/cityDropdown/types/cityDropdown.types';
+import type {
+  CityDropdownOption,
+  CityRecord,
+} from '../../modules/dropdowns/cityDropdown/types/cityDropdown.types';
 
 const toCityOption = (city: CityRecord): CityDropdownOption => ({
   value: city.name,

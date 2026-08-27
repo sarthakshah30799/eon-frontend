@@ -103,9 +103,7 @@ class ApiClient {
       }
 
       const disposition = response.headers.get('content-disposition') || '';
-      const filenameMatch = disposition.match(
-        /filename="?([^"]+)"?/i
-      );
+      const filenameMatch = disposition.match(/filename="?([^"]+)"?/i);
       return {
         data: {
           blob: await response.blob(),

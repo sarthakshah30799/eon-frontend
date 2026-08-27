@@ -8,4 +8,3 @@ export const useGetUserRole = (id: string) => {
     enabled: Boolean(id),
   });
 };
-

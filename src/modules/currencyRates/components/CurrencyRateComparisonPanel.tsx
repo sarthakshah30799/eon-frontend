@@ -20,7 +20,9 @@ const SidePreview = ({
       <div className="mt-2 space-y-2 text-sm text-text-primary">
         <div>Base: {side.baseRate || '-'}</div>
         <div className="rounded-sm border border-border-primary bg-surface-secondary/20 p-2">
-          <div className="text-xs uppercase tracking-wider text-text-tertiary">Group</div>
+          <div className="text-xs uppercase tracking-wider text-text-tertiary">
+            Group
+          </div>
           <div>
             {side.groupMarginType || 'EMPTY'}{' '}
             {formatMarginValue(side.groupMarginType, side.groupMarginValue)}
@@ -33,10 +35,15 @@ const SidePreview = ({
           </div>
         </div>
         <div className="rounded-sm border border-border-primary bg-surface-secondary/20 p-2">
-          <div className="text-xs uppercase tracking-wider text-text-tertiary">Override</div>
+          <div className="text-xs uppercase tracking-wider text-text-tertiary">
+            Override
+          </div>
           <div>
             {side.overrideMarginType || 'EMPTY'}{' '}
-            {formatMarginValue(side.overrideMarginType, side.overrideMarginValue)}
+            {formatMarginValue(
+              side.overrideMarginType,
+              side.overrideMarginValue
+            )}
           </div>
           <div className="text-xs text-text-tertiary">
             Amount: {side.overrideMarginAmount || '-'}
@@ -60,21 +67,16 @@ export const CurrencyRateComparisonPanel = ({
   if (!preview) {
     return (
       <div className="rounded-sm border border-border-primary bg-surface-secondary/20 p-4 text-sm text-text-secondary">
-        Select a product and currency to see the calculated final buy and sell prices.
+        Select a product and currency to see the calculated final buy and sell
+        prices.
       </div>
     );
   }
 
   return (
     <div className="grid gap-3 md:grid-cols-2">
-      <SidePreview
-        label="Buy"
-        side={preview.buy}
-      />
-      <SidePreview
-        label="Sell"
-        side={preview.sale}
-      />
+      <SidePreview label="Buy" side={preview.buy} />
+      <SidePreview label="Sell" side={preview.sale} />
     </div>
   );
 };

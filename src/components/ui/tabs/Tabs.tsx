@@ -30,8 +30,10 @@ interface TabsListProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;
 }
 
-interface TabsTriggerProps
-  extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'value'> {
+interface TabsTriggerProps extends Omit<
+  ButtonHTMLAttributes<HTMLButtonElement>,
+  'value'
+> {
   value: string;
   children: ReactNode;
 }
@@ -84,11 +86,7 @@ export const Tabs = ({
   );
 };
 
-export const TabsList = ({
-  className,
-  children,
-  ...props
-}: TabsListProps) => {
+export const TabsList = ({ className, children, ...props }: TabsListProps) => {
   const context = useContext(TabsContext);
 
   if (!context) {

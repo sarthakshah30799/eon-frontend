@@ -4,7 +4,9 @@ interface AlertTriangleIconProps {
   className?: string;
 }
 
-export const AlertTriangleIcon: React.FC<AlertTriangleIconProps> = ({ className = 'h-6 w-6' }) => {
+export const AlertTriangleIcon: React.FC<AlertTriangleIconProps> = ({
+  className = 'h-6 w-6',
+}) => {
   return (
     <svg
       aria-hidden="true"

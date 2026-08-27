@@ -16,11 +16,14 @@ export const usePassengerOtherDocumentTypes = () => {
   const loadOptions = useCallback(
     async (inputValue: string): Promise<AsyncSelectResponse> => {
       const allOptions = query.data ?? [];
-      
+
       const filteredOptions = inputValue?.trim()
-        ? allOptions.filter(opt =>
-            opt.label.toLowerCase().includes(inputValue.trim().toLowerCase()) ||
-            opt.value.toLowerCase().includes(inputValue.trim().toLowerCase())
+        ? allOptions.filter(
+            opt =>
+              opt.label
+                .toLowerCase()
+                .includes(inputValue.trim().toLowerCase()) ||
+              opt.value.toLowerCase().includes(inputValue.trim().toLowerCase())
           )
         : allOptions;
 

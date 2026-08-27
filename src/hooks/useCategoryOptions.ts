@@ -10,7 +10,10 @@ import type {
 
 const CATEGORY_OPTIONS_STALE_TIME = 5 * 60 * 1000;
 
-const toAsyncSelectOption = (option: ICategoryOption, useValueAsId = false): AsyncSelectOption => ({
+const toAsyncSelectOption = (
+  option: ICategoryOption,
+  useValueAsId = false
+): AsyncSelectOption => ({
   value: useValueAsId ? option.value : option.id,
   label: option.label,
 });
@@ -29,14 +32,25 @@ const sortCategoryOptions = (options: ICategoryOption[]) =>
     return left.label.localeCompare(right.label);
   });
 
-export const useCategoryOptions = (code?: CategoryOptionCode, useValueAsId = false, search?: string) => {
+export const useCategoryOptions = (
+  code?: CategoryOptionCode,
+  useValueAsId = false,
+  search?: string
+) => {
   const normalizedCode = code?.trim() ?? '';
   const queryClient = useQueryClient();
-  const queryKey = useMemo(() => createQueryKey(normalizedCode), [normalizedCode]);
+  const queryKey = useMemo(
+    () => createQueryKey(normalizedCode),
+    [normalizedCode]
+  );
 
   const query = useQuery({
     queryKey,
-    queryFn: () => categoryOptionsApi.getCategoryOptionsByCode(normalizedCode as CategoryOptionCode, search),
+    queryFn: () =>
+      categoryOptionsApi.getCategoryOptionsByCode(
+        normalizedCode as CategoryOptionCode,
+        search
+      ),
     enabled: Boolean(normalizedCode),
     staleTime: CATEGORY_OPTIONS_STALE_TIME,
   });
@@ -49,7 +63,11 @@ export const useCategoryOptions = (code?: CategoryOptionCode, useValueAsId = fal
 
       const options = await queryClient.fetchQuery({
         queryKey,
-        queryFn: () => categoryOptionsApi.getCategoryOptionsByCode(normalizedCode as CategoryOptionCode, inputValue),
+        queryFn: () =>
+          categoryOptionsApi.getCategoryOptionsByCode(
+            normalizedCode as CategoryOptionCode,
+            inputValue
+          ),
         staleTime: CATEGORY_OPTIONS_STALE_TIME,
       });
 
@@ -63,7 +81,10 @@ export const useCategoryOptions = (code?: CategoryOptionCode, useValueAsId = fal
   const createOptions = useCallback(
     async (
       options: Array<
-        Pick<ICreateCategoryOption, 'value' | 'label' | 'sortOrder' | 'isActive'>
+        Pick<
+          ICreateCategoryOption,
+          'value' | 'label' | 'sortOrder' | 'isActive'
+        >
       >
     ): Promise<AsyncSelectOption[]> => {
       const payload = options
@@ -80,9 +101,8 @@ export const useCategoryOptions = (code?: CategoryOptionCode, useValueAsId = fal
         throw new Error('Option value is required');
       }
 
-      const created = await categoryOptionsApi.bulkUpsertCategoryOptions(
-        payload
-      );
+      const created =
+        await categoryOptionsApi.bulkUpsertCategoryOptions(payload);
 
       queryClient.setQueryData<ICategoryOption[]>(queryKey, previous => {
         const nextOptionsMap = new Map<string, ICategoryOption>();
@@ -123,7 +143,8 @@ export const useCategoryOptions = (code?: CategoryOptionCode, useValueAsId = fal
 
   return {
     defaultOptions: useMemo(
-      () => (query.data ?? []).map(opt => toAsyncSelectOption(opt, useValueAsId)),
+      () =>
+        (query.data ?? []).map(opt => toAsyncSelectOption(opt, useValueAsId)),
       [query.data, useValueAsId]
     ),
     loadOptions,

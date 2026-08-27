@@ -12,4 +12,3 @@ export const useListTransfers = (params?: {
     queryFn: () => transfersApi.listTransfers(params),
   });
 };
-

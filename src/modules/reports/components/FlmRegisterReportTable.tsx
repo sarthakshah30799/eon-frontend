@@ -26,7 +26,7 @@ const NUMERIC_KEYS = new Set([
 const renderTable = (
   columns: IFlm3PurchaseFromPublicResponse['columns'],
   rows: IFlm3PurchaseFromPublicResponse['rows'],
-  keyPrefix: string,
+  keyPrefix: string
 ) => (
   <div className="overflow-x-auto rounded-md border border-slate-200 bg-white shadow-sm">
     <table className="min-w-max w-full border-collapse">

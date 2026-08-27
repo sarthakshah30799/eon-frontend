@@ -5,4 +5,3 @@ const TransferEditPage = () => {
 };
 
 export default TransferEditPage;
-

@@ -4,7 +4,9 @@ interface CurrencyIconProps {
   className?: string;
 }
 
-export const CurrencyIcon: React.FC<CurrencyIconProps> = ({ className = 'h-8 w-8' }) => {
+export const CurrencyIcon: React.FC<CurrencyIconProps> = ({
+  className = 'h-8 w-8',
+}) => {
   return (
     <svg
       className={className}

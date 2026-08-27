@@ -1,6 +1,9 @@
 import { useNavigate } from 'react-router-dom';
 import { PURPOSE_TEXTS } from '../constants/purposeConstants';
-import { createEmptyPurposeFormValues, sanitizePurposeFormValues } from '../utils/purposeUtils';
+import {
+  createEmptyPurposeFormValues,
+  sanitizePurposeFormValues,
+} from '../utils/purposeUtils';
 import { useCreatePurpose } from '../hooks';
 import { PurposeEditorView } from './PurposeEditorView';
 import type { ICreatePurpose } from '../types/purposeTypes';

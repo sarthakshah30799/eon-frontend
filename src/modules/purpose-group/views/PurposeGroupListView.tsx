@@ -14,7 +14,7 @@ export const PurposeGroupListView = () => {
   const debouncedSearch = useDebounce(search, 400);
   const query = useMemo(
     () => debouncedSearch.trim() || undefined,
-    [debouncedSearch],
+    [debouncedSearch]
   );
 
   const {

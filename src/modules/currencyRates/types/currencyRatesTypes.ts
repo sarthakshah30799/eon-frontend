@@ -123,7 +123,11 @@ export interface IProductCurrencyRate {
   buy: ICurrencyRateMargin;
   sale: ICurrencyRateMargin;
   isActive: boolean;
-  product?: { id: string; productCode: string; productDescription: string } | null;
+  product?: {
+    id: string;
+    productCode: string;
+    productDescription: string;
+  } | null;
   currency?: { id: string; currencyCode: string; currencyName: string } | null;
   createdAt: string;
   updatedAt: string;

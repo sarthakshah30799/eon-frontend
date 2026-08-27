@@ -29,7 +29,9 @@ export const DeliveryPersonManagementPage = () => {
         await manualBillBookApi.addDeliveryPerson(user.id);
         toast.success(`${user.name} added as delivery person.`);
       }
-      await queryClient.invalidateQueries({ queryKey: ['dp-management-users'] });
+      await queryClient.invalidateQueries({
+        queryKey: ['dp-management-users'],
+      });
       // also refresh the DP dropdown list
       await queryClient.invalidateQueries({ queryKey: ['delivery-persons'] });
     } catch (err: unknown) {
@@ -86,7 +88,9 @@ export const DeliveryPersonManagementPage = () => {
         </div>
       ) : users.length === 0 ? (
         <div className="rounded-xl border border-slate-200 bg-white py-16 text-center shadow-sm">
-          <p className="text-sm text-slate-500">No active users found in this branch.</p>
+          <p className="text-sm text-slate-500">
+            No active users found in this branch.
+          </p>
         </div>
       ) : (
         <div className="space-y-6">
@@ -107,12 +111,17 @@ export const DeliveryPersonManagementPage = () => {
             ) : (
               <ul className="divide-y divide-slate-100">
                 {deliveryPersons.map(user => (
-                  <li key={user.id} className="flex items-center justify-between px-5 py-3.5">
+                  <li
+                    key={user.id}
+                    className="flex items-center justify-between px-5 py-3.5"
+                  >
                     <div className="flex items-center gap-3">
                       <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700">
                         {user.name.charAt(0).toUpperCase()}
                       </span>
-                      <span className="text-sm font-medium text-slate-800">{user.name}</span>
+                      <span className="text-sm font-medium text-slate-800">
+                        {user.name}
+                      </span>
                     </div>
                     <button
                       onClick={() => handleToggle(user)}
@@ -149,12 +158,17 @@ export const DeliveryPersonManagementPage = () => {
             ) : (
               <ul className="divide-y divide-slate-100">
                 {others.map(user => (
-                  <li key={user.id} className="flex items-center justify-between px-5 py-3.5">
+                  <li
+                    key={user.id}
+                    className="flex items-center justify-between px-5 py-3.5"
+                  >
                     <div className="flex items-center gap-3">
                       <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-500">
                         {user.name.charAt(0).toUpperCase()}
                       </span>
-                      <span className="text-sm font-medium text-slate-800">{user.name}</span>
+                      <span className="text-sm font-medium text-slate-800">
+                        {user.name}
+                      </span>
                     </div>
                     <button
                       onClick={() => handleToggle(user)}

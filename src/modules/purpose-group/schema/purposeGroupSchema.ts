@@ -5,7 +5,9 @@ export const purposeGroupSchema = yup.object({
   name: yup.string().trim().required('Group name is required'),
   title: yup.string().trim().required('Report title is required'),
   profileType: yup
-    .mixed<(typeof PurposeGroupProfileTypeEnum)[keyof typeof PurposeGroupProfileTypeEnum]>()
+    .mixed<
+      (typeof PurposeGroupProfileTypeEnum)[keyof typeof PurposeGroupProfileTypeEnum]
+    >()
     .oneOf(Object.values(PurposeGroupProfileTypeEnum))
     .required('Profile type is required'),
   sortOrder: yup

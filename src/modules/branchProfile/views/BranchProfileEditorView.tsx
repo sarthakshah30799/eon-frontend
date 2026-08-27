@@ -1,9 +1,6 @@
 import { BranchProfileForm } from '../forms';
 import { createEmptyBranchProfileFormValues } from '../utils';
-import type {
-  ICreateBranchProfile,
-  IBranchProfileOption,
-} from '../types';
+import type { ICreateBranchProfile, IBranchProfileOption } from '../types';
 
 interface BranchProfileEditorViewProps {
   heading: string;

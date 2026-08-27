@@ -129,14 +129,17 @@ export const FormFieldSelect = ({
     const hasResolvedSingleOption = (value: unknown) =>
       Boolean(
         selectedOption &&
-          !isOptionArray(selectedOption) &&
-          getComparableOptionValues(selectedOption).includes(
-            getComparableFieldValue(value)
-          )
+        !isOptionArray(selectedOption) &&
+        getComparableOptionValues(selectedOption).includes(
+          getComparableFieldValue(value)
+        )
       );
 
     const hasResolvedMultiOptions = (selectedValues: unknown[]) => {
-      if (!isOptionArray(selectedOption) || selectedOption.length !== selectedValues.length) {
+      if (
+        !isOptionArray(selectedOption) ||
+        selectedOption.length !== selectedValues.length
+      ) {
         return false;
       }
 
@@ -191,7 +194,9 @@ export const FormFieldSelect = ({
                   }))
                 : nextOptions;
             setSelectedOption(current =>
-              optionsAreEqual(current, displayOptions) ? current : displayOptions
+              optionsAreEqual(current, displayOptions)
+                ? current
+                : displayOptions
             );
           }
         } catch {
@@ -238,7 +243,8 @@ export const FormFieldSelect = ({
             nextOption && displayValue === 'code'
               ? {
                   ...nextOption,
-                  label: nextOption.label.split('-')[0]?.trim() ?? nextOption.label,
+                  label:
+                    nextOption.label.split('-')[0]?.trim() ?? nextOption.label,
                 }
               : nextOption;
           setSelectedOption(current =>
@@ -377,7 +383,8 @@ export const FormFieldSelect = ({
             displayValue === 'code'
               ? {
                   ...nextOption,
-                  label: nextOption.label.split('-')[0]?.trim() ?? nextOption.label,
+                  label:
+                    nextOption.label.split('-')[0]?.trim() ?? nextOption.label,
                 }
               : nextOption;
           setSelectedOption(displayNextOption);

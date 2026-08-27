@@ -31,9 +31,13 @@ export const PurchaseRulePreviewSection = ({
 
   return (
     <CardSection heading={PURCHASE_RULE_TEXT.heading} className="space-y-4">
-      <div className={`rounded-xl border px-4 py-4 shadow-sm ${statusClassName}`}>
+      <div
+        className={`rounded-xl border px-4 py-4 shadow-sm ${statusClassName}`}
+      >
         {preview.allowed ? (
-          <div className="text-sm font-semibold text-text-primary">{statusMessage}</div>
+          <div className="text-sm font-semibold text-text-primary">
+            {statusMessage}
+          </div>
         ) : (
           <div className="space-y-2">
             <div className="text-sm font-semibold text-text-primary">
@@ -59,27 +63,39 @@ export const PurchaseRulePreviewSection = ({
             <span className="font-medium text-text-primary">
               {PURCHASE_RULE_TEXT.convertedAmount}
             </span>{' '}
-            {preview.transactionAmountInReferenceCurrency} {preview.referenceCurrencyCode}
+            {preview.transactionAmountInReferenceCurrency}{' '}
+            {preview.referenceCurrencyCode}
           </div>
           <div>
-            <span className="font-medium text-text-primary">{PURCHASE_RULE_TEXT.cashTotal}</span>{' '}
+            <span className="font-medium text-text-primary">
+              {PURCHASE_RULE_TEXT.cashTotal}
+            </span>{' '}
             {preview.cashTotalAmount}
           </div>
           <div>
-            <span className="font-medium text-text-primary">{PURCHASE_RULE_TEXT.chequeTotal}</span>{' '}
+            <span className="font-medium text-text-primary">
+              {PURCHASE_RULE_TEXT.chequeTotal}
+            </span>{' '}
             {preview.chequeTotalAmount}
           </div>
           <div>
-            <span className="font-medium text-text-primary">{PURCHASE_RULE_TEXT.cashLimit}</span>{' '}
+            <span className="font-medium text-text-primary">
+              {PURCHASE_RULE_TEXT.cashLimit}
+            </span>{' '}
             {preview.cashLimitAmount} {preview.referenceCurrencyCode}
           </div>
           <div>
-            <span className="font-medium text-text-primary">{PURCHASE_RULE_TEXT.cdfThreshold}</span>{' '}
+            <span className="font-medium text-text-primary">
+              {PURCHASE_RULE_TEXT.cdfThreshold}
+            </span>{' '}
             {preview.cdfThresholdAmount} {preview.referenceCurrencyCode}
           </div>
           <div>
-            <span className="font-medium text-text-primary">{PURCHASE_RULE_TEXT.historyAmount}</span>{' '}
-            {preview.cumulativeAmountInReferenceCurrency} {preview.referenceCurrencyCode}
+            <span className="font-medium text-text-primary">
+              {PURCHASE_RULE_TEXT.historyAmount}
+            </span>{' '}
+            {preview.cumulativeAmountInReferenceCurrency}{' '}
+            {preview.referenceCurrencyCode}
           </div>
         </div>
       </div>

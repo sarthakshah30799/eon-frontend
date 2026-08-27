@@ -8,13 +8,8 @@ export const useUpdateMenu = () => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: ({
-      id,
-      values,
-    }: {
-      id: string;
-      values: ICreateMenu;
-    }) => menuApi.updateMenu(id, values),
+    mutationFn: ({ id, values }: { id: string; values: ICreateMenu }) =>
+      menuApi.updateMenu(id, values),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['menus'] });
       await queryClient.invalidateQueries({ queryKey: ['menu-tree'] });

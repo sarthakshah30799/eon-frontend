@@ -54,7 +54,7 @@ const shiftDays = (date: Date, amount: number) => {
 
 export const buildReportDateRange = (
   preset: ReportDatePreset,
-  referenceDate = new Date(),
+  referenceDate = new Date()
 ): IReportDateRange => {
   const current = cloneDate(referenceDate);
 
@@ -88,7 +88,11 @@ export const buildReportDateRange = (
         endDate: formatDateInput(endOfMonth(current)),
       };
     case ReportDatePresetEnum.LAST_MONTH: {
-      const lastMonth = new Date(current.getFullYear(), current.getMonth() - 1, 1);
+      const lastMonth = new Date(
+        current.getFullYear(),
+        current.getMonth() - 1,
+        1
+      );
       return {
         preset,
         startDate: formatDateInput(startOfMonth(lastMonth)),
@@ -120,14 +124,18 @@ export const buildReportDateRange = (
 };
 
 export const formatReportDateRangeLabel = (range: IReportDateRange) => {
-  if (range.preset === ReportDatePresetEnum.ALL || (!range.startDate && !range.endDate)) {
+  if (
+    range.preset === ReportDatePresetEnum.ALL ||
+    (!range.startDate && !range.endDate)
+  ) {
     return 'All dates';
   }
   const fmt = (dateStr: string) => {
     if (!dateStr) return '-';
-    const withTime = dateStr.match(/^\d{4}-\d{2}-\d{2}$/) ? `${dateStr}T00:00:00` : dateStr;
+    const withTime = dateStr.match(/^\d{4}-\d{2}-\d{2}$/)
+      ? `${dateStr}T00:00:00`
+      : dateStr;
     return formatDateTime(withTime);
   };
   return `${fmt(range.startDate)} to ${fmt(range.endDate)}`;
 };
-

@@ -149,8 +149,7 @@ export const MiscellaneousProfileTable = ({
         <div className="overflow-hidden rounded-sm border border-border-primary">
           {renderSkeletonGroupRows()}
         </div>
-      ) : 
-      !loading && groupedOptions.length ? (
+      ) : !loading && groupedOptions.length ? (
         <>
           <div className="hidden border-b border-border-primary bg-surface-secondary/60 px-2 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-text-tertiary lg:grid lg:grid-cols-[minmax(100px,1.2fr)_minmax(0,1.8fr)_120px_140px] lg:gap-4">
             <div>Category</div>

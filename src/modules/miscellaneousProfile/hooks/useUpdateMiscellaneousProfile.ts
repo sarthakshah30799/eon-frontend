@@ -8,16 +8,13 @@ export const useUpdateMiscellaneousProfile = () => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: ({
-      id,
-      data,
-    }: {
-      id: string;
-      data: ICreateCategoryOption;
-    }) => categoryOptionsApi.updateCategoryOption(id, data),
+    mutationFn: ({ id, data }: { id: string; data: ICreateCategoryOption }) =>
+      categoryOptionsApi.updateCategoryOption(id, data),
     onSuccess: async (_, variables) => {
       await queryClient.invalidateQueries({ queryKey: ['category-options'] });
-      await queryClient.invalidateQueries({ queryKey: ['category-option', variables.id] });
+      await queryClient.invalidateQueries({
+        queryKey: ['category-option', variables.id],
+      });
       toast.success(CATEGORY_OPTIONS_TEXTS.UPDATE_SUCCESS);
     },
     onError: () => {

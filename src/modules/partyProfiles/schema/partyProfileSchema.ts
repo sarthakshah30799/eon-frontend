@@ -9,18 +9,48 @@ export const partyProfileSchema = yup.object({
     .required('Code is required')
     .min(5, 'Code must be at least 5 characters')
     .max(20, 'Code must be at most 20 characters'),
-  name: yup
-    .string()
-    .trim()
-    .required('Name is required'),
+  name: yup.string().trim().required('Name is required'),
   isIndividual: yup.boolean().default(false),
 
-  creditLimit: yup.number().typeError('Credit Limit must be a number').min(-1, 'Credit Limit cannot be less than -1').optional().nullable(),
-  creditDays: yup.number().integer('Credit Days must be an integer').typeError('Credit Days must be a number').min(-1, 'Credit Days cannot be less than -1').optional().nullable(),
-  temporaryCreditLimit: yup.number().typeError('Temporary Credit Limit must be a number').min(-1, 'Temporary Credit Limit cannot be less than -1').optional().nullable(),
-  temporaryCreditDays: yup.number().integer('Temporary Credit Days must be an integer').typeError('Temporary Credit Days must be a number').min(-1, 'Temporary Credit Days cannot be less than -1').optional().nullable(),
-  permanentCreditLimit: yup.number().typeError('Permanent Credit Limit must be a number').min(-1, 'Permanent Credit Limit cannot be less than -1').optional().nullable(),
-  permanentCreditDays: yup.number().integer('Permanent Credit Days must be an integer').typeError('Permanent Credit Days must be a number').min(-1, 'Permanent Credit Days cannot be less than -1').optional().nullable(),
+  creditLimit: yup
+    .number()
+    .typeError('Credit Limit must be a number')
+    .min(-1, 'Credit Limit cannot be less than -1')
+    .optional()
+    .nullable(),
+  creditDays: yup
+    .number()
+    .integer('Credit Days must be an integer')
+    .typeError('Credit Days must be a number')
+    .min(-1, 'Credit Days cannot be less than -1')
+    .optional()
+    .nullable(),
+  temporaryCreditLimit: yup
+    .number()
+    .typeError('Temporary Credit Limit must be a number')
+    .min(-1, 'Temporary Credit Limit cannot be less than -1')
+    .optional()
+    .nullable(),
+  temporaryCreditDays: yup
+    .number()
+    .integer('Temporary Credit Days must be an integer')
+    .typeError('Temporary Credit Days must be a number')
+    .min(-1, 'Temporary Credit Days cannot be less than -1')
+    .optional()
+    .nullable(),
+  permanentCreditLimit: yup
+    .number()
+    .typeError('Permanent Credit Limit must be a number')
+    .min(-1, 'Permanent Credit Limit cannot be less than -1')
+    .optional()
+    .nullable(),
+  permanentCreditDays: yup
+    .number()
+    .integer('Permanent Credit Days must be an integer')
+    .typeError('Permanent Credit Days must be a number')
+    .min(-1, 'Permanent Credit Days cannot be less than -1')
+    .optional()
+    .nullable(),
 
   address1: yup.string().trim().required('Address Line 1 is required'),
   address2: yup.string().trim().optional().nullable(),
@@ -30,8 +60,17 @@ export const partyProfileSchema = yup.object({
 
   kycApprovalNumber: yup.string().trim().optional().nullable(),
   kycRiskCategory: yup.string().trim().optional().nullable(),
-  chqTrxnLimit: yup.number().typeError('Chq Trxn Limit must be a number').min(-1, 'Chq Trxn Limit cannot be less than -1').optional().nullable(),
-  defaultHandlingCharges: yup.number().typeError('Handling Charges must be a number').optional().nullable(),
+  chqTrxnLimit: yup
+    .number()
+    .typeError('Chq Trxn Limit must be a number')
+    .min(-1, 'Chq Trxn Limit cannot be less than -1')
+    .optional()
+    .nullable(),
+  defaultHandlingCharges: yup
+    .number()
+    .typeError('Handling Charges must be a number')
+    .optional()
+    .nullable(),
   defaultAgent: yup.string().trim().optional().nullable(),
 
   phoneNo: yup.string().trim().optional().nullable(),
@@ -39,7 +78,12 @@ export const partyProfileSchema = yup.object({
   blockDateFrom: yup.string().trim().optional().nullable(),
   establishmentDate: yup.string().trim().optional().nullable(),
   remarks: yup.string().trim().optional().nullable(),
-  email: yup.string().trim().email('Must be a valid email').optional().nullable(),
+  email: yup
+    .string()
+    .trim()
+    .email('Must be a valid email')
+    .optional()
+    .nullable(),
   contactName: yup.string().trim().optional().nullable(),
   designation: yup.string().trim().optional().nullable(),
   group: yup.string().trim().optional().nullable(),
@@ -71,18 +115,25 @@ export const partyProfileSchema = yup.object({
     .trim()
     .optional()
     .nullable()
-    .test('pan-format', 'PAN No must be a valid 10-character Indian PAN', value => {
-      if (!value) return true;
-      return /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i.test(value);
-    }),
+    .test(
+      'pan-format',
+      'PAN No must be a valid 10-character Indian PAN',
+      value => {
+        if (!value) return true;
+        return /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i.test(value);
+      }
+    ),
   marketingExecutive: yup.string().trim().optional().nullable(),
   businessNature: yup.string().trim().optional().nullable(),
   isTdsDeducted: yup.boolean().default(false),
-  tdsGroup: yup.string().trim().when('isTdsDeducted', {
-    is: true,
-    then: schema => schema.required('TDS Group is required'),
-    otherwise: schema => schema.optional().nullable().default(''),
-  }),
+  tdsGroup: yup
+    .string()
+    .trim()
+    .when('isTdsDeducted', {
+      is: true,
+      then: schema => schema.required('TDS Group is required'),
+      otherwise: schema => schema.optional().nullable().default(''),
+    }),
   printAddress: yup.boolean().default(false),
   eefcClient: yup.boolean().default(false),
   sale: yup.boolean().default(false),
@@ -116,7 +167,11 @@ export const partyProfileSchema = yup.object({
     .optional()
     .nullable(),
   allowCardNumberMasking: yup.boolean().default(false),
-  divisionFactor: yup.number().typeError('Division Factor must be a number').optional().nullable(),
+  divisionFactor: yup
+    .number()
+    .typeError('Division Factor must be a number')
+    .optional()
+    .nullable(),
   commissionRules: yup
     .array()
     .of(
@@ -126,19 +181,25 @@ export const partyProfileSchema = yup.object({
         productCode: yup.string().trim().required('Product is required'),
         productDescription: yup.string().trim().optional().nullable(),
         commissionType: yup
-          .mixed<(typeof PartyProfileCommissionTypeEnum)[keyof typeof PartyProfileCommissionTypeEnum]>()
+          .mixed<
+            (typeof PartyProfileCommissionTypeEnum)[keyof typeof PartyProfileCommissionTypeEnum]
+          >()
           .oneOf(Object.values(PartyProfileCommissionTypeEnum))
           .required('Commission type is required'),
         commissionValue: yup
           .string()
           .trim()
           .required('Commission value is required')
-          .test('commission-value-number', 'Commission value must be a number', value => {
-            if (!value) {
-              return false;
+          .test(
+            'commission-value-number',
+            'Commission value must be a number',
+            value => {
+              if (!value) {
+                return false;
+              }
+              return Number.isFinite(Number(value));
             }
-            return Number.isFinite(Number(value));
-          }),
+          ),
       })
     )
     .default([]),

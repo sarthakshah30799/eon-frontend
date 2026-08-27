@@ -32,13 +32,15 @@ export const canApproveTransfer = (params: {
 
   return Boolean(
     activeBranchId &&
-      activeCounterId &&
-      transfer.destinationBranchId === activeBranchId &&
-      transfer.destinationCounterId === activeCounterId
+    activeCounterId &&
+    transfer.destinationBranchId === activeBranchId &&
+    transfer.destinationCounterId === activeCounterId
   );
 };
 
-export const getTransferStatusLabel = (status: (typeof TRANSFER_STATUS_OPTIONS)[number]['value']) => {
+export const getTransferStatusLabel = (
+  status: (typeof TRANSFER_STATUS_OPTIONS)[number]['value']
+) => {
   const option = TRANSFER_STATUS_OPTIONS.find(item => item.value === status);
   return option?.label ?? status;
 };

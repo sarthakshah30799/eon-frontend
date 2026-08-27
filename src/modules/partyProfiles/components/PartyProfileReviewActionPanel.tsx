@@ -2,10 +2,7 @@ import { useCallback, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { Button, Checkbox, Modal } from '@/components/ui';
 import { FormFieldTextarea } from '@/components/forms';
-import type {
-  ICreatePartyProfile,
-  IReviewPartyProfilePayload,
-} from '../types';
+import type { ICreatePartyProfile, IReviewPartyProfilePayload } from '../types';
 import { PartyProfileStatusEnum } from '../types';
 
 interface PartyProfileReviewActionPanelProps {
@@ -49,7 +46,8 @@ export const PartyProfileReviewActionPanel = ({
         await onReviewSubmit({
           status,
           active: isActive,
-          rejectReason: status === PartyProfileStatusEnum.REJECT ? rejectReason : undefined,
+          rejectReason:
+            status === PartyProfileStatusEnum.REJECT ? rejectReason : undefined,
         });
 
         if (status === PartyProfileStatusEnum.REJECT) {
@@ -76,7 +74,8 @@ export const PartyProfileReviewActionPanel = ({
       <div className="rounded-xl border border-border-primary bg-surface-primary p-4 shadow-sm">
         <div className="space-y-4">
           <p className="text-sm text-text-secondary">
-            Review the profile, choose whether it should be active, then approve or reject it.
+            Review the profile, choose whether it should be active, then approve
+            or reject it.
           </p>
 
           <div className="flex flex-wrap items-center gap-4">
@@ -89,7 +88,8 @@ export const PartyProfileReviewActionPanel = ({
               Active on approval
             </label>
             <p className="text-xs text-text-tertiary">
-              Approving or rejecting will also record who updated the status and when.
+              Approving or rejecting will also record who updated the status and
+              when.
             </p>
           </div>
 

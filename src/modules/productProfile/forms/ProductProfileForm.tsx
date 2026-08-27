@@ -13,7 +13,10 @@ import {
   PRODUCT_PROFILE_DETAIL_CHECKBOXES,
 } from '../constants';
 import { productProfileSchema } from '../schema';
-import type { ICreateProductProfile, IUpdateProductProfilePayload } from '../types';
+import type {
+  ICreateProductProfile,
+  IUpdateProductProfilePayload,
+} from '../types';
 import { useNavigate } from 'react-router-dom';
 import { productProfileApi } from '@/api/productProfile';
 import { partyProfileApi } from '@/api/partyProfile';
@@ -49,9 +52,8 @@ const ACCOUNT_PROFILE_SELECT_FIELDS: ReadonlySet<keyof ICreateProductProfile> =
     'profitAcBrnSale',
   ]);
 
-const isAccountProfileSelectField = (
-  fieldName: keyof ICreateProductProfile
-) => ACCOUNT_PROFILE_SELECT_FIELDS.has(fieldName);
+const isAccountProfileSelectField = (fieldName: keyof ICreateProductProfile) =>
+  ACCOUNT_PROFILE_SELECT_FIELDS.has(fieldName);
 
 interface ProductProfileFormProps {
   defaultValues: ICreateProductProfile;
@@ -63,11 +65,7 @@ interface ProductProfileFormProps {
   currentId?: string;
 }
 
-const CardIssuerField = ({
-  isSubmitting,
-}: {
-  isSubmitting: boolean;
-}) => {
+const CardIssuerField = ({ isSubmitting }: { isSubmitting: boolean }) => {
   const { watch, setValue } = useFormContext<ICreateProductProfile>();
   const issuerIds = watch('cardIssuerProfileIds') ?? [];
   const [selectedProfiles, setSelectedProfiles] = useState<IPartyProfile[]>([]);
@@ -83,11 +81,15 @@ const CardIssuerField = ({
       }
 
       const profiles = await Promise.all(
-        issuerIds.map(id => partyProfileApi.getPartyProfileById(id).catch(() => undefined))
+        issuerIds.map(id =>
+          partyProfileApi.getPartyProfileById(id).catch(() => undefined)
+        )
       );
       if (active) {
         setSelectedProfiles(
-          profiles.filter((profile): profile is IPartyProfile => Boolean(profile))
+          profiles.filter((profile): profile is IPartyProfile =>
+            Boolean(profile)
+          )
         );
       }
     };
@@ -102,7 +104,9 @@ const CardIssuerField = ({
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-sm font-semibold text-text-primary">Card Issuers</p>
+          <p className="text-sm font-semibold text-text-primary">
+            Card Issuers
+          </p>
           <p className="text-xs text-text-secondary">
             Select active and approved card issuer profiles.
           </p>
@@ -119,15 +123,19 @@ const CardIssuerField = ({
 
       <div className="flex flex-wrap gap-2">
         {selectedProfiles.length === 0 ? (
-          <span className="text-sm text-text-tertiary">No card issuers selected.</span>
-        ) : selectedProfiles.map(profile => (
-          <span
-            key={profile.id}
-            className="inline-flex items-center rounded-full border border-border-secondary bg-surface-secondary px-3 py-1 text-sm"
-          >
-            {profile.code} - {profile.name}
+          <span className="text-sm text-text-tertiary">
+            No card issuers selected.
           </span>
-        ))}
+        ) : (
+          selectedProfiles.map(profile => (
+            <span
+              key={profile.id}
+              className="inline-flex items-center rounded-full border border-border-secondary bg-surface-secondary px-3 py-1 text-sm"
+            >
+              {profile.code} - {profile.name}
+            </span>
+          ))
+        )}
       </div>
 
       <SelectPartyProfiles
@@ -140,10 +148,14 @@ const CardIssuerField = ({
         initialSelectedProfiles={selectedProfiles}
         onContinue={profiles => {
           setSelectedProfiles(profiles);
-          setValue('cardIssuerProfileIds', profiles.map(profile => profile.id), {
-            shouldDirty: true,
-            shouldValidate: true,
-          });
+          setValue(
+            'cardIssuerProfileIds',
+            profiles.map(profile => profile.id),
+            {
+              shouldDirty: true,
+              shouldValidate: true,
+            }
+          );
           setIsModalOpen(false);
         }}
         onClose={() => setIsModalOpen(false)}
@@ -481,7 +493,8 @@ export const ProductProfileForm = ({
           value: account.id,
           label: `${account.accountCode} - ${account.accountName}`,
         })),
-        hasMore: (response.data ?? []).length === ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
+        hasMore:
+          (response.data ?? []).length === ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
       };
     },
     []
@@ -522,7 +535,9 @@ export const ProductProfileForm = ({
       return onSubmit({
         ...values,
         cardIssuerProfileIds: currentIds.filter(id => !initialIdSet.has(id)),
-        removedCardIssuerProfileIds: initialIds.filter(id => !currentIdSet.has(id)),
+        removedCardIssuerProfileIds: initialIds.filter(
+          id => !currentIdSet.has(id)
+        ),
       });
     },
     [currentId, defaultValues.cardIssuerProfileIds, onSubmit]
@@ -572,7 +587,7 @@ export const ProductProfileForm = ({
 
       <CardSection heading="Accounting Configuration">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {PRODUCT_PROFILE_ACCOUNTING_FIELDS.map(field => (
+          {PRODUCT_PROFILE_ACCOUNTING_FIELDS.map(field =>
             isAccountProfileSelectField(field.name) ? (
               <FormFieldSelect
                 key={field.name}
@@ -595,7 +610,7 @@ export const ProductProfileForm = ({
                 disabled={isSubmitting}
               />
             )
-          ))}
+          )}
         </div>
       </CardSection>
 

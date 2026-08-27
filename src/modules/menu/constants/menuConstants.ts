@@ -1,6 +1,7 @@
 export const MENU_TEXTS = {
   CREATE_TITLE: 'Menu Management',
-  FORM_SUBTITLE: 'Create and update dynamic sidebar menus from the admin panel.',
+  FORM_SUBTITLE:
+    'Create and update dynamic sidebar menus from the admin panel.',
   SAVE_CHANGES: 'Save Changes',
   CREATE_SUCCESS: 'Menu created successfully!',
   UPDATE_SUCCESS: 'Menu updated successfully!',

@@ -11,7 +11,9 @@ export const MasterPageResolverView = () => {
   const { findPageBySlug } = useMasterPages();
   const permission = usePermission(location.pathname);
   const page = findPageBySlug(location.pathname);
-  const canSkipPermission = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
+  const canSkipPermission = Boolean(
+    user?.isAdmin || user?.isHo || user?.isHoStaff
+  );
 
   if (!page) {
     return <NotFoundState />;

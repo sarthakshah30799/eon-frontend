@@ -4,7 +4,9 @@ interface CloseIconProps {
   className?: string;
 }
 
-export const CloseIcon: React.FC<CloseIconProps> = ({ className = 'h-5 w-5' }) => {
+export const CloseIcon: React.FC<CloseIconProps> = ({
+  className = 'h-5 w-5',
+}) => {
   return (
     <svg
       aria-hidden="true"

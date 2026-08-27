@@ -17,8 +17,12 @@ export const CompanyProfileListView = () => {
     }),
     [debouncedSearch]
   );
-  const { data: companies = [], isLoading, isFetching, error } =
-    useListCompanyProfiles(query);
+  const {
+    data: companies = [],
+    isLoading,
+    isFetching,
+    error,
+  } = useListCompanyProfiles(query);
   const { deleteCompany, isPending: isDeleting } = useDeleteCompanyProfile();
 
   const handleDelete = async (id: string) => {

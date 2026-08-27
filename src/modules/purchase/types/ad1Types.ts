@@ -37,7 +37,7 @@ export interface IAd1FormValues {
   grossRevenue: string;
   revenueReceivable: string;
   agentId: string;
-  commGiven: string;       // display only — not saved to DB
+  commGiven: string; // display only — not saved to DB
   commPercentOnFe: string; // used for agentComm calculation only
   agentComm: string;
   tds: string;

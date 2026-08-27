@@ -10,7 +10,9 @@ interface ExpenseIncomeBookingListViewProps {
   type: 'EXPENSE' | 'INCOME';
 }
 
-export const ExpenseIncomeBookingListView = ({ type }: ExpenseIncomeBookingListViewProps) => {
+export const ExpenseIncomeBookingListView = ({
+  type,
+}: ExpenseIncomeBookingListViewProps) => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const basePath = type === 'EXPENSE' ? '/expense-booking' : '/income-booking';
@@ -25,7 +27,12 @@ export const ExpenseIncomeBookingListView = ({ type }: ExpenseIncomeBookingListV
     [type, debouncedSearch]
   );
 
-  const { data: masters = [], isLoading, isFetching, error } = useListBookingMasters(query);
+  const {
+    data: masters = [],
+    isLoading,
+    isFetching,
+    error,
+  } = useListBookingMasters(query);
 
   if (isLoading) {
     return <Loader />;
@@ -46,9 +53,7 @@ export const ExpenseIncomeBookingListView = ({ type }: ExpenseIncomeBookingListV
           <Button
             type="button"
             className="rounded-sm"
-            onClick={() =>
-              navigate(`${basePath}/create`)
-            }
+            onClick={() => navigate(`${basePath}/create`)}
           >
             Create {type === 'EXPENSE' ? 'Expense' : 'Income'} Booking
           </Button>

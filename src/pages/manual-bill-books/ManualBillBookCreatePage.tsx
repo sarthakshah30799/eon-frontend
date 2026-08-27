@@ -10,9 +10,7 @@ const ManualBillBookCreatePage = () => {
     navigate('/manual-bill-books');
   };
 
-  return (
-    <BulkDispatchView onSuccess={handleSuccess} reassignId={reassignId} />
-  );
+  return <BulkDispatchView onSuccess={handleSuccess} reassignId={reassignId} />;
 };
 
 export default ManualBillBookCreatePage;

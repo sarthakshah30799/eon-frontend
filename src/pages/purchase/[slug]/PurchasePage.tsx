@@ -1,7 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Button, AsyncSelect, type AsyncSelectOption, type AsyncSelectResponse } from '@/components/ui';
+import {
+  Button,
+  AsyncSelect,
+  type AsyncSelectOption,
+  type AsyncSelectResponse,
+} from '@/components/ui';
 import { NotFoundState } from '@/components/ui/not-found-state';
 import { PURCHASE_PAGE_STATUS_TEXT } from '@/modules/purchase/constants/purchaseConstants';
 import { useAuth } from '@/lib/AuthContext';
@@ -33,7 +38,9 @@ const PurchasePageView = ({ purchasePageType }: PurchasePageViewProps) => {
   const { user } = useAuth();
   const [search, setSearch] = useState('');
   const [branchFilter, setBranchFilter] = useState('');
-  const canSeeBranchFilter = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
+  const canSeeBranchFilter = Boolean(
+    user?.isAdmin || user?.isHo || user?.isHoStaff
+  );
 
   const { data: branches = [] } = useListBranchProfiles({ activeOnly: true });
   const branchOptions = useMemo<AsyncSelectOption[]>(
@@ -49,16 +56,17 @@ const PurchasePageView = ({ purchasePageType }: PurchasePageViewProps) => {
     [branchFilter, branchOptions]
   );
   const loadBranchOptions = useMemo(
-    () => async (inputValue: string): Promise<AsyncSelectResponse> => {
-      const normalizedInput = inputValue.trim().toLowerCase();
-      const filteredOptions = normalizedInput
-        ? branchOptions.filter(option =>
-            option.label.toLowerCase().includes(normalizedInput)
-          )
-        : branchOptions;
+    () =>
+      async (inputValue: string): Promise<AsyncSelectResponse> => {
+        const normalizedInput = inputValue.trim().toLowerCase();
+        const filteredOptions = normalizedInput
+          ? branchOptions.filter(option =>
+              option.label.toLowerCase().includes(normalizedInput)
+            )
+          : branchOptions;
 
-      return { options: filteredOptions };
-    },
+        return { options: filteredOptions };
+      },
     [branchOptions]
   );
 
@@ -79,7 +87,13 @@ const PurchasePageView = ({ purchasePageType }: PurchasePageViewProps) => {
     isFetching,
     error,
   } = useQuery({
-    queryKey: ['transactions', purchasePageType, selectedSlug, search, branchFilter],
+    queryKey: [
+      'transactions',
+      purchasePageType,
+      selectedSlug,
+      search,
+      branchFilter,
+    ],
     queryFn: () =>
       transactionsApi.getTransactions({
         slug: purchasePageType ?? undefined,
@@ -90,7 +104,10 @@ const PurchasePageView = ({ purchasePageType }: PurchasePageViewProps) => {
   });
 
   useEffect(() => {
-    const resolvedType = getPurchasePageTypeFromPath(location.pathname, routeSlug);
+    const resolvedType = getPurchasePageTypeFromPath(
+      location.pathname,
+      routeSlug
+    );
     if (!resolvedType || resolvedType === purchasePageType) {
       return;
     }
@@ -123,7 +140,9 @@ const PurchasePageView = ({ purchasePageType }: PurchasePageViewProps) => {
 
   if (!purchasePageType) {
     return (
-      <NotFoundState message={PURCHASE_PAGE_STATUS_TEXT.transactionPageNotFound} />
+      <NotFoundState
+        message={PURCHASE_PAGE_STATUS_TEXT.transactionPageNotFound}
+      />
     );
   }
 
@@ -143,7 +162,8 @@ const PurchasePageView = ({ purchasePageType }: PurchasePageViewProps) => {
             {getPurchasePageTitle(purchasePageType)}
           </h1>
           <p className="text-sm text-text-secondary">
-            Browse transactions for the selected slug, then create or edit records from here.
+            Browse transactions for the selected slug, then create or edit
+            records from here.
           </p>
         </div>
 
@@ -172,7 +192,9 @@ const PurchasePageView = ({ purchasePageType }: PurchasePageViewProps) => {
                 const selectedOption = Array.isArray(option)
                   ? (option[0] ?? null)
                   : option;
-                setBranchFilter(selectedOption?.value ? String(selectedOption.value) : '');
+                setBranchFilter(
+                  selectedOption?.value ? String(selectedOption.value) : ''
+                );
               }}
             />
           </div>
@@ -215,9 +237,7 @@ const PurchasePage = () => {
   }
 
   if (!purchasePageType) {
-    return (
-      <NotFoundState message={PURCHASE_PAGE_STATUS_TEXT.pageNotFound} />
-    );
+    return <NotFoundState message={PURCHASE_PAGE_STATUS_TEXT.pageNotFound} />;
   }
 
   return <PurchasePageView purchasePageType={purchasePageType} />;

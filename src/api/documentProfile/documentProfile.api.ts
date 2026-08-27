@@ -43,7 +43,9 @@ export const documentProfileApi = {
   getDocumentProfileById: async (
     id: string
   ): Promise<IDocumentProfile | undefined> => {
-    const res = await apiClient.get<IDocumentProfile>(`/document-profiles/${id}`);
+    const res = await apiClient.get<IDocumentProfile>(
+      `/document-profiles/${id}`
+    );
 
     if (res.error) {
       throw new Error(res.error);
@@ -55,7 +57,10 @@ export const documentProfileApi = {
   createDocumentProfile: async (
     data: ICreateDocumentProfile
   ): Promise<IDocumentProfile> => {
-    const res = await apiClient.post<IDocumentProfile>('/document-profiles', data);
+    const res = await apiClient.post<IDocumentProfile>(
+      '/document-profiles',
+      data
+    );
 
     if (res.error) {
       throw new Error(res.error);

@@ -9,13 +9,8 @@ export const useUpdateUserRoleStatus = () => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: ({
-      id,
-      isActive,
-    }: {
-      id: string;
-      isActive: boolean;
-    }) => userRoleApi.updateUserRoleStatus(id, isActive),
+    mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
+      userRoleApi.updateUserRoleStatus(id, isActive),
     onMutate: async ({ id, isActive }) => {
       await queryClient.cancelQueries({ queryKey: ['user-roles'] });
       await queryClient.cancelQueries({ queryKey: ['user-role', id] });
@@ -23,7 +18,10 @@ export const useUpdateUserRoleStatus = () => {
       const previousRoles = queryClient.getQueriesData<IUserRole[]>({
         queryKey: ['user-roles'],
       });
-      const previousRole = queryClient.getQueryData<IUserRole>(['user-role', id]);
+      const previousRole = queryClient.getQueryData<IUserRole>([
+        'user-role',
+        id,
+      ]);
 
       queryClient.setQueriesData<IUserRole[]>(
         { queryKey: ['user-roles'] },
@@ -33,8 +31,10 @@ export const useUpdateUserRoleStatus = () => {
           ) ?? currentRoles
       );
 
-      queryClient.setQueryData<IUserRole | undefined>(['user-role', id], currentRole =>
-        currentRole ? { ...currentRole, isActive } : currentRole
+      queryClient.setQueryData<IUserRole | undefined>(
+        ['user-role', id],
+        currentRole =>
+          currentRole ? { ...currentRole, isActive } : currentRole
       );
 
       return { previousRoles, previousRole };
@@ -45,7 +45,10 @@ export const useUpdateUserRoleStatus = () => {
       });
 
       if (context?.previousRole) {
-        queryClient.setQueryData(['user-role', variables.id], context.previousRole);
+        queryClient.setQueryData(
+          ['user-role', variables.id],
+          context.previousRole
+        );
       }
 
       toast.error(USER_ROLE_TEXTS.UPDATE_ERROR);

@@ -7,13 +7,20 @@ export const useCreateCountryAccessRules = (countryId: string) => {
 
   const mutation = useMutation({
     mutationFn: (
-      rules: Array<{ branchId: string; userId: string; fromDate?: string; toDate?: string }>
+      rules: Array<{
+        branchId: string;
+        userId: string;
+        fromDate?: string;
+        toDate?: string;
+      }>
     ) =>
       transactionPoliciesApi.createCountryAccessRules(countryId, {
         rules: rules.map(({ branchId, userId }) => ({ branchId, userId })),
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['country-access-rules', countryId] });
+      queryClient.invalidateQueries({
+        queryKey: ['country-access-rules', countryId],
+      });
       toast.success('Country access rules updated');
     },
     onError: () => {

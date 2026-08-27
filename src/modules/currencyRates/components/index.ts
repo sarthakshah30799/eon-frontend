@@ -5,4 +5,3 @@ export * from './CurrencyRateComparisonPanel';
 export * from './CurrencyRateGroupModal';
 export * from './CurrencyRateEntryModal';
 export * from './CurrencyRateOverrideModal';
-

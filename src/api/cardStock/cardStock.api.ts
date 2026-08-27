@@ -73,7 +73,10 @@ export interface ICardStockCard extends CardStockCardPayload {
   maskedCardNumber?: string;
 }
 
-export interface ICardStockReceiptItem extends Omit<CardStockItemPayload, 'cards'> {
+export interface ICardStockReceiptItem extends Omit<
+  CardStockItemPayload,
+  'cards'
+> {
   id: string;
   currencySnapshot?: ICurrencyProfile | null;
   productSnapshot?: IProductProfile | null;
@@ -114,40 +117,72 @@ export interface CardStockPrintResponse {
 
 export const cardStockApi = {
   list: async (): Promise<ICardStockReceipt[]> => {
-    const response = await apiClient.get<ICardStockReceipt[]>('/card-stock/receipts');
+    const response = await apiClient.get<ICardStockReceipt[]>(
+      '/card-stock/receipts'
+    );
     if (response.error) throw new Error(response.error);
     return response.data ?? [];
   },
 
   get: async (id: string): Promise<ICardStockReceipt> => {
-    const response = await apiClient.get<ICardStockReceipt>(`/card-stock/receipts/${id}`);
-    if (response.error || !response.data) throw new Error(response.error || 'Card stock receipt not found');
+    const response = await apiClient.get<ICardStockReceipt>(
+      `/card-stock/receipts/${id}`
+    );
+    if (response.error || !response.data)
+      throw new Error(response.error || 'Card stock receipt not found');
     return response.data;
   },
 
-  create: async (payload: CardStockReceiptPayload): Promise<ICardStockReceipt> => {
-    const response = await apiClient.post<ICardStockReceipt>('/card-stock/receipts', payload);
-    if (response.error || !response.data) throw new Error(response.error || 'Failed to create card stock receipt');
+  create: async (
+    payload: CardStockReceiptPayload
+  ): Promise<ICardStockReceipt> => {
+    const response = await apiClient.post<ICardStockReceipt>(
+      '/card-stock/receipts',
+      payload
+    );
+    if (response.error || !response.data)
+      throw new Error(response.error || 'Failed to create card stock receipt');
     return response.data;
   },
 
-  recordPrint: async (id: string, payload: CardStockPrintPayload): Promise<CardStockPrintResponse> => {
-    const response = await apiClient.post<CardStockPrintResponse>(`/card-stock/receipts/${id}/print`, payload);
-    if (response.error || !response.data) throw new Error(response.error || 'Failed to record CARD stock receipt print');
+  recordPrint: async (
+    id: string,
+    payload: CardStockPrintPayload
+  ): Promise<CardStockPrintResponse> => {
+    const response = await apiClient.post<CardStockPrintResponse>(
+      `/card-stock/receipts/${id}/print`,
+      payload
+    );
+    if (response.error || !response.data)
+      throw new Error(
+        response.error || 'Failed to record CARD stock receipt print'
+      );
     return response.data;
   },
 
   downloadTemplate: async (): Promise<Blob> => {
-    const response = await apiClient.getDownload('/card-stock/receipts/cards/template');
-    if (response.error || !response.data) throw new Error(response.error || 'Failed to download CARD stock template');
+    const response = await apiClient.getDownload(
+      '/card-stock/receipts/cards/template'
+    );
+    if (response.error || !response.data)
+      throw new Error(
+        response.error || 'Failed to download CARD stock template'
+      );
     return response.data.blob;
   },
 
-  previewUpload: async (file: File, issuerPartyProfileId?: string): Promise<CardStockUploadPreviewRow[]> => {
+  previewUpload: async (
+    file: File,
+    issuerPartyProfileId?: string
+  ): Promise<CardStockUploadPreviewRow[]> => {
     const formData = new FormData();
     formData.append('file', file);
-    if (issuerPartyProfileId) formData.append('issuerPartyProfileId', issuerPartyProfileId);
-    const response = await apiClient.postFormData<CardStockUploadPreviewRow[]>('/card-stock/receipts/cards/preview', formData);
+    if (issuerPartyProfileId)
+      formData.append('issuerPartyProfileId', issuerPartyProfileId);
+    const response = await apiClient.postFormData<CardStockUploadPreviewRow[]>(
+      '/card-stock/receipts/cards/preview',
+      formData
+    );
     if (response.error) throw new Error(response.error);
     return response.data ?? [];
   },

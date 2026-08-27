@@ -14,7 +14,9 @@ export const useUploadPartyProfileDocument = () => {
       toast.success('Document uploaded successfully!');
     },
     onError: error => {
-      toast.error(error instanceof Error ? error.message : 'Failed to upload document');
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to upload document'
+      );
     },
   });
 

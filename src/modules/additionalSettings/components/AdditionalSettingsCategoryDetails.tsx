@@ -28,7 +28,6 @@ interface AdditionalSettingsCategoryDetailsProps {
   ) => Promise<void>;
 }
 
-
 const CategoryTitleEditor = ({
   category,
   isReadOnly = false,
@@ -81,11 +80,12 @@ const SubcategoryRow = ({
     categoryCode,
     subcategory.code
   );
-  const isAccountProfileValue = subcategoryDefinition?.optionsSource === 'account-profile';
-  const isCurrencyProfileValue = subcategoryDefinition?.optionsSource === 'currency-profile';
-  const { data: currencyProfile, isFetching: isCurrencyFetching } = useGetCurrencyProfile(
-    isCurrencyProfileValue ? subcategory.value : ''
-  );
+  const isAccountProfileValue =
+    subcategoryDefinition?.optionsSource === 'account-profile';
+  const isCurrencyProfileValue =
+    subcategoryDefinition?.optionsSource === 'currency-profile';
+  const { data: currencyProfile, isFetching: isCurrencyFetching } =
+    useGetCurrencyProfile(isCurrencyProfileValue ? subcategory.value : '');
   const accountLabel = formatAccountProfileLabel(accountProfile);
   const currencyLabel = useMemo(() => {
     if (!currencyProfile) {
@@ -111,7 +111,8 @@ const SubcategoryRow = ({
         {subcategory.description || subcategory.title}
       </td>
       <td className="px-4 py-4 text-xs font-medium leading-5 text-text-primary">
-        {(areAccountProfilesFetching && isAccountProfileValue) || (isCurrencyFetching && isCurrencyProfileValue)
+        {(areAccountProfilesFetching && isAccountProfileValue) ||
+        (isCurrencyFetching && isCurrencyProfileValue)
           ? 'Loading...'
           : displayValue}
       </td>
@@ -137,7 +138,10 @@ interface EditSubcategoryFormProps {
   loadAccountProfileOptions: (
     inputValue?: string,
     page?: number
-  ) => Promise<{ options: { value: string; label: string }[]; hasMore: boolean }>;
+  ) => Promise<{
+    options: { value: string; label: string }[];
+    hasMore: boolean;
+  }>;
   isPolicyCategory?: boolean;
   onSave: (values: { description: string; value: string }) => Promise<void>;
   onCancel: () => void;
@@ -152,7 +156,9 @@ const EditSubcategoryForm = ({
   onSave,
   onCancel,
 }: EditSubcategoryFormProps) => {
-  const [description, setDescription] = useState(subcategory.description || subcategory.title);
+  const [description, setDescription] = useState(
+    subcategory.description || subcategory.title
+  );
   const [code] = useState(subcategory.code);
   const [categoryType] = useState(subcategory.categoryType || 'text');
   const [value, setValue] = useState(subcategory.value);
@@ -166,7 +172,9 @@ const EditSubcategoryForm = ({
   const isTransactionNumberingCategory =
     categoryCode?.trim().toUpperCase() === 'TRANSACTION_NUMBERING';
   const isRequiredPolicyValue = subcategoryDefinition?.required ?? true;
-  const isNumberType = categoryType.toLowerCase() === 'number' || categoryType.toLowerCase() === 'decimal';
+  const isNumberType =
+    categoryType.toLowerCase() === 'number' ||
+    categoryType.toLowerCase() === 'decimal';
   const isDateType = categoryType.toLowerCase() === 'date';
   const isSelectType = categoryType.toLowerCase() === 'select';
   const selectValueOptions = useMemo(
@@ -198,34 +206,35 @@ const EditSubcategoryForm = ({
       ? {
           value: currencyProfile.id,
           label:
-            currencyProfile.currencyCode?.trim() && currencyProfile.currencyName?.trim()
+            currencyProfile.currencyCode?.trim() &&
+            currencyProfile.currencyName?.trim()
               ? `${currencyProfile.currencyCode.trim()} - ${currencyProfile.currencyName.trim()}`
-              : currencyProfile.currencyName?.trim() || currencyProfile.currencyCode?.trim() || '',
+              : currencyProfile.currencyName?.trim() ||
+                currencyProfile.currencyCode?.trim() ||
+                '',
         }
       : null) ??
     selectValueOptions.find(option => option.value === value) ??
     null;
-  const loadCurrencyProfileOptions = useCallback(
-    async (inputValue: string) => {
-      const currencies = await currencyProfileApi.getCurrencyProfiles(inputValue);
+  const loadCurrencyProfileOptions = useCallback(async (inputValue: string) => {
+    const currencies = await currencyProfileApi.getCurrencyProfiles(inputValue);
 
-      return {
-        options: currencies.map(currency => {
-          const currencyCode = currency.currencyCode?.trim() || '';
-          const currencyName = currency.currencyName?.trim() || '';
+    return {
+      options: currencies.map(currency => {
+        const currencyCode = currency.currencyCode?.trim() || '';
+        const currencyName = currency.currencyName?.trim() || '';
 
-          return {
-            value: currency.id,
-            label: currencyCode && currencyName
+        return {
+          value: currency.id,
+          label:
+            currencyCode && currencyName
               ? `${currencyCode} - ${currencyName}`
               : currencyName || currencyCode,
-          };
-        }),
-        hasMore: false,
-      };
-    },
-    []
-  );
+        };
+      }),
+      hasMore: false,
+    };
+  }, []);
   const loadSelectValueOptions = useCallback(
     async (inputValue = '') => {
       if (subcategoryDefinition?.optionsSource === 'account-profile') {
@@ -312,7 +321,7 @@ const EditSubcategoryForm = ({
         ) : (
           <textarea
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={e => setDescription(e.target.value)}
             required
             rows={3}
             className="w-full rounded-sm border border-border-primary bg-surface-primary px-3 py-2 text-xs leading-5 text-text-primary outline-none transition focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
@@ -399,31 +408,38 @@ const EditSubcategoryForm = ({
               pattern={isTransactionNumberingCategory ? '\\d*' : undefined}
               maxLength={isTransactionNumberingCategory ? 9 : undefined}
               value={value}
-              onChange={(e) =>
+              onChange={e =>
                 isTransactionNumberingCategory
                   ? handleNumberingValueChange(e.target.value)
                   : setValue(e.target.value)
               }
               required={isRequiredPolicyValue}
               minLength={isTransactionNumberingCategory ? 8 : undefined}
-              min={subcategoryDefinition?.valueType === 'number' ? 0 : undefined}
+              min={
+                subcategoryDefinition?.valueType === 'number' ? 0 : undefined
+              }
               step={subcategoryDefinition?.valueType === 'number' ? '1' : 'any'}
               valueTransform="none"
               classes={{ container: 'max-w-none' }}
               placeholder={
                 isTransactionNumberingCategory
                   ? 'Enter 8-digit series counter'
-                  : subcategoryDefinition?.placeholder ??
-                    (isRequiredPolicyValue ? 'Enter value' : 'Enter value or leave blank')
+                  : (subcategoryDefinition?.placeholder ??
+                    (isRequiredPolicyValue
+                      ? 'Enter value'
+                      : 'Enter value or leave blank'))
               }
             />
             {isTransactionNumberingCategory ? (
               <p className="text-[11px] leading-5 text-text-secondary">
-                Enter exactly 8 digits. The final number is 5-digit branch code + 2-digit financial year + 8-digit series = 15 characters.
+                Enter exactly 8 digits. The final number is 5-digit branch code
+                + 2-digit financial year + 8-digit series = 15 characters.
               </p>
             ) : null}
             {valueError ? (
-              <p className="text-[11px] leading-5 text-error-600">{valueError}</p>
+              <p className="text-[11px] leading-5 text-error-600">
+                {valueError}
+              </p>
             ) : null}
           </div>
         ) : (
@@ -448,10 +464,7 @@ const EditSubcategoryForm = ({
         >
           Cancel
         </Button>
-        <Button
-          type="submit"
-          disabled={isSaving || !description.trim()}
-        >
+        <Button type="submit" disabled={isSaving || !description.trim()}>
           {isSaving ? 'Saving...' : 'Save Changes'}
         </Button>
       </div>
@@ -467,8 +480,11 @@ export const AdditionalSettingsCategoryDetails = ({
   onOpenEditCategory,
   onSaveSubcategory,
 }: AdditionalSettingsCategoryDetailsProps) => {
-  const [editingSubcategory, setEditingSubcategory] = useState<IAdditionalSettingSubcategory | null>(null);
-  const categoryDefinition = getAdditionalSettingCategoryDefinition(category?.code);
+  const [editingSubcategory, setEditingSubcategory] =
+    useState<IAdditionalSettingSubcategory | null>(null);
+  const categoryDefinition = getAdditionalSettingCategoryDefinition(
+    category?.code
+  );
   const isLockedCategory = Boolean(categoryDefinition?.titleLocked);
   const accountProfilesById = useMemo(
     () => new Map(accountProfiles.map(account => [account.id, account])),
@@ -500,9 +516,15 @@ export const AdditionalSettingsCategoryDetails = ({
     [accountProfileOptions]
   );
   const visibleSubcategories = useMemo(
-    () => category?.subcategories.filter(subcategory =>
-      !isLockedCategory || isRegisteredAdditionalSettingSubcategoryCode(category.code, subcategory.code)
-    ) ?? [],
+    () =>
+      category?.subcategories.filter(
+        subcategory =>
+          !isLockedCategory ||
+          isRegisteredAdditionalSettingSubcategoryCode(
+            category.code,
+            subcategory.code
+          )
+      ) ?? [],
     [category, isLockedCategory]
   );
 
@@ -515,9 +537,7 @@ export const AdditionalSettingsCategoryDetails = ({
     <div className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm">
       <div className="mb-5 flex items-start justify-between gap-4">
         <div>
-          <p className="text-xs font-medium text-text-secondary">
-            Details
-          </p>
+          <p className="text-xs font-medium text-text-secondary">Details</p>
           <h2 className="mt-1 text-xl font-semibold tracking-tight text-text-primary">
             Category Details
           </h2>
@@ -580,7 +600,9 @@ export const AdditionalSettingsCategoryDetails = ({
                         key={subcategory.id}
                         subcategory={subcategory}
                         categoryCode={category.code}
-                        accountProfile={accountProfilesById.get(subcategory.value)}
+                        accountProfile={accountProfilesById.get(
+                          subcategory.value
+                        )}
                         areAccountProfilesFetching={areAccountProfilesFetching}
                         onEdit={setEditingSubcategory}
                       />
@@ -599,7 +621,7 @@ export const AdditionalSettingsCategoryDetails = ({
 
       <Modal
         open={editingSubcategory !== null}
-        onOpenChange={(open) => {
+        onOpenChange={open => {
           if (!open) setEditingSubcategory(null);
         }}
         title="Edit Subcategory"
@@ -618,9 +640,13 @@ export const AdditionalSettingsCategoryDetails = ({
             loadAccountProfileOptions={loadAccountProfileOptions}
             isPolicyCategory={isLockedCategory}
             onCancel={() => setEditingSubcategory(null)}
-            onSave={async (values) => {
+            onSave={async values => {
               if (category) {
-                await onSaveSubcategory(category.id, editingSubcategory.id, values);
+                await onSaveSubcategory(
+                  category.id,
+                  editingSubcategory.id,
+                  values
+                );
                 setEditingSubcategory(null);
               }
             }}

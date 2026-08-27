@@ -9,8 +9,10 @@ import {
 
 export const MonthwiseLockingView = () => {
   const { data: windows = [], isLoading } = useListBackdateWindows();
-  const { submitBackdateWindows, isPending: isCreating } = useCreateBackdateWindows();
-  const { revokeBackdateWindow, isPending: isRevoking } = useRevokeBackdateWindow();
+  const { submitBackdateWindows, isPending: isCreating } =
+    useCreateBackdateWindows();
+  const { revokeBackdateWindow, isPending: isRevoking } =
+    useRevokeBackdateWindow();
 
   const rows = useMemo(
     () =>

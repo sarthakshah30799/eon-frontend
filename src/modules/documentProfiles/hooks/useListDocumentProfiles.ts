@@ -8,4 +8,3 @@ export const useListDocumentProfiles = (params?: IDocumentProfileListQuery) => {
     queryFn: () => documentProfileApi.getDocumentProfiles(params),
   });
 };
-

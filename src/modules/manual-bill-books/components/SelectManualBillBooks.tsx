@@ -50,19 +50,20 @@ const buildColumns = (
     {
       id: 'bookRange',
       header: 'Books From-To',
-      cell: ({ row }) => `${row.original.bookNoFrom} - ${row.original.bookNoTo}`,
+      cell: ({ row }) =>
+        `${row.original.bookNoFrom} - ${row.original.bookNoTo}`,
     },
     {
       id: 'branch',
       header: 'Branch',
       cell: ({ row }) => row.original.branchCode || '-',
     },
-      {
-        id: 'assignedTo',
-        accessorKey: 'assignedTo',
-        header: 'Assigned To',
-        cell: ({ row }) => resolveAssignedToLabel(row.original.assignedTo),
-      },
+    {
+      id: 'assignedTo',
+      accessorKey: 'assignedTo',
+      header: 'Assigned To',
+      cell: ({ row }) => resolveAssignedToLabel(row.original.assignedTo),
+    },
     {
       id: 'status',
       header: 'Status',
@@ -122,8 +123,11 @@ export const SelectManualBillBooks = ({
 }: SelectManualBillBooksProps) => {
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 350);
-  const { data: response, isLoading, isFetching } =
-    useListManualBillBooks({ branchId, limit: 1000, offset: 0 });
+  const {
+    data: response,
+    isLoading,
+    isFetching,
+  } = useListManualBillBooks({ branchId, limit: 1000, offset: 0 });
   const books = response?.data ?? [];
 
   const rows = useMemo<SelectableManualBillBookRow[]>(

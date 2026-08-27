@@ -4,7 +4,10 @@ import { Table, type TableColumnDef } from '@/components/ui';
 import { Modal } from '@/components/ui/modal/Modal';
 import { manualBillBookApi, type IDPAllocatedPageRow } from '@/api';
 import { useAuth } from '@/lib/AuthContext';
-import { ArrowLeftIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
+import {
+  ArrowLeftIcon,
+  ExclamationTriangleIcon,
+} from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
@@ -28,18 +31,19 @@ interface ConfirmState {
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 
-function mvToBookNo(
-  pageNo: number,
-  book: IDPAllocatedPageRow['book'],
-): number {
-  return book.bookNoFrom + Math.floor((pageNo - book.mvNoFrom) / book.vouchersPerBook);
+function mvToBookNo(pageNo: number, book: IDPAllocatedPageRow['book']): number {
+  return (
+    book.bookNoFrom +
+    Math.floor((pageNo - book.mvNoFrom) / book.vouchersPerBook)
+  );
 }
 
 function computeMVRangeForBook(
   bookNo: number,
-  book: IDPAllocatedPageRow['book'],
+  book: IDPAllocatedPageRow['book']
 ): { mvFrom: number; mvTo: number } {
-  const mvFrom = book.mvNoFrom + (bookNo - book.bookNoFrom) * book.vouchersPerBook;
+  const mvFrom =
+    book.mvNoFrom + (bookNo - book.bookNoFrom) * book.vouchersPerBook;
   const mvTo = mvFrom + book.vouchersPerBook - 1;
   return { mvFrom, mvTo };
 }
@@ -50,7 +54,11 @@ export const CashierDPUnmapView = () => {
   const { activeBranchId } = useAuth();
   const queryClient = useQueryClient();
 
-  const { data: dpRows = [], isLoading, isFetching } = useQuery<IDPAllocatedPageRow[]>({
+  const {
+    data: dpRows = [],
+    isLoading,
+    isFetching,
+  } = useQuery<IDPAllocatedPageRow[]>({
     queryKey: ['dp-allocated-pages', activeBranchId],
     queryFn: () => manualBillBookApi.getDPAllocatedPages(),
     enabled: !!activeBranchId,
@@ -62,7 +70,10 @@ export const CashierDPUnmapView = () => {
 
   const openForm = (row: IDPAllocatedPageRow) => {
     const firstBookNo = row.bookNoFrom;
-    const { mvFrom: calcFrom, mvTo: calcTo } = computeMVRangeForBook(firstBookNo, row.book);
+    const { mvFrom: calcFrom, mvTo: calcTo } = computeMVRangeForBook(
+      firstBookNo,
+      row.book
+    );
     setFormState({
       row,
       bookNoStr: String(firstBookNo),
@@ -85,7 +96,10 @@ export const CashierDPUnmapView = () => {
       if (!prev) return prev;
       const bookNo = parseInt(val, 10);
       if (!isNaN(bookNo)) {
-        const { mvFrom: calcFrom, mvTo: calcTo } = computeMVRangeForBook(bookNo, prev.row.book);
+        const { mvFrom: calcFrom, mvTo: calcTo } = computeMVRangeForBook(
+          bookNo,
+          prev.row.book
+        );
         return {
           ...prev,
           bookNoStr: val,
@@ -106,21 +120,31 @@ export const CashierDPUnmapView = () => {
     const mvTo = parseInt(formState.mvToStr, 10);
 
     if (isNaN(bookNo) || bookNo < row.bookNoFrom || bookNo > row.bookNoTo) {
-      setFormState(prev => prev ? {
-        ...prev,
-        error: `Book No must be between ${row.bookNoFrom} and ${row.bookNoTo}.`,
-      } : prev);
+      setFormState(prev =>
+        prev
+          ? {
+              ...prev,
+              error: `Book No must be between ${row.bookNoFrom} and ${row.bookNoTo}.`,
+            }
+          : prev
+      );
       return;
     }
     if (isNaN(mvFrom) || isNaN(mvTo) || mvFrom > mvTo) {
-      setFormState(prev => prev ? { ...prev, error: 'MV No From must be ≤ MV No To.' } : prev);
+      setFormState(prev =>
+        prev ? { ...prev, error: 'MV No From must be ≤ MV No To.' } : prev
+      );
       return;
     }
     if (mvFrom < row.mvFrom || mvTo > row.mvTo) {
-      setFormState(prev => prev ? {
-        ...prev,
-        error: `MV range must be within ${row.mvFrom} – ${row.mvTo}.`,
-      } : prev);
+      setFormState(prev =>
+        prev
+          ? {
+              ...prev,
+              error: `MV range must be within ${row.mvFrom} – ${row.mvTo}.`,
+            }
+          : prev
+      );
       return;
     }
 
@@ -128,10 +152,15 @@ export const CashierDPUnmapView = () => {
     const expectedBookNoFrom = mvToBookNo(mvFrom, row.book);
     const expectedBookNoTo = mvToBookNo(mvTo, row.book);
     if (expectedBookNoFrom !== bookNo || expectedBookNoTo !== bookNo) {
-      setFormState(prev => prev ? {
-        ...prev,
-        error: 'The entered MV range spans multiple books or does not match the selected Book No.',
-      } : prev);
+      setFormState(prev =>
+        prev
+          ? {
+              ...prev,
+              error:
+                'The entered MV range spans multiple books or does not match the selected Book No.',
+            }
+          : prev
+      );
       return;
     }
 
@@ -146,7 +175,7 @@ export const CashierDPUnmapView = () => {
 
   const handleConfirm = async () => {
     if (!confirmState) return;
-    setConfirmState(prev => prev ? { ...prev, isSubmitting: true } : prev);
+    setConfirmState(prev => (prev ? { ...prev, isSubmitting: true } : prev));
     try {
       await manualBillBookApi.unmapFromDP({
         dpUserId: confirmState.row.dpUserId,
@@ -158,78 +187,90 @@ export const CashierDPUnmapView = () => {
       toast.success('Pages successfully unmapped from delivery person.');
       closeForm();
       await queryClient.invalidateQueries({ queryKey: ['dp-allocated-pages'] });
-      await queryClient.invalidateQueries({ queryKey: ['cashier-manual-bill-books'] });
+      await queryClient.invalidateQueries({
+        queryKey: ['cashier-manual-bill-books'],
+      });
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Unmap failed.');
-      setConfirmState(prev => prev ? { ...prev, isSubmitting: false } : prev);
+      setConfirmState(prev => (prev ? { ...prev, isSubmitting: false } : prev));
     }
   };
 
   /* ─── Table columns ─────────────────────────────────────────────────── */
 
-  const columns = useMemo<TableColumnDef<IDPAllocatedPageRow>[]>(() => [
-    {
-      accessorKey: 'dpName',
-      header: 'Delivery Person',
-      cell: ({ row }) => (
-        <span className="font-semibold text-text-primary whitespace-nowrap">
-          {row.original.dpName}
-        </span>
-      ),
-    },
-    {
-      accessorKey: 'dispatchNo',
-      header: 'Dispatch No',
-      cell: ({ row }) => (
-        <span className="text-text-secondary whitespace-nowrap">{row.original.dispatchNo}</span>
-      ),
-    },
-    {
-      accessorKey: 'txnType',
-      header: 'Txn Type',
-      cell: ({ row }) => (
-        <span className="text-text-secondary whitespace-nowrap">{row.original.txnType}</span>
-      ),
-    },
-    {
-      id: 'bookRange',
-      header: 'Book Range',
-      cell: ({ row }) => {
-        const r = row.original;
-        const range = r.bookNoFrom === r.bookNoTo
-          ? String(r.bookNoFrom)
-          : `${r.bookNoFrom} – ${r.bookNoTo}`;
-        return (
-          <span className="font-semibold text-primary-700 whitespace-nowrap">{range}</span>
-        );
+  const columns = useMemo<TableColumnDef<IDPAllocatedPageRow>[]>(
+    () => [
+      {
+        accessorKey: 'dpName',
+        header: 'Delivery Person',
+        cell: ({ row }) => (
+          <span className="font-semibold text-text-primary whitespace-nowrap">
+            {row.original.dpName}
+          </span>
+        ),
       },
-    },
-    {
-      id: 'mvRange',
-      header: 'MV Range',
-      cell: ({ row }) => (
-        <span className="font-semibold text-emerald-700 whitespace-nowrap font-mono">
-          {row.original.mvFrom} – {row.original.mvTo}
-        </span>
-      ),
-    },
-    {
-      accessorKey: 'pageCount',
-      header: 'Pages',
-      cell: ({ row }) => (
-        <span className="text-text-secondary">{row.original.pageCount}</span>
-      ),
-    },
-    {
-      id: 'assignedBy',
-      header: 'Assigned By',
-      cell: ({ row }) => (
-        <span className="text-xs text-slate-600 whitespace-nowrap">
-          {row.original.assignedByName ?? '—'}
-        </span>
-      ),
-    },
-  ], []);
+      {
+        accessorKey: 'dispatchNo',
+        header: 'Dispatch No',
+        cell: ({ row }) => (
+          <span className="text-text-secondary whitespace-nowrap">
+            {row.original.dispatchNo}
+          </span>
+        ),
+      },
+      {
+        accessorKey: 'txnType',
+        header: 'Txn Type',
+        cell: ({ row }) => (
+          <span className="text-text-secondary whitespace-nowrap">
+            {row.original.txnType}
+          </span>
+        ),
+      },
+      {
+        id: 'bookRange',
+        header: 'Book Range',
+        cell: ({ row }) => {
+          const r = row.original;
+          const range =
+            r.bookNoFrom === r.bookNoTo
+              ? String(r.bookNoFrom)
+              : `${r.bookNoFrom} – ${r.bookNoTo}`;
+          return (
+            <span className="font-semibold text-primary-700 whitespace-nowrap">
+              {range}
+            </span>
+          );
+        },
+      },
+      {
+        id: 'mvRange',
+        header: 'MV Range',
+        cell: ({ row }) => (
+          <span className="font-semibold text-emerald-700 whitespace-nowrap font-mono">
+            {row.original.mvFrom} – {row.original.mvTo}
+          </span>
+        ),
+      },
+      {
+        accessorKey: 'pageCount',
+        header: 'Pages',
+        cell: ({ row }) => (
+          <span className="text-text-secondary">{row.original.pageCount}</span>
+        ),
+      },
+      {
+        id: 'assignedBy',
+        header: 'Assigned By',
+        cell: ({ row }) => (
+          <span className="text-xs text-slate-600 whitespace-nowrap">
+            {row.original.assignedByName ?? '—'}
+          </span>
+        ),
+      },
+    ],
+    []
+  );
 
   /* ─── List view ──────────────────────────────────────────────────────── */
 
@@ -283,35 +324,56 @@ export const CashierDPUnmapView = () => {
           {/* Summary */}
           <div className="grid grid-cols-2 gap-3 text-xs bg-slate-50 border border-slate-200 rounded-md p-4">
             <div>
-              <span className="block text-slate-400 font-semibold mb-0.5">Assigned To (DP)</span>
+              <span className="block text-slate-400 font-semibold mb-0.5">
+                Assigned To (DP)
+              </span>
               <span className="font-semibold text-rose-700">{row.dpName}</span>
             </div>
             <div>
-              <span className="block text-slate-400 font-semibold mb-0.5">Assigned By</span>
-              <span className="font-semibold text-slate-800">{row.assignedByName ?? '—'}</span>
-            </div>
-            <div>
-              <span className="block text-slate-400 font-semibold mb-0.5">Dispatch No</span>
-              <span className="text-slate-700">{row.dispatchNo}</span>
-            </div>
-            <div>
-              <span className="block text-slate-400 font-semibold mb-0.5">Transaction Type</span>
-              <span className="text-slate-700">{row.txnType}</span>
-            </div>
-            <div>
-              <span className="block text-slate-400 font-semibold mb-0.5">Book Range (Assigned)</span>
-              <span className="font-semibold text-primary-700">
-                {row.bookNoFrom === row.bookNoTo ? row.bookNoFrom : `${row.bookNoFrom} – ${row.bookNoTo}`}
+              <span className="block text-slate-400 font-semibold mb-0.5">
+                Assigned By
+              </span>
+              <span className="font-semibold text-slate-800">
+                {row.assignedByName ?? '—'}
               </span>
             </div>
             <div>
-              <span className="block text-slate-400 font-semibold mb-0.5">MV Range (Assigned)</span>
-              <span className="font-semibold text-emerald-700 font-mono">{row.mvFrom} – {row.mvTo}</span>
+              <span className="block text-slate-400 font-semibold mb-0.5">
+                Dispatch No
+              </span>
+              <span className="text-slate-700">{row.dispatchNo}</span>
+            </div>
+            <div>
+              <span className="block text-slate-400 font-semibold mb-0.5">
+                Transaction Type
+              </span>
+              <span className="text-slate-700">{row.txnType}</span>
+            </div>
+            <div>
+              <span className="block text-slate-400 font-semibold mb-0.5">
+                Book Range (Assigned)
+              </span>
+              <span className="font-semibold text-primary-700">
+                {row.bookNoFrom === row.bookNoTo
+                  ? row.bookNoFrom
+                  : `${row.bookNoFrom} – ${row.bookNoTo}`}
+              </span>
+            </div>
+            <div>
+              <span className="block text-slate-400 font-semibold mb-0.5">
+                MV Range (Assigned)
+              </span>
+              <span className="font-semibold text-emerald-700 font-mono">
+                {row.mvFrom} – {row.mvTo}
+              </span>
             </div>
             <div className="col-span-2">
-              <span className="block text-slate-400 font-semibold mb-0.5">Pages will be returned to</span>
+              <span className="block text-slate-400 font-semibold mb-0.5">
+                Pages will be returned to
+              </span>
               <span className="font-semibold text-sky-700">
-                {row.returnToUserName ?? 'Branch Manager pool (records released)'}
+                {row.returnToUserName ??
+                  'Branch Manager pool (records released)'}
               </span>
             </div>
           </div>
@@ -338,7 +400,9 @@ export const CashierDPUnmapView = () => {
             <div>
               <label className="block text-xs font-semibold text-slate-600 mb-1">
                 MV No From *
-                <span className="ml-1 text-slate-400 font-normal">(min: {row.mvFrom})</span>
+                <span className="ml-1 text-slate-400 font-normal">
+                  (min: {row.mvFrom})
+                </span>
               </label>
               <input
                 type="number"
@@ -346,7 +410,11 @@ export const CashierDPUnmapView = () => {
                 max={row.mvTo}
                 value={formState.mvFromStr}
                 onChange={e =>
-                  setFormState(prev => prev ? { ...prev, mvFromStr: e.target.value, error: '' } : prev)
+                  setFormState(prev =>
+                    prev
+                      ? { ...prev, mvFromStr: e.target.value, error: '' }
+                      : prev
+                  )
                 }
                 className="w-full rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs h-[38px] focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500"
               />
@@ -354,7 +422,9 @@ export const CashierDPUnmapView = () => {
             <div>
               <label className="block text-xs font-semibold text-slate-600 mb-1">
                 MV No To *
-                <span className="ml-1 text-slate-400 font-normal">(max: {row.mvTo})</span>
+                <span className="ml-1 text-slate-400 font-normal">
+                  (max: {row.mvTo})
+                </span>
               </label>
               <input
                 type="number"
@@ -362,7 +432,11 @@ export const CashierDPUnmapView = () => {
                 max={row.mvTo}
                 value={formState.mvToStr}
                 onChange={e =>
-                  setFormState(prev => prev ? { ...prev, mvToStr: e.target.value, error: '' } : prev)
+                  setFormState(prev =>
+                    prev
+                      ? { ...prev, mvToStr: e.target.value, error: '' }
+                      : prev
+                  )
                 }
                 className="w-full rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs h-[38px] focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500"
               />
@@ -370,12 +444,16 @@ export const CashierDPUnmapView = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1">Remarks (optional)</label>
+            <label className="block text-xs font-semibold text-slate-600 mb-1">
+              Remarks (optional)
+            </label>
             <textarea
               rows={2}
               value={formState.remarks}
               onChange={e =>
-                setFormState(prev => prev ? { ...prev, remarks: e.target.value } : prev)
+                setFormState(prev =>
+                  prev ? { ...prev, remarks: e.target.value } : prev
+                )
               }
               placeholder="Reason for retrieval..."
               className="w-full rounded-md border border-slate-200 px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 resize-none"
@@ -383,7 +461,9 @@ export const CashierDPUnmapView = () => {
           </div>
 
           {formState.error && (
-            <p className="text-xs font-medium text-rose-600">{formState.error}</p>
+            <p className="text-xs font-medium text-rose-600">
+              {formState.error}
+            </p>
           )}
 
           <div className="flex justify-end pt-2 border-t border-slate-100">
@@ -414,7 +494,9 @@ export const CashierDPUnmapView = () => {
 
         <Modal
           open
-          onOpenChange={open => { if (!open && !confirmState.isSubmitting) setConfirmState(null); }}
+          onOpenChange={open => {
+            if (!open && !confirmState.isSubmitting) setConfirmState(null);
+          }}
           title="Confirm Unmap from Delivery Person"
           size="md"
         >
@@ -422,21 +504,32 @@ export const CashierDPUnmapView = () => {
             <div className="flex items-start gap-3 rounded-md bg-amber-50 border border-amber-200 px-4 py-3">
               <ExclamationTriangleIcon className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
               <p className="text-xs text-amber-800">
-                This action will retrieve the selected pages from the delivery person and restore them to the original owner.
+                This action will retrieve the selected pages from the delivery
+                person and restore them to the original owner.
               </p>
             </div>
 
             <div className="grid grid-cols-2 gap-3 text-xs bg-slate-50 border border-slate-200 rounded-md p-4">
               <div>
-                <span className="block text-slate-400 font-semibold mb-0.5">Assigned By</span>
-                <span className="font-semibold text-slate-800">{row.assignedByName ?? '—'}</span>
+                <span className="block text-slate-400 font-semibold mb-0.5">
+                  Assigned By
+                </span>
+                <span className="font-semibold text-slate-800">
+                  {row.assignedByName ?? '—'}
+                </span>
               </div>
               <div>
-                <span className="block text-slate-400 font-semibold mb-0.5">Assigned To (DP)</span>
-                <span className="font-semibold text-rose-700">{row.dpName}</span>
+                <span className="block text-slate-400 font-semibold mb-0.5">
+                  Assigned To (DP)
+                </span>
+                <span className="font-semibold text-rose-700">
+                  {row.dpName}
+                </span>
               </div>
               <div>
-                <span className="block text-slate-400 font-semibold mb-0.5">Bill Book No</span>
+                <span className="block text-slate-400 font-semibold mb-0.5">
+                  Bill Book No
+                </span>
                 <span className="font-semibold text-primary-700">
                   {row.bookNoFrom === row.bookNoTo
                     ? String(row.bookNoFrom)
@@ -444,16 +537,21 @@ export const CashierDPUnmapView = () => {
                 </span>
               </div>
               <div>
-                <span className="block text-slate-400 font-semibold mb-0.5">Page Range (MV)</span>
+                <span className="block text-slate-400 font-semibold mb-0.5">
+                  Page Range (MV)
+                </span>
                 <span className="font-semibold text-emerald-700 font-mono">
                   {confirmState.mvFrom} – {confirmState.mvTo}
                 </span>
               </div>
               <div className="col-span-2">
-                <span className="block text-slate-400 font-semibold mb-0.5">Action</span>
+                <span className="block text-slate-400 font-semibold mb-0.5">
+                  Action
+                </span>
                 {row.returnToUserName ? (
                   <span className="text-sky-700 font-semibold">
-                    Pages will be returned to <strong>{row.returnToUserName}</strong>
+                    Pages will be returned to{' '}
+                    <strong>{row.returnToUserName}</strong>
                   </span>
                 ) : (
                   <span className="text-amber-700 font-semibold">

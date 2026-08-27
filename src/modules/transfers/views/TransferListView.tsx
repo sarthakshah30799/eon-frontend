@@ -15,7 +15,11 @@ const titleMap: Record<TransferType, string> = {
   BRANCH: 'Branch Transfers',
 };
 
-export const TransferListView = ({ transferType }: { transferType: TransferType }) => {
+export const TransferListView = ({
+  transferType,
+}: {
+  transferType: TransferType;
+}) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const isAdminOrHo = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
@@ -25,7 +29,10 @@ export const TransferListView = ({ transferType }: { transferType: TransferType 
   const queryParams = useMemo(
     () => ({
       transferType,
-      status: status === 'ALL' ? undefined : (status as 'HELD' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED'),
+      status:
+        status === 'ALL'
+          ? undefined
+          : (status as 'HELD' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED'),
       search: search.trim() || undefined,
     }),
     [search, status, transferType]
@@ -85,7 +92,9 @@ export const TransferListView = ({ transferType }: { transferType: TransferType 
             className="rounded-sm bg-transparent text-black! hover:bg-surface-secondary hover:text-text-primary"
             onClick={event => {
               event.stopPropagation();
-              navigate(`/transfer/${transferType.toLowerCase()}/edit/${row.original.id}`);
+              navigate(
+                `/transfer/${transferType.toLowerCase()}/edit/${row.original.id}`
+              );
             }}
           >
             <PencilSquareIcon className="h-5 w-5" />
@@ -105,7 +114,11 @@ export const TransferListView = ({ transferType }: { transferType: TransferType 
   }
 
   if (error instanceof Error) {
-    return <div className="rounded border border-red-300 bg-red-50 p-4 text-sm text-red-700">{error.message}</div>;
+    return (
+      <div className="rounded border border-red-300 bg-red-50 p-4 text-sm text-red-700">
+        {error.message}
+      </div>
+    );
   }
 
   return (
@@ -130,7 +143,9 @@ export const TransferListView = ({ transferType }: { transferType: TransferType 
                   variant={status === option.value ? 'default' : 'outline'}
                   onClick={() => setStatus(option.value)}
                 >
-                  {option.value === 'ALL' ? 'All' : getTransferStatusLabel(option.value)}
+                  {option.value === 'ALL'
+                    ? 'All'
+                    : getTransferStatusLabel(option.value)}
                 </Button>
               ))}
             </div>
@@ -138,7 +153,9 @@ export const TransferListView = ({ transferType }: { transferType: TransferType 
           <Button
             type="button"
             className="rounded-sm"
-            onClick={() => navigate(`/transfer/${transferType.toLowerCase()}/create`)}
+            onClick={() =>
+              navigate(`/transfer/${transferType.toLowerCase()}/create`)
+            }
           >
             New Transfer
           </Button>

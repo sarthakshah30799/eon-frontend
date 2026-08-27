@@ -47,7 +47,9 @@ export const mapPurposeToFormValues = (purpose: IPurpose): ICreatePurpose => ({
   })),
 });
 
-export const sanitizePurposeFormValues = (values: ICreatePurpose): ICreatePurpose => ({
+export const sanitizePurposeFormValues = (
+  values: ICreatePurpose
+): ICreatePurpose => ({
   ...values,
   code: values.code.trim().toUpperCase(),
   description: values.description.trim(),
@@ -73,14 +75,20 @@ export const sanitizePurposeFormValues = (values: ICreatePurpose): ICreatePurpos
 export const formatPurposeRateLabel = (rate: number, rateType: string) =>
   `${Number(rate).toFixed(2)} ${rateType === PurposeRateTypeEnum.RUPEES ? 'Rupees' : '%'}`;
 
-export const formatPurposeScopeLabel = (corporate: boolean, individual: boolean) => {
+export const formatPurposeScopeLabel = (
+  corporate: boolean,
+  individual: boolean
+) => {
   const values: string[] = [];
   if (corporate) values.push('Corporate');
   if (individual) values.push('Individual');
   return values.length > 0 ? values.join(' / ') : '-';
 };
 
-export const formatPurposeTransactionScopeLabel = (sell: boolean, purchase: boolean) => {
+export const formatPurposeTransactionScopeLabel = (
+  sell: boolean,
+  purchase: boolean
+) => {
   const values: string[] = [];
   if (sell) values.push('Sell');
   if (purchase) values.push('Purchase');

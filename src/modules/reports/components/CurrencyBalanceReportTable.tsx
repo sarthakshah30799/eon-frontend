@@ -1,4 +1,7 @@
-import type { ICurrencyBalanceReportColumn, ICurrencyBalanceReportRow } from '../types';
+import type {
+  ICurrencyBalanceReportColumn,
+  ICurrencyBalanceReportRow,
+} from '../types';
 
 interface CurrencyBalanceReportTableProps {
   columns: ICurrencyBalanceReportColumn[];
@@ -62,9 +65,13 @@ export const CurrencyBalanceReportTable = ({
                 className={rowIndex % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'}
               >
                 {columns.map(column => {
-                  const value = row[column.key as keyof ICurrencyBalanceReportRow] ?? '';
+                  const value =
+                    row[column.key as keyof ICurrencyBalanceReportRow] ?? '';
                   return (
-                    <td key={column.key} className={getCellClassName(column.key)}>
+                    <td
+                      key={column.key}
+                      className={getCellClassName(column.key)}
+                    >
                       {value || <span className="text-slate-300">-</span>}
                     </td>
                   );

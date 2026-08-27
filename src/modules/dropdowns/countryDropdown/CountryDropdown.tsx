@@ -92,7 +92,6 @@ export const CountryDropdown = ({
 
   const loadOptions = useCallback(
     async (inputValue: string): Promise<AsyncSelectResponse> => {
-      
       const normalizedInput = inputValue.trim();
       const pendingLoad = pendingLoadRef.current;
       setSearchTerm(inputValue);

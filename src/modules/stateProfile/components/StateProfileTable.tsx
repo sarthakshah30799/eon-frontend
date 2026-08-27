@@ -30,9 +30,7 @@ export const StateProfileTable = ({
   searchPlaceholder = 'Search',
 }: StateProfileTableProps) => {
   const navigate = useNavigate();
-  const { canModify, canView } = usePermission(
-    '/admin/state-profile'
-  );
+  const { canModify, canView } = usePermission('/admin/state-profile');
 
   const rows: StateProfileTableRow[] = states.map(state => ({
     id: state.id,

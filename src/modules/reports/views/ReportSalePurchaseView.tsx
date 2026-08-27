@@ -3,9 +3,16 @@ import { Button } from '@/components/ui';
 import { AccessDeniedState } from '@/components/ui/access-denied-state';
 import { PAGE_STATUS_TEXTS } from '@/constants';
 import { useAuth } from '@/lib/AuthContext';
-import { ReportCommonFiltersSection, SalePurchaseReportTable } from '../components';
+import {
+  ReportCommonFiltersSection,
+  SalePurchaseReportTable,
+} from '../components';
 import { useSalePurchaseReport } from '../hooks';
-import { ReportExportFormatEnum, ReportSortByEnum, ReportTransactionTypeEnum } from '../types';
+import {
+  ReportExportFormatEnum,
+  ReportSortByEnum,
+  ReportTransactionTypeEnum,
+} from '../types';
 import { summarizeReportSelection } from '../utils';
 
 export const ReportSalePurchaseView = () => {
@@ -14,18 +21,29 @@ export const ReportSalePurchaseView = () => {
   const canView = Boolean(user);
 
   const currentSummary = useMemo(() => {
-    const stateLabels = summarizeReportSelection(report.filters.stateIds, report.filters.stateOptions);
-    const branchLabels = summarizeReportSelection(report.filters.branchIds, report.filters.branchOptions);
-    const counterLabels = summarizeReportSelection(report.filters.counterIds, report.filters.counterOptions);
+    const stateLabels = summarizeReportSelection(
+      report.filters.stateIds,
+      report.filters.stateOptions
+    );
+    const branchLabels = summarizeReportSelection(
+      report.filters.branchIds,
+      report.filters.branchOptions
+    );
+    const counterLabels = summarizeReportSelection(
+      report.filters.counterIds,
+      report.filters.counterOptions
+    );
     const typeLabels = summarizeReportSelection(
       report.filters.partyTypeCodes,
-      report.filters.partyTypeOptions,
+      report.filters.partyTypeOptions
     );
     const txnTypeLabels = report.filters.transactionTypes.map(type =>
-      type === ReportTransactionTypeEnum.PURCHASE ? 'Purchase' : 'Sell',
+      type === ReportTransactionTypeEnum.PURCHASE ? 'Purchase' : 'Sell'
     );
     const sortLabel =
-      report.filters.sortBy === ReportSortByEnum.DATE_DESC ? 'Date Desc' : 'Date Asc';
+      report.filters.sortBy === ReportSortByEnum.DATE_DESC
+        ? 'Date Desc'
+        : 'Date Asc';
 
     return {
       states: stateLabels,
@@ -49,7 +67,9 @@ export const ReportSalePurchaseView = () => {
   ]);
 
   if (!canView) {
-    return <AccessDeniedState message={PAGE_STATUS_TEXTS.ACCESS_DENIED_MESSAGE} />;
+    return (
+      <AccessDeniedState message={PAGE_STATUS_TEXTS.ACCESS_DENIED_MESSAGE} />
+    );
   }
 
   return (
@@ -58,7 +78,7 @@ export const ReportSalePurchaseView = () => {
         <h1 className="text-lg font-semibold tracking-tight text-text-primary">
           Sell & Purchase Reports
         </h1>
-      <p className="max-w-3xl text-[11px] text-text-secondary">
+        <p className="max-w-3xl text-[11px] text-text-secondary">
           Grouped report for review, flat export for CSV/XLSX downloads.
         </p>
       </div>
@@ -68,13 +88,26 @@ export const ReportSalePurchaseView = () => {
       {report.filters.appliedFilters && (
         <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-[11px] text-text-secondary">
           Applied: {report.filters.appliedDateRangeLabel} | States{' '}
-          {currentSummary.states.length ? currentSummary.states.join(', ') : 'All'} | Branches{' '}
-          {currentSummary.branches.length ? currentSummary.branches.join(', ') : 'All'} | Counters{' '}
-          {currentSummary.counters.length ? currentSummary.counters.join(', ') : 'All'} | Party Types{' '}
-          {currentSummary.types.length ? currentSummary.types.join(', ') : 'All'} | Transaction{' '}
+          {currentSummary.states.length
+            ? currentSummary.states.join(', ')
+            : 'All'}{' '}
+          | Branches{' '}
+          {currentSummary.branches.length
+            ? currentSummary.branches.join(', ')
+            : 'All'}{' '}
+          | Counters{' '}
+          {currentSummary.counters.length
+            ? currentSummary.counters.join(', ')
+            : 'All'}{' '}
+          | Party Types{' '}
+          {currentSummary.types.length
+            ? currentSummary.types.join(', ')
+            : 'All'}{' '}
+          | Transaction{' '}
           {currentSummary.transactionTypes.length
             ? currentSummary.transactionTypes.join(', ')
-            : 'All'} | Sort By {currentSummary.sortLabel} | Party Profiles{' '}
+            : 'All'}{' '}
+          | Sort By {currentSummary.sortLabel} | Party Profiles{' '}
           {report.filters.partyProfileSelection.allSelected
             ? report.filters.partyProfileSelection.excludedIds.length > 0
               ? `All matching except ${report.filters.partyProfileSelection.excludedIds.length}`
@@ -89,9 +122,12 @@ export const ReportSalePurchaseView = () => {
         <section className="space-y-3 rounded-xl border border-border-primary bg-white p-3 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="space-y-0.5">
-              <h2 className="text-sm font-semibold text-text-primary">Report View</h2>
+              <h2 className="text-sm font-semibold text-text-primary">
+                Report View
+              </h2>
               <p className="text-[11px] text-text-secondary">
-                Grouped rows show transaction details on the first line, then item subtotal rows.
+                Grouped rows show transaction details on the first line, then
+                item subtotal rows.
               </p>
             </div>
 
@@ -106,7 +142,9 @@ export const ReportSalePurchaseView = () => {
                       : 'outline'
                   }
                   className="h-7 rounded-full px-3 text-[11px]"
-                  onClick={() => report.setExportFormat(ReportExportFormatEnum.XLSX)}
+                  onClick={() =>
+                    report.setExportFormat(ReportExportFormatEnum.XLSX)
+                  }
                 >
                   XLSX
                 </Button>
@@ -119,7 +157,9 @@ export const ReportSalePurchaseView = () => {
                       : 'outline'
                   }
                   className="h-7 rounded-full px-3 text-[11px]"
-                  onClick={() => report.setExportFormat(ReportExportFormatEnum.CSV)}
+                  onClick={() =>
+                    report.setExportFormat(ReportExportFormatEnum.CSV)
+                  }
                 >
                   CSV
                 </Button>

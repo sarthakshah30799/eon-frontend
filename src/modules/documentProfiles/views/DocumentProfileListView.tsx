@@ -19,8 +19,12 @@ export const DocumentProfileListView = () => {
     }),
     [debouncedSearch]
   );
-  const { data: documentProfiles = [], isLoading, isFetching, error } =
-    useListDocumentProfiles(query);
+  const {
+    data: documentProfiles = [],
+    isLoading,
+    isFetching,
+    error,
+  } = useListDocumentProfiles(query);
   const { deleteDocumentProfile, isPending: isDeleting } =
     useDeleteDocumentProfile();
 

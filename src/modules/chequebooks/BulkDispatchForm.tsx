@@ -20,9 +20,7 @@ import {
 } from './hooks';
 import { useAuth } from '@/lib/AuthContext';
 import toast from 'react-hot-toast';
-import {
-  bulkDispatchSchema,
-} from './bulkDispatchSchema';
+import { bulkDispatchSchema } from './bulkDispatchSchema';
 
 const ACCOUNT_PROFILE_OPTION_PAGE_SIZE = 30;
 
@@ -49,10 +47,14 @@ interface BulkDispatchFormFieldsProps {
   reassignId?: string;
 }
 
-const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => {
+const BulkDispatchFormFields = ({
+  reassignId,
+}: BulkDispatchFormFieldsProps) => {
   const form = useFormContext();
   const { user, activeBranchId } = useAuth();
-  const canSelectBranch = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
+  const canSelectBranch = Boolean(
+    user?.isAdmin || user?.isHo || user?.isHoStaff
+  );
   const branchId = useWatch({ name: 'branchId' });
   const dispatchDate = useWatch({ name: 'dispatchDate' });
   const bookNoFrom = useWatch({ name: 'bookNoFrom' });
@@ -69,9 +71,10 @@ const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => 
   // Pre-fill form when reassigning a rejected book
   useEffect(() => {
     if (!book) return;
-    const assignedToId = book.assignedTo && typeof book.assignedTo === 'object'
-      ? book.assignedTo.id
-      : (book.assignedTo as string) ?? '';
+    const assignedToId =
+      book.assignedTo && typeof book.assignedTo === 'object'
+        ? book.assignedTo.id
+        : ((book.assignedTo as string) ?? '');
     form.setValue('dispatchDate', new Date().toISOString().slice(0, 10));
     form.setValue('branchId', book.branchId || activeBranchId || '');
     form.setValue('bankAccountCode', book.bankAccountCode ?? '');
@@ -223,10 +226,15 @@ const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => 
   );
 };
 
-export const BulkDispatchForm = ({ onSuccess, reassignId }: BulkDispatchFormProps) => {
+export const BulkDispatchForm = ({
+  onSuccess,
+  reassignId,
+}: BulkDispatchFormProps) => {
   const navigate = useNavigate();
   const { user, activeBranchId, activeCounterId, setWorkplace } = useAuth();
-  const canSelectBranch = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
+  const canSelectBranch = Boolean(
+    user?.isAdmin || user?.isHo || user?.isHoStaff
+  );
 
   const onCancel = () => {
     navigate('/cheque-books');
@@ -259,7 +267,7 @@ export const BulkDispatchForm = ({ onSuccess, reassignId }: BulkDispatchFormProp
             vouchersPerBook: formatted.vouchersPerBook,
             mvNoFrom: formatted.mvNoFrom,
             remarks: formatted.remarks,
-          }
+          },
         });
         toast.success('ChequeBook dispatch reassigned successfully.');
       } else {
@@ -307,7 +315,9 @@ export const BulkDispatchForm = ({ onSuccess, reassignId }: BulkDispatchFormProp
       id="bulk-dispatch-form"
       onSubmit={handleSubmit}
       resolver={
-        yupResolver(bulkDispatchSchema) as unknown as Resolver<IBulkDispatchFormValues>
+        yupResolver(
+          bulkDispatchSchema
+        ) as unknown as Resolver<IBulkDispatchFormValues>
       }
       defaultValues={defaultValues}
       mode="all"

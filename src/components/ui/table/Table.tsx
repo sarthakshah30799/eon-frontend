@@ -18,7 +18,10 @@ import {
 import { cva, type VariantProps } from 'class-variance-authority';
 import { Button } from '../button1';
 import { Input } from '../input';
-import { PAGINATION_DEFAULTS, PAGINATION_PAGE_SIZE_OPTIONS } from '@/constants/paginationConstants';
+import {
+  PAGINATION_DEFAULTS,
+  PAGINATION_PAGE_SIZE_OPTIONS,
+} from '@/constants/paginationConstants';
 
 interface TableColumnMeta {
   headerClassName?: string;
@@ -126,7 +129,9 @@ function Table<T extends object>({
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    ...(enablePagination ? { getPaginationRowModel: getPaginationRowModel() } : {}),
+    ...(enablePagination
+      ? { getPaginationRowModel: getPaginationRowModel() }
+      : {}),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
     onSortingChange: updater => {
@@ -167,7 +172,9 @@ function Table<T extends object>({
     enableColumnFilters: enableFiltering,
     enableRowSelection,
     manualPagination: false,
-    pageCount: enablePagination ? Math.ceil(data.length / pagination.pageSize) : undefined,
+    pageCount: enablePagination
+      ? Math.ceil(data.length / pagination.pageSize)
+      : undefined,
     getRowId,
   });
 
@@ -295,22 +302,22 @@ function Table<T extends object>({
               renderSkeleton()
             ) : table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row, index) => (
-              <tr
-                key={row.id}
-                className={`${variant === 'striped' && index % 2 === 1 ? 'bg-surface-secondary' : ''} ${onRowClick ? 'cursor-pointer' : ''} hover:bg-surface-secondary`}
-                onClick={
-                  onRowClick
-                    ? () => {
-                        onRowClick(row.original);
-                      }
-                    : undefined
-                }
-              >
-                {row.getVisibleCells().map(cell => (
-                  <td
-                    key={cell.id}
-                    className={`whitespace-nowrap px-4 py-3 text-sm text-text-primary ${(cell.column.columnDef.meta as TableColumnMeta | undefined)?.cellClassName ?? ''}`}
-                  >
+                <tr
+                  key={row.id}
+                  className={`${variant === 'striped' && index % 2 === 1 ? 'bg-surface-secondary' : ''} ${onRowClick ? 'cursor-pointer' : ''} hover:bg-surface-secondary`}
+                  onClick={
+                    onRowClick
+                      ? () => {
+                          onRowClick(row.original);
+                        }
+                      : undefined
+                  }
+                >
+                  {row.getVisibleCells().map(cell => (
+                    <td
+                      key={cell.id}
+                      className={`whitespace-nowrap px-4 py-3 text-sm text-text-primary ${(cell.column.columnDef.meta as TableColumnMeta | undefined)?.cellClassName ?? ''}`}
+                    >
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
@@ -371,10 +378,10 @@ function Table<T extends object>({
             }}
             className="rounded-md border border-border-secondary px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
-          {pageSizeOptions.map(pageSize => (
-            <option key={pageSize} value={pageSize}>
-              Show {pageSize}
-            </option>
+            {pageSizeOptions.map(pageSize => (
+              <option key={pageSize} value={pageSize}>
+                Show {pageSize}
+              </option>
             ))}
           </select>
         </div>

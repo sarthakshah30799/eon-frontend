@@ -32,42 +32,59 @@ export const useSpecialReportFilters = () => {
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const isRestrictedUser = !user?.isAdmin && !user?.isHo && !user?.isHoStaff;
-  const userAssignments = useMemo(() => user?.assignments ?? [], [user?.assignments]);
+  const userAssignments = useMemo(
+    () => user?.assignments ?? [],
+    [user?.assignments]
+  );
   const searchParamsKey = searchParams.toString();
-  const parsedSearchParams = useMemo(() => new URLSearchParams(searchParamsKey), [searchParamsKey]);
+  const parsedSearchParams = useMemo(
+    () => new URLSearchParams(searchParamsKey),
+    [searchParamsKey]
+  );
 
   const hydratedRouteState = useMemo(() => {
     return {
       branchIds: readSearchParamList(parsedSearchParams, 'branchIds'),
       template:
-        (readSearchParamValue(parsedSearchParams, 'template') as SpecialReportTemplate) ||
+        (readSearchParamValue(
+          parsedSearchParams,
+          'template'
+        ) as SpecialReportTemplate) ||
         SpecialReportTemplateEnum.ACCOUNT_POSTING,
       sortBy:
         (readSearchParamValue(parsedSearchParams, 'sortBy') as ReportSortBy) ||
         ReportSortByEnum.DATE_ASC,
-      transactionNumbersText: readSearchParamList(parsedSearchParams, 'transactionNumbers').join(','),
+      transactionNumbersText: readSearchParamList(
+        parsedSearchParams,
+        'transactionNumbers'
+      ).join(','),
     };
   }, [parsedSearchParams]);
 
-  const [branchIds, setBranchIds] = useState<string[]>(hydratedRouteState.branchIds);
-  const [template, setTemplate] = useState<SpecialReportTemplate>(hydratedRouteState.template);
+  const [branchIds, setBranchIds] = useState<string[]>(
+    hydratedRouteState.branchIds
+  );
+  const [template, setTemplate] = useState<SpecialReportTemplate>(
+    hydratedRouteState.template
+  );
   const [sortBy, setSortBy] = useState<ReportSortBy>(hydratedRouteState.sortBy);
   const [transactionNumbersText, setTransactionNumbersText] = useState(
-    hydratedRouteState.transactionNumbersText,
+    hydratedRouteState.transactionNumbersText
   );
-  const [appliedFilters, setAppliedFilters] = useState<ISpecialReportRequest | null>(
-    searchParamsKey
-      ? {
-          branchIds: hydratedRouteState.branchIds,
-          template: hydratedRouteState.template,
-          transactionNumbers: hydratedRouteState.transactionNumbersText
-            .split(/[\n,]/)
-            .map(item => item.trim())
-            .filter(Boolean),
-          sortBy: hydratedRouteState.sortBy,
-        }
-      : null,
-  );
+  const [appliedFilters, setAppliedFilters] =
+    useState<ISpecialReportRequest | null>(
+      searchParamsKey
+        ? {
+            branchIds: hydratedRouteState.branchIds,
+            template: hydratedRouteState.template,
+            transactionNumbers: hydratedRouteState.transactionNumbersText
+              .split(/[\n,]/)
+              .map(item => item.trim())
+              .filter(Boolean),
+            sortBy: hydratedRouteState.sortBy,
+          }
+        : null
+    );
 
   const { data: branchProfiles = [] } = useQuery({
     queryKey: ['reports-special-branch-profiles'],
@@ -82,10 +99,12 @@ export const useSpecialReportFilters = () => {
     () =>
       isRestrictedUser
         ? branchProfiles.filter(branch =>
-            userAssignments.some(assignment => assignment.branchId === branch.id),
+            userAssignments.some(
+              assignment => assignment.branchId === branch.id
+            )
           )
         : branchProfiles,
-    [branchProfiles, isRestrictedUser, userAssignments],
+    [branchProfiles, isRestrictedUser, userAssignments]
   );
 
   const branchOptions = useMemo<IReportSelectOption[]>(
@@ -94,18 +113,22 @@ export const useSpecialReportFilters = () => {
         accessibleBranchProfiles.map(branch => ({
           id: branch.id,
           label: buildReportOptionLabel(branch.code, branch.name),
-        })),
+        }))
       ),
-    [accessibleBranchProfiles],
+    [accessibleBranchProfiles]
   );
 
   const selectedBranchIds = useMemo(
-    () => branchIds.filter(branchId => branchOptions.some(option => option.id === branchId)),
-    [branchIds, branchOptions],
+    () =>
+      branchIds.filter(branchId =>
+        branchOptions.some(option => option.id === branchId)
+      ),
+    [branchIds, branchOptions]
   );
 
   const branchAllSelected =
-    branchOptions.length > 0 && selectedBranchIds.length === branchOptions.length;
+    branchOptions.length > 0 &&
+    selectedBranchIds.length === branchOptions.length;
 
   const canView = selectedBranchIds.length > 0;
 

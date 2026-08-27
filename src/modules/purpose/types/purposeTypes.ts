@@ -3,7 +3,8 @@ export const PurposeRateTypeEnum = {
   RUPEES: 'RUPEES',
 } as const;
 
-export type PurposeRateType = (typeof PurposeRateTypeEnum)[keyof typeof PurposeRateTypeEnum];
+export type PurposeRateType =
+  (typeof PurposeRateTypeEnum)[keyof typeof PurposeRateTypeEnum];
 
 export const PurposePartyProfileTypeEnum = {
   CORPORATE: 'CORPORATE',
@@ -43,7 +44,10 @@ export interface IPurpose {
   updatedBy?: string;
 }
 
-export type ICreatePurposeSlab = Omit<IPurposeSlab, 'id' | 'purposeId' | 'createdAt' | 'updatedAt'>;
+export type ICreatePurposeSlab = Omit<
+  IPurposeSlab,
+  'id' | 'purposeId' | 'createdAt' | 'updatedAt'
+>;
 
 export type ICreatePurpose = Omit<
   IPurpose,

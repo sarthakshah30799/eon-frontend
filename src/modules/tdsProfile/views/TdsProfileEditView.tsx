@@ -19,7 +19,7 @@ export const TdsProfileEditView = () => {
     error,
   } = useGetTdsProfile(id || '', Boolean(id));
   const { updateTdsProfile, isPending } = useUpdateTdsProfile();
-console.log("id____", id);
+  console.log('id____', id);
 
   useEffect(() => {
     if (!id) {

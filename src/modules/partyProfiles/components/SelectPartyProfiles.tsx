@@ -74,23 +74,23 @@ const buildSelectionColumns = (
       header: ({ table }) => (
         <div className="flex justify-center">
           <Checkbox
-          checked={table.getIsAllRowsSelected()}
-          onChange={checked => {
-            table.toggleAllRowsSelected(checked);
-          }}
-          disabled={!multiple}
-          aria-label="Select all party profiles"
-          className="shrink-0"
+            checked={table.getIsAllRowsSelected()}
+            onChange={checked => {
+              table.toggleAllRowsSelected(checked);
+            }}
+            disabled={!multiple}
+            aria-label="Select all party profiles"
+            className="shrink-0"
           />
         </div>
       ),
       cell: ({ row }) => (
         <div className="flex justify-center">
           <Checkbox
-          checked={row.getIsSelected()}
-          onChange={checked => row.toggleSelected(checked)}
-          aria-label={`Select ${row.original.code}`}
-          className="shrink-0"
+            checked={row.getIsSelected()}
+            onChange={checked => row.toggleSelected(checked)}
+            aria-label={`Select ${row.original.code}`}
+            className="shrink-0"
           />
         </div>
       ),
@@ -129,7 +129,11 @@ export const SelectPartyProfiles = ({
     [types]
   );
 
-  const { data: response, isLoading, isFetching } = useListPartyProfiles(
+  const {
+    data: response,
+    isLoading,
+    isFetching,
+  } = useListPartyProfiles(
     {
       search: debouncedSearch.trim() || undefined,
       page: 1,
@@ -143,8 +147,9 @@ export const SelectPartyProfiles = ({
     true
   );
 
-  const profiles = (response?.data ?? EMPTY_PARTY_PROFILE_ROWS).filter(profile =>
-    allowedProfileIds === undefined || allowedProfileIds.includes(profile.id)
+  const profiles = (response?.data ?? EMPTY_PARTY_PROFILE_ROWS).filter(
+    profile =>
+      allowedProfileIds === undefined || allowedProfileIds.includes(profile.id)
   );
   const selectedRowIds = selectedProfiles.map(profile => profile.id);
   const rows = useMemo<SelectablePartyProfileRow[]>(
@@ -195,7 +200,10 @@ export const SelectPartyProfiles = ({
         }}
         getRowId={row => row.rowKey}
         selectedRowIds={selectedRowIds}
-        selectedRows={selectedProfiles.map(profile => ({ ...profile, rowKey: profile.id }))}
+        selectedRows={selectedProfiles.map(profile => ({
+          ...profile,
+          rowKey: profile.id,
+        }))}
         onSelectedRowIdsChange={nextIds => {
           setSelectedProfiles(current => {
             const profilesById = new Map([
@@ -217,15 +225,20 @@ export const SelectPartyProfiles = ({
               <div className="flex flex-wrap gap-2">
                 {selectedProfiles.map(profile => {
                   const unavailable =
-                    !profile.active || profile.status !== PartyProfileStatusEnum.APPROVE;
+                    !profile.active ||
+                    profile.status !== PartyProfileStatusEnum.APPROVE;
                   return (
                     <div
                       key={profile.id}
                       className="inline-flex items-center gap-2 rounded-full border border-border-secondary bg-surface-primary px-3 py-1 text-sm"
                     >
-                      <span>{profile.code} - {profile.name}</span>
+                      <span>
+                        {profile.code} - {profile.name}
+                      </span>
                       {unavailable && (
-                        <span className="text-xs text-text-tertiary">Unavailable</span>
+                        <span className="text-xs text-text-tertiary">
+                          Unavailable
+                        </span>
                       )}
                       <button
                         type="button"

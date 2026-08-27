@@ -18,7 +18,8 @@ export const useLoadCountryGroupOptions = () => {
     async (inputValue: string) => {
       const groups = await queryClient.fetchQuery({
         queryKey: ['country-groups', inputValue || undefined],
-        queryFn: () => countryGroupApi.getCountryGroups(inputValue || undefined),
+        queryFn: () =>
+          countryGroupApi.getCountryGroups(inputValue || undefined),
       });
       return {
         options: groups.map(group => ({

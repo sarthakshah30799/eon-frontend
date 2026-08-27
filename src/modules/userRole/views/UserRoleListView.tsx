@@ -19,8 +19,12 @@ export const UserRoleListView = () => {
     () => debouncedSearch.trim() || undefined,
     [debouncedSearch]
   );
-  const { data: roles = [], isLoading, isFetching, error } =
-    useListUserRoles(query);
+  const {
+    data: roles = [],
+    isLoading,
+    isFetching,
+    error,
+  } = useListUserRoles(query);
   const { deleteUserRole, isPending: isDeleting } = useDeleteUserRole();
   const { updateUserRoleStatus, isPending: isUpdatingStatus } =
     useUpdateUserRoleStatus();

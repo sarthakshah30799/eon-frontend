@@ -6,7 +6,10 @@ import { usePermission } from '@/hooks';
 import { useDebounce } from '@/hooks';
 import { PRODUCT_PROFILE_TEXTS } from '../constants';
 import { ProductProfileTable } from '../components';
-import { useListProductProfiles, useUpdateProductProfileStatus } from '../hooks';
+import {
+  useListProductProfiles,
+  useUpdateProductProfileStatus,
+} from '../hooks';
 
 export const ProductProfileListView = () => {
   const navigate = useNavigate();
@@ -35,17 +38,13 @@ export const ProductProfileListView = () => {
               product.bulkFee,
             ]
               .filter(Boolean)
-              .some(value =>
-                value.toString().toLowerCase().includes(query)
-              )
+              .some(value => value.toString().toLowerCase().includes(query))
           )
         : products,
     [products, query]
   );
-  const {
-    updateProductProfileStatus,
-    isPending: isUpdatingStatus,
-  } = useUpdateProductProfileStatus();
+  const { updateProductProfileStatus, isPending: isUpdatingStatus } =
+    useUpdateProductProfileStatus();
 
   const handleToggleStatus = async (id: string, isActiveProduct: boolean) => {
     await updateProductProfileStatus({ id, isActiveProduct });
@@ -70,9 +69,7 @@ export const ProductProfileListView = () => {
           <Button
             type="button"
             className="rounded-sm"
-            onClick={() =>
-              navigate('/admin/product-profile/create')
-            }
+            onClick={() => navigate('/admin/product-profile/create')}
           >
             {PRODUCT_PROFILE_TEXTS.CREATE_PRODUCT}
           </Button>

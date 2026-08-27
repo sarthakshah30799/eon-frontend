@@ -36,7 +36,8 @@ export const FLM8_CN_STATEMENT_TEXT = {
   apConnectHint: 'Show currency as Name(Country) from masters. AD only.',
   dateHeading: 'Date',
   emptyMessage: 'No CN stock or movement',
-  selectProductHint: 'Select a product and FFMC or AD before viewing the report.',
+  selectProductHint:
+    'Select a product and FFMC or AD before viewing the report.',
   selectProfileTypeHint: 'Select FFMC or AD.',
   selectProfileType: 'Select FFMC or AD',
   ffmc: 'FFMC',
@@ -59,7 +60,8 @@ export const FLM8_CN_STATEMENT_TEXT = {
   lockDataWarning:
     'After locking, transaction dates on or before the lock date are blocked for those branches. Monthwise backdate windows that become empty are revoked.',
   lockDataSuccess: 'Data lock applied.',
-  lockDataPartialSuccess: 'Data lock finished with some branches skipped or unchanged.',
+  lockDataPartialSuccess:
+    'Data lock finished with some branches skipped or unchanged.',
   lockDataError: 'Failed to lock FLM 8 data. Please try again.',
   lockDataNoBranches: 'Select at least one branch to lock.',
   lockDataNoEndDate: 'Apply the report with an end date before locking.',

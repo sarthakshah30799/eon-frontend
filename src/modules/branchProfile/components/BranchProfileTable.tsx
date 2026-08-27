@@ -68,7 +68,7 @@ export const BranchProfileTable = ({
           locationType:
             typeof branch.locationType === 'string'
               ? branch.locationType
-              : branch.locationType?.label ?? '-',
+              : (branch.locationType?.label ?? '-'),
           status: statusParts.join(' / '),
         };
       }),
@@ -76,17 +76,17 @@ export const BranchProfileTable = ({
   );
 
   const columns: TableColumnDef<BranchProfileTableRow>[] = [
-    { 
-      accessorKey: 'code', 
+    {
+      accessorKey: 'code',
       header: 'Branch Code',
       searchable: true,
-      filterable: true
+      filterable: true,
     },
-    { 
-      accessorKey: 'name', 
+    {
+      accessorKey: 'name',
       header: 'Branch Name',
       searchable: true,
-      filterable: true
+      filterable: true,
     },
     { accessorKey: 'branchNumber', header: 'Branch Number' },
     { accessorKey: 'country', header: 'Country' },
@@ -114,7 +114,7 @@ export const BranchProfileTable = ({
             <Button
               type="button"
               aria-label="Edit company branch"
-              className='border-0! bg-transparent! text-black!'
+              className="border-0! bg-transparent! text-black!"
               onClick={event => {
                 event.stopPropagation();
                 navigate(`/admin/branch-profile/edit/${branchId}`);

@@ -39,7 +39,12 @@ export const TransactionItemsFieldArray = <TItem extends { id: string }>({
         />
 
         <div className="flex justify-end">
-          <Button type="button" variant="outline" disabled={disabled} onClick={onAdd}>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={disabled}
+            onClick={onAdd}
+          >
             {addLabel}
           </Button>
         </div>

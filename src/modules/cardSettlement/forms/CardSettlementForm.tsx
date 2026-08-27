@@ -70,7 +70,8 @@ const withSnapshotOption = (
   id: string | undefined,
   snapshot: CardSettlementFormValues['issuerPartyProfileSnapshot']
 ) => {
-  if (!id || options.some(option => String(option.value) === id)) return options;
+  if (!id || options.some(option => String(option.value) === id))
+    return options;
   const fallback = snapshotOption(id, snapshot);
   return fallback ? [fallback, ...options] : options;
 };
@@ -83,22 +84,38 @@ export const CardSettlementForm = ({
   onHoBranchChange,
 }: Props) => {
   const form = useFormContext<CardSettlementFormValues>();
-  const { fields, replace } = useFieldArray({ control: form.control, name: 'items' });
+  const { fields, replace } = useFieldArray({
+    control: form.control,
+    name: 'items',
+  });
   const [pickerOpen, setPickerOpen] = useState(false);
   const kind = useWatch({ control: form.control, name: 'kind' });
-  const issuerPartyProfileId = useWatch({ control: form.control, name: 'issuerPartyProfileId' });
+  const issuerPartyProfileId = useWatch({
+    control: form.control,
+    name: 'issuerPartyProfileId',
+  });
   const currencyId = useWatch({ control: form.control, name: 'currencyId' });
   const hoBranchId = useWatch({ control: form.control, name: 'hoBranchId' });
   const issuerPartyProfileSnapshot = useWatch({
     control: form.control,
     name: 'issuerPartyProfileSnapshot',
   });
-  const currencySnapshot = useWatch({ control: form.control, name: 'currencySnapshot' });
-  const hoBranchSnapshot = useWatch({ control: form.control, name: 'hoBranchSnapshot' });
+  const currencySnapshot = useWatch({
+    control: form.control,
+    name: 'currencySnapshot',
+  });
+  const hoBranchSnapshot = useWatch({
+    control: form.control,
+    name: 'hoBranchSnapshot',
+  });
   const items = useWatch({ control: form.control, name: 'items' }) ?? [];
-  const isIssuerKind = isHo || kind === CardStockSettlementDocumentKind.HO_ISSUER;
+  const isIssuerKind =
+    isHo || kind === CardStockSettlementDocumentKind.HO_ISSUER;
   const references = useCardStockReferences();
-  const branchesQuery = useListBranchProfiles({ activeOnly: true }, isIssuerKind);
+  const branchesQuery = useListBranchProfiles(
+    { activeOnly: true },
+    isIssuerKind
+  );
   const canLoadUnsettled =
     Boolean(issuerPartyProfileId && currencyId) &&
     (!isIssuerKind || Boolean(hoBranchId)) &&
@@ -140,21 +157,36 @@ export const CardSettlementForm = ({
     hoBranchId,
     hoBranchSnapshot
   );
-  const loadIssuerOptions = useMemo(() => staticLoader(issuerOptions), [issuerOptions]);
-  const loadCurrencyOptions = useMemo(() => staticLoader(currencyOptions), [currencyOptions]);
-  const loadHoBranchOptions = useMemo(() => staticLoader(hoBranchOptions), [hoBranchOptions]);
-  const clearItems = () => form.setValue('items', [], { shouldDirty: true, shouldValidate: true });
+  const loadIssuerOptions = useMemo(
+    () => staticLoader(issuerOptions),
+    [issuerOptions]
+  );
+  const loadCurrencyOptions = useMemo(
+    () => staticLoader(currencyOptions),
+    [currencyOptions]
+  );
+  const loadHoBranchOptions = useMemo(
+    () => staticLoader(hoBranchOptions),
+    [hoBranchOptions]
+  );
+  const clearItems = () =>
+    form.setValue('items', [], { shouldDirty: true, shouldValidate: true });
 
   return (
     <div className="space-y-6">
-      <CardSection heading={CARD_SETTLEMENT_TEXT.detailsHeading} className="space-y-4">
+      <CardSection
+        heading={CARD_SETTLEMENT_TEXT.detailsHeading}
+        className="space-y-4"
+      >
         <div className="grid gap-4 xl:grid-cols-4">
           <div>
             <div className="mb-1 text-sm font-medium text-text-secondary">
               {CARD_SETTLEMENT_TEXT.type}
             </div>
             <div className="rounded-sm border border-border-primary bg-surface-secondary px-3 py-2 text-sm text-text-primary">
-              {isHo ? CARD_SETTLEMENT_TEXT.kindIssuer : CARD_SETTLEMENT_TEXT.kindBranch}
+              {isHo
+                ? CARD_SETTLEMENT_TEXT.kindIssuer
+                : CARD_SETTLEMENT_TEXT.kindBranch}
             </div>
           </div>
           <FormFieldSelect
@@ -225,12 +257,19 @@ export const CardSettlementForm = ({
           />
         </div>
       </CardSection>
-      <CardSection heading={CARD_SETTLEMENT_TEXT.itemsHeading} className="space-y-4">
+      <CardSection
+        heading={CARD_SETTLEMENT_TEXT.itemsHeading}
+        className="space-y-4"
+      >
         {!readOnly ? (
           <Button
             type="button"
             variant="outline"
-            disabled={!issuerPartyProfileId || !currencyId || (isIssuerKind && !hoBranchId)}
+            disabled={
+              !issuerPartyProfileId ||
+              !currencyId ||
+              (isIssuerKind && !hoBranchId)
+            }
             onClick={() => setPickerOpen(true)}
           >
             {CARD_SETTLEMENT_TEXT.selectCards}
@@ -304,7 +343,9 @@ export const CardSettlementForm = ({
         loading={unsettled.isLoading}
         showBranch={isHo}
         onClose={() => setPickerOpen(false)}
-        onApply={selected => replace(selected.map(item => toFormItem(item, kind)))}
+        onApply={selected =>
+          replace(selected.map(item => toFormItem(item, kind)))
+        }
       />
     </div>
   );

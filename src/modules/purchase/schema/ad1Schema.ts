@@ -38,7 +38,10 @@ export const ad1Schema = yup.object({
     .string()
     .trim()
     .required('Pan is required')
-    .matches(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i, 'PAN No must be a valid 10-character Indian PAN'),
+    .matches(
+      /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i,
+      'PAN No must be a valid 10-character Indian PAN'
+    ),
   dateOfBirth: yup
     .string()
     .trim()
@@ -47,7 +50,11 @@ export const ad1Schema = yup.object({
       if (!value) return true;
       const dob = new Date(value);
       const today = new Date();
-      const minDob = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+      const minDob = new Date(
+        today.getFullYear() - 18,
+        today.getMonth(),
+        today.getDate()
+      );
       dob.setHours(0, 0, 0, 0);
       minDob.setHours(0, 0, 0, 0);
       return dob <= minDob;
@@ -55,12 +62,18 @@ export const ad1Schema = yup.object({
   productId: yup.string().trim().required('Product is required'),
   beneficiaryName: yup.string().trim().required('Beneficiary Name is required'),
   beniAddress: yup.string().trim().required('Beneficiary Address is required'),
-  beneAccountNumber: yup.string().trim().required('Beneficiary Account Number is required'),
-  beneBankName: yup.string().trim().required('Beneficiary Bank Name is required'),
+  beneAccountNumber: yup
+    .string()
+    .trim()
+    .required('Beneficiary Account Number is required'),
+  beneBankName: yup
+    .string()
+    .trim()
+    .required('Beneficiary Bank Name is required'),
   swiftCode: yup.string().trim().required('Swift Code is required'),
   relationshipId: yup.string().trim().required('Relationship is required'),
   currencyId: yup.string().trim().required('Currency Code is required'),
-  
+
   // 7 Decimals
   fcVolume: decimalStringSchema
     .required('FC Volume is required')
@@ -68,7 +81,7 @@ export const ad1Schema = yup.object({
   saleRate: decimalStringSchema
     .required('Sell Rate is required')
     .test('decimals', 'Must have up to 7 decimal places', decimalPlaces(7)),
-    
+
   // 2 Decimals
   totalInrAmt: decimalStringSchema
     .required('Total INR Amt is required')
@@ -91,7 +104,7 @@ export const ad1Schema = yup.object({
   settlementRate: decimalStringSchema
     .required('Settlement Rate is required')
     .test('decimals', 'Must have up to 2 decimal places', decimalPlaces(2)),
-    
+
   grossRevenue: decimalStringSchema.default('0'),
   revenueReceivable: decimalStringSchema.default('0'),
   agentId: yup.string().trim().default(''),

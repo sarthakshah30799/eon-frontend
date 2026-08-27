@@ -3,7 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { PencilSquareIcon } from '@heroicons/react/24/outline';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button1';
-import { AsyncSelect, type AsyncSelectOption, type AsyncSelectResponse } from '@/components/ui';
+import {
+  AsyncSelect,
+  type AsyncSelectOption,
+  type AsyncSelectResponse,
+} from '@/components/ui';
 import { Table, type TableColumnDef } from '@/components/ui/table';
 import { AccessDeniedState } from '@/components/ui/access-denied-state';
 import { usePermission } from '@/hooks/usePermission';
@@ -30,7 +34,9 @@ export const AD1ListView = () => {
   const { hasAnyPermission } = usePermission('/ad1');
   const [search, setSearch] = useState('');
   const [branchFilter, setBranchFilter] = useState('');
-  const canSeeAllBranches = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
+  const canSeeAllBranches = Boolean(
+    user?.isAdmin || user?.isHo || user?.isHoStaff
+  );
 
   const { data: branches = [] } = useListBranchProfiles({ activeOnly: true });
   const branchOptions = useMemo<AsyncSelectOption[]>(
@@ -46,20 +52,26 @@ export const AD1ListView = () => {
     [branchFilter, branchOptions]
   );
   const loadBranchOptions = useMemo(
-    () => async (inputValue: string): Promise<AsyncSelectResponse> => {
-      const normalizedInput = inputValue.trim().toLowerCase();
-      const filteredOptions = normalizedInput
-        ? branchOptions.filter(option =>
-            option.label.toLowerCase().includes(normalizedInput)
-          )
-        : branchOptions;
+    () =>
+      async (inputValue: string): Promise<AsyncSelectResponse> => {
+        const normalizedInput = inputValue.trim().toLowerCase();
+        const filteredOptions = normalizedInput
+          ? branchOptions.filter(option =>
+              option.label.toLowerCase().includes(normalizedInput)
+            )
+          : branchOptions;
 
-      return { options: filteredOptions };
-    },
+        return { options: filteredOptions };
+      },
     [branchOptions]
   );
 
-  const { data = [], isLoading, isFetching, error } = useQuery({
+  const {
+    data = [],
+    isLoading,
+    isFetching,
+    error,
+  } = useQuery({
     queryKey: ['transactions-ad1', search, branchFilter],
     queryFn: () =>
       transactionAd1Api.getAll({
@@ -94,8 +106,10 @@ export const AD1ListView = () => {
         id: 'actions',
         header: 'Actions',
         meta: {
-          headerClassName: 'sticky right-0 z-20 border-l border-border-primary bg-surface-secondary',
-          cellClassName: 'sticky right-0 z-10 border-l border-border-primary bg-surface-primary',
+          headerClassName:
+            'sticky right-0 z-20 border-l border-border-primary bg-surface-secondary',
+          cellClassName:
+            'sticky right-0 z-10 border-l border-border-primary bg-surface-primary',
         },
         cell: ({ row }) => (
           <div className="flex items-center gap-2">
@@ -121,7 +135,9 @@ export const AD1ListView = () => {
   );
 
   if (!hasAnyPermission) {
-    return <AccessDeniedState message={PAGE_STATUS_TEXTS.ACCESS_DENIED_MESSAGE} />;
+    return (
+      <AccessDeniedState message={PAGE_STATUS_TEXTS.ACCESS_DENIED_MESSAGE} />
+    );
   }
 
   if (error) {
@@ -136,7 +152,9 @@ export const AD1ListView = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-2xl font-semibold text-text-primary">AD1 Transactions</h1>
+          <h1 className="text-2xl font-semibold text-text-primary">
+            AD1 Transactions
+          </h1>
           <p className="text-sm text-text-secondary">
             Browse and manage AD1 outward remittance transactions.
           </p>
@@ -164,7 +182,9 @@ export const AD1ListView = () => {
                 const selectedOption = Array.isArray(option)
                   ? (option[0] ?? null)
                   : option;
-                setBranchFilter(selectedOption?.value ? String(selectedOption.value) : '');
+                setBranchFilter(
+                  selectedOption?.value ? String(selectedOption.value) : ''
+                );
               }}
             />
           </div>

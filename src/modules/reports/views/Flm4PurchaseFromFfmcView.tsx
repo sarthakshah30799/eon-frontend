@@ -24,15 +24,15 @@ export const Flm4PurchaseFromFfmcView = () => {
   const currentSummary = useMemo(() => {
     const branchLabels = summarizeReportSelection(
       reportState.filters.branchIds,
-      reportState.filters.branchOptions,
+      reportState.filters.branchOptions
     );
     const profileLabels = summarizeReportSelection(
       reportState.filters.profileTypes,
-      reportState.filters.profileOptions,
+      reportState.filters.profileOptions
     );
     const productLabel =
       reportState.filters.productOptions.find(
-        option => option.id === reportState.filters.productId,
+        option => option.id === reportState.filters.productId
       )?.label ?? FLM4_PURCHASE_FROM_FFMC_TEXT.all;
 
     return {
@@ -50,7 +50,9 @@ export const Flm4PurchaseFromFfmcView = () => {
   ]);
 
   if (!canView) {
-    return <AccessDeniedState message={PAGE_STATUS_TEXTS.ACCESS_DENIED_MESSAGE} />;
+    return (
+      <AccessDeniedState message={PAGE_STATUS_TEXTS.ACCESS_DENIED_MESSAGE} />
+    );
   }
 
   return (
@@ -68,7 +70,8 @@ export const Flm4PurchaseFromFfmcView = () => {
 
       {reportState.filters.appliedFilters && (
         <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-[11px] text-text-secondary">
-          {FLM4_PURCHASE_FROM_FFMC_TEXT.appliedPrefix}: {reportState.appliedDateRangeLabel} |{' '}
+          {FLM4_PURCHASE_FROM_FFMC_TEXT.appliedPrefix}:{' '}
+          {reportState.appliedDateRangeLabel} |{' '}
           {FLM4_PURCHASE_FROM_FFMC_TEXT.branchHeading}{' '}
           {currentSummary.branches.length
             ? currentSummary.branches.join(', ')
@@ -78,7 +81,8 @@ export const Flm4PurchaseFromFfmcView = () => {
           reportState.filters.profileOptions.length
             ? FLM4_PURCHASE_FROM_FFMC_TEXT.all
             : currentSummary.profiles.join(', ')}{' '}
-          | {FLM4_PURCHASE_FROM_FFMC_TEXT.productHeading} {currentSummary.product}
+          | {FLM4_PURCHASE_FROM_FFMC_TEXT.productHeading}{' '}
+          {currentSummary.product}
         </div>
       )}
 
@@ -110,7 +114,9 @@ export const Flm4PurchaseFromFfmcView = () => {
                       : 'outline'
                   }
                   className="h-7 rounded-full px-3 text-[11px]"
-                  onClick={() => reportState.filters.setView(Flm4ReportViewEnum.NORMAL)}
+                  onClick={() =>
+                    reportState.filters.setView(Flm4ReportViewEnum.NORMAL)
+                  }
                 >
                   {FLM4_PURCHASE_FROM_FFMC_TEXT.normalView}
                 </Button>
@@ -123,7 +129,9 @@ export const Flm4PurchaseFromFfmcView = () => {
                       : 'outline'
                   }
                   className="h-7 rounded-full px-3 text-[11px]"
-                  onClick={() => reportState.filters.setView(Flm4ReportViewEnum.EXTENDED)}
+                  onClick={() =>
+                    reportState.filters.setView(Flm4ReportViewEnum.EXTENDED)
+                  }
                 >
                   {FLM4_PURCHASE_FROM_FFMC_TEXT.extendedView}
                 </Button>
@@ -139,7 +147,9 @@ export const Flm4PurchaseFromFfmcView = () => {
                       : 'outline'
                   }
                   className="h-7 rounded-full px-3 text-[11px]"
-                  onClick={() => reportState.setExportFormat(ReportExportFormatEnum.XLSX)}
+                  onClick={() =>
+                    reportState.setExportFormat(ReportExportFormatEnum.XLSX)
+                  }
                 >
                   {FLM4_PURCHASE_FROM_FFMC_TEXT.xlsx}
                 </Button>
@@ -152,7 +162,9 @@ export const Flm4PurchaseFromFfmcView = () => {
                       : 'outline'
                   }
                   className="h-7 rounded-full px-3 text-[11px]"
-                  onClick={() => reportState.setExportFormat(ReportExportFormatEnum.CSV)}
+                  onClick={() =>
+                    reportState.setExportFormat(ReportExportFormatEnum.CSV)
+                  }
                 >
                   {FLM4_PURCHASE_FROM_FFMC_TEXT.csv}
                 </Button>
@@ -180,7 +192,9 @@ export const Flm4PurchaseFromFfmcView = () => {
 
           <Flm4PurchaseFromFfmcTable
             report={reportState.report}
-            loading={reportState.isLoadingReport || reportState.isFetchingReport}
+            loading={
+              reportState.isLoadingReport || reportState.isFetchingReport
+            }
           />
         </section>
       )}

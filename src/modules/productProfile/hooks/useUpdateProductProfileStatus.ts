@@ -39,7 +39,9 @@ export const useUpdateProductProfileStatus = () => {
       queryClient.setQueryData<IProductProfile | undefined>(
         ['product-profile', id],
         currentProduct =>
-          currentProduct ? { ...currentProduct, isActiveProduct } : currentProduct
+          currentProduct
+            ? { ...currentProduct, isActiveProduct }
+            : currentProduct
       );
 
       return { previousProducts, previousProduct };
@@ -50,7 +52,10 @@ export const useUpdateProductProfileStatus = () => {
       });
 
       if (context?.previousProduct) {
-        queryClient.setQueryData(['product-profile', variables.id], context.previousProduct);
+        queryClient.setQueryData(
+          ['product-profile', variables.id],
+          context.previousProduct
+        );
       }
 
       toast.error(PRODUCT_PROFILE_TEXTS.UPDATE_ERROR);

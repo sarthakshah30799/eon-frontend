@@ -82,12 +82,10 @@ export const UserProfileTable = ({
             <Button
               type="button"
               aria-label="Edit user"
-              className='border-0! bg-transparent! text-black!'
+              className="border-0! bg-transparent! text-black!"
               onClick={event => {
                 event.stopPropagation();
-                navigate(
-                  `/user-profile/edit/${profileId}`
-                );
+                navigate(`/user-profile/edit/${profileId}`);
               }}
             >
               <PencilSquareIcon className="h-5 w-5" />

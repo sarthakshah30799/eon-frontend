@@ -1,5 +1,8 @@
 import { Button, Checkbox, Dropdown } from '@/components/ui';
-import { FLM8_CN_STATEMENT_TEXT, Flm8ProfileTypeEnum } from '../constants/flm8CnStatementConstants';
+import {
+  FLM8_CN_STATEMENT_TEXT,
+  Flm8ProfileTypeEnum,
+} from '../constants/flm8CnStatementConstants';
 import type { Flm8CnStatementFiltersState } from '../hooks/useFlm8CnStatementFilters';
 import CheckboxFilterGroup from './CheckboxFilterGroup';
 import ReportDatePresetFilter from './ReportDatePresetFilter';
@@ -20,15 +23,15 @@ export const Flm8CnStatementFiltersSection = ({
   filters,
 }: Flm8CnStatementFiltersSectionProps) => {
   const currentProductLabel =
-    filters.productOptions.find(option => option.id === filters.productId)?.label ??
-    FLM8_CN_STATEMENT_TEXT.selectProduct;
+    filters.productOptions.find(option => option.id === filters.productId)
+      ?.label ?? FLM8_CN_STATEMENT_TEXT.selectProduct;
   const profileTypeOptions = [
     { id: Flm8ProfileTypeEnum.FFMC, label: FLM8_CN_STATEMENT_TEXT.ffmc },
     { id: Flm8ProfileTypeEnum.AD, label: FLM8_CN_STATEMENT_TEXT.ad },
   ];
   const currentProfileTypeLabel =
-    profileTypeOptions.find(option => option.id === filters.profileType)?.label ??
-    FLM8_CN_STATEMENT_TEXT.selectProfileType;
+    profileTypeOptions.find(option => option.id === filters.profileType)
+      ?.label ?? FLM8_CN_STATEMENT_TEXT.selectProfileType;
   const showApConnect = filters.profileType === Flm8ProfileTypeEnum.AD;
 
   return (
@@ -49,7 +52,7 @@ export const Flm8CnStatementFiltersSection = ({
           emptyMessage="No branch options available."
           helperText={buildSelectionDescription(
             filters.branchIds.length,
-            filters.branchOptions.length,
+            filters.branchOptions.length
           )}
         />
 

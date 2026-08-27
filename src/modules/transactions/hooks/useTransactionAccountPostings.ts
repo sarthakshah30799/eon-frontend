@@ -4,15 +4,9 @@ import { toast } from 'react-hot-toast';
 import { useDebounce } from '@/hooks';
 import { transactionsApi } from '@/api/transactions';
 import { useListPartyProfiles } from '@/modules/partyProfiles/hooks';
-import {
-  formatDateTime,
-  formatReferenceLabel,
-} from '@/utils';
+import { formatDateTime, formatReferenceLabel } from '@/utils';
 import type { TransactionListRow } from '../components';
-import type {
-  ITransactionEntity,
-  TransactionType,
-} from '../types';
+import type { ITransactionEntity, TransactionType } from '../types';
 import { TransactionTypeEnum } from '../types';
 
 export interface TransactionAccountPostingOption {
@@ -30,41 +24,45 @@ export const useTransactionAccountPostings = (enabled = true) => {
   const [search, setSearch] = useState('');
   const [partyProfileId, setPartyProfileId] = useState('');
   const [transactionType, setTransactionType] = useState('');
-  const [activeTransactionId, setActiveTransactionId] = useState<string | null>(null);
+  const [activeTransactionId, setActiveTransactionId] = useState<string | null>(
+    null
+  );
   const debouncedSearch = useDebounce(search.trim(), 400);
 
-  const {
-    data: partyProfilesResponse,
-    isLoading: isPartyProfilesLoading,
-  } = useListPartyProfiles(
-    {
-      page: 1,
-      limit: 500,
-      activeOnly: true,
-    },
-    undefined,
-    enabled,
-    true,
-  );
+  const { data: partyProfilesResponse, isLoading: isPartyProfilesLoading } =
+    useListPartyProfiles(
+      {
+        page: 1,
+        limit: 500,
+        activeOnly: true,
+      },
+      undefined,
+      enabled,
+      true
+    );
 
   const partyProfileOptions = useMemo<TransactionAccountPostingOption[]>(
     () =>
       (partyProfilesResponse?.data ?? []).map(profile => ({
         value: profile.id,
-        label: `${profile.code}${profile.name ? ` - ${profile.name}` : ''}` || profile.id,
+        label:
+          `${profile.code}${profile.name ? ` - ${profile.name}` : ''}` ||
+          profile.id,
       })),
     [partyProfilesResponse]
   );
 
   const selectedPartyProfile = useMemo(
     () =>
-      partyProfileOptions.find(option => option.value === partyProfileId) ?? null,
+      partyProfileOptions.find(option => option.value === partyProfileId) ??
+      null,
     [partyProfileId, partyProfileOptions]
   );
 
   const selectedTransactionType = useMemo(
     () =>
-      transactionTypeOptions.find(option => option.value === transactionType) ?? null,
+      transactionTypeOptions.find(option => option.value === transactionType) ??
+      null,
     [transactionType]
   );
 
@@ -118,7 +116,9 @@ export const useTransactionAccountPostings = (enabled = true) => {
       transactionsApi.getTransactions({
         search: debouncedSearch || undefined,
         partyProfileId: partyProfileId || undefined,
-        transactionType: transactionType ? (transactionType as TransactionType) : undefined,
+        transactionType: transactionType
+          ? (transactionType as TransactionType)
+          : undefined,
       }),
   });
 
@@ -134,7 +134,9 @@ export const useTransactionAccountPostings = (enabled = true) => {
     },
     onError: error => {
       toast.error(
-        error instanceof Error ? error.message : 'Failed to queue account posting rebuild'
+        error instanceof Error
+          ? error.message
+          : 'Failed to queue account posting rebuild'
       );
     },
     onSettled: () => {

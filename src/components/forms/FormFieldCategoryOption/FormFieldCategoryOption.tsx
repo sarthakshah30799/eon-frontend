@@ -13,11 +13,14 @@ import type { ICategoryOptionsFormValues } from '@/modules/miscellaneousProfile'
 
 type FormFieldSelectProps = ComponentProps<typeof FormFieldSelect>;
 
-interface FormFieldCategoryOptionProps
-  extends Omit<
-    FormFieldSelectProps,
-    'loadOptions' | 'defaultOptions' | 'isCreatable' | 'isSearchable' | 'onCreateOption'
-  > {
+interface FormFieldCategoryOptionProps extends Omit<
+  FormFieldSelectProps,
+  | 'loadOptions'
+  | 'defaultOptions'
+  | 'isCreatable'
+  | 'isSearchable'
+  | 'onCreateOption'
+> {
   code: CategoryOptionCode;
   createLabel?: string;
   isCreatable?: boolean;
@@ -26,7 +29,9 @@ interface FormFieldCategoryOptionProps
   onChange?: (value: AsyncSelectOption | AsyncSelectOption[] | null) => void;
   onCreateTransform?: (
     inputValue: string
-  ) => { value: string; label: string } | Promise<{ value: string; label: string }>;
+  ) =>
+    | { value: string; label: string }
+    | Promise<{ value: string; label: string }>;
 }
 
 export const FormFieldCategoryOption = ({
@@ -97,7 +102,9 @@ export const FormFieldCategoryOption = ({
       setIsCreating(true);
 
       try {
-        const createdOptions = await createOptions(buildCategoryOptionPayloads(values));
+        const createdOptions = await createOptions(
+          buildCategoryOptionPayloads(values)
+        );
         const firstCreatedOption = createdOptions[0] ?? null;
 
         if (!firstCreatedOption) {

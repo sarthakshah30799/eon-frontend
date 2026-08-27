@@ -26,9 +26,7 @@ export const EntityPickerField = ({
       <Label>{label}</Label>
       <div
         className={
-          isBottomButton
-            ? 'flex flex-col gap-1.5'
-            : 'flex items-end gap-2'
+          isBottomButton ? 'flex flex-col gap-1.5' : 'flex items-end gap-2'
         }
       >
         <div
@@ -39,14 +37,22 @@ export const EntityPickerField = ({
         <Button
           type="button"
           variant="outline"
-          className={isBottomButton ? '!h-7.5 w-full shrink-0 rounded-md px-3 py-1 text-[14px]' : '!h-7.5 shrink-0 rounded-md px-3 py-1 text-[14px]'}
+          className={
+            isBottomButton
+              ? '!h-7.5 w-full shrink-0 rounded-md px-3 py-1 text-[14px]'
+              : '!h-7.5 shrink-0 rounded-md px-3 py-1 text-[14px]'
+          }
           disabled={disabled}
           onClick={onClick}
         >
           Select
         </Button>
       </div>
-      {helperText ? <p className="text-[11px] leading-tight text-text-tertiary">{helperText}</p> : null}
+      {helperText ? (
+        <p className="text-[11px] leading-tight text-text-tertiary">
+          {helperText}
+        </p>
+      ) : null}
     </div>
   );
 };

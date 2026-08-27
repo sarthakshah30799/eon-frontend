@@ -47,8 +47,7 @@ const isPanValidationRequired = (values: {
 const isPassportValidationRequired = (values: {
   entityType?: string;
   nationalityType?: string;
-}) =>
-  values.nationalityType !== PassengerNationalityTypeEnum.INDIAN;
+}) => values.nationalityType !== PassengerNationalityTypeEnum.INDIAN;
 
 const requiredText = (message: string) => yup.string().trim().required(message);
 
@@ -65,12 +64,16 @@ const passengerOtherDocumentSchema = yup
       then: schema => schema.required('Document number is required'),
       otherwise: schema => schema.default(''),
     }),
-    validTill: yup.string().trim().default('').when('documentType', {
-      is: (documentType: string) =>
-        shouldShowPassengerOtherDocumentValidityFields(documentType),
-      then: schema => schema.required('Valid till is required'),
-      otherwise: schema => schema.default(''),
-    }),
+    validTill: yup
+      .string()
+      .trim()
+      .default('')
+      .when('documentType', {
+        is: (documentType: string) =>
+          shouldShowPassengerOtherDocumentValidityFields(documentType),
+        then: schema => schema.required('Valid till is required'),
+        otherwise: schema => schema.default(''),
+      }),
     issueAt: yup.string().trim().default(''),
     issueDate: yup.string().trim().default(''),
     expiryDate: yup.string().trim().default(''),
@@ -80,12 +83,18 @@ const passengerOtherDocumentSchema = yup
 export const createPassengerPanVerificationSchema = () =>
   yup.object({
     entityType: yup
-      .mixed<(typeof PassengerEntityTypeEnum)[keyof typeof PassengerEntityTypeEnum]>()
+      .mixed<
+        (typeof PassengerEntityTypeEnum)[keyof typeof PassengerEntityTypeEnum]
+      >()
       .oneOf(Object.values(PassengerEntityTypeEnum))
       .required(),
     nationalityType: yup
       .mixed<PassengerNationalityType>()
-      .oneOf(Object.values(PassengerNationalityTypeEnum) as PassengerNationalityType[])
+      .oneOf(
+        Object.values(
+          PassengerNationalityTypeEnum
+        ) as PassengerNationalityType[]
+      )
       .required(),
     panNumber: optionalText().when(['entityType', 'nationalityType'], {
       is: (entityType: string, nationalityType: string) =>
@@ -99,12 +108,15 @@ export const createPassengerPanVerificationSchema = () =>
       then: () => requiredText('PAN holder name is required'),
       otherwise: schema => schema.default(''),
     }),
-    panDob: yup.string().trim().when(['entityType', 'nationalityType'], {
-      is: (entityType: string, nationalityType: string) =>
-        isPanValidationRequired({ entityType, nationalityType }),
-      then: schema => schema.required('PAN holder DOB is required'),
-      otherwise: schema => schema.default(''),
-    }),
+    panDob: yup
+      .string()
+      .trim()
+      .when(['entityType', 'nationalityType'], {
+        is: (entityType: string, nationalityType: string) =>
+          isPanValidationRequired({ entityType, nationalityType }),
+        then: schema => schema.required('PAN holder DOB is required'),
+        otherwise: schema => schema.default(''),
+      }),
     panHolderRelationType: yup.string().trim().default(''),
   });
 
@@ -112,7 +124,11 @@ export const createPassengerPassportVerificationSchema = () =>
   yup.object({
     nationalityType: yup
       .mixed<PassengerNationalityType>()
-      .oneOf(Object.values(PassengerNationalityTypeEnum) as PassengerNationalityType[])
+      .oneOf(
+        Object.values(
+          PassengerNationalityTypeEnum
+        ) as PassengerNationalityType[]
+      )
       .required(),
     passportNumber: optionalText().when('nationalityType', {
       is: (nationalityType: string) =>
@@ -126,28 +142,40 @@ export const createPassengerPassportVerificationSchema = () =>
       then: schema => schema.required('Passport issue place is required'),
       otherwise: schema => schema.default(''),
     }),
-    passportIssueDate: yup.string().trim().when('nationalityType', {
-      is: (nationalityType: string) =>
-        isPassportValidationRequired({ nationalityType }),
-      then: schema => schema.required('Passport issue date is required'),
-      otherwise: schema => schema.default(''),
-    }),
-    passportExpiryDate: yup.string().trim().when('nationalityType', {
-      is: (nationalityType: string) =>
-        isPassportValidationRequired({ nationalityType }),
-      then: schema =>
-        schema
-          .required('Passport expiry date is required')
-          .test('passport-date-order', 'Passport expiry date must be after issue date', function (value) {
-            const issueDate = this.parent.passportIssueDate as string | undefined;
-            if (!issueDate || !value) {
-              return true;
-            }
+    passportIssueDate: yup
+      .string()
+      .trim()
+      .when('nationalityType', {
+        is: (nationalityType: string) =>
+          isPassportValidationRequired({ nationalityType }),
+        then: schema => schema.required('Passport issue date is required'),
+        otherwise: schema => schema.default(''),
+      }),
+    passportExpiryDate: yup
+      .string()
+      .trim()
+      .when('nationalityType', {
+        is: (nationalityType: string) =>
+          isPassportValidationRequired({ nationalityType }),
+        then: schema =>
+          schema
+            .required('Passport expiry date is required')
+            .test(
+              'passport-date-order',
+              'Passport expiry date must be after issue date',
+              function (value) {
+                const issueDate = this.parent.passportIssueDate as
+                  | string
+                  | undefined;
+                if (!issueDate || !value) {
+                  return true;
+                }
 
-            return new Date(value) >= new Date(issueDate);
-          }),
-      otherwise: schema => schema.default(''),
-    }),
+                return new Date(value) >= new Date(issueDate);
+              }
+            ),
+        otherwise: schema => schema.default(''),
+      }),
     isIndianNationality: yup.boolean().required(),
   });
 
@@ -167,7 +195,12 @@ export const createPassengerOtherDocumentVerificationSchema = () =>
 
 export const createPassengerAmlDefaultValues = (
   entityType: PassengerEntityType = PassengerEntityTypeEnum.CORPORATE,
-  selectedPartyProfile?: { panNo?: string | null; panName?: string | null; name?: string | null; panDob?: string | null } | null,
+  selectedPartyProfile?: {
+    panNo?: string | null;
+    panName?: string | null;
+    name?: string | null;
+    panDob?: string | null;
+  } | null
 ): IPassengerAmlVerificationValues => {
   const resolvedPartyProfile = selectedPartyProfile ?? null;
   const resolvedEntityType =
@@ -180,11 +213,15 @@ export const createPassengerAmlDefaultValues = (
   return {
     entityType: resolvedEntityType,
     isIndianNationality: true,
-    panNumber: shouldPrefillFromPartyProfile ? resolvedPartyProfile?.panNo ?? '' : '',
-    panHolderName: shouldPrefillFromPartyProfile
-      ? resolvedPartyProfile?.panName ?? resolvedPartyProfile?.name ?? ''
+    panNumber: shouldPrefillFromPartyProfile
+      ? (resolvedPartyProfile?.panNo ?? '')
       : '',
-    panDob: shouldPrefillFromPartyProfile ? resolvedPartyProfile?.panDob ?? '' : '',
+    panHolderName: shouldPrefillFromPartyProfile
+      ? (resolvedPartyProfile?.panName ?? resolvedPartyProfile?.name ?? '')
+      : '',
+    panDob: shouldPrefillFromPartyProfile
+      ? (resolvedPartyProfile?.panDob ?? '')
+      : '',
     passportNumber: '',
     passportIssueAt: '',
     passportIssueDate: '',
@@ -195,7 +232,7 @@ export const createPassengerAmlDefaultValues = (
 export const createPassengerDetailsDefaultValues = (
   entityType: PassengerEntityType = PassengerEntityTypeEnum.CORPORATE,
   verifiedAmlValues?: IPassengerAmlVerificationValues | null,
-  selectedPartyProfile?: PassengerAmlPartyProfile | null,
+  selectedPartyProfile?: PassengerAmlPartyProfile | null
 ): IPassengerPassengerDetailsValues => {
   const resolvedEntityType =
     entityType === PassengerEntityTypeEnum.INDIVIDUAL
@@ -203,9 +240,11 @@ export const createPassengerDetailsDefaultValues = (
       : PassengerEntityTypeEnum.CORPORATE;
 
   const isIndianNationality =
-    verifiedAmlValues?.isIndianNationality ?? resolvedEntityType === PassengerEntityTypeEnum.CORPORATE;
+    verifiedAmlValues?.isIndianNationality ??
+    resolvedEntityType === PassengerEntityTypeEnum.CORPORATE;
   const shouldPrefillFromPartyProfile =
-    resolvedEntityType === PassengerEntityTypeEnum.CORPORATE && Boolean(selectedPartyProfile);
+    resolvedEntityType === PassengerEntityTypeEnum.CORPORATE &&
+    Boolean(selectedPartyProfile);
 
   return {
     entityType: resolvedEntityType,
@@ -215,25 +254,45 @@ export const createPassengerDetailsDefaultValues = (
     residentStatus: PassengerResidentStatusEnum.RESIDENT,
     countryId: '',
     stateId: shouldPrefillFromPartyProfile
-      ? selectedPartyProfile?.stateId ?? selectedPartyProfile?.gstStateId ?? ''
+      ? (selectedPartyProfile?.stateId ??
+        selectedPartyProfile?.gstStateId ??
+        '')
       : '',
     locationId: '',
-    city: shouldPrefillFromPartyProfile ? selectedPartyProfile?.city ?? '' : '',
-    address1: shouldPrefillFromPartyProfile ? selectedPartyProfile?.address1 ?? '' : '',
-    address2: shouldPrefillFromPartyProfile ? selectedPartyProfile?.address2 ?? '' : '',
-    email: shouldPrefillFromPartyProfile ? selectedPartyProfile?.email ?? '' : '',
-    contactNo: shouldPrefillFromPartyProfile ? selectedPartyProfile?.phoneNo ?? '' : '',
+    city: shouldPrefillFromPartyProfile
+      ? (selectedPartyProfile?.city ?? '')
+      : '',
+    address1: shouldPrefillFromPartyProfile
+      ? (selectedPartyProfile?.address1 ?? '')
+      : '',
+    address2: shouldPrefillFromPartyProfile
+      ? (selectedPartyProfile?.address2 ?? '')
+      : '',
+    email: shouldPrefillFromPartyProfile
+      ? (selectedPartyProfile?.email ?? '')
+      : '',
+    contactNo: shouldPrefillFromPartyProfile
+      ? (selectedPartyProfile?.phoneNo ?? '')
+      : '',
     panNumber: verifiedAmlValues?.panNumber ?? '',
     panHolderName: verifiedAmlValues?.panHolderName ?? '',
     panDob: verifiedAmlValues?.panDob ?? '',
     panHolderRelationType: '',
-    paidByPanNumber: shouldPrefillFromPartyProfile ? selectedPartyProfile?.panNo ?? '' : '',
-    paidByPanHolderName: shouldPrefillFromPartyProfile
-      ? selectedPartyProfile?.panName ?? selectedPartyProfile?.name ?? ''
+    paidByPanNumber: shouldPrefillFromPartyProfile
+      ? (selectedPartyProfile?.panNo ?? '')
       : '',
-    paidByPanDob: shouldPrefillFromPartyProfile ? selectedPartyProfile?.panDob ?? '' : '',
-    gstNumber: shouldPrefillFromPartyProfile ? selectedPartyProfile?.gstNo ?? '' : '',
-    gstStateId: shouldPrefillFromPartyProfile ? selectedPartyProfile?.gstStateId ?? '' : '',
+    paidByPanHolderName: shouldPrefillFromPartyProfile
+      ? (selectedPartyProfile?.panName ?? selectedPartyProfile?.name ?? '')
+      : '',
+    paidByPanDob: shouldPrefillFromPartyProfile
+      ? (selectedPartyProfile?.panDob ?? '')
+      : '',
+    gstNumber: shouldPrefillFromPartyProfile
+      ? (selectedPartyProfile?.gstNo ?? '')
+      : '',
+    gstStateId: shouldPrefillFromPartyProfile
+      ? (selectedPartyProfile?.gstStateId ?? '')
+      : '',
     isPep: false,
     passportNumber: verifiedAmlValues?.passportNumber ?? '',
     passportIssueAt: verifiedAmlValues?.passportIssueAt ?? '',

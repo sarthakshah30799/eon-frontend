@@ -58,7 +58,7 @@ export const useLoadManualBillBookBranchOptions = () => {
   return useCallback(
     async (inputValue: string) => {
       const branches = await queryClient.fetchQuery({
-        queryKey: ['branch-profiles', { search: inputValue || undefined, activeOnly: true }],
+        queryKey: ['branch-profiles', { search: inputValue || undefined, status: 'active' }],
         queryFn: () => branchProfileApi.getBranchProfiles({ search: inputValue || undefined, status: 'active' }),
       });
       return {

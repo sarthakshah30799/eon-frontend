@@ -87,7 +87,7 @@ export const ManualBillBookListView = () => {
   );
 
   const { data: branches = [] } = useListBranchProfiles({
-    activeOnly: true,
+    status: 'active',
   });
 
   const branchOptions = useMemo<AsyncSelectOption[]>(

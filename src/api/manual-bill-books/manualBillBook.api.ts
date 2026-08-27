@@ -1,6 +1,8 @@
 import { apiClient } from '../api';
 import type { IUserReference } from '../sharedTypes';
+import type { IPaginatedResponse, IOffsetPaginationParams } from '@/types/pagination';
 import { ManualBillBookStatusEnum } from '@/modules/manual-bill-books/types';
+import { PAGINATION_DEFAULTS } from '@/constants/paginationConstants';
 
 export type ManualBookStatus = typeof ManualBillBookStatusEnum[keyof typeof ManualBillBookStatusEnum];
 
@@ -82,6 +84,14 @@ export interface IManualBookDPMappingActionResponse {
   success: boolean;
 }
 
+export interface IManualBillBookListQuery extends IOffsetPaginationParams {
+  branchId?: string;
+  status?: string;
+  transactionType?: string;
+}
+
+export type IManualBillBookListResponse = IPaginatedResponse<IManualBook>;
+
 export const manualBillBookApi = {
   create: async (data: ICreateManualBook): Promise<IManualBook> => {
     const res = await apiClient.post<IManualBook>('/manual-bill-books/dispatch', data);
@@ -98,21 +108,39 @@ export const manualBillBookApi = {
   },
 
   findAll: async (
-    branchId?: string,
+    params?: IManualBillBookListQuery | string,
     status?: string,
     transactionType?: string,
-  ): Promise<IManualBook[]> => {
-    let url = '/manual-bill-books/dispatches';
-    const params: string[] = [];
-    if (branchId) params.push(`branchId=${encodeURIComponent(branchId)}`);
-    if (status) params.push(`status=${encodeURIComponent(status)}`);
-    if (transactionType) params.push(`transactionType=${encodeURIComponent(transactionType)}`);
-    if (params.length > 0) {
-      url += `?${params.join('&')}`;
+  ): Promise<IManualBillBookListResponse> => {
+    // Backward compat: findAll(branchId, status, transactionType)
+    let query: IManualBillBookListQuery = {};
+    if (typeof params === 'string') {
+      query = { branchId: params, status, transactionType };
+    } else if (params) {
+      query = params;
     }
-    const res = await apiClient.get<IManualBook[]>(url);
+    const search = new URLSearchParams();
+    if (query.branchId) search.set('branchId', query.branchId);
+    if (query.status) search.set('status', query.status);
+    if (query.transactionType) search.set('transactionType', query.transactionType);
+    if (query.limit !== undefined && query.limit !== null) search.set('limit', String(query.limit));
+    if (query.offset !== undefined && query.offset !== null) search.set('offset', String(query.offset));
+    const suffix = search.toString() ? `?${search.toString()}` : '';
+    const res = await apiClient.get<IManualBillBookListResponse>(`/manual-bill-books/dispatches${suffix}`);
     if (res.error) throw new Error(res.error);
-    return res.data || [];
+    if (!res.data) {
+      return { data: [], total: 0, totalItems: 0, totalPages: 0, limit: query.limit ?? PAGINATION_DEFAULTS.LIMIT, offset: query.offset ?? PAGINATION_DEFAULTS.OFFSET, hasMore: false };
+    }
+    // BE always returns paginated object { data, total, hasMore, limit, offset }
+    const obj = res.data as unknown as Record<string, unknown>;
+    const dataArr = (obj.data as IManualBook[]) ?? [];
+    const total = (obj.total as number) ?? (obj.totalItems as number) ?? dataArr.length;
+    const totalItems = (obj.totalItems as number) ?? total;
+    const limitVal = (obj.limit as number) ?? query.limit ?? PAGINATION_DEFAULTS.LIMIT;
+    const offsetVal = (obj.offset as number) ?? query.offset ?? PAGINATION_DEFAULTS.OFFSET;
+    const hasMore = (obj.hasMore as boolean) ?? (offsetVal + limitVal < total);
+    const totalPages = (obj.totalPages as number) ?? (limitVal > 0 ? Math.ceil(total / limitVal) : 1);
+    return { data: dataArr, total, totalItems, totalPages, limit: limitVal, offset: offsetVal, hasMore };
   },
 
   approveOrReject: async (id: string, data: IApproveRejectManualBook): Promise<IManualBook> => {

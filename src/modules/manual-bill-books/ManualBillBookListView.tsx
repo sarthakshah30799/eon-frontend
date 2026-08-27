@@ -4,6 +4,7 @@ import {
   AsyncSelect,
   Button,
   PageGrid,
+  PaginationControls,
   type AsyncSelectOption,
   type AsyncSelectResponse,
 } from '@/components/ui';
@@ -12,6 +13,7 @@ import {
   type IManualBook,
   type IManualBookAllocation,
   type IManualBookPageTracking,
+  type IManualBillBookListResponse,
 } from '@/api';
 import { Modal } from '@/components/ui/modal/Modal';
 import toast from 'react-hot-toast';
@@ -30,6 +32,7 @@ import {
 } from './types';
 import { usePermission } from '@/hooks/usePermission';
 import { useAuth } from '@/lib/AuthContext';
+import { PAGINATION_PAGE_SIZE_OPTIONS } from '@/constants/paginationConstants';
 
 const resolveAssignedToLabel = (assignedTo: IManualBook['assignedTo']) => {
   if (assignedTo && typeof assignedTo === 'object') {
@@ -181,21 +184,32 @@ export const ManualBillBookListView = () => {
     isFetched: isRoutedBookFetched,
   } = useGetManualBillBook(reviewId ?? undefined);
 
-  const {
-    data: books = [],
-    isLoading,
-    isFetching,
-    error,
-    refetch: refetchBooks,
-  } = useListManualBillBooks({
-    branchId: branchFilter || undefined,
-    status: statusFilter || undefined,
-  });
+  // Pagination is now encapsulated in the hook (route ?limit=&offset=) – reusable across any list
+  const listResult = useListManualBillBooks(
+    {
+      branchId: branchFilter || undefined,
+      status: statusFilter || undefined,
+    },
+    { withRoutePagination: true },
+  );
+  const listResponse = listResult.data as IManualBillBookListResponse | undefined;
+  const isLoading = listResult.isLoading;
+  const isFetching = listResult.isFetching;
+  const error = listResult.error;
+  const refetchBooks = listResult.refetch;
+  const limit = (listResult as unknown as { limit: number }).limit ?? 20;
+  const page = (listResult as unknown as { page: number }).page ?? 1;
+  const totalItems = (listResult as unknown as { totalItems: number }).totalItems ?? 0;
+  const totalPages = (listResult as unknown as { totalPages: number }).totalPages ?? 0;
+  const handlePageChange = (listResult as unknown as { handlePageChange: (p: number) => void }).handlePageChange ?? (() => {});
+  const handlePageSizeChange = (listResult as unknown as { handlePageSizeChange: (s: number) => void }).handlePageSizeChange ?? (() => {});
+  const resetOffsetInRoute = (listResult as unknown as { resetOffsetInRoute: () => void }).resetOffsetInRoute ?? (() => {});
+  const books: IManualBook[] = listResponse?.data ?? [];
 
   const reviewBook = useMemo(
     () =>
       reviewId
-        ? books.find(book => book.id === reviewId) ?? routedBook ?? null
+        ? books.find((book: IManualBook) => book.id === reviewId) ?? routedBook ?? null
         : null,
     [books, reviewId, routedBook]
   );
@@ -230,7 +244,7 @@ export const ManualBillBookListView = () => {
 
   useEffect(() => {
     if (!reviewId || isLoading || !isRoutedBookFetched) return;
-    if (books.some(book => book.id === reviewId) || routedBook) return;
+    if (books.some((book: IManualBook) => book.id === reviewId) || routedBook) return;
     toast.error(
       routedBookError instanceof Error
         ? routedBookError.message
@@ -438,6 +452,7 @@ export const ManualBillBookListView = () => {
                   setBranchFilter(
                     selectedOption?.value ? String(selectedOption.value) : ''
                   );
+                  resetOffsetInRoute();
                 }}
                 isClearable
                 isSearchable
@@ -463,6 +478,7 @@ export const ManualBillBookListView = () => {
                     ? (String(selectedOption.value) as ManualBillBookStatus)
                     : ''
                 );
+                resetOffsetInRoute();
               }}
               isClearable
               isSearchable
@@ -473,35 +489,44 @@ export const ManualBillBookListView = () => {
 
         {/* Table */}
 
-        <div className="overflow-x-auto border border-slate-200 rounded-md">
-          <ManualBillBookTable
-            books={books}
-            loading={isLoading || isFetching}
-            onRowClick={book => {
-              // HO clicking a REJECTED book → redirect to create page pre-filled for reassignment
-              if (
-                book.status === ManualBillBookStatusEnum.REJECT &&
-                (user?.isHo || user?.isHoStaff || user?.isAdmin)
-              ) {
-                navigate(`/manual-bill-books/create?reassignId=${book.id}`);
-                return;
-              }
-              if (book.status === ManualBillBookStatusEnum.APPROVE && !isUserHo) {
-                if (canAllocate) {
-                  navigate(`/manual-bill-books/allocation?bookId=${book.id}`);
-                } else if (canMap) {
-                  navigate(`/manual-bill-books/dp-mapping?bookId=${book.id}`);
-                } else if (canUnmap) {
-                  navigate(`/manual-bill-books/dp-unmapping?bookId=${book.id}`);
-                } else {
-                  openReview(book.id);
-                }
+        <ManualBillBookTable
+          books={books}
+          loading={isLoading || isFetching}
+          onRowClick={book => {
+            // HO clicking a REJECTED book → redirect to create page pre-filled for reassignment
+            if (
+              book.status === ManualBillBookStatusEnum.REJECT &&
+              (user?.isHo || user?.isHoStaff || user?.isAdmin)
+            ) {
+              navigate(`/manual-bill-books/create?reassignId=${book.id}`);
+              return;
+            }
+            if (book.status === ManualBillBookStatusEnum.APPROVE && !isUserHo) {
+              if (canAllocate) {
+                navigate(`/manual-bill-books/allocation?bookId=${book.id}`);
+              } else if (canMap) {
+                navigate(`/manual-bill-books/dp-mapping?bookId=${book.id}`);
+              } else if (canUnmap) {
+                navigate(`/manual-bill-books/dp-unmapping?bookId=${book.id}`);
               } else {
                 openReview(book.id);
               }
-            }}
-          />
-        </div>
+            } else {
+              openReview(book.id);
+            }
+          }}
+        />
+
+        <PaginationControls
+          page={page}
+          pageSize={limit}
+          totalItems={totalItems}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+          pageSizeOptions={[...PAGINATION_PAGE_SIZE_OPTIONS]}
+          itemLabel="dispatches"
+        />
       </section>
 
       {/* Review / Details Modal */}

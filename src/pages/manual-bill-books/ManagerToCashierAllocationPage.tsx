@@ -146,10 +146,9 @@ export const ManagerToCashierAllocationPage = () => {
       setIsProcessing(true);
       setAllocatedWarning('');
       // Fetch all dispatches for the branch (to query approved allocations)
-      const data = await listApprovedManualBillBooks(activeBranchId, ManualBillBookStatusEnum.APPROVE);
-      
+      const approvedBooks = await listApprovedManualBillBooks(activeBranchId, ManualBillBookStatusEnum.APPROVE);
       // Filter by range and txnType in memory
-      const matched = data.filter(book => {
+      const matched = approvedBooks.filter(book => {
         if (txnType !== 'ALL' && book.transactionType !== txnType) {
           return false;
         }

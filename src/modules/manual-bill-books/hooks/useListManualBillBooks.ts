@@ -3,15 +3,14 @@ import { useCallback, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { manualBillBookApi } from '@/api';
 import type { IManualBillBookListResponse } from '@/api/manual-bill-books/manualBillBook.api';
+import type { IOffsetPaginationParams } from '@/types/pagination';
 import { PAGINATION_DEFAULTS } from '@/constants/paginationConstants';
 
-// Re-export API query type for convenience (includes limit/offset)
-export type IManualBillBookListQuery = {
+// Re-export API query type for convenience (now extends common pagination)
+export type IManualBillBookListQuery = IOffsetPaginationParams & {
   branchId?: string;
   status?: string;
   transactionType?: string;
-  limit?: number;
-  offset?: number;
 };
 
 type UseListOptions = {

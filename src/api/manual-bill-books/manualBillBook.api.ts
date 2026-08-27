@@ -1,6 +1,6 @@
 import { apiClient } from '../api';
 import type { IUserReference } from '../sharedTypes';
-import type { IPaginatedResponse } from '@/types/pagination';
+import type { IPaginatedResponse, IOffsetPaginationParams } from '@/types/pagination';
 import { ManualBillBookStatusEnum } from '@/modules/manual-bill-books/types';
 import { PAGINATION_DEFAULTS } from '@/constants/paginationConstants';
 
@@ -84,12 +84,10 @@ export interface IManualBookDPMappingActionResponse {
   success: boolean;
 }
 
-export interface IManualBillBookListQuery {
+export interface IManualBillBookListQuery extends IOffsetPaginationParams {
   branchId?: string;
   status?: string;
   transactionType?: string;
-  limit?: number;
-  offset?: number;
 }
 
 export type IManualBillBookListResponse = IPaginatedResponse<IManualBook>;

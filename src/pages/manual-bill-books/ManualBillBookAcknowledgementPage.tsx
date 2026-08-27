@@ -66,8 +66,8 @@ export const ManualBillBookAcknowledgementPage = () => {
 
       try {
         setIsLoadingList(true);
-        const res = await manualBillBookApi.findAll({ branchId: activeBranchId });
-        const data = Array.isArray(res) ? res : res.data ?? [];
+        const res = await manualBillBookApi.findAll({ branchId: activeBranchId, limit: 1000, offset: 0 });
+        const data = res.data ?? [];
         if (cancelled) return;
         setDispatches(data);
       } catch (err: unknown) {
@@ -96,8 +96,10 @@ export const ManualBillBookAcknowledgementPage = () => {
         branchId: activeBranchId,
         status: searchStatus || undefined,
         transactionType: searchTxnType === 'ALL' ? undefined : searchTxnType,
+        limit: 1000,
+        offset: 0,
       });
-      const data = Array.isArray(res) ? res : res.data ?? [];
+      const data = res.data ?? [];
       if (selectedBookId) {
         setQueryResults(data.filter(b => b.id === selectedBookId));
       } else {

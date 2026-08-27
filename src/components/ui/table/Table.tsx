@@ -18,6 +18,7 @@ import {
 import { cva, type VariantProps } from 'class-variance-authority';
 import { Button } from '../button1';
 import { Input } from '../input';
+import { PAGINATION_DEFAULTS, PAGINATION_PAGE_SIZE_OPTIONS } from '@/constants/paginationConstants';
 
 interface TableColumnMeta {
   headerClassName?: string;
@@ -86,8 +87,8 @@ function Table<T extends object>({
   enablePagination = true,
   enableRowSelection = false,
   enableColumnVisibility = false,
-  pageSize = 10,
-  pageSizeOptions = [10, 20, 30, 40, 50, 100, 250, 500, 1000],
+  pageSize = PAGINATION_DEFAULTS.LIMIT,
+  pageSizeOptions = [...PAGINATION_PAGE_SIZE_OPTIONS, 250, 500, 1000],
   className = '',
   variant,
   size,

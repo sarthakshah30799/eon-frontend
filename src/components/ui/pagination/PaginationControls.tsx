@@ -1,4 +1,5 @@
 import { Button } from '../button1';
+import { PAGINATION_PAGE_SIZE_OPTIONS } from '@/constants/paginationConstants';
 
 interface PaginationControlsProps {
   page: number;
@@ -18,7 +19,7 @@ export const PaginationControls = ({
   totalPages,
   onPageChange,
   onPageSizeChange,
-  pageSizeOptions = [10, 20, 30, 40, 50],
+  pageSizeOptions = [...PAGINATION_PAGE_SIZE_OPTIONS],
   itemLabel = 'records',
 }: PaginationControlsProps) => {
   const safeTotalPages = Math.max(totalPages, 1);

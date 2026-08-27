@@ -1,6 +1,8 @@
 import { apiClient } from '../api';
 import type { IUserReference } from '../sharedTypes';
+import type { IPaginatedResponse } from '@/types/pagination';
 import { ManualBillBookStatusEnum } from '@/modules/manual-bill-books/types';
+import { PAGINATION_DEFAULTS } from '@/constants/paginationConstants';
 
 export type ManualBookStatus = typeof ManualBillBookStatusEnum[keyof typeof ManualBillBookStatusEnum];
 
@@ -90,15 +92,7 @@ export interface IManualBillBookListQuery {
   offset?: number;
 }
 
-export interface IManualBillBookListResponse {
-  data: IManualBook[];
-  total: number;
-  totalItems: number;
-  totalPages: number;
-  limit: number;
-  offset: number;
-  hasMore: boolean;
-}
+export type IManualBillBookListResponse = IPaginatedResponse<IManualBook>;
 
 export const manualBillBookApi = {
   create: async (data: ICreateManualBook): Promise<IManualBook> => {
@@ -134,37 +128,21 @@ export const manualBillBookApi = {
     if (query.limit !== undefined && query.limit !== null) search.set('limit', String(query.limit));
     if (query.offset !== undefined && query.offset !== null) search.set('offset', String(query.offset));
     const suffix = search.toString() ? `?${search.toString()}` : '';
-    const res = await apiClient.get<IManualBook[] | IManualBillBookListResponse & { total?: number; hasMore?: boolean }>(`/manual-bill-books/dispatches${suffix}`);
+    const res = await apiClient.get<IManualBillBookListResponse>(`/manual-bill-books/dispatches${suffix}`);
     if (res.error) throw new Error(res.error);
     if (!res.data) {
-      return { data: [], total: 0, totalItems: 0, totalPages: 0, limit: query.limit ?? 10, offset: query.offset ?? 0, hasMore: false };
+      return { data: [], total: 0, totalItems: 0, totalPages: 0, limit: query.limit ?? PAGINATION_DEFAULTS.LIMIT, offset: query.offset ?? PAGINATION_DEFAULTS.OFFSET, hasMore: false };
     }
-    // If backend returns array (legacy, no pagination), wrap it
-    if (Array.isArray(res.data)) {
-      const arr = res.data as IManualBook[];
-      const limit = query.limit ?? arr.length;
-      const offset = query.offset ?? 0;
-      const totalItems = arr.length;
-      const total = totalItems;
-      const totalPages = limit > 0 ? Math.ceil(totalItems / limit) : 1;
-      const hasMore = offset + limit < totalItems;
-      const sliced = query.limit !== undefined ? arr.slice(offset, offset + limit) : arr;
-      return { data: sliced, total, totalItems, totalPages, limit, offset, hasMore };
-    }
+    // BE always returns paginated object { data, total, hasMore, limit, offset }
     const obj = res.data as unknown as Record<string, unknown>;
-    // Backend returns paginated object { data, total, hasMore, limit, offset } (new) or legacy { data, totalItems, totalPages, limit, offset }
-    if (obj && Array.isArray((obj as { data: unknown }).data)) {
-      const dataArr = (obj.data as IManualBook[]) ?? [];
-      const total = (obj.total as number) ?? (obj.totalItems as number) ?? dataArr.length;
-      const totalItems = (obj.totalItems as number) ?? total;
-      const limitVal = (obj.limit as number) ?? query.limit ?? 10;
-      const offsetVal = (obj.offset as number) ?? query.offset ?? 0;
-      const hasMore = (obj.hasMore as boolean) ?? (offsetVal + limitVal < total);
-      const totalPages = (obj.totalPages as number) ?? (limitVal > 0 ? Math.ceil(total / limitVal) : 1);
-      return { data: dataArr, total, totalItems, totalPages, limit: limitVal, offset: offsetVal, hasMore };
-    }
-    // Fallback: treat as array
-    return { data: [], total: 0, totalItems: 0, totalPages: 0, limit: query.limit ?? 10, offset: query.offset ?? 0, hasMore: false };
+    const dataArr = (obj.data as IManualBook[]) ?? [];
+    const total = (obj.total as number) ?? (obj.totalItems as number) ?? dataArr.length;
+    const totalItems = (obj.totalItems as number) ?? total;
+    const limitVal = (obj.limit as number) ?? query.limit ?? PAGINATION_DEFAULTS.LIMIT;
+    const offsetVal = (obj.offset as number) ?? query.offset ?? PAGINATION_DEFAULTS.OFFSET;
+    const hasMore = (obj.hasMore as boolean) ?? (offsetVal + limitVal < total);
+    const totalPages = (obj.totalPages as number) ?? (limitVal > 0 ? Math.ceil(total / limitVal) : 1);
+    return { data: dataArr, total, totalItems, totalPages, limit: limitVal, offset: offsetVal, hasMore };
   },
 
   approveOrReject: async (id: string, data: IApproveRejectManualBook): Promise<IManualBook> => {

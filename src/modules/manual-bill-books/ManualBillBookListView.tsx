@@ -13,6 +13,7 @@ import {
   type IManualBook,
   type IManualBookAllocation,
   type IManualBookPageTracking,
+  type IManualBillBookListResponse,
 } from '@/api';
 import { Modal } from '@/components/ui/modal/Modal';
 import toast from 'react-hot-toast';
@@ -31,6 +32,7 @@ import {
 } from './types';
 import { usePermission } from '@/hooks/usePermission';
 import { useAuth } from '@/lib/AuthContext';
+import { PAGINATION_PAGE_SIZE_OPTIONS } from '@/constants/paginationConstants';
 
 const resolveAssignedToLabel = (assignedTo: IManualBook['assignedTo']) => {
   if (assignedTo && typeof assignedTo === 'object') {
@@ -49,21 +51,9 @@ const getStatusBadgeClass = (status: string) => {
 
 export const ManualBillBookListView = () => {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const reviewId = searchParams.get('reviewId');
-  // BE pagination via route: limit & offset (not state)
-  const rawLimit = searchParams.get('limit');
-  const rawOffset = searchParams.get('offset');
-  const limit = (() => {
-    const parsed = parseInt(rawLimit ?? '10', 10);
-    return Number.isFinite(parsed) && parsed > 0 ? parsed : 10;
-  })();
-  const offset = (() => {
-    const parsed = parseInt(rawOffset ?? '0', 10);
-    return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
-  })();
-  const page = Math.floor(offset / limit) + 1;
   const canSeeBranchFilter = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
   const isUserHo = (user?.isHo || user?.isHoStaff) && !user?.isAdmin;
   const isCashierOrDelivery = !!(user?.isCashier || user?.isDeliveryBoy);
@@ -194,79 +184,32 @@ export const ManualBillBookListView = () => {
     isFetched: isRoutedBookFetched,
   } = useGetManualBillBook(reviewId ?? undefined);
 
-  const {
-    data: listResponse,
-    isLoading,
-    isFetching,
-    error,
-    refetch: refetchBooks,
-  } = useListManualBillBooks({
-    branchId: branchFilter || undefined,
-    status: statusFilter || undefined,
-    limit,
-    offset,
-  });
-  const books = listResponse?.data ?? [];
-  // BE sends { data, total, limit, offset, hasMore } – API maps to total/totalItems/hasMore/totalPages
-  const totalItems = listResponse?.total ?? listResponse?.totalItems ?? 0;
-  const totalPages =
-    listResponse?.totalPages ??
-    (limit > 0 ? Math.ceil(totalItems / limit) : 0);
-
-  // Helpers to keep pagination in route (limit/offset) – preserves other params like reviewId
-  const setRoutePagination = useCallback(
-    (nextPage: number, nextLimit: number) => {
-      const safeLimit = Number.isFinite(nextLimit) && nextLimit > 0 ? nextLimit : limit;
-      const safePage = Number.isFinite(nextPage) && nextPage > 0 ? nextPage : 1;
-      const nextOffset = (safePage - 1) * safeLimit;
-      setSearchParams(prev => {
-        const next = new URLSearchParams(prev);
-        next.set('limit', String(safeLimit));
-        next.set('offset', String(nextOffset));
-        return next;
-      });
+  // Pagination is now encapsulated in the hook (route ?limit=&offset=) – reusable across any list
+  const listResult = useListManualBillBooks(
+    {
+      branchId: branchFilter || undefined,
+      status: statusFilter || undefined,
     },
-    [limit, setSearchParams],
+    { withRoutePagination: true },
   );
-
-  const handlePageChange = useCallback(
-    (nextPage: number) => setRoutePagination(nextPage, limit),
-    [limit, setRoutePagination],
-  );
-
-  const handlePageSizeChange = useCallback(
-    (nextLimit: number) => setRoutePagination(1, nextLimit),
-    [setRoutePagination],
-  );
-
-  const resetOffsetInRoute = useCallback(() => {
-    setSearchParams(prev => {
-      const next = new URLSearchParams(prev);
-      next.set('offset', '0');
-      // ensure limit present in route for consistency
-      if (!next.get('limit')) next.set('limit', String(limit));
-      return next;
-    });
-  }, [limit, setSearchParams]);
-
-  // Ensure route always contains default limit=10 & offset=0 (BE expectation)
-  useEffect(() => {
-    const hasLimit = searchParams.has('limit');
-    const hasOffset = searchParams.has('offset');
-    if (!hasLimit || !hasOffset) {
-      setSearchParams(prev => {
-        const next = new URLSearchParams(prev);
-        if (!next.has('limit')) next.set('limit', '10');
-        if (!next.has('offset')) next.set('offset', '0');
-        return next;
-      }, { replace: true });
-    }
-  }, [searchParams, setSearchParams]);
+  const listResponse = listResult.data as IManualBillBookListResponse | undefined;
+  const isLoading = listResult.isLoading;
+  const isFetching = listResult.isFetching;
+  const error = listResult.error;
+  const refetchBooks = listResult.refetch;
+  const limit = (listResult as unknown as { limit: number }).limit ?? 20;
+  const page = (listResult as unknown as { page: number }).page ?? 1;
+  const totalItems = (listResult as unknown as { totalItems: number }).totalItems ?? 0;
+  const totalPages = (listResult as unknown as { totalPages: number }).totalPages ?? 0;
+  const handlePageChange = (listResult as unknown as { handlePageChange: (p: number) => void }).handlePageChange ?? (() => {});
+  const handlePageSizeChange = (listResult as unknown as { handlePageSizeChange: (s: number) => void }).handlePageSizeChange ?? (() => {});
+  const resetOffsetInRoute = (listResult as unknown as { resetOffsetInRoute: () => void }).resetOffsetInRoute ?? (() => {});
+  const books: IManualBook[] = listResponse?.data ?? [];
 
   const reviewBook = useMemo(
     () =>
       reviewId
-        ? books.find(book => book.id === reviewId) ?? routedBook ?? null
+        ? books.find((book: IManualBook) => book.id === reviewId) ?? routedBook ?? null
         : null,
     [books, reviewId, routedBook]
   );
@@ -301,7 +244,7 @@ export const ManualBillBookListView = () => {
 
   useEffect(() => {
     if (!reviewId || isLoading || !isRoutedBookFetched) return;
-    if (books.some(book => book.id === reviewId) || routedBook) return;
+    if (books.some((book: IManualBook) => book.id === reviewId) || routedBook) return;
     toast.error(
       routedBookError instanceof Error
         ? routedBookError.message
@@ -581,7 +524,7 @@ export const ManualBillBookListView = () => {
           totalPages={totalPages}
           onPageChange={handlePageChange}
           onPageSizeChange={handlePageSizeChange}
-          pageSizeOptions={[10, 20, 30, 50, 100]}
+          pageSizeOptions={[...PAGINATION_PAGE_SIZE_OPTIONS]}
           itemLabel="dispatches"
         />
       </section>

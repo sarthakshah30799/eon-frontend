@@ -32,10 +32,12 @@ export const useListApprovedManualBillBooks = () => {
   const queryClient = useQueryClient();
   return useCallback(
     async (branchId: string, status: string) => {
-      return queryClient.fetchQuery({
+      const res = await queryClient.fetchQuery({
         queryKey: ['manual-bill-books-list', branchId, status],
-        queryFn: () => manualBillBookApi.findAll(branchId, status),
+        queryFn: () => manualBillBookApi.findAll({ branchId, status }),
       });
+      // findAll now returns paginated object; unwrap for legacy callers
+      return Array.isArray(res) ? res : (res as unknown as { data: typeof res }).data ?? (res as unknown as { data: unknown[] }).data ?? [];
     },
     [queryClient]
   );

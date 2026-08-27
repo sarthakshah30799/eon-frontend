@@ -113,8 +113,9 @@ export const ManagerToCashierAllocationPage = () => {
         isAutoProcessedRef.current = true;
         try {
           setIsProcessing(true);
-          const data = await listApprovedManualBillBooks(activeBranchId, ManualBillBookStatusEnum.APPROVE);
-          const book = data.find(b => b.id === bookId);
+          const res = await listApprovedManualBillBooks(activeBranchId, ManualBillBookStatusEnum.APPROVE) as unknown as import('@/api').IManualBook[] | import('@/api/manual-bill-books/manualBillBook.api').IManualBillBookListResponse;
+          const dataArr = Array.isArray(res) ? res : (res as unknown as { data: import('@/api').IManualBook[] }).data ?? [];
+          const book = dataArr.find(b => b.id === bookId);
           if (book) {
             // Only pre-fill the form fields — do NOT render the table yet.
             // The user must click Process to see the Dispatches Checklist.
@@ -146,10 +147,10 @@ export const ManagerToCashierAllocationPage = () => {
       setIsProcessing(true);
       setAllocatedWarning('');
       // Fetch all dispatches for the branch (to query approved allocations)
-      const data = await listApprovedManualBillBooks(activeBranchId, ManualBillBookStatusEnum.APPROVE);
-      
+      const res2 = await listApprovedManualBillBooks(activeBranchId, ManualBillBookStatusEnum.APPROVE) as unknown as import('@/api').IManualBook[] | import('@/api/manual-bill-books/manualBillBook.api').IManualBillBookListResponse;
+      const dataArr2 = Array.isArray(res2) ? res2 : (res2 as unknown as { data: import('@/api').IManualBook[] }).data ?? [];
       // Filter by range and txnType in memory
-      const matched = data.filter(book => {
+      const matched = dataArr2.filter(book => {
         if (txnType !== 'ALL' && book.transactionType !== txnType) {
           return false;
         }

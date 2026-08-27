@@ -4,6 +4,7 @@ import {
   AsyncSelect,
   Button,
   PageGrid,
+  PaginationControls,
   type AsyncSelectOption,
   type AsyncSelectResponse,
 } from '@/components/ui';
@@ -48,9 +49,21 @@ const getStatusBadgeClass = (status: string) => {
 
 export const ManualBillBookListView = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const reviewId = searchParams.get('reviewId');
+  // BE pagination via route: limit & offset (not state)
+  const rawLimit = searchParams.get('limit');
+  const rawOffset = searchParams.get('offset');
+  const limit = (() => {
+    const parsed = parseInt(rawLimit ?? '10', 10);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : 10;
+  })();
+  const offset = (() => {
+    const parsed = parseInt(rawOffset ?? '0', 10);
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
+  })();
+  const page = Math.floor(offset / limit) + 1;
   const canSeeBranchFilter = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
   const isUserHo = (user?.isHo || user?.isHoStaff) && !user?.isAdmin;
   const isCashierOrDelivery = !!(user?.isCashier || user?.isDeliveryBoy);
@@ -182,7 +195,7 @@ export const ManualBillBookListView = () => {
   } = useGetManualBillBook(reviewId ?? undefined);
 
   const {
-    data: books = [],
+    data: listResponse,
     isLoading,
     isFetching,
     error,
@@ -190,7 +203,65 @@ export const ManualBillBookListView = () => {
   } = useListManualBillBooks({
     branchId: branchFilter || undefined,
     status: statusFilter || undefined,
+    limit,
+    offset,
   });
+  const books = listResponse?.data ?? [];
+  // BE sends { data, total, limit, offset, hasMore } – API maps to total/totalItems/hasMore/totalPages
+  const totalItems = listResponse?.total ?? listResponse?.totalItems ?? 0;
+  const totalPages =
+    listResponse?.totalPages ??
+    (limit > 0 ? Math.ceil(totalItems / limit) : 0);
+
+  // Helpers to keep pagination in route (limit/offset) – preserves other params like reviewId
+  const setRoutePagination = useCallback(
+    (nextPage: number, nextLimit: number) => {
+      const safeLimit = Number.isFinite(nextLimit) && nextLimit > 0 ? nextLimit : limit;
+      const safePage = Number.isFinite(nextPage) && nextPage > 0 ? nextPage : 1;
+      const nextOffset = (safePage - 1) * safeLimit;
+      setSearchParams(prev => {
+        const next = new URLSearchParams(prev);
+        next.set('limit', String(safeLimit));
+        next.set('offset', String(nextOffset));
+        return next;
+      });
+    },
+    [limit, setSearchParams],
+  );
+
+  const handlePageChange = useCallback(
+    (nextPage: number) => setRoutePagination(nextPage, limit),
+    [limit, setRoutePagination],
+  );
+
+  const handlePageSizeChange = useCallback(
+    (nextLimit: number) => setRoutePagination(1, nextLimit),
+    [setRoutePagination],
+  );
+
+  const resetOffsetInRoute = useCallback(() => {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      next.set('offset', '0');
+      // ensure limit present in route for consistency
+      if (!next.get('limit')) next.set('limit', String(limit));
+      return next;
+    });
+  }, [limit, setSearchParams]);
+
+  // Ensure route always contains default limit=10 & offset=0 (BE expectation)
+  useEffect(() => {
+    const hasLimit = searchParams.has('limit');
+    const hasOffset = searchParams.has('offset');
+    if (!hasLimit || !hasOffset) {
+      setSearchParams(prev => {
+        const next = new URLSearchParams(prev);
+        if (!next.has('limit')) next.set('limit', '10');
+        if (!next.has('offset')) next.set('offset', '0');
+        return next;
+      }, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const reviewBook = useMemo(
     () =>
@@ -438,6 +509,7 @@ export const ManualBillBookListView = () => {
                   setBranchFilter(
                     selectedOption?.value ? String(selectedOption.value) : ''
                   );
+                  resetOffsetInRoute();
                 }}
                 isClearable
                 isSearchable
@@ -463,6 +535,7 @@ export const ManualBillBookListView = () => {
                     ? (String(selectedOption.value) as ManualBillBookStatus)
                     : ''
                 );
+                resetOffsetInRoute();
               }}
               isClearable
               isSearchable
@@ -473,35 +546,44 @@ export const ManualBillBookListView = () => {
 
         {/* Table */}
 
-        <div className="overflow-x-auto border border-slate-200 rounded-md">
-          <ManualBillBookTable
-            books={books}
-            loading={isLoading || isFetching}
-            onRowClick={book => {
-              // HO clicking a REJECTED book → redirect to create page pre-filled for reassignment
-              if (
-                book.status === ManualBillBookStatusEnum.REJECT &&
-                (user?.isHo || user?.isHoStaff || user?.isAdmin)
-              ) {
-                navigate(`/manual-bill-books/create?reassignId=${book.id}`);
-                return;
-              }
-              if (book.status === ManualBillBookStatusEnum.APPROVE && !isUserHo) {
-                if (canAllocate) {
-                  navigate(`/manual-bill-books/allocation?bookId=${book.id}`);
-                } else if (canMap) {
-                  navigate(`/manual-bill-books/dp-mapping?bookId=${book.id}`);
-                } else if (canUnmap) {
-                  navigate(`/manual-bill-books/dp-unmapping?bookId=${book.id}`);
-                } else {
-                  openReview(book.id);
-                }
+        <ManualBillBookTable
+          books={books}
+          loading={isLoading || isFetching}
+          onRowClick={book => {
+            // HO clicking a REJECTED book → redirect to create page pre-filled for reassignment
+            if (
+              book.status === ManualBillBookStatusEnum.REJECT &&
+              (user?.isHo || user?.isHoStaff || user?.isAdmin)
+            ) {
+              navigate(`/manual-bill-books/create?reassignId=${book.id}`);
+              return;
+            }
+            if (book.status === ManualBillBookStatusEnum.APPROVE && !isUserHo) {
+              if (canAllocate) {
+                navigate(`/manual-bill-books/allocation?bookId=${book.id}`);
+              } else if (canMap) {
+                navigate(`/manual-bill-books/dp-mapping?bookId=${book.id}`);
+              } else if (canUnmap) {
+                navigate(`/manual-bill-books/dp-unmapping?bookId=${book.id}`);
               } else {
                 openReview(book.id);
               }
-            }}
-          />
-        </div>
+            } else {
+              openReview(book.id);
+            }
+          }}
+        />
+
+        <PaginationControls
+          page={page}
+          pageSize={limit}
+          totalItems={totalItems}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+          pageSizeOptions={[10, 20, 30, 50, 100]}
+          itemLabel="dispatches"
+        />
       </section>
 
       {/* Review / Details Modal */}

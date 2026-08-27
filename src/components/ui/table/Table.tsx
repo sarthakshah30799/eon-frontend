@@ -125,7 +125,7 @@ function Table<T extends object>({
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
+    ...(enablePagination ? { getPaginationRowModel: getPaginationRowModel() } : {}),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
     onSortingChange: updater => {
@@ -166,7 +166,7 @@ function Table<T extends object>({
     enableColumnFilters: enableFiltering,
     enableRowSelection,
     manualPagination: false,
-    pageCount: Math.ceil(data.length / pagination.pageSize),
+    pageCount: enablePagination ? Math.ceil(data.length / pagination.pageSize) : undefined,
     getRowId,
   });
 

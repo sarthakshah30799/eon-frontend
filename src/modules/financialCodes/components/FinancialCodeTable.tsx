@@ -2,12 +2,14 @@ import { useNavigate } from 'react-router-dom';
 import { PencilSquareIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button1';
 import { Table, type TableColumnDef } from '@/components/ui/table';
+import type { PaginationControlsProps } from '@/components/ui';
 import { usePermission } from '@/hooks';
 import type { IFinancialCode } from '../types/financialCodeTypes';
 
-interface FinancialCodeTableProps {
+interface FinancialCodeTableProps extends PaginationControlsProps {
   financialCodes: IFinancialCode[];
   loading?: boolean;
+  isFetching?: boolean;
   onSearch?: (value: string) => void;
   searchValue?: string;
   searchPlaceholder?: string;
@@ -25,9 +27,16 @@ interface FinancialCodeTableRow {
 export const FinancialCodeTable = ({
   financialCodes,
   loading = false,
+  isFetching = false,
   onSearch,
   searchValue,
   searchPlaceholder,
+  page,
+  pageSize,
+  total,
+  totalPages,
+  onPageChange,
+  onPageSizeChange,
 }: FinancialCodeTableProps) => {
   const navigate = useNavigate();
   const { canModify, canView } = usePermission('/financial-profile');
@@ -94,9 +103,18 @@ export const FinancialCodeTable = ({
       columns={columns}
       data={rows}
       enableFiltering={false}
+      enablePagination
+      manualPagination
       enableRowSelection={false}
       enableColumnVisibility={false}
       loading={loading}
+      isFetching={isFetching}
+      page={page}
+      pageSize={pageSize}
+      total={total}
+      totalPages={totalPages}
+      onPageChange={onPageChange}
+      onPageSizeChange={onPageSizeChange}
       onSearch={onSearch}
       searchValue={searchValue}
       searchPlaceholder={searchPlaceholder}

@@ -1,3 +1,8 @@
+import type {
+  IOffsetPaginationParams,
+  IPaginatedResponse,
+} from '@/types/pagination';
+
 export interface IUserProfileAssignment {
   roleId: string;
   roleLabel: string;
@@ -48,3 +53,12 @@ export interface IUserProfileControlSetupItem {
   key: string;
   label: string;
 }
+
+export interface IUserProfileListQuery extends IOffsetPaginationParams {
+  activeOnly?: boolean;
+  search?: string;
+  branchId?: string;
+  roleFilter?: string;
+}
+
+export type IUserProfileListResponse = IPaginatedResponse<IUserProfile>;

@@ -6,6 +6,7 @@ import { CardSection } from '@/components/ui';
 import { Form, FormFieldInput, FormFieldSelect } from '@/components/forms';
 import type { AsyncSelectOption, AsyncSelectResponse } from '@/components/ui';
 import { useListPurposes } from '@/modules/purpose/hooks';
+import { PAGINATION_DEFAULTS, PAGINATION_MAX_LIMIT } from '@/constants/paginationConstants';
 import { TransactionTypeEnum } from '@/modules/transactions';
 import { purposeGroupSchema } from '../schema/purposeGroupSchema';
 import {
@@ -47,10 +48,14 @@ export const PurposeGroupForm = ({
   isSubmitting = false,
 }: PurposeGroupFormProps) => {
   const navigate = useNavigate();
-  const { data: purposes = [], isLoading: isLoadingPurposes } = useListPurposes(
-    undefined,
-    TransactionTypeEnum.SALE
+  const { data: purposesPage, isLoading: isLoadingPurposes } = useListPurposes(
+    {
+      transactionType: TransactionTypeEnum.SALE,
+      limit: PAGINATION_MAX_LIMIT,
+      offset: PAGINATION_DEFAULTS.OFFSET,
+    }
   );
+  const purposes = purposesPage?.data ?? [];
 
   const purposeOptions: AsyncSelectOption[] = useMemo(
     () =>

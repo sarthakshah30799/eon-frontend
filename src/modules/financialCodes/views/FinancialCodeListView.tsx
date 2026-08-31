@@ -1,36 +1,57 @@
 import { useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button1';
-import { useDebounce, usePermission } from '@/hooks';
+import { useDebounce, useOffsetPaginatedList, usePermission } from '@/hooks';
+import { PAGINATION_DEFAULTS } from '@/constants/paginationConstants';
+import { financialCodesApi } from '@/api/financialCodes/financialCodes.api';
 import { FINANCIAL_CODE_TEXTS } from '../constants/financialCodeConstants';
 import { FinancialCodeTable } from '../components/FinancialCodeTable';
-import { useListFinancialCodes } from '../hooks/useListFinancialCodes';
 
 export const FinancialCodeListView = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { canAdd } = usePermission('/financial-profile');
-  const page = 1;
-  const pageSize = 10;
   const search = searchParams.get('search') ?? '';
   const debouncedSearch = useDebounce(search, 400);
-
-  const query = useMemo(
+  const filters = useMemo(
     () => ({
-      page,
-      limit: pageSize,
       search: debouncedSearch.trim() || undefined,
     }),
-    [page, pageSize, debouncedSearch]
+    [debouncedSearch]
   );
 
   const {
-    data: listResponse,
+    rows: financialCodes,
     isLoading,
     isFetching,
     error,
-  } = useListFinancialCodes(query);
-  const financialCodes = listResponse?.data ?? [];
+    page,
+    limit,
+    total,
+    totalPages,
+    handlePageChange,
+    handlePageSizeChange,
+  } = useOffsetPaginatedList({
+    queryKey: ['financial-codes'],
+    queryFn: params => financialCodesApi.getFinancialCodes(params),
+    filters,
+  });
+
+  const handleSearch = (value: string) => {
+    setSearchParams(prev => {
+      const nextParams = new URLSearchParams(prev);
+      if (value.trim()) {
+        nextParams.set('search', value.trim());
+      } else {
+        nextParams.delete('search');
+      }
+      nextParams.set('offset', String(PAGINATION_DEFAULTS.OFFSET));
+      if (!nextParams.get('limit')) {
+        nextParams.set('limit', String(PAGINATION_DEFAULTS.LIMIT));
+      }
+      return nextParams;
+    });
+  };
 
   if (error) {
     return (
@@ -41,7 +62,7 @@ export const FinancialCodeListView = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {canAdd && (
         <div className="flex justify-end">
           <Button
@@ -52,23 +73,18 @@ export const FinancialCodeListView = () => {
           </Button>
         </div>
       )}
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
+      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
         <FinancialCodeTable
           financialCodes={financialCodes}
-          loading={isLoading || isFetching}
-          onSearch={value =>
-            setSearchParams(prev => {
-              const nextParams = new URLSearchParams(prev);
-
-              if (value.trim()) {
-                nextParams.set('search', value.trim());
-              } else {
-                nextParams.delete('search');
-              }
-
-              return nextParams;
-            })
-          }
+          loading={isLoading}
+          isFetching={isFetching}
+          page={page}
+          pageSize={limit}
+          total={total}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+          onSearch={handleSearch}
           searchValue={search}
           searchPlaceholder="Search financial type, code, name, or default sign"
         />

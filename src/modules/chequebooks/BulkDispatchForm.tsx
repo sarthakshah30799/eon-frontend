@@ -15,9 +15,9 @@ import {
   useLoadBankAccounts,
   useReassignChequeBookDispatch,
   useCreateChequeBook,
-  useLoadBranchOptions,
   useLoadCounterProfilesForBranch,
 } from './hooks';
+import { useLoadBranchOptions } from '@/modules/branchProfile/hooks';
 import { useAuth } from '@/lib/AuthContext';
 import toast from 'react-hot-toast';
 import { bulkDispatchSchema } from './bulkDispatchSchema';
@@ -66,7 +66,7 @@ const BulkDispatchFormFields = ({
   const getNextNumber = useGetNextChequeBookNumber();
   const loadAssignedToRaw = useLoadChequeBookBranchManagers();
   const loadBankAccounts = useLoadBankAccounts();
-  const loadBranchesRaw = useLoadBranchOptions();
+  const loadBranchesRaw = useLoadBranchOptions({ activeOnly: true });
 
   // Pre-fill form when reassigning a rejected book
   useEffect(() => {
@@ -150,13 +150,16 @@ const BulkDispatchFormFields = ({
   }, [mvNoFrom, mvNoTo, form]);
 
   const loadBranches = useCallback(
-    async (inputValue: string) => {
-      const res = await loadBranchesRaw(inputValue);
+    async (inputValue: string, page = 1) => {
+      const res = await loadBranchesRaw(inputValue, page);
       let options = res.options;
       if (!canSelectBranch) {
         options = options.filter(option => option.value === activeBranchId);
       }
-      return { options, hasMore: false };
+      return {
+        options,
+        hasMore: canSelectBranch ? Boolean(res.hasMore) : false,
+      };
     },
     [activeBranchId, canSelectBranch, loadBranchesRaw]
   );
@@ -189,6 +192,7 @@ const BulkDispatchFormFields = ({
         label="Branch"
         loadOptions={loadBranches}
         defaultOptions={true}
+        pagination
         disabled={reassignId ? true : !canSelectBranch}
       />
       <FormFieldSelect

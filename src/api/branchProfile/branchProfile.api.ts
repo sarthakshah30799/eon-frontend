@@ -9,6 +9,8 @@ import type { ICountryProfile } from '@/modules/countryProfile/types/countryProf
 import type { IStateProfile } from '@/modules/stateProfile/types/stateProfileTypes';
 import type { ICategoryOption } from '@/types/categoryOptionTypes';
 import { buildQueryString } from '@/utils';
+import { fetchAllMatching } from '@/utils/paginatedList';
+import type { IPaginatedResponse } from '@/types/pagination';
 
 interface BackendBranch {
   id: string;
@@ -123,12 +125,28 @@ const mapFrontendToBackend = (
 export const branchProfileApi = {
   getBranchProfiles: async (
     options?: IBranchProfileListQuery
-  ): Promise<IBranchProfile[]> => {
+  ): Promise<IPaginatedResponse<IBranchProfile>> => {
     const endpoint = `/branches${buildQueryString(options)}`;
-    const res = await apiClient.get<BackendBranch[]>(endpoint);
+    const res =
+      await apiClient.get<IPaginatedResponse<BackendBranch>>(endpoint);
     if (res.error) throw new Error(res.error);
-    return (res.data || []).map(mapBackendToFrontend);
+    const payload = res.data;
+    return {
+      data: (payload?.data || []).map(mapBackendToFrontend),
+      total: payload?.total ?? 0,
+      totalPages: payload?.totalPages ?? 0,
+      limit: payload?.limit ?? 0,
+      offset: payload?.offset ?? 0,
+      hasMore: payload?.hasMore ?? false,
+    };
   },
+
+  getAllBranchProfiles: async (
+    options?: Omit<IBranchProfileListQuery, 'limit' | 'offset'>
+  ): Promise<IBranchProfile[]> =>
+    fetchAllMatching(pagination =>
+      branchProfileApi.getBranchProfiles({ ...options, ...pagination })
+    ),
 
   getBranchProfileById: async (
     id: string
@@ -141,9 +159,9 @@ export const branchProfileApi = {
   createBranchProfile: async (
     data: ICreateBranchProfile
   ): Promise<IBranchProfile> => {
-    const companyRes = await companyProfileApi.getCompanyProfiles();
+    const companyRes = await companyProfileApi.getAllCompanyProfiles();
     const companyId =
-      companyRes.data?.[0]?.id || '11111111-1111-4111-b111-111111111111';
+      companyRes[0]?.id || '11111111-1111-4111-b111-111111111111';
 
     const backendData = mapFrontendToBackend(data, companyId);
     const res = await apiClient.post<BackendBranch>('/branches', backendData);
@@ -157,9 +175,9 @@ export const branchProfileApi = {
     id: string,
     data: ICreateBranchProfile
   ): Promise<IBranchProfile | undefined> => {
-    const companyRes = await companyProfileApi.getCompanyProfiles();
+    const companyRes = await companyProfileApi.getAllCompanyProfiles();
     const companyId =
-      companyRes.data?.[0]?.id || '11111111-1111-4111-b111-111111111111';
+      companyRes[0]?.id || '11111111-1111-4111-b111-111111111111';
 
     const backendData = mapFrontendToBackend(data, companyId);
     const res = await apiClient.put<BackendBranch>(

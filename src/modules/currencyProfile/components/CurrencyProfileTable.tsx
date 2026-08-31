@@ -2,11 +2,13 @@ import { useNavigate } from 'react-router-dom';
 import { PencilSquareIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button1';
 import { Table, type TableColumnDef } from '@/components/ui/table';
+import type { PaginationControlsProps } from '@/components/ui';
 import type { ICurrencyProfile } from '../types';
 
-interface CurrencyProfileTableProps {
+interface CurrencyProfileTableProps extends PaginationControlsProps {
   currencies: ICurrencyProfile[];
   loading?: boolean;
+  isFetching?: boolean;
   onSearch?: (value: string) => void;
   searchValue?: string;
   searchPlaceholder?: string;
@@ -29,9 +31,16 @@ interface CurrencyProfileTableRow {
 export const CurrencyProfileTable = ({
   currencies,
   loading = false,
+  isFetching = false,
   onSearch,
   searchValue,
   searchPlaceholder,
+  page,
+  pageSize,
+  total,
+  totalPages,
+  onPageChange,
+  onPageSizeChange,
 }: CurrencyProfileTableProps) => {
   const navigate = useNavigate();
 
@@ -110,9 +119,18 @@ export const CurrencyProfileTable = ({
       columns={columns}
       data={rows}
       enableFiltering={false}
+      enablePagination
+      manualPagination
       enableRowSelection={false}
       enableColumnVisibility={false}
       loading={loading}
+      isFetching={isFetching}
+      page={page}
+      pageSize={pageSize}
+      total={total}
+      totalPages={totalPages}
+      onPageChange={onPageChange}
+      onPageSizeChange={onPageSizeChange}
       onSearch={onSearch}
       searchValue={searchValue}
       searchPlaceholder={searchPlaceholder}

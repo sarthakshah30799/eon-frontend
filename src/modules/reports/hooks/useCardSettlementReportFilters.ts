@@ -110,29 +110,31 @@ export const useCardSettlementReportFilters = () => {
     queryKey: ['reports-card-settlement-branch-profiles'],
     enabled: true,
     queryFn: async () =>
-      branchProfileApi.getBranchProfiles({
+      branchProfileApi.getAllBranchProfiles({
         activeOnly: true,
       }),
   });
 
   const {
-    data: currencyProfiles = [],
+    data: currencyProfilesPage,
     isLoading: isLoadingCurrencies,
     isFetching: isFetchingCurrencies,
   } = useListCurrencyProfiles(undefined, true);
+  const currencyProfiles = currencyProfilesPage?.data ?? [];
 
   const {
-    data: productProfiles = [],
+    data: productProfilesPage,
     isLoading: isLoadingProducts,
     isFetching: isFetchingProducts,
   } = useListProductProfiles(true);
+  const productProfiles = productProfilesPage?.data ?? [];
 
   const {
     data: issuerResponse,
     isLoading: isLoadingIssuers,
     isFetching: isFetchingIssuers,
   } = useListPartyProfiles(
-    { page: 1, limit: ISSUER_PAGE_SIZE, activeOnly: true },
+    { limit: ISSUER_PAGE_SIZE, offset: 0, activeOnly: true },
     PartyProfileTypeEnum.CARD_ISSUER_PROFILE
   );
 

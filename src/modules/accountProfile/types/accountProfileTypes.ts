@@ -1,6 +1,7 @@
 import type { ICurrencyProfile } from '@/modules/currencyProfile/types';
 import type { IBranchProfile } from '@/modules/branchProfile/types';
 import type { ICategoryOption } from '@/types/categoryOptionTypes';
+import type { IOffsetPaginationParams, IPaginatedResponse } from '@/types/pagination';
 
 export interface IAccountProfile {
   id: string;
@@ -81,9 +82,7 @@ export type ICreateAccountProfile = Omit<
   directRemittance?: boolean;
 };
 
-export interface IAccountProfileListQuery {
-  page?: number;
-  limit?: number;
+export interface IAccountProfileListQuery extends IOffsetPaginationParams {
   search?: string;
   accountCode?: string;
   accountName?: string;
@@ -98,10 +97,4 @@ export interface IAccountProfileListQuery {
   journalVoucher?: boolean;
 }
 
-export interface IAccountProfileListResponse {
-  data: IAccountProfile[];
-  page: number;
-  limit: number;
-  totalItems: number;
-  totalPages: number;
-}
+export type IAccountProfileListResponse = IPaginatedResponse<IAccountProfile>;

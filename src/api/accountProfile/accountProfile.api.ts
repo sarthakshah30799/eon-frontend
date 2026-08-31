@@ -5,6 +5,7 @@ import type {
   IAccountProfileListResponse,
   ICreateAccountProfile,
 } from '@/modules/accountProfile/types/accountProfileTypes';
+import { fetchAllMatching, normalizePaginatedResponse } from '@/utils';
 
 const buildQueryString = (params?: IAccountProfileListQuery) => {
   if (!params) {
@@ -33,21 +34,15 @@ export const accountProfileApi = {
       `/account-profiles${buildQueryString(params)}`
     );
     if (res.error) throw new Error(res.error);
-    if (!res.data) {
-      return {
-        data: [],
-        page: params?.page ?? 1,
-        limit: params?.limit ?? 10,
-        totalItems: 0,
-        totalPages: 0,
-      };
-    }
-
-    return {
-      ...res.data,
-      data: res.data.data || [],
-    };
+    return normalizePaginatedResponse(res.data, params?.limit, params?.offset);
   },
+
+  getAllAccountProfiles: async (
+    params?: Omit<IAccountProfileListQuery, 'limit' | 'offset'>
+  ): Promise<IAccountProfile[]> =>
+    fetchAllMatching(pagination =>
+      accountProfileApi.getAccountProfiles({ ...params, ...pagination })
+    ),
 
   getAccountProfileById: async (
     id: string

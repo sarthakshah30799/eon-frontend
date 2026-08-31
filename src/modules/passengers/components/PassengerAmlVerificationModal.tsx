@@ -191,8 +191,8 @@ export const PassengerAmlVerificationModal = ({
     resetIdentityLookup,
   } = usePassengerPassportLookup();
   const { data: countryProfilesResponse } = useListCountryProfiles({
-    page: 1,
     limit: 100,
+    offset: 0,
     search: 'India',
   });
   const countryProfiles = useMemo(

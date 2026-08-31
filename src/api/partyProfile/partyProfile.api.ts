@@ -8,6 +8,7 @@ import type {
   IReviewPartyProfilePayload,
   IUpdatePartyProfile,
 } from '@/modules/partyProfiles/types/partyProfileTypes';
+import { fetchAllMatching, normalizePaginatedResponse } from '@/utils/paginatedList';
 
 const buildQueryString = (params?: IPartyProfileListQuery) => {
   if (!params) {
@@ -61,21 +62,19 @@ export const partyProfileApi = {
       })}`
     );
     if (res.error) throw new Error(res.error);
-    if (!res.data) {
-      return {
-        data: [],
-        page: params?.page ?? 1,
-        limit: params?.limit ?? 10,
-        totalItems: 0,
-        totalPages: 0,
-      };
-    }
-
-    return {
-      ...res.data,
-      data: res.data.data || [],
-    };
+    return normalizePaginatedResponse(res.data, params?.limit, params?.offset);
   },
+
+  getAllPartyProfiles: async (
+    params?: Omit<IPartyProfileListQuery, 'limit' | 'offset'>,
+    profileType?: PartyProfileType | PartyProfileType[]
+  ): Promise<IPartyProfile[]> =>
+    fetchAllMatching(pagination =>
+      partyProfileApi.getPartyProfiles(
+        { ...params, ...pagination },
+        profileType
+      )
+    ),
 
   getPartyProfileById: async (
     id: string

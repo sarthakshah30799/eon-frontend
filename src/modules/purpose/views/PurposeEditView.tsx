@@ -55,7 +55,7 @@ export const PurposeEditView = () => {
   }
 
   return (
-    <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
+    <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
       <PurposeEditorView
         submitLabel={PURPOSE_TEXTS.SAVE_CHANGES}
         defaultValues={defaultValues}

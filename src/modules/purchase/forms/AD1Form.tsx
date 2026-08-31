@@ -28,6 +28,8 @@ import {
 import type { ICurrencyProfile } from '@/modules/currencyProfile/types';
 import { TransactionTypeEnum } from '@/modules/transactions';
 import type { AsyncSelectResponse } from '@/components/ui';
+import { PAGINATION_DEFAULTS } from '@/constants/paginationConstants';
+import { pageToOffset, toAsyncSelectPage } from '@/utils/paginatedList';
 import type { DefaultValues } from 'react-hook-form';
 import type { IAd1FormValues } from '../types';
 import type { TransactionType } from '@/modules/transactions';
@@ -141,12 +143,12 @@ const AD1FormBody = ({
   // Load product profiles and currencies on mount
   useEffect(() => {
     productProfileApi
-      .getProductProfiles({ otherTransaction: true })
+      .getAllProductProfiles({ otherTransaction: true })
       .then(setProductProfiles)
       .catch(console.error);
     currencyProfileApi
-      .getCurrencyProfiles()
-      .then(res => setCurrencies(res.filter(c => c.active)))
+      .getAllCurrencyProfiles({ activeOnly: true })
+      .then(res => setCurrencies(res))
       .catch(console.error);
   }, []);
 
@@ -361,16 +363,24 @@ const AD1FormBody = ({
   }, [branchId, setValue]);
 
   const loadCurrencies = useCallback(
-    async (search: string): Promise<AsyncSelectResponse> => {
-      const currencies = await currencyProfileApi.getCurrencyProfiles(search);
-      return {
-        options: currencies
-          .filter(c => c.active)
-          .map(c => ({
-            value: c.id,
-            label: `${c.currencyCode} - ${c.currencyName}`,
-          })),
-      };
+    async (search: string, page = 1): Promise<AsyncSelectResponse> => {
+      const limit = PAGINATION_DEFAULTS.LIMIT;
+      const response = await currencyProfileApi.getCurrencyProfiles({
+        search: search.trim() || undefined,
+        activeOnly: true,
+        limit,
+        offset: pageToOffset(page, limit),
+      });
+      return toAsyncSelectPage(
+        {
+          ...response,
+          data: response.data.filter(currency => currency.active),
+        },
+        currency => ({
+          value: currency.id,
+          label: `${currency.currencyCode} - ${currency.currencyName}`,
+        })
+      );
     },
     []
   );
@@ -395,27 +405,25 @@ const AD1FormBody = ({
   );
 
   const loadProducts = useCallback(
-    async (search: string): Promise<AsyncSelectResponse> => {
-      const products = await productProfileApi.getProductProfiles({
+    async (search: string, page = 1): Promise<AsyncSelectResponse> => {
+      const limit = PAGINATION_DEFAULTS.LIMIT;
+      const response = await productProfileApi.getProductProfiles({
         otherTransaction: true,
+        search: search.trim() || undefined,
+        activeOnly: true,
+        limit,
+        offset: pageToOffset(page, limit),
       });
-      const filtered = search
-        ? products.filter(
-            p =>
-              p.productCode.toLowerCase().includes(search.toLowerCase()) ||
-              (p.productDescription ?? '')
-                .toLowerCase()
-                .includes(search.toLowerCase())
-          )
-        : products;
-      return {
-        options: filtered
-          .filter(p => p.isActiveProduct)
-          .map(p => ({
-            value: p.id,
-            label: `${p.productCode} - ${p.productDescription ?? p.productCode}`,
-          })),
-      };
+      return toAsyncSelectPage(
+        {
+          ...response,
+          data: response.data.filter(product => product.isActiveProduct),
+        },
+        product => ({
+          value: product.id,
+          label: `${product.productCode} - ${product.productDescription ?? product.productCode}`,
+        })
+      );
     },
     [transactionType]
   );

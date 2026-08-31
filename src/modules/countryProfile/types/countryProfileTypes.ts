@@ -1,4 +1,5 @@
 import type { ICountryGroup } from '@/api/countryGroup/countryGroup.api';
+import type { IOffsetPaginationParams, IPaginatedResponse } from '@/types/pagination';
 
 export const CountryRiskCategory = {
   LOW: 'low',
@@ -39,9 +40,7 @@ export type ICreateCountryProfile = Omit<
 
 export type IUpdateCountryProfile = Partial<ICreateCountryProfile>;
 
-export interface ICountryProfileListQuery {
-  page?: number;
-  limit?: number;
+export interface ICountryProfileListQuery extends IOffsetPaginationParams {
   search?: string;
   code?: string;
   name?: string;
@@ -73,18 +72,6 @@ export interface IBackendCountry {
   updatedAt: string;
 }
 
-export interface IBackendCountryListResponse {
-  data: IBackendCountry[];
-  page: number;
-  limit: number;
-  totalItems: number;
-  totalPages: number;
-}
+export type IBackendCountryListResponse = IPaginatedResponse<IBackendCountry>;
 
-export interface ICountryProfileListResponse {
-  data: ICountryProfile[];
-  page: number;
-  limit: number;
-  totalItems: number;
-  totalPages: number;
-}
+export type ICountryProfileListResponse = IPaginatedResponse<ICountryProfile>;

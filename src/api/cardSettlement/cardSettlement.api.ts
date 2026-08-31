@@ -1,5 +1,11 @@
 import { apiClient } from '../api';
 import type { CardStockSnapshot } from '../cardStock';
+import type {
+  IOffsetPaginationParams,
+  IPaginatedResponse,
+} from '@/types/pagination';
+import { buildQueryString } from '@/utils';
+import { fetchAllMatching, normalizePaginatedResponse } from '@/utils/paginatedList';
 
 export const CardStockSettlementDocumentKind = {
   BRANCH_HO: 'BRANCH_HO',
@@ -90,7 +96,7 @@ export interface CardStockUnsettledItem {
   productSnapshot: CardStockSnapshot;
 }
 
-export interface CardStockSettlementDocumentFilters {
+export interface CardStockSettlementDocumentFilters extends IOffsetPaginationParams {
   status?: CardStockSettlementDocumentStatus;
   kind?: CardStockSettlementDocumentKind;
   issuerPartyProfileId?: string;
@@ -113,25 +119,29 @@ export interface CreateCardStockSettlementDocumentPayload {
   items: Array<{ id: string; rate: string }>;
 }
 
-const queryString = (filters: object) => {
-  const params = new URLSearchParams();
-  Object.entries(filters).forEach(([key, value]) => {
-    if (typeof value === 'string' && value) params.set(key, value);
-  });
-  const value = params.toString();
-  return value ? `?${value}` : '';
-};
+const queryString = (filters: object) => buildQueryString(filters);
 
 export const cardSettlementApi = {
   list: async (
     filters: CardStockSettlementDocumentFilters = {}
-  ): Promise<CardStockSettlementDocument[]> => {
-    const response = await apiClient.get<CardStockSettlementDocument[]>(
-      `/card-stock/settlements${queryString(filters)}`
-    );
+  ): Promise<IPaginatedResponse<CardStockSettlementDocument>> => {
+    const response = await apiClient.get<
+      IPaginatedResponse<CardStockSettlementDocument>
+    >(`/card-stock/settlements${queryString(filters)}`);
     if (response.error) throw new Error(response.error);
-    return response.data ?? [];
+    return normalizePaginatedResponse(
+      response.data,
+      filters.limit,
+      filters.offset
+    );
   },
+
+  listAll: async (
+    filters: Omit<CardStockSettlementDocumentFilters, 'limit' | 'offset'> = {}
+  ): Promise<CardStockSettlementDocument[]> =>
+    fetchAllMatching(pagination =>
+      cardSettlementApi.list({ ...filters, ...pagination })
+    ),
   get: async (id: string): Promise<CardStockSettlementDocument> => {
     const response = await apiClient.get<CardStockSettlementDocument>(
       `/card-stock/settlements/${id}`

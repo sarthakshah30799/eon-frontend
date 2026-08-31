@@ -87,10 +87,10 @@ export const useProcessChequeBookAllocations = () => {
       fromVal,
       toVal,
     }: IProcessChequeBookAllocationsInput) => {
-      const data = await chequebookApi.findAll(
+      const data = await chequebookApi.findAllMatching({
         branchId,
-        ChequeBookStatusEnum.APPROVE
-      );
+        status: ChequeBookStatusEnum.APPROVE,
+      });
 
       const matched = data.filter(book => {
         if (

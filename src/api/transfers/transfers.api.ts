@@ -3,6 +3,12 @@ import type { ITransactionReferenceSnapshot } from '@/modules/transactions';
 import type { IBranchProfile } from '@/modules/branchProfile/types/branchProfileTypes';
 import type { ICounterProfile } from '@/modules/counterProfile/types/counterProfileTypes';
 import type { ICompanyProfile } from '@/modules/companyProfile/types';
+import type {
+  IOffsetPaginationParams,
+  IPaginatedResponse,
+} from '@/types/pagination';
+import { buildQueryString } from '@/utils';
+import { fetchAllMatching, normalizePaginatedResponse } from '@/utils/paginatedList';
 
 export type TransferType = 'COUNTER' | 'BRANCH';
 export type TransferStatus = 'HELD' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED';
@@ -94,30 +100,29 @@ export interface IRecordTransferPrintPayload {
   sendEmail?: boolean;
 }
 
-const buildQuery = (params?: Record<string, string | undefined>) => {
-  if (!params) return '';
-  const searchParams = new URLSearchParams();
-  Object.entries(params).forEach(([key, value]) => {
-    if (value) {
-      searchParams.set(key, value);
-    }
-  });
-  const query = searchParams.toString();
-  return query ? `?${query}` : '';
-};
+export interface ITransferListQuery extends IOffsetPaginationParams {
+  transferType?: TransferType;
+  status?: TransferStatus;
+  search?: string;
+}
 
 export const transfersApi = {
-  listTransfers: async (params?: {
-    transferType?: TransferType;
-    status?: TransferStatus;
-    search?: string;
-  }) => {
-    const res = await apiClient.get<ICurrencyTransfer[]>(
-      `/transfers${buildQuery(params)}`
+  listTransfers: async (
+    params?: ITransferListQuery
+  ): Promise<IPaginatedResponse<ICurrencyTransfer>> => {
+    const res = await apiClient.get<IPaginatedResponse<ICurrencyTransfer>>(
+      `/transfers${buildQueryString(params)}`
     );
     if (res.error) throw new Error(res.error);
-    return res.data ?? [];
+    return normalizePaginatedResponse(res.data, params?.limit, params?.offset);
   },
+
+  listAllTransfers: async (
+    params?: Omit<ITransferListQuery, 'limit' | 'offset'>
+  ): Promise<ICurrencyTransfer[]> =>
+    fetchAllMatching(pagination =>
+      transfersApi.listTransfers({ ...params, ...pagination })
+    ),
   getTransferById: async (id: string) => {
     const res = await apiClient.get<ICurrencyTransfer>(`/transfers/${id}`);
     if (res.error) throw new Error(res.error);

@@ -1,10 +1,10 @@
 import { useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button1';
-import { Loader } from '@/components/ui/loader';
-import { useDebounce, usePermission } from '@/hooks';
+import { useDebounce, useOffsetPaginatedList, usePermission } from '@/hooks';
+import { PAGINATION_DEFAULTS } from '@/constants/paginationConstants';
+import { expenseIncomeBookingApi } from '@/api/expenseIncomeBooking/expenseIncomeBooking.api';
 import { ExpenseIncomeBookingTable } from '../components/ExpenseIncomeBookingTable';
-import { useListBookingMasters } from '../hooks/useListBookingMasters';
 
 interface ExpenseIncomeBookingListViewProps {
   type: 'EXPENSE' | 'INCOME';
@@ -19,24 +19,45 @@ export const ExpenseIncomeBookingListView = ({
   const { canAdd } = usePermission(basePath);
   const search = searchParams.get('search') ?? '';
   const debouncedSearch = useDebounce(search, 400);
-  const query = useMemo(
+  const filters = useMemo(
     () => ({
       type,
       search: debouncedSearch.trim() || undefined,
     }),
     [type, debouncedSearch]
   );
-
   const {
-    data: masters = [],
+    rows: masters,
     isLoading,
     isFetching,
     error,
-  } = useListBookingMasters(query);
+    page,
+    limit,
+    total,
+    totalPages,
+    handlePageChange,
+    handlePageSizeChange,
+  } = useOffsetPaginatedList({
+    queryKey: ['booking-masters', type],
+    queryFn: params => expenseIncomeBookingApi.getBookingMasters(params),
+    filters,
+  });
 
-  if (isLoading) {
-    return <Loader />;
-  }
+  const handleSearch = (value: string) => {
+    setSearchParams(prev => {
+      const nextParams = new URLSearchParams(prev);
+      if (value.trim()) {
+        nextParams.set('search', value.trim());
+      } else {
+        nextParams.delete('search');
+      }
+      nextParams.set('offset', String(PAGINATION_DEFAULTS.OFFSET));
+      if (!nextParams.get('limit')) {
+        nextParams.set('limit', String(PAGINATION_DEFAULTS.LIMIT));
+      }
+      return nextParams;
+    });
+  };
 
   if (error) {
     return (
@@ -47,7 +68,7 @@ export const ExpenseIncomeBookingListView = ({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <div className="flex justify-end">
         {canAdd && (
           <Button
@@ -60,26 +81,21 @@ export const ExpenseIncomeBookingListView = ({
         )}
       </div>
 
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
+      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
         <ExpenseIncomeBookingTable
           masters={masters}
           type={type}
-          loading={isLoading || isFetching}
-          onSearch={value =>
-            setSearchParams(prev => {
-              const nextParams = new URLSearchParams(prev);
-
-              if (value.trim()) {
-                nextParams.set('search', value.trim());
-              } else {
-                nextParams.delete('search');
-              }
-
-              return nextParams;
-            })
-          }
+          loading={isLoading}
+          isFetching={isFetching}
+          onSearch={handleSearch}
           searchValue={search}
           searchPlaceholder="Search code or description"
+          page={page}
+          pageSize={limit}
+          total={total}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
         />
       </section>
     </div>

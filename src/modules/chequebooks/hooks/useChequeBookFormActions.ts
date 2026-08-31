@@ -1,8 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { chequebookApi, branchProfileApi, counterProfileApi } from '@/api';
+import { chequebookApi, counterProfileApi } from '@/api';
 import { accountProfileApi } from '@/api/accountProfile/accountProfile.api';
 import { useCallback } from 'react';
 import type { AsyncSelectResponse } from '@/components/ui';
+import { toPageQuery } from '@/utils/paginatedList';
 
 export const useGetChequeBook = (id?: string) => {
   return useQuery({
@@ -54,15 +55,19 @@ export const useLoadBankAccounts = () => {
   const queryClient = useQueryClient();
   return useCallback(
     async (inputValue: string, page = 1) => {
+      const limit = 30;
       const response = await queryClient.fetchQuery({
         queryKey: [
           'account-profiles',
-          { page, limit: 30, search: inputValue || undefined, active: true },
+          {
+            ...toPageQuery(page, limit),
+            search: inputValue || undefined,
+            active: true,
+          },
         ],
         queryFn: () =>
           accountProfileApi.getAccountProfiles({
-            page,
-            limit: 30,
+            ...toPageQuery(page, limit),
             search: inputValue || undefined,
             active: true,
           }),
@@ -81,7 +86,7 @@ export const useLoadBankAccounts = () => {
           value: acc.id,
           label: `${acc.accountCode} - ${acc.accountName}`,
         })),
-        hasMore: (response.data || []).length === 30,
+        hasMore: response.hasMore,
       };
     },
     [queryClient]
@@ -111,33 +116,6 @@ export const useCreateChequeBook = () => {
   });
 };
 
-export const useLoadBranchOptions = () => {
-  const queryClient = useQueryClient();
-  return useCallback(
-    async (inputValue: string) => {
-      const branches = await queryClient.fetchQuery({
-        queryKey: [
-          'branch-profiles',
-          { search: inputValue || undefined, activeOnly: true },
-        ],
-        queryFn: () =>
-          branchProfileApi.getBranchProfiles({
-            search: inputValue || undefined,
-            activeOnly: true,
-          }),
-      });
-      return {
-        options: branches.map(branch => ({
-          value: branch.id,
-          label: `${branch.code} - ${branch.name}`,
-        })),
-        hasMore: false,
-      };
-    },
-    [queryClient]
-  );
-};
-
 export const useLoadCounterProfilesForBranch = () => {
   const queryClient = useQueryClient();
   return useCallback(
@@ -145,7 +123,7 @@ export const useLoadCounterProfilesForBranch = () => {
       return queryClient.fetchQuery({
         queryKey: ['counter-profiles', { branchId, activeOnly: true }],
         queryFn: () =>
-          counterProfileApi.getCounterProfiles({ branchId, activeOnly: true }),
+          counterProfileApi.getAllCounterProfiles({ branchId, activeOnly: true }),
       });
     },
     [queryClient]

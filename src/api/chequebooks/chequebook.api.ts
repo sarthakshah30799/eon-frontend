@@ -4,6 +4,15 @@ import {
   ChequeBookStatusEnum,
   type ChequeBookStatus,
 } from '@/modules/chequebooks/types';
+import type {
+  IOffsetPaginationParams,
+  IPaginatedResponse,
+} from '@/types/pagination';
+import { buildQueryString } from '@/utils';
+import {
+  fetchAllMatching,
+  normalizePaginatedResponse,
+} from '@/utils/paginatedList';
 
 export const AuthorizedUserRole = {
   CASHIER: 'is_cashier',
@@ -90,6 +99,17 @@ export interface IChequeBookCashierReturnGroup {
   remarks: string;
 }
 
+export interface IChequeBookListQuery extends IOffsetPaginationParams {
+  branchId?: string;
+  status?: string;
+  bankAccountCode?: string;
+}
+
+export interface IChequeBookSelectablePagesQuery extends IOffsetPaginationParams {
+  accountId?: string;
+  userId?: string;
+}
+
 export const chequebookApi = {
   create: async (data: ICreateChequeBook): Promise<IChequeBook> => {
     const res = await apiClient.post<IChequeBook>(
@@ -102,23 +122,21 @@ export const chequebookApi = {
   },
 
   findAll: async (
-    branchId?: string,
-    status?: string,
-    bankAccountCode?: string
-  ): Promise<IChequeBook[]> => {
-    let url = '/chequebooks/dispatches';
-    const params: string[] = [];
-    if (branchId) params.push(`branchId=${encodeURIComponent(branchId)}`);
-    if (status) params.push(`status=${encodeURIComponent(status)}`);
-    if (bankAccountCode)
-      params.push(`bankAccountCode=${encodeURIComponent(bankAccountCode)}`);
-    if (params.length > 0) {
-      url += `?${params.join('&')}`;
-    }
-    const res = await apiClient.get<IChequeBook[]>(url);
+    params?: IChequeBookListQuery
+  ): Promise<IPaginatedResponse<IChequeBook>> => {
+    const res = await apiClient.get<IPaginatedResponse<IChequeBook>>(
+      `/chequebooks/dispatches${buildQueryString(params)}`
+    );
     if (res.error) throw new Error(res.error);
-    return res.data || [];
+    return normalizePaginatedResponse(res.data, params?.limit, params?.offset);
   },
+
+  findAllMatching: async (
+    params?: Omit<IChequeBookListQuery, 'limit' | 'offset'>
+  ): Promise<IChequeBook[]> =>
+    fetchAllMatching(pagination =>
+      chequebookApi.findAll({ ...params, ...pagination })
+    ),
 
   approveOrReject: async (
     id: string,
@@ -240,21 +258,23 @@ export const chequebookApi = {
     return res.data || [];
   },
 
-  getSelectablePages: async (params: {
-    accountId?: string;
-    userId?: string;
-  }): Promise<IChequeBookPageTracking[]> => {
-    const query = new URLSearchParams();
-    if (params.accountId) query.set('accountId', params.accountId);
-    if (params.userId) query.set('userId', params.userId);
-
-    const suffix = query.toString() ? `?${query.toString()}` : '';
-    const res = await apiClient.get<IChequeBookPageTracking[]>(
-      `/chequebooks/pages/selectable${suffix}`
+  getSelectablePages: async (
+    params: IChequeBookSelectablePagesQuery = {}
+  ): Promise<IPaginatedResponse<IChequeBookPageTracking>> => {
+    const { limit, offset, ...filters } = params;
+    const res = await apiClient.get<IPaginatedResponse<IChequeBookPageTracking>>(
+      `/chequebooks/pages/selectable${buildQueryString({ ...filters, limit, offset })}`
     );
     if (res.error) throw new Error(res.error);
-    return res.data || [];
+    return normalizePaginatedResponse(res.data, limit, offset);
   },
+
+  getAllSelectablePages: async (
+    params?: Omit<IChequeBookSelectablePagesQuery, 'limit' | 'offset'>
+  ): Promise<IChequeBookPageTracking[]> =>
+    fetchAllMatching(pagination =>
+      chequebookApi.getSelectablePages({ ...params, ...pagination })
+    ),
 
   updatePagesStatus: async (
     pageNos: number[],

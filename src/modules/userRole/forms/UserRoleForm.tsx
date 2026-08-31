@@ -42,7 +42,7 @@ export const UserRoleForm = ({
         return false;
       }
 
-      const roles = await userRoleApi.getUserRoles();
+      const roles = await userRoleApi.getAllUserRoles();
       return roles.some(
         role =>
           normalizeCodeValue(role.code) === normalizedCode &&

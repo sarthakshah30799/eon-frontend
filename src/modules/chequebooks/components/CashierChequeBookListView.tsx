@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { Table, type TableColumnDef } from '@/components/ui';
 import { Modal } from '@/components/ui/modal/Modal';
 import { chequebookApi, type IChequeBookPageTracking } from '@/api';
 import { useAuth } from '@/lib/AuthContext';
+import { useOffsetPaginatedList } from '@/hooks';
 import toast from 'react-hot-toast';
 
 export interface ICashierChequeBookRow {
@@ -99,14 +100,28 @@ export const CashierChequeBookListView = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
+  const filters = useMemo(
+    () => ({
+      userId: user?.id,
+    }),
+    [user?.id]
+  );
+
   const {
-    data: pages = [],
+    rows: pages,
     isLoading,
     isFetching,
-  } = useQuery<IChequeBookPageTracking[]>({
+    page,
+    limit,
+    total,
+    totalPages,
+    handlePageChange,
+    handlePageSizeChange,
+  } = useOffsetPaginatedList({
     queryKey: ['cashier-chequebooks', user?.id],
-    queryFn: () => chequebookApi.getSelectablePages({ userId: user?.id }),
-    enabled: !!user?.id,
+    queryFn: params => chequebookApi.getSelectablePages(params),
+    filters,
+    enabled: Boolean(user?.id),
   });
 
   const rows = useMemo(() => groupPagesIntoRows(pages), [pages]);
@@ -250,17 +265,25 @@ export const CashierChequeBookListView = () => {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
+      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
         <div className="overflow-x-auto border border-slate-200 rounded-md">
           <Table
             columns={columns}
             data={rows}
             enableSorting={false}
             enableFiltering={false}
-            enablePagination={false}
+            enablePagination
+            manualPagination
+            page={page}
+            pageSize={limit}
+            total={total}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
             enableRowSelection={false}
             enableColumnVisibility={false}
-            loading={isLoading || isFetching}
+            loading={isLoading}
+            isFetching={isFetching}
             className="min-w-full text-xs"
             emptyMessage="No cheque pages assigned to you."
             onRowClick={openModal}

@@ -4,9 +4,18 @@ import type {
   ICreateCategoryOption,
   CategoryOptionCode,
 } from '@/types/categoryOptionTypes';
+import type { IOffsetPaginationParams, IPaginatedResponse } from '@/types/pagination';
+import { fetchAllMatching, normalizePaginatedResponse } from '@/utils/paginatedList';
+import { buildQueryString } from '@/utils';
 
 const normalizeCode = (code: CategoryOptionCode): CategoryOptionCode =>
   code.trim() as CategoryOptionCode;
+
+export interface ICategoryOptionListQuery extends IOffsetPaginationParams {
+  search?: string;
+}
+
+export type ICategoryOptionListResponse = IPaginatedResponse<ICategoryOption>;
 
 export interface IStaticCategoryOption {
   value: string;
@@ -14,17 +23,31 @@ export interface IStaticCategoryOption {
 }
 
 export const categoryOptionsApi = {
-  getCategoryOptions: async (search?: string): Promise<ICategoryOption[]> => {
-    const query = search?.trim()
-      ? `?search=${encodeURIComponent(search.trim())}`
-      : '';
-    const res = await apiClient.get<ICategoryOption[]>(
-      `/select-options/all${query}`
+  getCategoryOptions: async (
+    params?: ICategoryOptionListQuery | string
+  ): Promise<ICategoryOptionListResponse> => {
+    const queryObj: ICategoryOptionListQuery | undefined =
+      typeof params === 'string'
+        ? { search: params.trim() || undefined }
+        : params;
+    const res = await apiClient.get<ICategoryOptionListResponse>(
+      `/select-options/all${buildQueryString(queryObj)}`
     );
 
     if (res.error) throw new Error(res.error);
-    return res.data ?? [];
+    return normalizePaginatedResponse(
+      res.data,
+      queryObj?.limit,
+      queryObj?.offset
+    );
   },
+
+  getAllCategoryOptions: async (
+    params?: Omit<ICategoryOptionListQuery, 'limit' | 'offset'>
+  ): Promise<ICategoryOption[]> =>
+    fetchAllMatching(pagination =>
+      categoryOptionsApi.getCategoryOptions({ ...params, ...pagination })
+    ),
 
   getCategoryOptionsByCode: async (
     code: CategoryOptionCode,

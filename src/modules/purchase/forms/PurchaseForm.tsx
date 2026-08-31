@@ -80,6 +80,7 @@ import type {
 } from '@/modules/transactions';
 import { useTransactionTcsPreview } from '@/modules/transactions';
 import { useAuth } from '@/lib/AuthContext';
+import { toPageQuery } from '@/utils/paginatedList';
 
 const ACCOUNT_PROFILE_OPTION_PAGE_SIZE = 30;
 
@@ -241,16 +242,14 @@ const PurchaseFormBody = ({
         : (passengerEntityType as PassengerEntityType | '' | null) || null;
   const additionalChargeAccountQuery = useMemo(
     () => ({
-      page: 1,
-      limit: ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
+      ...toPageQuery(1, ACCOUNT_PROFILE_OPTION_PAGE_SIZE),
       active: true,
     }),
     []
   );
   const paymentAccountQuery = useMemo(
     () => ({
-      page: 1,
-      limit: ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
+      ...toPageQuery(1, ACCOUNT_PROFILE_OPTION_PAGE_SIZE),
       active: true,
     }),
     []

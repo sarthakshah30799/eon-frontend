@@ -14,7 +14,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { transactionPoliciesApi } from '@/api/transactionPolicies/transactionPolicies.api';
 import type { IPolicyChecklistItem } from '@/modules/auth/types';
 import { formatDateTime } from '@/utils';
-import { useListBranchProfiles } from '@/modules/branchProfile/hooks';
+import { useLoadBranchOptions } from '@/modules/branchProfile/hooks';
 
 type ChecklistAnswers = Record<string, string | boolean>;
 type DayEndAction = 'start' | 'end';
@@ -67,10 +67,18 @@ const DayEndStartProcessForm = ({
   const canSelectWorkplace = Boolean(
     user?.isAdmin || user?.isHo || user?.isHoStaff
   );
-  const { data: branches = [] } = useListBranchProfiles(
-    { activeOnly: true },
-    canSelectWorkplace
-  );
+  const loadBranchOptions = useLoadBranchOptions({ activeOnly: true });
+  const [selectedBranchOption, setSelectedBranchOption] =
+    useState<AsyncSelectOption | null>(
+      canSelectWorkplace
+        ? null
+        : activeBranchId
+          ? {
+              value: activeBranchId,
+              label: user?.branchName?.trim() || activeBranchId,
+            }
+          : null
+    );
   const [selectedBranchId, setSelectedBranchId] = useState(
     canSelectWorkplace ? '' : (activeBranchId ?? '')
   );
@@ -91,21 +99,16 @@ const DayEndStartProcessForm = ({
   const effectivePolicyContext =
     selectedPolicy.data ??
     (effectiveSelectedBranchId === activeBranchId ? policyContext : null);
-  const effectiveBranches = canSelectWorkplace
-    ? branches
+  const workplaceBranchOptions = canSelectWorkplace
+    ? []
     : activeBranchId
       ? [
           {
-            id: activeBranchId,
-            code: '',
-            name: user?.branchName?.trim() || activeBranchId,
+            value: activeBranchId,
+            label: user?.branchName?.trim() || activeBranchId,
           },
         ]
       : [];
-  const branchOptions = effectiveBranches.map(branch => ({
-    value: branch.id,
-    label: branch.code ? `${branch.code} - ${branch.name}` : branch.name,
-  }));
   const checklist = useMemo(
     () => effectivePolicyContext?.checklist ?? [],
     [effectivePolicyContext?.checklist]
@@ -300,24 +303,24 @@ const DayEndStartProcessForm = ({
           <div className="grid gap-4 md:grid-cols-2">
             <AsyncSelect
               label="Branch"
-              value={
-                branchOptions.find(
-                  option => option.value === effectiveSelectedBranchId
-                ) ?? null
-              }
-              defaultOptions={branchOptions}
+              value={selectedBranchOption}
+              defaultOptions={true}
+              pagination={canSelectWorkplace}
               isSearchable
               isClearable={false}
               disabled={!canSelectWorkplace}
-              loadOptions={async input => ({
-                options: branchOptions.filter(option =>
-                  option.label.toLowerCase().includes(input.toLowerCase())
-                ),
-              })}
+              loadOptions={async (input, page = 1) => {
+                if (!canSelectWorkplace) {
+                  return { options: workplaceBranchOptions, hasMore: false };
+                }
+                return loadBranchOptions(input, page);
+              }}
               onChange={option => {
                 const selected = Array.isArray(option) ? option[0] : option;
-                const nextBranchId = selected
-                  ? String((selected as AsyncSelectOption).value)
+                const nextOption = (selected as AsyncSelectOption | null) ?? null;
+                setSelectedBranchOption(nextOption);
+                const nextBranchId = nextOption
+                  ? String(nextOption.value)
                   : '';
                 setSelectedBranchId(nextBranchId);
               }}

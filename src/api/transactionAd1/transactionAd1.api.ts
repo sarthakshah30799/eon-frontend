@@ -7,6 +7,12 @@ import type { IPartyProfile } from '@/modules/partyProfiles/types';
 import type { IAccountProfile } from '@/modules/accountProfile/types/accountProfileTypes';
 import type { IPurpose } from '@/modules/purpose/types';
 import type { ICategoryOption } from '@/types/categoryOptionTypes';
+import type {
+  IOffsetPaginationParams,
+  IPaginatedResponse,
+} from '@/types/pagination';
+import { buildQueryString } from '@/utils';
+import { fetchAllMatching, normalizePaginatedResponse } from '@/utils/paginatedList';
 
 export type Ad1TransactionStatus = 'DRAFT' | 'APPROVED' | 'REJECTED';
 
@@ -135,6 +141,11 @@ export type IUpdateTransactionAd1 = Partial<
   Omit<ICreateTransactionAd1, 'requiresApproval'>
 >;
 
+export interface ITransactionAd1ListQuery extends IOffsetPaginationParams {
+  search?: string;
+  branchId?: string;
+}
+
 export const transactionAd1Api = {
   create: async (payload: ICreateTransactionAd1): Promise<ITransactionAd1> => {
     const res = await apiClient.post<ITransactionAd1>(
@@ -145,20 +156,22 @@ export const transactionAd1Api = {
     return res.data!;
   },
 
-  getAll: async (params?: {
-    search?: string;
-    branchId?: string;
-  }): Promise<ITransactionAd1[]> => {
-    const query = new URLSearchParams();
-    if (params?.search) query.set('search', params.search);
-    if (params?.branchId) query.set('branchId', params.branchId);
-    const suffix = query.toString() ? `?${query.toString()}` : '';
-    const res = await apiClient.get<ITransactionAd1[]>(
-      `/transactions/ad1${suffix}`
+  getAll: async (
+    params?: ITransactionAd1ListQuery
+  ): Promise<IPaginatedResponse<ITransactionAd1>> => {
+    const res = await apiClient.get<IPaginatedResponse<ITransactionAd1>>(
+      `/transactions/ad1${buildQueryString(params)}`
     );
     if (res.error) throw new Error(res.error);
-    return res.data!;
+    return normalizePaginatedResponse(res.data, params?.limit, params?.offset);
   },
+
+  getAllMatching: async (
+    params?: Omit<ITransactionAd1ListQuery, 'limit' | 'offset'>
+  ): Promise<ITransactionAd1[]> =>
+    fetchAllMatching(pagination =>
+      transactionAd1Api.getAll({ ...params, ...pagination })
+    ),
 
   getById: async (id: string): Promise<ITransactionAd1> => {
     const res = await apiClient.get<ITransactionAd1>(`/transactions/ad1/${id}`);

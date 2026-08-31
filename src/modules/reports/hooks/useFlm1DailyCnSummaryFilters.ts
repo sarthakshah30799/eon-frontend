@@ -118,12 +118,13 @@ export const useFlm1DailyCnSummaryFilters =
       queryKey: ['reports-flm1-branch-profiles'],
       enabled: true,
       queryFn: async () =>
-        branchProfileApi.getBranchProfiles({
+        branchProfileApi.getAllBranchProfiles({
           activeOnly: true,
         }),
     });
 
-    const { data: productProfiles = [] } = useListProductProfiles(true);
+    const { data: productProfilesPage } = useListProductProfiles(true);
+    const productProfiles = productProfilesPage?.data ?? [];
 
     const accessibleBranchProfiles = useMemo(
       () =>

@@ -1,11 +1,12 @@
 import { useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button1';
-import { usePermission } from '@/hooks';
-import { useDebounce } from '@/hooks';
+import { useDebounce, useOffsetPaginatedList, usePermission } from '@/hooks';
+import { PAGINATION_DEFAULTS } from '@/constants/paginationConstants';
+import { tdsProfileApi } from '@/api/tdsProfile';
 import { TDS_PROFILE_TEXTS } from '../constants';
 import { TdsProfileTable } from '../components';
-import { useDeleteTdsProfile, useListTdsProfiles } from '../hooks';
+import { useDeleteTdsProfile } from '../hooks';
 
 export const TdsProfileListView = () => {
   const navigate = useNavigate();
@@ -13,20 +14,48 @@ export const TdsProfileListView = () => {
   const { canAdd } = usePermission('/admin/tds-profile');
   const search = searchParams.get('search') ?? '';
   const debouncedSearch = useDebounce(search, 400);
-  const query = useMemo(
-    () => debouncedSearch.trim() || undefined,
+  const filters = useMemo(
+    () => ({
+      search: debouncedSearch.trim() || undefined,
+    }),
     [debouncedSearch]
   );
   const {
-    data: tdsProfiles = [],
+    rows: tdsProfiles,
     isLoading,
     isFetching,
     error,
-  } = useListTdsProfiles(query);
+    page,
+    limit,
+    total,
+    totalPages,
+    handlePageChange,
+    handlePageSizeChange,
+  } = useOffsetPaginatedList({
+    queryKey: ['tds-profiles'],
+    queryFn: params => tdsProfileApi.getTdsProfiles(params),
+    filters,
+  });
   const { deleteTdsProfile, isPending: isDeleting } = useDeleteTdsProfile();
 
   const handleDelete = async (id: string) => {
     await deleteTdsProfile(id);
+  };
+
+  const handleSearch = (value: string) => {
+    setSearchParams(prev => {
+      const nextParams = new URLSearchParams(prev);
+      if (value.trim()) {
+        nextParams.set('search', value.trim());
+      } else {
+        nextParams.delete('search');
+      }
+      nextParams.set('offset', String(PAGINATION_DEFAULTS.OFFSET));
+      if (!nextParams.get('limit')) {
+        nextParams.set('limit', String(PAGINATION_DEFAULTS.LIMIT));
+      }
+      return nextParams;
+    });
   };
 
   if (error) {
@@ -38,7 +67,7 @@ export const TdsProfileListView = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <div className="flex justify-end">
         {canAdd && (
           <Button
@@ -51,27 +80,22 @@ export const TdsProfileListView = () => {
         )}
       </div>
 
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
+      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
         <TdsProfileTable
           tdsProfiles={tdsProfiles}
           onDelete={handleDelete}
           isDeleting={isDeleting}
-          loading={isLoading || isFetching}
-          onSearch={value =>
-            setSearchParams(prev => {
-              const nextParams = new URLSearchParams(prev);
-
-              if (value.trim()) {
-                nextParams.set('search', value.trim());
-              } else {
-                nextParams.delete('search');
-              }
-
-              return nextParams;
-            })
-          }
+          loading={isLoading}
+          isFetching={isFetching}
+          onSearch={handleSearch}
           searchValue={search}
           searchPlaceholder="Search code, name, value, or sort order"
+          page={page}
+          pageSize={limit}
+          total={total}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
         />
       </section>
     </div>

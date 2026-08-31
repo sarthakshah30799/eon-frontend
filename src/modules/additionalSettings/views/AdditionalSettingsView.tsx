@@ -87,7 +87,7 @@ export const AdditionalSettingsView = ({
     data: accountProfileResponse,
     isFetching: areAccountProfilesFetching,
   } = useListAccountProfiles(
-    { page: 1, limit: 100 },
+    { limit: 100, offset: 0 },
     shouldLoadAccountProfiles
   );
   const accountProfiles = accountProfileResponse?.data ?? [];

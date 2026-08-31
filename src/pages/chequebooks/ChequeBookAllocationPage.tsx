@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import { Button, Input } from '@/components/ui';
 import { FormFieldSelect } from '@/components/forms';
 import { formatDateTime } from '@/utils';
+import { toPageQuery } from '@/utils/paginatedList';
 import { accountProfileApi } from '@/api/accountProfile/accountProfile.api';
 import { useListChequeBookCashiers } from '@/modules/chequebooks/hooks';
 import { ChequeBookStatusEnum } from '@/modules/chequebooks/types';
@@ -193,10 +194,10 @@ export const ChequeBookAllocationPage = () => {
         setIsProcessing(true);
         setAllocatedWarning('');
 
-        const data = await chequebookApi.findAll(
-          activeBranchId,
-          ChequeBookStatusEnum.APPROVE
-        );
+        const data = await chequebookApi.findAllMatching({
+          branchId: activeBranchId,
+          status: ChequeBookStatusEnum.APPROVE,
+        });
         const matched = data.filter(book => {
           if (
             bankAccountCode !== 'ALL' &&
@@ -399,8 +400,7 @@ export const ChequeBookAllocationPage = () => {
                   try {
                     const response = await accountProfileApi.getAccountProfiles(
                       {
-                        page,
-                        limit: ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
+                        ...toPageQuery(page, ACCOUNT_PROFILE_OPTION_PAGE_SIZE),
                         search: inputValue,
                         active: true,
                       }
@@ -417,9 +417,7 @@ export const ChequeBookAllocationPage = () => {
                         value: acc.id,
                         label: `${acc.accountCode} - ${acc.accountName}`,
                       })),
-                      hasMore:
-                        (response.data || []).length ===
-                        ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
+                      hasMore: response.hasMore,
                     };
                   } catch {
                     return { options: [], hasMore: false };

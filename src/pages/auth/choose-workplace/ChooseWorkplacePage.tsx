@@ -6,8 +6,6 @@ import { useAuth } from '../../../lib/AuthContext';
 import { Loader } from '../../../components/ui/loader';
 import { Form } from '../../../components/forms';
 import { toast } from 'react-hot-toast';
-import { useListBranchProfiles } from '@/modules/branchProfile/hooks';
-import { useListCounterProfiles } from '@/modules/counterProfile/hooks';
 import { WorkplaceFormFields } from './WorkplaceFormFields';
 import { CHOOSE_WORKPLACE_TEXT } from './chooseWorkplaceConstants';
 import type { IWorkplaceFormValues } from './chooseWorkplaceTypes';
@@ -35,16 +33,6 @@ const ChooseWorkplacePage: React.FC = () => {
   const userAssignments = useMemo(
     () => user?.assignments ?? [],
     [user?.assignments]
-  );
-
-  const { isLoading: isBranchesLoading } = useListBranchProfiles(
-    { activeOnly: true },
-    canSelectAllBranches
-  );
-
-  const { isLoading: isCountersLoading } = useListCounterProfiles(
-    { activeOnly: true },
-    canSelectAllBranches
   );
 
   const defaultValues = useMemo<IWorkplaceFormValues>(() => {
@@ -80,10 +68,6 @@ const ChooseWorkplacePage: React.FC = () => {
         <Loader />
       </div>
     );
-  }
-
-  if (canSelectAllBranches && (isBranchesLoading || isCountersLoading)) {
-    return <Loader />;
   }
 
   const handleSubmit = async (values: IWorkplaceFormValues) => {

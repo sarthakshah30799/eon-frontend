@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { FormFieldSelect } from '@/components/forms';
 import { useAuth } from '@/lib/AuthContext';
-import { useListBranchProfiles } from '@/modules/branchProfile/hooks';
+import { counterProfileApi } from '@/api/counterProfile';
 import {
-  useGetCounterProfile,
-  useListCounterProfiles,
-} from '@/modules/counterProfile/hooks';
+  useGetBranchProfile,
+  useLoadBranchOptions,
+} from '@/modules/branchProfile/hooks';
+import { useGetCounterProfile } from '@/modules/counterProfile/hooks';
 import type { AsyncSelectOption, AsyncSelectResponse } from '@/components/ui';
 import { PURCHASE_WORKPLACE_TEXT } from '../constants/purchaseConstants';
 
@@ -42,10 +44,13 @@ export const PurchaseWorkplaceFields = ({
     user?.isAdmin || user?.isHo || user?.isHoStaff
   );
 
-  const { data: branches = [], isLoading: isBranchesLoading } =
-    useListBranchProfiles({ activeOnly: true });
-  const { data: counters = [], isLoading: isCountersLoading } =
-    useListCounterProfiles({ activeOnly: true }, canEditWorkplace);
+  const loadBranchOptions = useLoadBranchOptions({ activeOnly: true });
+  const { data: selectedBranch } = useGetBranchProfile(branchId || '');
+  const { data: counters = [], isLoading: isCountersLoading } = useQuery({
+    queryKey: ['counter-profiles-all', { activeOnly: true }],
+    queryFn: () => counterProfileApi.getAllCounterProfiles({ activeOnly: true }),
+    enabled: canEditWorkplace,
+  });
   const { data: activeCounter, isLoading: isActiveCounterLoading } =
     useGetCounterProfile(activeCounterId ?? '');
 
@@ -87,13 +92,12 @@ export const PurchaseWorkplaceFields = ({
       return [];
     }
 
-    const selectedBranch = branches.find(branch => branch.id === branchId);
     const connectedCounterIds = new Set(
       selectedBranch?.connectCounterIds ?? []
     );
 
     return counters.filter(counter => connectedCounterIds.has(counter.id));
-  }, [branchId, branches, counters]);
+  }, [branchId, counters, selectedBranch]);
 
   useEffect(() => {
     if (
@@ -111,7 +115,7 @@ export const PurchaseWorkplaceFields = ({
       return;
     }
 
-    if (!counterId || !branchId || counters.length === 0) {
+    if (!counterId || !branchId || counters.length === 0 || !selectedBranch) {
       return;
     }
 
@@ -128,6 +132,7 @@ export const PurchaseWorkplaceFields = ({
     counterId,
     counters.length,
     form,
+    selectedBranch,
   ]);
 
   useEffect(() => {
@@ -146,15 +151,6 @@ export const PurchaseWorkplaceFields = ({
     });
   }, [activeCounterId, branchId, canEditWorkplace, counterId, form]);
 
-  const branchOptions = useMemo<AsyncSelectOption[]>(
-    () =>
-      branches.map(branch => ({
-        value: branch.id,
-        label: `${branch.code} - ${branch.name}`,
-      })),
-    [branches]
-  );
-
   const counterOptions = useMemo<AsyncSelectOption[]>(() => {
     if (!canEditWorkplace) {
       return sessionCounterOption ? [sessionCounterOption] : [];
@@ -164,22 +160,6 @@ export const PurchaseWorkplaceFields = ({
       toCounterOption(counter.id, counter.counterNo, counter.name)
     );
   }, [branchCounters, canEditWorkplace, sessionCounterOption]);
-
-  const loadBranchOptions = useCallback(
-    async (inputValue: string): Promise<AsyncSelectResponse> => {
-      const normalizedInput = inputValue.trim().toLowerCase();
-      const filteredOptions = normalizedInput
-        ? branchOptions.filter(option =>
-            option.label.toLowerCase().includes(normalizedInput)
-          )
-        : branchOptions;
-
-      return {
-        options: filteredOptions,
-      };
-    },
-    [branchOptions]
-  );
 
   const loadCounterOptions = useCallback(
     async (inputValue: string): Promise<AsyncSelectResponse> => {
@@ -216,8 +196,8 @@ export const PurchaseWorkplaceFields = ({
         label={PURCHASE_WORKPLACE_TEXT.branchLabel}
         placeholder={PURCHASE_WORKPLACE_TEXT.selectBranch}
         loadOptions={loadBranchOptions}
-        defaultOptions={branchOptions}
-        isLoading={isBranchesLoading}
+        defaultOptions={true}
+        pagination
         disabled={disableSelection}
       />
       <FormFieldSelect

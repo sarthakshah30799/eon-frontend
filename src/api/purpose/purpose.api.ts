@@ -1,7 +1,13 @@
 import { apiClient } from '../api';
-import type { ICreatePurpose, IPurpose } from '@/modules/purpose/types';
-import type { TransactionType } from '@/modules/transactions';
+import type {
+  ICreatePurpose,
+  IPurpose,
+  IPurposeListQuery,
+  IPurposeListResponse,
+} from '@/modules/purpose/types';
 import type { PurposePartyProfileType } from '@/modules/purpose/types';
+import { buildQueryString } from '@/utils';
+import { fetchAllMatching, normalizePaginatedResponse } from '@/utils/paginatedList';
 
 interface BackendPurposeSlab {
   id: string;
@@ -61,28 +67,62 @@ const preparePayload = (values: ICreatePurpose): ICreatePurpose => ({
   })),
 });
 
+const normalizePurposeListQuery = (
+  search?: string,
+  transactionType?: IPurposeListQuery['transactionType'],
+  partyProfileType?: PurposePartyProfileType
+): IPurposeListQuery | undefined => {
+  if (
+    search === undefined &&
+    transactionType === undefined &&
+    partyProfileType === undefined
+  ) {
+    return undefined;
+  }
+
+  return {
+    search: search?.trim() || undefined,
+    transactionType,
+    partyProfileType,
+  };
+};
+
 export const purposeApi = {
   getPurposes: async (
-    search?: string,
-    transactionType?: TransactionType,
+    params?: IPurposeListQuery | string,
+    transactionType?: IPurposeListQuery['transactionType'],
     partyProfileType?: PurposePartyProfileType
-  ): Promise<IPurpose[]> => {
-    const params = new URLSearchParams();
-    if (search?.trim()) {
-      params.set('search', search.trim());
-    }
-    if (transactionType) {
-      params.set('transactionType', transactionType);
-    }
-    if (partyProfileType) {
-      params.set('partyProfileType', partyProfileType);
-    }
-    const query = params.toString() ? `?${params.toString()}` : '';
-    const res = await apiClient.get<BackendPurpose[]>(`/purposes${query}`);
+  ): Promise<IPurposeListResponse> => {
+    const queryObj: IPurposeListQuery | undefined =
+      typeof params === 'string'
+        ? normalizePurposeListQuery(params, transactionType, partyProfileType)
+        : params;
+    const res = await apiClient.get<IPurposeListResponse>(
+      `/purposes${buildQueryString(queryObj)}`
+    );
 
     if (res.error) throw new Error(res.error);
-    return (res.data ?? []).map(mapBackendToFrontend);
+    const payload = normalizePaginatedResponse(
+      res.data
+        ? {
+            ...res.data,
+            data: (res.data.data ?? []).map(item =>
+              mapBackendToFrontend(item as unknown as BackendPurpose)
+            ),
+          }
+        : res.data,
+      queryObj?.limit,
+      queryObj?.offset
+    );
+    return payload;
   },
+
+  getAllPurposes: async (
+    params?: Omit<IPurposeListQuery, 'limit' | 'offset'>
+  ): Promise<IPurpose[]> =>
+    fetchAllMatching(pagination =>
+      purposeApi.getPurposes({ ...params, ...pagination })
+    ),
 
   getPurposeById: async (id: string): Promise<IPurpose | undefined> => {
     const res = await apiClient.get<BackendPurpose>(`/purposes/${id}`);

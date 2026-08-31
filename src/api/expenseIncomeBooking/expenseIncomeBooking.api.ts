@@ -1,40 +1,30 @@
 import { apiClient } from '../api';
 import type {
   IExpenseIncomeBookingMasterListQuery,
+  IExpenseIncomeBookingMasterListResponse,
   ICreateExpenseIncomeBookingMaster,
   IExpenseIncomeBookingMaster,
 } from '../../modules/expenseIncomeBooking/types/expenseIncomeBookingTypes';
-
-const buildQueryString = (params?: IExpenseIncomeBookingMasterListQuery) => {
-  if (!params) {
-    return '';
-  }
-
-  const query = new URLSearchParams();
-
-  Object.entries(params).forEach(([key, value]) => {
-    if (value === undefined || value === null || value === '') {
-      return;
-    }
-
-    query.set(key, String(value));
-  });
-
-  const queryString = query.toString();
-  return queryString ? `?${queryString}` : '';
-};
+import { buildQueryString } from '@/utils';
+import { fetchAllMatching, normalizePaginatedResponse } from '@/utils/paginatedList';
 
 export const expenseIncomeBookingApi = {
   getBookingMasters: async (
     params?: IExpenseIncomeBookingMasterListQuery
-  ): Promise<IExpenseIncomeBookingMaster[]> => {
-    // Note: The NestJS API returns an array directly
-    const res = await apiClient.get<IExpenseIncomeBookingMaster[]>(
+  ): Promise<IExpenseIncomeBookingMasterListResponse> => {
+    const res = await apiClient.get<IExpenseIncomeBookingMasterListResponse>(
       `/expense-income-booking-masters${buildQueryString(params)}`
     );
     if (res.error) throw new Error(res.error);
-    return res.data || [];
+    return normalizePaginatedResponse(res.data, params?.limit, params?.offset);
   },
+
+  getAllBookingMasters: async (
+    params?: Omit<IExpenseIncomeBookingMasterListQuery, 'limit' | 'offset'>
+  ): Promise<IExpenseIncomeBookingMaster[]> =>
+    fetchAllMatching(pagination =>
+      expenseIncomeBookingApi.getBookingMasters({ ...params, ...pagination })
+    ),
 
   getBookingMasterById: async (
     id: string

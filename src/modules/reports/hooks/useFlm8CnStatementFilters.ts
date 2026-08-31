@@ -148,12 +148,13 @@ export const useFlm8CnStatementFilters = (): Flm8CnStatementFiltersState => {
     queryKey: ['reports-flm8-branch-profiles'],
     enabled: true,
     queryFn: async () =>
-      branchProfileApi.getBranchProfiles({
+      branchProfileApi.getAllBranchProfiles({
         activeOnly: true,
       }),
   });
 
-  const { data: productProfiles = [] } = useListProductProfiles(true);
+  const { data: productProfilesPage } = useListProductProfiles(true);
+  const productProfiles = productProfilesPage?.data ?? [];
 
   const accessibleBranchProfiles = useMemo(
     () =>

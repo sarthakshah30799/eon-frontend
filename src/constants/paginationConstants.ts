@@ -3,6 +3,8 @@ export const PAGINATION_DEFAULTS = {
   OFFSET: 0,
 } as const;
 
+export const PAGINATION_MAX_LIMIT = 100;
+
 export const PAGINATION_PAGE_SIZE_OPTIONS = [10, 20, 30, 50, 100] as const;
 
 export const PAGINATION_DROPDOWN_OPTIONS = PAGINATION_PAGE_SIZE_OPTIONS;

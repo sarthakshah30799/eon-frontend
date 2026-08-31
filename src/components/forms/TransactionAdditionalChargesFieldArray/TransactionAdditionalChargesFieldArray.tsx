@@ -14,6 +14,7 @@ import {
   type TransactionType,
 } from '@/modules/transactions';
 import { getPurchaseTransactionAccountFilter } from '@/modules/purchase/utils/purchaseUtils';
+import { toPageQuery } from '@/utils/paginatedList';
 
 const ACCOUNT_PROFILE_OPTION_PAGE_SIZE = 30;
 import type { ITransactionAdditionalChargeFormRow } from './transactionAdditionalChargesTypes';
@@ -67,8 +68,7 @@ const AdditionalChargeRow = ({
     async (inputValue: string, page = 1): Promise<AsyncSelectResponse> => {
       const derivedQuery: IAccountProfileListQuery = {
         ...accountQuery,
-        page,
-        limit: ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
+        ...toPageQuery(page, ACCOUNT_PROFILE_OPTION_PAGE_SIZE),
         search: inputValue,
         active: true,
         accountType: AccountProfileLedgerLabelEnum.GeneralLedger,
@@ -88,7 +88,7 @@ const AdditionalChargeRow = ({
           value: account.id,
           label: `${account.accountCode} - ${account.accountName}`,
         })),
-        hasMore: accounts.length === ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
+        hasMore: response.hasMore,
       };
     },
     [accountQuery, transactionType]

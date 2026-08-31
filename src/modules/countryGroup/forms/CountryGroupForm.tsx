@@ -33,8 +33,9 @@ export const CountryGroupForm = ({
   showFooter = true,
 }: CountryGroupFormProps) => {
   const navigate = useNavigate();
-  const { data: currencyProfiles = [], isLoading: isLoadingCurrencies } =
+  const { data: currencyProfilesPage, isLoading: isLoadingCurrencies } =
     useListCurrencyProfiles(undefined, true);
+  const currencyProfiles = currencyProfilesPage?.data ?? [];
 
   const currencyOptions = useMemo<AsyncSelectOption[]>(
     () =>

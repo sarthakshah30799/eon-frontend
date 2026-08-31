@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { manualBillBookApi, branchProfileApi, counterProfileApi } from '@/api';
+import { manualBillBookApi, counterProfileApi } from '@/api';
 import { useCallback } from 'react';
 import type { AsyncSelectResponse } from '@/components/ui';
 
@@ -64,33 +64,6 @@ export const useReassignManualBillBookDispatch = () => {
   });
 };
 
-export const useLoadManualBillBookBranchOptions = () => {
-  const queryClient = useQueryClient();
-  return useCallback(
-    async (inputValue: string) => {
-      const branches = await queryClient.fetchQuery({
-        queryKey: [
-          'branch-profiles',
-          { search: inputValue || undefined, activeOnly: true },
-        ],
-        queryFn: () =>
-          branchProfileApi.getBranchProfiles({
-            search: inputValue || undefined,
-            activeOnly: true,
-          }),
-      });
-      return {
-        options: branches.map(branch => ({
-          value: branch.id,
-          label: `${branch.code} - ${branch.name}`,
-        })),
-        hasMore: false,
-      };
-    },
-    [queryClient]
-  );
-};
-
 export const useLoadManualBillBookCounterProfiles = () => {
   const queryClient = useQueryClient();
   return useCallback(
@@ -98,7 +71,7 @@ export const useLoadManualBillBookCounterProfiles = () => {
       return queryClient.fetchQuery({
         queryKey: ['counter-profiles', { branchId, activeOnly: true }],
         queryFn: () =>
-          counterProfileApi.getCounterProfiles({ branchId, activeOnly: true }),
+          counterProfileApi.getAllCounterProfiles({ branchId, activeOnly: true }),
       });
     },
     [queryClient]

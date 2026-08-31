@@ -1,5 +1,10 @@
 export type BookingMasterType = 'EXPENSE' | 'INCOME';
 
+import type {
+  IOffsetPaginationParams,
+  IPaginatedResponse,
+} from '@/types/pagination';
+
 export interface ITdsAccountSummary {
   id: string;
   accountCode: string;
@@ -50,17 +55,10 @@ export interface ICreateExpenseIncomeBookingMaster {
   to: string | null;
 }
 
-export interface IExpenseIncomeBookingMasterListQuery {
+export interface IExpenseIncomeBookingMasterListQuery extends IOffsetPaginationParams {
   type?: BookingMasterType;
-  page?: number;
-  limit?: number;
   search?: string;
 }
 
-export interface IExpenseIncomeBookingMasterListResponse {
-  data: IExpenseIncomeBookingMaster[];
-  page: number;
-  limit: number;
-  totalItems: number;
-  totalPages: number;
-}
+export type IExpenseIncomeBookingMasterListResponse =
+  IPaginatedResponse<IExpenseIncomeBookingMaster>;

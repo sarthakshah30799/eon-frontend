@@ -1,15 +1,12 @@
 import { useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button1';
-import { Loader } from '@/components/ui/loader';
-import { usePermission } from '@/hooks';
-import { useDebounce } from '@/hooks';
+import { useDebounce, useOffsetPaginatedList, usePermission } from '@/hooks';
+import { PAGINATION_DEFAULTS } from '@/constants/paginationConstants';
+import { productProfileApi } from '@/api/productProfile';
 import { PRODUCT_PROFILE_TEXTS } from '../constants';
 import { ProductProfileTable } from '../components';
-import {
-  useListProductProfiles,
-  useUpdateProductProfileStatus,
-} from '../hooks';
+import { useUpdateProductProfileStatus } from '../hooks';
 
 export const ProductProfileListView = () => {
   const navigate = useNavigate();
@@ -17,32 +14,29 @@ export const ProductProfileListView = () => {
   const { canAdd } = usePermission('/admin/product-profile');
   const search = searchParams.get('search') ?? '';
   const debouncedSearch = useDebounce(search, 400);
-  const query = useMemo(
-    () => debouncedSearch.trim().toLowerCase(),
+  const filters = useMemo(
+    () => ({
+      search: debouncedSearch.trim() || undefined,
+      activeOnly: false as const,
+    }),
     [debouncedSearch]
   );
   const {
-    data: products = [],
+    rows: products,
     isLoading,
     isFetching,
     error,
-  } = useListProductProfiles(false);
-  const filteredProducts = useMemo(
-    () =>
-      query
-        ? products.filter(product =>
-            [
-              product.productCode,
-              product.productDescription,
-              product.retail,
-              product.bulkFee,
-            ]
-              .filter(Boolean)
-              .some(value => value.toString().toLowerCase().includes(query))
-          )
-        : products,
-    [products, query]
-  );
+    page,
+    limit,
+    total,
+    totalPages,
+    handlePageChange,
+    handlePageSizeChange,
+  } = useOffsetPaginatedList({
+    queryKey: ['product-profiles'],
+    queryFn: params => productProfileApi.getProductProfiles(params),
+    filters,
+  });
   const { updateProductProfileStatus, isPending: isUpdatingStatus } =
     useUpdateProductProfileStatus();
 
@@ -50,9 +44,21 @@ export const ProductProfileListView = () => {
     await updateProductProfileStatus({ id, isActiveProduct });
   };
 
-  if (isLoading) {
-    return <Loader />;
-  }
+  const handleSearch = (value: string) => {
+    setSearchParams(prev => {
+      const nextParams = new URLSearchParams(prev);
+      if (value.trim()) {
+        nextParams.set('search', value.trim());
+      } else {
+        nextParams.delete('search');
+      }
+      nextParams.set('offset', String(PAGINATION_DEFAULTS.OFFSET));
+      if (!nextParams.get('limit')) {
+        nextParams.set('limit', String(PAGINATION_DEFAULTS.LIMIT));
+      }
+      return nextParams;
+    });
+  };
 
   if (error) {
     return (
@@ -63,7 +69,7 @@ export const ProductProfileListView = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <div className="flex justify-end">
         {canAdd && (
           <Button
@@ -76,27 +82,22 @@ export const ProductProfileListView = () => {
         )}
       </div>
 
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
+      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
         <ProductProfileTable
-          products={filteredProducts}
+          products={products}
           onToggleStatus={handleToggleStatus}
           isUpdatingStatus={isUpdatingStatus}
-          loading={isLoading || isFetching}
-          onSearch={value =>
-            setSearchParams(prev => {
-              const nextParams = new URLSearchParams(prev);
-
-              if (value.trim()) {
-                nextParams.set('search', value.trim());
-              } else {
-                nextParams.delete('search');
-              }
-
-              return nextParams;
-            })
-          }
+          loading={isLoading}
+          isFetching={isFetching}
+          onSearch={handleSearch}
           searchValue={search}
           searchPlaceholder="Search product code, description, retail, or bulk fee"
+          page={page}
+          pageSize={limit}
+          total={total}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
         />
       </section>
     </div>

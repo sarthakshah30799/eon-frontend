@@ -2,7 +2,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline';
-import { branchProfileApi, counterProfileApi, userRoleApi } from '@/api';
+import { counterProfileApi, userRoleApi } from '@/api';
+import {
+  useGetBranchProfile,
+  useLoadBranchOptions,
+} from '@/modules/branchProfile/hooks';
 import {
   Button,
   CardSection,
@@ -72,19 +76,15 @@ export const UserProfileAssignmentsSection = ({
     isFetching: isRolesFetching,
   } = useQuery({
     queryKey: ['user-profile-role-options'],
-    queryFn: async () => userRoleApi.getUserRoles(),
+    queryFn: async () => userRoleApi.getAllUserRoles(),
   });
 
+  const loadBranchOptions = useLoadBranchOptions({ activeOnly: true });
   const {
-    data: branches = [],
-    isLoading: isBranchesLoading,
-    isFetching: isBranchesFetching,
-    dataUpdatedAt: branchesUpdatedAt,
-  } = useQuery({
-    queryKey: ['user-profile-branch-options'],
-    queryFn: async () =>
-      branchProfileApi.getBranchProfiles({ activeOnly: true }),
-  });
+    data: selectedBranch,
+    isLoading: isSelectedBranchLoading,
+    isFetching: isSelectedBranchFetching,
+  } = useGetBranchProfile(selectedBranchId);
 
   const {
     data: counters = [],
@@ -94,7 +94,7 @@ export const UserProfileAssignmentsSection = ({
   } = useQuery({
     queryKey: ['user-profile-counter-options'],
     queryFn: async () =>
-      counterProfileApi.getCounterProfiles({ activeOnly: true }),
+      counterProfileApi.getAllCounterProfiles({ activeOnly: true }),
   });
 
   const roleOptions = useMemo(
@@ -106,22 +106,10 @@ export const UserProfileAssignmentsSection = ({
     [roles]
   );
 
-  const branchOptions = useMemo(
-    () =>
-      branches.map(branch => ({
-        value: branch.id,
-        label: branch.name,
-      })),
-    [branches]
-  );
-
   const counterOptions = useMemo(() => {
     if (!selectedBranchId) {
       return [];
     }
-    const selectedBranch = branches.find(
-      branch => branch.id === selectedBranchId
-    );
     const connectedCounterIds = selectedBranch?.connectCounterIds || [];
 
     return counters
@@ -130,22 +118,17 @@ export const UserProfileAssignmentsSection = ({
         value: counter.id,
         label: counter.name || `Counter ${counter.counterNo}`,
       }));
-  }, [branches, counters, selectedBranchId]);
+  }, [counters, selectedBranch, selectedBranchId]);
 
   const roleLoadOptions = useMemo(
     () => createStaticLoadOptions(roleOptions),
     [roleOptions]
-  );
-  const branchLoadOptions = useMemo(
-    () => createStaticLoadOptions(branchOptions),
-    [branchOptions]
   );
   const counterLoadOptions = useMemo(
     () => createStaticLoadOptions(counterOptions),
     [counterOptions]
   );
   const roleDefaultOptions = roleOptions;
-  const branchDefaultOptions = branchOptions;
   const counterDefaultOptions = counterOptions;
 
   useEffect(() => {
@@ -156,9 +139,6 @@ export const UserProfileAssignmentsSection = ({
       return;
     }
 
-    const selectedBranch = branches.find(
-      branch => branch.id === selectedBranchId
-    );
     if (!selectedBranch) {
       return;
     }
@@ -168,7 +148,7 @@ export const UserProfileAssignmentsSection = ({
     if (selectedCounterId && !connectedCounterIds.includes(selectedCounterId)) {
       setValue('counterId', '');
     }
-  }, [branches, selectedBranchId, selectedCounterId, setValue]);
+  }, [selectedBranch, selectedBranchId, selectedCounterId, setValue]);
 
   const clearEditor = () => {
     setEditingIndex(null);
@@ -186,7 +166,9 @@ export const UserProfileAssignmentsSection = ({
       roleId: selectedRoleId,
       roleLabel: getOptionLabel(roleOptions, selectedRoleId),
       branchId: selectedBranchId,
-      branchLabel: getOptionLabel(branchOptions, selectedBranchId),
+      branchLabel: selectedBranch
+        ? `${selectedBranch.code} - ${selectedBranch.name}`
+        : selectedBranchId,
       counterId: selectedCounterId,
       counterLabel: getOptionLabel(counterOptions, selectedCounterId),
     };
@@ -293,7 +275,7 @@ export const UserProfileAssignmentsSection = ({
   ];
 
   const canSaveAssignment = Boolean(
-    selectedRoleId && selectedBranchId && selectedCounterId
+    selectedRoleId && selectedBranchId && selectedCounterId && selectedBranch
   );
   const buttonLabel = editingIndex === null ? 'Assign' : 'Save Changes';
 
@@ -302,14 +284,12 @@ export const UserProfileAssignmentsSection = ({
       <div className="grid gap-4 md:grid-cols-3">
         <div className="space-y-2">
           <FormFieldSelect
-            key={`branch-select-${branchesUpdatedAt || 'loading'}`}
             name="branchId"
             label="Associated Branch"
             placeholder="Select Branch"
-            loadOptions={branchLoadOptions}
-            defaultOptions={branchDefaultOptions}
-            isLoading={isBranchesLoading || isBranchesFetching}
-            pagination={false}
+            loadOptions={loadBranchOptions}
+            defaultOptions={true}
+            pagination
             disabled={isSubmitting}
           />
         </div>
@@ -323,7 +303,12 @@ export const UserProfileAssignmentsSection = ({
             }
             loadOptions={counterLoadOptions}
             defaultOptions={counterDefaultOptions}
-            isLoading={isCountersLoading || isCountersFetching}
+            isLoading={
+              isCountersLoading ||
+              isCountersFetching ||
+              isSelectedBranchLoading ||
+              isSelectedBranchFetching
+            }
             pagination={false}
             disabled={isSubmitting || !selectedBranchId}
           />

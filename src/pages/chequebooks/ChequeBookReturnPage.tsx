@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { Button, Checkbox, Input } from '@/components/ui';
 import { FormFieldSelect } from '@/components/forms';
 import { accountProfileApi } from '@/api/accountProfile/accountProfile.api';
+import { toPageQuery } from '@/utils/paginatedList';
 import { chequebookApi, type IChequeBookCashierReturnGroup } from '@/api';
 
 const ACCOUNT_PROFILE_OPTION_PAGE_SIZE = 30;
@@ -178,8 +179,7 @@ export const ChequeBookReturnPage = () => {
                   try {
                     const response = await accountProfileApi.getAccountProfiles(
                       {
-                        page,
-                        limit: ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
+                        ...toPageQuery(page, ACCOUNT_PROFILE_OPTION_PAGE_SIZE),
                         search: inputValue,
                         active: true,
                       }
@@ -197,9 +197,7 @@ export const ChequeBookReturnPage = () => {
                         value: acc.id,
                         label: `${acc.accountCode} - ${acc.accountName}`,
                       })),
-                      hasMore:
-                        (response.data || []).length ===
-                        ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
+                      hasMore: response.hasMore,
                     };
                   } catch {
                     return {

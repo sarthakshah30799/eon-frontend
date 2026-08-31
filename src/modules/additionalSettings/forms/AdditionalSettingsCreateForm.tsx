@@ -12,6 +12,8 @@ import {
   FormFieldTextarea,
 } from '@/components/forms';
 import { currencyProfileApi } from '@/api/currencyProfile';
+import { PAGINATION_DEFAULTS } from '@/constants/paginationConstants';
+import { pageToOffset, toAsyncSelectPage } from '@/utils/paginatedList';
 import { additionalSettingsSchema } from '../schema';
 import {
   createEmptyAdditionalSettingCategoryFormValues,
@@ -176,15 +178,18 @@ const SubcategoryRowFields = ({
 
   const loadCurrencyProfileOptions = useCallback(
     async (inputValue: string, page = 1) => {
-      const response = await currencyProfileApi.getCurrencyProfiles(inputValue);
+      const limit = PAGINATION_DEFAULTS.LIMIT;
+      const response = await currencyProfileApi.getCurrencyProfiles({
+        search: inputValue.trim() || undefined,
+        activeOnly: true,
+        limit,
+        offset: pageToOffset(page, limit),
+      });
 
-      return {
-        options: response.map(currency => ({
-          value: currency.id,
-          label: `${currency.currencyCode} - ${currency.currencyName}`,
-        })),
-        hasMore: response.length === 30 && page === 1,
-      };
+      return toAsyncSelectPage(response, currency => ({
+        value: currency.id,
+        label: `${currency.currencyCode} - ${currency.currencyName}`,
+      }));
     },
     []
   );

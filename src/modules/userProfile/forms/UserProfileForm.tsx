@@ -32,7 +32,7 @@ const UserProfileFormFields = ({
         return false;
       }
 
-      const users = await userProfileApi.getUserProfiles();
+      const users = await userProfileApi.getAllUserProfiles();
       return users.some(
         user =>
           normalizeCodeValue(user.code) === normalizedCode &&

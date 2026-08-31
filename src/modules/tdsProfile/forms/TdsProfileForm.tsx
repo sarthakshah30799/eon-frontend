@@ -38,7 +38,7 @@ export const TdsProfileForm = ({
         return false;
       }
 
-      const profiles = await tdsProfileApi.getTdsProfiles();
+      const profiles = await tdsProfileApi.getAllTdsProfiles();
       return profiles.some(
         profile =>
           normalizeCodeValue(profile.code) === normalizedCode &&

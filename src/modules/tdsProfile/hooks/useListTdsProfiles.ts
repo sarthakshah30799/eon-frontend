@@ -1,9 +1,18 @@
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { tdsProfileApi } from '@/api/tdsProfile';
+import type { ITdsProfileListQuery } from '../types';
 
-export const useListTdsProfiles = (search?: string) => {
+export const useListTdsProfiles = (
+  search?: ITdsProfileListQuery | string,
+  enabled = true
+) => {
+  const params: ITdsProfileListQuery | undefined =
+    typeof search === 'string' ? { search: search.trim() || undefined } : search;
+
   return useQuery({
-    queryKey: ['tds-profiles', search?.trim() || ''],
-    queryFn: () => tdsProfileApi.getTdsProfiles(search),
+    queryKey: ['tds-profiles', params],
+    queryFn: () => tdsProfileApi.getTdsProfiles(params),
+    placeholderData: keepPreviousData,
+    enabled,
   });
 };

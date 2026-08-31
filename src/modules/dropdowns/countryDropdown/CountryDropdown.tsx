@@ -49,8 +49,8 @@ export const CountryDropdown = ({
     isLoading: isLoadingOptions,
     isFetching: isFetchingOptions,
   } = useListCountryProfiles({
-    page: 1,
     limit: 25,
+    offset: 0,
     search: searchTerm.trim() || undefined,
     hideBlockedCountry,
     hideRestrictedCountry,

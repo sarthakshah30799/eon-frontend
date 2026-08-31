@@ -17,11 +17,13 @@ import { useSalePurchaseReportFilters } from './useSalePurchaseReportFilters';
 export const useProductProfitReportFilters = () => {
   const baseFilters = useSalePurchaseReportFilters();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { data: currencyProfiles = [] } = useListCurrencyProfiles(
+  const { data: currencyProfilesPage } = useListCurrencyProfiles(
     undefined,
     true
   );
-  const { data: productProfiles = [] } = useListProductProfiles(true);
+  const currencyProfiles = currencyProfilesPage?.data ?? [];
+  const { data: productProfilesPage } = useListProductProfiles(true);
+  const productProfiles = productProfilesPage?.data ?? [];
   const searchParamsKey = searchParams.toString();
   const parsedSearchParams = useMemo(
     () => new URLSearchParams(searchParamsKey),

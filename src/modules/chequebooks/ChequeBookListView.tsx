@@ -10,8 +10,14 @@ import {
   type AsyncSelectOption,
   type AsyncSelectResponse,
 } from '@/components/ui';
-import { useListChequeBooks, useGetChequeBook } from './hooks';
-import { useListBranchProfiles } from '@/modules/branchProfile/hooks';
+import {
+  buildBranchToolbarFilter,
+  buildStaticAsyncSelectToolbarFilter,
+} from '@/components/ui/table';
+import { useOffsetPaginatedList } from '@/hooks';
+import { PAGINATION_DEFAULTS } from '@/constants/paginationConstants';
+import { useGetChequeBook } from './hooks';
+import { useLoadBranchOptions } from '@/modules/branchProfile/hooks';
 import { ChequeBookTable } from './components';
 import { CashierChequeBookListView } from './components/CashierChequeBookListView';
 import {
@@ -32,7 +38,7 @@ const resolveAssignedToLabel = (assignedTo: IChequeBook['assignedTo']) => {
 /** Normalises status to uppercase for comparison — handles both old PascalCase and new UPPERCASE DB values */
 export const ChequeBookListView = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const reviewId = searchParams.get('reviewId');
   const canSeeBranchFilter = Boolean(
@@ -84,39 +90,9 @@ export const ChequeBookListView = () => {
     [reviewStatusOptions]
   );
 
-  const { data: branches = [] } = useListBranchProfiles({
-    activeOnly: true,
-  });
-
-  const branchOptions = useMemo<AsyncSelectOption[]>(
-    () =>
-      branches.map(branch => ({
-        value: branch.id,
-        label: `${branch.code} - ${branch.name}`,
-      })),
-    [branches]
-  );
-
-  const selectedBranchOption = useMemo<AsyncSelectOption | null>(
-    () => branchOptions.find(option => option.value === branchFilter) ?? null,
-    [branchFilter, branchOptions]
-  );
-
-  const loadBranchOptions = useCallback(
-    async (inputValue: string): Promise<AsyncSelectResponse> => {
-      const normalizedInput = inputValue.trim().toLowerCase();
-      const filteredOptions = normalizedInput
-        ? branchOptions.filter(option =>
-            option.label.toLowerCase().includes(normalizedInput)
-          )
-        : branchOptions;
-
-      return {
-        options: filteredOptions,
-      };
-    },
-    [branchOptions]
-  );
+  const loadBranchOptions = useLoadBranchOptions({ activeOnly: true });
+  const [selectedBranchOption, setSelectedBranchOption] =
+    useState<AsyncSelectOption | null>(null);
 
   const statusOptions = useMemo<AsyncSelectOption[]>(
     () => [
@@ -141,31 +117,80 @@ export const ChequeBookListView = () => {
     [statusFilter, statusOptions]
   );
 
-  const loadStatusOptions = useCallback(
-    async (inputValue: string): Promise<AsyncSelectResponse> => {
-      const normalizedInput = inputValue.trim().toLowerCase();
-      const filteredOptions = normalizedInput
-        ? statusOptions.filter(option =>
-            option.label.toLowerCase().includes(normalizedInput)
-          )
-        : statusOptions;
+  const filters = useMemo(
+    () => ({
+      branchId: branchFilter || undefined,
+      status: statusFilter || undefined,
+    }),
+    [branchFilter, statusFilter]
+  );
 
-      return {
-        options: filteredOptions,
-      };
-    },
-    [statusOptions]
+  const resetOffset = useCallback(() => {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      next.set('offset', String(PAGINATION_DEFAULTS.OFFSET));
+      if (!next.has('limit')) {
+        next.set('limit', String(PAGINATION_DEFAULTS.LIMIT));
+      }
+      return next;
+    });
+  }, [setSearchParams]);
+
+  const toolbarFilters = useMemo(
+    () => [
+      buildBranchToolbarFilter({
+        visible: canSeeBranchFilter,
+        label: 'Branch',
+        value: selectedBranchOption,
+        loadOptions: loadBranchOptions,
+        onChange: option => {
+          setSelectedBranchOption(option);
+          setBranchFilter(option?.value ? String(option.value) : '');
+          resetOffset();
+        },
+      }),
+      buildStaticAsyncSelectToolbarFilter({
+        id: 'status',
+        label: 'Status',
+        options: statusOptions,
+        value: selectedStatusOption,
+        placeholder: 'All Statuses',
+        onChange: option => {
+          setStatusFilter(
+            option?.value
+              ? (String(option.value) as ChequeBookStatus)
+              : ''
+          );
+          resetOffset();
+        },
+      }),
+    ],
+    [
+      canSeeBranchFilter,
+      loadBranchOptions,
+      resetOffset,
+      selectedBranchOption,
+      selectedStatusOption,
+      statusOptions,
+    ]
   );
 
   const {
-    data: books = [],
+    rows: books,
     isLoading,
     isFetching,
     error,
     refetch: refetchBooks,
-  } = useListChequeBooks({
-    branchId: branchFilter || undefined,
-    status: statusFilter || undefined,
+    page,
+    limit,
+    total,
+    totalPages,
+    handlePageChange,
+    handlePageSizeChange,
+  } = useOffsetPaginatedList({
+    queryKey: ['cheque-books'],
+    queryFn: params => chequebookApi.findAll(params),
+    filters,
   });
 
   const {
@@ -267,64 +292,20 @@ export const ChequeBookListView = () => {
         </Button>
       </div>
 
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
-        {/* Filters */}
-        <div className="flex flex-wrap gap-4 items-center mb-2">
-          {canSeeBranchFilter && (
-            <div className="flex-1 min-w-50">
-              <AsyncSelect
-                label="Filter by Branch"
-                placeholder="All Branches"
-                value={selectedBranchOption}
-                loadOptions={loadBranchOptions}
-                defaultOptions={branchOptions}
-                onChange={option => {
-                  const selectedOption = Array.isArray(option)
-                    ? (option[0] ?? null)
-                    : option;
-
-                  setBranchFilter(
-                    selectedOption?.value ? String(selectedOption.value) : ''
-                  );
-                }}
-                isClearable
-                isSearchable
-                pagination={false}
-              />
-            </div>
-          )}
-
-          <div className="w-37.5">
-            <AsyncSelect
-              label="Filter by Status"
-              placeholder="All Statuses"
-              value={selectedStatusOption}
-              loadOptions={loadStatusOptions}
-              defaultOptions={statusOptions}
-              onChange={option => {
-                const selectedOption = Array.isArray(option)
-                  ? (option[0] ?? null)
-                  : option;
-
-                setStatusFilter(
-                  selectedOption?.value
-                    ? (String(selectedOption.value) as ChequeBookStatus)
-                    : ''
-                );
-              }}
-              isClearable
-              isSearchable
-              pagination={false}
-            />
-          </div>
-        </div>
-
-        {/* Table */}
-        <div className="overflow-x-auto border border-slate-200 rounded-md">
-          <ChequeBookTable
-            books={books}
-            loading={isLoading || isFetching}
-            onRowClick={book => {
+      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+        <ChequeBookTable
+          books={books}
+          loading={isLoading}
+          isFetching={isFetching}
+          manualPagination
+          page={page}
+          pageSize={limit}
+          total={total}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+          toolbarFilters={toolbarFilters}
+          onRowClick={book => {
               if (isHoStaff && book.status === ChequeBookStatusEnum.REJECT) {
                 navigate(`/cheque-books/create?reassignId=${book.id}`);
                 return;
@@ -336,10 +317,9 @@ export const ChequeBookListView = () => {
                 navigate(`/cheque-books/allocation?bookId=${book.id}`);
                 return;
               }
-              openReview(book.id);
-            }}
-          />
-        </div>
+            openReview(book.id);
+          }}
+        />
       </section>
 
       {/* Review / Details Modal */}

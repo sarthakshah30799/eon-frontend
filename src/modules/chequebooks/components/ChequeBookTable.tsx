@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { Table, type TableColumnDef } from '@/components/ui';
+import { Table, type TableColumnDef, type TableToolbarFilter } from '@/components/ui';
+import type { PaginationControlsProps } from '@/components/ui';
 import type { IChequeBook } from '@/api';
 import { ChequeBookStatusEnum } from '../types';
 
@@ -11,16 +12,28 @@ const resolveAssignedToLabel = (assignedTo: IChequeBook['assignedTo']) => {
   return assignedTo || 'N/A';
 };
 
-interface ChequeBookTableProps {
+interface ChequeBookTableProps extends Partial<PaginationControlsProps> {
   books: IChequeBook[];
   loading?: boolean;
+  isFetching?: boolean;
   onRowClick?: (book: IChequeBook) => void;
+  manualPagination?: boolean;
+  toolbarFilters?: TableToolbarFilter[];
 }
 
 export const ChequeBookTable = ({
   books,
   loading = false,
+  isFetching = false,
   onRowClick,
+  manualPagination = false,
+  page,
+  pageSize,
+  total,
+  totalPages,
+  onPageChange,
+  onPageSizeChange,
+  toolbarFilters,
 }: ChequeBookTableProps) => {
   const tableColumns = useMemo<TableColumnDef<IChequeBook>[]>(
     () => [
@@ -120,12 +133,21 @@ export const ChequeBookTable = ({
       data={books}
       enableSorting={false}
       enableFiltering={false}
-      enablePagination={false}
+      enablePagination={manualPagination}
+      manualPagination={manualPagination}
+      page={page}
+      pageSize={pageSize}
+      total={total}
+      totalPages={totalPages}
+      onPageChange={onPageChange}
+      onPageSizeChange={onPageSizeChange}
       enableRowSelection={false}
       enableColumnVisibility={false}
       loading={loading}
+      isFetching={isFetching}
       className="min-w-full text-xs"
       onRowClick={onRowClick}
+      toolbarFilters={toolbarFilters}
       emptyMessage="No Records found. Create your first Cheque Book."
     />
   );

@@ -1,5 +1,12 @@
 import { apiClient } from '../api';
-import type { ICreateUserRole, IUserRole } from '@/modules/userRole/types';
+import type {
+  ICreateUserRole,
+  IUserRole,
+  IUserRoleListQuery,
+  IUserRoleListResponse,
+} from '@/modules/userRole/types';
+import { buildQueryString } from '@/utils';
+import { fetchAllMatching, normalizePaginatedResponse } from '@/utils/paginatedList';
 
 interface BackendRole {
   id: string;
@@ -54,14 +61,40 @@ const mapBackendToFrontend = (role: BackendRole): IUserRole => {
 };
 
 export const userRoleApi = {
-  getUserRoles: async (search?: string): Promise<IUserRole[]> => {
-    const query = search?.trim()
-      ? `?search=${encodeURIComponent(search.trim())}`
-      : '';
-    const res = await apiClient.get<BackendRole[]>(`/roles${query}`);
+  getUserRoles: async (
+    params?: IUserRoleListQuery | string
+  ): Promise<IUserRoleListResponse> => {
+    const queryObj: IUserRoleListQuery | undefined =
+      typeof params === 'string'
+        ? { search: params.trim() || undefined }
+        : params;
+    const res = await apiClient.get<IUserRoleListResponse>(
+      `/roles${buildQueryString(queryObj)}`
+    );
     if (res.error) throw new Error(res.error);
-    return (res.data || []).map(mapBackendToFrontend);
+    const payload = normalizePaginatedResponse(
+      res.data
+        ? {
+            ...res.data,
+            data: (res.data.data || []).map(mapBackendToFrontend),
+          }
+        : res.data,
+      queryObj?.limit,
+      queryObj?.offset
+    );
+    return payload;
   },
+
+  getAllUserRoles: async (
+    params?: Omit<IUserRoleListQuery, 'limit' | 'offset'> | string
+  ): Promise<IUserRole[]> =>
+    fetchAllMatching(pagination =>
+      userRoleApi.getUserRoles(
+        typeof params === 'string'
+          ? { search: params.trim() || undefined, ...pagination }
+          : { ...params, ...pagination }
+      )
+    ),
 
   getUserRoleById: async (id: string): Promise<IUserRole> => {
     const res = await apiClient.get<BackendRole>(`/roles/${id}`);

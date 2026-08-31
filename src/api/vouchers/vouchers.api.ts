@@ -3,9 +3,12 @@ import type {
   AccountingVoucher,
   AvailableAdvance,
   VoucherFormValues,
-  VoucherListResponse,
+  VoucherListQuery,
   VoucherType,
 } from '@/modules/vouchers/types';
+import type { IPaginatedResponse } from '@/types/pagination';
+import { buildQueryString } from '@/utils';
+import { normalizePaginatedResponse } from '@/utils/paginatedList';
 
 const pathFor = (type: VoucherType) =>
   type === 'RECEIPT'
@@ -13,31 +16,17 @@ const pathFor = (type: VoucherType) =>
     : type === 'PAYMENT'
       ? 'payments'
       : 'journal-vouchers';
-const queryString = (params: Record<string, string | number | undefined>) => {
-  const query = new URLSearchParams();
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== '') query.set(key, String(value));
-  });
-  return query.toString() ? `?${query.toString()}` : '';
-};
 
 export const vouchersApi = {
-  list: async (
-    type: VoucherType,
-    params: Record<string, string | number | undefined> = {}
-  ) => {
-    const response = await apiClient.get<VoucherListResponse>(
-      `/${pathFor(type)}${queryString(params)}`
+  list: async (type: VoucherType, params: VoucherListQuery = {}) => {
+    const response = await apiClient.get<IPaginatedResponse<AccountingVoucher>>(
+      `/${pathFor(type)}${buildQueryString(params)}`
     );
     if (response.error) throw new Error(response.error);
-    return (
-      response.data ?? {
-        data: [],
-        page: 1,
-        limit: 20,
-        totalItems: 0,
-        totalPages: 0,
-      }
+    return normalizePaginatedResponse(
+      response.data,
+      params.limit,
+      params.offset
     );
   },
   get: async (type: VoucherType, id: string) => {
@@ -50,7 +39,7 @@ export const vouchersApi = {
   },
   nextNumber: async (type: VoucherType, branchId: string) => {
     const response = await apiClient.get<{ nextNumber: string }>(
-      `/${pathFor(type)}/next-number${queryString({ branchId })}`
+      `/${pathFor(type)}/next-number${buildQueryString({ branchId })}`
     );
     if (response.error) throw new Error(response.error);
     return response.data?.nextNumber ?? '';
@@ -115,7 +104,7 @@ export const vouchersApi = {
     }
   ) => {
     const response = await apiClient.get<AvailableAdvance[]>(
-      `/${pathFor(type)}/available-advances${queryString(params)}`
+      `/${pathFor(type)}/available-advances${buildQueryString(params)}`
     );
     if (response.error) throw new Error(response.error);
     return response.data ?? [];

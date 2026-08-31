@@ -52,7 +52,7 @@ export const CountryGroupEditView = () => {
   }
 
   return (
-    <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
+    <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
       <CountryGroupEditorView
         submitLabel={COUNTRY_GROUP_TEXTS.SAVE_CHANGES}
         defaultValues={defaultValues ?? createEmptyCountryGroupFormValues()}

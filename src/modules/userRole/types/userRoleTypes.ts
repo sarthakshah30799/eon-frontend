@@ -1,3 +1,8 @@
+import type {
+  IOffsetPaginationParams,
+  IPaginatedResponse,
+} from '@/types/pagination';
+
 export interface IUserRole {
   id: string;
   code: string;
@@ -31,3 +36,9 @@ export type ICreateUserRole = Omit<
 >;
 
 export type IUpdateUserRole = Partial<ICreateUserRole>;
+
+export interface IUserRoleListQuery extends IOffsetPaginationParams {
+  search?: string;
+}
+
+export type IUserRoleListResponse = IPaginatedResponse<IUserRole>;

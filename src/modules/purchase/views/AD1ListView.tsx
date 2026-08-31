@@ -1,20 +1,23 @@
-import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useCallback, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { PencilSquareIcon } from '@heroicons/react/24/outline';
-import { useQuery } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button1';
 import {
-  AsyncSelect,
+  Button,
   type AsyncSelectOption,
-  type AsyncSelectResponse,
 } from '@/components/ui';
-import { Table, type TableColumnDef } from '@/components/ui/table';
+import {
+  Table,
+  type TableColumnDef,
+  buildBranchToolbarFilter,
+  buildSearchToolbarFilter,
+} from '@/components/ui/table';
 import { AccessDeniedState } from '@/components/ui/access-denied-state';
-import { usePermission } from '@/hooks/usePermission';
+import { useDebounce, useOffsetPaginatedList, usePermission } from '@/hooks';
 import { useAuth } from '@/lib/AuthContext';
-import { useListBranchProfiles } from '@/modules/branchProfile/hooks';
+import { useLoadBranchOptions } from '@/modules/branchProfile/hooks';
 import { transactionAd1Api } from '@/api/transactionAd1/transactionAd1.api';
 import { PAGE_STATUS_TEXTS } from '@/constants';
+import { PAGINATION_DEFAULTS } from '@/constants/paginationConstants';
 import { formatDateTime } from '@/utils';
 
 interface Ad1Row {
@@ -30,59 +33,60 @@ interface Ad1Row {
 
 export const AD1ListView = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const { hasAnyPermission } = usePermission('/ad1');
-  const [search, setSearch] = useState('');
+  const search = searchParams.get('search') ?? '';
+  const debouncedSearch = useDebounce(search, 400);
   const [branchFilter, setBranchFilter] = useState('');
   const canSeeAllBranches = Boolean(
     user?.isAdmin || user?.isHo || user?.isHoStaff
   );
 
-  const { data: branches = [] } = useListBranchProfiles({ activeOnly: true });
-  const branchOptions = useMemo<AsyncSelectOption[]>(
-    () =>
-      branches.map(branch => ({
-        value: branch.id,
-        label: `${branch.code} - ${branch.name}`,
-      })),
-    [branches]
-  );
-  const selectedBranchOption = useMemo<AsyncSelectOption | null>(
-    () => branchOptions.find(option => option.value === branchFilter) ?? null,
-    [branchFilter, branchOptions]
-  );
-  const loadBranchOptions = useMemo(
-    () =>
-      async (inputValue: string): Promise<AsyncSelectResponse> => {
-        const normalizedInput = inputValue.trim().toLowerCase();
-        const filteredOptions = normalizedInput
-          ? branchOptions.filter(option =>
-              option.label.toLowerCase().includes(normalizedInput)
-            )
-          : branchOptions;
+  const loadBranchOptions = useLoadBranchOptions({ activeOnly: true });
+  const [selectedBranchOption, setSelectedBranchOption] =
+    useState<AsyncSelectOption | null>(null);
 
-        return { options: filteredOptions };
-      },
-    [branchOptions]
+  const filters = useMemo(
+    () => ({
+      search: debouncedSearch.trim() || undefined,
+      branchId: canSeeAllBranches ? branchFilter || undefined : undefined,
+    }),
+    [branchFilter, canSeeAllBranches, debouncedSearch]
   );
 
   const {
-    data = [],
+    rows,
     isLoading,
     isFetching,
     error,
-  } = useQuery({
-    queryKey: ['transactions-ad1', search, branchFilter],
-    queryFn: () =>
-      transactionAd1Api.getAll({
-        search: search.trim() || undefined,
-        branchId: canSeeAllBranches ? branchFilter || undefined : undefined,
-      }),
+    page,
+    limit,
+    total,
+    totalPages,
+    handlePageChange,
+    handlePageSizeChange,
+  } = useOffsetPaginatedList({
+    queryKey: ['transactions-ad1'],
+    queryFn: params => transactionAd1Api.getAll(params),
+    filters,
+    enabled: hasAnyPermission,
   });
 
-  const rows = useMemo<Ad1Row[]>(
+  const resetOffset = useCallback(() => {
+    setSearchParams(prev => {
+      const nextParams = new URLSearchParams(prev);
+      nextParams.set('offset', String(PAGINATION_DEFAULTS.OFFSET));
+      if (!nextParams.get('limit')) {
+        nextParams.set('limit', String(PAGINATION_DEFAULTS.LIMIT));
+      }
+      return nextParams;
+    });
+  }, [setSearchParams]);
+
+  const tableRows = useMemo<Ad1Row[]>(
     () =>
-      data.map(t => ({
+      rows.map(t => ({
         id: t.id,
         number: t.number ?? '-',
         docNo: t.docNo ?? '-',
@@ -92,7 +96,7 @@ export const AD1ListView = () => {
         fcVolume: t.fcVolume ?? '-',
         createdAt: formatDateTime(t.createdAt),
       })),
-    [data]
+    [rows]
   );
 
   const columns: TableColumnDef<Ad1Row>[] = useMemo(
@@ -134,6 +138,50 @@ export const AD1ListView = () => {
     [navigate]
   );
 
+  const handleSearch = useCallback((value: string) => {
+    setSearchParams(prev => {
+      const nextParams = new URLSearchParams(prev);
+      if (value.trim()) {
+        nextParams.set('search', value.trim());
+      } else {
+        nextParams.delete('search');
+      }
+      nextParams.set('offset', String(PAGINATION_DEFAULTS.OFFSET));
+      if (!nextParams.get('limit')) {
+        nextParams.set('limit', String(PAGINATION_DEFAULTS.LIMIT));
+      }
+      return nextParams;
+    });
+  }, [setSearchParams]);
+
+  const toolbarFilters = useMemo(
+    () => [
+      buildSearchToolbarFilter({
+        value: search,
+        onChange: handleSearch,
+        placeholder: 'Search by number',
+      }),
+      buildBranchToolbarFilter({
+        visible: canSeeAllBranches,
+        value: selectedBranchOption,
+        loadOptions: loadBranchOptions,
+        onChange: option => {
+          setSelectedBranchOption(option);
+          setBranchFilter(option?.value ? String(option.value) : '');
+          resetOffset();
+        },
+      }),
+    ],
+    [
+      canSeeAllBranches,
+      handleSearch,
+      loadBranchOptions,
+      resetOffset,
+      search,
+      selectedBranchOption,
+    ]
+  );
+
   if (!hasAnyPermission) {
     return (
       <AccessDeniedState message={PAGE_STATUS_TEXTS.ACCESS_DENIED_MESSAGE} />
@@ -168,42 +216,25 @@ export const AD1ListView = () => {
         </Button>
       </div>
 
-      {canSeeAllBranches && (
-        <div className="flex flex-wrap items-end gap-4">
-          <div className="min-w-[240px] flex-1">
-            <AsyncSelect
-              label="Branch Filter"
-              placeholder="All Branches"
-              value={selectedBranchOption}
-              loadOptions={loadBranchOptions}
-              defaultOptions={branchOptions}
-              isClearable
-              onChange={option => {
-                const selectedOption = Array.isArray(option)
-                  ? (option[0] ?? null)
-                  : option;
-                setBranchFilter(
-                  selectedOption?.value ? String(selectedOption.value) : ''
-                );
-              }}
-            />
-          </div>
-        </div>
-      )}
-
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
+      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
         <Table
           columns={columns}
-          data={rows}
-          loading={isLoading || isFetching}
+          data={tableRows}
+          loading={isLoading}
+          isFetching={isFetching}
           enableFiltering={false}
-          enablePagination={false}
+          enablePagination
+          manualPagination
           enableColumnVisibility={false}
           enableRowSelection={false}
           enableSorting={false}
-          onSearch={setSearch}
-          searchValue={search}
-          searchPlaceholder="Search by number"
+          page={page}
+          pageSize={limit}
+          total={total}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+          toolbarFilters={toolbarFilters}
           onRowClick={row => navigate(`/ad1/edit/${row.id}`)}
           emptyMessage="No AD1 transactions found."
         />

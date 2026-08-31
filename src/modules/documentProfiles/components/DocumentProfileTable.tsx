@@ -2,14 +2,16 @@ import { useNavigate } from 'react-router-dom';
 import { PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button1';
 import { Table, type TableColumnDef } from '@/components/ui/table';
+import type { PaginationControlsProps } from '@/components/ui';
 import type { IDocumentProfile } from '../types';
 import { getDocumentTypeLabel } from '../utils';
 
-interface DocumentProfileTableProps {
+interface DocumentProfileTableProps extends PaginationControlsProps {
   documentProfiles: IDocumentProfile[];
   onDelete: (id: string) => void | Promise<void>;
   isDeleting?: boolean;
   loading?: boolean;
+  isFetching?: boolean;
   onSearch?: (value: string) => void;
   searchValue?: string;
   searchPlaceholder?: string;
@@ -34,9 +36,16 @@ export const DocumentProfileTable = ({
   onDelete,
   isDeleting = false,
   loading = false,
+  isFetching = false,
   onSearch,
   searchValue = '',
   searchPlaceholder = 'Search',
+  page,
+  pageSize,
+  total,
+  totalPages,
+  onPageChange,
+  onPageSizeChange,
 }: DocumentProfileTableProps) => {
   const navigate = useNavigate();
   const rows: DocumentProfileTableRow[] = documentProfiles.map(profile => ({
@@ -117,10 +126,18 @@ export const DocumentProfileTable = ({
       columns={columns}
       data={rows}
       enableFiltering={false}
-      enablePagination={false}
+      enablePagination
+      manualPagination
       enableRowSelection={false}
       enableColumnVisibility={false}
       loading={loading}
+      isFetching={isFetching}
+      page={page}
+      pageSize={pageSize}
+      total={total}
+      totalPages={totalPages}
+      onPageChange={onPageChange}
+      onPageSizeChange={onPageSizeChange}
       onSearch={onSearch}
       searchValue={searchValue}
       searchPlaceholder={searchPlaceholder}

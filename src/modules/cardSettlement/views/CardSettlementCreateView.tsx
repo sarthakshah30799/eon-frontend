@@ -8,7 +8,7 @@ import { Loader } from '@/components/ui/loader';
 import { useAuth } from '@/lib/AuthContext';
 import { transactionPoliciesApi } from '@/api/transactionPolicies';
 import { getTransactionDatePolicy } from '@/modules/transactionPolicies/utils/transactionDatePolicy';
-import { useListBranchProfiles } from '@/modules/branchProfile/hooks';
+import { branchProfileApi } from '@/api/branchProfile';
 import { CardStockSettlementDocumentKind } from '@/api/cardSettlement';
 import toast from 'react-hot-toast';
 import { CardSettlementForm } from '../forms';
@@ -71,7 +71,11 @@ export const CardSettlementCreateView = () => {
   const kind = isHo
     ? CardStockSettlementDocumentKind.HO_ISSUER
     : CardStockSettlementDocumentKind.BRANCH_HO;
-  const branchesQuery = useListBranchProfiles({ activeOnly: true }, isHo);
+  const branchesQuery = useQuery({
+    queryKey: ['branch-profiles-all', { activeOnly: true }],
+    queryFn: () => branchProfileApi.getAllBranchProfiles({ activeOnly: true }),
+    enabled: isHo,
+  });
   const defaultHoBranchId = useMemo(() => {
     const hoBranches = (branchesQuery.data ?? []).filter(
       branch => branch.isHeadOffice

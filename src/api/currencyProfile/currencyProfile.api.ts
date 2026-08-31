@@ -3,7 +3,10 @@ import { buildQueryString } from '@/utils';
 import type {
   ICreateCurrencyProfile,
   ICurrencyProfile,
+  ICurrencyProfileListQuery,
+  ICurrencyProfileListResponse,
 } from '@/modules/currencyProfile/types';
+import { fetchAllMatching, normalizePaginatedResponse } from '@/utils/paginatedList';
 
 interface BackendCurrencyProfile extends Omit<ICurrencyProfile, 'countryId'> {
   countryId: string | null;
@@ -18,25 +21,41 @@ const mapBackendToFrontend = (
   country: currency.country ?? null,
 });
 
+const normalizeListQuery = (
+  options?:
+    | string
+    | Omit<ICurrencyProfileListQuery, 'limit' | 'offset'>
+): ICurrencyProfileListQuery | undefined =>
+  typeof options === 'string' ? { search: options || undefined } : options;
+
 export const currencyProfileApi = {
   getCurrencyProfiles: async (
-    options?:
-      | string
-      | {
-          search?: string;
-          activeOnly?: boolean;
-          includeOnlyStocking?: boolean;
-          productAllowed?: string;
-        }
-  ): Promise<ICurrencyProfile[]> => {
-    const queryObj =
-      typeof options === 'string' ? { search: options || undefined } : options;
-    const res = await apiClient.get<BackendCurrencyProfile[]>(
+    options?: ICurrencyProfileListQuery | string
+  ): Promise<ICurrencyProfileListResponse> => {
+    const queryObj = normalizeListQuery(options);
+    const res = await apiClient.get<ICurrencyProfileListResponse>(
       `/currencies${buildQueryString(queryObj)}`
     );
     if (res.error) throw new Error(res.error);
-    return (res.data || []).map(mapBackendToFrontend);
+    const payload = normalizePaginatedResponse(
+      res.data
+        ? {
+            ...res.data,
+            data: (res.data.data || []).map(mapBackendToFrontend),
+          }
+        : res.data,
+      queryObj?.limit,
+      queryObj?.offset
+    );
+    return payload;
   },
+
+  getAllCurrencyProfiles: async (
+    options?: Omit<ICurrencyProfileListQuery, 'limit' | 'offset'> | string
+  ): Promise<ICurrencyProfile[]> =>
+    fetchAllMatching(pagination =>
+      currencyProfileApi.getCurrencyProfiles({ ...normalizeListQuery(options), ...pagination })
+    ),
 
   getCurrencyProfileById: async (
     id: string

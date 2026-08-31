@@ -14,11 +14,26 @@ import type {
   TransactionStatus,
   TransactionType,
 } from '@/modules/transactions';
+import type {
+  IOffsetPaginationParams,
+  IPaginatedResponse,
+} from '@/types/pagination';
 import { API_BASE_URL } from '@/config/api';
+import { buildQueryString } from '@/utils';
+import { fetchAllMatching, normalizePaginatedResponse } from '@/utils/paginatedList';
 
 const appendJsonPart = (formData: FormData, key: string, value: unknown) => {
   formData.append(key, JSON.stringify(value));
 };
+
+export interface ITransactionListQuery extends IOffsetPaginationParams {
+  slug?: string;
+  branchId?: string;
+  search?: string;
+  status?: TransactionStatus;
+  partyProfileId?: string;
+  transactionType?: TransactionType;
+}
 
 export const transactionsApi = {
   getTransactionDocumentDownloadUrl: (
@@ -27,36 +42,26 @@ export const transactionsApi = {
   ) =>
     `${API_BASE_URL}/transactions/${transactionId}/documents/${documentId}/download`,
 
-  getTransactions: async (params?: {
-    slug?: string;
-    branchId?: string;
-    search?: string;
-    status?: TransactionStatus;
-    partyProfileId?: string;
-    transactionType?: TransactionType;
-  }): Promise<ITransactionEntity[]> => {
-    const query = new URLSearchParams();
-
-    if (params?.slug) query.set('slug', params.slug);
-    if (params?.branchId) query.set('branchId', params.branchId);
-    if (params?.search) query.set('search', params.search);
-    if (params?.status) query.set('status', params.status);
-    if (params?.partyProfileId)
-      query.set('partyProfileId', params.partyProfileId);
-    if (params?.transactionType)
-      query.set('transactionType', params.transactionType);
-
-    const suffix = query.toString() ? `?${query.toString()}` : '';
-    const res = await apiClient.get<ITransactionEntity[]>(
-      `/transactions${suffix}`
+  getTransactions: async (
+    params?: ITransactionListQuery
+  ): Promise<IPaginatedResponse<ITransactionEntity>> => {
+    const res = await apiClient.get<IPaginatedResponse<ITransactionEntity>>(
+      `/transactions${buildQueryString(params)}`
     );
 
     if (res.error) {
       throw new Error(res.error);
     }
 
-    return res.data || [];
+    return normalizePaginatedResponse(res.data, params?.limit, params?.offset);
   },
+
+  getAllTransactions: async (
+    params?: Omit<ITransactionListQuery, 'limit' | 'offset'>
+  ): Promise<ITransactionEntity[]> =>
+    fetchAllMatching(pagination =>
+      transactionsApi.getTransactions({ ...params, ...pagination })
+    ),
 
   getQuantityAvailability: async (params: {
     branchId: string;

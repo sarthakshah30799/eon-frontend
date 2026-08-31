@@ -7,7 +7,9 @@ export interface IBranchProfileOption {
   label: string;
 }
 
-export interface IBranchProfileListQuery {
+import type { IOffsetPaginationParams } from '@/types/pagination';
+
+export interface IBranchProfileListQuery extends IOffsetPaginationParams {
   activeOnly?: boolean;
   search?: string;
 }

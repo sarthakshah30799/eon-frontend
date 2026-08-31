@@ -2,9 +2,11 @@ import { apiClient } from '../api';
 import type {
   ICompanyProfile,
   ICompanyProfileListQuery,
+  ICompanyProfileListResponse,
   ICreateCompanyProfile,
 } from '../../modules/companyProfile/types';
 import { buildQueryString } from '@/utils';
+import { fetchAllMatching, normalizePaginatedResponse } from '@/utils/paginatedList';
 
 const normalizeCompanyProfilePayload = (values: ICreateCompanyProfile) => ({
   ...values,
@@ -14,11 +16,23 @@ const normalizeCompanyProfilePayload = (values: ICreateCompanyProfile) => ({
 });
 
 export const companyProfileApi = {
-  getCompanyProfiles: async (params?: ICompanyProfileListQuery) => {
-    return apiClient.get<ICompanyProfile[]>(
+  getCompanyProfiles: async (
+    params?: ICompanyProfileListQuery
+  ): Promise<ICompanyProfileListResponse> => {
+    const res = await apiClient.get<ICompanyProfileListResponse>(
       `/companies${buildQueryString(params)}`
     );
+    if (res.error) throw new Error(res.error);
+    return normalizePaginatedResponse(res.data, params?.limit, params?.offset);
   },
+
+  getAllCompanyProfiles: async (
+    params?: Omit<ICompanyProfileListQuery, 'limit' | 'offset'>
+  ): Promise<ICompanyProfile[]> =>
+    fetchAllMatching(pagination =>
+      companyProfileApi.getCompanyProfiles({ ...params, ...pagination })
+    ),
+
   getCompanyProfileById: async (id: string) => {
     return apiClient.get<ICompanyProfile>(`/companies/${id}`);
   },

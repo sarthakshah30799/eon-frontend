@@ -1,14 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
-import { transfersApi } from '@/api/transfers/transfers.api';
-import type { TransferStatus, TransferType } from '../types';
+import { transfersApi, type ITransferListQuery } from '@/api/transfers/transfers.api';
 
-export const useListTransfers = (params?: {
-  transferType?: TransferType;
-  status?: TransferStatus;
-  search?: string;
-}) => {
+export const useListTransfers = (params?: Omit<ITransferListQuery, 'limit' | 'offset'>) => {
   return useQuery({
-    queryKey: ['transfers', params],
-    queryFn: () => transfersApi.listTransfers(params),
+    queryKey: ['transfers', 'all', params],
+    queryFn: () => transfersApi.listAllTransfers(params),
   });
 };

@@ -1,12 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { vouchersApi } from '@/api/vouchers';
-import type { VoucherFormValues, VoucherType } from './types';
+import type { VoucherFormValues, VoucherListQuery, VoucherType } from './types';
 
-export const useVoucherList = (type: VoucherType) =>
+export const useVoucherList = (
+  type: VoucherType,
+  params: VoucherListQuery = {}
+) =>
   useQuery({
-    queryKey: ['vouchers', type],
-    queryFn: () => vouchersApi.list(type),
+    queryKey: ['vouchers', type, params],
+    queryFn: () => vouchersApi.list(type, params),
   });
 export const useVoucher = (type: VoucherType, id: string) =>
   useQuery({

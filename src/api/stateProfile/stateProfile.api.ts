@@ -7,6 +7,7 @@ import type {
   ICreateStateProfile,
   IStateProfile,
 } from '@/modules/stateProfile/types';
+import { fetchAllMatching, normalizePaginatedResponse } from '@/utils/paginatedList';
 
 const buildQueryString = (params?: IStateProfileListQuery) => {
   if (!params) {
@@ -35,21 +36,15 @@ export const stateProfileApi = {
       `/states${buildQueryString(params)}`
     );
     if (res.error) throw new Error(res.error);
-    if (!res.data) {
-      return {
-        data: [],
-        page: params?.page ?? 1,
-        limit: params?.limit ?? 10,
-        totalItems: 0,
-        totalPages: 0,
-      };
-    }
-
-    return {
-      ...res.data,
-      data: res.data.data || [],
-    };
+    return normalizePaginatedResponse(res.data, params?.limit, params?.offset);
   },
+
+  getAllStateProfiles: async (
+    params?: Omit<IStateProfileListQuery, 'limit' | 'offset'>
+  ): Promise<IStateProfile[]> =>
+    fetchAllMatching(pagination =>
+      stateProfileApi.getStateProfiles({ ...params, ...pagination })
+    ),
 
   getStateProfileById: async (
     id: string

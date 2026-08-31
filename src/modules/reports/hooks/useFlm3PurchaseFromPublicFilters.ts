@@ -135,12 +135,13 @@ export const useFlm3PurchaseFromPublicFilters =
       queryKey: ['reports-flm3-branch-profiles'],
       enabled: true,
       queryFn: async () =>
-        branchProfileApi.getBranchProfiles({
+        branchProfileApi.getAllBranchProfiles({
           activeOnly: true,
         }),
     });
 
-    const { data: productProfiles = [] } = useListProductProfiles(true);
+    const { data: productProfilesPage } = useListProductProfiles(true);
+    const productProfiles = productProfilesPage?.data ?? [];
 
     const accessibleBranchProfiles = useMemo(
       () =>

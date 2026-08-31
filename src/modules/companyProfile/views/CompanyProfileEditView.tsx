@@ -22,11 +22,12 @@ export const CompanyProfileEditView = ({
   const navigate = useNavigate();
   const { id: paramId } = useParams<{ id: string }>();
   const {
-    data: companies = [],
+    data: companiesPage,
     isLoading: isListLoading,
     error: listError,
   } = useListCompanyProfiles();
 
+  const companies = companiesPage?.data ?? [];
   const activeCompanyId = propId || paramId || companies[0]?.id;
 
   const {

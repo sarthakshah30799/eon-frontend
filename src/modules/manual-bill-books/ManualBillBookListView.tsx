@@ -4,16 +4,19 @@ import {
   AsyncSelect,
   Button,
   PageGrid,
-  PaginationControls,
   type AsyncSelectOption,
   type AsyncSelectResponse,
 } from '@/components/ui';
+import {
+  buildBranchToolbarFilter,
+  buildSearchToolbarFilter,
+  buildStaticAsyncSelectToolbarFilter,
+} from '@/components/ui/table';
 import {
   manualBillBookApi,
   type IManualBook,
   type IManualBookAllocation,
   type IManualBookPageTracking,
-  type IManualBillBookListResponse,
 } from '@/api';
 import { Modal } from '@/components/ui/modal/Modal';
 import toast from 'react-hot-toast';
@@ -24,15 +27,18 @@ import {
   useGetManualBillBook,
   useListManualBillBooks,
 } from './hooks';
-import { useListBranchProfiles } from '@/modules/branchProfile/hooks';
+import {
+  useGetBranchProfile,
+  useLoadBranchOptions,
+} from '@/modules/branchProfile/hooks';
 import {
   ManualBillBookStatusEnum,
   type ManualBillBookReviewStatus,
-  type ManualBillBookStatus,
 } from './types';
 import { usePermission } from '@/hooks/usePermission';
+import { useDebounce } from '@/hooks';
 import { useAuth } from '@/lib/AuthContext';
-import { PAGINATION_PAGE_SIZE_OPTIONS } from '@/constants/paginationConstants';
+import { PAGINATION_DEFAULTS } from '@/constants/paginationConstants';
 
 const resolveAssignedToLabel = (assignedTo: IManualBook['assignedTo']) => {
   if (assignedTo && typeof assignedTo === 'object') {
@@ -70,11 +76,36 @@ export const ManualBillBookListView = () => {
   const { hasAnyPermission: canUnmap } = usePermission(
     '/manual-bill-books/dp-unmapping'
   );
-  // Filter states
-  const [branchFilter, setBranchFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState<ManualBillBookStatus | ''>(
-    ''
-  );
+
+  const {
+    data: listResponse,
+    isLoading,
+    isFetching,
+    error,
+    refetch: refetchBooks,
+    limit = PAGINATION_DEFAULTS.LIMIT,
+    page = 1,
+    total = 0,
+    totalPages = 0,
+    handlePageChange = () => undefined,
+    handlePageSizeChange = () => undefined,
+    handleBranchChange = () => undefined,
+    handleStatusChange = () => undefined,
+    handleSearchChange = () => undefined,
+    branchId: branchFilter,
+    status: statusFilter,
+    search: routeSearch,
+  } = useListManualBillBooks(undefined, { withRoutePagination: true });
+  const books: IManualBook[] = listResponse?.data ?? [];
+
+  const [searchInput, setSearchInput] = useState(routeSearch ?? '');
+  const debouncedSearch = useDebounce(searchInput, 350);
+
+  useEffect(() => {
+    const nextSearch = debouncedSearch.trim();
+    if ((nextSearch || undefined) === (routeSearch || undefined)) return;
+    handleSearchChange(debouncedSearch);
+  }, [debouncedSearch, handleSearchChange, routeSearch]);
 
   const statusOptions = useMemo<AsyncSelectOption[]>(
     () => [
@@ -99,54 +130,55 @@ export const ManualBillBookListView = () => {
     [statusFilter, statusOptions]
   );
 
-  const { data: branches = [] } = useListBranchProfiles({
-    activeOnly: true,
-  });
+  const loadBranchOptions = useLoadBranchOptions({ activeOnly: true });
+  const { data: selectedBranch } = useGetBranchProfile(branchFilter || '');
+  const selectedBranchOption = useMemo<AsyncSelectOption | null>(() => {
+    if (!branchFilter || !selectedBranch) {
+      return null;
+    }
 
-  const branchOptions = useMemo<AsyncSelectOption[]>(
-    () =>
-      branches.map(branch => ({
-        value: branch.id,
-        label: `${branch.code} - ${branch.name}`,
-      })),
-    [branches]
-  );
+    return {
+      value: selectedBranch.id,
+      label: `${selectedBranch.code} - ${selectedBranch.name}`,
+    };
+  }, [branchFilter, selectedBranch]);
 
-  const selectedBranchOption = useMemo<AsyncSelectOption | null>(
-    () => branchOptions.find(option => option.value === branchFilter) ?? null,
-    [branchFilter, branchOptions]
-  );
-
-  const loadBranchOptions = useCallback(
-    async (inputValue: string): Promise<AsyncSelectResponse> => {
-      const normalizedInput = inputValue.trim().toLowerCase();
-      const filteredOptions = normalizedInput
-        ? branchOptions.filter(option =>
-            option.label.toLowerCase().includes(normalizedInput)
-          )
-        : branchOptions;
-
-      return {
-        options: filteredOptions,
-      };
-    },
-    [branchOptions]
-  );
-
-  const loadStatusOptions = useCallback(
-    async (inputValue: string): Promise<AsyncSelectResponse> => {
-      const normalizedInput = inputValue.trim().toLowerCase();
-      const filteredOptions = normalizedInput
-        ? statusOptions.filter(option =>
-            option.label.toLowerCase().includes(normalizedInput)
-          )
-        : statusOptions;
-
-      return {
-        options: filteredOptions,
-      };
-    },
-    [statusOptions]
+  const toolbarFilters = useMemo(
+    () => [
+      buildSearchToolbarFilter({
+        value: searchInput,
+        onChange: setSearchInput,
+        placeholder: 'Dispatch no, remarks, book or MV',
+      }),
+      buildBranchToolbarFilter({
+        visible: canSeeBranchFilter,
+        value: selectedBranchOption,
+        loadOptions: loadBranchOptions,
+        onChange: option => {
+          handleBranchChange(option?.value ? String(option.value) : '');
+        },
+      }),
+      buildStaticAsyncSelectToolbarFilter({
+        id: 'status',
+        label: 'Status',
+        options: statusOptions,
+        value: selectedStatusOption,
+        placeholder: 'All Statuses',
+        onChange: option => {
+          handleStatusChange(option?.value ? String(option.value) : '');
+        },
+      }),
+    ],
+    [
+      canSeeBranchFilter,
+      handleBranchChange,
+      handleStatusChange,
+      loadBranchOptions,
+      searchInput,
+      selectedBranchOption,
+      selectedStatusOption,
+      statusOptions,
+    ]
   );
 
   // Review modal states
@@ -197,38 +229,6 @@ export const ManualBillBookListView = () => {
     error: routedBookError,
     isFetched: isRoutedBookFetched,
   } = useGetManualBillBook(reviewId ?? undefined);
-
-  // Pagination is now encapsulated in the hook (route ?limit=&offset=) – reusable across any list
-  const listResult = useListManualBillBooks(
-    {
-      branchId: branchFilter || undefined,
-      status: statusFilter || undefined,
-    },
-    { withRoutePagination: true }
-  );
-  const listResponse = listResult.data as
-    | IManualBillBookListResponse
-    | undefined;
-  const isLoading = listResult.isLoading;
-  const isFetching = listResult.isFetching;
-  const error = listResult.error;
-  const refetchBooks = listResult.refetch;
-  const limit = (listResult as unknown as { limit: number }).limit ?? 20;
-  const page = (listResult as unknown as { page: number }).page ?? 1;
-  const totalItems =
-    (listResult as unknown as { totalItems: number }).totalItems ?? 0;
-  const totalPages =
-    (listResult as unknown as { totalPages: number }).totalPages ?? 0;
-  const handlePageChange =
-    (listResult as unknown as { handlePageChange: (p: number) => void })
-      .handlePageChange ?? (() => {});
-  const handlePageSizeChange =
-    (listResult as unknown as { handlePageSizeChange: (s: number) => void })
-      .handlePageSizeChange ?? (() => {});
-  const resetOffsetInRoute =
-    (listResult as unknown as { resetOffsetInRoute: () => void })
-      .resetOffsetInRoute ?? (() => {});
-  const books: IManualBook[] = listResponse?.data ?? [];
 
   const reviewBook = useMemo(
     () =>
@@ -457,7 +457,7 @@ export const ManualBillBookListView = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <div className="flex justify-end">
         <Button
           type="button"
@@ -467,65 +467,18 @@ export const ManualBillBookListView = () => {
         </Button>
       </div>
 
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
-        {/* Filters */}
-        <div className="flex flex-wrap gap-4 items-center mb-2">
-          {canSeeBranchFilter && (
-            <div className="flex-1 min-w-50">
-              <AsyncSelect
-                label="Filter by Branch"
-                placeholder="All Branches"
-                value={selectedBranchOption}
-                loadOptions={loadBranchOptions}
-                defaultOptions={branchOptions}
-                onChange={option => {
-                  const selectedOption = Array.isArray(option)
-                    ? (option[0] ?? null)
-                    : option;
-
-                  setBranchFilter(
-                    selectedOption?.value ? String(selectedOption.value) : ''
-                  );
-                  resetOffsetInRoute();
-                }}
-                isClearable
-                isSearchable
-                pagination={false}
-              />
-            </div>
-          )}
-
-          <div className="w-37.5">
-            <AsyncSelect
-              label="Filter by Status"
-              placeholder="All Statuses"
-              value={selectedStatusOption}
-              loadOptions={loadStatusOptions}
-              defaultOptions={statusOptions}
-              onChange={option => {
-                const selectedOption = Array.isArray(option)
-                  ? (option[0] ?? null)
-                  : option;
-
-                setStatusFilter(
-                  selectedOption?.value
-                    ? (String(selectedOption.value) as ManualBillBookStatus)
-                    : ''
-                );
-                resetOffsetInRoute();
-              }}
-              isClearable
-              isSearchable
-              pagination={false}
-            />
-          </div>
-        </div>
-
-        {/* Table */}
-
+      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
         <ManualBillBookTable
           books={books}
-          loading={isLoading || isFetching}
+          loading={isLoading}
+          isFetching={isFetching}
+          page={page}
+          pageSize={limit}
+          total={total}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+          toolbarFilters={toolbarFilters}
           onRowClick={book => {
             // HO clicking a REJECTED book → redirect to create page pre-filled for reassignment
             if (
@@ -549,17 +502,6 @@ export const ManualBillBookListView = () => {
               openReview(book.id);
             }
           }}
-        />
-
-        <PaginationControls
-          page={page}
-          pageSize={limit}
-          totalItems={totalItems}
-          totalPages={totalPages}
-          onPageChange={handlePageChange}
-          onPageSizeChange={handlePageSizeChange}
-          pageSizeOptions={[...PAGINATION_PAGE_SIZE_OPTIONS]}
-          itemLabel="dispatches"
         />
       </section>
 

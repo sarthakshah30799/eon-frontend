@@ -13,7 +13,9 @@ export interface ICounterProfile {
   updatedBy?: string;
 }
 
-export interface ICounterProfileListQuery {
+import type { IOffsetPaginationParams } from '@/types/pagination';
+
+export interface ICounterProfileListQuery extends IOffsetPaginationParams {
   activeOnly?: boolean;
   search?: string;
   branchId?: string;

@@ -3,3 +3,4 @@ export * from './useCategoryOptions';
 export * from './usePurposeOptions';
 export * from './useDebounce';
 export * from './debouncePromise';
+export * from './useOffsetPaginatedList';

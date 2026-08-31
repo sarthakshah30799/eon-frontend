@@ -1,3 +1,9 @@
+import type {
+  IOffsetPaginationParams,
+  IPaginatedResponse,
+} from '@/types/pagination';
+import type { TransactionType } from '@/modules/transactions';
+
 export const PurposeRateTypeEnum = {
   PERCENT: 'PERCENT',
   RUPEES: 'RUPEES',
@@ -65,12 +71,10 @@ export type ICreatePurpose = Omit<
 
 export type IUpdatePurpose = Partial<ICreatePurpose>;
 
-export interface IPurposeListQuery {
+export interface IPurposeListQuery extends IOffsetPaginationParams {
   search?: string;
-  transactionType?: import('@/modules/transactions').TransactionType;
+  transactionType?: TransactionType;
   partyProfileType?: PurposePartyProfileType;
 }
 
-export interface IPurposeListResponse {
-  data: IPurpose[];
-}
+export type IPurposeListResponse = IPaginatedResponse<IPurpose>;

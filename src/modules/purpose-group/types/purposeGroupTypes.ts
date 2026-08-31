@@ -1,3 +1,7 @@
+import type {
+  IOffsetPaginationParams,
+  IPaginatedResponse,
+} from '@/types/pagination';
 import type { IPurpose } from '@/modules/purpose/types';
 
 export const PurposeGroupProfileTypeEnum = {
@@ -31,7 +35,9 @@ export interface ICreatePurposeGroup {
 
 export type IUpdatePurposeGroup = Partial<ICreatePurposeGroup>;
 
-export interface IPurposeGroupListQuery {
+export interface IPurposeGroupListQuery extends IOffsetPaginationParams {
   search?: string;
   profileType?: PurposeGroupProfileType;
 }
+
+export type IPurposeGroupListResponse = IPaginatedResponse<IPurposeGroup>;

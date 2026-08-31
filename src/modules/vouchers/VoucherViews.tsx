@@ -1,18 +1,20 @@
 import { useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Button } from '@/components/ui';
+import { Button, PaginationControls } from '@/components/ui';
 import { Loader } from '@/components/ui/loader';
 import { useAuth } from '@/lib/AuthContext';
+import { useOffsetPaginatedList } from '@/hooks';
 import { getTransactionDatePolicy } from '@/modules/transactionPolicies/utils/transactionDatePolicy';
 import { transactionPoliciesApi } from '@/api/transactionPolicies/transactionPolicies.api';
+import { useQuery } from '@tanstack/react-query';
 import { VoucherForm } from './VoucherForm';
 import {
   createVoucherIdempotencyKey,
   VOUCHER_LABELS,
   VOUCHER_PATHS,
 } from './constants';
-import { useCreateVoucher, useVoucher, useVoucherList } from './hooks';
+import { useCreateVoucher, useVoucher } from './hooks';
+import { vouchersApi } from '@/api/vouchers';
 import type {
   AccountingVoucher,
   VoucherFormValues,
@@ -117,7 +119,21 @@ const fromEntity = (voucher: AccountingVoucher): VoucherFormValues => ({
 });
 
 export const VoucherListView = ({ type }: { type: VoucherType }) => {
-  const { data, isLoading, error } = useVoucherList(type);
+  const {
+    rows,
+    isLoading,
+    isFetching,
+    error,
+    page,
+    limit,
+    total,
+    totalPages,
+    handlePageChange,
+    handlePageSizeChange,
+  } = useOffsetPaginatedList({
+    queryKey: ['vouchers', type],
+    queryFn: params => vouchersApi.list(type, params),
+  });
   const label = VOUCHER_LABELS[type];
   if (isLoading)
     return (
@@ -144,7 +160,7 @@ export const VoucherListView = ({ type }: { type: VoucherType }) => {
         </p>
       )}
       <div className="space-y-2">
-        {(data?.data ?? []).map(voucher => (
+        {rows.map(voucher => (
           <Link
             key={voucher.id}
             to={`${VOUCHER_PATHS[type]}/edit/${voucher.id}`}
@@ -157,12 +173,24 @@ export const VoucherListView = ({ type }: { type: VoucherType }) => {
             <span>{voucher.accountMode ?? '-'}</span>
           </Link>
         ))}
-        {!data?.data.length && (
+        {!rows.length && (
           <div className="rounded-lg border bg-white p-8 text-center text-text-secondary">
             No {label.toLowerCase()} records found.
           </div>
         )}
       </div>
+      <PaginationControls
+        page={page}
+        pageSize={limit}
+        total={total}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
+        itemLabel={`${label.toLowerCase()} records`}
+      />
+      {isFetching && !isLoading ? (
+        <p className="text-sm text-text-secondary">Refreshing...</p>
+      ) : null}
     </div>
   );
 };

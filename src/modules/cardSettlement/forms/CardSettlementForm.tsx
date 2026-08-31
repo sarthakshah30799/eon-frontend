@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import {
   Button,
@@ -12,7 +13,7 @@ import {
   FormFieldSelect,
 } from '@/components/forms';
 import { CardStockSettlementDocumentKind } from '@/api/cardSettlement';
-import { useListBranchProfiles } from '@/modules/branchProfile/hooks';
+import { branchProfileApi } from '@/api/branchProfile';
 import { useCardStockReferences } from '@/modules/cardStock/hooks';
 import type { TransactionDatePolicy } from '@/modules/transactionPolicies/utils/transactionDatePolicy';
 import { CARD_SETTLEMENT_TEXT } from '../constants/cardSettlementConstants';
@@ -112,10 +113,11 @@ export const CardSettlementForm = ({
   const isIssuerKind =
     isHo || kind === CardStockSettlementDocumentKind.HO_ISSUER;
   const references = useCardStockReferences();
-  const branchesQuery = useListBranchProfiles(
-    { activeOnly: true },
-    isIssuerKind
-  );
+  const branchesQuery = useQuery({
+    queryKey: ['branch-profiles-all', { activeOnly: true }],
+    queryFn: () => branchProfileApi.getAllBranchProfiles({ activeOnly: true }),
+    enabled: isIssuerKind,
+  });
   const canLoadUnsettled =
     Boolean(issuerPartyProfileId && currencyId) &&
     (!isIssuerKind || Boolean(hoBranchId)) &&

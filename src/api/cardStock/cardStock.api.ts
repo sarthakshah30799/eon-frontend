@@ -4,6 +4,12 @@ import type { IBranchProfile } from '@/modules/branchProfile/types';
 import type { ICurrencyProfile } from '@/modules/currencyProfile/types';
 import type { IProductProfile } from '@/modules/productProfile/types';
 import type { IPartyProfile } from '@/modules/partyProfiles/types';
+import type {
+  IOffsetPaginationParams,
+  IPaginatedResponse,
+} from '@/types/pagination';
+import { buildQueryString } from '@/utils';
+import { fetchAllMatching, normalizePaginatedResponse } from '@/utils/paginatedList';
 
 export interface CardStockSnapshot {
   id?: string;
@@ -115,14 +121,25 @@ export interface CardStockPrintResponse {
   message: string;
 }
 
+export type ICardStockReceiptListQuery = IOffsetPaginationParams;
+
 export const cardStockApi = {
-  list: async (): Promise<ICardStockReceipt[]> => {
-    const response = await apiClient.get<ICardStockReceipt[]>(
-      '/card-stock/receipts'
+  list: async (
+    params?: ICardStockReceiptListQuery
+  ): Promise<IPaginatedResponse<ICardStockReceipt>> => {
+    const response = await apiClient.get<IPaginatedResponse<ICardStockReceipt>>(
+      `/card-stock/receipts${buildQueryString(params)}`
     );
     if (response.error) throw new Error(response.error);
-    return response.data ?? [];
+    return normalizePaginatedResponse(
+      response.data,
+      params?.limit,
+      params?.offset
+    );
   },
+
+  listAll: async (): Promise<ICardStockReceipt[]> =>
+    fetchAllMatching(pagination => cardStockApi.list(pagination)),
 
   get: async (id: string): Promise<ICardStockReceipt> => {
     const response = await apiClient.get<ICardStockReceipt>(

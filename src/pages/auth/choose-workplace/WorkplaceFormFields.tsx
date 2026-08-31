@@ -1,10 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useFormContext, useFormState, useWatch } from 'react-hook-form';
 import { FormFieldSelect } from '../../../components/forms';
 import { Button } from '../../../components/ui';
 import type { IUserAssignment } from '../../../modules/auth/types';
-import { useListBranchProfiles } from '@/modules/branchProfile/hooks';
-import { useListCounterProfiles } from '@/modules/counterProfile/hooks';
+import { counterProfileApi } from '@/api/counterProfile';
+import {
+  useGetBranchProfile,
+  useLoadBranchOptions,
+} from '@/modules/branchProfile/hooks';
 import { CHOOSE_WORKPLACE_TEXT } from './chooseWorkplaceConstants';
 import type { IWorkplaceFormValues } from './chooseWorkplaceTypes';
 
@@ -35,29 +39,27 @@ export const WorkplaceFormFields = ({
     return grouped;
   }, [userAssignments]);
 
-  const { data: branchProfiles = [] } = useListBranchProfiles(
-    { activeOnly: true },
-    canSelectAllBranches
-  );
+  const loadApiBranchOptions = useLoadBranchOptions({ activeOnly: true });
+  const { data: selectedBranchProfile } = useGetBranchProfile(branchId || '');
 
   const { data: counterProfiles = [], isLoading: isCountersLoading } =
-    useListCounterProfiles({ activeOnly: true }, canSelectAllBranches);
+    useQuery({
+      queryKey: ['counter-profiles-all', { activeOnly: true }],
+      queryFn: () =>
+        counterProfileApi.getAllCounterProfiles({ activeOnly: true }),
+      enabled: canSelectAllBranches,
+    });
 
-  const visibleBranches = useMemo(() => {
-    if (canSelectAllBranches) {
-      return branchProfiles.map(branch => ({
-        value: branch.id,
-        label: `${branch.code} - ${branch.name}`,
-      }));
-    }
-
-    return Array.from(assignmentsByBranch.entries()).map(
-      ([assignmentBranchId, branchAssignments]) => ({
-        value: assignmentBranchId,
-        label: branchAssignments[0]?.branchName ?? 'Unknown Branch',
-      })
-    );
-  }, [assignmentsByBranch, branchProfiles, canSelectAllBranches]);
+  const visibleBranches = useMemo(
+    () =>
+      Array.from(assignmentsByBranch.entries()).map(
+        ([assignmentBranchId, branchAssignments]) => ({
+          value: assignmentBranchId,
+          label: branchAssignments[0]?.branchName ?? 'Unknown Branch',
+        })
+      ),
+    [assignmentsByBranch]
+  );
 
   const canSelectBranch = canSelectAllBranches || visibleBranches.length > 1;
   const effectiveSelectedBranchId =
@@ -70,11 +72,8 @@ export const WorkplaceFormFields = ({
     }
 
     if (canSelectAllBranches) {
-      const selectedBranch = branchProfiles.find(
-        branch => branch.id === effectiveSelectedBranchId
-      );
       const connectedCounterIds = new Set(
-        selectedBranch?.connectCounterIds ?? []
+        selectedBranchProfile?.connectCounterIds ?? []
       );
 
       return counterProfiles
@@ -103,10 +102,10 @@ export const WorkplaceFormFields = ({
       }));
   }, [
     assignmentsByBranch,
-    branchProfiles,
     canSelectAllBranches,
     counterProfiles,
     effectiveSelectedBranchId,
+    selectedBranchProfile,
   ]);
 
   useEffect(() => {
@@ -131,15 +130,22 @@ export const WorkplaceFormFields = ({
   }, [branchId, canSelectAllBranches, form, visibleBranches]);
 
   const loadBranchOptions = useCallback(
-    async (inputValue: string) => ({
-      options: inputValue
-        ? visibleBranches.filter(option =>
-            option.label.toLowerCase().includes(inputValue.toLowerCase())
-          )
-        : visibleBranches,
-      hasMore: false,
-    }),
-    [visibleBranches]
+    async (inputValue: string, page = 1) => {
+      if (canSelectAllBranches) {
+        return loadApiBranchOptions(inputValue, page);
+      }
+
+      const normalizedInput = inputValue.trim().toLowerCase();
+      return {
+        options: normalizedInput
+          ? visibleBranches.filter(option =>
+              option.label.toLowerCase().includes(normalizedInput)
+            )
+          : visibleBranches,
+        hasMore: false,
+      };
+    },
+    [canSelectAllBranches, loadApiBranchOptions, visibleBranches]
   );
 
   const loadCounterOptions = useCallback(
@@ -162,6 +168,7 @@ export const WorkplaceFormFields = ({
         className="!max-w-none"
         loadOptions={loadBranchOptions}
         defaultOptions={true}
+        pagination={canSelectAllBranches}
         disabled={!canSelectBranch}
         isSearchable
         menuPosition="absolute"

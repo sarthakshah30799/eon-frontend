@@ -58,7 +58,8 @@ const BranchProfileFormFields = ({
   const previousStateIdRef = useRef<string>(stateId);
 
   const { data: selectedState } = useGetStateProfile(stateId);
-  const { data: companies = [] } = useListCompanyProfiles();
+  const { data: companiesPage } = useListCompanyProfiles();
+  const companies = companiesPage?.data ?? [];
   const companyPan = companies[0]?.panNo || '';
 
   const validateBranchCode = useValidateBranchCode(currentId);
@@ -246,7 +247,7 @@ const BranchProfileFormFields = ({
           label="Connect Counters"
           placeholder="Select counters to link"
           loadOptions={loadCounterOptions}
-          pagination={false}
+          pagination
           defaultOptions={true}
           disabled={isSubmitting}
           isMulti

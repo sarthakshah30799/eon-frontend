@@ -1,10 +1,11 @@
 import { useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button1';
-import { useDebounce } from '@/hooks';
+import { useDebounce, useOffsetPaginatedList } from '@/hooks';
+import { PAGINATION_DEFAULTS } from '@/constants/paginationConstants';
+import { counterProfileApi } from '@/api/counterProfile';
 import {
   useDeleteCounterProfile,
-  useListCounterProfiles,
   useUpdateCounterProfileStatus,
 } from '../hooks';
 import { COUNTER_PROFILE_TEXTS } from '../constants';
@@ -15,18 +16,28 @@ export const CounterProfileListView = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const search = searchParams.get('search') ?? '';
   const debouncedSearch = useDebounce(search, 400);
-  const query = useMemo(
+  const filters = useMemo(
     () => ({
       search: debouncedSearch.trim() || undefined,
     }),
     [debouncedSearch]
   );
   const {
-    data: counters = [],
+    rows: counters,
     isLoading,
     isFetching,
     error,
-  } = useListCounterProfiles(query);
+    page,
+    limit,
+    total,
+    totalPages,
+    handlePageChange,
+    handlePageSizeChange,
+  } = useOffsetPaginatedList({
+    queryKey: ['counter-profiles'],
+    queryFn: params => counterProfileApi.getCounterProfiles(params),
+    filters,
+  });
   const { deleteCounterProfile, isPending: isDeleting } =
     useDeleteCounterProfile();
   const { updateCounterProfileStatus, isPending: isUpdatingStatus } =
@@ -46,6 +57,22 @@ export const CounterProfileListView = () => {
     await updateCounterProfileStatus({ id, isActive });
   };
 
+  const handleSearch = (value: string) => {
+    setSearchParams(prev => {
+      const nextParams = new URLSearchParams(prev);
+      if (value.trim()) {
+        nextParams.set('search', value.trim());
+      } else {
+        nextParams.delete('search');
+      }
+      nextParams.set('offset', String(PAGINATION_DEFAULTS.OFFSET));
+      if (!nextParams.get('limit')) {
+        nextParams.set('limit', String(PAGINATION_DEFAULTS.LIMIT));
+      }
+      return nextParams;
+    });
+  };
+
   if (error) {
     return (
       <div className="py-6 text-center text-error-600">
@@ -55,43 +82,37 @@ export const CounterProfileListView = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <div className="flex justify-end">
         <Button
           type="button"
+          className="rounded-sm"
           onClick={() => navigate('/admin/counter-profile/create')}
         >
           {COUNTER_PROFILE_TEXTS.CREATE_COUNTER}
         </Button>
       </div>
 
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
+      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
         <CounterProfileTable
           counters={counters}
           onToggleStatus={handleToggleStatus}
           onDelete={handleDelete}
-          isDeleting={isDeleting}
           isUpdatingStatus={isUpdatingStatus}
-          loading={isLoading || isFetching}
-          onSearch={value =>
-            setSearchParams(prev => {
-              const nextParams = new URLSearchParams(prev);
-
-              if (value.trim()) {
-                nextParams.set('search', value.trim());
-              } else {
-                nextParams.delete('search');
-              }
-
-              return nextParams;
-            })
-          }
+          isDeleting={isDeleting}
+          loading={isLoading}
+          isFetching={isFetching}
+          onSearch={handleSearch}
           searchValue={search}
           searchPlaceholder="Search counter name"
+          page={page}
+          pageSize={limit}
+          total={total}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
         />
       </section>
     </div>
   );
 };
-
-export default CounterProfileListView;

@@ -1,33 +1,61 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import { manualBillBookApi, type IManualBook } from '@/api';
-import { Loader } from '@/components/ui/loader';
 import {
   Button,
   AsyncSelect,
   DatePicker,
   type AsyncSelectOption,
 } from '@/components/ui';
-import { formatDateTime, formatDateInput, parseDateInput } from '@/utils';
+import { formatDateInput, parseDateInput } from '@/utils';
 import type { MultiValue, SingleValue } from 'react-select';
 import toast from 'react-hot-toast';
-import { ManualBillBookAcknowledgementChecklistTable } from '@/modules/manual-bill-books/components';
+import {
+  ManualBillBookAcknowledgementChecklistTable,
+  ManualBillBookTable,
+} from '@/modules/manual-bill-books/components';
+import { useListManualBillBooks } from '@/modules/manual-bill-books/hooks';
 import {
   ManualBillBookStatusEnum,
   type ManualBillBookReviewStatus,
 } from '@/modules/manual-bill-books/types';
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
-import { useCategoryOptions } from '@/hooks';
+import { useCategoryOptions, useDebounce } from '@/hooks';
+import { PAGINATION_DEFAULTS } from '@/constants/paginationConstants';
 
 export const ManualBillBookAcknowledgementPage = () => {
   const { activeBranchId } = useAuth();
 
-  // Navigation: 'list' | 'detail'
   const [view, setView] = useState<'list' | 'detail'>('list');
-  const [isLoadingList, setIsLoadingList] = useState(true);
-  const [dispatches, setDispatches] = useState<IManualBook[]>([]);
 
-  // Filter states for Detail View
+  const {
+    data: listResponse,
+    isLoading,
+    isFetching,
+    refetch: refetchBooks,
+    limit = PAGINATION_DEFAULTS.LIMIT,
+    page = 1,
+    total = 0,
+    totalPages = 0,
+    handlePageChange = () => undefined,
+    handlePageSizeChange = () => undefined,
+    handleSearchChange = () => undefined,
+    search: routeSearch,
+  } = useListManualBillBooks(
+    { branchId: activeBranchId ?? undefined },
+    { withRoutePagination: true }
+  );
+  const dispatches: IManualBook[] = listResponse?.data ?? [];
+
+  const [searchInput, setSearchInput] = useState(routeSearch ?? '');
+  const debouncedSearch = useDebounce(searchInput, 350);
+
+  useEffect(() => {
+    const nextSearch = debouncedSearch.trim();
+    if ((nextSearch || undefined) === (routeSearch || undefined)) return;
+    handleSearchChange(debouncedSearch);
+  }, [debouncedSearch, handleSearchChange, routeSearch]);
+
   const [searchStatus, setSearchStatus] = useState('PENDING');
   const [searchTxnType, setSearchTxnType] = useState('ALL');
   const { defaultOptions: txnTypes, loadOptions: loadTxnTypeOptions } =
@@ -41,75 +69,35 @@ export const ManualBillBookAcknowledgementPage = () => {
   const [fromDate, setFromDate] = useState(formatDateInput(getPastDate(30)));
   const [toDate, setToDate] = useState(formatDateInput(getPastDate(0)));
 
-  // Checklist table results
   const [queryResults, setQueryResults] = useState<IManualBook[]>([]);
-  const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [reloadToken, setReloadToken] = useState(0);
 
-  // Record of updates: id -> { status: 'APPROVED' | 'REJECTED', remarks: string }
   const [rowEdits, setRowEdits] = useState<
     Record<string, { status?: ManualBillBookReviewStatus; remarks: string }>
   >({});
   const selectedTxnType = txnTypes.find(t => t.value === searchTxnType);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    void (async () => {
-      if (!activeBranchId) {
-        if (!cancelled) {
-          setIsLoadingList(false);
-        }
-        return;
-      }
-
-      try {
-        setIsLoadingList(true);
-        const res = await manualBillBookApi.findAll({
-          branchId: activeBranchId,
-          limit: 1000,
-          offset: 0,
-        });
-        const data = res.data ?? [];
-        if (cancelled) return;
-        setDispatches(data);
-      } catch (err: unknown) {
-        toast.error(
-          err instanceof Error
-            ? err.message
-            : 'Failed to fetch dispatches list.'
-        );
-      } finally {
-        if (!cancelled) {
-          setIsLoadingList(false);
-        }
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [activeBranchId, reloadToken]);
-
   const handleProcessQuery = async () => {
     if (!activeBranchId) return;
+    if (!fromDate || !toDate) {
+      toast.error('Please select From Date and To Date.');
+      return;
+    }
+    if (fromDate > toDate) {
+      toast.error('From Date must be on or before To Date.');
+      return;
+    }
     try {
       setIsProcessing(true);
-      const res = await manualBillBookApi.findAll({
+      const data = await manualBillBookApi.findAllMatching({
         branchId: activeBranchId,
         status: searchStatus || undefined,
         transactionType: searchTxnType === 'ALL' ? undefined : searchTxnType,
-        limit: 1000,
-        offset: 0,
+        fromDate,
+        toDate,
       });
-      const data = res.data ?? [];
-      if (selectedBookId) {
-        setQueryResults(data.filter(b => b.id === selectedBookId));
-      } else {
-        setQueryResults(data);
-      }
+      setQueryResults(data);
       setRowEdits({});
     } catch (err: unknown) {
       toast.error(
@@ -171,8 +159,7 @@ export const ManualBillBookAcknowledgementPage = () => {
 
       // Refresh current query to hide processed items (if filtered by Pending)
       await handleProcessQuery();
-      // Also refresh master list
-      setReloadToken(token => token + 1);
+      await refetchBooks();
     } catch (err: unknown) {
       toast.error(
         err instanceof Error ? err.message : 'Failed to save acknowledgements.'
@@ -196,7 +183,6 @@ export const ManualBillBookAcknowledgementPage = () => {
     setFromDate(formatDateInput(fromD));
     setToDate(formatDateInput(toD));
 
-    setSelectedBookId(book.id);
     setView('detail');
 
     // Clear previous query results (do not auto-process)
@@ -232,90 +218,35 @@ export const ManualBillBookAcknowledgementPage = () => {
       </div>
 
       {view === 'list' ? (
-        /* List View of Dispatched Books */
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="px-5 py-4 border-b border-slate-200 bg-slate-50">
-            <h3 className="font-semibold text-slate-800 text-sm">Dispatches</h3>
+        <div className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+          <h3 className="mb-4 text-sm font-semibold text-text-primary">
+            Dispatches
+          </h3>
+          <ManualBillBookTable
+            books={dispatches}
+            loading={isLoading}
+            isFetching={isFetching}
+            page={page}
+            pageSize={limit}
+            total={total}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+            searchValue={searchInput}
+            onSearch={setSearchInput}
+            onRowClick={handleRowClick}
+            emptyMessage="No dispatches found for this branch."
+          />
+          <div className="mt-4">
+            <Button
+              onClick={() => {
+                setView('detail');
+                setQueryResults([]);
+              }}
+            >
+              Go to Manual Bill Status Search
+            </Button>
           </div>
-
-          {isLoadingList ? (
-            <div className="py-20 flex justify-center">
-              <Loader />
-            </div>
-          ) : dispatches.length === 0 ? (
-            <div className="py-16 text-center">
-              <p className="text-sm text-slate-500">
-                No dispatches found for this branch.
-              </p>
-              <Button
-                onClick={() => {
-                  setView('detail');
-                  setQueryResults([]);
-                }}
-                className="mt-4"
-              >
-                Go to Manual Bill Status Search
-              </Button>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50/50 text-slate-600 font-medium select-none">
-                    <th className="px-6 py-3">Date</th>
-                    <th className="px-6 py-3">No</th>
-                    <th className="px-6 py-3">Branch</th>
-                    <th className="px-6 py-3">Txn Type</th>
-                    <th className="px-6 py-3">Books From-To</th>
-                    <th className="px-6 py-3">Vouchers/Book</th>
-                    <th className="px-6 py-3">MV From-To</th>
-                    <th className="px-6 py-3">Assigned To</th>
-                    <th className="px-6 py-3">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-slate-700">
-                  {dispatches.map(book => (
-                    <tr
-                      key={book.id}
-                      onClick={() => handleRowClick(book)}
-                      className="hover:bg-slate-50/80 cursor-pointer transition"
-                    >
-                      <td className="px-6 py-4">
-                        {formatDateTime(book.dispatchDate)}
-                      </td>
-                      <td className="px-6 py-4 font-mono font-semibold text-slate-900">
-                        {book.no}
-                      </td>
-                      <td className="px-6 py-4 font-semibold text-xs text-slate-600">
-                        {book.branchCode || 'Unknown'}
-                      </td>
-                      <td className="px-6 py-4">{book.transactionType}</td>
-                      <td className="px-6 py-4">
-                        {book.bookNoFrom} - {book.bookNoTo}
-                      </td>
-                      <td className="px-6 py-4">{book.vouchersPerBook}</td>
-                      <td className="px-6 py-4 font-semibold text-sky-800">
-                        {book.mvNoFrom} - {book.mvNoTo}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold border ${
-                            book.status === ManualBillBookStatusEnum.APPROVE
-                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                              : book.status === ManualBillBookStatusEnum.REJECT
-                                ? 'bg-rose-50 text-rose-700 border-rose-200'
-                                : 'bg-amber-50 text-amber-700 border-amber-200'
-                          }`}
-                        >
-                          {book.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
         </div>
       ) : (
         /* Detailed / Process checklist View */
@@ -360,7 +291,6 @@ export const ManualBillBookAcknowledgementPage = () => {
                     setSearchStatus(
                       selectedOption?.value ? String(selectedOption.value) : ''
                     );
-                    setSelectedBookId(null);
                   }}
                   loadOptions={async (inputValue: string) => {
                     const opts = [
@@ -419,7 +349,6 @@ export const ManualBillBookAcknowledgementPage = () => {
                         ? String(selectedOption.value)
                         : 'ALL'
                     );
-                    setSelectedBookId(null);
                   }}
                   loadOptions={async (inputValue: string) => {
                     const response = await loadTxnTypeOptions(inputValue);
@@ -441,7 +370,6 @@ export const ManualBillBookAcknowledgementPage = () => {
                   selected={fromDate ? parseDateInput(fromDate) : null}
                   onChange={date => {
                     setFromDate(date ? formatDateInput(date) : '');
-                    setSelectedBookId(null);
                   }}
                 />
               </div>
@@ -452,7 +380,6 @@ export const ManualBillBookAcknowledgementPage = () => {
                   selected={toDate ? parseDateInput(toDate) : null}
                   onChange={date => {
                     setToDate(date ? formatDateInput(date) : '');
-                    setSelectedBookId(null);
                   }}
                 />
               </div>
@@ -466,7 +393,7 @@ export const ManualBillBookAcknowledgementPage = () => {
           </div>
 
           {/* Results Checklist table */}
-          <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
+          <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
             <div className="px-5 py-4 border-b border-slate-200 bg-slate-50">
               <h3 className="font-semibold text-slate-800 text-sm">
                 Dispatches Checklist

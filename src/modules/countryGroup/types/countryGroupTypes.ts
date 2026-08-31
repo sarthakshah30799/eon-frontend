@@ -4,6 +4,8 @@ import type {
   ICountryGroupFormValues,
   ICreateCountryGroup,
   IUpdateCountryGroup,
+  ICountryGroupListQuery,
+  ICountryGroupListResponse,
 } from '@/api/countryGroup';
 
 export type {
@@ -12,8 +14,6 @@ export type {
   ICountryGroupFormValues,
   ICreateCountryGroup,
   IUpdateCountryGroup,
+  ICountryGroupListQuery,
+  ICountryGroupListResponse,
 };
-
-export interface ICountryGroupListResponse {
-  data: ICountryGroup[];
-}

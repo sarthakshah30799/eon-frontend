@@ -28,12 +28,12 @@ export const useValidateCountryCode = (currentId?: string) => {
       const res = await queryClient.fetchQuery({
         queryKey: [
           'country-profiles',
-          { page: 1, limit: 20, code: normalizedCode },
+          { limit: 20, offset: 0, code: normalizedCode },
         ],
         queryFn: () =>
           countryProfileApi.getCountryProfiles({
-            page: 1,
             limit: 20,
+            offset: 0,
             code: normalizedCode,
           }),
       });

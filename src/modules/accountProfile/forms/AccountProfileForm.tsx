@@ -14,14 +14,14 @@ import {
 } from '@/components/forms';
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import { financialCodesApi } from '@/api/financialCodes/financialCodes.api';
-import { branchProfileApi } from '@/api/branchProfile/branchProfile.api';
 import { accountProfileApi } from '@/api/accountProfile';
 import { useGetFinancialCode } from '@/modules/financialCodes/hooks/useGetFinancialCode';
 import { useListCurrencyProfiles } from '@/modules/currencyProfile/hooks/useListCurrencyProfiles';
+import { useLoadBranchOptions } from '@/modules/branchProfile/hooks';
 import { accountProfileSchema } from '../schema/accountProfileSchema';
 import type { ICreateAccountProfile } from '../types/accountProfileTypes';
 import { isAccountProfileCurrencyOption } from '../utils/accountProfileUtils';
-import { normalizeCodeValue } from '@/utils';
+import { normalizeCodeValue, toPageQuery } from '@/utils';
 
 const ACCOUNT_PROFILE_OPTION_PAGE_SIZE = 30;
 
@@ -47,7 +47,7 @@ const FinancialCodeObserver = ({ isDisabled }: { isDisabled: boolean }) => {
   // Fetch all financial codes for looking up and filtering
   const { data: financialCodesRes } = useQuery({
     queryKey: ['financial-codes-lookup'],
-    queryFn: () => financialCodesApi.getFinancialCodes({ page: 1, limit: 100 }),
+    queryFn: () => financialCodesApi.getFinancialCodes({ limit: 100, offset: 0 }),
   });
   const financialCodes = useMemo(
     () => financialCodesRes?.data || [],
@@ -110,8 +110,8 @@ const FinancialCodeObserver = ({ isDisabled }: { isDisabled: boolean }) => {
   const loadFinancialCodeOptions = useCallback(
     async (inputValue: string) => {
       const res = await financialCodesApi.getFinancialCodes({
-        page: 1,
         limit: 100,
+        offset: 0,
         search: inputValue,
       });
       let data = res.data || [];
@@ -129,8 +129,8 @@ const FinancialCodeObserver = ({ isDisabled }: { isDisabled: boolean }) => {
 
   const loadFinancialTypeOptions = useCallback(async (inputValue: string) => {
     const res = await financialCodesApi.getFinancialCodes({
-      page: 1,
       limit: 100,
+      offset: 0,
     });
     const types = new Set<string>();
     const options: { value: string; label: string }[] = [];
@@ -205,10 +205,11 @@ export const AccountProfileForm = ({
 }: AccountProfileFormProps) => {
   const navigate = useNavigate();
   const isDisabled = isSubmitting || readOnly;
-  const { data: currencies = [], isLoading: isCurrenciesLoading } =
+  const { data: currenciesPage, isLoading: isCurrenciesLoading } =
     useListCurrencyProfiles({
       activeOnly: false,
     });
+  const currencies = currenciesPage?.data ?? [];
   const currencyOptions = useMemo(
     () =>
       currencies.filter(isAccountProfileCurrencyOption).map(currency => ({
@@ -235,28 +236,12 @@ export const AccountProfileForm = ({
     [currencyOptions]
   );
 
-  const loadBranchOptions = useCallback(async (inputValue: string) => {
-    const data = await branchProfileApi.getBranchProfiles({
-      activeOnly: true,
-    });
-    const filtered = data.filter(
-      b =>
-        b.code.toLowerCase().includes(inputValue.toLowerCase()) ||
-        b.name.toLowerCase().includes(inputValue.toLowerCase())
-    );
-    return {
-      options: filtered.map(b => ({
-        value: b.id,
-        label: `${b.code} - ${b.name}`,
-      })),
-    };
-  }, []);
+  const loadBranchOptions = useLoadBranchOptions({ activeOnly: true });
 
   const loadMapToAccountOptions = useCallback(
     async (inputValue: string, page = 1) => {
       const res = await accountProfileApi.getAccountProfiles({
-        page,
-        limit: ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
+        ...toPageQuery(page, ACCOUNT_PROFILE_OPTION_PAGE_SIZE),
         search: inputValue,
         active: true,
       });
@@ -266,7 +251,7 @@ export const AccountProfileForm = ({
           value: a.id,
           label: `${a.accountCode} - ${a.accountName}`,
         })),
-        hasMore: (res.data || []).length === ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
+        hasMore: res.hasMore,
       };
     },
     [currentId]
@@ -280,8 +265,7 @@ export const AccountProfileForm = ({
       }
 
       const res = await accountProfileApi.getAccountProfiles({
-        page: 1,
-        limit: ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
+        ...toPageQuery(1, ACCOUNT_PROFILE_OPTION_PAGE_SIZE),
         search: normalizedCode,
       });
       return (res.data || []).some(
@@ -398,6 +382,8 @@ export const AccountProfileForm = ({
             placeholder="Select Branch"
             disabled={isDisabled}
             loadOptions={loadBranchOptions}
+            defaultOptions={true}
+            pagination
             isClearable
           />
           <FormFieldSelect

@@ -16,6 +16,7 @@ import { expenseIncomeBookingSchema } from '../schema/expenseIncomeBookingSchema
 import type { ICreateExpenseIncomeBookingMaster } from '../types/expenseIncomeBookingTypes';
 import { accountProfileApi } from '@/api/accountProfile/accountProfile.api';
 import { normalizeCodeValue } from '@/utils';
+import { toPageQuery } from '@/utils/paginatedList';
 import { expenseIncomeBookingApi } from '@/api/expenseIncomeBooking/expenseIncomeBooking.api';
 
 const ACCOUNT_PROFILE_OPTION_PAGE_SIZE = 30;
@@ -46,11 +47,11 @@ const CodeField = ({
         return false;
       }
 
-      const res = await expenseIncomeBookingApi.getBookingMasters({
+      const items = await expenseIncomeBookingApi.getAllBookingMasters({
         type,
       });
 
-      return (res ?? []).some(
+      return items.some(
         item =>
           normalizeCodeValue(item.code) === normalizedCode &&
           item.id !== currentId
@@ -225,8 +226,7 @@ export const ExpenseIncomeBookingForm = ({
     async (inputValue: string, page = 1) => {
       try {
         const response = await accountProfileApi.getAccountProfiles({
-          limit: ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
-          page,
+          ...toPageQuery(page, ACCOUNT_PROFILE_OPTION_PAGE_SIZE),
           active: true,
         });
         const options = (response.data ?? []).map(acc => ({
@@ -240,8 +240,7 @@ export const ExpenseIncomeBookingForm = ({
 
         return {
           options: filtered,
-          hasMore:
-            (response.data ?? []).length === ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
+          hasMore: response.hasMore,
         };
       } catch (err) {
         console.error('Error fetching account profiles:', err);

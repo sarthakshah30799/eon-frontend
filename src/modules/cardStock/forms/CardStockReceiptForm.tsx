@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import {
@@ -17,7 +17,10 @@ import {
 import type { AsyncSelectOption, AsyncSelectResponse } from '@/components/ui';
 import { useAuth } from '@/lib/AuthContext';
 import { transactionPoliciesApi } from '@/api/transactionPolicies';
-import { useListBranchProfiles } from '@/modules/branchProfile/hooks';
+import {
+  useGetBranchProfile,
+  useLoadBranchOptions,
+} from '@/modules/branchProfile/hooks';
 import { getTransactionDatePolicy } from '@/modules/transactionPolicies/utils/transactionDatePolicy';
 import type { ICurrencyProfile } from '@/modules/currencyProfile/types';
 import type { IPartyProfile } from '@/modules/partyProfiles/types';
@@ -520,35 +523,31 @@ const CardIssuerProfileField = ({
 const ReceiptHeader = ({
   readOnly,
   issuers,
-  branches,
   canSelectBranch,
+  loadBranchOptions,
   transactionDatePolicy,
   onBranchChange,
 }: {
   readOnly: boolean;
   issuers: IPartyProfile[];
-  branches: Array<{ id: string; code: string; name: string }>;
   canSelectBranch: boolean;
+  loadBranchOptions: (
+    inputValue: string,
+    page?: number
+  ) => Promise<AsyncSelectResponse>;
   transactionDatePolicy: ReturnType<typeof getTransactionDatePolicy>;
   onBranchChange: (value: string | string[] | null) => void;
 }) => {
-  const branchOptions = useMemo(
-    () =>
-      branches.map(branch => ({
-        value: branch.id,
-        label: `${branch.code} - ${branch.name}`,
-      })),
-    [branches]
-  );
-
   return (
     <CardSection heading="Receipt Stock" className="space-y-4">
       <div className="grid gap-3 md:grid-cols-4">
-        <StaticFormFieldSelect
+        <FormFieldSelect
           name="branchId"
           label="Branch"
-          options={branchOptions}
-          disabled={readOnly || !canSelectBranch || branches.length <= 1}
+          loadOptions={loadBranchOptions}
+          defaultOptions={true}
+          pagination
+          disabled={readOnly || !canSelectBranch}
           onValueChange={onBranchChange}
         />
         <FormFieldDatePicker
@@ -590,18 +589,31 @@ export const CardStockReceiptForm = ({
   const [selectedBranchId, setSelectedBranchId] = useState(
     initialValues.branchId
   );
-  const { data: branches = [], isLoading: branchesLoading } =
-    useListBranchProfiles({ activeOnly: true });
-  const availableBranches = useMemo(
-    () =>
-      branches
-        .filter(branch => canSelectBranch || branch.id === activeBranchId)
-        .map(branch => ({
-          id: branch.id,
-          code: branch.code,
-          name: branch.name,
-        })),
-    [activeBranchId, branches, canSelectBranch]
+  const loadBranchOptionsBase = useLoadBranchOptions({ activeOnly: true });
+  const { data: selectedBranch } = useGetBranchProfile(selectedBranchId);
+  const loadBranchOptions = useCallback(
+    async (inputValue: string, page = 1) => {
+      const result = await loadBranchOptionsBase(inputValue, page);
+      const options = canSelectBranch
+        ? [...result.options]
+        : result.options.filter(option => option.value === activeBranchId);
+
+      if (page === 1 && selectedBranch) {
+        const selectedOption = {
+          value: selectedBranch.id,
+          label: `${selectedBranch.code} - ${selectedBranch.name}`,
+        };
+        if (!options.some(option => option.value === selectedOption.value)) {
+          options.unshift(selectedOption);
+        }
+      }
+
+      return {
+        options,
+        hasMore: canSelectBranch ? Boolean(result.hasMore) : false,
+      };
+    },
+    [activeBranchId, canSelectBranch, loadBranchOptionsBase, selectedBranch]
   );
   const selectedBranchPolicy = useQuery({
     queryKey: ['card-stock', 'transaction-date-policy', selectedBranchId],
@@ -635,7 +647,7 @@ export const CardStockReceiptForm = ({
     console.info('[CARD STOCK] transaction date policy', transactionDatePolicy);
   }, [readOnly, transactionDatePolicy]);
 
-  if (references.isLoading || branchesLoading) return <Loader />;
+  if (references.isLoading) return <Loader />;
 
   return (
     <Form<ICardStockFormValues>
@@ -671,8 +683,8 @@ export const CardStockReceiptForm = ({
       <ReceiptHeader
         readOnly={readOnly}
         issuers={references.issuers}
-        branches={availableBranches}
         canSelectBranch={canSelectBranch}
+        loadBranchOptions={loadBranchOptions}
         transactionDatePolicy={transactionDatePolicy}
         onBranchChange={value => {
           const nextBranch = typeof value === 'string' ? value : '';

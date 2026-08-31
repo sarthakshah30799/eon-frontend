@@ -1,14 +1,29 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button1';
-import { Loader } from '@/components/ui/loader';
 import { Table, type TableColumnDef } from '@/components/ui/table';
+import { useOffsetPaginatedList } from '@/hooks';
+import { cardStockApi } from '@/api/cardStock';
 import { formatDateTime } from '@/utils';
-import { useListCardStockReceipts } from '../hooks';
 import type { CardStockReceipt } from '../types';
 
 export const CardStockListView = () => {
   const navigate = useNavigate();
-  const { data = [], isLoading, error } = useListCardStockReceipts();
+  const {
+    rows: data,
+    isLoading,
+    isFetching,
+    error,
+    page,
+    limit,
+    total,
+    totalPages,
+    handlePageChange,
+    handlePageSizeChange,
+  } = useOffsetPaginatedList({
+    queryKey: ['card-stock', 'receipts'],
+    queryFn: params => cardStockApi.list(params),
+  });
+
   const columns: TableColumnDef<CardStockReceipt>[] = [
     { accessorKey: 'transactionNumber', header: 'Transaction Number' },
     {
@@ -44,8 +59,8 @@ export const CardStockListView = () => {
       ),
     },
   ];
-  if (isLoading) return <Loader />;
-  if (error)
+
+  if (error) {
     return (
       <div className="py-6 text-center text-error-600">
         {error instanceof Error
@@ -53,6 +68,8 @@ export const CardStockListView = () => {
           : 'Failed to load card stock receipts'}
       </div>
     );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -68,14 +85,22 @@ export const CardStockListView = () => {
           New Receipt Stock
         </Button>
       </div>
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
+      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
         <Table
           columns={columns}
           data={data}
           loading={isLoading}
+          isFetching={isFetching}
           enableSorting={false}
           enableFiltering={false}
-          enablePagination={false}
+          enablePagination
+          manualPagination
+          page={page}
+          pageSize={limit}
+          total={total}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
           emptyMessage="No card stock receipts found."
         />
       </section>

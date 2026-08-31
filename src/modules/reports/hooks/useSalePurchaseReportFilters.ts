@@ -149,7 +149,7 @@ export const useSalePurchaseReportFilters = () => {
     queryKey: ['reports-branch-profiles'],
     enabled: true,
     queryFn: async () =>
-      branchProfileApi.getBranchProfiles({
+      branchProfileApi.getAllBranchProfiles({
         activeOnly: true,
       }),
   });
@@ -158,7 +158,7 @@ export const useSalePurchaseReportFilters = () => {
     queryKey: ['reports-counter-profiles'],
     enabled: true,
     queryFn: async () =>
-      counterProfileApi.getCounterProfiles({
+      counterProfileApi.getAllCounterProfiles({
         activeOnly: true,
       }),
   });
@@ -381,24 +381,22 @@ export const useSalePurchaseReportFilters = () => {
       partyProfileBranchIds,
     ],
     enabled: partyTypeCodes.length > 0,
-    initialPageParam: 1,
+    initialPageParam: 0,
     queryFn: async ({ pageParam }) =>
       partyProfileApi.getPartyProfiles(
         {
           search: debouncedPartyProfileSearch.trim() || undefined,
           activeOnly: true,
-          page: Number(pageParam) || 1,
+          offset: Number(pageParam) || 0,
           limit: PAGE_SIZE,
           branchIds: partyProfileBranchIds,
         },
         partyTypeCodes as PartyProfileType[]
       ),
-    getNextPageParam: lastPage => {
-      if (lastPage.page >= lastPage.totalPages) {
-        return undefined;
-      }
-      return lastPage.page + 1;
-    },
+    getNextPageParam: (lastPage, _allPages, lastPageParam) =>
+      lastPage.hasMore
+        ? (Number(lastPageParam) || 0) + lastPage.limit
+        : undefined,
   });
 
   const partyProfiles = useMemo(
@@ -406,7 +404,7 @@ export const useSalePurchaseReportFilters = () => {
     [partyProfilesQuery.data]
   );
   const partyProfilesTotalItems =
-    partyProfilesQuery.data?.pages[0]?.totalItems ?? 0;
+    partyProfilesQuery.data?.pages[0]?.total ?? 0;
 
   const visibleCounterIds = useMemo(
     () => counterIds.filter(counterId => allowedCounterIds.has(counterId)),

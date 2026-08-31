@@ -1,3 +1,5 @@
+import type { IOffsetPaginationParams, IPaginatedResponse } from '@/types/pagination';
+
 export interface IStateProfile {
   id: string;
   countryId: string;
@@ -26,9 +28,7 @@ export type ICreateStateProfile = Omit<
 
 export type IUpdateStateProfile = Partial<ICreateStateProfile>;
 
-export interface IStateProfileListQuery {
-  page?: number;
-  limit?: number;
+export interface IStateProfileListQuery extends IOffsetPaginationParams {
   search?: string;
   countryId?: string;
   code?: string;
@@ -50,18 +50,6 @@ export interface IBackendState {
   updatedAt: string;
 }
 
-export interface IBackendStateListResponse {
-  data: IBackendState[];
-  page: number;
-  limit: number;
-  totalItems: number;
-  totalPages: number;
-}
+export type IBackendStateListResponse = IPaginatedResponse<IBackendState>;
 
-export interface IStateProfileListResponse {
-  data: IStateProfile[];
-  page: number;
-  limit: number;
-  totalItems: number;
-  totalPages: number;
-}
+export type IStateProfileListResponse = IPaginatedResponse<IStateProfile>;

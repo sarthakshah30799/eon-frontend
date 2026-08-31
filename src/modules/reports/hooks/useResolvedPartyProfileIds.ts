@@ -21,7 +21,7 @@ export const useResolvedPartyProfileIds = (
     }
 
     const resolvedIds = new Set<string>();
-    let page = 1;
+    let offset = 0;
 
     while (true) {
       const response = await partyProfileApi.getPartyProfiles(
@@ -29,7 +29,7 @@ export const useResolvedPartyProfileIds = (
           search:
             filters.appliedFilters?.partyProfileSearch?.trim() || undefined,
           activeOnly: true,
-          page,
+          offset,
           limit: PAGE_SIZE,
         },
         filters.appliedFilters?.partyTypeCodes?.length
@@ -43,11 +43,11 @@ export const useResolvedPartyProfileIds = (
         }
       });
 
-      if (!response.totalPages || page >= response.totalPages) {
+      if (!response.hasMore) {
         break;
       }
 
-      page += 1;
+      offset += PAGE_SIZE;
     }
 
     return [...resolvedIds];

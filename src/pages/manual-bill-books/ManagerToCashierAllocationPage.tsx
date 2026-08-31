@@ -9,6 +9,7 @@ import {
   useListApprovedManualBillBooks,
   useGetManualBillBookAllocations,
   useSaveManualBillBookAllocations,
+  useGetManualBillBook,
 } from '@/modules/manual-bill-books/hooks';
 import { useCategoryOptions } from '@/hooks/useCategoryOptions';
 import {
@@ -112,37 +113,19 @@ export const ManagerToCashierAllocationPage = () => {
     useListManualBillBookAuthorizedUsers(activeBranchId || undefined);
 
   const listApprovedManualBillBooks = useListApprovedManualBillBooks();
+  const { data: prefillBook } = useGetManualBillBook(bookId ?? undefined);
   const getManualBillBookAllocations = useGetManualBillBookAllocations();
   const { mutateAsync: saveManualBillBookAllocations } =
     useSaveManualBillBookAllocations();
 
   useEffect(() => {
-    const prefillFromBook = async () => {
-      if (bookId && activeBranchId && !isAutoProcessedRef.current) {
-        isAutoProcessedRef.current = true;
-        try {
-          setIsProcessing(true);
-          const data = await listApprovedManualBillBooks(
-            activeBranchId,
-            ManualBillBookStatusEnum.APPROVE
-          );
-          const book = data.find(b => b.id === bookId);
-          if (book) {
-            // Only pre-fill the form fields — do NOT render the table yet.
-            // The user must click Process to see the Dispatches Checklist.
-            setTxnType(book.transactionType);
-            setBookNoFromStr(String(book.bookNoFrom));
-            setBookNoToStr(String(book.bookNoTo));
-          }
-        } catch (err: unknown) {
-          console.error('Failed to pre-fill book details:', err);
-        } finally {
-          setIsProcessing(false);
-        }
-      }
-    };
-    prefillFromBook();
-  }, [bookId, activeBranchId, listApprovedManualBillBooks]);
+    if (prefillBook && !isAutoProcessedRef.current) {
+      isAutoProcessedRef.current = true;
+      setTxnType(prefillBook.transactionType);
+      setBookNoFromStr(String(prefillBook.bookNoFrom));
+      setBookNoToStr(String(prefillBook.bookNoTo));
+    }
+  }, [prefillBook]);
 
   const handleProcess = async () => {
     if (!activeBranchId) return;
@@ -159,18 +142,12 @@ export const ManagerToCashierAllocationPage = () => {
     try {
       setIsProcessing(true);
       setAllocatedWarning('');
-      // Fetch all dispatches for the branch (to query approved allocations)
-      const approvedBooks = await listApprovedManualBillBooks(
-        activeBranchId,
-        ManualBillBookStatusEnum.APPROVE
-      );
-      // Filter by range and txnType in memory
-      const matched = approvedBooks.filter(book => {
-        if (txnType !== 'ALL' && book.transactionType !== txnType) {
-          return false;
-        }
-        // Check overlap of range
-        return book.bookNoFrom <= toVal && book.bookNoTo >= fromVal;
+      const matched = await listApprovedManualBillBooks({
+        branchId: activeBranchId,
+        status: ManualBillBookStatusEnum.APPROVE,
+        transactionType: txnType === 'ALL' ? undefined : txnType,
+        bookNoFrom: fromVal,
+        bookNoTo: toVal,
       });
 
       const matchedIds = matched.map(b => b.id);

@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import { Checkbox, SelectEntity, type TableColumnDef } from '@/components/ui';
-import type { PaginationState } from '@tanstack/react-table';
 import { useDebounce } from '@/hooks';
 import { useListPartyProfiles } from '../hooks';
 import { PartyProfileStatusEnum, type PartyProfileType } from '../types';
@@ -13,7 +12,7 @@ interface SelectPartyProfilesProps {
   multiple?: boolean;
   title?: string;
   description?: string;
-  queryParams?: Omit<IPartyProfileListQuery, 'page' | 'limit' | 'search'>;
+  queryParams?: Omit<IPartyProfileListQuery, 'limit' | 'offset' | 'search'>;
   allowedProfileIds?: string[];
   initialSelectedProfiles?: IPartyProfile[];
   onContinue: (profiles: IPartyProfile[]) => void;
@@ -136,8 +135,8 @@ export const SelectPartyProfiles = ({
   } = useListPartyProfiles(
     {
       search: debouncedSearch.trim() || undefined,
-      page: 1,
       limit: pageSize,
+      offset: 0,
       ...queryParams,
       activeOnly: true,
       status: PartyProfileStatusEnum.APPROVE,
@@ -261,9 +260,7 @@ export const SelectPartyProfiles = ({
         }
         enablePagination
         pageSize={pageSize}
-        onPaginationChange={(pagination: PaginationState) => {
-          setPageSize(pagination.pageSize);
-        }}
+        onPageSizeChange={setPageSize}
       />
     </>
   );

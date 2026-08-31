@@ -2,8 +2,10 @@ import { useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { purposeApi } from '@/api/purpose';
 import type { AsyncSelectOption, AsyncSelectResponse } from '@/components/ui';
+import { PAGINATION_DEFAULTS } from '@/constants/paginationConstants';
 import type { TransactionType } from '@/modules/transactions';
 import type { PurposePartyProfileType } from '@/modules/purpose/types';
+import { pageToOffset, toAsyncSelectPage } from '@/utils/paginatedList';
 
 const PURPOSE_OPTIONS_STALE_TIME = 5 * 60 * 1000;
 
@@ -59,37 +61,42 @@ export const usePurposeOptions = (
   const query = useQuery({
     queryKey,
     queryFn: () =>
-      purposeApi.getPurposes(
-        '',
-        normalizedTransactionType ?? undefined,
-        normalizedPartyProfileType ?? undefined
-      ),
+      purposeApi.getPurposes({
+        transactionType: normalizedTransactionType ?? undefined,
+        partyProfileType: normalizedPartyProfileType ?? undefined,
+        limit: PAGINATION_DEFAULTS.LIMIT,
+        offset: PAGINATION_DEFAULTS.OFFSET,
+      }),
     staleTime: PURPOSE_OPTIONS_STALE_TIME,
     enabled: true,
   });
 
   const loadOptions = useCallback(
-    async (inputValue: string): Promise<AsyncSelectResponse> => {
+    async (inputValue: string, page = 1): Promise<AsyncSelectResponse> => {
       const search = inputValue.trim();
+      const limit = PAGINATION_DEFAULTS.LIMIT;
       const cacheKey = createQueryKey(
         normalizedTransactionType,
         normalizedPartyProfileType,
         search
       );
-      const purposes = await queryClient.fetchQuery({
-        queryKey: cacheKey,
+      const response = await queryClient.fetchQuery({
+        queryKey: [...cacheKey, page, limit],
         queryFn: () =>
-          purposeApi.getPurposes(
-            search,
-            normalizedTransactionType ?? undefined,
-            normalizedPartyProfileType ?? undefined
-          ),
+          purposeApi.getPurposes({
+            search: search || undefined,
+            transactionType: normalizedTransactionType ?? undefined,
+            partyProfileType: normalizedPartyProfileType ?? undefined,
+            limit,
+            offset: pageToOffset(page, limit),
+          }),
         staleTime: PURPOSE_OPTIONS_STALE_TIME,
       });
 
-      const options = purposes.map(toAsyncSelectOption);
+      const pageResult = toAsyncSelectPage(response, toAsyncSelectOption);
       return {
-        options: filterOptions(options, inputValue),
+        options: filterOptions(pageResult.options, inputValue),
+        hasMore: pageResult.hasMore,
       };
     },
     [normalizedPartyProfileType, normalizedTransactionType, queryClient]
@@ -97,7 +104,7 @@ export const usePurposeOptions = (
 
   return {
     defaultOptions: useMemo(
-      () => (query.data ?? []).map(toAsyncSelectOption),
+      () => (query.data?.data ?? []).map(toAsyncSelectOption),
       [query.data]
     ),
     loadOptions,

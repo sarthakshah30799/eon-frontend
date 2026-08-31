@@ -1,3 +1,8 @@
+import type {
+  IOffsetPaginationParams,
+  IPaginatedResponse,
+} from '@/types/pagination';
+
 export interface ITdsProfile {
   id: string;
   code: string;
@@ -26,3 +31,9 @@ export type ICreateTdsProfile = {
 };
 
 export type IUpdateTdsProfile = Partial<ICreateTdsProfile>;
+
+export interface ITdsProfileListQuery extends IOffsetPaginationParams {
+  search?: string;
+}
+
+export type ITdsProfileListResponse = IPaginatedResponse<ITdsProfile>;

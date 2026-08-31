@@ -175,12 +175,13 @@ export const useFlm4PurchaseFromFfmcFilters =
       queryKey: ['reports-flm4-branch-profiles'],
       enabled: true,
       queryFn: async () =>
-        branchProfileApi.getBranchProfiles({
+        branchProfileApi.getAllBranchProfiles({
           activeOnly: true,
         }),
     });
 
-    const { data: productProfiles = [] } = useListProductProfiles(true);
+    const { data: productProfilesPage } = useListProductProfiles(true);
+    const productProfiles = productProfilesPage?.data ?? [];
     const { data: partyProfileTypes = [] } = usePartyProfileTypes();
 
     const accessibleBranchProfiles = useMemo(

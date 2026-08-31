@@ -34,6 +34,7 @@ import {
   createEmptyPurchasePaymentRow,
   getPurchaseTransactionAccountFilter,
 } from '@/modules/purchase/utils/purchaseUtils';
+import { toPageQuery } from '@/utils/paginatedList';
 import {
   SETTLEMENT_SOURCE_OPTIONS,
   TRANSACTION_PAYMENT_TEXT,
@@ -531,7 +532,7 @@ const PaymentDetailRow = ({
 
       try {
         setIsLoadingPages(true);
-        const pages = await chequebookApi.getSelectablePages({
+        const pages = await chequebookApi.getAllSelectablePages({
           accountId: String(accountId),
           userId: selectablePagesUserId || undefined,
         });
@@ -632,8 +633,7 @@ const PaymentDetailRow = ({
     async (inputValue: string, page = 1): Promise<AsyncSelectResponse> => {
       const response = await accountProfileApi.getAccountProfiles({
         ...accountQuery,
-        page,
-        limit: ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
+        ...toPageQuery(page, ACCOUNT_PROFILE_OPTION_PAGE_SIZE),
         search: inputValue,
         active: true,
         accountType:
@@ -652,7 +652,7 @@ const PaymentDetailRow = ({
           value: account.id,
           label: `${account.accountCode} - ${account.accountName}`,
         })),
-        hasMore: accounts.length === ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
+        hasMore: response.hasMore,
       };
     },
     [accountQuery, paymentMethod, transactionType]

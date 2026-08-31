@@ -3,15 +3,17 @@ import { PencilSquareIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button1';
 import { ToggleSwitch } from '@/components/ui/toggleSwitch';
 import { Table, type TableColumnDef } from '@/components/ui/table';
+import type { PaginationControlsProps } from '@/components/ui';
 import type { ICounterProfile } from '../types';
 
-interface CounterProfileTableProps {
+interface CounterProfileTableProps extends PaginationControlsProps {
   counters: ICounterProfile[];
   onToggleStatus: (id: string, isActive: boolean) => void | Promise<void>;
   onDelete: (id: string) => void | Promise<void>;
   isUpdatingStatus?: boolean;
   isDeleting?: boolean;
   loading?: boolean;
+  isFetching?: boolean;
   onSearch?: (value: string) => void;
   searchValue?: string;
   searchPlaceholder?: string;
@@ -29,9 +31,16 @@ export const CounterProfileTable = ({
   onToggleStatus,
   isUpdatingStatus = false,
   loading = false,
+  isFetching = false,
   onSearch,
   searchValue,
   searchPlaceholder,
+  page,
+  pageSize,
+  total,
+  totalPages,
+  onPageChange,
+  onPageSizeChange,
 }: CounterProfileTableProps) => {
   const navigate = useNavigate();
 
@@ -103,10 +112,18 @@ export const CounterProfileTable = ({
       columns={columns}
       data={rows}
       enableFiltering={false}
-      enablePagination={false}
+      enablePagination
+      manualPagination
       enableRowSelection={false}
       enableColumnVisibility={false}
       loading={loading}
+      isFetching={isFetching}
+      page={page}
+      pageSize={pageSize}
+      total={total}
+      totalPages={totalPages}
+      onPageChange={onPageChange}
+      onPageSizeChange={onPageSizeChange}
       onSearch={onSearch}
       searchValue={searchValue}
       searchPlaceholder={searchPlaceholder}

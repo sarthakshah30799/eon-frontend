@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Checkbox, SelectEntity, type TableColumnDef } from '@/components/ui';
+import { PAGINATION_DEFAULTS, PAGINATION_MAX_LIMIT } from '@/constants/paginationConstants';
 import { useListCurrencyProfiles } from '../hooks';
 import type { ICurrencyProfile } from '../types';
 
@@ -101,10 +102,16 @@ export const SelectCurrencyProfiles = ({
   const [search, setSearch] = useState('');
 
   const {
-    data: currencies = [],
+    data: currenciesPage,
     isLoading,
     isFetching,
-  } = useListCurrencyProfiles(search);
+  } = useListCurrencyProfiles({
+    search: search.trim() || undefined,
+    activeOnly: true,
+    limit: PAGINATION_MAX_LIMIT,
+    offset: PAGINATION_DEFAULTS.OFFSET,
+  });
+  const currencies = currenciesPage?.data ?? [];
 
   const rows = useMemo<SelectableCurrencyProfileRow[]>(
     () =>

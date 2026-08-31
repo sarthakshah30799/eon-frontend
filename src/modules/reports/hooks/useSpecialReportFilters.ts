@@ -90,7 +90,7 @@ export const useSpecialReportFilters = () => {
     queryKey: ['reports-special-branch-profiles'],
     enabled: true,
     queryFn: async () =>
-      branchProfileApi.getBranchProfiles({
+      branchProfileApi.getAllBranchProfiles({
         activeOnly: true,
       }),
   });

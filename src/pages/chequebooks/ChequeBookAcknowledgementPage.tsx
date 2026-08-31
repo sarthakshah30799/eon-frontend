@@ -5,6 +5,7 @@ import { chequebookApi, type IChequeBook } from '@/api';
 import toast from 'react-hot-toast';
 import { FormFieldSelect } from '@/components/forms';
 import { accountProfileApi } from '@/api/accountProfile/accountProfile.api';
+import { toPageQuery } from '@/utils/paginatedList';
 import {
   AsyncSelect,
   Button,
@@ -118,11 +119,12 @@ export const ChequeBookAcknowledgementPage = () => {
     if (!activeBranchId) return;
     try {
       setIsProcessing(true);
-      const data = await chequebookApi.findAll(
-        activeBranchId,
-        searchStatus || undefined,
-        currentBankAccountCode === 'ALL' ? undefined : currentBankAccountCode
-      );
+      const data = await chequebookApi.findAllMatching({
+        branchId: activeBranchId,
+        status: searchStatus || undefined,
+        bankAccountCode:
+          currentBankAccountCode === 'ALL' ? undefined : currentBankAccountCode,
+      });
       if (selectedBookId) {
         setQueryResults(data.filter(b => b.id === selectedBookId));
       } else {
@@ -317,8 +319,7 @@ export const ChequeBookAcknowledgementPage = () => {
                       try {
                         const response =
                           await accountProfileApi.getAccountProfiles({
-                            page,
-                            limit: ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
+                            ...toPageQuery(page, ACCOUNT_PROFILE_OPTION_PAGE_SIZE),
                             search: inputValue,
                             active: true,
                           });
@@ -339,9 +340,7 @@ export const ChequeBookAcknowledgementPage = () => {
                             value: acc.id,
                             label: `${acc.accountCode} - ${acc.accountName}`,
                           })),
-                          hasMore:
-                            (response.data || []).length ===
-                            ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
+                          hasMore: response.hasMore,
                         };
                       } catch {
                         return {

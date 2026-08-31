@@ -323,9 +323,8 @@ export const Sidebar = ({
   const { data: company = null } = useQuery({
     queryKey: ['company-profile-sidebar'],
     queryFn: async (): Promise<ICompanyProfile | null> => {
-      const response = await companyProfileApi.getCompanyProfiles();
-      if (response.error) throw new Error(response.error);
-      return response.data?.[0] ?? null;
+      const companies = await companyProfileApi.getAllCompanyProfiles();
+      return companies[0] ?? null;
     },
   });
 

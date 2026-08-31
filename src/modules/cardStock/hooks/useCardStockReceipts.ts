@@ -1,10 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { cardStockApi } from '@/api/cardStock';
 
-export const useListCardStockReceipts = () =>
+export const useListCardStockReceipts = (
+  params?: Omit<Parameters<typeof cardStockApi.list>[0], 'limit' | 'offset'>
+) =>
   useQuery({
-    queryKey: ['card-stock', 'receipts'],
-    queryFn: cardStockApi.list,
+    queryKey: ['card-stock', 'receipts', 'all', params],
+    queryFn: () => cardStockApi.listAll(),
   });
 
 export const useGetCardStockReceipt = (id: string) =>

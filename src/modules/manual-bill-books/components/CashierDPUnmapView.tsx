@@ -277,7 +277,7 @@ export const CashierDPUnmapView = () => {
   if (!formState && !confirmState) {
     return (
       <div className="space-y-6">
-        <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
+        <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
           <div className="overflow-x-auto border border-slate-200 rounded-md">
             <Table
               columns={columns}

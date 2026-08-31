@@ -9,11 +9,11 @@ import {
 const key = ['card-stock', 'settlement-documents'] as const;
 
 export const useCardSettlements = (
-  filters: CardStockSettlementDocumentFilters
+  filters: Omit<CardStockSettlementDocumentFilters, 'limit' | 'offset'>
 ) =>
   useQuery({
-    queryKey: [...key, filters],
-    queryFn: () => cardSettlementApi.list(filters),
+    queryKey: [...key, 'all', filters],
+    queryFn: () => cardSettlementApi.listAll(filters),
   });
 
 export const useCardSettlement = (id: string) =>

@@ -2,9 +2,11 @@ import { apiClient } from '../api';
 import type {
   IDocumentProfile,
   IDocumentProfileListQuery,
+  IDocumentProfileListResponse,
   ICreateDocumentProfile,
   IResolveDocumentProfileQuery,
 } from '@/modules/documentProfiles/types';
+import { fetchAllMatching, normalizePaginatedResponse } from '@/utils/paginatedList';
 
 const buildQueryString = (
   params?: IDocumentProfileListQuery | IResolveDocumentProfileQuery
@@ -28,8 +30,8 @@ const buildQueryString = (
 export const documentProfileApi = {
   getDocumentProfiles: async (
     params?: IDocumentProfileListQuery
-  ): Promise<IDocumentProfile[]> => {
-    const res = await apiClient.get<IDocumentProfile[]>(
+  ): Promise<IDocumentProfileListResponse> => {
+    const res = await apiClient.get<IDocumentProfileListResponse>(
       `/document-profiles${buildQueryString(params)}`
     );
 
@@ -37,8 +39,15 @@ export const documentProfileApi = {
       throw new Error(res.error);
     }
 
-    return res.data || [];
+    return normalizePaginatedResponse(res.data, params?.limit, params?.offset);
   },
+
+  getAllDocumentProfiles: async (
+    params?: Omit<IDocumentProfileListQuery, 'limit' | 'offset'>
+  ): Promise<IDocumentProfile[]> =>
+    fetchAllMatching(pagination =>
+      documentProfileApi.getDocumentProfiles({ ...params, ...pagination })
+    ),
 
   getDocumentProfileById: async (
     id: string

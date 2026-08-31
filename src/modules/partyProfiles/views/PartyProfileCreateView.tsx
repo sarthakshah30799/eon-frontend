@@ -173,7 +173,7 @@ export const PartyProfileCreateView = () => {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
+      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
         <PartyProfileForm
           defaultValues={defaultValues}
           onSubmit={handleSubmit}

@@ -113,7 +113,7 @@ export const useCurrencyBalanceReportFilters =
       queryKey: ['reports-currency-balance-branch-profiles'],
       enabled: true,
       queryFn: async () =>
-        branchProfileApi.getBranchProfiles({
+        branchProfileApi.getAllBranchProfiles({
           activeOnly: true,
         }),
     });
@@ -122,15 +122,16 @@ export const useCurrencyBalanceReportFilters =
       queryKey: ['reports-currency-balance-counter-profiles'],
       enabled: true,
       queryFn: async () =>
-        counterProfileApi.getCounterProfiles({
+        counterProfileApi.getAllCounterProfiles({
           activeOnly: true,
         }),
     });
 
-    const { data: currencyProfiles = [] } = useListCurrencyProfiles(
+    const { data: currencyProfilesPage } = useListCurrencyProfiles(
       undefined,
       true
     );
+    const currencyProfiles = currencyProfilesPage?.data ?? [];
 
     const accessibleBranchProfiles = useMemo(
       () =>

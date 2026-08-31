@@ -1,12 +1,11 @@
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { userProfileApi } from '@/api/userProfile';
+import type { IUserProfileListQuery } from '../types';
 
-export const useListUserProfiles = (options?: {
-  activeOnly?: boolean;
-  search?: string;
-  branchId?: string;
-  roleFilter?: string;
-}) => {
+export const useListUserProfiles = (
+  options?: IUserProfileListQuery,
+  enabled = true
+) => {
   return useQuery({
     queryKey: [
       'user-profiles',
@@ -14,7 +13,11 @@ export const useListUserProfiles = (options?: {
       options?.search?.trim() || '',
       options?.branchId?.trim() || '',
       options?.roleFilter?.trim() || '',
+      options?.limit,
+      options?.offset,
     ],
     queryFn: () => userProfileApi.getUserProfiles(options),
+    placeholderData: keepPreviousData,
+    enabled,
   });
 };

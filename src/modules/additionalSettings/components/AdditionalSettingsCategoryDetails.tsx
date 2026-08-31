@@ -13,6 +13,8 @@ import {
 import { formatAccountProfileLabel } from '../utils/additionalSettingsUtils';
 import { useGetCurrencyProfile } from '@/modules/currencyProfile/hooks';
 import { currencyProfileApi } from '@/api';
+import { PAGINATION_DEFAULTS } from '@/constants/paginationConstants';
+import { pageToOffset, toAsyncSelectPage } from '@/utils/paginatedList';
 import type { IAccountProfile } from '@/modules/accountProfile/types/accountProfileTypes';
 
 interface AdditionalSettingsCategoryDetailsProps {
@@ -216,11 +218,17 @@ const EditSubcategoryForm = ({
       : null) ??
     selectValueOptions.find(option => option.value === value) ??
     null;
-  const loadCurrencyProfileOptions = useCallback(async (inputValue: string) => {
-    const currencies = await currencyProfileApi.getCurrencyProfiles(inputValue);
+  const loadCurrencyProfileOptions = useCallback(
+    async (inputValue: string, page = 1) => {
+      const limit = PAGINATION_DEFAULTS.LIMIT;
+      const response = await currencyProfileApi.getCurrencyProfiles({
+        search: inputValue.trim() || undefined,
+        activeOnly: true,
+        limit,
+        offset: pageToOffset(page, limit),
+      });
 
-    return {
-      options: currencies.map(currency => {
+      return toAsyncSelectPage(response, currency => {
         const currencyCode = currency.currencyCode?.trim() || '';
         const currencyName = currency.currencyName?.trim() || '';
 
@@ -231,10 +239,10 @@ const EditSubcategoryForm = ({
               ? `${currencyCode} - ${currencyName}`
               : currencyName || currencyCode,
         };
-      }),
-      hasMore: false,
-    };
-  }, []);
+      });
+    },
+    []
+  );
   const loadSelectValueOptions = useCallback(
     async (inputValue = '') => {
       if (subcategoryDefinition?.optionsSource === 'account-profile') {

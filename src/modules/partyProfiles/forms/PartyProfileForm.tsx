@@ -16,9 +16,9 @@ import {
 import { partyProfileSchema } from '../schema';
 import type { ICreatePartyProfile } from '../types';
 
-import { branchProfileApi } from '@/api/branchProfile/branchProfile.api';
 import { partyProfileApi } from '@/api/partyProfile';
 import { useAuth } from '@/lib/AuthContext';
+import { useLoadBranchOptions } from '@/modules/branchProfile/hooks';
 import { useGetStateProfile } from '@/modules/stateProfile';
 import {
   CARD_ISSUER_FORM_TEXT,
@@ -158,24 +158,7 @@ const PartyProfileFormFields = ({
     }
   }, [form, gstNo, panNo, selectedGstState?.gstStateCode]);
 
-  const branchLoadOptions = useCallback(async (inputValue: string) => {
-    const branches = await branchProfileApi.getBranchProfiles({
-      activeOnly: true,
-    });
-    const options = branches
-      .filter(
-        branch =>
-          !inputValue ||
-          `${branch.code} - ${branch.name}`
-            .toLowerCase()
-            .includes(inputValue.toLowerCase())
-      )
-      .map(branch => ({
-        value: branch.id,
-        label: `${branch.code} - ${branch.name}`,
-      }));
-    return { options };
-  }, []);
+  const branchLoadOptions = useLoadBranchOptions({ activeOnly: true });
 
   const validatePartyCode = useCallback(
     async (value: string) => {
@@ -186,8 +169,8 @@ const PartyProfileFormFields = ({
 
       const partyProfiles = await partyProfileApi.getPartyProfiles(
         {
-          page: 1,
           limit: 20,
+          offset: 0,
           code: normalizedCode,
           type: effectiveProfileType,
         },
@@ -599,6 +582,8 @@ const PartyProfileFormFields = ({
             label="Current Branch"
             placeholder="Select current branch"
             loadOptions={branchLoadOptions}
+            defaultOptions={true}
+            pagination
             disabled={isSubmitting || !canEditBranch || Boolean(currentId)}
           />
         </div>

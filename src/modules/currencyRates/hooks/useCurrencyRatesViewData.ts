@@ -33,12 +33,12 @@ const loadCurrencyRatesViewData = async (): Promise<CurrencyRatesViewData> => {
     await Promise.all([
       currencyRatesApi.getGroups(),
       productProfileApi
-        .getProductProfiles()
+        .getAllProductProfiles()
         .then(list =>
           list.filter(product => product.isActiveProduct !== false)
         ),
       currencyProfileApi
-        .getCurrencyProfiles()
+        .getAllCurrencyProfiles()
         .then(list => list.filter(currency => currency.active !== false)),
       currencyRatesApi.getLatestRates(),
       currencyRatesApi.getProductCurrencyRates(),

@@ -23,12 +23,11 @@ export const useSelectableManualBillBookPages = (
       userId ?? '',
       transactionType ?? '',
     ],
-    queryFn: async () => {
-      return manualBillBookApi.getSelectablePages({
+    queryFn: async () =>
+      manualBillBookApi.getAllSelectablePages({
         userId,
         transactionType,
-      });
-    },
+      }),
     enabled: Boolean(enabled && branchId),
   });
 };

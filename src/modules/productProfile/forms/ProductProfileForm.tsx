@@ -22,6 +22,7 @@ import { productProfileApi } from '@/api/productProfile';
 import { partyProfileApi } from '@/api/partyProfile';
 import { accountProfileApi } from '@/api/accountProfile';
 import { normalizeCodeValue } from '@/utils';
+import { toPageQuery } from '@/utils/paginatedList';
 import { SelectPartyProfiles } from '@/modules/partyProfiles/components';
 import { PartyProfileTypeEnum } from '@/modules/partyProfiles/types';
 import type { IPartyProfile } from '@/modules/partyProfiles/types';
@@ -483,8 +484,7 @@ export const ProductProfileForm = ({
   const loadAccountProfileOptions = useCallback(
     async (inputValue: string, page = 1) => {
       const response = await accountProfileApi.getAccountProfiles({
-        page,
-        limit: ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
+        ...toPageQuery(page, ACCOUNT_PROFILE_OPTION_PAGE_SIZE),
         search: inputValue,
       });
 
@@ -493,8 +493,7 @@ export const ProductProfileForm = ({
           value: account.id,
           label: `${account.accountCode} - ${account.accountName}`,
         })),
-        hasMore:
-          (response.data ?? []).length === ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
+        hasMore: response.hasMore,
       };
     },
     []
@@ -507,7 +506,7 @@ export const ProductProfileForm = ({
         return false;
       }
 
-      const products = await productProfileApi.getProductProfiles();
+      const products = await productProfileApi.getAllProductProfiles();
       return products.some(
         product =>
           normalizeCodeValue(product.productCode) === normalizedCode &&

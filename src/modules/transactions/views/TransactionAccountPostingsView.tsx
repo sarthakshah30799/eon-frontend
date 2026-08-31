@@ -1,5 +1,10 @@
 import { ArrowPathIcon } from '@heroicons/react/24/outline';
-import { AsyncSelect, Button, Input } from '@/components/ui';
+import { useMemo } from 'react';
+import { Button } from '@/components/ui';
+import {
+  buildSearchToolbarFilter,
+  type TableToolbarFilter,
+} from '@/components/ui/table';
 import { AccessDeniedState } from '@/components/ui/access-denied-state';
 import { PAGE_STATUS_TEXTS } from '@/constants';
 import { useAuth } from '@/lib/AuthContext';
@@ -28,35 +33,83 @@ export const TransactionAccountPostingsView = () => {
     isRebuildPending,
     resetFilters,
     queueAccountPostingRebuild,
+    page,
+    limit,
+    total,
+    totalPages,
+    handlePageChange,
+    handlePageSizeChange,
   } = useTransactionAccountPostings(canView);
 
-  const handlePartyProfileChange = (selectedOption: unknown) => {
-    if (
-      !selectedOption ||
-      Array.isArray(selectedOption) ||
-      typeof selectedOption !== 'object' ||
-      !('value' in selectedOption)
-    ) {
-      setPartyProfileId('');
-      return;
-    }
-
-    setPartyProfileId(String(selectedOption.value));
-  };
-
-  const handleTransactionTypeChange = (selectedOption: unknown) => {
-    if (
-      !selectedOption ||
-      Array.isArray(selectedOption) ||
-      typeof selectedOption !== 'object' ||
-      !('value' in selectedOption)
-    ) {
-      setTransactionType('');
-      return;
-    }
-
-    setTransactionType(String(selectedOption.value));
-  };
+  const toolbarFilters = useMemo<TableToolbarFilter[]>(
+    () => [
+      buildSearchToolbarFilter({
+        value: search,
+        onChange: setSearch,
+        placeholder: 'Search transaction number',
+      }),
+      {
+        id: 'partyProfile',
+        type: 'asyncSelect',
+        label: 'Party Profile',
+        value: selectedPartyProfile,
+        loadOptions: loadPartyProfileOptions,
+        defaultOptions: true,
+        pagination: false,
+        isSearchable: true,
+        isClearable: true,
+        isDisabled: isPartyProfilesLoading,
+        placeholder: 'All party profiles',
+        className: 'w-56 shrink-0',
+        onChange: option => {
+          setPartyProfileId(option?.value ? String(option.value) : '');
+        },
+      },
+      {
+        id: 'transactionType',
+        type: 'asyncSelect',
+        label: 'Transaction Type',
+        value: selectedTransactionType,
+        loadOptions: loadTransactionTypeOptions,
+        defaultOptions: true,
+        pagination: false,
+        isSearchable: true,
+        isClearable: true,
+        placeholder: 'All types',
+        className: 'w-44 shrink-0',
+        onChange: option => {
+          setTransactionType(option?.value ? String(option.value) : '');
+        },
+      },
+      {
+        id: 'resetFilters',
+        type: 'custom',
+        className: 'ml-auto shrink-0',
+        render: () => (
+          <Button
+            type="button"
+            variant="outline"
+            className="rounded-sm"
+            onClick={resetFilters}
+          >
+            Reset Filters
+          </Button>
+        ),
+      },
+    ],
+    [
+      isPartyProfilesLoading,
+      loadPartyProfileOptions,
+      loadTransactionTypeOptions,
+      resetFilters,
+      search,
+      selectedPartyProfile,
+      selectedTransactionType,
+      setPartyProfileId,
+      setSearch,
+      setTransactionType,
+    ]
+  );
 
   if (!canView) {
     return (
@@ -84,62 +137,19 @@ export const TransactionAccountPostingsView = () => {
         </p>
       </div>
 
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
-        <div className="grid gap-4 md:grid-cols-3">
-          <Input
-            label="Search"
-            placeholder="Search transaction number"
-            value={search}
-            onChange={event => setSearch(event.target.value)}
-          />
-
-          <AsyncSelect
-            label="Party Profile"
-            value={selectedPartyProfile}
-            loadOptions={loadPartyProfileOptions}
-            defaultOptions={true}
-            isSearchable
-            isClearable
-            isDisabled={isPartyProfilesLoading}
-            placeholder="All party profiles"
-            onChange={handlePartyProfileChange}
-          />
-
-          <AsyncSelect
-            label="Transaction Type"
-            value={selectedTransactionType}
-            loadOptions={loadTransactionTypeOptions}
-            defaultOptions={true}
-            isClearable
-            placeholder="All types"
-            onChange={handleTransactionTypeChange}
-          />
-        </div>
-
-        <div className="mt-4 flex items-center justify-between gap-4">
-          <p className="text-sm text-text-secondary">
-            {isLoading || isFetching
-              ? 'Loading transactions...'
-              : `${rows.length} transaction(s) found`}
-          </p>
-          <Button
-            type="button"
-            variant="outline"
-            className="rounded-sm"
-            onClick={resetFilters}
-          >
-            Reset Filters
-          </Button>
-        </div>
-      </section>
-
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
+      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
         <TransactionListTable
           rows={rows}
-          loading={isLoading || isFetching}
-          search={search}
-          onSearch={setSearch}
-          searchPlaceholder="Search transaction number"
+          loading={isLoading}
+          isFetching={isFetching}
+          toolbarFilters={toolbarFilters}
+          manualPagination
+          page={page}
+          pageSize={limit}
+          total={total}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
           onActionClick={row => void queueAccountPostingRebuild(row.id)}
           actionLabel="Queue account posting rebuild"
           actionMode="custom"

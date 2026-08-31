@@ -1,13 +1,12 @@
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { FormFieldSelect } from '@/components/forms';
 import { CardSection } from '@/components/ui';
 import { useAuth } from '@/lib/AuthContext';
-import { useListBranchProfiles } from '@/modules/branchProfile/hooks';
-import {
-  useGetCounterProfile,
-  useListCounterProfiles,
-} from '@/modules/counterProfile/hooks';
+import { counterProfileApi } from '@/api/counterProfile';
+import { useLoadBranchOptions } from '@/modules/branchProfile/hooks';
+import { useGetCounterProfile } from '@/modules/counterProfile/hooks';
 import type { ITransferFormValues, TransferType } from '../types';
 
 interface TransferWorkplaceFieldsProps {
@@ -27,9 +26,6 @@ export interface TransferWorkplaceReferenceOptions {
   destinationBranch?: TransferWorkplaceReferenceOption;
   destinationCounter?: TransferWorkplaceReferenceOption;
 }
-
-const buildBranchLabel = (branch: { code: string; name: string }) =>
-  `${branch.code} - ${branch.name}`;
 
 const buildCounterLabel = (counter: { counterNo: string; name: string }) =>
   `${counter.counterNo} - ${counter.name}`;
@@ -58,18 +54,31 @@ export const TransferWorkplaceFields = ({
     name: 'destinationBranchId',
   });
 
-  const { data: branches = [] } = useListBranchProfiles({ activeOnly: true });
-  const { data: sourceCounters = [] } = useListCounterProfiles(
-    { activeOnly: true, branchId: sourceBranchId || undefined },
-    Boolean(sourceBranchId)
-  );
-  const { data: destinationCounters = [] } = useListCounterProfiles(
-    {
-      activeOnly: true,
-      branchId: destinationBranchId || sourceBranchId || undefined,
-    },
-    Boolean(destinationBranchId || sourceBranchId)
-  );
+  const loadBranchOptions = useLoadBranchOptions({ activeOnly: true });
+  const { data: sourceCounters = [] } = useQuery({
+    queryKey: ['counter-profiles-all', { activeOnly: true, branchId: sourceBranchId }],
+    queryFn: () =>
+      counterProfileApi.getAllCounterProfiles({
+        activeOnly: true,
+        branchId: sourceBranchId || undefined,
+      }),
+    enabled: Boolean(sourceBranchId),
+  });
+  const { data: destinationCounters = [] } = useQuery({
+    queryKey: [
+      'counter-profiles-all',
+      {
+        activeOnly: true,
+        branchId: destinationBranchId || sourceBranchId,
+      },
+    ],
+    queryFn: () =>
+      counterProfileApi.getAllCounterProfiles({
+        activeOnly: true,
+        branchId: destinationBranchId || sourceBranchId || undefined,
+      }),
+    enabled: Boolean(destinationBranchId || sourceBranchId),
+  });
   const { data: activeCounterProfile } = useGetCounterProfile(
     activeCounterId || ''
   );
@@ -205,30 +214,60 @@ export const TransferWorkplaceFields = ({
     readOnly,
   ]);
 
-  const branchOptions = useMemo(() => {
-    const options = branches.map(branch => ({
-      value: branch.id,
-      label: buildBranchLabel(branch),
-    }));
+  const mergeBranchOptions = useCallback(
+    async (
+      inputValue: string,
+      page = 1,
+      extraOptions: Array<TransferWorkplaceReferenceOption | undefined> = [],
+      excludeValue?: string
+    ) => {
+      const result = await loadBranchOptions(inputValue, page);
+      const extras = extraOptions.filter(
+        (option): option is TransferWorkplaceReferenceOption => Boolean(option)
+      );
+      const options = result.options.filter(
+        option => option.value !== excludeValue
+      );
 
-    for (const option of [
-      readOnlyOptions?.sourceBranch,
-      readOnlyOptions?.destinationBranch,
-    ]) {
-      if (
-        option &&
-        !options.some(existing => existing.value === option.value)
-      ) {
-        options.push(option);
+      if (page === 1) {
+        for (const extra of extras) {
+          if (
+            extra.value !== excludeValue &&
+            !options.some(existing => existing.value === extra.value)
+          ) {
+            options.unshift(extra);
+          }
+        }
       }
-    }
 
-    return options;
-  }, [
-    branches,
-    readOnlyOptions?.destinationBranch,
-    readOnlyOptions?.sourceBranch,
-  ]);
+      return {
+        options,
+        hasMore: result.hasMore,
+      };
+    },
+    [loadBranchOptions]
+  );
+
+  const loadSourceBranchOptions = useCallback(
+    (inputValue: string, page = 1) =>
+      mergeBranchOptions(inputValue, page, [readOnlyOptions?.sourceBranch]),
+    [mergeBranchOptions, readOnlyOptions?.sourceBranch]
+  );
+
+  const loadDestinationBranchOptions = useCallback(
+    (inputValue: string, page = 1) =>
+      mergeBranchOptions(
+        inputValue,
+        page,
+        [readOnlyOptions?.destinationBranch],
+        sourceBranchId || undefined
+      ),
+    [
+      mergeBranchOptions,
+      readOnlyOptions?.destinationBranch,
+      sourceBranchId,
+    ]
+  );
 
   const sourceCounterOptions = useMemo(() => {
     const mergedCounters = [...sourceCounters];
@@ -319,15 +358,9 @@ export const TransferWorkplaceFields = ({
             name="sourceBranchId"
             label="Source Branch"
             placeholder="Select source branch"
-            loadOptions={async inputValue => {
-              const search = inputValue.trim().toLowerCase();
-              return {
-                options: branchOptions.filter(option =>
-                  search ? option.label.toLowerCase().includes(search) : true
-                ),
-              };
-            }}
-            defaultOptions={branchOptions}
+            loadOptions={loadSourceBranchOptions}
+            defaultOptions={true}
+            pagination
             disabled={!canEditWorkplace}
             onValueChange={value => {
               form.setValue('sourceCounterId', '', {
@@ -390,15 +423,9 @@ export const TransferWorkplaceFields = ({
               name="destinationBranchId"
               label="Destination Branch"
               placeholder="Select destination branch"
-              loadOptions={async inputValue => {
-                const search = inputValue.trim().toLowerCase();
-                return {
-                  options: branchOptions.filter(option =>
-                    search ? option.label.toLowerCase().includes(search) : true
-                  ),
-                };
-              }}
-              defaultOptions={branchOptions}
+              loadOptions={loadDestinationBranchOptions}
+              defaultOptions={true}
+              pagination
               disabled={!canEditDestination}
               onValueChange={() => {
                 form.setValue('destinationCounterId', '', {

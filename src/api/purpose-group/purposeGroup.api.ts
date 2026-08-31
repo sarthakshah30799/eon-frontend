@@ -2,8 +2,12 @@ import { apiClient } from '../api';
 import type {
   ICreatePurposeGroup,
   IPurposeGroup,
+  IPurposeGroupListQuery,
+  IPurposeGroupListResponse,
   PurposeGroupProfileType,
 } from '@/modules/purpose-group/types';
+import { buildQueryString } from '@/utils';
+import { fetchAllMatching, normalizePaginatedResponse } from '@/utils/paginatedList';
 
 const preparePayload = (values: ICreatePurposeGroup) => ({
   name: values.name.trim(),
@@ -13,23 +17,42 @@ const preparePayload = (values: ICreatePurposeGroup) => ({
   purposeIds: [...new Set((values.purposeIds ?? []).filter(Boolean))],
 });
 
+const normalizePurposeGroupListQuery = (
+  search?: string,
+  profileType?: PurposeGroupProfileType
+): IPurposeGroupListQuery | undefined => {
+  if (search === undefined && profileType === undefined) {
+    return undefined;
+  }
+
+  return {
+    search: search?.trim() || undefined,
+    profileType,
+  };
+};
+
 export const purposeGroupApi = {
   getPurposeGroups: async (
-    search?: string,
+    params?: IPurposeGroupListQuery | string,
     profileType?: PurposeGroupProfileType
-  ): Promise<IPurposeGroup[]> => {
-    const params = new URLSearchParams();
-    if (search?.trim()) {
-      params.set('search', search.trim());
-    }
-    if (profileType) {
-      params.set('profileType', profileType);
-    }
-    const query = params.toString() ? `?${params.toString()}` : '';
-    const res = await apiClient.get<IPurposeGroup[]>(`/purpose-groups${query}`);
+  ): Promise<IPurposeGroupListResponse> => {
+    const queryObj: IPurposeGroupListQuery | undefined =
+      typeof params === 'string'
+        ? normalizePurposeGroupListQuery(params, profileType)
+        : params;
+    const res = await apiClient.get<IPurposeGroupListResponse>(
+      `/purpose-groups${buildQueryString(queryObj)}`
+    );
     if (res.error) throw new Error(res.error);
-    return res.data ?? [];
+    return normalizePaginatedResponse(res.data, queryObj?.limit, queryObj?.offset);
   },
+
+  getAllPurposeGroups: async (
+    params?: Omit<IPurposeGroupListQuery, 'limit' | 'offset'>
+  ): Promise<IPurposeGroup[]> =>
+    fetchAllMatching(pagination =>
+      purposeGroupApi.getPurposeGroups({ ...params, ...pagination })
+    ),
 
   getPurposeGroupById: async (
     id: string

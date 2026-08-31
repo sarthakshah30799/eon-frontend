@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   AsyncSelect,
   Button,
@@ -6,11 +6,9 @@ import {
   Table,
   type TableColumnDef,
   type AsyncSelectOption,
-  type AsyncSelectResponse,
 } from '@/components/ui';
 import { SelectUserProfiles } from '@/modules/userProfile/components';
-import { branchProfileApi } from '@/api/branchProfile';
-import type { IBranchProfile } from '@/modules/branchProfile/types';
+import { useLoadBranchOptions } from '@/modules/branchProfile/hooks';
 import type { IUserProfile } from '@/modules/userProfile/types';
 
 export interface BranchUserAccessRuleRow {
@@ -43,11 +41,6 @@ interface BranchUserAccessRulesManagerProps {
   emptyMessage?: string;
 }
 
-const mapBranchToOption = (branch: IBranchProfile): AsyncSelectOption => ({
-  value: branch.id,
-  label: `${branch.code} - ${branch.name}`,
-});
-
 export const BranchUserAccessRulesManager = ({
   title,
   description,
@@ -67,19 +60,7 @@ export const BranchUserAccessRulesManager = ({
   const [toDate, setToDate] = useState('');
   const [formError, setFormError] = useState('');
 
-  const loadBranchOptions = useCallback(
-    async (inputValue: string): Promise<AsyncSelectResponse> => {
-      const branches = await branchProfileApi.getBranchProfiles({
-        activeOnly: true,
-        search: inputValue.trim() || undefined,
-      });
-
-      return {
-        options: branches.map(mapBranchToOption),
-      };
-    },
-    []
-  );
+  const loadBranchOptions = useLoadBranchOptions({ activeOnly: true });
 
   const columns = useMemo<TableColumnDef<BranchUserAccessRuleRow>[]>(() => {
     const nextColumns: TableColumnDef<BranchUserAccessRuleRow>[] = [
@@ -177,6 +158,8 @@ export const BranchUserAccessRulesManager = ({
               <AsyncSelect
                 loadOptions={loadBranchOptions}
                 value={selectedBranch}
+                defaultOptions={true}
+                pagination
                 onChange={option => {
                   setSelectedBranch(option as AsyncSelectOption | null);
                   setSelectedUsers([]);

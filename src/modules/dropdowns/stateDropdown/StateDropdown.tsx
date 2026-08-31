@@ -148,6 +148,7 @@ export const StateDropdown = ({
         className={className}
         loadOptions={loadOptions}
         defaultOptions={mergedDefaultOptions}
+        pagination
         isLoading={
           isLoadingOptions || isFetchingOptions || isResolvingSelectedOption
         }

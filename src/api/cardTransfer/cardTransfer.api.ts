@@ -8,6 +8,12 @@ import type {
   CardTransferRequest,
   CardTransferCard,
 } from '@/modules/cardTransfer/types';
+import type {
+  IOffsetPaginationParams,
+  IPaginatedResponse,
+} from '@/types/pagination';
+import { buildQueryString } from '@/utils';
+import { fetchAllMatching, normalizePaginatedResponse } from '@/utils/paginatedList';
 
 // Keep the route contract in one place until the backend controller is released.
 const BASE_PATH = '/card-stock/transfers';
@@ -22,13 +28,35 @@ const request = async <T>(
   return response.data;
 };
 
+export interface ICardTransferListQuery extends IOffsetPaginationParams {
+  status?: string;
+  search?: string;
+}
+
 export const cardTransferApi = {
-  list: (params?: { status?: string; search?: string }) =>
+  list: (params?: ICardTransferListQuery) =>
     request(
-      apiClient.get<CardTransferRequest[]>(
-        `${BASE_PATH}${params ? `?${new URLSearchParams(Object.entries(params).filter(([, value]) => Boolean(value)) as string[][])}` : ''}`
-      ),
+      apiClient
+        .get<IPaginatedResponse<CardTransferRequest>>(
+          `${BASE_PATH}${buildQueryString(params)}`
+        )
+        .then(response => {
+          if (response.error) return response;
+          return {
+            ...response,
+            data: normalizePaginatedResponse(
+              response.data,
+              params?.limit,
+              params?.offset
+            ),
+          };
+        }),
       'Failed to load CARD transfer requests'
+    ),
+
+  listAll: (params?: Omit<ICardTransferListQuery, 'limit' | 'offset'>) =>
+    fetchAllMatching(pagination =>
+      cardTransferApi.list({ ...params, ...pagination })
     ),
   get: (id: string) =>
     request(

@@ -1,9 +1,10 @@
 import { useMemo, useRef, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { Button, CardSection } from '@/components/ui';
 import { useAuth } from '@/lib/AuthContext';
-import { useListBranchProfiles } from '@/modules/branchProfile/hooks';
-import { useListCounterProfiles } from '@/modules/counterProfile/hooks';
+import { branchProfileApi } from '@/api/branchProfile';
+import { counterProfileApi } from '@/api/counterProfile';
 import { useListAdditionalSettings } from '@/modules/additionalSettings/hooks';
 import { getAdditionalSettingTextValue } from '@/modules/additionalSettings/utils';
 import { downloadBlob } from '@/modules/reports/utils';
@@ -36,8 +37,14 @@ export const StockRevaluationView = () => {
       : []
   );
   const [file, setFile] = useState<File | null>(null);
-  const { data: branches = [] } = useListBranchProfiles({ activeOnly: true });
-  const { data: counters = [] } = useListCounterProfiles({ activeOnly: true });
+  const { data: branches = [] } = useQuery({
+    queryKey: ['branch-profiles-all', { activeOnly: true }],
+    queryFn: () => branchProfileApi.getAllBranchProfiles({ activeOnly: true }),
+  });
+  const { data: counters = [] } = useQuery({
+    queryKey: ['counter-profiles-all', { activeOnly: true }],
+    queryFn: () => counterProfileApi.getAllCounterProfiles({ activeOnly: true }),
+  });
   const { data: settings = [] } = useListAdditionalSettings();
   const stockSetting = getAdditionalSettingTextValue(
     settings,

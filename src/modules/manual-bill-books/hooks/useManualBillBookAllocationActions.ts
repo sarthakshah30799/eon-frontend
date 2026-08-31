@@ -35,21 +35,25 @@ export const useLoadCashierOptions = () => {
 export const useListApprovedManualBillBooks = () => {
   const queryClient = useQueryClient();
   return useCallback(
-    async (branchId: string, status: string) => {
+    async (params: {
+      branchId: string;
+      status: string;
+      transactionType?: string;
+      bookNoFrom: number;
+      bookNoTo: number;
+    }) => {
       const res = await queryClient.fetchQuery({
-        queryKey: ['manual-bill-books-list', branchId, status],
+        queryKey: ['manual-bill-books-matching', params],
         queryFn: () =>
-          manualBillBookApi.findAll({
-            branchId,
-            status,
-            limit: 1000,
-            offset: 0,
+          manualBillBookApi.findAllMatching({
+            branchId: params.branchId,
+            status: params.status,
+            transactionType: params.transactionType,
+            bookNoFrom: params.bookNoFrom,
+            bookNoTo: params.bookNoTo,
           }),
       });
-      // findAll is always paginated; unwrap data
-      return (
-        (res as unknown as { data: import('@/api').IManualBook[] }).data ?? []
-      );
+      return res;
     },
     [queryClient]
   );

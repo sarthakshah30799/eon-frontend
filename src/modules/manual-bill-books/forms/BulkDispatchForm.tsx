@@ -13,6 +13,7 @@ import {
 } from '@/components/forms';
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import { useAuth } from '@/lib/AuthContext';
+import { useLoadBranchOptions } from '@/modules/branchProfile/hooks';
 import type { Resolver } from 'react-hook-form';
 import {
   useCreateManualBillBook,
@@ -20,7 +21,6 @@ import {
   useGetNextManualBillBookNumber,
   useLoadManualBillBookBranchManagers,
   useReassignManualBillBookDispatch,
-  useLoadManualBillBookBranchOptions,
   useLoadManualBillBookCounterProfiles,
   useValidateManualBillBookBookRange,
   useValidateManualBillBookPageRange,
@@ -154,7 +154,7 @@ const BulkDispatchFormFields = ({
 
   const { data: book } = useGetManualBillBook(reassignId);
   const getNextNumber = useGetNextManualBillBookNumber();
-  const loadBranchesRaw = useLoadManualBillBookBranchOptions();
+  const loadBranchesRaw = useLoadBranchOptions({ activeOnly: true });
   const loadAssignedToRaw = useLoadManualBillBookBranchManagers();
 
   // Pre-fill form with rejected book data in reassign mode
@@ -243,13 +243,16 @@ const BulkDispatchFormFields = ({
   }, [bookNoFrom, bookNoTo, form]);
 
   const loadBranches = useCallback(
-    async (inputValue: string) => {
-      const res = await loadBranchesRaw(inputValue);
+    async (inputValue: string, page = 1) => {
+      const res = await loadBranchesRaw(inputValue, page);
       let options = res.options;
       if (!canSelectBranch) {
         options = options.filter(option => option.value === activeBranchId);
       }
-      return { options, hasMore: false };
+      return {
+        options,
+        hasMore: canSelectBranch ? Boolean(res.hasMore) : false,
+      };
     },
     [activeBranchId, canSelectBranch, loadBranchesRaw]
   );
@@ -278,6 +281,7 @@ const BulkDispatchFormFields = ({
         label="Branch"
         loadOptions={loadBranches}
         defaultOptions={true}
+        pagination
         disabled={reassignId ? true : !canSelectBranch}
       />
       <FormFieldCategoryOption

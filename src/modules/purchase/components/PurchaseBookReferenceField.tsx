@@ -1,17 +1,47 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
+import {
+  manualBillBookApi,
+  type IManualBookPageTracking,
+} from '@/api/manual-bill-books/manualBillBook.api';
 import { FormFieldSelect } from '@/components/forms';
+import type { AsyncSelectResponse } from '@/components/ui';
+import { PAGINATION_DEFAULTS } from '@/constants/paginationConstants';
 import { SelectUserProfiles } from '@/modules/userProfile/components';
 import { useAuth } from '@/lib/AuthContext';
 import { TransactionTypeEnum } from '@/modules/transactions';
 import type { PurchasePageType } from '@/pages/purchase/[slug]/purchasePage.enum';
+import { pageToOffset, toAsyncSelectPage } from '@/utils/paginatedList';
 import type { IPurchaseFormValues } from '../types/purchaseTypes';
 import {
   createStaticLoadOptions,
   formatPurchaseEntityLabel,
 } from '../utils/purchaseUtils';
 import { EntityPickerField } from './EntityPickerField';
-import { useSelectableManualBillBookPages } from '@/modules/manual-bill-books/hooks';
+
+const formatManualBookPageLabel = (
+  page: Pick<IManualBookPageTracking, 'pageNo' | 'manualBook'>,
+  isSale: boolean
+) =>
+  `${page.manualBook?.no || 'Book'} | Page ${page.pageNo}${
+    page.manualBook?.transactionType
+      ? ` (${page.manualBook.transactionType})`
+      : isSale
+        ? ' (SELL)'
+        : ' (PURCHASE)'
+  }`;
+
+const pageMatchesSearch = (
+  page: IManualBookPageTracking,
+  normalizedSearch: string
+) =>
+  [
+    String(page.pageNo),
+    page.manualBook?.no,
+    page.manualBook?.transactionType,
+  ]
+    .filter(Boolean)
+    .some(value => String(value).toLowerCase().includes(normalizedSearch));
 
 interface PurchaseBookReferenceFieldProps {
   branchId?: string;
@@ -65,6 +95,10 @@ export const PurchaseBookReferenceField = ({
     control: form.control,
     name: 'manualBookPageId',
   });
+  const manualBookPageSnapshot = useWatch({
+    control: form.control,
+    name: 'manualBookPageSnapshot',
+  });
   const manualBookNo = useWatch({
     control: form.control,
     name: 'manualBookNo',
@@ -80,6 +114,13 @@ export const PurchaseBookReferenceField = ({
   const previousReferenceTypeRef = useRef<string>(manualBookReferenceType);
   const previousTransactionTypeRef = useRef<string>(transactionType);
   const previousBranchRef = useRef<string | undefined>(resolvedBranchId);
+  const pageCacheRef = useRef(new Map<string, IManualBookPageTracking>());
+  const pageQueryKeyRef = useRef('');
+  const [isBookPagesLoading, setIsBookPagesLoading] = useState(false);
+  const [pagesAvailabilityByKey, setPagesAvailabilityByKey] = useState<{
+    key: string;
+    value: 'unknown' | 'empty' | 'hasPages';
+  }>({ key: '', value: 'unknown' });
 
   const isDeliveryBoyMode = manualBookReferenceType === 'DELIVERY_BOY';
   const isSale = transactionType === TransactionTypeEnum.SALE;
@@ -88,22 +129,25 @@ export const PurchaseBookReferenceField = ({
     : cashierAssigneeId;
   const resolvedTransactionType =
     purchasePageType ?? (transactionType || undefined);
-  const {
-    data: pageOptions = [],
-    isLoading: isLoadingPages,
-    isFetching: isFetchingPages,
-  } = useSelectableManualBillBookPages({
-    branchId: resolvedBranchId,
-    userId: selectedReferenceUserId,
-    transactionType: resolvedTransactionType,
-    enabled:
-      Boolean(resolvedBranchId) &&
-      (!isDeliveryBoyMode || Boolean(deliveryBoyAssigneeId)) &&
-      (!canOverrideWorkplace ||
-        isDeliveryBoyMode ||
-        Boolean(cashierAssigneeId)),
-  });
-  const isBookPagesLoading = isLoadingPages || isFetchingPages;
+  const pageQueryKey = useMemo(
+    () =>
+      [
+        manualBookReferenceType,
+        resolvedBranchId ?? '',
+        resolvedTransactionType ?? '',
+        selectedReferenceUserId,
+      ].join('::'),
+    [
+      manualBookReferenceType,
+      resolvedBranchId,
+      resolvedTransactionType,
+      selectedReferenceUserId,
+    ]
+  );
+  const pagesAvailability =
+    pagesAvailabilityByKey.key === pageQueryKey
+      ? pagesAvailabilityByKey.value
+      : 'unknown';
   const hasPageSelectionPrerequisites =
     Boolean(resolvedBranchId) &&
     (!isDeliveryBoyMode || Boolean(deliveryBoyAssigneeId)) &&
@@ -111,7 +155,7 @@ export const PurchaseBookReferenceField = ({
   const hasNoBookPagesAvailable =
     hasPageSelectionPrerequisites &&
     !isBookPagesLoading &&
-    pageOptions.length === 0;
+    pagesAvailability === 'empty';
 
   useEffect(() => {
     if (previousReferenceTypeRef.current === manualBookReferenceType) {
@@ -257,48 +301,53 @@ export const PurchaseBookReferenceField = ({
     });
   }, [form, resolvedBranchId]);
 
-  useEffect(() => {
-    const selectedPage = pageOptions.find(
-      page => page.id === String(manualBookPageId || '')
-    );
-    if (!selectedPage) {
-      return;
-    }
+  const applySelectedPage = useCallback(
+    (pageId: string | null) => {
+      if (!pageId) {
+        return;
+      }
 
-    const selectedBook = selectedPage.manualBook;
-    const nextManualBookId = selectedPage.manualBookId;
-    const nextManualBookNo = selectedBook?.no ?? '';
-    const nextSnapshot = {
-      ...selectedPage,
-    };
+      const selectedPage = pageCacheRef.current.get(pageId);
+      if (!selectedPage) {
+        return;
+      }
 
-    if (form.getValues('manualBookId') !== nextManualBookId) {
-      form.setValue('manualBookId', nextManualBookId, {
-        shouldDirty: true,
-        shouldTouch: true,
-        shouldValidate: true,
-      });
-    }
+      const selectedBook = selectedPage.manualBook;
+      const nextManualBookId = selectedPage.manualBookId;
+      const nextManualBookNo = selectedBook?.no ?? '';
+      const nextSnapshot = {
+        ...selectedPage,
+      };
 
-    if (form.getValues('manualBookNo') !== nextManualBookNo) {
-      form.setValue('manualBookNo', nextManualBookNo, {
-        shouldDirty: true,
-        shouldTouch: true,
-        shouldValidate: false,
-      });
-    }
+      if (form.getValues('manualBookId') !== nextManualBookId) {
+        form.setValue('manualBookId', nextManualBookId, {
+          shouldDirty: true,
+          shouldTouch: true,
+          shouldValidate: true,
+        });
+      }
 
-    if (
-      JSON.stringify(form.getValues('manualBookPageSnapshot')) !==
-      JSON.stringify(nextSnapshot)
-    ) {
-      form.setValue('manualBookPageSnapshot', nextSnapshot, {
-        shouldDirty: true,
-        shouldTouch: true,
-        shouldValidate: false,
-      });
-    }
-  }, [form, manualBookPageId, pageOptions]);
+      if (form.getValues('manualBookNo') !== nextManualBookNo) {
+        form.setValue('manualBookNo', nextManualBookNo, {
+          shouldDirty: true,
+          shouldTouch: true,
+          shouldValidate: false,
+        });
+      }
+
+      if (
+        JSON.stringify(form.getValues('manualBookPageSnapshot')) !==
+        JSON.stringify(nextSnapshot)
+      ) {
+        form.setValue('manualBookPageSnapshot', nextSnapshot, {
+          shouldDirty: true,
+          shouldTouch: true,
+          shouldValidate: false,
+        });
+      }
+    },
+    [form]
+  );
 
   const loadReferenceTypeOptions = useMemo(
     () =>
@@ -310,31 +359,92 @@ export const PurchaseBookReferenceField = ({
   );
 
   const loadManualBookPageOptions = useCallback(
-    async (inputValue: string) => {
-      const normalized = inputValue.trim().toLowerCase();
-      const options = pageOptions
-        .filter(page => {
-          if (!normalized) {
-            return true;
-          }
+    async (inputValue: string, page = 1): Promise<AsyncSelectResponse> => {
+      if (!hasPageSelectionPrerequisites) {
+        return { options: [], hasMore: false };
+      }
 
-          return [
-            String(page.pageNo),
-            page.manualBook?.no,
-            page.manualBook?.transactionType,
-          ]
-            .filter(Boolean)
-            .some(value => String(value).toLowerCase().includes(normalized));
-        })
-        .map(page => ({
-          value: page.id,
-          label: `${page.manualBook?.no || 'Book'} | Page ${page.pageNo}${page.manualBook?.transactionType ? ` (${page.manualBook.transactionType})` : isSale ? ' (SELL)' : ' (PURCHASE)'}`,
-        }));
+      const normalizedSearch = inputValue.trim().toLowerCase();
+      const limit = PAGINATION_DEFAULTS.LIMIT;
 
-      return { options, hasMore: false };
+      if (pageQueryKeyRef.current !== pageQueryKey) {
+        pageCacheRef.current.clear();
+        pageQueryKeyRef.current = pageQueryKey;
+      }
+
+      setIsBookPagesLoading(true);
+      try {
+        const response = await manualBillBookApi.getSelectablePages({
+          userId: selectedReferenceUserId || undefined,
+          transactionType: resolvedTransactionType,
+          limit,
+          offset: pageToOffset(page, limit),
+        });
+
+        (response.data ?? []).forEach(item => {
+          pageCacheRef.current.set(item.id, item);
+        });
+
+        if (page === 1 && !normalizedSearch) {
+          setPagesAvailabilityByKey({
+            key: pageQueryKey,
+            value: (response.total ?? 0) > 0 ? 'hasPages' : 'empty',
+          });
+        }
+
+        const sourcePages = normalizedSearch
+          ? (response.data ?? []).filter(item =>
+              pageMatchesSearch(item, normalizedSearch)
+            )
+          : (response.data ?? []);
+
+        return toAsyncSelectPage(
+          {
+            ...response,
+            data: sourcePages,
+          },
+          item => ({
+            value: item.id,
+            label: formatManualBookPageLabel(item, isSale),
+          })
+        );
+      } finally {
+        setIsBookPagesLoading(false);
+      }
     },
-    [isSale, pageOptions]
+    [
+      hasPageSelectionPrerequisites,
+      isSale,
+      pageQueryKey,
+      resolvedTransactionType,
+      selectedReferenceUserId,
+    ]
   );
+
+  const manualBookPageDefaultOptions = useMemo(() => {
+    if (!manualBookPageId) {
+      return undefined;
+    }
+
+    const snapshot = manualBookPageSnapshot as IManualBookPageTracking | null;
+    if (!snapshot?.id) {
+      return undefined;
+    }
+
+    return [
+      {
+        value: String(snapshot.id),
+        label: formatManualBookPageLabel(snapshot, isSale),
+      },
+    ];
+  }, [isSale, manualBookPageId, manualBookPageSnapshot]);
+
+  useEffect(() => {
+    const snapshot = manualBookPageSnapshot as IManualBookPageTracking | null;
+    if (snapshot?.id) {
+      pageCacheRef.current.set(String(snapshot.id), snapshot);
+    }
+  }, [manualBookPageSnapshot]);
 
   const getManualBookPageEmptyMessage = useCallback(
     ({ inputValue }: { inputValue: string }) => {
@@ -450,19 +560,24 @@ export const PurchaseBookReferenceField = ({
 
         <div className="min-w-0 flex-1 lg:max-w-[360px]">
           <FormFieldSelect
-            key={`manual-book-page-${manualBookReferenceType}-${transactionType}-${selectedReferenceUserId || 'cashier'}-${resolvedBranchId || 'branch'}-${pageOptions.length}`}
+            key={`manual-book-page-${manualBookReferenceType}-${transactionType}-${selectedReferenceUserId || 'cashier'}-${resolvedBranchId || 'branch'}`}
             name="manualBookPageId"
             label={isDeliveryBoyMode ? 'Delivery Boy Page' : 'Cashier Page'}
             isLoading={isBookPagesLoading}
             placeholder={'Select bill book page'}
             loadOptions={loadManualBookPageOptions}
+            defaultOptions={manualBookPageDefaultOptions ?? true}
+            pagination
+            pageSize={PAGINATION_DEFAULTS.LIMIT}
             noOptionsMessage={getManualBookPageEmptyMessage}
+            onValueChange={value =>
+              applySelectedPage(typeof value === 'string' ? value : null)
+            }
             disabled={
               disabled ||
               !resolvedBranchId ||
               (isDeliveryBoyMode && !deliveryBoyUserId) ||
-              (!isDeliveryBoyMode && canOverrideWorkplace && !cashierUserId) ||
-              isBookPagesLoading
+              (!isDeliveryBoyMode && canOverrideWorkplace && !cashierUserId)
             }
             isSearchable
             cacheOptions={false}

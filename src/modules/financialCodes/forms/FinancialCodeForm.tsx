@@ -148,7 +148,8 @@ export const FinancialCodeForm = ({
         return false;
       }
 
-      const existing = await financialCodesApi.getFinancialCodeByCode(normalizedCode);
+      const existing =
+        await financialCodesApi.getFinancialCodeByCode(normalizedCode);
       return Boolean(existing && existing.id !== currentId);
     },
     [currentId]
@@ -166,7 +167,7 @@ export const FinancialCodeForm = ({
   };
   return (
     <Form
-      id='financial-profile-form'
+      id="financial-profile-form"
       onSubmit={onSubmit}
       onError={handleSubmitErrors}
       resolver={

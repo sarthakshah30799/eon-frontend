@@ -14,7 +14,9 @@ export const useRejectTransfer = () => {
       toast.success('Transfer rejected successfully');
     },
     onError: (error: unknown) => {
-      toast.error(getTransferHookErrorMessage(error, 'Failed to reject transfer'));
+      toast.error(
+        getTransferHookErrorMessage(error, 'Failed to reject transfer')
+      );
     },
   });
 
@@ -23,4 +25,3 @@ export const useRejectTransfer = () => {
     rejectTransfer: mutation.mutateAsync,
   };
 };
-

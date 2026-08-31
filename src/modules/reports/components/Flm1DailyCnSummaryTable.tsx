@@ -40,7 +40,9 @@ export const Flm1DailyCnSummaryTable = ({
     <div className="space-y-4">
       {report.groups.map(group => (
         <div key={group.branchId} className="space-y-2">
-          <h3 className="text-sm font-semibold text-text-primary">{group.branchLabel}</h3>
+          <h3 className="text-sm font-semibold text-text-primary">
+            {group.branchLabel}
+          </h3>
           {group.empty ? (
             <div className="rounded-md border border-slate-200 bg-white px-3 py-4 text-[11px] text-text-secondary">
               {group.emptyMessage || FLM1_DAILY_CN_SUMMARY_TEXT.emptyMessage}
@@ -85,7 +87,11 @@ export const Flm1DailyCnSummaryTable = ({
                               ].join(' ')}
                             >
                               {value ||
-                                (isParticulars ? '' : <span className="text-slate-300">-</span>)}
+                                (isParticulars ? (
+                                  ''
+                                ) : (
+                                  <span className="text-slate-300">-</span>
+                                ))}
                             </td>
                           );
                         })}

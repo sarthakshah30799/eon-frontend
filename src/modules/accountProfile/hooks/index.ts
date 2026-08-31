@@ -57,7 +57,9 @@ export const useUpdateAccountProfile = () => {
       accountProfileApi.updateAccountProfile(id, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['account-profiles'] });
-      queryClient.invalidateQueries({ queryKey: ['account-profile', variables.id] });
+      queryClient.invalidateQueries({
+        queryKey: ['account-profile', variables.id],
+      });
       toast.success('Account Profile updated successfully!');
     },
     onError: (error: unknown) => {

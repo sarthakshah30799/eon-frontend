@@ -16,6 +16,7 @@ export const useCardStockReferences = () => {
         activeOnly: true,
         status: 'APPROVE',
         limit: 100,
+        offset: 0,
         type: PartyProfileTypeEnum.CARD_ISSUER_PROFILE,
       });
       return response.data;
@@ -24,18 +25,19 @@ export const useCardStockReferences = () => {
   const products = useQuery({
     queryKey: ['card-stock', 'products'],
     queryFn: async () =>
-      (await productProfileApi.getProductProfiles({ activeOnly: true })).filter(
+      (await productProfileApi.getAllProductProfiles({ activeOnly: true })).filter(
         product => isCardProductCode(product.productCode)
       ),
   });
   const tradableCurrencies = useQuery({
     queryKey: ['card-stock', 'currencies', 'tradable'],
-    queryFn: () => currencyProfileApi.getCurrencyProfiles({ activeOnly: true }),
+    queryFn: () =>
+      currencyProfileApi.getAllCurrencyProfiles({ activeOnly: true }),
   });
   const cmStockingCurrencies = useQuery({
     queryKey: ['card-stock', 'currencies', 'cm-stocking'],
     queryFn: () =>
-      currencyProfileApi.getCurrencyProfiles({
+      currencyProfileApi.getAllCurrencyProfiles({
         activeOnly: true,
         includeOnlyStocking: true,
         productAllowed: MULTI_CURRENCY_CARD_PRODUCT_CODE,

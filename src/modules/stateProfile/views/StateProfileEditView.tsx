@@ -27,9 +27,7 @@ export const StateProfileEditView = () => {
   }
 
   const handleSubmit = async (values: ICreateStateProfile) => {
-    const {
-      ...payload
-    } = values;
+    const { ...payload } = values;
     await submitStateProfile(payload);
     navigate('/admin/state-profile');
   };
@@ -37,8 +35,12 @@ export const StateProfileEditView = () => {
   return (
     <div className="space-y-4">
       <StateProfileEditorView
-        heading={canModify ? STATE_PROFILE_TEXTS.EDIT_STATE : "View State Details"}
-        description={canModify ? "Update the state details." : "View the state details."}
+        heading={
+          canModify ? STATE_PROFILE_TEXTS.EDIT_STATE : 'View State Details'
+        }
+        description={
+          canModify ? 'Update the state details.' : 'View the state details.'
+        }
         submitLabel={STATE_PROFILE_TEXTS.SAVE_CHANGES}
         defaultValues={
           state

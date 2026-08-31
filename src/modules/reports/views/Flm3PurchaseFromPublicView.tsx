@@ -24,11 +24,11 @@ export const Flm3PurchaseFromPublicView = () => {
   const currentSummary = useMemo(() => {
     const branchLabels = summarizeReportSelection(
       reportState.filters.branchIds,
-      reportState.filters.branchOptions,
+      reportState.filters.branchOptions
     );
     const productLabel =
       reportState.filters.productOptions.find(
-        option => option.id === reportState.filters.productId,
+        option => option.id === reportState.filters.productId
       )?.label ?? FLM3_PURCHASE_FROM_PUBLIC_TEXT.all;
 
     return {
@@ -43,7 +43,9 @@ export const Flm3PurchaseFromPublicView = () => {
   ]);
 
   if (!canView) {
-    return <AccessDeniedState message={PAGE_STATUS_TEXTS.ACCESS_DENIED_MESSAGE} />;
+    return (
+      <AccessDeniedState message={PAGE_STATUS_TEXTS.ACCESS_DENIED_MESSAGE} />
+    );
   }
 
   return (
@@ -61,12 +63,14 @@ export const Flm3PurchaseFromPublicView = () => {
 
       {reportState.filters.appliedFilters && (
         <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-[11px] text-text-secondary">
-          {FLM3_PURCHASE_FROM_PUBLIC_TEXT.appliedPrefix}: {reportState.appliedDateRangeLabel} |{' '}
+          {FLM3_PURCHASE_FROM_PUBLIC_TEXT.appliedPrefix}:{' '}
+          {reportState.appliedDateRangeLabel} |{' '}
           {FLM3_PURCHASE_FROM_PUBLIC_TEXT.branchHeading}{' '}
           {currentSummary.branches.length
             ? currentSummary.branches.join(', ')
             : FLM3_PURCHASE_FROM_PUBLIC_TEXT.all}{' '}
-          | {FLM3_PURCHASE_FROM_PUBLIC_TEXT.productHeading} {currentSummary.product}
+          | {FLM3_PURCHASE_FROM_PUBLIC_TEXT.productHeading}{' '}
+          {currentSummary.product}
         </div>
       )}
 
@@ -98,7 +102,9 @@ export const Flm3PurchaseFromPublicView = () => {
                       : 'outline'
                   }
                   className="h-7 rounded-full px-3 text-[11px]"
-                  onClick={() => reportState.filters.setView(Flm3ReportViewEnum.NORMAL)}
+                  onClick={() =>
+                    reportState.filters.setView(Flm3ReportViewEnum.NORMAL)
+                  }
                 >
                   {FLM3_PURCHASE_FROM_PUBLIC_TEXT.normalView}
                 </Button>
@@ -111,7 +117,9 @@ export const Flm3PurchaseFromPublicView = () => {
                       : 'outline'
                   }
                   className="h-7 rounded-full px-3 text-[11px]"
-                  onClick={() => reportState.filters.setView(Flm3ReportViewEnum.EXTENDED)}
+                  onClick={() =>
+                    reportState.filters.setView(Flm3ReportViewEnum.EXTENDED)
+                  }
                 >
                   {FLM3_PURCHASE_FROM_PUBLIC_TEXT.extendedView}
                 </Button>
@@ -127,7 +135,9 @@ export const Flm3PurchaseFromPublicView = () => {
                       : 'outline'
                   }
                   className="h-7 rounded-full px-3 text-[11px]"
-                  onClick={() => reportState.setExportFormat(ReportExportFormatEnum.XLSX)}
+                  onClick={() =>
+                    reportState.setExportFormat(ReportExportFormatEnum.XLSX)
+                  }
                 >
                   {FLM3_PURCHASE_FROM_PUBLIC_TEXT.xlsx}
                 </Button>
@@ -140,7 +150,9 @@ export const Flm3PurchaseFromPublicView = () => {
                       : 'outline'
                   }
                   className="h-7 rounded-full px-3 text-[11px]"
-                  onClick={() => reportState.setExportFormat(ReportExportFormatEnum.CSV)}
+                  onClick={() =>
+                    reportState.setExportFormat(ReportExportFormatEnum.CSV)
+                  }
                 >
                   {FLM3_PURCHASE_FROM_PUBLIC_TEXT.csv}
                 </Button>
@@ -168,7 +180,9 @@ export const Flm3PurchaseFromPublicView = () => {
 
           <Flm3PurchaseFromPublicTable
             report={reportState.report}
-            loading={reportState.isLoadingReport || reportState.isFetchingReport}
+            loading={
+              reportState.isLoadingReport || reportState.isFetchingReport
+            }
           />
         </section>
       )}

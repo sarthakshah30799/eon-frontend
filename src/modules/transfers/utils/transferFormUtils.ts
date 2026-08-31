@@ -1,5 +1,10 @@
 import type { ICreateTransferPayload } from '@/api/transfers/transfers.api';
-import { calculateRoundedTransactionAmount, calculateTransactionRoundOff, calculateTransactionTotal, formatPurchaseDecimal } from '@/modules/purchase/utils/purchaseUtils';
+import {
+  calculateRoundedTransactionAmount,
+  calculateTransactionRoundOff,
+  calculateTransactionTotal,
+  formatPurchaseDecimal,
+} from '@/modules/purchase/utils/purchaseUtils';
 import {
   TransferTypeEnum,
   type ICurrencyTransfer,
@@ -61,7 +66,7 @@ const snapshotValue = (
 const dateOnly = (value: string | null) => value?.slice(0, 10) ?? '';
 
 export const mapTransferToFormValues = (
-  transfer: ICurrencyTransfer,
+  transfer: ICurrencyTransfer
 ): ITransferFormValues => ({
   transferType: transfer.transferType,
   number: transfer.number ?? '',
@@ -82,7 +87,7 @@ export const mapTransferToFormValues = (
       item.productSnapshot,
       'productDescription',
       'description',
-      'name',
+      'name'
     ),
     quantity: String(item.quantity ?? ''),
     per: String(item.per ?? ''),

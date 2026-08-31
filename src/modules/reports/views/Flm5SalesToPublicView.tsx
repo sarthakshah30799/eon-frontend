@@ -24,11 +24,11 @@ export const Flm5SalesToPublicView = () => {
   const currentSummary = useMemo(() => {
     const branchLabels = summarizeReportSelection(
       reportState.filters.branchIds,
-      reportState.filters.branchOptions,
+      reportState.filters.branchOptions
     );
     const productLabel =
       reportState.filters.productOptions.find(
-        option => option.id === reportState.filters.productId,
+        option => option.id === reportState.filters.productId
       )?.label ?? FLM5_SALES_TO_PUBLIC_TEXT.all;
 
     return {
@@ -43,7 +43,9 @@ export const Flm5SalesToPublicView = () => {
   ]);
 
   if (!canView) {
-    return <AccessDeniedState message={PAGE_STATUS_TEXTS.ACCESS_DENIED_MESSAGE} />;
+    return (
+      <AccessDeniedState message={PAGE_STATUS_TEXTS.ACCESS_DENIED_MESSAGE} />
+    );
   }
 
   return (
@@ -61,7 +63,8 @@ export const Flm5SalesToPublicView = () => {
 
       {reportState.filters.appliedFilters && (
         <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-[11px] text-text-secondary">
-          {FLM5_SALES_TO_PUBLIC_TEXT.appliedPrefix}: {reportState.appliedDateRangeLabel} |{' '}
+          {FLM5_SALES_TO_PUBLIC_TEXT.appliedPrefix}:{' '}
+          {reportState.appliedDateRangeLabel} |{' '}
           {FLM5_SALES_TO_PUBLIC_TEXT.branchHeading}{' '}
           {currentSummary.branches.length
             ? currentSummary.branches.join(', ')
@@ -98,7 +101,9 @@ export const Flm5SalesToPublicView = () => {
                       : 'outline'
                   }
                   className="h-7 rounded-full px-3 text-[11px]"
-                  onClick={() => reportState.filters.setView(Flm5ReportViewEnum.NORMAL)}
+                  onClick={() =>
+                    reportState.filters.setView(Flm5ReportViewEnum.NORMAL)
+                  }
                 >
                   {FLM5_SALES_TO_PUBLIC_TEXT.normalView}
                 </Button>
@@ -111,7 +116,9 @@ export const Flm5SalesToPublicView = () => {
                       : 'outline'
                   }
                   className="h-7 rounded-full px-3 text-[11px]"
-                  onClick={() => reportState.filters.setView(Flm5ReportViewEnum.EXTENDED)}
+                  onClick={() =>
+                    reportState.filters.setView(Flm5ReportViewEnum.EXTENDED)
+                  }
                 >
                   {FLM5_SALES_TO_PUBLIC_TEXT.extendedView}
                 </Button>
@@ -127,7 +134,9 @@ export const Flm5SalesToPublicView = () => {
                       : 'outline'
                   }
                   className="h-7 rounded-full px-3 text-[11px]"
-                  onClick={() => reportState.setExportFormat(ReportExportFormatEnum.XLSX)}
+                  onClick={() =>
+                    reportState.setExportFormat(ReportExportFormatEnum.XLSX)
+                  }
                 >
                   {FLM5_SALES_TO_PUBLIC_TEXT.xlsx}
                 </Button>
@@ -140,7 +149,9 @@ export const Flm5SalesToPublicView = () => {
                       : 'outline'
                   }
                   className="h-7 rounded-full px-3 text-[11px]"
-                  onClick={() => reportState.setExportFormat(ReportExportFormatEnum.CSV)}
+                  onClick={() =>
+                    reportState.setExportFormat(ReportExportFormatEnum.CSV)
+                  }
                 >
                   {FLM5_SALES_TO_PUBLIC_TEXT.csv}
                 </Button>
@@ -168,7 +179,9 @@ export const Flm5SalesToPublicView = () => {
 
           <Flm5SalesToPublicTable
             report={reportState.report}
-            loading={reportState.isLoadingReport || reportState.isFetchingReport}
+            loading={
+              reportState.isLoadingReport || reportState.isFetchingReport
+            }
           />
         </section>
       )}

@@ -24,4 +24,3 @@ export const useCreateDocumentProfile = () => {
     isPending: mutation.isPending,
   };
 };
-

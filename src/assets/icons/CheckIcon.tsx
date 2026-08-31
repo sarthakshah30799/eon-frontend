@@ -4,7 +4,9 @@ interface CheckIconProps {
   className?: string;
 }
 
-export const CheckIcon: React.FC<CheckIconProps> = ({ className = 'h-6 w-6' }) => {
+export const CheckIcon: React.FC<CheckIconProps> = ({
+  className = 'h-6 w-6',
+}) => {
   return (
     <svg
       aria-hidden="true"

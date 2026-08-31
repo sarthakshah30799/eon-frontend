@@ -35,59 +35,72 @@ const DatePickerInput = forwardRef<
     onDateBlur?: () => void;
     onInputKeyDown?: React.KeyboardEventHandler<HTMLInputElement>;
   }
->((({ className = '', value, placeholder, onParsedDateChange, onDateBlur, onInputKeyDown, ...props }, ref) => {
-  const [typedValue, setTypedValue] = useState<string | null>(null);
-  const displayValue = typedValue ?? toDisplayDate(value);
+>(
+  (
+    {
+      className = '',
+      value,
+      placeholder,
+      onParsedDateChange,
+      onDateBlur,
+      onInputKeyDown,
+      ...props
+    },
+    ref
+  ) => {
+    const [typedValue, setTypedValue] = useState<string | null>(null);
+    const displayValue = typedValue ?? toDisplayDate(value);
 
-  const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
-    setTypedValue(null);
-    props.onBlur?.(event);
-    onDateBlur?.();
-  };
+    const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
+      setTypedValue(null);
+      props.onBlur?.(event);
+      onDateBlur?.();
+    };
 
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    onInputKeyDown?.(event);
-    if (event.defaultPrevented) {
-      return;
-    }
-    props.onKeyDown?.(event);
-  };
+    const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+      onInputKeyDown?.(event);
+      if (event.defaultPrevented) {
+        return;
+      }
+      props.onKeyDown?.(event);
+    };
 
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const nextValue = maskDateInput(event.target.value);
-    setTypedValue(nextValue);
+    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+      const nextValue = maskDateInput(event.target.value);
+      setTypedValue(nextValue);
 
-    if (!nextValue) {
-      onParsedDateChange?.(null);
-      return;
-    }
+      if (!nextValue) {
+        onParsedDateChange?.(null);
+        return;
+      }
 
-    if (nextValue.length === 10) {
-      const parsed = parseDateInput(nextValue);
-      onParsedDateChange?.(parsed);
-    }
-  };
+      if (nextValue.length === 10) {
+        const parsed = parseDateInput(nextValue);
+        onParsedDateChange?.(parsed);
+      }
+    };
 
-  return (
-    <div className="relative flex items-center w-full">
-      <input
-        {...props}
-        ref={ref}
-        type="text"
-        inputMode="numeric"
-        className={`min-h-7.5 w-full rounded-md border border-border-secondary bg-surface-primary pl-3 pr-10 py-1 text-left text-sm text-text-primary shadow-none transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
-        value={displayValue}
-        placeholder={placeholder}
-        onChange={handleChange}
-        onBlur={handleBlur}
-        onKeyDown={handleKeyDown}
-      />
-      <span className="absolute right-3 flex items-center pointer-events-none text-slate-400">
-        <CalendarIcon className="h-4 w-4" />
-      </span>
-    </div>
-  );
-}));
+    return (
+      <div className="relative flex items-center w-full">
+        <input
+          {...props}
+          ref={ref}
+          type="text"
+          inputMode="numeric"
+          className={`min-h-7.5 w-full rounded-md border border-border-secondary bg-surface-primary pl-3 pr-10 py-1 text-left text-sm text-text-primary shadow-none transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+          value={displayValue}
+          placeholder={placeholder}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          onKeyDown={handleKeyDown}
+        />
+        <span className="absolute right-3 flex items-center pointer-events-none text-slate-400">
+          <CalendarIcon className="h-4 w-4" />
+        </span>
+      </div>
+    );
+  }
+);
 
 DatePickerInput.displayName = 'DatePickerInput';
 

@@ -8,4 +8,3 @@ export const useGetCountryProfile = (id: string) => {
     enabled: Boolean(id),
   });
 };
-

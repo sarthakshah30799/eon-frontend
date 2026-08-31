@@ -1,12 +1,23 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { useWatch, useFormContext } from 'react-hook-form';
-import { FormFieldCategoryOption, FormFieldCountryDropdown, FormFieldDatePicker, FormFieldInput, FormFieldStateDropdown, FormFieldYesNoToggle } from '@/components/forms';
+import {
+  FormFieldCategoryOption,
+  FormFieldCountryDropdown,
+  FormFieldDatePicker,
+  FormFieldInput,
+  FormFieldStateDropdown,
+  FormFieldYesNoToggle,
+} from '@/components/forms';
 import { useCategoryOptions } from '@/hooks';
 import { useGetCountryProfile } from '@/modules/countryProfile/hooks';
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import type { IPurchaseFormValues } from '@/modules/purchase/types/purchaseTypes';
 import { TransactionTypeEnum } from '@/modules/transactions';
-import { PassengerEntityTypeEnum, PassengerNationalityTypeEnum, PassengerResidentStatusEnum } from '../types/passengerTypes';
+import {
+  PassengerEntityTypeEnum,
+  PassengerNationalityTypeEnum,
+  PassengerResidentStatusEnum,
+} from '../types/passengerTypes';
 import { PASSENGER_IDENTITY_TEXT } from '../constants/passengerConstants';
 import { PassengerIdentityFields } from './PassengerIdentityFields';
 import { PassengerOtherDocumentsSection } from './PassengerOtherDocumentsSection';
@@ -76,7 +87,9 @@ export const PassengerDetailsFields = ({
     control: form.control,
     name: 'transactionType',
   });
-  const { data: selectedCountryProfile } = useGetCountryProfile(countryId || '');
+  const { data: selectedCountryProfile } = useGetCountryProfile(
+    countryId || ''
+  );
   const { defaultOptions: panRelationOptions } = useCategoryOptions(
     CategoryOptionCodeEnum.PassengerPanHolderRelation,
     true
@@ -91,8 +104,12 @@ export const PassengerDetailsFields = ({
   const isCorporateEntity = entityType === PassengerEntityTypeEnum.CORPORATE;
   const showPanSection = isCorporateEntity || isIndianNationality;
   const isIndiaCountry = useMemo(() => {
-    const code = String(selectedCountryProfile?.code ?? '').trim().toUpperCase();
-    const name = String(selectedCountryProfile?.name ?? '').trim().toLowerCase();
+    const code = String(selectedCountryProfile?.code ?? '')
+      .trim()
+      .toUpperCase();
+    const name = String(selectedCountryProfile?.name ?? '')
+      .trim()
+      .toLowerCase();
 
     return code === 'IN' || name === 'india';
   }, [selectedCountryProfile?.code, selectedCountryProfile?.name]);
@@ -100,8 +117,12 @@ export const PassengerDetailsFields = ({
   const selfRelationOption = useMemo(
     () =>
       panRelationOptions.find(option => {
-        const normalizedValue = String(option.value ?? '').trim().toLowerCase();
-        const normalizedLabel = String(option.label ?? '').trim().toLowerCase();
+        const normalizedValue = String(option.value ?? '')
+          .trim()
+          .toLowerCase();
+        const normalizedLabel = String(option.label ?? '')
+          .trim()
+          .toLowerCase();
 
         return normalizedValue === 'self' || normalizedLabel === 'self';
       }) ?? null,
@@ -116,7 +137,10 @@ export const PassengerDetailsFields = ({
       return normalizedRelation === 'self';
     }
 
-    return String(panHolderRelationType ?? '') === String(selfRelationOption.value ?? '');
+    return (
+      String(panHolderRelationType ?? '') ===
+      String(selfRelationOption.value ?? '')
+    );
   }, [panHolderRelationType, selfRelationOption]);
 
   useEffect(() => {
@@ -126,8 +150,12 @@ export const PassengerDetailsFields = ({
 
     const companyRelationOption =
       panRelationOptions.find(option => {
-        const normalizedValue = String(option.value ?? '').trim().toLowerCase();
-        const normalizedLabel = String(option.label ?? '').trim().toLowerCase();
+        const normalizedValue = String(option.value ?? '')
+          .trim()
+          .toLowerCase();
+        const normalizedLabel = String(option.label ?? '')
+          .trim()
+          .toLowerCase();
 
         return normalizedValue === 'company' || normalizedLabel === 'company';
       }) ?? null;
@@ -136,16 +164,29 @@ export const PassengerDetailsFields = ({
       return;
     }
 
-    if (String(panHolderRelationType ?? '') === String(companyRelationOption.value ?? '')) {
+    if (
+      String(panHolderRelationType ?? '') ===
+      String(companyRelationOption.value ?? '')
+    ) {
       return;
     }
 
-    form.setValue('panHolderRelationType', String(companyRelationOption.value), {
-      shouldDirty: false,
-      shouldTouch: false,
-      shouldValidate: false,
-    });
-  }, [form, isCorporateEntity, panHolderRelationType, panRelationOptions, showPanSection]);
+    form.setValue(
+      'panHolderRelationType',
+      String(companyRelationOption.value),
+      {
+        shouldDirty: false,
+        shouldTouch: false,
+        shouldValidate: false,
+      }
+    );
+  }, [
+    form,
+    isCorporateEntity,
+    panHolderRelationType,
+    panRelationOptions,
+    showPanSection,
+  ]);
 
   useEffect(() => {
     if (isIndiaCountry) {
@@ -161,11 +202,15 @@ export const PassengerDetailsFields = ({
 
     if (nationalityType === PassengerNationalityTypeEnum.NRI) {
       if (residentStatus !== PassengerResidentStatusEnum.NON_RESIDENT) {
-        form.setValue('residentStatus', PassengerResidentStatusEnum.NON_RESIDENT, {
-          shouldDirty: true,
-          shouldTouch: true,
-          shouldValidate: false,
-        });
+        form.setValue(
+          'residentStatus',
+          PassengerResidentStatusEnum.NON_RESIDENT,
+          {
+            shouldDirty: true,
+            shouldTouch: true,
+            shouldValidate: false,
+          }
+        );
       }
       return;
     }
@@ -212,8 +257,10 @@ export const PassengerDetailsFields = ({
     };
 
     if (
-      nextPaidByValues.paidByPanNumber === currentPaidByValues.paidByPanNumber &&
-      nextPaidByValues.paidByPanHolderName === currentPaidByValues.paidByPanHolderName &&
+      nextPaidByValues.paidByPanNumber ===
+        currentPaidByValues.paidByPanNumber &&
+      nextPaidByValues.paidByPanHolderName ===
+        currentPaidByValues.paidByPanHolderName &&
       nextPaidByValues.paidByPanDob === currentPaidByValues.paidByPanDob
     ) {
       return;
@@ -254,7 +301,8 @@ export const PassengerDetailsFields = ({
               Passenger Details
             </h3>
             <p className="text-sm text-text-secondary">
-              Keep nationality, resident status, and base location aligned with the passenger record.
+              Keep nationality, resident status, and base location aligned with
+              the passenger record.
             </p>
           </div>
 
@@ -285,31 +333,50 @@ export const PassengerDetailsFields = ({
               onValueChange={value => {
                 const nextResidentStatus = Array.isArray(value) ? null : value;
 
-                if (nextResidentStatus === PassengerResidentStatusEnum.RESIDENT) {
-                  form.setValue('nationalityType', PassengerNationalityTypeEnum.INDIAN, {
-                    shouldDirty: true,
-                    shouldTouch: true,
-                    shouldValidate: false,
-                  });
+                if (
+                  nextResidentStatus === PassengerResidentStatusEnum.RESIDENT
+                ) {
+                  form.setValue(
+                    'nationalityType',
+                    PassengerNationalityTypeEnum.INDIAN,
+                    {
+                      shouldDirty: true,
+                      shouldTouch: true,
+                      shouldValidate: false,
+                    }
+                  );
                   return;
                 }
 
-                if (nextResidentStatus === PassengerResidentStatusEnum.NON_RESIDENT) {
-                  form.setValue('nationalityType', PassengerNationalityTypeEnum.NRI, {
-                    shouldDirty: true,
-                    shouldTouch: true,
-                    shouldValidate: false,
-                  });
+                if (
+                  nextResidentStatus ===
+                  PassengerResidentStatusEnum.NON_RESIDENT
+                ) {
+                  form.setValue(
+                    'nationalityType',
+                    PassengerNationalityTypeEnum.NRI,
+                    {
+                      shouldDirty: true,
+                      shouldTouch: true,
+                      shouldValidate: false,
+                    }
+                  );
                   clearCountrySelection();
                   return;
                 }
 
-                if (nextResidentStatus === PassengerResidentStatusEnum.FOREIGNER) {
-                  form.setValue('nationalityType', PassengerNationalityTypeEnum.FOREIGNER, {
-                    shouldDirty: true,
-                    shouldTouch: true,
-                    shouldValidate: false,
-                  });
+                if (
+                  nextResidentStatus === PassengerResidentStatusEnum.FOREIGNER
+                ) {
+                  form.setValue(
+                    'nationalityType',
+                    PassengerNationalityTypeEnum.FOREIGNER,
+                    {
+                      shouldDirty: true,
+                      shouldTouch: true,
+                      shouldValidate: false,
+                    }
+                  );
                   clearCountrySelection();
                 }
               }}
@@ -355,58 +422,59 @@ export const PassengerDetailsFields = ({
               Billing And Contact
             </h3>
             <p className="text-sm text-text-secondary">
-              These fields can be prefilled from the selected corporate profile and edited if needed.
+              These fields can be prefilled from the selected corporate profile
+              and edited if needed.
             </p>
           </div>
 
           {showPanSection ? (
             <div className="grid gap-4 md:grid-cols-2">
-            {showPanRelationField ? (
-              <FormFieldCategoryOption
-                name="panHolderRelationType"
-                label="PAN Holder Relation"
-                placeholder="Select relation"
-                code={CategoryOptionCodeEnum.PassengerPanHolderRelation}
-                useValueAsId
-                disabled={isCorporateEntity}
+              {showPanRelationField ? (
+                <FormFieldCategoryOption
+                  name="panHolderRelationType"
+                  label="PAN Holder Relation"
+                  placeholder="Select relation"
+                  code={CategoryOptionCodeEnum.PassengerPanHolderRelation}
+                  useValueAsId
+                  disabled={isCorporateEntity}
+                />
+              ) : null}
+              <FormFieldInput
+                name="paidByPanNumber"
+                label="Paid By PAN Number"
+                placeholder="Enter paid by PAN number"
+                valueTransform="uppercase"
               />
-            ) : null}
-            <FormFieldInput
-              name="paidByPanNumber"
-              label="Paid By PAN Number"
-              placeholder="Enter paid by PAN number"
-              valueTransform="uppercase"
-            />
-            <FormFieldInput
-              name="paidByPanHolderName"
-              label="Paid By PAN Holder Name"
-              placeholder="Enter paid by PAN holder name"
-            />
-            <FormFieldDatePicker
-              name="paidByPanDob"
-              label="Paid By PAN Holder DOB"
-              placeholder="Select DOB"
-              onBlur={onPanFieldBlur}
-            />
-            <FormFieldInput
-              name="email"
-              label="Email"
-              placeholder="Enter email address"
-              type="email"
-              valueTransform="none"
-            />
-            <FormFieldInput
-              name="contactNo"
-              label="Contact Number"
-              placeholder="Enter contact number"
-              valueTransform="none"
-            />
-            <FormFieldInput
-              name="gstNumber"
-              label="GST Number"
-              placeholder="Enter GST number"
-              valueTransform="uppercase"
-            />
+              <FormFieldInput
+                name="paidByPanHolderName"
+                label="Paid By PAN Holder Name"
+                placeholder="Enter paid by PAN holder name"
+              />
+              <FormFieldDatePicker
+                name="paidByPanDob"
+                label="Paid By PAN Holder DOB"
+                placeholder="Select DOB"
+                onBlur={onPanFieldBlur}
+              />
+              <FormFieldInput
+                name="email"
+                label="Email"
+                placeholder="Enter email address"
+                type="email"
+                valueTransform="none"
+              />
+              <FormFieldInput
+                name="contactNo"
+                label="Contact Number"
+                placeholder="Enter contact number"
+                valueTransform="none"
+              />
+              <FormFieldInput
+                name="gstNumber"
+                label="GST Number"
+                placeholder="Enter GST number"
+                valueTransform="uppercase"
+              />
             </div>
           ) : null}
 
@@ -456,7 +524,8 @@ export const PassengerDetailsFields = ({
                 Sale Compliance
               </h3>
               <p className="text-sm text-text-secondary">
-                These transaction-side values are captured here for the sell flow and stored on the transaction.
+                These transaction-side values are captured here for the sell
+                flow and stored on the transaction.
               </p>
             </div>
 
@@ -635,7 +704,7 @@ export const PassengerDetailsFields = ({
           </section>
         ) : null}
 
-        {(isIndianNationality || showTravelDetails) ? (
+        {isIndianNationality || showTravelDetails ? (
           <section className="space-y-4 rounded-sm border border-border-primary bg-surface-secondary p-4">
             {/* <div>
               <h3 className="text-base font-semibold text-text-primary">

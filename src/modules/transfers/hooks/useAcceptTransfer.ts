@@ -13,7 +13,9 @@ export const useAcceptTransfer = () => {
       toast.success('Transfer accepted successfully');
     },
     onError: (error: unknown) => {
-      toast.error(getTransferHookErrorMessage(error, 'Failed to accept transfer'));
+      toast.error(
+        getTransferHookErrorMessage(error, 'Failed to accept transfer')
+      );
     },
   });
 
@@ -22,4 +24,3 @@ export const useAcceptTransfer = () => {
     acceptTransfer: mutation.mutateAsync,
   };
 };
-

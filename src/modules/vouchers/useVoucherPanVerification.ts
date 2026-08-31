@@ -9,10 +9,18 @@ import {
 import { VOUCHER_FORM_TEXT } from './constants';
 import type { VoucherFormValues } from './types';
 
-export type VoucherPanVerificationStatus = 'idle' | 'checking' | 'valid' | 'invalid';
+export type VoucherPanVerificationStatus =
+  | 'idle'
+  | 'checking'
+  | 'valid'
+  | 'invalid';
 
-const getPanSnapshot = (values: Pick<VoucherFormValues, 'panNumber' | 'panName' | 'panDob'>) =>
-  `${String(values.panNumber ?? '').trim().toUpperCase()}|${String(values.panName ?? '').trim()}|${String(values.panDob ?? '').trim()}`;
+const getPanSnapshot = (
+  values: Pick<VoucherFormValues, 'panNumber' | 'panName' | 'panDob'>
+) =>
+  `${String(values.panNumber ?? '')
+    .trim()
+    .toUpperCase()}|${String(values.panName ?? '').trim()}|${String(values.panDob ?? '').trim()}`;
 
 export const useVoucherPanVerification = (enabled: boolean) => {
   const form = useFormContext<VoucherFormValues>();
@@ -79,7 +87,9 @@ export const useVoucherPanVerification = (enabled: boolean) => {
       }
 
       const nextMessage =
-        error instanceof Error ? error.message : VOUCHER_FORM_TEXT.panVerifyFailed;
+        error instanceof Error
+          ? error.message
+          : VOUCHER_FORM_TEXT.panVerifyFailed;
       verifiedSnapshotRef.current = '';
       setStatus('invalid');
       setMessage(nextMessage);

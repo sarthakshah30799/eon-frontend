@@ -4,7 +4,9 @@ interface UserIconProps {
   className?: string;
 }
 
-export const UserIcon: React.FC<UserIconProps> = ({ className = 'h-5 w-5' }) => {
+export const UserIcon: React.FC<UserIconProps> = ({
+  className = 'h-5 w-5',
+}) => {
   return (
     <svg
       aria-hidden="true"

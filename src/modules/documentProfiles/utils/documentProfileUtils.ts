@@ -28,7 +28,10 @@ export const normalizeDocumentProfileValues = (
   documentDescription: values.documentDescription.trim(),
   documentType: Array.from(
     new Set(
-      (Array.isArray(values.documentType) ? values.documentType : [values.documentType])
+      (Array.isArray(values.documentType)
+        ? values.documentType
+        : [values.documentType]
+      )
         .map(type => type.trim().toUpperCase())
         .filter(Boolean)
     )
@@ -47,7 +50,9 @@ export const loadDocumentTypeOptions = async (inputValue: string) => {
   }));
   return {
     options: inputValue
-      ? opts.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+      ? opts.filter(opt =>
+          opt.label.toLowerCase().includes(inputValue.toLowerCase())
+        )
       : opts,
   };
 };
@@ -63,7 +68,9 @@ export const documentTypeToAccept = (documentType: string | string[]) => {
 
   return Array.from(
     new Set(
-      normalizedTypes.map(type => DOCUMENT_TYPE_ACCEPT_MAP[type.trim().toUpperCase()] ?? '')
+      normalizedTypes.map(
+        type => DOCUMENT_TYPE_ACCEPT_MAP[type.trim().toUpperCase()] ?? ''
+      )
     )
   )
     .filter(Boolean)
@@ -80,7 +87,11 @@ export const getDocumentTypeLabel = (documentType: string | string[]) => {
   }
 
   return normalizedTypes
-    .map(type => DOCUMENT_TYPE_OPTIONS.find(option => option.value === type)?.label ?? type)
+    .map(
+      type =>
+        DOCUMENT_TYPE_OPTIONS.find(option => option.value === type)?.label ??
+        type
+    )
     .join(', ');
 };
 
@@ -100,7 +111,10 @@ export const getDocumentTypeOptionItems = () =>
     label: option.label,
   }));
 
-export const isFileTypeAllowed = (file: File, documentType: string | string[]) => {
+export const isFileTypeAllowed = (
+  file: File,
+  documentType: string | string[]
+) => {
   const normalizedTypes = Array.isArray(documentType)
     ? documentType
     : [documentType];

@@ -89,7 +89,7 @@ export const BranchCounterTable = ({
                 event.stopPropagation();
                 onEdit(counter);
               }}
-              >
+            >
               <PencilSquareIcon className="h-5 w-5" />
             </Button>
           </div>

@@ -2,7 +2,11 @@ import { apiClient } from '../api';
 import type {
   ICreateUserRole,
   IUserRole,
+  IUserRoleListQuery,
+  IUserRoleListResponse,
 } from '@/modules/userRole/types';
+import { buildQueryString } from '@/utils';
+import { fetchAllMatching, normalizePaginatedResponse } from '@/utils/paginatedList';
 
 interface BackendRole {
   id: string;
@@ -57,12 +61,40 @@ const mapBackendToFrontend = (role: BackendRole): IUserRole => {
 };
 
 export const userRoleApi = {
-  getUserRoles: async (search?: string): Promise<IUserRole[]> => {
-    const query = search?.trim() ? `?search=${encodeURIComponent(search.trim())}` : '';
-    const res = await apiClient.get<BackendRole[]>(`/roles${query}`);
+  getUserRoles: async (
+    params?: IUserRoleListQuery | string
+  ): Promise<IUserRoleListResponse> => {
+    const queryObj: IUserRoleListQuery | undefined =
+      typeof params === 'string'
+        ? { search: params.trim() || undefined }
+        : params;
+    const res = await apiClient.get<IUserRoleListResponse>(
+      `/roles${buildQueryString(queryObj)}`
+    );
     if (res.error) throw new Error(res.error);
-    return (res.data || []).map(mapBackendToFrontend);
+    const payload = normalizePaginatedResponse(
+      res.data
+        ? {
+            ...res.data,
+            data: (res.data.data || []).map(mapBackendToFrontend),
+          }
+        : res.data,
+      queryObj?.limit,
+      queryObj?.offset
+    );
+    return payload;
   },
+
+  getAllUserRoles: async (
+    params?: Omit<IUserRoleListQuery, 'limit' | 'offset'> | string
+  ): Promise<IUserRole[]> =>
+    fetchAllMatching(pagination =>
+      userRoleApi.getUserRoles(
+        typeof params === 'string'
+          ? { search: params.trim() || undefined, ...pagination }
+          : { ...params, ...pagination }
+      )
+    ),
 
   getUserRoleById: async (id: string): Promise<IUserRole> => {
     const res = await apiClient.get<BackendRole>(`/roles/${id}`);
@@ -103,8 +135,12 @@ export const userRoleApi = {
     return true;
   },
 
-  getRolePermissions: async (id: string): Promise<Record<string, Record<string, boolean>>> => {
-    const res = await apiClient.get<Record<string, Record<string, boolean>>>(`/roles/${id}/permissions`);
+  getRolePermissions: async (
+    id: string
+  ): Promise<Record<string, Record<string, boolean>>> => {
+    const res = await apiClient.get<Record<string, Record<string, boolean>>>(
+      `/roles/${id}/permissions`
+    );
     if (res.error) throw new Error(res.error);
     return res.data || {};
   },
@@ -113,7 +149,10 @@ export const userRoleApi = {
     id: string,
     permissions: Record<string, Record<string, boolean>>
   ): Promise<boolean> => {
-    const res = await apiClient.post<{ message: string }>(`/roles/${id}/permissions`, permissions);
+    const res = await apiClient.post<{ message: string }>(
+      `/roles/${id}/permissions`,
+      permissions
+    );
     if (res.error) throw new Error(res.error);
     return true;
   },

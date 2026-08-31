@@ -52,7 +52,8 @@ const buildAllocationRows = (
       const bookMvNoTo = bookMvNoFrom + book.vouchersPerBook - 1;
 
       const existing = allocations.find(
-        allocation => allocation.checkBookId === book.id && allocation.bookNo === i
+        allocation =>
+          allocation.checkBookId === book.id && allocation.bookNo === i
       );
 
       generatedRows.push({
@@ -86,10 +87,16 @@ export const useProcessChequeBookAllocations = () => {
       fromVal,
       toVal,
     }: IProcessChequeBookAllocationsInput) => {
-      const data = await chequebookApi.findAll(branchId, ChequeBookStatusEnum.APPROVE);
+      const data = await chequebookApi.findAllMatching({
+        branchId,
+        status: ChequeBookStatusEnum.APPROVE,
+      });
 
       const matched = data.filter(book => {
-        if (bankAccountCode !== 'ALL' && book.bankAccountCode !== bankAccountCode) {
+        if (
+          bankAccountCode !== 'ALL' &&
+          book.bankAccountCode !== bankAccountCode
+        ) {
           return false;
         }
 

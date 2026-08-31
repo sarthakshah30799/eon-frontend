@@ -2,24 +2,32 @@ import { apiClient } from '../api';
 import type {
   ICreateProductProfile,
   IProductProfile,
+  IProductProfileListQuery,
+  IProductProfileListResponse,
   IUpdateProductProfilePayload,
 } from '@/modules/productProfile/types';
+import { buildQueryString } from '@/utils';
+import { fetchAllMatching, normalizePaginatedResponse } from '@/utils/paginatedList';
 
 export const productProfileApi = {
-  getProductProfiles: async (filter?: { bulkBuying?: boolean; bulkSelling?: boolean; otherTransaction?: boolean; search?: string; activeOnly?: boolean }): Promise<IProductProfile[]> => {
-    const params = new URLSearchParams();
-    if (filter?.bulkBuying) params.set('bulkBuying', 'true');
-    if (filter?.bulkSelling) params.set('bulkSelling', 'true');
-    if (filter?.otherTransaction) params.set('otherTransaction', 'true');
-    if (filter?.activeOnly !== undefined) params.set('activeOnly', String(filter.activeOnly));
-    if (filter?.search?.trim()) params.set('search', filter.search.trim());
-    const query = params.toString() ? `?${params.toString()}` : '';
-    const res = await apiClient.get<IProductProfile[]>(`/products${query}`);
+  getProductProfiles: async (
+    filter?: IProductProfileListQuery
+  ): Promise<IProductProfileListResponse> => {
+    const res = await apiClient.get<IProductProfileListResponse>(
+      `/products${buildQueryString(filter)}`
+    );
     if (res.error) {
       throw new Error(res.error);
     }
-    return res.data || [];
+    return normalizePaginatedResponse(res.data, filter?.limit, filter?.offset);
   },
+
+  getAllProductProfiles: async (
+    filter?: Omit<IProductProfileListQuery, 'limit' | 'offset'>
+  ): Promise<IProductProfile[]> =>
+    fetchAllMatching(pagination =>
+      productProfileApi.getProductProfiles({ ...filter, ...pagination })
+    ),
 
   getProductProfileById: async (
     id: string

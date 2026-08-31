@@ -23,7 +23,10 @@ import {
   getPurchaseTradeMode,
   getPurchaseTransactionType,
 } from '../../purchasePage.enum';
-import { mapPurchaseTransactionToFormValues, createEmptyPurchaseFormValues } from '@/modules/purchase/utils/purchaseUtils';
+import {
+  mapPurchaseTransactionToFormValues,
+  createEmptyPurchaseFormValues,
+} from '@/modules/purchase/utils/purchaseUtils';
 
 const PurchaseEditPage = () => {
   const navigate = useNavigate();
@@ -35,7 +38,11 @@ const PurchaseEditPage = () => {
 
   const isAd1 = slug === 'ad1';
 
-  const { data: transaction, isLoading: isTransactionLoading, error: transactionError } = useQuery({
+  const {
+    data: transaction,
+    isLoading: isTransactionLoading,
+    error: transactionError,
+  } = useQuery({
     queryKey: ['transaction', id],
     queryFn: () => transactionsApi.getTransactionById(id ?? ''),
     enabled: Boolean(id) && !isAd1,
@@ -140,9 +147,7 @@ const PurchaseEditPage = () => {
   }
 
   if (!purchasePageType) {
-    return (
-      <NotFoundState message={PURCHASE_PAGE_STATUS_TEXT.pageNotFound} />
-    );
+    return <NotFoundState message={PURCHASE_PAGE_STATUS_TEXT.pageNotFound} />;
   }
 
   if (isLoading) {
@@ -153,7 +158,13 @@ const PurchaseEditPage = () => {
     );
   }
 
-  if (transactionError || branchError || pricingError || additionalSettingsError || !transaction) {
+  if (
+    transactionError ||
+    branchError ||
+    pricingError ||
+    additionalSettingsError ||
+    !transaction
+  ) {
     return (
       <NotFoundState message={PURCHASE_PAGE_STATUS_TEXT.transactionNotFound} />
     );
@@ -166,7 +177,8 @@ const PurchaseEditPage = () => {
           {getPurchasePageTitle(purchasePageType)}
         </h1>
         <p className="text-sm text-text-secondary">
-          View the transaction in the same form layout. Editing is disabled from this screen.
+          View the transaction in the same form layout. Editing is disabled from
+          this screen.
         </p>
       </div>
 

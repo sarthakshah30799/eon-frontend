@@ -8,7 +8,7 @@ import { Loader } from '@/components/ui/loader';
 import { useAuth } from '@/lib/AuthContext';
 import { transactionPoliciesApi } from '@/api/transactionPolicies';
 import { getTransactionDatePolicy } from '@/modules/transactionPolicies/utils/transactionDatePolicy';
-import { useListBranchProfiles } from '@/modules/branchProfile/hooks';
+import { branchProfileApi } from '@/api/branchProfile';
 import { CardStockSettlementDocumentKind } from '@/api/cardSettlement';
 import toast from 'react-hot-toast';
 import { CardSettlementForm } from '../forms';
@@ -18,10 +18,18 @@ import { useCreateCardSettlement } from '../hooks';
 import type { CardSettlementFormValues } from '../types/cardSettlementTypes';
 import { emptySettlementForm } from '../utils/cardSettlementUtils';
 
-const SettlementDateSync = ({ transactionDate }: { transactionDate: string }) => {
+const SettlementDateSync = ({
+  transactionDate,
+}: {
+  transactionDate: string;
+}) => {
   const form = useFormContext<CardSettlementFormValues>();
   useEffect(() => {
-    if (!transactionDate || form.getValues('transactionDate') === transactionDate) return;
+    if (
+      !transactionDate ||
+      form.getValues('transactionDate') === transactionDate
+    )
+      return;
     form.setValue('transactionDate', transactionDate, {
       shouldDirty: false,
       shouldTouch: false,
@@ -53,26 +61,46 @@ const SettlementKindSync = ({
 
 export const CardSettlementCreateView = () => {
   const navigate = useNavigate();
-  const { user, isLoading: authLoading, policyContext, activeBranchId } = useAuth();
+  const {
+    user,
+    isLoading: authLoading,
+    policyContext,
+    activeBranchId,
+  } = useAuth();
   const isHo = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
   const kind = isHo
     ? CardStockSettlementDocumentKind.HO_ISSUER
     : CardStockSettlementDocumentKind.BRANCH_HO;
-  const branchesQuery = useListBranchProfiles({ activeOnly: true }, isHo);
+  const branchesQuery = useQuery({
+    queryKey: ['branch-profiles-all', { activeOnly: true }],
+    queryFn: () => branchProfileApi.getAllBranchProfiles({ activeOnly: true }),
+    enabled: isHo,
+  });
   const defaultHoBranchId = useMemo(() => {
-    const hoBranches = (branchesQuery.data ?? []).filter(branch => branch.isHeadOffice);
-    return hoBranches.find(branch => branch.id === activeBranchId)?.id ?? hoBranches[0]?.id ?? '';
+    const hoBranches = (branchesQuery.data ?? []).filter(
+      branch => branch.isHeadOffice
+    );
+    return (
+      hoBranches.find(branch => branch.id === activeBranchId)?.id ??
+      hoBranches[0]?.id ??
+      ''
+    );
   }, [activeBranchId, branchesQuery.data]);
   const [hoBranchId, setHoBranchId] = useState('');
   const selectedHoBranchId = hoBranchId || defaultHoBranchId;
   const policyBranchId = isHo ? selectedHoBranchId : activeBranchId;
   const policyQuery = useQuery({
     queryKey: ['card-settlement', 'transaction-date-policy', policyBranchId],
-    queryFn: () => transactionPoliciesApi.getPolicyContext(policyBranchId ?? ''),
+    queryFn: () =>
+      transactionPoliciesApi.getPolicyContext(policyBranchId ?? ''),
     enabled: Boolean(policyBranchId),
   });
   const transactionDatePolicy = useMemo(
-    () => getTransactionDatePolicy(policyQuery.data ?? (policyBranchId === activeBranchId ? policyContext : null)),
+    () =>
+      getTransactionDatePolicy(
+        policyQuery.data ??
+          (policyBranchId === activeBranchId ? policyContext : null)
+      ),
     [activeBranchId, policyBranchId, policyContext, policyQuery.data]
   );
   const createMutation = useCreateCardSettlement();
@@ -81,7 +109,12 @@ export const CardSettlementCreateView = () => {
     values.hoBranchId = isHo ? defaultHoBranchId : '';
     values.transactionDate = transactionDatePolicy.defaultTransactionDate ?? '';
     return values;
-  }, [defaultHoBranchId, isHo, kind, transactionDatePolicy.defaultTransactionDate]);
+  }, [
+    defaultHoBranchId,
+    isHo,
+    kind,
+    transactionDatePolicy.defaultTransactionDate,
+  ]);
 
   if (authLoading || !user || (isHo && branchesQuery.isLoading)) {
     return <Loader />;
@@ -118,7 +151,9 @@ export const CardSettlementCreateView = () => {
       }}
     >
       <SettlementKindSync kind={kind} hoBranchId={defaultHoBranchId} />
-      <SettlementDateSync transactionDate={transactionDatePolicy.defaultTransactionDate} />
+      <SettlementDateSync
+        transactionDate={transactionDatePolicy.defaultTransactionDate}
+      />
       <div className="space-y-4">
         <div>
           <h1 className="text-2xl font-semibold text-text-primary">

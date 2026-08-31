@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Checkbox, SelectEntity, type TableColumnDef } from '@/components/ui';
+import { PAGINATION_DEFAULTS, PAGINATION_MAX_LIMIT } from '@/constants/paginationConstants';
 import { useDebounce } from '@/hooks';
 import { useListUserProfiles } from '../hooks';
 import type { IUserProfile } from '../types';
@@ -123,12 +124,19 @@ export const SelectUserProfiles = ({
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 350);
 
-  const { data: users = [], isLoading, isFetching } = useListUserProfiles({
+  const {
+    data: usersPage,
+    isLoading,
+    isFetching,
+  } = useListUserProfiles({
     activeOnly: true,
     search: debouncedSearch.trim() || undefined,
     branchId: branchId?.trim() || undefined,
     roleFilter,
+    limit: PAGINATION_MAX_LIMIT,
+    offset: PAGINATION_DEFAULTS.OFFSET,
   });
+  const users = usersPage?.data ?? [];
 
   const rows = useMemo<SelectableUserProfileRow[]>(
     () =>

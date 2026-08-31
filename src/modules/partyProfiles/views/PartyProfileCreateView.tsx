@@ -3,7 +3,11 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useCreatePartyProfile, usePartyProfileTypes } from '../hooks';
 import { PartyProfileForm } from '../forms/PartyProfileForm';
 import type { ICreatePartyProfile } from '../types';
-import { toPartyProfileApiType, toPartyProfileRouteType, PARTY_PROFILE_STATUS_TEXT } from '../constants';
+import {
+  toPartyProfileApiType,
+  toPartyProfileRouteType,
+  PARTY_PROFILE_STATUS_TEXT,
+} from '../constants';
 import { buildPartyProfileDocumentsPath } from '@/modules/partyProfileDocuments/utils/partyProfileDocumentRoutes';
 import { NotFoundState } from '@/components/ui/not-found-state';
 import { AccessDeniedState } from '@/components/ui/access-denied-state';
@@ -82,7 +86,8 @@ export const PartyProfileCreateView = () => {
   const navigate = useNavigate();
   const { type: routeType } = useParams<{ type?: string }>();
 
-  const { data: typeOptions = [], isLoading: isTypesLoading } = usePartyProfileTypes();
+  const { data: typeOptions = [], isLoading: isTypesLoading } =
+    usePartyProfileTypes();
   const routeOptions = useMemo(
     () =>
       typeOptions.map(option => ({
@@ -98,7 +103,9 @@ export const PartyProfileCreateView = () => {
     () => toPartyProfileApiType(selectedType) as PartyProfileType,
     [selectedType]
   );
-  const isInvalidTypeRoute = Boolean(routeType) && !routeOptions.some(option => option.value === selectedType);
+  const isInvalidTypeRoute =
+    Boolean(routeType) &&
+    !routeOptions.some(option => option.value === selectedType);
   const { canAdd } = usePermission(
     selectedType ? `/party-profiles/${selectedType}` : '/party-profiles'
   );
@@ -128,7 +135,9 @@ export const PartyProfileCreateView = () => {
 
   if (!routeOptions.length || !canAdd) {
     return (
-      <AccessDeniedState message={PARTY_PROFILE_STATUS_TEXT.accessDeniedCreate} />
+      <AccessDeniedState
+        message={PARTY_PROFILE_STATUS_TEXT.accessDeniedCreate}
+      />
     );
   }
 
@@ -164,7 +173,7 @@ export const PartyProfileCreateView = () => {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
+      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
         <PartyProfileForm
           defaultValues={defaultValues}
           onSubmit={handleSubmit}

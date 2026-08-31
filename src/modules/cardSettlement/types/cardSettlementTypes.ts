@@ -17,7 +17,10 @@ export interface CardSettlementFormItem {
 export interface CardSettlementFormValues {
   kind: CardStockSettlementDocumentKind;
   issuerPartyProfileId: string;
-  issuerPartyProfileSnapshot?: CardStockSnapshot | ITransactionReferenceSnapshot | null;
+  issuerPartyProfileSnapshot?:
+    | CardStockSnapshot
+    | ITransactionReferenceSnapshot
+    | null;
   currencyId: string;
   currencySnapshot?: CardStockSnapshot | ITransactionReferenceSnapshot | null;
   branchId: string;

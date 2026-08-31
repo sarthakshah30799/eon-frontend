@@ -5,6 +5,7 @@ import type {
   IFinancialCodeListResponse,
   ICreateFinancialCode,
 } from '@/modules/financialCodes/types/financialCodeTypes';
+import { fetchAllMatching, normalizePaginatedResponse } from '@/utils/paginatedList';
 
 const buildQueryString = (params?: IFinancialCodeListQuery) => {
   if (!params) {
@@ -33,21 +34,15 @@ export const financialCodesApi = {
       `/financial-codes${buildQueryString(params)}`
     );
     if (res.error) throw new Error(res.error);
-    if (!res.data) {
-      return {
-        data: [],
-        page: params?.page ?? 1,
-        limit: params?.limit ?? 10,
-        totalItems: 0,
-        totalPages: 0,
-      };
-    }
-
-    return {
-      ...res.data,
-      data: res.data.data || [],
-    };
+    return normalizePaginatedResponse(res.data, params?.limit, params?.offset);
   },
+
+  getAllFinancialCodes: async (
+    params?: Omit<IFinancialCodeListQuery, 'limit' | 'offset'>
+  ): Promise<IFinancialCode[]> =>
+    fetchAllMatching(pagination =>
+      financialCodesApi.getFinancialCodes({ ...params, ...pagination })
+    ),
 
   getFinancialCodeById: async (
     id: string
@@ -60,7 +55,9 @@ export const financialCodesApi = {
   getFinancialCodeByCode: async (
     code: string
   ): Promise<IFinancialCode | undefined> => {
-    const res = await apiClient.get<IFinancialCode>(`/financial-codes/by-code/${code}`);
+    const res = await apiClient.get<IFinancialCode>(
+      `/financial-codes/by-code/${code}`
+    );
     if (res.error) throw new Error(res.error);
     return res.data;
   },
@@ -77,7 +74,10 @@ export const financialCodesApi = {
       ...values,
       subProfiles: sanitizedSubProfiles,
     };
-    const res = await apiClient.post<IFinancialCode>('/financial-codes', payload);
+    const res = await apiClient.post<IFinancialCode>(
+      '/financial-codes',
+      payload
+    );
     if (res.error) throw new Error(res.error);
     if (!res.data) throw new Error('Failed to create financial code');
     return res.data;
@@ -97,15 +97,18 @@ export const financialCodesApi = {
       ...values,
       subProfiles: sanitizedSubProfiles,
     };
-    const res = await apiClient.put<IFinancialCode>(`/financial-codes/${id}`, payload);
+    const res = await apiClient.put<IFinancialCode>(
+      `/financial-codes/${id}`,
+      payload
+    );
     if (res.error) throw new Error(res.error);
     return res.data;
   },
 
-  deleteFinancialCode: async (
-    id: string
-  ): Promise<{ message: string }> => {
-    const res = await apiClient.delete<{ message: string }>(`/financial-codes/${id}`);
+  deleteFinancialCode: async (id: string): Promise<{ message: string }> => {
+    const res = await apiClient.delete<{ message: string }>(
+      `/financial-codes/${id}`
+    );
     if (res.error) throw new Error(res.error);
     if (!res.data) throw new Error('Failed to delete financial code');
     return res.data;

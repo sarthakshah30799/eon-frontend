@@ -5,4 +5,3 @@ const DocumentProfileListPage = () => {
 };
 
 export default DocumentProfileListPage;
-

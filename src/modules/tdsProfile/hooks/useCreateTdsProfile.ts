@@ -8,7 +8,8 @@ export const useCreateTdsProfile = () => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: (data: ICreateTdsProfile) => tdsProfileApi.createTdsProfile(data),
+    mutationFn: (data: ICreateTdsProfile) =>
+      tdsProfileApi.createTdsProfile(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tds-profiles'] });
       toast.success(TDS_PROFILE_TEXTS.CREATE_SUCCESS);

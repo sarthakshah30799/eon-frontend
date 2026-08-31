@@ -16,7 +16,10 @@ export const useListChequeBookCashiers = (branchId: string | null) => {
         return [];
       }
 
-      return chequebookApi.getAuthorizedUsers(branchId, AuthorizedUserRole.CASHIER);
+      return chequebookApi.getAuthorizedUsers(
+        branchId,
+        AuthorizedUserRole.CASHIER
+      );
     },
     enabled: Boolean(branchId),
   });

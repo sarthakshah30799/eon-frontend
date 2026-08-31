@@ -1,19 +1,22 @@
 import { useNavigate } from 'react-router-dom';
 import { PencilSquareIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button1';
-import { Table, type TableColumnDef } from '@/components/ui/table';
+import { Table, type TableColumnDef, type TableToolbarFilter } from '@/components/ui/table';
+import type { PaginationControlsProps } from '@/components/ui';
 import { usePermission } from '@/hooks';
 import { useAuth } from '@/lib/AuthContext';
 import type { IPartyProfile } from '../types/partyProfileTypes';
 import { PartyProfileDocumentsActionButton } from './PartyProfileDocumentsActionButton';
 
-interface PartyProfileTableProps {
+interface PartyProfileTableProps extends PaginationControlsProps {
   clients: IPartyProfile[];
   loading?: boolean;
+  isFetching?: boolean;
   selectedType?: string;
   onSearch?: (value: string) => void;
   searchValue?: string;
   searchPlaceholder?: string;
+  toolbarFilters?: TableToolbarFilter[];
 }
 
 interface PartyProfileTableRow {
@@ -35,10 +38,18 @@ interface PartyProfileTableRow {
 export const PartyProfileTable = ({
   clients,
   loading = false,
+  isFetching = false,
   selectedType = '',
   onSearch,
   searchValue,
   searchPlaceholder,
+  toolbarFilters,
+  page,
+  pageSize,
+  total,
+  totalPages,
+  onPageChange,
+  onPageSizeChange,
 }: PartyProfileTableProps) => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -98,7 +109,9 @@ export const PartyProfileTable = ({
             />
             <Button
               type="button"
-              aria-label={canEditThisProfile ? 'Edit party profile' : 'View party profile'}
+              aria-label={
+                canEditThisProfile ? 'Edit party profile' : 'View party profile'
+              }
               variant="ghost"
               size="icon"
               className="rounded-sm bg-transparent text-black! hover:bg-surface-secondary hover:text-text-primary"
@@ -122,17 +135,29 @@ export const PartyProfileTable = ({
     },
   ];
 
+  const useLegacySearch = Boolean(onSearch) && !toolbarFilters?.length;
+
   return (
     <Table
       columns={columns}
       data={rows}
       enableFiltering={false}
+      enablePagination
+      manualPagination
       enableRowSelection={false}
       enableColumnVisibility={false}
       loading={loading}
-      onSearch={onSearch}
-      searchValue={searchValue}
+      isFetching={isFetching}
+      page={page}
+      pageSize={pageSize}
+      total={total}
+      totalPages={totalPages}
+      onPageChange={onPageChange}
+      onPageSizeChange={onPageSizeChange}
+      onSearch={useLegacySearch ? onSearch : undefined}
+      searchValue={useLegacySearch ? searchValue : undefined}
       searchPlaceholder={searchPlaceholder}
+      toolbarFilters={toolbarFilters}
       onRowClick={
         canModify || canView
           ? row =>

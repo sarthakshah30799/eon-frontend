@@ -8,7 +8,8 @@ export const useUpdateCountryGroup = (id: string) => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: (data: ICreateCountryGroup) => countryGroupApi.updateCountryGroup(id, data),
+    mutationFn: (data: ICreateCountryGroup) =>
+      countryGroupApi.updateCountryGroup(id, data),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['country-groups'] });
       await queryClient.invalidateQueries({ queryKey: ['country-groups', id] });

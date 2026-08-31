@@ -20,28 +20,73 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
   { path: '/payments/create', meta: { title: 'Create Payment' } },
   { path: '/payments/edit/:id', meta: { title: 'Payment Details' } },
   { path: '/journal-vouchers', meta: { title: 'Journal Vouchers' } },
-  { path: '/journal-vouchers/create', meta: { title: 'Create Journal Voucher' } },
-  { path: '/journal-vouchers/edit/:id', meta: { title: 'Journal Voucher Details' } },
+  {
+    path: '/journal-vouchers/create',
+    meta: { title: 'Create Journal Voucher' },
+  },
+  {
+    path: '/journal-vouchers/edit/:id',
+    meta: { title: 'Journal Voucher Details' },
+  },
   { path: '/fake-currencies', meta: { title: 'Fake Currencies' } },
   { path: '/fake-currencies/create', meta: { title: 'Create Fake Currency' } },
-  { path: '/fake-currencies/edit/:id', meta: { title: 'Fake Currency Details' } },
+  {
+    path: '/fake-currencies/edit/:id',
+    meta: { title: 'Fake Currency Details' },
+  },
   { path: '/reports/stock-revaluations', meta: { title: 'Stock Revaluation' } },
-  { path: '/reports/card-unsettled-report', meta: { title: 'Unsettled CARD Report' } },
-  { path: '/reports/card-settled-report', meta: { title: 'Settled CARD Report' } },
-  { path: '/reports/card-blank-stock-report', meta: { title: 'Blank Stock CARD Report' } },
-  { path: '/reports/flm1-daily-cn-summary', meta: { title: 'FLM1 Daily CN Summary' } },
-  { path: '/reports/flm2-daily-et-summary', meta: { title: 'Encashed TC Balance' } },
-  { path: '/reports/flm3-purchase-from-public', meta: { title: 'FLM 3 - Purchase from Public' } },
-  { path: '/reports/flm4-purchase-from-ffmc', meta: { title: 'FLM 4 - Purchase from FFMC' } },
-  { path: '/reports/flm5-sales-to-public', meta: { title: 'FLM 5 - Sales to Public' } },
-  { path: '/reports/flm6-sales-to-ffmc', meta: { title: 'FLM 6 - Sales to FFMC' } },
-  { path: '/reports/flm7-surrender-statement', meta: { title: 'FLM 7 - Surrender Statement' } },
-  { path: '/reports/flm8-cn-statement', meta: { title: 'FLM 8 - CN Statement' } },
+  {
+    path: '/reports/card-unsettled-report',
+    meta: { title: 'Unsettled CARD Report' },
+  },
+  {
+    path: '/reports/card-settled-report',
+    meta: { title: 'Settled CARD Report' },
+  },
+  {
+    path: '/reports/card-blank-stock-report',
+    meta: { title: 'Blank Stock CARD Report' },
+  },
+  {
+    path: '/reports/flm1-daily-cn-summary',
+    meta: { title: 'FLM1 Daily CN Summary' },
+  },
+  {
+    path: '/reports/flm2-daily-et-summary',
+    meta: { title: 'Encashed TC Balance' },
+  },
+  {
+    path: '/reports/flm3-purchase-from-public',
+    meta: { title: 'FLM 3 - Purchase from Public' },
+  },
+  {
+    path: '/reports/flm4-purchase-from-ffmc',
+    meta: { title: 'FLM 4 - Purchase from FFMC' },
+  },
+  {
+    path: '/reports/flm5-sales-to-public',
+    meta: { title: 'FLM 5 - Sales to Public' },
+  },
+  {
+    path: '/reports/flm6-sales-to-ffmc',
+    meta: { title: 'FLM 6 - Sales to FFMC' },
+  },
+  {
+    path: '/reports/flm7-surrender-statement',
+    meta: { title: 'FLM 7 - Surrender Statement' },
+  },
+  {
+    path: '/reports/flm8-cn-statement',
+    meta: { title: 'FLM 8 - CN Statement' },
+  },
   { path: '/card-stock', meta: { title: 'Receipt Stock' } },
   { path: '/card-stock/create', meta: { title: 'Create Receipt Stock' } },
   { path: '/card-stock/edit/:id', meta: { title: 'Receipt Stock Details' } },
   { path: '/card-settlement', meta: { title: 'CARD Settlement' } },
-  { path: '/card-settlement/create', meta: { title: 'Create CARD Settlement' } },
+  {
+    path: '/card-settlement/create',
+    meta: { title: 'Create CARD Settlement' },
+  },
   { path: '/card-settlement/edit/:id', meta: { title: 'CARD Settlement' } },
   { path: '/card-settlement/:id', meta: { title: 'CARD Settlement' } },
   { path: '/users/list', meta: { title: 'Users' } },
@@ -559,10 +604,9 @@ export const resolveHeaderMeta = (
 
     if (!matchedRoute) continue;
 
-    const purchasePageType = getPurchasePageTypeFromPath(
-      cleanPathname,
-      matchedRoute.params.slug
-    ) ?? getPurchasePageTypeFromSlug(matchedRoute.params.slug);
+    const purchasePageType =
+      getPurchasePageTypeFromPath(cleanPathname, matchedRoute.params.slug) ??
+      getPurchasePageTypeFromSlug(matchedRoute.params.slug);
 
     const pageTitle = route.path.startsWith('/transfer')
       ? 'Transfer'
@@ -581,7 +625,9 @@ export const resolveHeaderMeta = (
           return { title: 'Create Transfer' };
         }
         return {
-          title: purchasePageType ? `Create ${pageTitle}` : 'Create Transaction',
+          title: purchasePageType
+            ? `Create ${pageTitle}`
+            : 'Create Transaction',
         };
       case 'view':
         if (route.path.startsWith('/transfer')) {
@@ -598,7 +644,10 @@ export const resolveHeaderMeta = (
       route.path.endsWith('/') && route.path !== '/'
         ? route.path.slice(0, -1)
         : route.path;
-    const matchedRoute = matchPath({ path: cleanRoutePath, end: true }, cleanPathname);
+    const matchedRoute = matchPath(
+      { path: cleanRoutePath, end: true },
+      cleanPathname
+    );
     if (matchedRoute) {
       return route.meta;
     }

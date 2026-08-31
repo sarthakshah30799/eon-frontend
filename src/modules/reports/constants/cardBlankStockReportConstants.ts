@@ -3,8 +3,7 @@ export const CARD_BLANK_STOCK_REPORT_TEXT = {
   description:
     'Currently blank CARD stock at the holding branch. Date is the original stock receipt date. Pending transfers and sold cards are excluded.',
   reportViewTitle: 'Report View',
-  reportViewDescription:
-    'One row per blank card. The list is not grouped.',
+  reportViewDescription: 'One row per blank card. The list is not grouped.',
   download: 'Download',
   loadError: 'Failed to load report data. Please try again.',
   xlsx: 'XLSX',

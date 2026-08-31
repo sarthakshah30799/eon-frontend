@@ -62,7 +62,9 @@ export const migrationsApi = {
   },
 
   applyCurrentSchema: async (
-    payload: MigrationPayload & { schemaTarget?: 'currentMaster' | 'currentTransaction' }
+    payload: MigrationPayload & {
+      schemaTarget?: 'currentMaster' | 'currentTransaction';
+    }
   ): Promise<MigrationSchemaApplyResponse> => {
     const res = await apiClient.post<MigrationSchemaApplyResponse>(
       '/migrations/apply-current-schema',
@@ -80,7 +82,9 @@ export const migrationsApi = {
     return res.data;
   },
 
-  runMock: async (payload: MigrationPayload): Promise<{ blob: Blob; filename?: string }> => {
+  runMock: async (
+    payload: MigrationPayload
+  ): Promise<{ blob: Blob; filename?: string }> => {
     const res = await apiClient.postDownload('/migrations/mock', payload);
 
     if (res.error) {
@@ -94,7 +98,9 @@ export const migrationsApi = {
     return res.data;
   },
 
-  runMigration: async (payload: MigrationPayload): Promise<{ blob: Blob; filename?: string }> => {
+  runMigration: async (
+    payload: MigrationPayload
+  ): Promise<{ blob: Blob; filename?: string }> => {
     const res = await apiClient.postDownload('/migrations/run', payload);
 
     if (res.error) {

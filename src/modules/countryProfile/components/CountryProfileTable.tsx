@@ -2,12 +2,14 @@ import { useNavigate } from 'react-router-dom';
 import { PencilSquareIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button1';
 import { Table, type TableColumnDef } from '@/components/ui/table';
+import type { PaginationControlsProps } from '@/components/ui';
 import { usePermission } from '@/hooks';
 import type { ICountryProfile } from '../types';
 
-interface CountryProfileTableProps {
+interface CountryProfileTableProps extends PaginationControlsProps {
   countries: ICountryProfile[];
   loading?: boolean;
+  isFetching?: boolean;
   onSearch?: (value: string) => void;
   searchValue?: string;
   searchPlaceholder?: string;
@@ -24,14 +26,19 @@ interface CountryProfileTableRow {
 export const CountryProfileTable = ({
   countries,
   loading = false,
+  isFetching = false,
   onSearch,
   searchValue = '',
   searchPlaceholder = 'Search',
+  page,
+  pageSize,
+  total,
+  totalPages,
+  onPageChange,
+  onPageSizeChange,
 }: CountryProfileTableProps) => {
   const navigate = useNavigate();
-  const { canModify, canView } = usePermission(
-    '/admin/country-profile'
-  );
+  const { canModify, canView } = usePermission('/admin/country-profile');
 
   const rows: CountryProfileTableRow[] = countries.map(country => ({
     id: country.id,
@@ -91,16 +98,24 @@ export const CountryProfileTable = ({
       columns={columns}
       data={rows}
       enableFiltering={false}
+      enablePagination
+      manualPagination
       enableRowSelection={false}
       enableColumnVisibility={false}
       loading={loading}
+      isFetching={isFetching}
+      page={page}
+      pageSize={pageSize}
+      total={total}
+      totalPages={totalPages}
+      onPageChange={onPageChange}
+      onPageSizeChange={onPageSizeChange}
       onSearch={onSearch}
       searchValue={searchValue}
       searchPlaceholder={searchPlaceholder}
       onRowClick={
         canModify || canView
-          ? row =>
-              navigate(`/admin/country-profile/edit/${row.id}`)
+          ? row => navigate(`/admin/country-profile/edit/${row.id}`)
           : undefined
       }
       emptyMessage="No countries found. Create your first country."

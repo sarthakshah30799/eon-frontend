@@ -9,5 +9,5 @@ export const WorkflowStatus = {
   REJECT: 'REJECT',
 } as const;
 
-export type WorkflowStatus = (typeof WorkflowStatus)[keyof typeof WorkflowStatus];
-
+export type WorkflowStatus =
+  (typeof WorkflowStatus)[keyof typeof WorkflowStatus];

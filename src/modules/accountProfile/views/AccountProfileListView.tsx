@@ -1,35 +1,57 @@
 import { useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button1';
-import { useDebounce, usePermission } from '@/hooks';
+import { useDebounce, useOffsetPaginatedList, usePermission } from '@/hooks';
+import { PAGINATION_DEFAULTS } from '@/constants/paginationConstants';
+import { accountProfileApi } from '@/api/accountProfile/accountProfile.api';
 import { AccountProfileTable } from '../components';
-import { useListAccountProfiles } from '../hooks';
 
 export const AccountProfileListView = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { canAdd } = usePermission('/admin/accounts-profile');
-  const page = 1;
-  const pageSize = 10;
   const search = searchParams.get('search') ?? '';
   const debouncedSearch = useDebounce(search, 400);
 
-  const query = useMemo(
+  const filters = useMemo(
     () => ({
-      page,
-      limit: pageSize,
       search: debouncedSearch.trim() || undefined,
     }),
-    [page, pageSize, debouncedSearch]
+    [debouncedSearch]
   );
 
   const {
-    data: accountResponse,
+    rows: accounts,
     isLoading,
     isFetching,
     error,
-  } = useListAccountProfiles(query);
-  const accounts = accountResponse?.data ?? [];
+    page,
+    limit,
+    total,
+    totalPages,
+    handlePageChange,
+    handlePageSizeChange,
+  } = useOffsetPaginatedList({
+    queryKey: ['account-profiles'],
+    queryFn: params => accountProfileApi.getAccountProfiles(params),
+    filters,
+  });
+
+  const handleSearch = (value: string) => {
+    setSearchParams(prev => {
+      const nextParams = new URLSearchParams(prev);
+      if (value.trim()) {
+        nextParams.set('search', value.trim());
+      } else {
+        nextParams.delete('search');
+      }
+      nextParams.set('offset', String(PAGINATION_DEFAULTS.OFFSET));
+      if (!nextParams.get('limit')) {
+        nextParams.set('limit', String(PAGINATION_DEFAULTS.LIMIT));
+      }
+      return nextParams;
+    });
+  };
 
   if (error) {
     return (
@@ -40,7 +62,7 @@ export const AccountProfileListView = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <div className="flex justify-end">
         {canAdd && (
           <Button
@@ -53,25 +75,20 @@ export const AccountProfileListView = () => {
         )}
       </div>
 
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
+      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
         <AccountProfileTable
           accounts={accounts}
-          loading={isLoading || isFetching}
-          onSearch={value =>
-            setSearchParams(prev => {
-              const nextParams = new URLSearchParams(prev);
-
-              if (value.trim()) {
-                nextParams.set('search', value.trim());
-              } else {
-                nextParams.delete('search');
-              }
-
-              return nextParams;
-            })
-          }
+          loading={isLoading}
+          isFetching={isFetching}
+          onSearch={handleSearch}
           searchValue={search}
           searchPlaceholder="Search a/c code, a/c name, division/dept, a/c type, currency, or financial code"
+          page={page}
+          pageSize={limit}
+          total={total}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
         />
       </section>
     </div>

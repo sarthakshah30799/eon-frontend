@@ -1,5 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { transfersApi, type IRecordTransferPrintPayload } from '@/api/transfers/transfers.api';
+import {
+  transfersApi,
+  type IRecordTransferPrintPayload,
+} from '@/api/transfers/transfers.api';
 
 export const useRecordTransferPrint = () => {
   const queryClient = useQueryClient();
@@ -12,7 +15,9 @@ export const useRecordTransferPrint = () => {
       payload: IRecordTransferPrintPayload;
     }) => transfersApi.recordPrint(id, payload),
     onSuccess: (_data, variables) => {
-      void queryClient.invalidateQueries({ queryKey: ['transfer', variables.id] });
+      void queryClient.invalidateQueries({
+        queryKey: ['transfer', variables.id],
+      });
       void queryClient.invalidateQueries({ queryKey: ['transfers'] });
     },
   });

@@ -28,7 +28,10 @@ import {
 import { AdditionalSettingsCodeEnum } from '@/modules/additionalSettings/constants';
 import { getAdditionalSettingTextValue } from '@/modules/additionalSettings/utils';
 import { getTransactionDatePolicy } from '@/modules/transactionPolicies/utils/transactionDatePolicy';
-import type { IPurchaseDraftDocumentAttachment, IPurchaseFormValues } from '../types';
+import type {
+  IPurchaseDraftDocumentAttachment,
+  IPurchaseFormValues,
+} from '../types';
 
 interface PurchaseCreateViewProps {
   purchasePageType: PurchasePageType | null;
@@ -39,8 +42,7 @@ export const PurchaseCreateView = ({
 }: PurchaseCreateViewProps) => {
   const navigate = useNavigate();
   const { slug } = useParams<{ slug?: string }>();
-  const { user, activeBranchId, activeCounterId, policyContext } =
-    useAuth();
+  const { user, activeBranchId, activeCounterId, policyContext } = useAuth();
   const canSelectWorkplace = Boolean(
     user?.isAdmin || user?.isHo || user?.isHoStaff
   );
@@ -156,24 +158,37 @@ export const PurchaseCreateView = ({
     [data]
   );
 
-  const onSubmit = useCallback(async (values: IPurchaseFormValues, attachments: IPurchaseDraftDocumentAttachment[]) => {
-    const payload = mapPurchaseFormValuesToSubmitPayload(
-      values,
-      attachments,
-      requiresApproval
-    );
-    const created = await createPurchaseTransaction(payload);
-    setSavedTransaction(created);
-    const listSlug = slug || getPurchasePageSlugFromType(purchasePageType);
-    if (!listSlug) {
-      return;
-    }
-    navigate(
-      getPurchaseTransactionType(purchasePageType) === TransactionTypeEnum.SALE
-        ? `/sell/${listSlug}`
-        : `/purchase/${listSlug}`
-    );
-  }, [createPurchaseTransaction, navigate, purchasePageType, requiresApproval, slug]);
+  const onSubmit = useCallback(
+    async (
+      values: IPurchaseFormValues,
+      attachments: IPurchaseDraftDocumentAttachment[]
+    ) => {
+      const payload = mapPurchaseFormValuesToSubmitPayload(
+        values,
+        attachments,
+        requiresApproval
+      );
+      const created = await createPurchaseTransaction(payload);
+      setSavedTransaction(created);
+      const listSlug = slug || getPurchasePageSlugFromType(purchasePageType);
+      if (!listSlug) {
+        return;
+      }
+      navigate(
+        getPurchaseTransactionType(purchasePageType) ===
+          TransactionTypeEnum.SALE
+          ? `/sell/${listSlug}`
+          : `/purchase/${listSlug}`
+      );
+    },
+    [
+      createPurchaseTransaction,
+      navigate,
+      purchasePageType,
+      requiresApproval,
+      slug,
+    ]
+  );
 
   const isLoading =
     isBranchLoading || isPricingLoading || isAdditionalSettingsLoading;

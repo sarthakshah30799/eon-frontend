@@ -3,7 +3,10 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Loader } from '@/components/ui/loader';
 import { PURPOSE_TEXTS } from '../constants/purposeConstants';
 import { useGetPurpose, useUpdatePurpose } from '../hooks';
-import { mapPurposeToFormValues, sanitizePurposeFormValues } from '../utils/purposeUtils';
+import {
+  mapPurposeToFormValues,
+  sanitizePurposeFormValues,
+} from '../utils/purposeUtils';
 import { PurposeEditorView } from './PurposeEditorView';
 import type { ICreatePurpose } from '../types/purposeTypes';
 
@@ -52,7 +55,7 @@ export const PurposeEditView = () => {
   }
 
   return (
-    <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
+    <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
       <PurposeEditorView
         submitLabel={PURPOSE_TEXTS.SAVE_CHANGES}
         defaultValues={defaultValues}

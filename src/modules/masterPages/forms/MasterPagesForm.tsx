@@ -85,7 +85,8 @@ interface NodeFieldsProps {
 
 const NodeFields = ({ name, depth, onRemove }: NodeFieldsProps) => {
   const form = useFormContext<IMasterPagesFormValues>();
-  const childName = `${name}.children` as FieldArrayPath<IMasterPagesFormValues>;
+  const childName =
+    `${name}.children` as FieldArrayPath<IMasterPagesFormValues>;
   const { fields, append, replace, remove } = useFieldArray({
     control: form.control,
     name: childName,

@@ -19,8 +19,10 @@ interface CurrencyRateGroupModalProps {
   onClose: () => void;
 }
 
-const labelClass = 'mb-1 block text-xs font-semibold uppercase tracking-wider text-text-secondary';
-const inputClass = 'w-full rounded-sm border border-border-primary bg-surface-primary px-3 py-2 text-sm text-text-primary outline-none transition focus:border-primary-500';
+const labelClass =
+  'mb-1 block text-xs font-semibold uppercase tracking-wider text-text-secondary';
+const inputClass =
+  'w-full rounded-sm border border-border-primary bg-surface-primary px-3 py-2 text-sm text-text-primary outline-none transition focus:border-primary-500';
 const loadMarginTypeOptions = async (inputValue: string) => {
   const opts = CURRENCY_RATE_MARGIN_TYPE_OPTIONS.map(option => ({
     value: option.value,
@@ -28,7 +30,9 @@ const loadMarginTypeOptions = async (inputValue: string) => {
   }));
   return {
     options: inputValue
-      ? opts.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+      ? opts.filter(opt =>
+          opt.label.toLowerCase().includes(inputValue.toLowerCase())
+        )
       : opts,
     hasMore: false,
   };
@@ -64,7 +68,9 @@ export const CurrencyRateGroupModal = ({
               : 'New group'}
           </div>
           <div className="mt-1">
-            {selectedGroup ? 'You are editing this group.' : 'No group is selected yet.'}
+            {selectedGroup
+              ? 'You are editing this group.'
+              : 'No group is selected yet.'}
           </div>
         </div>
 
@@ -73,7 +79,9 @@ export const CurrencyRateGroupModal = ({
             <label className={labelClass}>Group Code</label>
             <Input
               value={form.code}
-              onChange={event => setForm(next => ({ ...next, code: event.target.value }))}
+              onChange={event =>
+                setForm(next => ({ ...next, code: event.target.value }))
+              }
               placeholder="MAJOR"
               valueTransform="none"
               classes={{ container: 'max-w-none' }}
@@ -83,7 +91,9 @@ export const CurrencyRateGroupModal = ({
             <label className={labelClass}>Group Name</label>
             <Input
               value={form.name}
-              onChange={event => setForm(next => ({ ...next, name: event.target.value }))}
+              onChange={event =>
+                setForm(next => ({ ...next, name: event.target.value }))
+              }
               placeholder="Major"
               valueTransform="none"
               classes={{ container: 'max-w-none' }}
@@ -93,7 +103,9 @@ export const CurrencyRateGroupModal = ({
             <label className={labelClass}>Description</label>
             <textarea
               value={form.description}
-              onChange={event => setForm(next => ({ ...next, description: event.target.value }))}
+              onChange={event =>
+                setForm(next => ({ ...next, description: event.target.value }))
+              }
               className={inputClass}
               rows={2}
             />
@@ -107,12 +119,15 @@ export const CurrencyRateGroupModal = ({
                 ) ?? null
               }
               onChange={option => {
-                const selectedOption = Array.isArray(option) ? option[0] : option;
+                const selectedOption = Array.isArray(option)
+                  ? option[0]
+                  : option;
                 setForm(next => ({
                   ...next,
                   buyMarginType:
-                    (selectedOption?.value as CurrencyRateMarginType | undefined) ??
-                    '',
+                    (selectedOption?.value as
+                      | CurrencyRateMarginType
+                      | undefined) ?? '',
                 }));
               }}
               loadOptions={loadMarginTypeOptions}
@@ -124,7 +139,12 @@ export const CurrencyRateGroupModal = ({
             <label className={labelClass}>Buy Margin Value</label>
             <Input
               value={form.buyMarginValue}
-              onChange={event => setForm(next => ({ ...next, buyMarginValue: event.target.value }))}
+              onChange={event =>
+                setForm(next => ({
+                  ...next,
+                  buyMarginValue: event.target.value,
+                }))
+              }
               valueTransform="none"
               classes={{ container: 'max-w-none' }}
             />
@@ -138,12 +158,15 @@ export const CurrencyRateGroupModal = ({
                 ) ?? null
               }
               onChange={option => {
-                const selectedOption = Array.isArray(option) ? option[0] : option;
+                const selectedOption = Array.isArray(option)
+                  ? option[0]
+                  : option;
                 setForm(next => ({
                   ...next,
                   saleMarginType:
-                    (selectedOption?.value as CurrencyRateMarginType | undefined) ??
-                    '',
+                    (selectedOption?.value as
+                      | CurrencyRateMarginType
+                      | undefined) ?? '',
                 }));
               }}
               loadOptions={loadMarginTypeOptions}
@@ -155,7 +178,12 @@ export const CurrencyRateGroupModal = ({
             <label className={labelClass}>Sell Margin Value</label>
             <Input
               value={form.saleMarginValue}
-              onChange={event => setForm(next => ({ ...next, saleMarginValue: event.target.value }))}
+              onChange={event =>
+                setForm(next => ({
+                  ...next,
+                  saleMarginValue: event.target.value,
+                }))
+              }
               valueTransform="none"
               classes={{ container: 'max-w-none' }}
             />
@@ -165,24 +193,41 @@ export const CurrencyRateGroupModal = ({
         <label className="flex items-center gap-2 text-sm text-text-primary">
           <Checkbox
             checked={form.isActive}
-            onChange={checked => setForm(next => ({ ...next, isActive: checked }))}
+            onChange={checked =>
+              setForm(next => ({ ...next, isActive: checked }))
+            }
           />
           Active
         </label>
 
         <div className="flex gap-3">
-          <Button type="button" onClick={() => void onSubmit()} disabled={isSubmitting}>
-            {isSubmitting ? 'Saving...' : mode === 'edit' ? 'Update Group' : 'Create Group'}
+          <Button
+            type="button"
+            onClick={() => void onSubmit()}
+            disabled={isSubmitting}
+          >
+            {isSubmitting
+              ? 'Saving...'
+              : mode === 'edit'
+                ? 'Update Group'
+                : 'Create Group'}
           </Button>
-          <Button type="button" variant="ghost" onClick={onClose} disabled={isSubmitting}>
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={onClose}
+            disabled={isSubmitting}
+          >
             Cancel
           </Button>
         </div>
 
         <div className="rounded-sm border border-border-primary bg-surface-secondary/20 p-4 text-xs text-text-secondary">
-          Buy preview: {form.buyMarginType || 'EMPTY'} {formatMarginValue(form.buyMarginType, form.buyMarginValue)}
+          Buy preview: {form.buyMarginType || 'EMPTY'}{' '}
+          {formatMarginValue(form.buyMarginType, form.buyMarginValue)}
           <br />
-          Sell preview: {form.saleMarginType || 'EMPTY'} {formatMarginValue(form.saleMarginType, form.saleMarginValue)}
+          Sell preview: {form.saleMarginType || 'EMPTY'}{' '}
+          {formatMarginValue(form.saleMarginType, form.saleMarginValue)}
         </div>
       </div>
     </Modal>

@@ -16,7 +16,7 @@ export const useCreateCompanyProfile = () => {
       queryClient.invalidateQueries({ queryKey: ['company-profiles'] });
       toast.success('Company profile created successfully');
     },
-    onError: (error) => {
+    onError: error => {
       toast.error(error.message || 'Failed to create company profile');
     },
   });

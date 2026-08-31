@@ -59,6 +59,6 @@ export const mapFormValuesToRecord = (
   ...values,
   pricingGroupId: values.pricingGroupId || null,
   productAllowed: values.onlyStocking
-    ? (values.productAllowed || CurrencyProductAllowed.CN)
+    ? values.productAllowed || CurrencyProductAllowed.CN
     : '',
 });

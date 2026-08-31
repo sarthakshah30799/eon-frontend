@@ -1,4 +1,4 @@
-import ChequeBookCreateView from "@/modules/chequebooks/views/ChequeBookCreateView";
+import ChequeBookCreateView from '@/modules/chequebooks/views/ChequeBookCreateView';
 
 const ChequeBookCreatePage = () => {
   return <ChequeBookCreateView />;

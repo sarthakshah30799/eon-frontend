@@ -43,8 +43,8 @@ const StateCodeField = ({
       }
 
       const res = await stateProfileApi.getStateProfiles({
-        page: 1,
         limit: 20,
+        offset: 0,
         countryId,
         code: normalizedCode,
       });

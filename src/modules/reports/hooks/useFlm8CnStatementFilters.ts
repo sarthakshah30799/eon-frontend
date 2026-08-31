@@ -63,7 +63,10 @@ export interface Flm8CnStatementFiltersState {
   canView: boolean;
 }
 
-const toOption = (id: string, label: string): IReportSelectOption => ({ id, label });
+const toOption = (id: string, label: string): IReportSelectOption => ({
+  id,
+  label,
+});
 
 const parseView = (value: string): Flm8ReportView =>
   value === Flm8ReportViewEnum.HORIZONTAL
@@ -75,8 +78,7 @@ const parseProfileType = (value: string): Flm8ProfileType | '' =>
     ? value
     : '';
 
-const parseBooleanParam = (value: string) =>
-  value === 'true' || value === '1';
+const parseBooleanParam = (value: string) => value === 'true' || value === '1';
 
 export const useFlm8CnStatementFilters = (): Flm8CnStatementFiltersState => {
   const { user } = useAuth();
@@ -84,43 +86,49 @@ export const useFlm8CnStatementFilters = (): Flm8CnStatementFiltersState => {
   const isRestrictedUser = !user?.isAdmin && !user?.isHo && !user?.isHoStaff;
   const userAssignments = useMemo(
     () => user?.assignments ?? [],
-    [user?.assignments],
+    [user?.assignments]
   );
   const searchParamsKey = searchParams.toString();
   const parsedSearchParams = useMemo(
     () => new URLSearchParams(searchParamsKey),
-    [searchParamsKey],
+    [searchParamsKey]
   );
 
   const hydratedRouteState = useMemo(() => {
     const nextProfileType = parseProfileType(
-      readSearchParamValue(parsedSearchParams, 'profileType'),
+      readSearchParamValue(parsedSearchParams, 'profileType')
     );
     return {
       dateRange: readDateRangeSearchParams(
         parsedSearchParams,
-        ReportDatePresetEnum.TODAY,
+        ReportDatePresetEnum.TODAY
       ),
       branchIds: readSearchParamList(parsedSearchParams, 'branchIds'),
       productId: readSearchParamValue(parsedSearchParams, 'productId'),
       profileType: nextProfileType,
       apConnect:
         nextProfileType === Flm8ProfileTypeEnum.AD &&
-        parseBooleanParam(readSearchParamValue(parsedSearchParams, 'apConnect')),
+        parseBooleanParam(
+          readSearchParamValue(parsedSearchParams, 'apConnect')
+        ),
       view: parseView(readSearchParamValue(parsedSearchParams, 'view')),
     };
   }, [parsedSearchParams]);
 
   const [dateRange, setDateRange] = useState<IReportDateRange>(
-    hydratedRouteState.dateRange,
+    hydratedRouteState.dateRange
   );
-  const [branchIds, setBranchIds] = useState<string[]>(hydratedRouteState.branchIds);
+  const [branchIds, setBranchIds] = useState<string[]>(
+    hydratedRouteState.branchIds
+  );
   const [productId, setProductId] = useState(hydratedRouteState.productId);
   const [profileType, setProfileTypeState] = useState<Flm8ProfileType | ''>(
-    hydratedRouteState.profileType,
+    hydratedRouteState.profileType
   );
   const [apConnect, setApConnectState] = useState(hydratedRouteState.apConnect);
-  const [view, setViewState] = useState<Flm8ReportView>(hydratedRouteState.view);
+  const [view, setViewState] = useState<Flm8ReportView>(
+    hydratedRouteState.view
+  );
   const [appliedFilters, setAppliedFilters] = useState<
     Flm8CnStatementFiltersState['appliedFilters']
   >(
@@ -133,38 +141,41 @@ export const useFlm8CnStatementFilters = (): Flm8CnStatementFiltersState => {
           apConnect: hydratedRouteState.apConnect,
           view: hydratedRouteState.view,
         }
-      : null,
+      : null
   );
 
   const { data: branchProfiles = [] } = useQuery({
     queryKey: ['reports-flm8-branch-profiles'],
     enabled: true,
     queryFn: async () =>
-      branchProfileApi.getBranchProfiles({
+      branchProfileApi.getAllBranchProfiles({
         activeOnly: true,
       }),
   });
 
-  const { data: productProfiles = [] } = useListProductProfiles(true);
+  const { data: productProfilesPage } = useListProductProfiles(true);
+  const productProfiles = productProfilesPage?.data ?? [];
 
   const accessibleBranchProfiles = useMemo(
     () =>
       isRestrictedUser
         ? branchProfiles.filter(branch =>
-            userAssignments.some(assignment => assignment.branchId === branch.id),
+            userAssignments.some(
+              assignment => assignment.branchId === branch.id
+            )
           )
         : branchProfiles,
-    [branchProfiles, isRestrictedUser, userAssignments],
+    [branchProfiles, isRestrictedUser, userAssignments]
   );
 
   const branchOptions = useMemo<IReportSelectOption[]>(
     () =>
       uniqueOptions(
         accessibleBranchProfiles.map(branch =>
-          toOption(branch.id, buildReportOptionLabel(branch.code, branch.name)),
-        ),
+          toOption(branch.id, buildReportOptionLabel(branch.code, branch.name))
+        )
       ),
-    [accessibleBranchProfiles],
+    [accessibleBranchProfiles]
   );
 
   const productOptions = useMemo<IReportSelectOption[]>(
@@ -173,17 +184,21 @@ export const useFlm8CnStatementFilters = (): Flm8CnStatementFiltersState => {
         productProfiles.map(product =>
           toOption(
             product.id,
-            buildReportOptionLabel(product.productCode, product.productDescription),
-          ),
-        ),
+            buildReportOptionLabel(
+              product.productCode,
+              product.productDescription
+            )
+          )
+        )
       ),
-    [productProfiles],
+    [productProfiles]
   );
 
   const defaultProductId = useMemo(() => {
     const cnProduct = productProfiles.find(
       product =>
-        String(product.productCode ?? '').toUpperCase() === FLM8_DEFAULT_PRODUCT_CODE,
+        String(product.productCode ?? '').toUpperCase() ===
+        FLM8_DEFAULT_PRODUCT_CODE
     );
     return cnProduct?.id ?? productOptions[0]?.id ?? '';
   }, [productOptions, productProfiles]);
@@ -191,16 +206,19 @@ export const useFlm8CnStatementFilters = (): Flm8CnStatementFiltersState => {
   const selectedBranchIds = useMemo(
     () =>
       branchIds.filter(branchId =>
-        branchOptions.some(option => option.id === branchId),
+        branchOptions.some(option => option.id === branchId)
       ),
-    [branchIds, branchOptions],
+    [branchIds, branchOptions]
   );
-  const selectedProductId = productOptions.some(option => option.id === productId)
+  const selectedProductId = productOptions.some(
+    option => option.id === productId
+  )
     ? productId
     : defaultProductId;
 
   const branchAllSelected =
-    branchOptions.length > 0 && selectedBranchIds.length === branchOptions.length;
+    branchOptions.length > 0 &&
+    selectedBranchIds.length === branchOptions.length;
 
   const toggleBranch = (id: string, checked: boolean) => {
     setBranchIds(current => toggleId(current, id, checked));
@@ -216,7 +234,7 @@ export const useFlm8CnStatementFilters = (): Flm8CnStatementFiltersState => {
     nextProductId: string,
     nextProfileType: Flm8ProfileType | '',
     nextApConnect: boolean,
-    nextView: Flm8ReportView,
+    nextView: Flm8ReportView
   ) => {
     return buildSearchParams(undefined, next => {
       setSearchParamValue(next, 'datePreset', nextDateRange.preset);
@@ -228,7 +246,9 @@ export const useFlm8CnStatementFilters = (): Flm8CnStatementFiltersState => {
       setSearchParamValue(
         next,
         'apConnect',
-        nextProfileType === Flm8ProfileTypeEnum.AD && nextApConnect ? 'true' : '',
+        nextProfileType === Flm8ProfileTypeEnum.AD && nextApConnect
+          ? 'true'
+          : ''
       );
       setSearchParamValue(next, 'view', nextView);
     });
@@ -265,9 +285,9 @@ export const useFlm8CnStatementFilters = (): Flm8CnStatementFiltersState => {
         appliedFilters.productId,
         appliedFilters.profileType,
         appliedFilters.apConnect,
-        nextView,
+        nextView
       ),
-      { replace: true },
+      { replace: true }
     );
   };
 
@@ -283,7 +303,12 @@ export const useFlm8CnStatementFilters = (): Flm8CnStatementFiltersState => {
   };
 
   const handleView = () => {
-    if (!selectedProductId || !dateRange.startDate || !dateRange.endDate || !profileType) {
+    if (
+      !selectedProductId ||
+      !dateRange.startDate ||
+      !dateRange.endDate ||
+      !profileType
+    ) {
       return;
     }
 
@@ -322,9 +347,9 @@ export const useFlm8CnStatementFilters = (): Flm8CnStatementFiltersState => {
         selectedProductId,
         profileType,
         effectiveApConnect,
-        view,
+        view
       ),
-      { replace: true },
+      { replace: true }
     );
   };
 
@@ -354,7 +379,10 @@ export const useFlm8CnStatementFilters = (): Flm8CnStatementFiltersState => {
     appliedFilters,
     appliedDateRangeLabel,
     canView: Boolean(
-      selectedProductId && dateRange.startDate && dateRange.endDate && profileType,
+      selectedProductId &&
+      dateRange.startDate &&
+      dateRange.endDate &&
+      profileType
     ),
   };
 };

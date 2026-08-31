@@ -1,3 +1,8 @@
+import type {
+  IOffsetPaginationParams,
+  IPaginatedResponse,
+} from '@/types/pagination';
+
 export interface ICompanyProfile {
   id: string;
   shortCode?: string;
@@ -17,9 +22,11 @@ export interface ICompanyProfile {
   updatedAt?: string;
 }
 
-export interface ICompanyProfileListQuery {
+export interface ICompanyProfileListQuery extends IOffsetPaginationParams {
   search?: string;
 }
+
+export type ICompanyProfileListResponse = IPaginatedResponse<ICompanyProfile>;
 
 export interface ICreateCompanyProfile {
   shortCode: string;

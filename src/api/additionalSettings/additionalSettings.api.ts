@@ -7,7 +7,9 @@ import type { IPasswordPolicy } from '@/modules/auth/types/authTypes';
 
 export const additionalSettingsApi = {
   getAdditionalSettings: async (): Promise<IAdditionalSettingCategory[]> => {
-    const res = await apiClient.get<IAdditionalSettingCategory[]>('/additional-settings');
+    const res = await apiClient.get<IAdditionalSettingCategory[]>(
+      '/additional-settings'
+    );
     if (res.error) {
       throw new Error(res.error);
     }
@@ -15,7 +17,9 @@ export const additionalSettingsApi = {
   },
 
   getValueTypes: async (): Promise<string[]> => {
-    const res = await apiClient.get<string[]>('/additional-settings/value-types');
+    const res = await apiClient.get<string[]>(
+      '/additional-settings/value-types'
+    );
     if (res.error) {
       throw new Error(res.error);
     }
@@ -23,7 +27,9 @@ export const additionalSettingsApi = {
   },
 
   getPasswordPolicy: async (): Promise<IPasswordPolicy> => {
-    const res = await apiClient.get<IPasswordPolicy>('/additional-settings/password-policy');
+    const res = await apiClient.get<IPasswordPolicy>(
+      '/additional-settings/password-policy'
+    );
     if (res.error) {
       throw new Error(res.error);
     }

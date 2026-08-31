@@ -8,8 +8,12 @@ import type {
 } from '@/modules/passengers/types/passengerTypes';
 
 export const passengersApi = {
-  getOtherDocumentTypes: async (search?: string): Promise<Array<{ value: string; label: string }>> => {
-    const query = search?.trim() ? `?search=${encodeURIComponent(search.trim())}` : '';
+  getOtherDocumentTypes: async (
+    search?: string
+  ): Promise<Array<{ value: string; label: string }>> => {
+    const query = search?.trim()
+      ? `?search=${encodeURIComponent(search.trim())}`
+      : '';
     const res = await apiClient.get<Array<{ value: string; label: string }>>(
       `/passengers/other-document-types${query}`
     );
@@ -59,9 +63,9 @@ export const passengersApi = {
     return res.data;
   },
 
-  lookupPassport: async (
-    payload: { passportNumber: string }
-  ): Promise<IPassengerPassportLookupResponse> => {
+  lookupPassport: async (payload: {
+    passportNumber: string;
+  }): Promise<IPassengerPassportLookupResponse> => {
     const res = await apiClient.post<IPassengerPassportLookupResponse>(
       '/passengers/lookup-passport',
       payload
@@ -78,8 +82,14 @@ export const passengersApi = {
     return res.data;
   },
 
-  lookupIdentity: async (payload: { panNumber?: string; passportNumber?: string }): Promise<IPassengerPassportLookupResponse> => {
-    const res = await apiClient.post<IPassengerPassportLookupResponse>('/passengers/lookup-identity', payload);
+  lookupIdentity: async (payload: {
+    panNumber?: string;
+    passportNumber?: string;
+  }): Promise<IPassengerPassportLookupResponse> => {
+    const res = await apiClient.post<IPassengerPassportLookupResponse>(
+      '/passengers/lookup-identity',
+      payload
+    );
     if (res.error) throw new Error(res.error);
     if (!res.data) throw new Error('Failed to lookup passenger identity');
     return res.data;

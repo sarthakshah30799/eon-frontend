@@ -38,22 +38,24 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
       assignment.counterId === activeCounterId
   );
 
-  const { data: activeBranchProfile } = useGetBranchProfile(activeBranchId ?? '');
-  const { data: activeCounterProfile } = useGetCounterProfile(activeCounterId ?? '');
+  const { data: activeBranchProfile } = useGetBranchProfile(
+    activeBranchId ?? ''
+  );
+  const { data: activeCounterProfile } = useGetCounterProfile(
+    activeCounterId ?? ''
+  );
 
-  const activeBranchLabel =
-    activeBranchProfile ? `${activeBranchProfile.code} - ${activeBranchProfile.name}` :
-    user?.branchName?.trim() ||
-    activeAssignment?.branchName ||
-    'Not selected';
+  const activeBranchLabel = activeBranchProfile
+    ? `${activeBranchProfile.code} - ${activeBranchProfile.name}`
+    : user?.branchName?.trim() ||
+      activeAssignment?.branchName ||
+      'Not selected';
 
-  const activeCounterLabel =
-    activeCounterProfile
-      ? `${activeCounterProfile.counterNo} - ${activeCounterProfile.name}`
-      :
-    user?.counterName?.trim() ||
-    activeAssignment?.counterName ||
-    'Not selected';
+  const activeCounterLabel = activeCounterProfile
+    ? `${activeCounterProfile.counterNo} - ${activeCounterProfile.name}`
+    : user?.counterName?.trim() ||
+      activeAssignment?.counterName ||
+      'Not selected';
   const displayName = user?.name?.trim() || 'Profile';
   const userEmail = user?.email?.trim() || 'No email available';
   const userAvatar = user?.avatar;

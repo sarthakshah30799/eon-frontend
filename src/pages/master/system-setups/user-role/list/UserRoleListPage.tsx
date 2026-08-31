@@ -5,4 +5,3 @@ const UserRoleListPage = () => {
 };
 
 export default UserRoleListPage;
-

@@ -6,7 +6,9 @@ import {
   isRegisteredAdditionalSettingCategoryCode,
 } from '../registry/additionalSettingsRegistry';
 
-const categoryCodeOptions = getAdditionalSettingCategoryCodeOptions().map(option => option.value);
+const categoryCodeOptions = getAdditionalSettingCategoryCodeOptions().map(
+  option => option.value
+);
 
 export const additionalSettingsSchema = yup.object({
   title: yup.string().trim().required('Category title is required'),
@@ -31,7 +33,8 @@ export const additionalSettingsSchema = yup.object({
     .default([])
     .test('registered-subcategory-codes', function (subcategories) {
       const categoryCode = String(this.parent?.code ?? '').trim();
-      const categoryDefinition = getAdditionalSettingCategoryDefinition(categoryCode);
+      const categoryDefinition =
+        getAdditionalSettingCategoryDefinition(categoryCode);
 
       if (!categoryCode) {
         return true;
@@ -42,15 +45,20 @@ export const additionalSettingsSchema = yup.object({
       }
 
       const allowedCodes = new Set<string>(
-        getAdditionalSettingSubcategoryCodeOptions(categoryCode).map(option => option.value)
+        getAdditionalSettingSubcategoryCodeOptions(categoryCode).map(
+          option => option.value
+        )
       );
 
       for (const [index, subcategory] of (subcategories ?? []).entries()) {
-        const code = String(subcategory?.code ?? '').trim().toUpperCase();
+        const code = String(subcategory?.code ?? '')
+          .trim()
+          .toUpperCase();
         if (code && !allowedCodes.has(code)) {
           return this.createError({
             path: `subcategories[${index}].code`,
-            message: 'Subcategory code must be selected from the predefined list',
+            message:
+              'Subcategory code must be selected from the predefined list',
           });
         }
 
@@ -58,7 +66,11 @@ export const additionalSettingsSchema = yup.object({
           item => item.code === code
         );
 
-        if (registryEntry && registryEntry.required && !String(subcategory?.value ?? '').trim()) {
+        if (
+          registryEntry &&
+          registryEntry.required &&
+          !String(subcategory?.value ?? '').trim()
+        ) {
           return this.createError({
             path: `subcategories[${index}].value`,
             message: 'Subcategory value is required',
@@ -66,7 +78,9 @@ export const additionalSettingsSchema = yup.object({
         }
 
         const isTransactionNumbering =
-          String(categoryCode ?? '').trim().toUpperCase() === 'TRANSACTION_NUMBERING';
+          String(categoryCode ?? '')
+            .trim()
+            .toUpperCase() === 'TRANSACTION_NUMBERING';
         if (isTransactionNumbering) {
           const rawValue = String(subcategory?.value ?? '').trim();
           if (rawValue) {

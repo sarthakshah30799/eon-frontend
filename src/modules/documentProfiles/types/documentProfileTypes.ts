@@ -1,4 +1,8 @@
 import type { ICategoryOption } from '@/types/categoryOptionTypes';
+import type {
+  IOffsetPaginationParams,
+  IPaginatedResponse,
+} from '@/types/pagination';
 
 export interface IDocumentProfileFile {
   fileName: string;
@@ -43,12 +47,12 @@ export interface ICreateDocumentProfile {
 
 export type IUpdateDocumentProfile = Partial<ICreateDocumentProfile>;
 
-export interface IDocumentProfileListQuery {
+export interface IDocumentProfileListQuery extends IOffsetPaginationParams {
   search?: string;
   active?: boolean;
-  page?: number;
-  limit?: number;
 }
+
+export type IDocumentProfileListResponse = IPaginatedResponse<IDocumentProfile>;
 
 export interface IResolveDocumentProfileQuery {
   specificationType?: string;

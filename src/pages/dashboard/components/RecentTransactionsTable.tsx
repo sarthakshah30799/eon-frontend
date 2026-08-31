@@ -19,69 +19,100 @@ const statusLabel: Record<string, string> = {
   REJECTED: 'REJECTED',
 };
 
-const RecentTransactionsTable = ({ transactions, loading = false, onRowClick }: RecentTransactionsTableProps) => {
+const RecentTransactionsTable = ({
+  transactions,
+  loading = false,
+  onRowClick,
+}: RecentTransactionsTableProps) => {
   const navigate = useNavigate();
 
-  const columns: TableColumnDef<RecentTransaction>[] = useMemo(() => [
-    {
-      accessorKey: 'number',
-      header: 'Txn ID',
-      cell: (info) => <span className="font-mono text-primary">{info.getValue() as string || '\u2014'}</span>,
-    },
-    {
-      accessorKey: 'partyName',
-      header: 'Customer',
-      cell: (info) => info.getValue() as string || '\u2014',
-    },
-    {
-      id: 'pair',
-      header: 'Pair',
-      accessorFn: (row) => `${row.currencyCode}/${row.productCode}`,
-      cell: (info) => <span className="font-mono font-medium">{info.getValue() as string}</span>,
-    },
-    {
-      accessorKey: 'transactionType',
-      header: 'Type',
-      cell: (info) => {
-        const val = info.getValue() as string;
-        const color = val === 'SALE' ? 'text-emerald-600' : 'text-red-600';
-        return <span className={`font-medium ${color}`}>{val === 'SALE' ? 'Buy' : 'Sell'}</span>;
-      },
-    },
-    {
-      accessorKey: 'fcyAmount',
-      header: 'FCY Amt',
-      cell: (info) => <span className="font-mono">{formatCurrency(info.getValue() as string)}</span>,
-    },
-    {
-      accessorKey: 'lcyAmount',
-      header: 'LCY Amt',
-      cell: (info) => <span className="font-mono">MYR {formatCurrency(info.getValue() as string)}</span>,
-    },
-    {
-      accessorKey: 'status',
-      header: 'Status',
-      cell: (info) => {
-        const val = info.getValue() as string;
-        const colors: Record<string, string> = {
-          APPROVED: 'bg-success-50 text-success-700 border-success-200',
-          PENDING: 'bg-amber-50 text-amber-700 border-amber-200',
-          DRAFT: 'bg-blue-50 text-blue-700 border-blue-200',
-          REJECTED: 'bg-error-50 text-error-700 border-error-200',
-        };
-        return (
-          <span className={`inline-flex items-center rounded border px-2 py-0.5 text-xs font-medium ${colors[val] || colors.DRAFT}`}>
-            {statusLabel[val] || val}
+  const columns: TableColumnDef<RecentTransaction>[] = useMemo(
+    () => [
+      {
+        accessorKey: 'number',
+        header: 'Txn ID',
+        cell: info => (
+          <span className="font-mono text-primary">
+            {(info.getValue() as string) || '\u2014'}
           </span>
-        );
+        ),
       },
-    },
-  ], []);
+      {
+        accessorKey: 'partyName',
+        header: 'Customer',
+        cell: info => (info.getValue() as string) || '\u2014',
+      },
+      {
+        id: 'pair',
+        header: 'Pair',
+        accessorFn: row => `${row.currencyCode}/${row.productCode}`,
+        cell: info => (
+          <span className="font-mono font-medium">
+            {info.getValue() as string}
+          </span>
+        ),
+      },
+      {
+        accessorKey: 'transactionType',
+        header: 'Type',
+        cell: info => {
+          const val = info.getValue() as string;
+          const color = val === 'SALE' ? 'text-emerald-600' : 'text-red-600';
+          return (
+            <span className={`font-medium ${color}`}>
+              {val === 'SALE' ? 'Buy' : 'Sell'}
+            </span>
+          );
+        },
+      },
+      {
+        accessorKey: 'fcyAmount',
+        header: 'FCY Amt',
+        cell: info => (
+          <span className="font-mono">
+            {formatCurrency(info.getValue() as string)}
+          </span>
+        ),
+      },
+      {
+        accessorKey: 'lcyAmount',
+        header: 'LCY Amt',
+        cell: info => (
+          <span className="font-mono">
+            MYR {formatCurrency(info.getValue() as string)}
+          </span>
+        ),
+      },
+      {
+        accessorKey: 'status',
+        header: 'Status',
+        cell: info => {
+          const val = info.getValue() as string;
+          const colors: Record<string, string> = {
+            APPROVED: 'bg-success-50 text-success-700 border-success-200',
+            PENDING: 'bg-amber-50 text-amber-700 border-amber-200',
+            DRAFT: 'bg-blue-50 text-blue-700 border-blue-200',
+            REJECTED: 'bg-error-50 text-error-700 border-error-200',
+          };
+          return (
+            <span
+              className={`inline-flex items-center rounded border px-2 py-0.5 text-xs font-medium ${colors[val] || colors.DRAFT}`}
+            >
+              {statusLabel[val] || val}
+            </span>
+          );
+        },
+      },
+    ],
+    []
+  );
 
   return (
     <section className="rounded-lg border border-border-primary bg-surface-primary shadow-sm">
       <div className="flex items-center justify-between border-b border-border-primary px-4 pb-3 pt-4">
-        <h2 className="text-sm font-semibold text-text-primary">Recent Transactions</h2>
+        <h2 className="text-sm font-semibold text-text-primary">
+          Recent Transactions
+        </h2>
         {transactions.length > 0 && (
           <Button
             variant="outline"

@@ -15,9 +15,7 @@ export const AdditionalSettingsCategoryList = ({
   return (
     <div className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm">
       <div className="mb-4">
-        <p className="text-sm font-medium text-text-secondary">
-          Categories
-        </p>
+        <p className="text-sm font-medium text-text-secondary">Categories</p>
         <h2 className="mt-1 text-xl font-semibold tracking-tight text-text-primary">
           Available Categories
         </h2>

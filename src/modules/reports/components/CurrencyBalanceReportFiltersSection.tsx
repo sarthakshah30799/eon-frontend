@@ -19,8 +19,8 @@ export const CurrencyBalanceReportFiltersSection = ({
   filters,
 }: CurrencyBalanceReportFiltersSectionProps) => {
   const currentCurrencyLabel =
-    filters.currencyOptions.find(option => option.id === filters.currencyId)?.label ??
-    'Select Currency';
+    filters.currencyOptions.find(option => option.id === filters.currencyId)
+      ?.label ?? 'Select Currency';
 
   return (
     <section className="space-y-3 rounded-xl border border-border-primary bg-white p-3 shadow-sm">
@@ -40,7 +40,7 @@ export const CurrencyBalanceReportFiltersSection = ({
           emptyMessage="No branch options available."
           helperText={buildSelectionDescription(
             filters.branchIds.length,
-            filters.branchOptions.length,
+            filters.branchOptions.length
           )}
         />
 
@@ -54,7 +54,7 @@ export const CurrencyBalanceReportFiltersSection = ({
           emptyMessage="Select a branch first."
           helperText={buildSelectionDescription(
             filters.counterIds.length,
-            filters.counterOptions.length,
+            filters.counterOptions.length
           )}
           disabled={filters.branchIds.length === 0}
         />

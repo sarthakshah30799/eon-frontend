@@ -49,8 +49,8 @@ export const CountryDropdown = ({
     isLoading: isLoadingOptions,
     isFetching: isFetchingOptions,
   } = useListCountryProfiles({
-    page: 1,
     limit: 25,
+    offset: 0,
     search: searchTerm.trim() || undefined,
     hideBlockedCountry,
     hideRestrictedCountry,
@@ -92,7 +92,6 @@ export const CountryDropdown = ({
 
   const loadOptions = useCallback(
     async (inputValue: string): Promise<AsyncSelectResponse> => {
-      
       const normalizedInput = inputValue.trim();
       const pendingLoad = pendingLoadRef.current;
       setSearchTerm(inputValue);

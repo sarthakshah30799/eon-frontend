@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useController, useFieldArray, useFormContext, useWatch } from 'react-hook-form';
+import {
+  useController,
+  useFieldArray,
+  useFormContext,
+  useWatch,
+} from 'react-hook-form';
 import { TrashIcon, PlusIcon } from '@heroicons/react/24/outline';
 import type { AsyncSelectResponse } from '@/components/ui';
 import { Button, CardSection, Label } from '@/components/ui';
@@ -29,6 +34,7 @@ import {
   createEmptyPurchasePaymentRow,
   getPurchaseTransactionAccountFilter,
 } from '@/modules/purchase/utils/purchaseUtils';
+import { toPageQuery } from '@/utils/paginatedList';
 import {
   SETTLEMENT_SOURCE_OPTIONS,
   TRANSACTION_PAYMENT_TEXT,
@@ -162,18 +168,32 @@ const PaymentDetailRow = ({
     control: form.control,
     name: `${arrayName}.${index}.paymentMethod`,
   }) as string | undefined;
-  const settlementSource = (useWatch({
-    control: form.control,
-    name: `${arrayName}.${index}.settlementSource`,
-  }) as 'NORMAL' | 'ADVANCE' | undefined) ?? 'NORMAL';
+  const settlementSource =
+    (useWatch({
+      control: form.control,
+      name: `${arrayName}.${index}.settlementSource`,
+    }) as 'NORMAL' | 'ADVANCE' | undefined) ?? 'NORMAL';
   const advanceVoucherId = useWatch({
     control: form.control,
     name: `${arrayName}.${index}.advanceVoucherId`,
   }) as string | undefined;
-  const partyProfileId = useWatch({ control: form.control, name: 'partyProfileId' }) as string | undefined;
-  const transactionDate = useWatch({ control: form.control, name: 'transactionDate' }) as string | undefined;
-  const counterId = useWatch({ control: form.control, name: 'counterId' }) as string | undefined;
-  const amountLocked = Boolean(useWatch({ control: form.control, name: `${arrayName}.${index}.amountLocked` }));
+  const partyProfileId = useWatch({
+    control: form.control,
+    name: 'partyProfileId',
+  }) as string | undefined;
+  const transactionDate = useWatch({
+    control: form.control,
+    name: 'transactionDate',
+  }) as string | undefined;
+  const counterId = useWatch({ control: form.control, name: 'counterId' }) as
+    | string
+    | undefined;
+  const amountLocked = Boolean(
+    useWatch({
+      control: form.control,
+      name: `${arrayName}.${index}.amountLocked`,
+    })
+  );
   const paymentRows = useWatch({
     control: form.control,
     name: arrayName,
@@ -212,17 +232,29 @@ const PaymentDetailRow = ({
       transactionDate: transactionDate ?? '',
       paymentMethod: advancePaymentMethod,
     }),
-    [advancePaymentMethod, counterId, partyProfileId, resolvedBranchId, transactionDate]
+    [
+      advancePaymentMethod,
+      counterId,
+      partyProfileId,
+      resolvedBranchId,
+      transactionDate,
+    ]
   );
   const canLoadAdvances = Boolean(
-    partyProfileId && resolvedBranchId && counterId && transactionDate && paymentMethod
+    partyProfileId &&
+    resolvedBranchId &&
+    counterId &&
+    transactionDate &&
+    paymentMethod
   );
-  const { data: availableAdvances = EMPTY_AVAILABLE_ADVANCES, isLoading: isLoadingAdvances } =
-    useAvailableAdvances(
-      advanceType,
-      advanceQueryParams,
-      (settlementSource === 'ADVANCE' || isAdvanceModalOpen) && canLoadAdvances
-    );
+  const {
+    data: availableAdvances = EMPTY_AVAILABLE_ADVANCES,
+    isLoading: isLoadingAdvances,
+  } = useAvailableAdvances(
+    advanceType,
+    advanceQueryParams,
+    (settlementSource === 'ADVANCE' || isAdvanceModalOpen) && canLoadAdvances
+  );
   const {
     fieldState: { error: advanceVoucherError },
   } = useController({
@@ -361,20 +393,31 @@ const PaymentDetailRow = ({
     }
 
     if (!canUseCash && paymentMethod === TransactionPaymentMethodEnum.CASH) {
-      form.setValue(`${arrayName}.${index}.paymentMethod`, TransactionPaymentMethodEnum.CHEQUE, {
-        shouldDirty: true,
-        shouldTouch: true,
-        shouldValidate: true,
-      });
+      form.setValue(
+        `${arrayName}.${index}.paymentMethod`,
+        TransactionPaymentMethodEnum.CHEQUE,
+        {
+          shouldDirty: true,
+          shouldTouch: true,
+          shouldValidate: true,
+        }
+      );
       return;
     }
 
-    if (!canUseCheque && paymentMethod === TransactionPaymentMethodEnum.CHEQUE) {
-      form.setValue(`${arrayName}.${index}.paymentMethod`, TransactionPaymentMethodEnum.CASH, {
-        shouldDirty: true,
-        shouldTouch: true,
-        shouldValidate: true,
-      });
+    if (
+      !canUseCheque &&
+      paymentMethod === TransactionPaymentMethodEnum.CHEQUE
+    ) {
+      form.setValue(
+        `${arrayName}.${index}.paymentMethod`,
+        TransactionPaymentMethodEnum.CASH,
+        {
+          shouldDirty: true,
+          shouldTouch: true,
+          shouldValidate: true,
+        }
+      );
       return;
     }
 
@@ -472,14 +515,7 @@ const PaymentDetailRow = ({
         shouldValidate: false,
       });
     }
-  }, [
-    arrayName,
-    canUseCash,
-    canUseCheque,
-    form,
-    index,
-    paymentMethod,
-  ]);
+  }, [arrayName, canUseCash, canUseCheque, form, index, paymentMethod]);
 
   useEffect(() => {
     const loadPages = async () => {
@@ -496,7 +532,7 @@ const PaymentDetailRow = ({
 
       try {
         setIsLoadingPages(true);
-        const pages = await chequebookApi.getSelectablePages({
+        const pages = await chequebookApi.getAllSelectablePages({
           accountId: String(accountId),
           userId: selectablePagesUserId || undefined,
         });
@@ -597,8 +633,7 @@ const PaymentDetailRow = ({
     async (inputValue: string, page = 1): Promise<AsyncSelectResponse> => {
       const response = await accountProfileApi.getAccountProfiles({
         ...accountQuery,
-        page,
-        limit: ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
+        ...toPageQuery(page, ACCOUNT_PROFILE_OPTION_PAGE_SIZE),
         search: inputValue,
         active: true,
         accountType:
@@ -617,7 +652,7 @@ const PaymentDetailRow = ({
           value: account.id,
           label: `${account.accountCode} - ${account.accountName}`,
         })),
-        hasMore: accounts.length === ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
+        hasMore: response.hasMore,
       };
     },
     [accountQuery, paymentMethod, transactionType]
@@ -646,7 +681,11 @@ const PaymentDetailRow = ({
   const chequePageDefaultOptions = useMemo(() => {
     if (!selectedChequePage?.id) return undefined;
     // If the selected page is already in selectable pages, no need for fallback
-    if (pageOptions.some(page => String(page.id) === String(selectedChequePage.id))) {
+    if (
+      pageOptions.some(
+        page => String(page.id) === String(selectedChequePage.id)
+      )
+    ) {
       return undefined;
     }
     return [
@@ -662,238 +701,250 @@ const PaymentDetailRow = ({
 
   return (
     <>
-    <div className="grid gap-4 rounded-sm border border-border-secondary bg-surface-primary p-4 md:grid-cols-2 xl:grid-cols-[1fr_1.3fr_1.5fr_1.25fr_1fr_1fr_1.25fr_auto]">
-      <div className="md:col-span-2 xl:col-span-1">
-        <FormFieldSelect
-          name={`${arrayName}.${index}.settlementSource`}
-          label={TRANSACTION_PAYMENT_TEXT.settlementSource}
-          loadOptions={loadSettlementSourceOptions}
-          defaultOptions={SETTLEMENT_SOURCE_OPTIONS}
-          disabled={disabled || Boolean(advanceVoucherId)}
-          onValueChange={value => {
-            if (String(value) === 'ADVANCE') {
-              setIsAdvanceModalOpen(true);
-            }
-          }}
-        />
-      </div>
-      {settlementSource === 'ADVANCE' ? (
-        <div className="md:col-span-2 xl:col-span-1">
-          <Label>{isSale ? TRANSACTION_PAYMENT_TEXT.receiptAdvance : TRANSACTION_PAYMENT_TEXT.paymentAdvance}</Label>
-          <Button
-            type="button"
-            variant="outline"
-            className="mt-1 h-8 w-full justify-between rounded-sm px-3 text-left font-normal"
-            disabled={
-              disabled || Boolean(advanceVoucherId) || !canLoadAdvances
-            }
-            onClick={() => setIsAdvanceModalOpen(true)}
-          >
-            <span className="truncate">
-              {advanceVoucherId
-                ? TRANSACTION_PAYMENT_TEXT.selectedAdvance(
-                    advanceVoucherNumber || advanceVoucherId,
-                    formatAmount(advanceAvailableAmount)
-                  )
-                : !canLoadAdvances
-                  ? TRANSACTION_PAYMENT_TEXT.missingAdvanceContext
-                  : isLoadingAdvances
-                    ? TRANSACTION_PAYMENT_TEXT.loadingAdvances
-                    : TRANSACTION_PAYMENT_TEXT.selectAdvance}
-            </span>
-          </Button>
-          <p className="mt-1 text-xs text-text-secondary">
-            {canLoadAdvances
-              ? TRANSACTION_PAYMENT_TEXT.availableCount(selectableAdvanceCount)
-              : TRANSACTION_PAYMENT_TEXT.missingAdvanceContext}
-          </p>
-          {advanceVoucherError?.message ? (
-            <p className="mt-1 text-sm text-error-600">
-              {advanceVoucherError.message}
-            </p>
-          ) : null}
-        </div>
-      ) : null}
-      <div className="md:col-span-2 xl:col-span-1">
-        <FormFieldSelect
-          key={`account-${paymentMethod || 'none'}`}
-          name={`${arrayName}.${index}.accountId`}
-          label="Account"
-          placeholder={
-            isCash
-              ? 'Select cash ledger account'
-              : isSale
-              ? 'Select sell bank account'
-                : 'Select purchase bank account'
-          }
-          loadOptions={loadAccountOptions}
-          pagination
-          pageSize={ACCOUNT_PROFILE_OPTION_PAGE_SIZE}
-          disabled={disabled || settlementSource === 'ADVANCE'}
-          isSearchable
-          cacheOptions={false}
-        />
-      </div>
-
-      {isCheque && isPurchase && settlementSource !== 'ADVANCE' ? (
+      <div className="grid gap-4 rounded-sm border border-border-secondary bg-surface-primary p-4 md:grid-cols-2 xl:grid-cols-[1fr_1.3fr_1.5fr_1.25fr_1fr_1fr_1.25fr_auto]">
         <div className="md:col-span-2 xl:col-span-1">
           <FormFieldSelect
-            key={`cheque-page-${accountId || 'empty'}-${pageOptions.length}-${String(chequePageId || 'empty')}`}
-            name={`${arrayName}.${index}.chequePageId`}
-            label="Cheque Page"
-            placeholder="Select cheque page"
-            loadOptions={async (
-              inputValue: string
-            ): Promise<AsyncSelectResponse> => {
-              const normalized = inputValue.trim().toLowerCase();
-              // In edit, selected page may not be in selectable pages (already used) - include snapshot for display/menu
-              const allPages =
-                selectedChequePage &&
-                !pageOptions.some(page => String(page.id) === String(selectedChequePage.id))
-                  ? [selectedChequePage, ...pageOptions]
-                  : pageOptions;
-              const options = allPages
-                .filter(page => {
-                  if (!normalized) {
-                    return true;
-                  }
-
-                  return [
-                    String(page.pageNo),
-                    page.checkBook?.no,
-                    page.checkBook?.bankAccountCode,
-                  ]
-                    .filter(Boolean)
-                    .some(value =>
-                      String(value).toLowerCase().includes(normalized)
-                    );
-                })
-                .map(page => ({
-                  value: page.id,
-                  label: `${page.checkBook?.no || 'Book'} | Page ${page.pageNo}`,
-                }));
-
-              return { options, hasMore: false };
-            }}
-            defaultOptions={chequePageDefaultOptions}
-            // Show only 2nd element (Page ...) inside the input value; menu keeps full "Book | Page" label.
-            formatOptionLabel={(option, meta) => {
-              if (meta.context === 'value') {
-                const parts = String(option.label).split('|');
-                return parts[1]?.trim() || option.label;
+            name={`${arrayName}.${index}.settlementSource`}
+            label={TRANSACTION_PAYMENT_TEXT.settlementSource}
+            loadOptions={loadSettlementSourceOptions}
+            defaultOptions={SETTLEMENT_SOURCE_OPTIONS}
+            disabled={disabled || Boolean(advanceVoucherId)}
+            onValueChange={value => {
+              if (String(value) === 'ADVANCE') {
+                setIsAdvanceModalOpen(true);
               }
-              return option.label;
             }}
-            disabled={disabled || !accountId || isLoadingPages}
+          />
+        </div>
+        {settlementSource === 'ADVANCE' ? (
+          <div className="md:col-span-2 xl:col-span-1">
+            <Label>
+              {isSale
+                ? TRANSACTION_PAYMENT_TEXT.receiptAdvance
+                : TRANSACTION_PAYMENT_TEXT.paymentAdvance}
+            </Label>
+            <Button
+              type="button"
+              variant="outline"
+              className="mt-1 h-8 w-full justify-between rounded-sm px-3 text-left font-normal"
+              disabled={
+                disabled || Boolean(advanceVoucherId) || !canLoadAdvances
+              }
+              onClick={() => setIsAdvanceModalOpen(true)}
+            >
+              <span className="truncate">
+                {advanceVoucherId
+                  ? TRANSACTION_PAYMENT_TEXT.selectedAdvance(
+                      advanceVoucherNumber || advanceVoucherId,
+                      formatAmount(advanceAvailableAmount)
+                    )
+                  : !canLoadAdvances
+                    ? TRANSACTION_PAYMENT_TEXT.missingAdvanceContext
+                    : isLoadingAdvances
+                      ? TRANSACTION_PAYMENT_TEXT.loadingAdvances
+                      : TRANSACTION_PAYMENT_TEXT.selectAdvance}
+              </span>
+            </Button>
+            <p className="mt-1 text-xs text-text-secondary">
+              {canLoadAdvances
+                ? TRANSACTION_PAYMENT_TEXT.availableCount(
+                    selectableAdvanceCount
+                  )
+                : TRANSACTION_PAYMENT_TEXT.missingAdvanceContext}
+            </p>
+            {advanceVoucherError?.message ? (
+              <p className="mt-1 text-sm text-error-600">
+                {advanceVoucherError.message}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+        <div className="md:col-span-2 xl:col-span-1">
+          <FormFieldSelect
+            key={`account-${paymentMethod || 'none'}`}
+            name={`${arrayName}.${index}.accountId`}
+            label="Account"
+            placeholder={
+              isCash
+                ? 'Select cash ledger account'
+                : isSale
+                  ? 'Select sell bank account'
+                  : 'Select purchase bank account'
+            }
+            loadOptions={loadAccountOptions}
+            pagination
+            pageSize={ACCOUNT_PROFILE_OPTION_PAGE_SIZE}
+            disabled={disabled || settlementSource === 'ADVANCE'}
             isSearchable
             cacheOptions={false}
           />
-          {selectedBookLabel ? (
-            <p className="mt-1 text-xs text-text-secondary">
-              Selected book: {selectedBookLabel}
-            </p>
-          ) : null}
         </div>
-      ) : null}
 
-      {!isPurchase && <div className="md:col-span-2 xl:col-span-1">
-        <FormFieldInput
-          name={`${arrayName}.${index}.chequeNumber`}
-          label="Cheque / Ref No"
-          placeholder={
-            isCash
-              ? 'Not required'
-              : isSale
-                ? 'Enter customer cheque number'
-                : 'Page no will fill here'
-          }
-          disabled={disabled || isCash || settlementSource === 'ADVANCE'}
-        />
-      </div>}
+        {isCheque && isPurchase && settlementSource !== 'ADVANCE' ? (
+          <div className="md:col-span-2 xl:col-span-1">
+            <FormFieldSelect
+              key={`cheque-page-${accountId || 'empty'}-${pageOptions.length}-${String(chequePageId || 'empty')}`}
+              name={`${arrayName}.${index}.chequePageId`}
+              label="Cheque Page"
+              placeholder="Select cheque page"
+              loadOptions={async (
+                inputValue: string
+              ): Promise<AsyncSelectResponse> => {
+                const normalized = inputValue.trim().toLowerCase();
+                // In edit, selected page may not be in selectable pages (already used) - include snapshot for display/menu
+                const allPages =
+                  selectedChequePage &&
+                  !pageOptions.some(
+                    page => String(page.id) === String(selectedChequePage.id)
+                  )
+                    ? [selectedChequePage, ...pageOptions]
+                    : pageOptions;
+                const options = allPages
+                  .filter(page => {
+                    if (!normalized) {
+                      return true;
+                    }
 
-      <div className="md:col-span-2 xl:col-span-1">
-        <FormFieldDatePicker
-          name={`${arrayName}.${index}.chequeDate`}
-          label="Cheque Date"
-          disabled={disabled || !isCheque || settlementSource === 'ADVANCE'}
-        />
-      </div>
+                    return [
+                      String(page.pageNo),
+                      page.checkBook?.no,
+                      page.checkBook?.bankAccountCode,
+                    ]
+                      .filter(Boolean)
+                      .some(value =>
+                        String(value).toLowerCase().includes(normalized)
+                      );
+                  })
+                  .map(page => ({
+                    value: page.id,
+                    label: `${page.checkBook?.no || 'Book'} | Page ${page.pageNo}`,
+                  }));
 
-      <div className="md:col-span-2 xl:col-span-1">
-        <FormFieldInput
-          name={`${arrayName}.${index}.branchName`}
-          label="Branch Name"
-          placeholder="Branch name"
-          disabled={disabled || !isCheque || settlementSource === 'ADVANCE'}
-        />
-      </div>
+                return { options, hasMore: false };
+              }}
+              defaultOptions={chequePageDefaultOptions}
+              // Show only 2nd element (Page ...) inside the input value; menu keeps full "Book | Page" label.
+              formatOptionLabel={(option, meta) => {
+                if (meta.context === 'value') {
+                  const parts = String(option.label).split('|');
+                  return parts[1]?.trim() || option.label;
+                }
+                return option.label;
+              }}
+              disabled={disabled || !accountId || isLoadingPages}
+              isSearchable
+              cacheOptions={false}
+            />
+            {selectedBookLabel ? (
+              <p className="mt-1 text-xs text-text-secondary">
+                Selected book: {selectedBookLabel}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
 
-      <div className="md:col-span-2 xl:col-span-1">
-        <FormFieldInput
-          name={`${arrayName}.${index}.drawnOn`}
-          label="Drawn On"
-          placeholder="Drawn on"
-          disabled={disabled || !isCheque || settlementSource === 'ADVANCE'}
-        />
-      </div>
-
-      <div className="md:col-span-2 xl:col-span-1">
-        <FormFieldInput
-          name={`${arrayName}.${index}.amount`}
-          label="Amount"
-          type="number"
-          disabled={disabled || settlementSource === 'ADVANCE' || amountLocked}
-        />
-      </div>
-
-      <div className="flex items-start justify-end pt-7">
-        <Button
-          type="button"
-          variant="destructive"
-          size="icon"
-          disabled={!canRemove || disabled}
-          onClick={() => onRemove(index)}
-          aria-label="Remove payment detail"
-        >
-          <TrashIcon className="h-4 w-4" aria-hidden="true" />
-        </Button>
-      </div>
-
-      <div className="md:col-span-2 xl:col-span-8">
-        <p className="text-xs text-text-secondary">
-          Available amount for this row: {formatAmount(availableAmount)}
-          {maxAmount !== undefined
-            ? ` | Remaining after this row: ${formatAmount(remainingAfterCurrent)}`
-            : ''}
-        </p>
-        {paymentMethod === TransactionPaymentMethodEnum.CASH ? (
-          <p className="mt-1 text-xs text-text-tertiary">
-            Cash mode requires an active INR Cash Ledger account.
-          </p>
-        ) : isSale ? (
-          <p className="mt-1 text-xs text-text-tertiary">
-            Enter the customer-provided cheque number directly.
-          </p>
-        ) : chequeNumber ? null : (
-          <p className="mt-1 text-xs text-text-tertiary">
-            Select the cheque page from the list; the reference number will be
-            filled automatically.
-          </p>
+        {!isPurchase && (
+          <div className="md:col-span-2 xl:col-span-1">
+            <FormFieldInput
+              name={`${arrayName}.${index}.chequeNumber`}
+              label="Cheque / Ref No"
+              placeholder={
+                isCash
+                  ? 'Not required'
+                  : isSale
+                    ? 'Enter customer cheque number'
+                    : 'Page no will fill here'
+              }
+              disabled={disabled || isCash || settlementSource === 'ADVANCE'}
+            />
+          </div>
         )}
+
+        <div className="md:col-span-2 xl:col-span-1">
+          <FormFieldDatePicker
+            name={`${arrayName}.${index}.chequeDate`}
+            label="Cheque Date"
+            disabled={disabled || !isCheque || settlementSource === 'ADVANCE'}
+          />
+        </div>
+
+        <div className="md:col-span-2 xl:col-span-1">
+          <FormFieldInput
+            name={`${arrayName}.${index}.branchName`}
+            label="Branch Name"
+            placeholder="Branch name"
+            disabled={disabled || !isCheque || settlementSource === 'ADVANCE'}
+          />
+        </div>
+
+        <div className="md:col-span-2 xl:col-span-1">
+          <FormFieldInput
+            name={`${arrayName}.${index}.drawnOn`}
+            label="Drawn On"
+            placeholder="Drawn on"
+            disabled={disabled || !isCheque || settlementSource === 'ADVANCE'}
+          />
+        </div>
+
+        <div className="md:col-span-2 xl:col-span-1">
+          <FormFieldInput
+            name={`${arrayName}.${index}.amount`}
+            label="Amount"
+            type="number"
+            disabled={
+              disabled || settlementSource === 'ADVANCE' || amountLocked
+            }
+          />
+        </div>
+
+        <div className="flex items-start justify-end pt-7">
+          <Button
+            type="button"
+            variant="destructive"
+            size="icon"
+            disabled={!canRemove || disabled}
+            onClick={() => onRemove(index)}
+            aria-label="Remove payment detail"
+          >
+            <TrashIcon className="h-4 w-4" aria-hidden="true" />
+          </Button>
+        </div>
+
+        <div className="md:col-span-2 xl:col-span-8">
+          <p className="text-xs text-text-secondary">
+            Available amount for this row: {formatAmount(availableAmount)}
+            {maxAmount !== undefined
+              ? ` | Remaining after this row: ${formatAmount(remainingAfterCurrent)}`
+              : ''}
+          </p>
+          {paymentMethod === TransactionPaymentMethodEnum.CASH ? (
+            <p className="mt-1 text-xs text-text-tertiary">
+              Cash mode requires an active INR Cash Ledger account.
+            </p>
+          ) : isSale ? (
+            <p className="mt-1 text-xs text-text-tertiary">
+              Enter the customer-provided cheque number directly.
+            </p>
+          ) : chequeNumber ? null : (
+            <p className="mt-1 text-xs text-text-tertiary">
+              Select the cheque page from the list; the reference number will be
+              filled automatically.
+            </p>
+          )}
+        </div>
       </div>
-    </div>
-    {isAdvanceModalOpen ? (
-      <SelectAvailableAdvances
-        open={isAdvanceModalOpen}
-        type={advanceType}
-        params={advanceQueryParams}
-        remainingAmount={availableAmount}
-        excludedVoucherIds={selectedAdvanceVoucherIds}
-        selectedVoucherIds={advanceVoucherId ? [advanceVoucherId] : []}
-        onContinue={applySelectedAdvances}
-        onClose={closeAdvanceModal}
-      />
-    ) : null}
+      {isAdvanceModalOpen ? (
+        <SelectAvailableAdvances
+          open={isAdvanceModalOpen}
+          type={advanceType}
+          params={advanceQueryParams}
+          remainingAmount={availableAmount}
+          excludedVoucherIds={selectedAdvanceVoucherIds}
+          selectedVoucherIds={advanceVoucherId ? [advanceVoucherId] : []}
+          onContinue={applySelectedAdvances}
+          onClose={closeAdvanceModal}
+        />
+      ) : null}
     </>
   );
 };
@@ -950,104 +1001,149 @@ export const TransactionPaymentDetailsFieldArray = ({
     );
   }, [paymentRows]);
 
-  const selectedAdvanceVoucherIds = useMemo(() => (paymentRows ?? [])
-    .filter(row => row.settlementSource === 'ADVANCE' && Boolean(row.advanceVoucherId))
-    .map(row => String(row.advanceVoucherId)), [paymentRows]);
-
-  const handleAdvancesSelected = useCallback((
-    selectedIndex: number,
-    vouchers: AvailableAdvance[],
-    paymentMethod: string
-  ) => {
-    const rows = [...((form.getValues(name) ?? []) as ITransactionPaymentDetailFormRow[])];
-    const current = rows[selectedIndex];
-    if (!current) {
-      return;
-    }
-
-    const usedVoucherIds = new Set(
-      rows
-        .filter((row, index) => index !== selectedIndex && row.settlementSource === 'ADVANCE' && Boolean(row.advanceVoucherId))
-        .map(row => String(row.advanceVoucherId))
-    );
-    const uniqueVouchers = vouchers.filter(voucher => !usedVoucherIds.has(voucher.id));
-    if (!uniqueVouchers.length) {
-      form.setError(`${name}.${selectedIndex}.advanceVoucherId`, {
-        type: 'duplicate',
-        message: TRANSACTION_PAYMENT_TEXT.duplicateAdvance,
-      });
-      return;
-    }
-
-    const remainderIndex = rows.findIndex(row => row.isAdvanceRemainder);
-    const rowsWithoutRemainder = remainderIndex >= 0
-      ? rows.filter((_, index) => index !== remainderIndex)
-      : rows;
-    const startIndex = remainderIndex >= 0 && remainderIndex < selectedIndex
-      ? selectedIndex - 1
-      : selectedIndex;
-    const baseRow = rowsWithoutRemainder[startIndex] ?? current;
-    const usedByOthersCents = rowsWithoutRemainder.reduce((sum, row, index) => {
-      if (index === startIndex) {
-        return sum;
-      }
-      return sum + amountCents(row.amount);
-    }, 0);
-    let remainingCents = Math.max(amountCents(maxAmount) - usedByOthersCents, 0);
-    const advanceRows: ITransactionPaymentDetailFormRow[] = [];
-
-    uniqueVouchers.forEach(voucher => {
-      if (remainingCents <= 0) {
-        return;
-      }
-      const appliedCents = Math.min(remainingCents, amountCents(voucher.availableAmount));
-      if (appliedCents <= 0) {
-        return;
-      }
-      remainingCents -= appliedCents;
-      advanceRows.push(
-        buildAdvancePaymentRow(
-          baseRow,
-          voucher,
-          (appliedCents / 100).toFixed(2),
-          paymentMethod
+  const selectedAdvanceVoucherIds = useMemo(
+    () =>
+      (paymentRows ?? [])
+        .filter(
+          row =>
+            row.settlementSource === 'ADVANCE' && Boolean(row.advanceVoucherId)
         )
+        .map(row => String(row.advanceVoucherId)),
+    [paymentRows]
+  );
+
+  const handleAdvancesSelected = useCallback(
+    (
+      selectedIndex: number,
+      vouchers: AvailableAdvance[],
+      paymentMethod: string
+    ) => {
+      const rows = [
+        ...((form.getValues(name) ?? []) as ITransactionPaymentDetailFormRow[]),
+      ];
+      const current = rows[selectedIndex];
+      if (!current) {
+        return;
+      }
+
+      const usedVoucherIds = new Set(
+        rows
+          .filter(
+            (row, index) =>
+              index !== selectedIndex &&
+              row.settlementSource === 'ADVANCE' &&
+              Boolean(row.advanceVoucherId)
+          )
+          .map(row => String(row.advanceVoucherId))
       );
-    });
+      const uniqueVouchers = vouchers.filter(
+        voucher => !usedVoucherIds.has(voucher.id)
+      );
+      if (!uniqueVouchers.length) {
+        form.setError(`${name}.${selectedIndex}.advanceVoucherId`, {
+          type: 'duplicate',
+          message: TRANSACTION_PAYMENT_TEXT.duplicateAdvance,
+        });
+        return;
+      }
 
-    if (!advanceRows.length) {
-      return;
-    }
+      const remainderIndex = rows.findIndex(row => row.isAdvanceRemainder);
+      const rowsWithoutRemainder =
+        remainderIndex >= 0
+          ? rows.filter((_, index) => index !== remainderIndex)
+          : rows;
+      const startIndex =
+        remainderIndex >= 0 && remainderIndex < selectedIndex
+          ? selectedIndex - 1
+          : selectedIndex;
+      const baseRow = rowsWithoutRemainder[startIndex] ?? current;
+      const usedByOthersCents = rowsWithoutRemainder.reduce(
+        (sum, row, index) => {
+          if (index === startIndex) {
+            return sum;
+          }
+          return sum + amountCents(row.amount);
+        },
+        0
+      );
+      let remainingCents = Math.max(
+        amountCents(maxAmount) - usedByOthersCents,
+        0
+      );
+      const advanceRows: ITransactionPaymentDetailFormRow[] = [];
 
-    const nextRows = [
-      ...rowsWithoutRemainder.slice(0, startIndex),
-      ...advanceRows,
-      ...rowsWithoutRemainder.slice(startIndex + 1),
-    ];
-    if (remainingCents > 0) {
-      nextRows.push(createEmptyPurchasePaymentRow({
-        settlementSource: 'NORMAL',
-        paymentMethod,
-        amount: (remainingCents / 100).toFixed(2),
-        isAdvanceRemainder: true,
-        amountLocked: true,
-      }));
-    }
+      uniqueVouchers.forEach(voucher => {
+        if (remainingCents <= 0) {
+          return;
+        }
+        const appliedCents = Math.min(
+          remainingCents,
+          amountCents(voucher.availableAmount)
+        );
+        if (appliedCents <= 0) {
+          return;
+        }
+        remainingCents -= appliedCents;
+        advanceRows.push(
+          buildAdvancePaymentRow(
+            baseRow,
+            voucher,
+            (appliedCents / 100).toFixed(2),
+            paymentMethod
+          )
+        );
+      });
 
-    replace(nextRows);
-    form.clearErrors(`${name}.${startIndex}.advanceVoucherId`);
-  }, [form, maxAmount, name, replace]);
+      if (!advanceRows.length) {
+        return;
+      }
+
+      const nextRows = [
+        ...rowsWithoutRemainder.slice(0, startIndex),
+        ...advanceRows,
+        ...rowsWithoutRemainder.slice(startIndex + 1),
+      ];
+      if (remainingCents > 0) {
+        nextRows.push(
+          createEmptyPurchasePaymentRow({
+            settlementSource: 'NORMAL',
+            paymentMethod,
+            amount: (remainingCents / 100).toFixed(2),
+            isAdvanceRemainder: true,
+            amountLocked: true,
+          })
+        );
+      }
+
+      replace(nextRows);
+      form.clearErrors(`${name}.${startIndex}.advanceVoucherId`);
+    },
+    [form, maxAmount, name, replace]
+  );
 
   useEffect(() => {
-    const rows = (form.getValues(name) ?? []) as ITransactionPaymentDetailFormRow[];
+    const rows = (form.getValues(name) ??
+      []) as ITransactionPaymentDetailFormRow[];
     const remainderIndex = rows.findIndex(row => row.isAdvanceRemainder);
     if (remainderIndex < 0) return;
-    const desiredCents = Math.max(amountCents(maxAmount) - rows.reduce((sum, row, index) => index === remainderIndex ? sum : sum + amountCents(row.amount), 0), 0);
+    const desiredCents = Math.max(
+      amountCents(maxAmount) -
+        rows.reduce(
+          (sum, row, index) =>
+            index === remainderIndex ? sum : sum + amountCents(row.amount),
+          0
+        ),
+      0
+    );
     const currentCents = amountCents(rows[remainderIndex]?.amount);
     if (desiredCents === 0 && rows.length > 1) {
       remove(remainderIndex);
     } else if (currentCents !== desiredCents) {
-      form.setValue(`${name}.${remainderIndex}.amount`, (desiredCents / 100).toFixed(2), { shouldDirty: true, shouldValidate: false });
+      form.setValue(
+        `${name}.${remainderIndex}.amount`,
+        (desiredCents / 100).toFixed(2),
+        { shouldDirty: true, shouldValidate: false }
+      );
     }
   }, [form, maxAmount, name, paymentRows, remove]);
 
@@ -1088,7 +1184,11 @@ export const TransactionPaymentDetailsFieldArray = ({
     }
 
     const primaryAmountField = `${name}.0.amount` as const;
-    if (form.getFieldState(primaryAmountField).isDirty || currentRows[0]?.amountLocked || currentRows[0]?.settlementSource === 'ADVANCE') {
+    if (
+      form.getFieldState(primaryAmountField).isDirty ||
+      currentRows[0]?.amountLocked ||
+      currentRows[0]?.settlementSource === 'ADVANCE'
+    ) {
       return;
     }
 
@@ -1135,8 +1235,14 @@ export const TransactionPaymentDetailsFieldArray = ({
           shouldTouch: true,
           shouldValidate: false,
         });
-        form.setValue(`${name}.${index}.isAdvanceRemainder`, false, { shouldDirty: true, shouldValidate: false });
-        form.setValue(`${name}.${index}.amountLocked`, false, { shouldDirty: true, shouldValidate: false });
+        form.setValue(`${name}.${index}.isAdvanceRemainder`, false, {
+          shouldDirty: true,
+          shouldValidate: false,
+        });
+        form.setValue(`${name}.${index}.amountLocked`, false, {
+          shouldDirty: true,
+          shouldValidate: false,
+        });
         form.setValue(`${name}.${index}.paymentMethod`, method, {
           shouldDirty: true,
           shouldTouch: true,

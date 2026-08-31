@@ -13,21 +13,29 @@ export const VOUCHER_FORM_TEXT = {
   panNumberPlaceholder: 'Enter PAN number',
   panNamePlaceholder: 'Enter name on PAN card',
   panDobPlaceholder: 'Select DOB',
-  panVerifyIncomplete: 'Enter PAN number, name, and DOB, then press Enter to verify.',
+  panVerifyIncomplete:
+    'Enter PAN number, name, and DOB, then press Enter to verify.',
   panVerifyChecking: 'Verifying PAN details...',
   panVerifySuccess: 'PAN details verified successfully',
-  panVerifyFailed: 'PAN verification failed. Please review the entered details.',
+  panVerifyFailed:
+    'PAN verification failed. Please review the entered details.',
 } as const;
 
 export const AVAILABLE_ADVANCE_TEXT = {
   titleReceipt: 'Select Receipt Advances',
   titlePayment: 'Select Payment Advances',
-  description: (count: number, accountLabel: string, remainingAmount: string) =>
+  description: (
+    count: number,
+    accountLabel: string,
+    remainingAmount: string
+  ) =>
     accountLabel
       ? `${count} available advance${count === 1 ? '' : 's'} against ${accountLabel}. Select one or more to apply against remaining ${remainingAmount}.`
       : `${count} available advance${count === 1 ? '' : 's'} for this party. Select one or more to apply against remaining ${remainingAmount}.`,
-  empty: 'No available advances found for this party, account, and payment mode.',
-  missingContext: 'Select party, branch, counter, and transaction date before choosing an advance.',
+  empty:
+    'No available advances found for this party, account, and payment mode.',
+  missingContext:
+    'Select party, branch, counter, and transaction date before choosing an advance.',
   searchPlaceholder: 'Search voucher number or account',
   number: 'Voucher No',
   date: 'Date',
@@ -48,4 +56,5 @@ export const VOUCHER_PATHS: Record<VoucherType, string> = {
 };
 
 export const createVoucherIdempotencyKey = () =>
-  globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  globalThis.crypto?.randomUUID?.() ??
+  `${Date.now()}-${Math.random().toString(36).slice(2)}`;

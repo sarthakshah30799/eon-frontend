@@ -1,8 +1,4 @@
-import {
-  QueryProvider,
-  AuthProvider,
-  MasterPagesProvider,
-} from './lib';
+import { QueryProvider, AuthProvider, MasterPagesProvider } from './lib';
 import { Toaster } from 'react-hot-toast';
 import { AppRouter } from './router';
 

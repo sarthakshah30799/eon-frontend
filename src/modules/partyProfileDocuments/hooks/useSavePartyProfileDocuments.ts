@@ -23,7 +23,9 @@ export const useSavePartyProfileDocuments = () => {
       toast.success('Party profile documents saved successfully!');
     },
     onError: error => {
-      toast.error(error instanceof Error ? error.message : 'Failed to save documents');
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to save documents'
+      );
     },
   });
 

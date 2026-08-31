@@ -7,21 +7,28 @@ import {
   createEmptyCategoryOptionsFormValues,
 } from '../utils';
 import { useBulkCreateMiscellaneousProfiles } from '../hooks';
-import { useListMiscellaneousProfiles } from '../hooks';
+import { categoryOptionsApi } from '@/api/categoryOptions';
+import { useQuery } from '@tanstack/react-query';
 import { MiscellaneousProfileForm } from '../forms';
 import type { ICategoryOptionsFormValues } from '../utils';
 
 export const MiscellaneousProfileCreateView = () => {
   const navigate = useNavigate();
-  const { submitCategoryOptions, isPending } = useBulkCreateMiscellaneousProfiles();
-  const { data: existingOptions = [] } = useListMiscellaneousProfiles();
+  const { submitCategoryOptions, isPending } =
+    useBulkCreateMiscellaneousProfiles();
+  const { data: existingOptions = [] } = useQuery({
+    queryKey: ['category-options', 'all'],
+    queryFn: () => categoryOptionsApi.getAllCategoryOptions(),
+  });
 
   const availableCodeOptions = useMemo(() => {
     const existingCodes = new Set(
       existingOptions.map(option => option.code.trim().toUpperCase())
     );
 
-    return CATEGORY_OPTION_CODE_OPTIONS.filter(option => !existingCodes.has(option.value));
+    return CATEGORY_OPTION_CODE_OPTIONS.filter(
+      option => !existingCodes.has(option.value)
+    );
   }, [existingOptions]);
 
   const handleSubmit = async (values: ICategoryOptionsFormValues) => {

@@ -7,9 +7,7 @@ export const UserListPage = () => {
   const { data: users, isLoading, error } = useListUser();
 
   if (isLoading) {
-    return (
-      <Loader />
-    );
+    return <Loader />;
   }
 
   if (error) {

@@ -3,7 +3,10 @@ import { Checkbox, SelectEntity, type TableColumnDef } from '@/components/ui';
 import { useDebounce } from '@/hooks';
 import { toDisplayDate } from '@/utils';
 import { AVAILABLE_ADVANCE_TEXT } from '../constants';
-import { useAvailableAdvances, type AvailableAdvanceQueryParams } from '../hooks';
+import {
+  useAvailableAdvances,
+  type AvailableAdvanceQueryParams,
+} from '../hooks';
 import type { AvailableAdvance } from '../types';
 import { formatAdvanceAccountLabel } from '../utils';
 
@@ -69,7 +72,8 @@ const buildColumns = (): TableColumnDef<AvailableAdvance>[] => [
     id: 'account',
     header: AVAILABLE_ADVANCE_TEXT.account,
     cell: ({ row }) =>
-      formatAdvanceAccountLabel(row.original.advanceControlAccountSnapshot) || '-',
+      formatAdvanceAccountLabel(row.original.advanceControlAccountSnapshot) ||
+      '-',
   },
   {
     id: 'availableAmount',
@@ -97,20 +101,23 @@ export const SelectAvailableAdvances = ({
 }: SelectAvailableAdvancesProps) => {
   const [search, setSearch] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>(selectedVoucherIds);
-  const [selectedAdvances, setSelectedAdvances] = useState<AvailableAdvance[]>([]);
+  const [selectedAdvances, setSelectedAdvances] = useState<AvailableAdvance[]>(
+    []
+  );
   const debouncedSearch = useDebounce(search, 350);
   const canLoad = Boolean(
     params.partyProfileId &&
-      params.branchId &&
-      params.counterId &&
-      params.transactionDate &&
-      params.paymentMethod
+    params.branchId &&
+    params.counterId &&
+    params.transactionDate &&
+    params.paymentMethod
   );
-  const { data = EMPTY_AVAILABLE_ADVANCES, isLoading, isFetching, error } = useAvailableAdvances(
-    type,
-    params,
-    open && canLoad
-  );
+  const {
+    data = EMPTY_AVAILABLE_ADVANCES,
+    isLoading,
+    isFetching,
+    error,
+  } = useAvailableAdvances(type, params, open && canLoad);
 
   const rows = useMemo(() => {
     const excluded = new Set(
@@ -124,8 +131,15 @@ export const SelectAvailableAdvances = ({
       if (!query) {
         return true;
       }
-      const accountLabel = formatAdvanceAccountLabel(voucher.advanceControlAccountSnapshot);
-      return [voucher.number, accountLabel, voucher.chequeNumber, voucher.availableAmount]
+      const accountLabel = formatAdvanceAccountLabel(
+        voucher.advanceControlAccountSnapshot
+      );
+      return [
+        voucher.number,
+        accountLabel,
+        voucher.chequeNumber,
+        voucher.availableAmount,
+      ]
         .filter(Boolean)
         .some(value => String(value).toLowerCase().includes(query));
     });
@@ -133,7 +147,13 @@ export const SelectAvailableAdvances = ({
 
   const accountLabel = useMemo(() => {
     const labels = Array.from(
-      new Set(rows.map(row => formatAdvanceAccountLabel(row.advanceControlAccountSnapshot)).filter(Boolean))
+      new Set(
+        rows
+          .map(row =>
+            formatAdvanceAccountLabel(row.advanceControlAccountSnapshot)
+          )
+          .filter(Boolean)
+      )
     );
     return labels.length === 1 ? labels[0] : '';
   }, [rows]);
@@ -147,7 +167,11 @@ export const SelectAvailableAdvances = ({
   return (
     <SelectEntity<AvailableAdvance>
       open={open}
-      title={type === 'RECEIPT' ? AVAILABLE_ADVANCE_TEXT.titleReceipt : AVAILABLE_ADVANCE_TEXT.titlePayment}
+      title={
+        type === 'RECEIPT'
+          ? AVAILABLE_ADVANCE_TEXT.titleReceipt
+          : AVAILABLE_ADVANCE_TEXT.titlePayment
+      }
       description={
         canLoad
           ? AVAILABLE_ADVANCE_TEXT.description(

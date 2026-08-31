@@ -1,11 +1,5 @@
 import { useMemo, type Dispatch, type SetStateAction } from 'react';
-import {
-  AsyncSelect,
-  Button,
-  Checkbox,
-  Input,
-  Modal,
-} from '@/components/ui';
+import { AsyncSelect, Button, Checkbox, Input, Modal } from '@/components/ui';
 import type {
   ICurrencyRate,
   ICurrencyRateComparisonPreview,
@@ -28,7 +22,11 @@ interface CurrencyRateOverrideModalProps {
   open: boolean;
   form: IProductCurrencyRateFormValues;
   setForm: Dispatch<SetStateAction<IProductCurrencyRateFormValues>>;
-  products: Array<{ id: string; productCode: string; productDescription: string }>;
+  products: Array<{
+    id: string;
+    productCode: string;
+    productDescription: string;
+  }>;
   currencies: ICurrencyProfile[];
   rates: ICurrencyRate[];
   selectedRule: IProductCurrencyRate | null;
@@ -37,7 +35,8 @@ interface CurrencyRateOverrideModalProps {
   onClose: () => void;
 }
 
-const labelClass = 'mb-1 block text-xs font-semibold uppercase tracking-wider text-text-secondary';
+const labelClass =
+  'mb-1 block text-xs font-semibold uppercase tracking-wider text-text-secondary';
 const loadMarginTypeOptions = async (inputValue: string) => {
   const opts = CURRENCY_RATE_MARGIN_TYPE_OPTIONS.map(option => ({
     value: option.value,
@@ -45,7 +44,9 @@ const loadMarginTypeOptions = async (inputValue: string) => {
   }));
   return {
     options: inputValue
-      ? opts.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+      ? opts.filter(opt =>
+          opt.label.toLowerCase().includes(inputValue.toLowerCase())
+        )
       : opts,
     hasMore: false,
   };
@@ -63,10 +64,15 @@ export const CurrencyRateOverrideModal = ({
   onSubmit,
   onClose,
 }: CurrencyRateOverrideModalProps) => {
-  const selectedCurrency = currencies.find(currency => currency.id === form.currencyId) ?? null;
-  const selectedProduct = products.find(product => product.id === form.productId) ?? null;
+  const selectedCurrency =
+    currencies.find(currency => currency.id === form.currencyId) ?? null;
+  const selectedProduct =
+    products.find(product => product.id === form.productId) ?? null;
   const latestRate = getLatestRateForCurrency(rates, form.currencyId);
-  const currencyPricingGroup = getCurrencyPricingGroup(currencies, form.currencyId);
+  const currencyPricingGroup = getCurrencyPricingGroup(
+    currencies,
+    form.currencyId
+  );
   const productOptions = products.map(product => ({
     value: product.id,
     label: `${product.productCode} - ${product.productDescription}`,
@@ -77,13 +83,17 @@ export const CurrencyRateOverrideModal = ({
   }));
   const loadProductOptions = async (inputValue: string) => ({
     options: inputValue
-      ? productOptions.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+      ? productOptions.filter(opt =>
+          opt.label.toLowerCase().includes(inputValue.toLowerCase())
+        )
       : productOptions,
     hasMore: false,
   });
   const loadCurrencyOptions = async (inputValue: string) => ({
     options: inputValue
-      ? currencyOptions.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+      ? currencyOptions.filter(opt =>
+          opt.label.toLowerCase().includes(inputValue.toLowerCase())
+        )
       : currencyOptions,
     hasMore: false,
   });
@@ -124,14 +134,14 @@ export const CurrencyRateOverrideModal = ({
                 Buy: {selectedRule.buy.marginType || 'EMPTY'}{' '}
                 {formatMarginValue(
                   selectedRule.buy.marginType,
-                  selectedRule.buy.marginValue,
+                  selectedRule.buy.marginValue
                 )}
               </div>
               <div>
                 Sell: {selectedRule.sale.marginType || 'EMPTY'}{' '}
                 {formatMarginValue(
                   selectedRule.sale.marginType,
-                  selectedRule.sale.marginValue,
+                  selectedRule.sale.marginValue
                 )}
               </div>
             </div>
@@ -168,20 +178,21 @@ export const CurrencyRateOverrideModal = ({
                   Buy Margin: {currencyPricingGroup.buyMarginType || 'EMPTY'}{' '}
                   {formatMarginValue(
                     currencyPricingGroup.buyMarginType,
-                    currencyPricingGroup.buyMarginValue,
+                    currencyPricingGroup.buyMarginValue
                   )}
                 </div>
                 <div>
                   Sell Margin: {currencyPricingGroup.saleMarginType || 'EMPTY'}{' '}
                   {formatMarginValue(
                     currencyPricingGroup.saleMarginType,
-                    currencyPricingGroup.saleMarginValue,
+                    currencyPricingGroup.saleMarginValue
                   )}
                 </div>
               </div>
             ) : (
               <div className="mt-1">
-                The group price source will appear here once the currency is assigned.
+                The group price source will appear here once the currency is
+                assigned.
               </div>
             )}
           </div>
@@ -206,8 +217,9 @@ export const CurrencyRateOverrideModal = ({
             <label className={labelClass}>Product</label>
             <AsyncSelect
               value={
-                productOptions.find(option => option.value === form.productId) ??
-                null
+                productOptions.find(
+                  option => option.value === form.productId
+                ) ?? null
               }
               onChange={option => {
                 const nextOption = Array.isArray(option) ? option[0] : option;
@@ -225,8 +237,9 @@ export const CurrencyRateOverrideModal = ({
             <label className={labelClass}>Currency</label>
             <AsyncSelect
               value={
-                currencyOptions.find(option => option.value === form.currencyId) ??
-                null
+                currencyOptions.find(
+                  option => option.value === form.currencyId
+                ) ?? null
               }
               onChange={option => {
                 const nextOption = Array.isArray(option) ? option[0] : option;
@@ -241,31 +254,34 @@ export const CurrencyRateOverrideModal = ({
           </div>
 
           <div className="grid gap-4 md:col-span-2 md:grid-cols-2">
-          <div>
-            <label className={labelClass}>Buy Margin Type</label>
-            <AsyncSelect
-              value={
-                CURRENCY_RATE_MARGIN_TYPE_OPTIONS.find(
-                  option => option.value === form.buy.marginType
-                ) ?? null
-              }
-              onChange={option => {
-                const selectedOption = Array.isArray(option) ? option[0] : option;
-                setForm(next => ({
-                  ...next,
-                  buy: {
-                    ...next.buy,
-                    marginType:
-                      (selectedOption?.value as CurrencyRateMarginType | undefined) ??
-                      '',
-                  },
-                }));
-              }}
-              loadOptions={loadMarginTypeOptions}
-              placeholder="Select"
-              isClearable
-            />
-          </div>
+            <div>
+              <label className={labelClass}>Buy Margin Type</label>
+              <AsyncSelect
+                value={
+                  CURRENCY_RATE_MARGIN_TYPE_OPTIONS.find(
+                    option => option.value === form.buy.marginType
+                  ) ?? null
+                }
+                onChange={option => {
+                  const selectedOption = Array.isArray(option)
+                    ? option[0]
+                    : option;
+                  setForm(next => ({
+                    ...next,
+                    buy: {
+                      ...next.buy,
+                      marginType:
+                        (selectedOption?.value as
+                          | CurrencyRateMarginType
+                          | undefined) ?? '',
+                    },
+                  }));
+                }}
+                loadOptions={loadMarginTypeOptions}
+                placeholder="Select"
+                isClearable
+              />
+            </div>
             <div>
               <label className={labelClass}>Buy Margin Value</label>
               <Input
@@ -308,31 +324,34 @@ export const CurrencyRateOverrideModal = ({
                 classes={{ container: 'max-w-none' }}
               />
             </div>
-          <div>
-            <label className={labelClass}>Sell Margin Type</label>
-            <AsyncSelect
-              value={
-                CURRENCY_RATE_MARGIN_TYPE_OPTIONS.find(
-                  option => option.value === form.sale.marginType
-                ) ?? null
-              }
-              onChange={option => {
-                const selectedOption = Array.isArray(option) ? option[0] : option;
-                setForm(next => ({
-                  ...next,
-                  sale: {
-                    ...next.sale,
-                    marginType:
-                      (selectedOption?.value as CurrencyRateMarginType | undefined) ??
-                      '',
-                  },
-                }));
-              }}
-              loadOptions={loadMarginTypeOptions}
-              placeholder="Select"
-              isClearable
-            />
-          </div>
+            <div>
+              <label className={labelClass}>Sell Margin Type</label>
+              <AsyncSelect
+                value={
+                  CURRENCY_RATE_MARGIN_TYPE_OPTIONS.find(
+                    option => option.value === form.sale.marginType
+                  ) ?? null
+                }
+                onChange={option => {
+                  const selectedOption = Array.isArray(option)
+                    ? option[0]
+                    : option;
+                  setForm(next => ({
+                    ...next,
+                    sale: {
+                      ...next.sale,
+                      marginType:
+                        (selectedOption?.value as
+                          | CurrencyRateMarginType
+                          | undefined) ?? '',
+                    },
+                  }));
+                }}
+                loadOptions={loadMarginTypeOptions}
+                placeholder="Select"
+                isClearable
+              />
+            </div>
             <div>
               <label className={labelClass}>Sell Margin Value</label>
               <Input
@@ -380,21 +399,37 @@ export const CurrencyRateOverrideModal = ({
           <label className="flex items-center gap-2 text-sm text-text-primary md:col-span-2">
             <Checkbox
               checked={form.isActive}
-              onChange={checked => setForm(next => ({ ...next, isActive: checked }))}
+              onChange={checked =>
+                setForm(next => ({ ...next, isActive: checked }))
+              }
             />
             Active
           </label>
         </div>
 
         <div className="rounded-sm border border-border-primary bg-surface-secondary/20 p-4 text-xs text-text-secondary">
-          If an override field is empty, the group rule remains the applied value.
+          If an override field is empty, the group rule remains the applied
+          value.
         </div>
 
         <div className="flex gap-3">
-          <Button type="button" onClick={() => void onSubmit()} disabled={isSubmitting}>
-            {isSubmitting ? 'Saving...' : selectedRule ? 'Update Override' : 'Create Override'}
+          <Button
+            type="button"
+            onClick={() => void onSubmit()}
+            disabled={isSubmitting}
+          >
+            {isSubmitting
+              ? 'Saving...'
+              : selectedRule
+                ? 'Update Override'
+                : 'Create Override'}
           </Button>
-          <Button type="button" variant="ghost" onClick={onClose} disabled={isSubmitting}>
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={onClose}
+            disabled={isSubmitting}
+          >
             Cancel
           </Button>
         </div>

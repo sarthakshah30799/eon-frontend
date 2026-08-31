@@ -4,7 +4,9 @@ interface ArrowLeftIconProps {
   className?: string;
 }
 
-export const ArrowLeftIcon: React.FC<ArrowLeftIconProps> = ({ className = 'h-4 w-4' }) => {
+export const ArrowLeftIcon: React.FC<ArrowLeftIconProps> = ({
+  className = 'h-4 w-4',
+}) => {
   return (
     <svg
       aria-hidden="true"

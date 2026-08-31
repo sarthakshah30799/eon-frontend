@@ -1,4 +1,3 @@
-
 import { Modal } from '@/components/ui';
 import { Button } from '@/components/ui';
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
@@ -45,25 +44,18 @@ export const HighRiskPartyProfileWarningModal = ({
                 High Risk Warning
               </p>
               <p className="text-xs text-warning-700 mt-1">
-                This party profile has been flagged as high risk. Please proceed with caution.
+                This party profile has been flagged as high risk. Please proceed
+                with caution.
               </p>
             </div>
           </div>
         </div>
 
         <div className="flex justify-end gap-3 pt-4 border-t border-border-primary">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleCancel}
-          >
+          <Button type="button" variant="outline" onClick={handleCancel}>
             Cancel
           </Button>
-          <Button
-            type="button"
-            variant="destructive"
-            onClick={handleConfirm}
-          >
+          <Button type="button" variant="destructive" onClick={handleConfirm}>
             Proceed Anyway
           </Button>
         </div>

@@ -1,7 +1,11 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { useWatch, useFormContext, type SubmitErrorHandler } from 'react-hook-form';
+import {
+  useWatch,
+  useFormContext,
+  type SubmitErrorHandler,
+} from 'react-hook-form';
 import { useQueryClient } from '@tanstack/react-query';
 import * as yup from 'yup';
 import toast from 'react-hot-toast';
@@ -53,15 +57,24 @@ const fakeCurrencySchema = yup.object({
   transactionDate: yup.string().required('Transaction date is required'),
   reasonId: yup.string().required('Reason is required'),
   remarks: yup.string().trim().nullable().default(''),
-  transactions: yup.array().of(yup.object({
-    currencyId: yup.string().required('Currency is required'),
-    productId: yup.string().required('Product is required'),
-    quantity: yup.string().required('Quantity is required'),
-    rate: yup.string().required('Rate is required'),
-  })).min(1, 'At least one transaction item is required').required(),
+  transactions: yup
+    .array()
+    .of(
+      yup.object({
+        currencyId: yup.string().required('Currency is required'),
+        productId: yup.string().required('Product is required'),
+        quantity: yup.string().required('Quantity is required'),
+        rate: yup.string().required('Rate is required'),
+      })
+    )
+    .min(1, 'At least one transaction item is required')
+    .required(),
 });
 
-type FakeCurrencyFormValues = IPurchaseFormValues & { reasonId: string; remarks: string };
+type FakeCurrencyFormValues = IPurchaseFormValues & {
+  reasonId: string;
+  remarks: string;
+};
 
 interface FakeCurrencyCreateViewProps {
   initialValues?: FakeCurrencyFormValues;
@@ -70,9 +83,17 @@ interface FakeCurrencyCreateViewProps {
 }
 
 const FakeCurrencyTotal = () => {
-  const rows = (useWatch({ name: 'transactions' }) as FakeCurrencyFormValues['transactions'] | undefined) ?? [];
-  const total = rows.reduce((sum: number, row) => sum + Number(row?.finalAmount || 0), 0);
-  return <div className="text-right text-lg font-semibold">{total.toFixed(2)}</div>;
+  const rows =
+    (useWatch({ name: 'transactions' }) as
+      | FakeCurrencyFormValues['transactions']
+      | undefined) ?? [];
+  const total = rows.reduce(
+    (sum: number, row) => sum + Number(row?.finalAmount || 0),
+    0
+  );
+  return (
+    <div className="text-right text-lg font-semibold">{total.toFixed(2)}</div>
+  );
 };
 
 const FakeCurrencyPicker = ({
@@ -93,9 +114,20 @@ const FakeCurrencyPicker = ({
       onContinue={currencies => {
         const currency = currencies[0] as ICurrencyProfile | undefined;
         if (!currency || rowIndex === null) return;
-        form.setValue(`transactions.${rowIndex}.currencyId`, currency.id, { shouldDirty: true, shouldValidate: true });
-        form.setValue(`transactions.${rowIndex}.currencyCode`, currency.currencyCode, { shouldDirty: true });
-        form.setValue(`transactions.${rowIndex}.currencyName`, currency.currencyName, { shouldDirty: true });
+        form.setValue(`transactions.${rowIndex}.currencyId`, currency.id, {
+          shouldDirty: true,
+          shouldValidate: true,
+        });
+        form.setValue(
+          `transactions.${rowIndex}.currencyCode`,
+          currency.currencyCode,
+          { shouldDirty: true }
+        );
+        form.setValue(
+          `transactions.${rowIndex}.currencyName`,
+          currency.currencyName,
+          { shouldDirty: true }
+        );
         onClose();
       }}
       onClose={onClose}
@@ -112,7 +144,9 @@ const FakeCurrencyPrintSection = ({
   const queryClient = useQueryClient();
   const [isPrinting, setIsPrinting] = useState(false);
   const hasPrintedHistory = Boolean(
-    savedTransaction.logs?.some(log => log.action === TransactionLogActionEnum.PRINT),
+    savedTransaction.logs?.some(
+      log => log.action === TransactionLogActionEnum.PRINT
+    )
   );
   const [hasPrintedOnce, setHasPrintedOnce] = useState(false);
   const copyType =
@@ -133,7 +167,8 @@ const FakeCurrencyPrintSection = ({
       const html = buildPurchasePrintHtml({
         copyType,
         transactionNumber: savedTransaction.number,
-        transactionDate: formValues.transactionDate || savedTransaction.transactionDate || '',
+        transactionDate:
+          formValues.transactionDate || savedTransaction.transactionDate || '',
         company: toPrintCompany(savedTransaction.companySnapshot),
         branch: toPrintBranch(savedTransaction.branchSnapshot),
         transaction: formValues,
@@ -146,19 +181,30 @@ const FakeCurrencyPrintSection = ({
         html,
         sendEmail: false,
       });
-      await queryClient.invalidateQueries({ queryKey: ['fake-currency', savedTransaction.id] });
+      await queryClient.invalidateQueries({
+        queryKey: ['fake-currency', savedTransaction.id],
+      });
       openPrintWindow(html, FAKE_CURRENCY_PRINT_TEXT.popupBlocked);
       setHasPrintedOnce(true);
-      toast.success(FAKE_CURRENCY_PRINT_TEXT.printed(getPurchasePrintCopyLabel(copyType)));
+      toast.success(
+        FAKE_CURRENCY_PRINT_TEXT.printed(getPurchasePrintCopyLabel(copyType))
+      );
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : FAKE_CURRENCY_PRINT_TEXT.printFailed);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : FAKE_CURRENCY_PRINT_TEXT.printFailed
+      );
     } finally {
       setIsPrinting(false);
     }
   };
 
   return (
-    <CardSection heading={FAKE_CURRENCY_PRINT_TEXT.heading} className="space-y-4">
+    <CardSection
+      heading={FAKE_CURRENCY_PRINT_TEXT.heading}
+      className="space-y-4"
+    >
       <p className="text-sm text-text-secondary">
         {hasPrintedOnce || hasPrintedHistory
           ? FAKE_CURRENCY_PRINT_TEXT.duplicateHint
@@ -170,7 +216,9 @@ const FakeCurrencyPrintSection = ({
         onClick={() => void handlePrintCopy()}
         disabled={isPrinting}
       >
-        {isPrinting ? FAKE_CURRENCY_PRINT_TEXT.preparing : FAKE_CURRENCY_PRINT_TEXT.printCopy}
+        {isPrinting
+          ? FAKE_CURRENCY_PRINT_TEXT.preparing
+          : FAKE_CURRENCY_PRINT_TEXT.printCopy}
       </Button>
     </CardSection>
   );
@@ -185,36 +233,62 @@ export const FakeCurrencyCreateView = ({
   const { activeBranchId, activeCounterId, policyContext } = useAuth();
   const transactionDatePolicy = useMemo(
     () => getTransactionDatePolicy(policyContext),
-    [policyContext],
+    [policyContext]
   );
-  const [currencyPickerRowIndex, setCurrencyPickerRowIndex] = useState<number | null>(null);
-  const [draftDocuments, setDraftDocuments] = useState<Record<string, File | null>>({});
+  const [currencyPickerRowIndex, setCurrencyPickerRowIndex] = useState<
+    number | null
+  >(null);
+  const [draftDocuments, setDraftDocuments] = useState<
+    Record<string, File | null>
+  >({});
   const { data: branch } = useGetBranchProfile(activeBranchId ?? '');
-  const { data: pricingData, isLoading: pricingLoading } = useCurrencyRatesViewData();
-  const { data: settings = [], isLoading: settingsLoading } = useListAdditionalSettings();
-  const { data: transactionDocumentProfiles = [], isLoading: documentProfilesLoading } =
-    useResolveDocumentProfiles({ specificationType: 'TRANSACTION', type: 'FAKE_CURRENCY' });
+  const { data: pricingData, isLoading: pricingLoading } =
+    useCurrencyRatesViewData();
+  const { data: settings = [], isLoading: settingsLoading } =
+    useListAdditionalSettings();
+  const {
+    data: transactionDocumentProfiles = [],
+    isLoading: documentProfilesLoading,
+  } = useResolveDocumentProfiles({
+    specificationType: 'TRANSACTION',
+    type: 'FAKE_CURRENCY',
+  });
   const { createFakeCurrency, isPending } = useCreateFakeCurrency();
   const rateEditable = getAdditionalSettingBooleanValue(
     settings,
     AdditionalSettingsCodeEnum.FakeCurrency,
     AdditionalSettingsCodeEnum.FakeCurrencyRateEditable,
-    false,
+    false
   );
 
-  const generatedDefaultValues = useMemo<FakeCurrencyFormValues>(() => ({
-    ...createEmptyPurchaseFormValues(
-      TransactionTypeEnum.SALE,
-      TradeModeEnum.RETAIL,
-      TransactionTypeProfileEnum.FAKE_CURRENCY,
-      branch ? { id: branch.id, code: branch.code, name: branch.name, label: `${branch.code} - ${branch.name}` } : null,
-      activeBranchId ?? '',
-      activeCounterId ?? '',
+  const generatedDefaultValues = useMemo<FakeCurrencyFormValues>(
+    () => ({
+      ...createEmptyPurchaseFormValues(
+        TransactionTypeEnum.SALE,
+        TradeModeEnum.RETAIL,
+        TransactionTypeProfileEnum.FAKE_CURRENCY,
+        branch
+          ? {
+              id: branch.id,
+              code: branch.code,
+              name: branch.name,
+              label: `${branch.code} - ${branch.name}`,
+            }
+          : null,
+        activeBranchId ?? '',
+        activeCounterId ?? '',
+        transactionDatePolicy.defaultTransactionDate
+      ),
+      reasonId: '',
+      remarks: '',
+    }),
+    [
+      activeBranchId,
+      activeCounterId,
+      branch,
       transactionDatePolicy.defaultTransactionDate,
-    ),
-    reasonId: '',
-    remarks: '',
-  }), [activeBranchId, activeCounterId, branch, transactionDatePolicy.defaultTransactionDate]);
+    ]
+  );
   const defaultValues = initialValues ?? generatedDefaultValues;
 
   const draftDocumentAttachments = useMemo<IPurchaseDraftDocumentAttachment[]>(
@@ -226,11 +300,20 @@ export const FakeCurrencyCreateView = ({
   );
 
   if (pricingLoading || settingsLoading || documentProfilesLoading) {
-    return <div className="flex min-h-[50vh] items-center justify-center"><Loader /></div>;
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <Loader />
+      </div>
+    );
   }
 
   const resolvedPricingData = pricingData ?? {
-    groups: [], products: [], currencies: [], rates: [], latestRates: [], productCurrencyRates: [],
+    groups: [],
+    products: [],
+    currencies: [],
+    rates: [],
+    latestRates: [],
+    productCurrencyRates: [],
   };
 
   const onError: SubmitErrorHandler<FakeCurrencyFormValues> = errors => {
@@ -278,20 +361,46 @@ export const FakeCurrencyCreateView = ({
         });
         navigate(`/fake-currencies/edit/${created.id}`);
       }}
-      footer={readOnly ? undefined : {
-        submitLabel: isPending ? 'Saving...' : 'Save Fake Currency',
-        isSubmitDisabled: isPending || !transactionDatePolicy.canPunchTransactions,
-      }}
+      footer={
+        readOnly
+          ? undefined
+          : {
+              submitLabel: isPending ? 'Saving...' : 'Save Fake Currency',
+              isSubmitDisabled:
+                isPending || !transactionDatePolicy.canPunchTransactions,
+            }
+      }
     >
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-semibold">Fake Currencies</h1>
-          <p className="text-sm text-text-secondary">Remove unusable currency from the selected counter stock.</p>
+          <p className="text-sm text-text-secondary">
+            Remove unusable currency from the selected counter stock.
+          </p>
         </div>
-        <CardSection heading="Fake Currency Details" className="grid gap-4 md:grid-cols-2">
-          <FormFieldDatePicker name="transactionDate" label="Transaction Date" disabled={readOnly || !transactionDatePolicy.canPunchTransactions} minDate={transactionDatePolicy.minDate} maxDate={transactionDatePolicy.maxDate} />
-          <FormFieldCategoryOption name="reasonId" code={CategoryOptionCodeEnum.FakeCurrencyReason} label="Reason" disabled={readOnly} />
-          <FormFieldTextarea name="remarks" label="Remarks" className="md:col-span-2" disabled={readOnly} />
+        <CardSection
+          heading="Fake Currency Details"
+          className="grid gap-4 md:grid-cols-2"
+        >
+          <FormFieldDatePicker
+            name="transactionDate"
+            label="Transaction Date"
+            disabled={readOnly || !transactionDatePolicy.canPunchTransactions}
+            minDate={transactionDatePolicy.minDate}
+            maxDate={transactionDatePolicy.maxDate}
+          />
+          <FormFieldCategoryOption
+            name="reasonId"
+            code={CategoryOptionCodeEnum.FakeCurrencyReason}
+            label="Reason"
+            disabled={readOnly}
+          />
+          <FormFieldTextarea
+            name="remarks"
+            label="Remarks"
+            className="md:col-span-2"
+            disabled={readOnly}
+          />
         </CardSection>
         <PurchaseTransactionTable
           branchId={initialValues?.branchId ?? activeBranchId ?? ''}
@@ -303,41 +412,60 @@ export const FakeCurrencyCreateView = ({
           rateEditable={rateEditable}
           useAverageSellRate
         />
-        <CardSection heading="Total Amount" className="flex items-center justify-between">
-          <span className="text-sm text-text-secondary">Total fake currency value</span>
+        <CardSection
+          heading="Total Amount"
+          className="flex items-center justify-between"
+        >
+          <span className="text-sm text-text-secondary">
+            Total fake currency value
+          </span>
           <FakeCurrencyTotal />
         </CardSection>
-        {!readOnly ? <CardSection heading="Transaction Documents" className="space-y-4">
-          <p className="text-sm text-text-secondary">
-            Attach optional supporting documents for this fake-currency entry.
-          </p>
-          {transactionDocumentProfiles.length > 0 ? (
-            <div className="grid gap-4">
-              {transactionDocumentProfiles.map(profile => (
-                <DocumentRequirementCard
-                  key={profile.id}
-                  profile={profile}
-                  selectedFile={draftDocuments[profile.id] ?? null}
-                  onSelectFile={(documentProfileId, file) =>
-                    setDraftDocuments(previous => ({ ...previous, [documentProfileId]: file }))
-                  }
-                  onClearFile={documentProfileId =>
-                    setDraftDocuments(previous => {
-                      const next = { ...previous };
-                      delete next[documentProfileId];
-                      return next;
-                    })
-                  }
-                />
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-text-secondary">No active document profiles found.</p>
-          )}
-        </CardSection> : null}
-        {readOnly && savedTransaction ? <FakeCurrencyPrintSection savedTransaction={savedTransaction} /> : null}
+        {!readOnly ? (
+          <CardSection heading="Transaction Documents" className="space-y-4">
+            <p className="text-sm text-text-secondary">
+              Attach optional supporting documents for this fake-currency entry.
+            </p>
+            {transactionDocumentProfiles.length > 0 ? (
+              <div className="grid gap-4">
+                {transactionDocumentProfiles.map(profile => (
+                  <DocumentRequirementCard
+                    key={profile.id}
+                    profile={profile}
+                    selectedFile={draftDocuments[profile.id] ?? null}
+                    onSelectFile={(documentProfileId, file) =>
+                      setDraftDocuments(previous => ({
+                        ...previous,
+                        [documentProfileId]: file,
+                      }))
+                    }
+                    onClearFile={documentProfileId =>
+                      setDraftDocuments(previous => {
+                        const next = { ...previous };
+                        delete next[documentProfileId];
+                        return next;
+                      })
+                    }
+                  />
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-text-secondary">
+                No active document profiles found.
+              </p>
+            )}
+          </CardSection>
+        ) : null}
+        {readOnly && savedTransaction ? (
+          <FakeCurrencyPrintSection savedTransaction={savedTransaction} />
+        ) : null}
       </div>
-      {!readOnly ? <FakeCurrencyPicker rowIndex={currencyPickerRowIndex} onClose={() => setCurrencyPickerRowIndex(null)} /> : null}
+      {!readOnly ? (
+        <FakeCurrencyPicker
+          rowIndex={currencyPickerRowIndex}
+          onClose={() => setCurrencyPickerRowIndex(null)}
+        />
+      ) : null}
     </Form>
   );
 };

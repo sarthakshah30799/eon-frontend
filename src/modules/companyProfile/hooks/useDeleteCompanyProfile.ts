@@ -15,7 +15,7 @@ export const useDeleteCompanyProfile = () => {
       queryClient.invalidateQueries({ queryKey: ['company-profiles'] });
       toast.success('Company profile deleted successfully');
     },
-    onError: (error) => {
+    onError: error => {
       toast.error(error.message || 'Failed to delete company profile');
     },
   });

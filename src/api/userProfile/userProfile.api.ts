@@ -3,7 +3,10 @@ import { buildQueryString } from '@/utils';
 import type {
   ICreateUserProfile,
   IUserProfile,
+  IUserProfileListQuery,
+  IUserProfileListResponse,
 } from '@/modules/userProfile/types';
+import { fetchAllMatching, normalizePaginatedResponse } from '@/utils/paginatedList';
 
 interface BackendUserAssignment {
   roleId: string;
@@ -109,9 +112,7 @@ const mapBackendToFrontend = (user: BackendUser): IUserProfile => {
   };
 };
 
-const mapFrontendToBackend = (
-  form: ICreateUserProfile
-): BackendUserPayload => {
+const mapFrontendToBackend = (form: ICreateUserProfile): BackendUserPayload => {
   const payload: BackendUserPayload = {
     code: form.code,
     name: form.name,
@@ -141,23 +142,38 @@ const mapFrontendToBackend = (
 };
 
 export const userProfileApi = {
-  getUserProfiles: async (options?: {
-    activeOnly?: boolean;
-    search?: string;
-    branchId?: string;
-    roleFilter?: string;
-  }): Promise<IUserProfile[]> => {
+  getUserProfiles: async (
+    options?: IUserProfileListQuery
+  ): Promise<IUserProfileListResponse> => {
     const endpoint = `/users${buildQueryString({
-      activeOnly:
-        options?.activeOnly === false ? 'false' : undefined,
+      activeOnly: options?.activeOnly === false ? 'false' : undefined,
       search: options?.search?.trim() || undefined,
       branchId: options?.branchId?.trim() || undefined,
       roleFilter: options?.roleFilter?.trim() || undefined,
+      limit: options?.limit,
+      offset: options?.offset,
     })}`;
-    const res = await apiClient.get<BackendUser[]>(endpoint);
+    const res = await apiClient.get<IUserProfileListResponse>(endpoint);
     if (res.error) throw new Error(res.error);
-    return (res.data || []).map(mapBackendToFrontend);
+    const payload = normalizePaginatedResponse(
+      res.data
+        ? {
+            ...res.data,
+            data: (res.data.data || []).map(mapBackendToFrontend),
+          }
+        : res.data,
+      options?.limit,
+      options?.offset
+    );
+    return payload;
   },
+
+  getAllUserProfiles: async (
+    options?: Omit<IUserProfileListQuery, 'limit' | 'offset'>
+  ): Promise<IUserProfile[]> =>
+    fetchAllMatching(pagination =>
+      userProfileApi.getUserProfiles({ ...options, ...pagination })
+    ),
   getUserProfileById: async (id: string): Promise<IUserProfile> => {
     const res = await apiClient.get<BackendUser>(`/users/${id}`);
     if (res.error) throw new Error(res.error);

@@ -24,7 +24,10 @@ export class ApiError extends Error {
   details?: unknown;
   status?: number;
 
-  constructor(message: string, options?: { code?: string; details?: unknown; status?: number }) {
+  constructor(
+    message: string,
+    options?: { code?: string; details?: unknown; status?: number }
+  ) {
     super(message);
     this.name = 'ApiError';
     this.code = options?.code;
@@ -52,14 +55,20 @@ class AuthAPI {
       const response = await fetch(url, config);
 
       if (!response.ok) {
-        const errorData: IAuthError & { error?: string } = await response.json().catch(() => ({
-          message: 'Network error occurred',
-        }));
-        if (response.status === 401 && SESSION_PROTECTED_ENDPOINTS.has(endpoint)) {
+        const errorData: IAuthError & { error?: string } = await response
+          .json()
+          .catch(() => ({
+            message: 'Network error occurred',
+          }));
+        if (
+          response.status === 401 &&
+          SESSION_PROTECTED_ENDPOINTS.has(endpoint)
+        ) {
           const errorMessage =
             typeof errorData.message === 'string'
               ? errorData.message
-              : typeof errorData.message === 'object' && errorData.message !== null
+              : typeof errorData.message === 'object' &&
+                  errorData.message !== null
                 ? errorData.message.message
                 : undefined;
           dispatchSessionExpired({
@@ -71,10 +80,9 @@ class AuthAPI {
           typeof errorData.message === 'object' && errorData.message !== null
             ? errorData.message
             : undefined;
-        const nestedMessage =
-          nestedResponse
-            ? nestedResponse.message
-            : undefined;
+        const nestedMessage = nestedResponse
+          ? nestedResponse.message
+          : undefined;
         const code = errorData.code || nestedResponse?.code;
         const details = errorData.details || nestedResponse?.details;
         const message =
@@ -108,7 +116,9 @@ class AuthAPI {
     });
   }
 
-  async completeInitialPassword(password: string): Promise<{ message: string }> {
+  async completeInitialPassword(
+    password: string
+  ): Promise<{ message: string }> {
     return this.request<{ message: string }>('/auth/setup-password', {
       method: 'POST',
       body: JSON.stringify({ password }),
@@ -170,8 +180,16 @@ class AuthAPI {
   async setWorkplace(data: {
     branchId: string;
     counterId: string;
-  }): Promise<{ message: string; activeBranchId: string; activeCounterId: string }> {
-    return this.request<{ message: string; activeBranchId: string; activeCounterId: string }>('/auth/workplace', {
+  }): Promise<{
+    message: string;
+    activeBranchId: string;
+    activeCounterId: string;
+  }> {
+    return this.request<{
+      message: string;
+      activeBranchId: string;
+      activeCounterId: string;
+    }>('/auth/workplace', {
       method: 'POST',
       body: JSON.stringify(data),
       credentials: 'include',
@@ -203,6 +221,5 @@ class AuthAPI {
     });
   }
 }
-
 
 export const authApi = new AuthAPI();

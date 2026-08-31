@@ -42,10 +42,11 @@ export const UserRoleForm = ({
         return false;
       }
 
-      const roles = await userRoleApi.getUserRoles();
+      const roles = await userRoleApi.getAllUserRoles();
       return roles.some(
         role =>
-          normalizeCodeValue(role.code) === normalizedCode && role.id !== currentId
+          normalizeCodeValue(role.code) === normalizedCode &&
+          role.id !== currentId
       );
     },
     [currentId]
@@ -98,11 +99,7 @@ export const UserRoleForm = ({
               disabled={isSubmitting}
             />
           )}
-          <FormFieldCheckbox
-            name="isMd"
-            label="MD"
-            disabled={isSubmitting}
-          />
+          <FormFieldCheckbox name="isMd" label="MD" disabled={isSubmitting} />
           <FormFieldCheckbox
             name="isCompliance"
             label="Compliance"
@@ -185,7 +182,6 @@ export const UserRoleForm = ({
       </CardSection>
 
       {children}
-
     </Form>
   );
 };

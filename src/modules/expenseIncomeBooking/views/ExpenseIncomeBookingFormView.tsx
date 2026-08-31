@@ -14,15 +14,20 @@ interface ExpenseIncomeBookingFormViewProps {
   mode: 'create' | 'edit';
 }
 
-export const ExpenseIncomeBookingFormView = ({ type, mode }: ExpenseIncomeBookingFormViewProps) => {
+export const ExpenseIncomeBookingFormView = ({
+  type,
+  mode,
+}: ExpenseIncomeBookingFormViewProps) => {
   const navigate = useNavigate();
   const { id = '' } = useParams<{ id: string }>();
   const basePath = type === 'EXPENSE' ? '/expense-booking' : '/income-booking';
   const { canModify } = usePermission(basePath);
 
   const { data: master, isLoading } = useGetBookingMaster(id);
-  const { submitBookingMaster, isPending: isCreatePending } = useCreateBookingMaster();
-  const { updateBookingMaster: triggerUpdate, isPending: isUpdatePending } = useUpdateBookingMaster();
+  const { submitBookingMaster, isPending: isCreatePending } =
+    useCreateBookingMaster();
+  const { updateBookingMaster: triggerUpdate, isPending: isUpdatePending } =
+    useUpdateBookingMaster();
 
   const isSubmitting = isCreatePending || isUpdatePending;
 
@@ -33,7 +38,9 @@ export const ExpenseIncomeBookingFormView = ({ type, mode }: ExpenseIncomeBookin
   if (mode === 'edit' && !master) {
     return (
       <div className="rounded-sm border border-border-primary bg-surface-primary p-6 shadow-sm">
-        <p className="text-center text-text-secondary">Booking Master not found</p>
+        <p className="text-center text-text-secondary">
+          Booking Master not found
+        </p>
       </div>
     );
   }
@@ -43,7 +50,7 @@ export const ExpenseIncomeBookingFormView = ({ type, mode }: ExpenseIncomeBookin
       const payload = {
         ...values,
         description: values.description || null,
-        tdsAccountId: values.tdsApplicable ? (values.tdsAccountId || null) : null,
+        tdsAccountId: values.tdsApplicable ? values.tdsAccountId || null : null,
         tdsValue: values.tdsApplicable ? Number(values.tdsValue || 0) : 0,
         totalGst: Number(values.totalGst || 0),
         from: values.from || null,
@@ -61,47 +68,52 @@ export const ExpenseIncomeBookingFormView = ({ type, mode }: ExpenseIncomeBookin
     }
   };
 
-  const defaultValues: ICreateExpenseIncomeBookingMaster = mode === 'edit' && master
-    ? {
-        type: master.type,
-        code: master.code,
-        description: master.description ?? '',
-        applicableCustomer: master.applicableCustomer,
-        applicableVendor: master.applicableVendor,
-        applicableEmployee: master.applicableEmployee,
-        applicableAgent: master.applicableAgent,
-        applicableCardIssuer: master.applicableCardIssuer,
-        active: master.active,
-        allowRecPay: master.allowRecPay,
-        totalGst: master.totalGst,
-        tdsApplicable: master.tdsApplicable,
-        tdsValue: master.tdsValue,
-        tdsAccountId: master.tdsAccountId,
-        from: master.from ? new Date(master.from).toISOString().split('T')[0] : null,
-        to: master.to ? new Date(master.to).toISOString().split('T')[0] : null,
-      }
-    : {
-        type,
-        code: '',
-        description: '',
-        applicableCustomer: false,
-        applicableVendor: false,
-        applicableEmployee: false,
-        applicableAgent: false,
-        applicableCardIssuer: false,
-        active: true,
-        allowRecPay: false,
-        totalGst: 0,
-        tdsApplicable: false,
-        tdsValue: 0,
-        tdsAccountId: null,
-        from: null,
-        to: null,
-      };
+  const defaultValues: ICreateExpenseIncomeBookingMaster =
+    mode === 'edit' && master
+      ? {
+          type: master.type,
+          code: master.code,
+          description: master.description ?? '',
+          applicableCustomer: master.applicableCustomer,
+          applicableVendor: master.applicableVendor,
+          applicableEmployee: master.applicableEmployee,
+          applicableAgent: master.applicableAgent,
+          applicableCardIssuer: master.applicableCardIssuer,
+          active: master.active,
+          allowRecPay: master.allowRecPay,
+          totalGst: master.totalGst,
+          tdsApplicable: master.tdsApplicable,
+          tdsValue: master.tdsValue,
+          tdsAccountId: master.tdsAccountId,
+          from: master.from
+            ? new Date(master.from).toISOString().split('T')[0]
+            : null,
+          to: master.to
+            ? new Date(master.to).toISOString().split('T')[0]
+            : null,
+        }
+      : {
+          type,
+          code: '',
+          description: '',
+          applicableCustomer: false,
+          applicableVendor: false,
+          applicableEmployee: false,
+          applicableAgent: false,
+          applicableCardIssuer: false,
+          active: true,
+          allowRecPay: false,
+          totalGst: 0,
+          tdsApplicable: false,
+          tdsValue: 0,
+          tdsAccountId: null,
+          from: null,
+          to: null,
+        };
 
   return (
     <div className="space-y-6">
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
+      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
         <ExpenseIncomeBookingForm
           type={type}
           defaultValues={defaultValues}

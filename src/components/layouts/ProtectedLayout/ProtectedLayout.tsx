@@ -19,11 +19,14 @@ interface RouteHandle {
 export const ProtectedLayout: React.FC<ProtectedLayoutProps> = ({
   children,
 }) => {
-  const { isLoading, isAuthenticated, user, activeBranchId, activeCounterId } = useAuth();
+  const { isLoading, isAuthenticated, user, activeBranchId, activeCounterId } =
+    useAuth();
   const location = useLocation();
   const matches = useMatches();
   const permission = usePermission(location.pathname);
-  const canSkipWorkplace = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
+  const canSkipWorkplace = Boolean(
+    user?.isAdmin || user?.isHo || user?.isHoStaff
+  );
   const isCatchAllRoute = matches.some(
     match => (match.handle as RouteHandle | undefined)?.isCatchAll
   );

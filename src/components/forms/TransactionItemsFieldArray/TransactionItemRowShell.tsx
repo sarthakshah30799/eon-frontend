@@ -26,7 +26,9 @@ export const TransactionItemRowShell = ({
       <div className="mb-3 flex items-center justify-between gap-3">
         <div>
           {title ? (
-            <div className="text-sm font-semibold text-text-primary">{title}</div>
+            <div className="text-sm font-semibold text-text-primary">
+              {title}
+            </div>
           ) : null}
           {availabilityText ? (
             <div className="text-xs text-text-tertiary">{availabilityText}</div>

@@ -11,10 +11,14 @@ const transferItemSchema = yup.object({
     .string()
     .trim()
     .required('Quantity is required')
-    .test('transfer-item-quantity', 'Quantity must be a valid number', value => {
-      if (!value) return false;
-      return Number.isFinite(Number(value));
-    }),
+    .test(
+      'transfer-item-quantity',
+      'Quantity must be a valid number',
+      value => {
+        if (!value) return false;
+        return Number.isFinite(Number(value));
+      }
+    ),
   per: yup
     .string()
     .trim()
@@ -49,8 +53,14 @@ export const transferRequestSchema = yup.object({
   billReference: yup.string().trim().required('Bill reference is required'),
   sourceBranchId: yup.string().trim().required('Source branch is required'),
   sourceCounterId: yup.string().trim().required('Source counter is required'),
-  destinationBranchId: yup.string().trim().required('Destination branch is required'),
-  destinationCounterId: yup.string().trim().required('Destination counter is required'),
+  destinationBranchId: yup
+    .string()
+    .trim()
+    .required('Destination branch is required'),
+  destinationCounterId: yup
+    .string()
+    .trim()
+    .required('Destination counter is required'),
   rejectionReason: yup.string().trim().optional().default(''),
   items: yup
     .array()

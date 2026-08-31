@@ -1,5 +1,11 @@
 import { apiClient } from '../api';
 import type { CardStockSnapshot } from '../cardStock';
+import type {
+  IOffsetPaginationParams,
+  IPaginatedResponse,
+} from '@/types/pagination';
+import { buildQueryString } from '@/utils';
+import { fetchAllMatching, normalizePaginatedResponse } from '@/utils/paginatedList';
 
 export const CardStockSettlementDocumentKind = {
   BRANCH_HO: 'BRANCH_HO',
@@ -7,7 +13,7 @@ export const CardStockSettlementDocumentKind = {
 } as const;
 
 export type CardStockSettlementDocumentKind =
-  typeof CardStockSettlementDocumentKind[keyof typeof CardStockSettlementDocumentKind];
+  (typeof CardStockSettlementDocumentKind)[keyof typeof CardStockSettlementDocumentKind];
 
 export const CardStockSettlementDocumentStatus = {
   PENDING_HO_ACCEPTANCE: 'PENDING_HO_ACCEPTANCE',
@@ -18,7 +24,7 @@ export const CardStockSettlementDocumentStatus = {
 } as const;
 
 export type CardStockSettlementDocumentStatus =
-  typeof CardStockSettlementDocumentStatus[keyof typeof CardStockSettlementDocumentStatus];
+  (typeof CardStockSettlementDocumentStatus)[keyof typeof CardStockSettlementDocumentStatus];
 
 export const CardStockSettlementSaleKind = {
   FRESH: 'FRESH',
@@ -26,7 +32,7 @@ export const CardStockSettlementSaleKind = {
 } as const;
 
 export type CardStockSettlementSaleKind =
-  typeof CardStockSettlementSaleKind[keyof typeof CardStockSettlementSaleKind];
+  (typeof CardStockSettlementSaleKind)[keyof typeof CardStockSettlementSaleKind];
 
 export interface CardStockSettlementDocumentItem {
   id: string;
@@ -90,7 +96,7 @@ export interface CardStockUnsettledItem {
   productSnapshot: CardStockSnapshot;
 }
 
-export interface CardStockSettlementDocumentFilters {
+export interface CardStockSettlementDocumentFilters extends IOffsetPaginationParams {
   status?: CardStockSettlementDocumentStatus;
   kind?: CardStockSettlementDocumentKind;
   issuerPartyProfileId?: string;
@@ -113,24 +119,35 @@ export interface CreateCardStockSettlementDocumentPayload {
   items: Array<{ id: string; rate: string }>;
 }
 
-const queryString = (filters: object) => {
-  const params = new URLSearchParams();
-  Object.entries(filters).forEach(([key, value]) => {
-    if (typeof value === 'string' && value) params.set(key, value);
-  });
-  const value = params.toString();
-  return value ? `?${value}` : '';
-};
+const queryString = (filters: object) => buildQueryString(filters);
 
 export const cardSettlementApi = {
-  list: async (filters: CardStockSettlementDocumentFilters = {}): Promise<CardStockSettlementDocument[]> => {
-    const response = await apiClient.get<CardStockSettlementDocument[]>(`/card-stock/settlements${queryString(filters)}`);
+  list: async (
+    filters: CardStockSettlementDocumentFilters = {}
+  ): Promise<IPaginatedResponse<CardStockSettlementDocument>> => {
+    const response = await apiClient.get<
+      IPaginatedResponse<CardStockSettlementDocument>
+    >(`/card-stock/settlements${queryString(filters)}`);
     if (response.error) throw new Error(response.error);
-    return response.data ?? [];
+    return normalizePaginatedResponse(
+      response.data,
+      filters.limit,
+      filters.offset
+    );
   },
+
+  listAll: async (
+    filters: Omit<CardStockSettlementDocumentFilters, 'limit' | 'offset'> = {}
+  ): Promise<CardStockSettlementDocument[]> =>
+    fetchAllMatching(pagination =>
+      cardSettlementApi.list({ ...filters, ...pagination })
+    ),
   get: async (id: string): Promise<CardStockSettlementDocument> => {
-    const response = await apiClient.get<CardStockSettlementDocument>(`/card-stock/settlements/${id}`);
-    if (response.error || !response.data) throw new Error(response.error || 'CARD settlement not found');
+    const response = await apiClient.get<CardStockSettlementDocument>(
+      `/card-stock/settlements/${id}`
+    );
+    if (response.error || !response.data)
+      throw new Error(response.error || 'CARD settlement not found');
     return response.data;
   },
   listUnsettled: async (filters: {
@@ -140,28 +157,53 @@ export const cardSettlementApi = {
     branchId?: string;
     hoBranchId?: string;
   }): Promise<CardStockUnsettledItem[]> => {
-    const response = await apiClient.get<CardStockUnsettledItem[]>(`/card-stock/settlements/unsettled${queryString(filters)}`);
+    const response = await apiClient.get<CardStockUnsettledItem[]>(
+      `/card-stock/settlements/unsettled${queryString(filters)}`
+    );
     if (response.error) throw new Error(response.error);
     return response.data ?? [];
   },
-  create: async (payload: CreateCardStockSettlementDocumentPayload): Promise<CardStockSettlementDocument> => {
-    const response = await apiClient.post<CardStockSettlementDocument>('/card-stock/settlements', payload);
-    if (response.error || !response.data) throw new Error(response.error || 'Failed to create CARD settlement');
+  create: async (
+    payload: CreateCardStockSettlementDocumentPayload
+  ): Promise<CardStockSettlementDocument> => {
+    const response = await apiClient.post<CardStockSettlementDocument>(
+      '/card-stock/settlements',
+      payload
+    );
+    if (response.error || !response.data)
+      throw new Error(response.error || 'Failed to create CARD settlement');
     return response.data;
   },
   accept: async (id: string): Promise<CardStockSettlementDocument> => {
-    const response = await apiClient.post<CardStockSettlementDocument>(`/card-stock/settlements/${id}/accept`);
-    if (response.error || !response.data) throw new Error(response.error || 'Failed to accept CARD settlement');
+    const response = await apiClient.post<CardStockSettlementDocument>(
+      `/card-stock/settlements/${id}/accept`
+    );
+    if (response.error || !response.data)
+      throw new Error(response.error || 'Failed to accept CARD settlement');
     return response.data;
   },
-  reject: async (id: string, reason: string): Promise<CardStockSettlementDocument> => {
-    const response = await apiClient.post<CardStockSettlementDocument>(`/card-stock/settlements/${id}/reject`, { reason });
-    if (response.error || !response.data) throw new Error(response.error || 'Failed to reject CARD settlement');
+  reject: async (
+    id: string,
+    reason: string
+  ): Promise<CardStockSettlementDocument> => {
+    const response = await apiClient.post<CardStockSettlementDocument>(
+      `/card-stock/settlements/${id}/reject`,
+      { reason }
+    );
+    if (response.error || !response.data)
+      throw new Error(response.error || 'Failed to reject CARD settlement');
     return response.data;
   },
-  cancel: async (id: string, reason: string): Promise<CardStockSettlementDocument> => {
-    const response = await apiClient.post<CardStockSettlementDocument>(`/card-stock/settlements/${id}/cancel`, { reason });
-    if (response.error || !response.data) throw new Error(response.error || 'Failed to cancel CARD settlement');
+  cancel: async (
+    id: string,
+    reason: string
+  ): Promise<CardStockSettlementDocument> => {
+    const response = await apiClient.post<CardStockSettlementDocument>(
+      `/card-stock/settlements/${id}/cancel`,
+      { reason }
+    );
+    if (response.error || !response.data)
+      throw new Error(response.error || 'Failed to cancel CARD settlement');
     return response.data;
   },
 };

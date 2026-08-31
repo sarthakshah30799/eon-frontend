@@ -1,6 +1,8 @@
 import type { VoucherSnapshot } from './types';
 
-export const formatAdvanceAccountLabel = (snapshot?: VoucherSnapshot | null) => {
+export const formatAdvanceAccountLabel = (
+  snapshot?: VoucherSnapshot | null
+) => {
   const code = snapshot?.code ?? snapshot?.key ?? '';
   const name = snapshot?.label ?? snapshot?.name ?? '';
   if (code && name) {

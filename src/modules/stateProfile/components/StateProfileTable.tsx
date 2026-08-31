@@ -2,12 +2,14 @@ import { useNavigate } from 'react-router-dom';
 import { PencilSquareIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button1';
 import { Table, type TableColumnDef } from '@/components/ui/table';
+import type { PaginationControlsProps } from '@/components/ui';
 import { usePermission } from '@/hooks';
 import type { IStateProfile } from '../types';
 
-interface StateProfileTableProps {
+interface StateProfileTableProps extends PaginationControlsProps {
   states: IStateProfile[];
   loading?: boolean;
+  isFetching?: boolean;
   onSearch?: (value: string) => void;
   searchValue?: string;
   searchPlaceholder?: string;
@@ -25,14 +27,19 @@ interface StateProfileTableRow {
 export const StateProfileTable = ({
   states,
   loading = false,
+  isFetching = false,
   onSearch,
   searchValue = '',
   searchPlaceholder = 'Search',
+  page,
+  pageSize,
+  total,
+  totalPages,
+  onPageChange,
+  onPageSizeChange,
 }: StateProfileTableProps) => {
   const navigate = useNavigate();
-  const { canModify, canView } = usePermission(
-    '/admin/state-profile'
-  );
+  const { canModify, canView } = usePermission('/admin/state-profile');
 
   const rows: StateProfileTableRow[] = states.map(state => ({
     id: state.id,
@@ -94,10 +101,18 @@ export const StateProfileTable = ({
       columns={columns}
       data={rows}
       enableFiltering={false}
-      enablePagination={false}
+      enablePagination
+      manualPagination
       enableRowSelection={false}
       enableColumnVisibility={false}
       loading={loading}
+      isFetching={isFetching}
+      page={page}
+      pageSize={pageSize}
+      total={total}
+      totalPages={totalPages}
+      onPageChange={onPageChange}
+      onPageSizeChange={onPageSizeChange}
       onSearch={onSearch}
       searchValue={searchValue}
       searchPlaceholder={searchPlaceholder}

@@ -1,7 +1,11 @@
 import { useState } from 'react';
 import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button1';
-import { createEmptyCountryGroupFormValues, CountryGroupForm, useCreateCountryGroup } from '@/modules/countryGroup';
+import {
+  createEmptyCountryGroupFormValues,
+  CountryGroupForm,
+  useCreateCountryGroup,
+} from '@/modules/countryGroup';
 
 interface CountryGroupModalProps {
   open: boolean;
@@ -39,7 +43,12 @@ export const CountryGroupModal = ({
       size="xl"
       footer={
         <div className="flex items-center justify-end gap-3">
-          <Button type="button" variant="outline" onClick={() => handleOpenChange(false)} disabled={isPending}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => handleOpenChange(false)}
+            disabled={isPending}
+          >
             Cancel
           </Button>
           <Button type="submit" form="country-group-form" disabled={isPending}>
@@ -67,7 +76,11 @@ export const CountryGroupModal = ({
               onSuccess(newGroup.id);
               onOpenChange(false);
             } catch (error) {
-              setSubmitError(error instanceof Error ? error.message : 'Failed to create country group');
+              setSubmitError(
+                error instanceof Error
+                  ? error.message
+                  : 'Failed to create country group'
+              );
             }
           }}
           isSubmitting={isPending}

@@ -1,3 +1,8 @@
+import type {
+  IOffsetPaginationParams,
+  IPaginatedResponse,
+} from '@/types/pagination';
+
 export interface IProductProfileCheckboxFieldConfig {
   name: keyof ICreateProductProfile;
   label: string;
@@ -79,8 +84,17 @@ export type ICreateProductProfile = Omit<
 
 export type IUpdateProductProfile = Partial<ICreateProductProfile>;
 
-export interface IUpdateProductProfilePayload
-  extends Partial<ICreateProductProfile> {
+export interface IUpdateProductProfilePayload extends Partial<ICreateProductProfile> {
   cardIssuerProfileIds?: string[];
   removedCardIssuerProfileIds?: string[];
 }
+
+export interface IProductProfileListQuery extends IOffsetPaginationParams {
+  bulkBuying?: boolean;
+  bulkSelling?: boolean;
+  otherTransaction?: boolean;
+  search?: string;
+  activeOnly?: boolean;
+}
+
+export type IProductProfileListResponse = IPaginatedResponse<IProductProfile>;

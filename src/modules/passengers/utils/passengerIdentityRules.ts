@@ -32,33 +32,42 @@ const isForeignNationality = (values: PassengerIdentityValues) =>
   values.nationalityType === PassengerNationalityTypeEnum.NRI ||
   values.nationalityType === PassengerNationalityTypeEnum.FOREIGNER;
 
-export const hasCompletePassengerPanValues = (values: PassengerIdentityValues) =>
-  Boolean(trim(values.panNumber) && trim(values.panHolderName) && trim(values.panDob));
+export const hasCompletePassengerPanValues = (
+  values: PassengerIdentityValues
+) =>
+  Boolean(
+    trim(values.panNumber) && trim(values.panHolderName) && trim(values.panDob)
+  );
 
 export const hasAnyPassengerPanValue = (values: PassengerIdentityValues) =>
-  Boolean(trim(values.panNumber) || trim(values.panHolderName) || trim(values.panDob));
+  Boolean(
+    trim(values.panNumber) || trim(values.panHolderName) || trim(values.panDob)
+  );
 
 export const hasCompletePassengerPassportValues = (
   values: PassengerIdentityValues
 ) =>
   Boolean(
     trim(values.passportNumber) &&
-      trim(values.passportIssueAt) &&
-      trim(values.passportIssueDate) &&
-      trim(values.passportExpiryDate)
+    trim(values.passportIssueAt) &&
+    trim(values.passportIssueDate) &&
+    trim(values.passportExpiryDate)
   );
 
 export const hasAnyPassengerPassportValue = (values: PassengerIdentityValues) =>
   Boolean(
     trim(values.passportNumber) ||
-      trim(values.passportIssueAt) ||
-      trim(values.passportIssueDate) ||
-      trim(values.passportExpiryDate)
+    trim(values.passportIssueAt) ||
+    trim(values.passportIssueDate) ||
+    trim(values.passportExpiryDate)
   );
 
 export const hasCompletePassengerOtherDocuments = (
   values: PassengerIdentityValues
-) => (values.otherDocuments ?? []).some(row => isPassengerOtherDocumentComplete(row));
+) =>
+  (values.otherDocuments ?? []).some(row =>
+    isPassengerOtherDocumentComplete(row)
+  );
 
 export const isPassengerPanRequired = (values: PassengerIdentityValues) => {
   if (isCorporateEntity(values)) {
@@ -83,7 +92,9 @@ export const isPassengerPanHolderRelationRequired = (
   values: PassengerIdentityValues
 ) => isPassengerPanRequired(values);
 
-export const isPassengerPassportRequired = (values: PassengerIdentityValues) => {
+export const isPassengerPassportRequired = (
+  values: PassengerIdentityValues
+) => {
   if (isForeignNationality(values)) {
     return true;
   }
@@ -95,8 +106,9 @@ export const isPassengerPassportRequired = (values: PassengerIdentityValues) => 
   return hasAnyPassengerPassportValue(values);
 };
 
-export const isPassengerArrivalDateRequired = (values: PassengerIdentityValues) =>
-  isForeignNationality(values);
+export const isPassengerArrivalDateRequired = (
+  values: PassengerIdentityValues
+) => isForeignNationality(values);
 
 export const isPassengerOtherDocumentsRequired = (
   values: PassengerIdentityValues

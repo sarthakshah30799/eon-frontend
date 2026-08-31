@@ -20,19 +20,19 @@ export const CardBlankStockReportView = () => {
   const currentSummary = useMemo(() => {
     const branchLabels = summarizeReportSelection(
       report.filters.branchIds,
-      report.filters.branchOptions,
+      report.filters.branchOptions
     );
     const productLabels = summarizeReportSelection(
       report.filters.productIds,
-      report.filters.productOptions,
+      report.filters.productOptions
     );
     const currencyLabels = summarizeReportSelection(
       report.filters.currencyIds,
-      report.filters.currencyOptions,
+      report.filters.currencyOptions
     );
     const issuerLabels = summarizeReportSelection(
       report.filters.issuerPartyProfileIds,
-      report.filters.issuerOptions,
+      report.filters.issuerOptions
     );
     const sortLabel =
       report.filters.sortBy === ReportSortByEnum.DATE_DESC
@@ -59,7 +59,9 @@ export const CardBlankStockReportView = () => {
   ]);
 
   if (!canView) {
-    return <AccessDeniedState message={PAGE_STATUS_TEXTS.ACCESS_DENIED_MESSAGE} />;
+    return (
+      <AccessDeniedState message={PAGE_STATUS_TEXTS.ACCESS_DENIED_MESSAGE} />
+    );
   }
 
   return (
@@ -77,7 +79,8 @@ export const CardBlankStockReportView = () => {
 
       {report.filters.appliedFilters && (
         <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-[11px] text-text-secondary">
-          {CARD_BLANK_STOCK_REPORT_TEXT.appliedPrefix}: {report.appliedDateRangeLabel} |{' '}
+          {CARD_BLANK_STOCK_REPORT_TEXT.appliedPrefix}:{' '}
+          {report.appliedDateRangeLabel} |{' '}
           {CARD_BLANK_STOCK_REPORT_TEXT.branchHeading}{' '}
           {currentSummary.branches.length
             ? currentSummary.branches.join(', ')
@@ -121,7 +124,9 @@ export const CardBlankStockReportView = () => {
                       : 'outline'
                   }
                   className="h-7 rounded-full px-3 text-[11px]"
-                  onClick={() => report.setExportFormat(ReportExportFormatEnum.XLSX)}
+                  onClick={() =>
+                    report.setExportFormat(ReportExportFormatEnum.XLSX)
+                  }
                 >
                   {CARD_BLANK_STOCK_REPORT_TEXT.xlsx}
                 </Button>
@@ -134,7 +139,9 @@ export const CardBlankStockReportView = () => {
                       : 'outline'
                   }
                   className="h-7 rounded-full px-3 text-[11px]"
-                  onClick={() => report.setExportFormat(ReportExportFormatEnum.CSV)}
+                  onClick={() =>
+                    report.setExportFormat(ReportExportFormatEnum.CSV)
+                  }
                 >
                   {CARD_BLANK_STOCK_REPORT_TEXT.csv}
                 </Button>

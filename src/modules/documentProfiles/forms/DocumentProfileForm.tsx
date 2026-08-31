@@ -17,10 +17,7 @@ import type { IDocumentProfileFormValues } from '../types';
 import { DOCUMENT_PROFILE_TEXTS } from '../constants/documentProfileConstants';
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import { useDocumentSpecificationTypeOptions } from '../hooks';
-import {
-  getDocumentTypeOptionItems,
-  loadDocumentTypeOptions,
-} from '../utils';
+import { getDocumentTypeOptionItems, loadDocumentTypeOptions } from '../utils';
 
 interface DocumentProfileFormProps {
   defaultValues: IDocumentProfileFormValues;
@@ -32,7 +29,8 @@ interface DocumentProfileFormProps {
 const DocumentProfileFields = ({ isSubmitting }: { isSubmitting: boolean }) => {
   const { control, setValue } = useFormContext<IDocumentProfileFormValues>();
   const specificationType = useWatch({ control, name: 'specificationType' });
-  const { data: specificationTypeOptions = [] } = useDocumentSpecificationTypeOptions();
+  const { data: specificationTypeOptions = [] } =
+    useDocumentSpecificationTypeOptions();
   const previousSpecificationTypeRef = useRef<string | null>(null);
 
   const selectedSpecificationType = specificationTypeOptions.find(
@@ -47,7 +45,9 @@ const DocumentProfileFields = ({ isSubmitting }: { isSubmitting: boolean }) => {
       }));
       return {
         options: inputValue
-          ? opts.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+          ? opts.filter(opt =>
+              opt.label.toLowerCase().includes(inputValue.toLowerCase())
+            )
           : opts,
       };
     },
@@ -155,8 +155,16 @@ const DocumentProfileFields = ({ isSubmitting }: { isSubmitting: boolean }) => {
         disabled={isSubmitting}
       />
       <div className="flex items-end gap-6">
-        <FormFieldCheckbox name="isRequired" label="Required" disabled={isSubmitting} />
-        <FormFieldCheckbox name="active" label="Active" disabled={isSubmitting} />
+        <FormFieldCheckbox
+          name="isRequired"
+          label="Required"
+          disabled={isSubmitting}
+        />
+        <FormFieldCheckbox
+          name="active"
+          label="Active"
+          disabled={isSubmitting}
+        />
       </div>
     </div>
   );
@@ -169,7 +177,9 @@ export const DocumentProfileForm = ({
   isSubmitting = false,
 }: DocumentProfileFormProps) => {
   const navigate = useNavigate();
-  const handleSubmitErrors: SubmitErrorHandler<IDocumentProfileFormValues> = errors => {
+  const handleSubmitErrors: SubmitErrorHandler<
+    IDocumentProfileFormValues
+  > = errors => {
     console.log('DocumentProfileForm submit errors:', errors);
   };
 
@@ -178,7 +188,11 @@ export const DocumentProfileForm = ({
       id="document-profile-form"
       onSubmit={onSubmit}
       onError={handleSubmitErrors}
-      resolver={yupResolver(documentProfileSchema) as Resolver<IDocumentProfileFormValues>}
+      resolver={
+        yupResolver(
+          documentProfileSchema
+        ) as Resolver<IDocumentProfileFormValues>
+      }
       defaultValues={defaultValues}
       className="space-y-6"
       footer={{

@@ -1,6 +1,12 @@
 import { useMemo } from 'react';
-import { Table, type TableColumnDef } from '@/components/ui';
+import {
+  Table,
+  type PaginationControlsProps,
+  type TableColumnDef,
+  type TableToolbarFilter,
+} from '@/components/ui';
 import type { IManualBook } from '@/api';
+import { PAGINATION_PAGE_SIZE_OPTIONS } from '@/constants/paginationConstants';
 import { ManualBillBookStatusEnum } from '../types';
 
 const resolveAssignedToLabel = (assignedTo: IManualBook['assignedTo']) => {
@@ -12,21 +18,43 @@ const resolveAssignedToLabel = (assignedTo: IManualBook['assignedTo']) => {
 };
 
 const getStatusBadgeClass = (status: string) => {
-  if (status === ManualBillBookStatusEnum.APPROVE) return 'bg-emerald-100 text-emerald-800';
-  if (status === ManualBillBookStatusEnum.REJECT) return 'bg-rose-100 text-rose-800';
+  if (status === ManualBillBookStatusEnum.APPROVE)
+    return 'bg-emerald-100 text-emerald-800';
+  if (status === ManualBillBookStatusEnum.REJECT)
+    return 'bg-rose-100 text-rose-800';
   return 'bg-amber-100 text-amber-800';
 };
 
-interface ManualBillBookTableProps {
+interface ManualBillBookTableProps extends PaginationControlsProps {
   books: IManualBook[];
   loading?: boolean;
+  isFetching?: boolean;
   onRowClick?: (book: IManualBook) => void;
+  onSearch?: (value: string) => void;
+  searchValue?: string;
+  searchPlaceholder?: string;
+  toolbarFilters?: TableToolbarFilter[];
+  emptyMessage?: string;
 }
 
 export const ManualBillBookTable = ({
   books,
   loading = false,
+  isFetching = false,
   onRowClick,
+  page,
+  pageSize,
+  total,
+  totalPages,
+  onPageChange,
+  onPageSizeChange,
+  pageSizeOptions = [...PAGINATION_PAGE_SIZE_OPTIONS],
+  itemLabel = 'dispatches',
+  onSearch,
+  searchValue,
+  searchPlaceholder = 'Search dispatch no, remarks, book or MV number',
+  toolbarFilters,
+  emptyMessage = 'No Records found. Create your first Manual Bill Book.',
 }: ManualBillBookTableProps) => {
   const tableColumns = useMemo<TableColumnDef<IManualBook>[]>(
     () => [
@@ -113,19 +141,35 @@ export const ManualBillBookTable = ({
     []
   );
 
+  const useLegacySearch = Boolean(onSearch) && !toolbarFilters?.length;
+
   return (
     <Table
       columns={tableColumns}
       data={books}
       enableSorting={false}
       enableFiltering={false}
-      enablePagination={false}
+      enablePagination
+      manualPagination
       enableRowSelection={false}
       enableColumnVisibility={false}
+      page={page}
+      pageSize={pageSize}
+      pageSizeOptions={pageSizeOptions}
+      total={total}
+      totalPages={totalPages}
+      onPageChange={onPageChange}
+      onPageSizeChange={onPageSizeChange}
+      paginationItemLabel={itemLabel}
       loading={loading}
+      isFetching={isFetching}
       className="min-w-full text-xs"
       onRowClick={onRowClick}
-      emptyMessage="No Records found. Create your first Manual Bill Book."
+      onSearch={useLegacySearch ? onSearch : undefined}
+      searchValue={useLegacySearch ? searchValue : undefined}
+      searchPlaceholder={searchPlaceholder}
+      toolbarFilters={toolbarFilters}
+      emptyMessage={emptyMessage}
     />
   );
 };

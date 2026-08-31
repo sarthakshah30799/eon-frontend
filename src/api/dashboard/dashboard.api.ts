@@ -62,44 +62,56 @@ export const dashboardApi = {
   getStats: async (): Promise<DashboardStats> => {
     const res = await apiClient.get<DashboardStats>('/dashboard/stats');
     if (res.error) throw new Error(res.error);
-    return res.data ?? {
-      todayVolume: '0',
-      yesterdayVolume: '0',
-      todayTransactionCount: 0,
-      yesterdayTransactionCount: 0,
-      pendingApprovals: 0,
-      pendingPartyProfileReviews: 0,
-      pendingTransactions: 0,
-      pendingChequeBooks: 0,
-      pendingManualBooks: 0,
-      pendingTransfers: 0,
-      activeAlerts: 0,
-    };
+    return (
+      res.data ?? {
+        todayVolume: '0',
+        yesterdayVolume: '0',
+        todayTransactionCount: 0,
+        yesterdayTransactionCount: 0,
+        pendingApprovals: 0,
+        pendingPartyProfileReviews: 0,
+        pendingTransactions: 0,
+        pendingChequeBooks: 0,
+        pendingManualBooks: 0,
+        pendingTransfers: 0,
+        activeAlerts: 0,
+      }
+    );
   },
 
   getVolumeByCurrency: async (): Promise<VolumeByCurrency[]> => {
-    const res = await apiClient.get<VolumeByCurrency[]>('/dashboard/volume-by-currency');
+    const res = await apiClient.get<VolumeByCurrency[]>(
+      '/dashboard/volume-by-currency'
+    );
     if (res.error) throw new Error(res.error);
     return res.data ?? [];
   },
 
   getVolumeChart: async (days?: number): Promise<VolumeDataPoint[]> => {
     const query = days ? `?days=${days}` : '';
-    const res = await apiClient.get<VolumeDataPoint[]>(`/dashboard/volume-chart${query}`);
+    const res = await apiClient.get<VolumeDataPoint[]>(
+      `/dashboard/volume-chart${query}`
+    );
     if (res.error) throw new Error(res.error);
     return res.data ?? [];
   },
 
-  getRecentTransactions: async (limit?: number): Promise<RecentTransaction[]> => {
+  getRecentTransactions: async (
+    limit?: number
+  ): Promise<RecentTransaction[]> => {
     const query = limit ? `?limit=${limit}` : '';
-    const res = await apiClient.get<RecentTransaction[]>(`/dashboard/recent-transactions${query}`);
+    const res = await apiClient.get<RecentTransaction[]>(
+      `/dashboard/recent-transactions${query}`
+    );
     if (res.error) throw new Error(res.error);
     return res.data ?? [];
   },
 
   getPendingApprovals: async (limit?: number): Promise<PendingApproval[]> => {
     const query = limit ? `?limit=${limit}` : '';
-    const res = await apiClient.get<PendingApproval[]>(`/dashboard/pending-approvals${query}`);
+    const res = await apiClient.get<PendingApproval[]>(
+      `/dashboard/pending-approvals${query}`
+    );
     if (res.error) throw new Error(res.error);
     return res.data ?? [];
   },

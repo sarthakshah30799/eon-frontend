@@ -17,7 +17,11 @@ const purposeSlabSchema = yup.object({
   toAmount: yup
     .number()
     .transform((value, originalValue) => {
-      if (originalValue === '' || originalValue === null || originalValue === undefined) {
+      if (
+        originalValue === '' ||
+        originalValue === null ||
+        originalValue === undefined
+      ) {
         return null;
       }
       return value;
@@ -36,30 +40,38 @@ const purposeSlabSchema = yup.object({
     .required('Rate type is required'),
 });
 
-export const purposeSchema = yup.object({
-  code: yup.string().trim().length(2, 'Code must be exactly 2 characters').required('Code is required'),
-  description: yup.string().trim().required('Description is required'),
-  threshold: yup
-    .number()
-    .transform((value, originalValue) => (originalValue === '' ? 0 : value))
-    .min(0, 'Threshold must be at least 0')
-    .default(0),
-  rate: yup
-    .number()
-    .transform((value, originalValue) => (originalValue === '' ? 0 : value))
-    .min(0, 'Rate must be at least 0')
-    .default(0),
-  rateType: yup
-    .mixed<(typeof PurposeRateTypeEnum)[keyof typeof PurposeRateTypeEnum]>()
-    .oneOf(Object.values(PurposeRateTypeEnum))
-    .required('Rate type is required'),
-  corporate: yup.boolean().default(true),
-  individual: yup.boolean().default(false),
-  sell: yup.boolean().default(false),
-  purchase: yup.boolean().default(true),
-  slabs: yup.array().of(purposeSlabSchema).default([]),
-}).test(
-  'purpose-scope',
-  'Purpose must apply to at least one party profile type and one transaction type',
-  value => Boolean(value?.corporate || value?.individual) && Boolean(value?.sell || value?.purchase),
-);
+export const purposeSchema = yup
+  .object({
+    code: yup
+      .string()
+      .trim()
+      .length(2, 'Code must be exactly 2 characters')
+      .required('Code is required'),
+    description: yup.string().trim().required('Description is required'),
+    threshold: yup
+      .number()
+      .transform((value, originalValue) => (originalValue === '' ? 0 : value))
+      .min(0, 'Threshold must be at least 0')
+      .default(0),
+    rate: yup
+      .number()
+      .transform((value, originalValue) => (originalValue === '' ? 0 : value))
+      .min(0, 'Rate must be at least 0')
+      .default(0),
+    rateType: yup
+      .mixed<(typeof PurposeRateTypeEnum)[keyof typeof PurposeRateTypeEnum]>()
+      .oneOf(Object.values(PurposeRateTypeEnum))
+      .required('Rate type is required'),
+    corporate: yup.boolean().default(true),
+    individual: yup.boolean().default(false),
+    sell: yup.boolean().default(false),
+    purchase: yup.boolean().default(true),
+    slabs: yup.array().of(purposeSlabSchema).default([]),
+  })
+  .test(
+    'purpose-scope',
+    'Purpose must apply to at least one party profile type and one transaction type',
+    value =>
+      Boolean(value?.corporate || value?.individual) &&
+      Boolean(value?.sell || value?.purchase)
+  );

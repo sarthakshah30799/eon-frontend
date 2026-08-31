@@ -1,22 +1,17 @@
 import { useQuery } from '@tanstack/react-query';
-import { chequebookApi, type IChequeBook } from '@/api';
+import {
+  chequebookApi,
+  type IChequeBook,
+  type IChequeBookListQuery,
+} from '@/api';
 
-export interface IChequeBookListQuery {
-  branchId?: string;
-  status?: string;
-  bankAccountCode?: string;
-}
+export type { IChequeBookListQuery };
 
-export const useListChequeBooks = (params?: IChequeBookListQuery) => {
+export const useListChequeBooks = (
+  params?: Omit<IChequeBookListQuery, 'limit' | 'offset'>
+) => {
   return useQuery<IChequeBook[]>({
-    queryKey: ['cheque-books', params],
-    queryFn: async () => {
-      const data = await chequebookApi.findAll(
-        params?.branchId,
-        params?.status,
-        params?.bankAccountCode,
-      );
-      return data;
-    },
+    queryKey: ['cheque-books', 'all', params],
+    queryFn: async () => chequebookApi.findAllMatching(params),
   });
 };

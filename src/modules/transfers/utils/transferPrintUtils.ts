@@ -131,7 +131,10 @@ const numberToWords = (input: number) => {
 };
 
 const joinAddress = (...parts: Array<string | null | undefined>) =>
-  parts.map(part => part?.trim()).filter(Boolean).join(', ');
+  parts
+    .map(part => part?.trim())
+    .filter(Boolean)
+    .join(', ');
 
 const getCopyLabel = (copyType: TransferPrintCopyType) =>
   copyType === 'DUPLICATE_COPY' ? 'Duplicate Copy' : 'Original Copy';
@@ -149,25 +152,33 @@ const getBranchDisplay = (branchSnapshot?: IBranchProfile | null) => {
     branchSnapshot.address3,
     branchSnapshot.city,
     branchSnapshot.gstState,
-    branchSnapshot.pinCode,
+    branchSnapshot.pinCode
   );
 
-  const heading = [name, code ? `(${code})` : ''].filter(Boolean).join(' ').trim();
+  const heading = [name, code ? `(${code})` : '']
+    .filter(Boolean)
+    .join(' ')
+    .trim();
   return [heading, address].filter(Boolean).join(', ') || '-';
 };
 
 const getCounterDisplay = (
   counterSnapshot?: ITransactionReferenceSnapshot | null,
-  branchSnapshot?: IBranchProfile | null,
+  branchSnapshot?: IBranchProfile | null
 ) => {
   if (!counterSnapshot) {
     return getBranchDisplay(branchSnapshot);
   }
 
-  const counterName = String(counterSnapshot.name ?? counterSnapshot.label ?? counterSnapshot.code ?? '').trim();
+  const counterName = String(
+    counterSnapshot.name ?? counterSnapshot.label ?? counterSnapshot.code ?? ''
+  ).trim();
   const counterCode = String(counterSnapshot.code ?? '').trim();
   const branchDisplay = getBranchDisplay(branchSnapshot);
-  const heading = [counterName, counterCode ? `(${counterCode})` : ''].filter(Boolean).join(' ').trim();
+  const heading = [counterName, counterCode ? `(${counterCode})` : '']
+    .filter(Boolean)
+    .join(' ')
+    .trim();
   return [heading, branchDisplay].filter(Boolean).join(', ') || '-';
 };
 
@@ -182,22 +193,25 @@ export const buildTransferPrintHtml = ({
   company: ICompanyProfile | null;
   branch: IBranchProfile | null;
 }) => {
-  const transferDate = transfer.transactionDate ? new Date(transfer.transactionDate) : new Date();
+  const transferDate = transfer.transactionDate
+    ? new Date(transfer.transactionDate)
+    : new Date();
   const transferDateLabel = formatDate(transferDate);
-  const destinationLabel = transfer.transferType === 'BRANCH' ? 'Branch' : 'Counter';
+  const destinationLabel =
+    transfer.transferType === 'BRANCH' ? 'Branch' : 'Counter';
   const destinationDisplay =
     transfer.transferType === 'BRANCH'
       ? getBranchDisplay(transfer.destinationBranchSnapshot ?? null)
       : getCounterDisplay(
           transfer.destinationCounterSnapshot ?? null,
-          transfer.destinationBranchSnapshot ?? null,
+          transfer.destinationBranchSnapshot ?? null
         );
   const sourceDisplay =
     transfer.transferType === 'BRANCH'
       ? getBranchDisplay(transfer.sourceBranchSnapshot ?? null)
       : getCounterDisplay(
           transfer.sourceCounterSnapshot ?? null,
-          transfer.sourceBranchSnapshot ?? null,
+          transfer.sourceBranchSnapshot ?? null
         );
 
   const totalAmount = (transfer.items ?? []).reduce((sum, item) => {
@@ -215,7 +229,7 @@ export const buildTransferPrintHtml = ({
           <td class="right">${escapeHtml(formatAmount(item.quantity, 7))}</td>
           <td class="right">${escapeHtml(formatAmount(item.rate, 7))}</td>
           <td class="right">${escapeHtml(formatAmount(item.finalAmount || item.amount))}</td>
-        </tr>`,
+        </tr>`
     )
     .join('');
 
@@ -470,7 +484,9 @@ export const buildTransferPrintHtml = ({
   `;
 };
 
-export const getTransferPrintCopyType = (printCount?: number | null): TransferPrintCopyType =>
+export const getTransferPrintCopyType = (
+  printCount?: number | null
+): TransferPrintCopyType =>
   (printCount ?? 0) === 0 ? 'CUSTOMER_COPY' : 'DUPLICATE_COPY';
 
 export const getTransferPrintCopyLabel = (copyType: TransferPrintCopyType) =>

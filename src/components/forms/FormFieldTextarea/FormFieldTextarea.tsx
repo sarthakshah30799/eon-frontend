@@ -3,8 +3,7 @@ import { useController } from 'react-hook-form';
 import { useFormContext } from 'react-hook-form';
 import { Label } from '@/components/ui';
 
-interface FormFieldTextareaProps
-  extends TextareaHTMLAttributes<HTMLTextAreaElement> {
+interface FormFieldTextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   name: string;
   label?: string;
   wrapperClassName?: string;

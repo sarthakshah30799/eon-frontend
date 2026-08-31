@@ -1,7 +1,4 @@
-import type {
-  ICompanyProfile,
-  ICreateCompanyProfile,
-} from '../types';
+import type { ICompanyProfile, ICreateCompanyProfile } from '../types';
 
 export const createEmptyCompanyProfileFormValues =
   (): ICreateCompanyProfile => ({

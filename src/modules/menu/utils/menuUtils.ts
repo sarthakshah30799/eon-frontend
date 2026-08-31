@@ -27,9 +27,7 @@ export const createEmptyMenuValues = (): ICreateMenu => ({
   isActive: true,
 });
 
-export const mapMenuToCreateValues = (
-  menu: IMenu
-): ICreateMenu => ({
+export const mapMenuToCreateValues = (menu: IMenu): ICreateMenu => ({
   isAdmin: menu.isAdmin,
   name: menu.name,
   path: menu.path ? normalizeMenuPath(menu.path) : '',
@@ -39,10 +37,7 @@ export const mapMenuToCreateValues = (
   isActive: menu.isActive,
 });
 
-const collectDescendantIds = (
-  menus: IMenu[],
-  menuId: string
-): Set<string> => {
+const collectDescendantIds = (menus: IMenu[], menuId: string): Set<string> => {
   const descendants = new Set<string>();
   const stack = [menuId];
 
@@ -81,8 +76,6 @@ export const buildParentMenuOptions = (
     existing.push(menu);
     childrenByParent.set(key, existing);
   }
-
-  
 
   const options: AsyncSelectOption[] = [];
 

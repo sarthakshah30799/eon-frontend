@@ -5,4 +5,3 @@ const UserProfileListPage = () => {
 };
 
 export default UserProfileListPage;
-

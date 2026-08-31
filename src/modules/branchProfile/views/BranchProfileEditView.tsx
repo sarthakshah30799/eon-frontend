@@ -1,12 +1,7 @@
-import { useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { BRANCH_PROFILE_TEXTS } from '../constants';
-import {
-  useGetBranchProfile,
-  useListBranchProfiles,
-  useUpdateBranchProfile,
-} from '../hooks';
-import { mapRecordToFormValues, toBranchAttachedToOptions } from '../utils';
+import { useGetBranchProfile, useUpdateBranchProfile } from '../hooks';
+import { mapRecordToFormValues } from '../utils';
 import type { ICreateBranchProfile } from '../types';
 import { BranchProfileEditorView } from './BranchProfileEditorView';
 import { Loader } from '@/components/ui/loader';
@@ -15,18 +10,10 @@ export const BranchProfileEditView = () => {
   const navigate = useNavigate();
   const { id = '' } = useParams<{ id: string }>();
   const { data: branchProfile, isLoading } = useGetBranchProfile(id);
-  const { data: branches = [] } = useListBranchProfiles();
   const { submitBranchProfile, isPending } = useUpdateBranchProfile(id);
 
-  const branchAttachedToOptions = useMemo(
-    () => toBranchAttachedToOptions(branches, id),
-    [branches, id]
-  );
-
   if (isLoading) {
-    return (
-      <Loader />
-    );
+    return <Loader />;
   }
 
   if (!branchProfile) {
@@ -52,7 +39,7 @@ export const BranchProfileEditView = () => {
         onSubmitBranch={handleSubmit}
         onCancel={() => navigate('/admin/branch-profile')}
         isSubmitting={isPending}
-        branchAttachedToOptions={branchAttachedToOptions}
+        branchAttachedToOptions={[]}
         currentId={id}
       />
     </div>

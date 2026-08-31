@@ -5,4 +5,3 @@ const CountryProfileListPage = () => {
 };
 
 export default CountryProfileListPage;
-

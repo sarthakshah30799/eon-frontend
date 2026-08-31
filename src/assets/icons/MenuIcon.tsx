@@ -4,7 +4,9 @@ interface MenuIconProps {
   className?: string;
 }
 
-export const MenuIcon: React.FC<MenuIconProps> = ({ className = 'h-5 w-5' }) => {
+export const MenuIcon: React.FC<MenuIconProps> = ({
+  className = 'h-5 w-5',
+}) => {
   return (
     <svg
       aria-hidden="true"

@@ -38,7 +38,7 @@ export const TdsProfileForm = ({
         return false;
       }
 
-      const profiles = await tdsProfileApi.getTdsProfiles();
+      const profiles = await tdsProfileApi.getAllTdsProfiles();
       return profiles.some(
         profile =>
           normalizeCodeValue(profile.code) === normalizedCode &&
@@ -120,11 +120,7 @@ export const TdsProfileForm = ({
             label="From"
             disabled={isSubmitting}
           />
-          <FormFieldDatePicker
-            name="to"
-            label="To"
-            disabled={isSubmitting}
-          />
+          <FormFieldDatePicker name="to" label="To" disabled={isSubmitting} />
         </div>
       </CardSection>
 

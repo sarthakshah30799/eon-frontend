@@ -8,4 +8,3 @@ export const useGetTransfer = (id: string) => {
     enabled: Boolean(id),
   });
 };
-

@@ -23,12 +23,12 @@ export const useFlm3PurchaseFromPublic = () => {
       view: filters.appliedFilters?.view ?? filters.view,
       layout: filters.appliedFilters?.layout ?? filters.layout,
     }),
-    [filters.appliedFilters, filters.view, filters.layout],
+    [filters.appliedFilters, filters.view, filters.layout]
   );
 
   const reportQueryKey = useMemo(
     () => ['flm3-purchase-from-public', requestParams],
-    [requestParams],
+    [requestParams]
   );
 
   const reportQuery = useQuery<IFlm3PurchaseFromPublicResponse>({
@@ -49,10 +49,13 @@ export const useFlm3PurchaseFromPublic = () => {
       {
         ...requestParams,
       },
-      exportFormat,
+      exportFormat
     );
 
-    downloadBlob(payload.blob, payload.filename || 'flm3-purchase-from-public.xlsx');
+    downloadBlob(
+      payload.blob,
+      payload.filename || 'flm3-purchase-from-public.xlsx'
+    );
   }, [exportFormat, filters.appliedFilters, requestParams]);
 
   return {

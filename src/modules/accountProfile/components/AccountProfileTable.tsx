@@ -2,12 +2,14 @@ import { useNavigate } from 'react-router-dom';
 import { PencilSquareIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button1';
 import { Table, type TableColumnDef } from '@/components/ui/table';
+import type { PaginationControlsProps } from '@/components/ui';
 import { usePermission } from '@/hooks';
 import type { IAccountProfile } from '../types/accountProfileTypes';
 
-interface AccountProfileTableProps {
+interface AccountProfileTableProps extends PaginationControlsProps {
   accounts: IAccountProfile[];
   loading?: boolean;
+  isFetching?: boolean;
   onSearch?: (value: string) => void;
   searchValue?: string;
   searchPlaceholder?: string;
@@ -27,9 +29,16 @@ interface AccountProfileTableRow {
 export const AccountProfileTable = ({
   accounts,
   loading = false,
+  isFetching = false,
   onSearch,
   searchValue = '',
   searchPlaceholder = 'Search',
+  page,
+  pageSize,
+  total,
+  totalPages,
+  onPageChange,
+  onPageSizeChange,
 }: AccountProfileTableProps) => {
   const navigate = useNavigate();
   const { canModify, canView } = usePermission('/admin/accounts-profile');
@@ -100,9 +109,18 @@ export const AccountProfileTable = ({
       columns={columns}
       data={rows}
       enableFiltering={false}
+      enablePagination
+      manualPagination
       enableRowSelection={false}
       enableColumnVisibility={false}
       loading={loading}
+      isFetching={isFetching}
+      page={page}
+      pageSize={pageSize}
+      total={total}
+      totalPages={totalPages}
+      onPageChange={onPageChange}
+      onPageSizeChange={onPageSizeChange}
       onSearch={onSearch}
       searchValue={searchValue}
       searchPlaceholder={searchPlaceholder}

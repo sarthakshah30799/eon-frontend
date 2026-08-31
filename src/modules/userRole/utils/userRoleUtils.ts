@@ -1,9 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query';
-import type {
-  ICreateUserRole,
-  IUserRole,
-  UserRightsRowState,
-} from '../types';
+import type { ICreateUserRole, IUserRole, UserRightsRowState } from '../types';
 
 export const createEmptyUserRoleFormValues = (): ICreateUserRole => ({
   code: '',
@@ -26,9 +22,7 @@ export const createEmptyUserRoleFormValues = (): ICreateUserRole => ({
   isDelAppAccess: false,
 });
 
-export const mapRecordToFormValues = (
-  record: IUserRole
-): ICreateUserRole => ({
+export const mapRecordToFormValues = (record: IUserRole): ICreateUserRole => ({
   code: record.code || '',
   name: record.name || '',
   isAdmin: !!record.isAdmin,

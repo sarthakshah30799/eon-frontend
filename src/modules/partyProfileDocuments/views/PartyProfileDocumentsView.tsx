@@ -51,8 +51,11 @@ export const PartyProfileDocumentsView = () => {
     isLoading: isDocumentsLoading,
     error: partyProfileDocumentsError,
   } = useGetPartyProfileDocuments(id || '', Boolean(id));
-  const { savePartyProfileDocuments, isPending: isSaving } = useSavePartyProfileDocuments();
-  const [stagedFiles, setStagedFiles] = useState<Record<string, File | null>>({});
+  const { savePartyProfileDocuments, isPending: isSaving } =
+    useSavePartyProfileDocuments();
+  const [stagedFiles, setStagedFiles] = useState<Record<string, File | null>>(
+    {}
+  );
   const [saveRevision, setSaveRevision] = useState(0);
 
   const documentProfiles = partyProfileDocuments?.documentProfiles ?? [];

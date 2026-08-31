@@ -2,10 +2,7 @@ import { useState, type ReactNode } from 'react';
 import { Button } from '../button1';
 import { Modal } from '../modal';
 import { Table, type TableColumnDef } from '../table';
-import type {
-  PaginationState,
-  RowSelectionState,
-} from '@tanstack/react-table';
+import type { RowSelectionState } from '@tanstack/react-table';
 
 interface SelectEntityProps<T extends { id: string }> {
   open: boolean;
@@ -19,7 +16,7 @@ interface SelectEntityProps<T extends { id: string }> {
   enablePagination?: boolean;
   pageSize?: number;
   pageSizeOptions?: number[];
-  onPaginationChange?: (pagination: PaginationState) => void;
+  onPageSizeChange?: (pageSize: number) => void;
   searchValue?: string;
   onSearch?: (value: string) => void;
   searchPlaceholder?: string;
@@ -49,7 +46,7 @@ export const SelectEntity = <T extends { id: string }>({
   enablePagination = true,
   pageSize = 10,
   pageSizeOptions,
-  onPaginationChange,
+  onPageSizeChange,
   searchValue = '',
   onSearch,
   searchPlaceholder = 'Search',
@@ -64,9 +61,8 @@ export const SelectEntity = <T extends { id: string }>({
   continueLabel = 'Continue',
   cancelLabel = 'Cancel',
 }: SelectEntityProps<T>) => {
-  const [rowSelection, setRowSelection] = useState<RowSelectionState>(
-    EMPTY_ROW_SELECTION
-  );
+  const [rowSelection, setRowSelection] =
+    useState<RowSelectionState>(EMPTY_ROW_SELECTION);
 
   const displayedRowSelection = selectedRowIds
     ? Object.fromEntries(selectedRowIds.map(rowId => [rowId, true]))
@@ -106,9 +102,7 @@ export const SelectEntity = <T extends { id: string }>({
   });
 
   const handleRowSelectionChange = (nextSelection: RowSelectionState) => {
-    const currentPageIds = new Set(
-      data.map(row => getRowId?.(row) ?? row.id)
-    );
+    const currentPageIds = new Set(data.map(row => getRowId?.(row) ?? row.id));
     const retainedIds = (selectedRowIds ?? []).filter(
       rowId => !currentPageIds.has(rowId)
     );
@@ -118,9 +112,7 @@ export const SelectEntity = <T extends { id: string }>({
 
     if (multiple) {
       setRowSelection(nextSelection);
-      onSelectedRowIdsChange?.(
-        [...new Set([...retainedIds, ...nextPageIds])]
-      );
+      onSelectedRowIdsChange?.([...new Set([...retainedIds, ...nextPageIds])]);
       return;
     }
 
@@ -132,7 +124,9 @@ export const SelectEntity = <T extends { id: string }>({
     const resolvedSelection = selectedRowId ? { [selectedRowId]: true } : {};
     setRowSelection(resolvedSelection);
     onSelectedRowIdsChange?.(
-      selectedRowId ? [...new Set([...retainedIds, selectedRowId])] : retainedIds
+      selectedRowId
+        ? [...new Set([...retainedIds, selectedRowId])]
+        : retainedIds
     );
   };
 
@@ -169,19 +163,19 @@ export const SelectEntity = <T extends { id: string }>({
       <div className="space-y-5">
         {selectedSummary}
         <Table
-        columns={columns}
-        data={data}
-        getRowId={getRowId}
-        loading={loading}
-        enableSorting={false}
-        enableFiltering={false}
-        enablePagination={enablePagination}
-        pageSize={pageSize}
-        pageSizeOptions={pageSizeOptions}
-        enableRowSelection={selectable}
-        rowSelection={displayedRowSelection}
-        onPaginationChange={onPaginationChange}
-        onRowSelectionChange={handleRowSelectionChange}
+          columns={columns}
+          data={data}
+          getRowId={getRowId}
+          loading={loading}
+          enableSorting={false}
+          enableFiltering={false}
+          enablePagination={enablePagination}
+          pageSize={pageSize}
+          pageSizeOptions={pageSizeOptions}
+          enableRowSelection={selectable}
+          rowSelection={displayedRowSelection}
+          onPageSizeChange={onPageSizeChange}
+          onRowSelectionChange={handleRowSelectionChange}
           onSearch={onSearch}
           searchValue={searchValue}
           searchPlaceholder={searchPlaceholder}

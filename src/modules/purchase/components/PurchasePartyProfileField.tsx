@@ -4,7 +4,10 @@ import { Button } from '@/components/ui';
 import { SelectPartyProfiles } from '@/modules/partyProfiles/components';
 import { HighRiskPartyProfileWarningModal } from './HighRiskPartyProfileWarningModal';
 import type { PartyProfileType } from '@/modules/partyProfiles/types';
-import type { IPartyProfileListQuery, IPartyProfile } from '@/modules/partyProfiles/types';
+import type {
+  IPartyProfileListQuery,
+  IPartyProfile,
+} from '@/modules/partyProfiles/types';
 import type { IPurchaseFormValues } from '../types/purchaseTypes';
 import type { PurchasePageType } from '@/pages/purchase/[slug]/purchasePage.enum';
 import { isCorporateIndividualPurchasePage } from '@/pages/purchase/[slug]/purchasePage.enum';
@@ -33,7 +36,8 @@ export const PurchasePartyProfileField = ({
   const form = useFormContext<IPurchaseFormValues>();
   const [open, setOpen] = useState(false);
   const [warningModalOpen, setWarningModalOpen] = useState(false);
-  const [selectedProfileForWarning, setSelectedProfileForWarning] = useState<IPartyProfile | null>(null);
+  const [selectedProfileForWarning, setSelectedProfileForWarning] =
+    useState<IPartyProfile | null>(null);
 
   const partyProfileCode = form.watch('partyProfileCode');
   const partyProfileName = form.watch('partyProfileName');
@@ -80,9 +84,13 @@ export const PurchasePartyProfileField = ({
       transactionPartyProfileType
     ),
     activeOnly: true,
-  } satisfies Pick<IPartyProfileListQuery, 'sale' | 'purchase' | 'activeOnly' | 'isIndividual'>;
+  } satisfies Pick<
+    IPartyProfileListQuery,
+    'sale' | 'purchase' | 'activeOnly' | 'isIndividual'
+  >;
 
-  const isCombinedPartyProfilePage = isCorporateIndividualPurchasePage(purchasePageType);
+  const isCombinedPartyProfilePage =
+    isCorporateIndividualPurchasePage(purchasePageType);
 
   const proceedWithProfileSelection = (selectedProfile: IPartyProfile) => {
     form.setValue('partyProfileId', selectedProfile.id, {
@@ -159,11 +167,15 @@ export const PurchasePartyProfileField = ({
       shouldTouch: true,
       shouldValidate: false,
     });
-    form.setValue('partyProfileContactName', selectedProfile.contactName || '', {
-      shouldDirty: true,
-      shouldTouch: true,
-      shouldValidate: false,
-    });
+    form.setValue(
+      'partyProfileContactName',
+      selectedProfile.contactName || '',
+      {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: false,
+      }
+    );
     form.setValue('partyProfileApplyTax', selectedProfile.applyTax, {
       shouldDirty: true,
       shouldTouch: true,
@@ -202,7 +214,12 @@ export const PurchasePartyProfileField = ({
             type="button"
             variant={passengerInfoCaptured ? 'secondary' : 'default'}
             className="w-full shadow-sm transition-transform duration-200 hover:-translate-y-0.5"
-            disabled={disabled || !partyProfileId || !entityType || (isCombinedPartyProfilePage && !transactionPartyProfileType)}
+            disabled={
+              disabled ||
+              !partyProfileId ||
+              !entityType ||
+              (isCombinedPartyProfilePage && !transactionPartyProfileType)
+            }
             onClick={() => {
               onAddPassengerInfo?.();
             }}
@@ -213,7 +230,9 @@ export const PurchasePartyProfileField = ({
 
         {passengerInfoCaptured ? (
           <div className="rounded-sm border border-border-primary bg-surface-secondary px-4 py-3 text-sm text-text-secondary">
-            <div className="font-medium text-text-primary">Passenger Captured</div>
+            <div className="font-medium text-text-primary">
+              Passenger Captured
+            </div>
             <div className="mt-1">
               {entityType === PassengerEntityTypeEnum.CORPORATE
                 ? 'Corporate passenger'
@@ -224,9 +243,7 @@ export const PurchasePartyProfileField = ({
                 ? `PAN: ${panNumber || '-'}`
                 : `Passport: ${passportNumber || '-'}`}
             </div>
-            {panHolderName ? (
-              <div className="mt-1">{panHolderName}</div>
-            ) : null}
+            {panHolderName ? <div className="mt-1">{panHolderName}</div> : null}
           </div>
         ) : null}
       </div>

@@ -2,16 +2,18 @@ import { useNavigate } from 'react-router-dom';
 import { PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button1';
 import { Table, type TableColumnDef } from '@/components/ui/table';
+import type { PaginationControlsProps } from '@/components/ui';
 import { formatCountryGroupSellLimit, formatNullableInteger } from '../utils';
 import type { ICountryGroup } from '../types';
 
-interface CountryGroupTableProps {
+interface CountryGroupTableProps extends PaginationControlsProps {
   groups: ICountryGroup[];
   onDelete?: (id: string) => void | Promise<void>;
   canModify?: boolean;
   canDelete?: boolean;
   isDeleting?: boolean;
   loading?: boolean;
+  isFetching?: boolean;
   onSearch?: (value: string) => void;
   searchValue?: string;
   searchPlaceholder?: string;
@@ -33,9 +35,16 @@ export const CountryGroupTable = ({
   canDelete = false,
   isDeleting = false,
   loading = false,
+  isFetching = false,
   onSearch,
   searchValue = '',
   searchPlaceholder = 'Search',
+  page,
+  pageSize,
+  total,
+  totalPages,
+  onPageChange,
+  onPageSizeChange,
 }: CountryGroupTableProps) => {
   const navigate = useNavigate();
 
@@ -58,8 +67,10 @@ export const CountryGroupTable = ({
       id: 'actions',
       header: 'Actions',
       meta: {
-        headerClassName: 'sticky right-0 z-20 border-l border-border-primary bg-surface-secondary',
-        cellClassName: 'sticky right-0 z-10 border-l border-border-primary bg-surface-primary',
+        headerClassName:
+          'sticky right-0 z-20 border-l border-border-primary bg-surface-secondary',
+        cellClassName:
+          'sticky right-0 z-10 border-l border-border-primary bg-surface-primary',
       },
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
@@ -88,7 +99,11 @@ export const CountryGroupTable = ({
               disabled={isDeleting}
               onClick={async event => {
                 event.stopPropagation();
-                if (window.confirm('Are you sure you want to delete this country group?')) {
+                if (
+                  window.confirm(
+                    'Are you sure you want to delete this country group?'
+                  )
+                ) {
                   await onDelete(row.original.id);
                 }
               }}
@@ -107,10 +122,18 @@ export const CountryGroupTable = ({
       columns={columns}
       data={rows}
       enableFiltering={false}
-      enablePagination={false}
+      enablePagination
+      manualPagination
       enableColumnVisibility={false}
       enableRowSelection={false}
       loading={loading}
+      isFetching={isFetching}
+      page={page}
+      pageSize={pageSize}
+      total={total}
+      totalPages={totalPages}
+      onPageChange={onPageChange}
+      onPageSizeChange={onPageSizeChange}
       onSearch={onSearch}
       searchValue={searchValue}
       searchPlaceholder={searchPlaceholder}

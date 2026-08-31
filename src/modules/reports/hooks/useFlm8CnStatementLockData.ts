@@ -16,11 +16,11 @@ interface UseFlm8CnStatementLockDataArgs {
 
 const resolveInitialBranchIds = (
   appliedBranchIds: string[],
-  branchOptions: IReportSelectOption[],
+  branchOptions: IReportSelectOption[]
 ) => {
   if (appliedBranchIds.length > 0) {
     return appliedBranchIds.filter(id =>
-      branchOptions.some(option => option.id === id),
+      branchOptions.some(option => option.id === id)
     );
   }
 
@@ -40,7 +40,8 @@ export const useFlm8CnStatementLockData = ({
   const reportStartDate = appliedFilters?.dateRange.startDate ?? '';
 
   const allSelected =
-    branchOptions.length > 0 && selectedBranchIds.length === branchOptions.length;
+    branchOptions.length > 0 &&
+    selectedBranchIds.length === branchOptions.length;
 
   const openLockModal = useCallback(() => {
     if (!appliedFilters?.dateRange.endDate) {
@@ -49,7 +50,7 @@ export const useFlm8CnStatementLockData = ({
     }
 
     setSelectedBranchIds(
-      resolveInitialBranchIds(appliedFilters.branchIds, branchOptions),
+      resolveInitialBranchIds(appliedFilters.branchIds, branchOptions)
     );
     setIsOpen(true);
   }, [appliedFilters, branchOptions]);
@@ -69,9 +70,11 @@ export const useFlm8CnStatementLockData = ({
 
   const toggleAllBranches = useCallback(
     (checked: boolean) => {
-      setSelectedBranchIds(checked ? branchOptions.map(option => option.id) : []);
+      setSelectedBranchIds(
+        checked ? branchOptions.map(option => option.id) : []
+      );
     },
-    [branchOptions],
+    [branchOptions]
   );
 
   const mutation = useMutation({
@@ -98,10 +101,10 @@ export const useFlm8CnStatementLockData = ({
     },
     onSuccess: async result => {
       const changed = result.results.filter(
-        row => row.status === 'created' || row.status === 'advanced',
+        row => row.status === 'created' || row.status === 'advanced'
       ).length;
       const skipped = result.results.filter(
-        row => row.status === 'skipped' || row.status === 'unchanged',
+        row => row.status === 'skipped' || row.status === 'unchanged'
       ).length;
 
       if (changed > 0 && skipped === 0) {
@@ -152,7 +155,7 @@ export const useFlm8CnStatementLockData = ({
       selectedBranchIds,
       toggleAllBranches,
       toggleBranch,
-    ],
+    ]
   );
 };
 

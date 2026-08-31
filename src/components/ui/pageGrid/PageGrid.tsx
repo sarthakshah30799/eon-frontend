@@ -11,7 +11,11 @@ interface PageGridProps {
   title?: string;
   pages: IPageItem[];
   isLoading?: boolean;
-  onUpdateStatus: (pageNos: number[], status: 'VOID', remarks?: string) => Promise<void>;
+  onUpdateStatus: (
+    pageNos: number[],
+    status: 'VOID',
+    remarks?: string
+  ) => Promise<void>;
   onReturnPages: (pageNos: number[]) => Promise<void>;
 }
 
@@ -152,11 +156,7 @@ export const PageGrid = ({
               >
                 Void Selected ({selectedPages.length})
               </Button>
-              <Button
-                variant="secondary"
-                onClick={handleBatchReturn}
-                size="sm"
-              >
+              <Button variant="secondary" onClick={handleBatchReturn} size="sm">
                 Return Selected ({selectedPages.length})
               </Button>
             </>
@@ -167,20 +167,32 @@ export const PageGrid = ({
       {/* Stats Board */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
         <div className="p-3 bg-slate-50 border border-slate-100 rounded-md text-center">
-          <span className="block text-xs font-semibold text-slate-500">Total</span>
+          <span className="block text-xs font-semibold text-slate-500">
+            Total
+          </span>
           <span className="text-xl font-bold text-slate-800">{totalCount}</span>
         </div>
         <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-md text-center">
-          <span className="block text-xs font-semibold text-emerald-600">Used</span>
-          <span className="text-xl font-bold text-emerald-800">{usedCount}</span>
+          <span className="block text-xs font-semibold text-emerald-600">
+            Used
+          </span>
+          <span className="text-xl font-bold text-emerald-800">
+            {usedCount}
+          </span>
         </div>
         <div className="p-3 bg-rose-50 border border-rose-100 rounded-md text-center">
-          <span className="block text-xs font-semibold text-rose-600">Void</span>
+          <span className="block text-xs font-semibold text-rose-600">
+            Void
+          </span>
           <span className="text-xl font-bold text-rose-800">{voidCount}</span>
         </div>
         <div className="p-3 bg-slate-50 border border-slate-100 rounded-md text-center">
-          <span className="block text-xs font-semibold text-slate-500">Allocated</span>
-          <span className="text-xl font-bold text-slate-800">{allocatedCount}</span>
+          <span className="block text-xs font-semibold text-slate-500">
+            Allocated
+          </span>
+          <span className="text-xl font-bold text-slate-800">
+            {allocatedCount}
+          </span>
         </div>
       </div>
 
@@ -206,9 +218,13 @@ export const PageGrid = ({
                 className={`py-2 px-1 text-xs font-semibold text-center border rounded-md transition-all cursor-pointer select-none ${getStatusColor(
                   page.isVoided
                 )} ${
-                  isSelected ? 'ring-2 ring-blue-500 scale-95 border-blue-600' : ''
+                  isSelected
+                    ? 'ring-2 ring-blue-500 scale-95 border-blue-600'
+                    : ''
                 } ${
-                  isMultiSelect && !isSelectable ? 'opacity-40 cursor-not-allowed' : ''
+                  isMultiSelect && !isSelectable
+                    ? 'opacity-40 cursor-not-allowed'
+                    : ''
                 }`}
               >
                 {page.pageNo}
@@ -221,13 +237,15 @@ export const PageGrid = ({
       {/* Action / Detail Modal */}
       <Modal
         open={modalState.open}
-        onOpenChange={(open) => !open && setModalState(prev => ({ ...prev, open: false }))}
+        onOpenChange={open =>
+          !open && setModalState(prev => ({ ...prev, open: false }))
+        }
         title={
           modalState.type === 'detail'
             ? `Page ${modalState.pages[0]} Details`
             : modalState.type === 'return'
-            ? 'Return Pages to Manager'
-            : 'Update Page Status'
+              ? 'Return Pages to Manager'
+              : 'Update Page Status'
         }
         size="md"
       >
@@ -235,25 +253,38 @@ export const PageGrid = ({
           {modalState.type === 'detail' && detailPage && (
             <div className="space-y-3">
               <div>
-                <span className="block font-semibold text-slate-500 text-xs">VOUCHER / LEAF NUMBER</span>
-                <span className="text-lg font-bold text-slate-800">{detailPage.pageNo}</span>
+                <span className="block font-semibold text-slate-500 text-xs">
+                  VOUCHER / LEAF NUMBER
+                </span>
+                <span className="text-lg font-bold text-slate-800">
+                  {detailPage.pageNo}
+                </span>
               </div>
               <div>
-                <span className="block font-semibold text-slate-500 text-xs">STATUS</span>
+                <span className="block font-semibold text-slate-500 text-xs">
+                  STATUS
+                </span>
                 <span className="inline-block px-2.5 py-0.5 mt-1 rounded text-xs font-semibold bg-slate-100 text-slate-800">
                   {detailPage.isVoided ? 'VOIDED' : 'ALLOCATED'}
                 </span>
               </div>
               {detailPage.remarks && (
                 <div>
-                  <span className="block font-semibold text-slate-500 text-xs">REMARKS</span>
+                  <span className="block font-semibold text-slate-500 text-xs">
+                    REMARKS
+                  </span>
                   <span className="block mt-1 text-slate-800 p-2.5 bg-slate-50 rounded border border-slate-100">
                     {detailPage.remarks}
                   </span>
                 </div>
               )}
               <div className="pt-4 flex justify-end">
-                <Button variant="secondary" onClick={() => setModalState(prev => ({ ...prev, open: false }))}>
+                <Button
+                  variant="secondary"
+                  onClick={() =>
+                    setModalState(prev => ({ ...prev, open: false }))
+                  }
+                >
                   Close
                 </Button>
               </div>
@@ -263,7 +294,8 @@ export const PageGrid = ({
           {modalState.type === 'status' && (
             <div className="space-y-4">
               <p>
-                You are updating the status of **{modalState.pages.length}** page(s):
+                You are updating the status of **{modalState.pages.length}**
+                page(s):
                 <span className="block mt-1 p-2 bg-slate-50 border border-slate-100 rounded text-slate-700 font-semibold max-h-20 overflow-y-auto">
                   {modalState.pages.join(', ')}
                 </span>
@@ -285,14 +317,19 @@ export const PageGrid = ({
                 <textarea
                   rows={3}
                   value={remarks}
-                  onChange={(e) => setRemarks(e.target.value)}
+                  onChange={e => setRemarks(e.target.value)}
                   placeholder="Enter reason..."
                   className="w-full p-2.5 border border-slate-200 rounded focus:ring-1 focus:ring-blue-500 outline-none text-sm"
                 />
               </div>
 
               <div className="pt-4 flex justify-end gap-3">
-                <Button variant="secondary" onClick={() => setModalState(prev => ({ ...prev, open: false }))}>
+                <Button
+                  variant="secondary"
+                  onClick={() =>
+                    setModalState(prev => ({ ...prev, open: false }))
+                  }
+                >
                   Cancel
                 </Button>
                 <Button
@@ -309,20 +346,31 @@ export const PageGrid = ({
           {modalState.type === 'return' && (
             <div className="space-y-4">
               <p>
-                Are you sure you want to return **{modalState.pages.length}** unused page(s) to the manager?
+                Are you sure you want to return **{modalState.pages.length}**
+                unused page(s) to the manager?
                 <span className="block mt-1 p-2 bg-slate-50 border border-slate-100 rounded text-slate-700 font-semibold max-h-20 overflow-y-auto">
                   {modalState.pages.join(', ')}
                 </span>
               </p>
               <p className="text-xs text-rose-600 font-semibold">
-                Warning: This will delete these page records from the user's assignment so they can be re-allocated in the future.
+                Warning: This will delete these page records from the user's
+                assignment so they can be re-allocated in the future.
               </p>
 
               <div className="pt-4 flex justify-end gap-3">
-                <Button variant="secondary" onClick={() => setModalState(prev => ({ ...prev, open: false }))}>
+                <Button
+                  variant="secondary"
+                  onClick={() =>
+                    setModalState(prev => ({ ...prev, open: false }))
+                  }
+                >
                   Cancel
                 </Button>
-                <Button variant="destructive" onClick={handleSubmit} disabled={isSubmitting}>
+                <Button
+                  variant="destructive"
+                  onClick={handleSubmit}
+                  disabled={isSubmitting}
+                >
                   {isSubmitting ? 'Returning...' : 'Return Pages'}
                 </Button>
               </div>

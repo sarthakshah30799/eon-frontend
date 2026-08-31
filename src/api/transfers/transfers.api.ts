@@ -3,6 +3,12 @@ import type { ITransactionReferenceSnapshot } from '@/modules/transactions';
 import type { IBranchProfile } from '@/modules/branchProfile/types/branchProfileTypes';
 import type { ICounterProfile } from '@/modules/counterProfile/types/counterProfileTypes';
 import type { ICompanyProfile } from '@/modules/companyProfile/types';
+import type {
+  IOffsetPaginationParams,
+  IPaginatedResponse,
+} from '@/types/pagination';
+import { buildQueryString } from '@/utils';
+import { fetchAllMatching, normalizePaginatedResponse } from '@/utils/paginatedList';
 
 export type TransferType = 'COUNTER' | 'BRANCH';
 export type TransferStatus = 'HELD' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED';
@@ -94,54 +100,70 @@ export interface IRecordTransferPrintPayload {
   sendEmail?: boolean;
 }
 
-const buildQuery = (params?: Record<string, string | undefined>) => {
-  if (!params) return '';
-  const searchParams = new URLSearchParams();
-  Object.entries(params).forEach(([key, value]) => {
-    if (value) {
-      searchParams.set(key, value);
-    }
-  });
-  const query = searchParams.toString();
-  return query ? `?${query}` : '';
-};
+export interface ITransferListQuery extends IOffsetPaginationParams {
+  transferType?: TransferType;
+  status?: TransferStatus;
+  search?: string;
+}
 
 export const transfersApi = {
-  listTransfers: async (params?: {
-    transferType?: TransferType;
-    status?: TransferStatus;
-    search?: string;
-  }) => {
-    const res = await apiClient.get<ICurrencyTransfer[]>(`/transfers${buildQuery(params)}`);
+  listTransfers: async (
+    params?: ITransferListQuery
+  ): Promise<IPaginatedResponse<ICurrencyTransfer>> => {
+    const res = await apiClient.get<IPaginatedResponse<ICurrencyTransfer>>(
+      `/transfers${buildQueryString(params)}`
+    );
     if (res.error) throw new Error(res.error);
-    return res.data ?? [];
+    return normalizePaginatedResponse(res.data, params?.limit, params?.offset);
   },
+
+  listAllTransfers: async (
+    params?: Omit<ITransferListQuery, 'limit' | 'offset'>
+  ): Promise<ICurrencyTransfer[]> =>
+    fetchAllMatching(pagination =>
+      transfersApi.listTransfers({ ...params, ...pagination })
+    ),
   getTransferById: async (id: string) => {
     const res = await apiClient.get<ICurrencyTransfer>(`/transfers/${id}`);
     if (res.error) throw new Error(res.error);
     if (!res.data) throw new Error('Failed to load transfer');
     return res.data;
   },
-  createCounterTransfer: async (payload: Omit<ICreateTransferPayload, 'transferType'>) => {
-    const res = await apiClient.post<ICurrencyTransfer>('/transfers/counter', payload);
+  createCounterTransfer: async (
+    payload: Omit<ICreateTransferPayload, 'transferType'>
+  ) => {
+    const res = await apiClient.post<ICurrencyTransfer>(
+      '/transfers/counter',
+      payload
+    );
     if (res.error) throw new Error(res.error);
     if (!res.data) throw new Error('Failed to create transfer');
     return res.data;
   },
-  createBranchTransfer: async (payload: Omit<ICreateTransferPayload, 'transferType'>) => {
-    const res = await apiClient.post<ICurrencyTransfer>('/transfers/branch', payload);
+  createBranchTransfer: async (
+    payload: Omit<ICreateTransferPayload, 'transferType'>
+  ) => {
+    const res = await apiClient.post<ICurrencyTransfer>(
+      '/transfers/branch',
+      payload
+    );
     if (res.error) throw new Error(res.error);
     if (!res.data) throw new Error('Failed to create transfer');
     return res.data;
   },
   acceptTransfer: async (id: string) => {
-    const res = await apiClient.post<ICurrencyTransfer>(`/transfers/${id}/accept`);
+    const res = await apiClient.post<ICurrencyTransfer>(
+      `/transfers/${id}/accept`
+    );
     if (res.error) throw new Error(res.error);
     if (!res.data) throw new Error('Failed to accept transfer');
     return res.data;
   },
   rejectTransfer: async (id: string, remarks?: string | null) => {
-    const res = await apiClient.post<ICurrencyTransfer>(`/transfers/${id}/reject`, { remarks: remarks ?? null });
+    const res = await apiClient.post<ICurrencyTransfer>(
+      `/transfers/${id}/reject`,
+      { remarks: remarks ?? null }
+    );
     if (res.error) throw new Error(res.error);
     if (!res.data) throw new Error('Failed to reject transfer');
     return res.data;
@@ -149,11 +171,16 @@ export const transfersApi = {
   recordPrint: async (
     id: string,
     payload: IRecordTransferPrintPayload
-  ): Promise<{ message: string; copyType: ITransferPrintCopyType; printCount: number }> => {
-    const res = await apiClient.post<{ message: string; copyType: ITransferPrintCopyType; printCount: number }>(
-      `/transfers/${id}/print`,
-      payload
-    );
+  ): Promise<{
+    message: string;
+    copyType: ITransferPrintCopyType;
+    printCount: number;
+  }> => {
+    const res = await apiClient.post<{
+      message: string;
+      copyType: ITransferPrintCopyType;
+      printCount: number;
+    }>(`/transfers/${id}/print`, payload);
     if (res.error) throw new Error(res.error);
     if (!res.data) throw new Error('Failed to record transfer print');
     return res.data;

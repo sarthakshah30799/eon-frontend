@@ -8,7 +8,10 @@ import {
 import { createEmptyStateProfileFormValues } from '@/modules/stateProfile/utils';
 import type { ICreateStateProfile } from '@/modules/stateProfile/types';
 import { useStateDropdown } from './hooks';
-import type { StateDropdownOption, StateDropdownProps } from './types/stateDropdown.types';
+import type {
+  StateDropdownOption,
+  StateDropdownProps,
+} from './types/stateDropdown.types';
 
 export const StateDropdown = ({
   value,
@@ -40,22 +43,19 @@ export const StateDropdown = ({
   const { submitStateProfile, isPending: isCreatingState } =
     useCreateStateProfile();
 
-  const mergedDefaultOptions = useMemo<StateDropdownOption[]>(
-    () => {
-      const map = new Map<string, StateDropdownOption>();
+  const mergedDefaultOptions = useMemo<StateDropdownOption[]>(() => {
+    const map = new Map<string, StateDropdownOption>();
 
-      defaultOptions.forEach(option => {
-        map.set(option.value, option);
-      });
+    defaultOptions.forEach(option => {
+      map.set(option.value, option);
+    });
 
-      createdOptions.forEach(option => {
-        map.set(option.value, option);
-      });
+    createdOptions.forEach(option => {
+      map.set(option.value, option);
+    });
 
-      return Array.from(map.values());
-    },
-    [createdOptions, defaultOptions]
-  );
+    return Array.from(map.values());
+  }, [createdOptions, defaultOptions]);
 
   useEffect(() => {
     let isActive = true;
@@ -148,6 +148,7 @@ export const StateDropdown = ({
         className={className}
         loadOptions={loadOptions}
         defaultOptions={mergedDefaultOptions}
+        pagination
         isLoading={
           isLoadingOptions || isFetchingOptions || isResolvingSelectedOption
         }

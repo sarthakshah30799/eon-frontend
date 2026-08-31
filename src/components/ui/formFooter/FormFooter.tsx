@@ -19,7 +19,7 @@ interface FormFooterProps {
 export const FormFooter = ({
   formId,
   submitLabel,
-  backLabel="Back",
+  backLabel = 'Back',
   onBackClick,
   onCancel,
   isSubmitting,

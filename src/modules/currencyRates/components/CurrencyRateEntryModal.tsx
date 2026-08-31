@@ -25,8 +25,10 @@ interface CurrencyRateEntryModalProps {
   onClose: () => void;
 }
 
-const labelClass = 'mb-1 block text-xs font-semibold uppercase tracking-wider text-text-secondary';
-const inputClass = 'w-full rounded-sm border border-border-primary bg-surface-primary px-3 py-2 text-sm text-text-primary outline-none transition focus:border-primary-500';
+const labelClass =
+  'mb-1 block text-xs font-semibold uppercase tracking-wider text-text-secondary';
+const inputClass =
+  'w-full rounded-sm border border-border-primary bg-surface-primary px-3 py-2 text-sm text-text-primary outline-none transition focus:border-primary-500';
 const rateStep = `0.${'0'.repeat(CURRENCY_RATE_DECIMALS - 1)}1`;
 const providerOptions = [
   { value: 'TICKER', label: 'TICKER' },
@@ -51,20 +53,28 @@ export const CurrencyRateEntryModal = ({
     value: currency.id,
     label: `${currency.currencyCode} - ${currency.currencyName}`,
   }));
-  const loadCurrencyOptions = async (inputValue: string): Promise<AsyncSelectResponse> => ({
+  const loadCurrencyOptions = async (
+    inputValue: string
+  ): Promise<AsyncSelectResponse> => ({
     options: inputValue
-      ? currencyOptions.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+      ? currencyOptions.filter(opt =>
+          opt.label.toLowerCase().includes(inputValue.toLowerCase())
+        )
       : currencyOptions,
     hasMore: false,
   });
-  const loadProviderOptions = async (inputValue: string): Promise<AsyncSelectResponse> => {
+  const loadProviderOptions = async (
+    inputValue: string
+  ): Promise<AsyncSelectResponse> => {
     const opts = providerOptions.map(option => ({
       value: option.value,
       label: option.label,
     }));
     return {
       options: inputValue
-        ? opts.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+        ? opts.filter(opt =>
+            opt.label.toLowerCase().includes(inputValue.toLowerCase())
+          )
         : opts,
       hasMore: false,
     };
@@ -105,8 +115,9 @@ export const CurrencyRateEntryModal = ({
             <label className={labelClass}>Currency</label>
             <AsyncSelect
               value={
-                currencyOptions.find(option => option.value === form.currencyId) ??
-                null
+                currencyOptions.find(
+                  option => option.value === form.currencyId
+                ) ?? null
               }
               onChange={option => {
                 const nextOption = Array.isArray(option) ? option[0] : option;
@@ -125,8 +136,9 @@ export const CurrencyRateEntryModal = ({
             <label className={labelClass}>Provider</label>
             <AsyncSelect
               value={
-                providerOptions.find(option => option.value === form.provider) ??
-                null
+                providerOptions.find(
+                  option => option.value === form.provider
+                ) ?? null
               }
               onChange={option => {
                 const nextOption = Array.isArray(option) ? option[0] : option;
@@ -153,7 +165,12 @@ export const CurrencyRateEntryModal = ({
                   maxDecimalPlaces={CURRENCY_RATE_DECIMALS}
                   value={form.baseBuyRate}
                   disabled={isDetailView}
-                  onChange={event => setForm(next => ({ ...next, baseBuyRate: event.target.value }))}
+                  onChange={event =>
+                    setForm(next => ({
+                      ...next,
+                      baseBuyRate: event.target.value,
+                    }))
+                  }
                   className={inputClass}
                 />
               </div>
@@ -165,7 +182,12 @@ export const CurrencyRateEntryModal = ({
                   maxDecimalPlaces={CURRENCY_RATE_DECIMALS}
                   value={form.baseSaleRate}
                   disabled={isDetailView}
-                  onChange={event => setForm(next => ({ ...next, baseSaleRate: event.target.value }))}
+                  onChange={event =>
+                    setForm(next => ({
+                      ...next,
+                      baseSaleRate: event.target.value,
+                    }))
+                  }
                   className={inputClass}
                 />
               </div>
@@ -181,7 +203,9 @@ export const CurrencyRateEntryModal = ({
                 maxDecimalPlaces={CURRENCY_RATE_DECIMALS}
                 value={form.baseRate}
                 disabled={isDetailView}
-                onChange={event => setForm(next => ({ ...next, baseRate: event.target.value }))}
+                onChange={event =>
+                  setForm(next => ({ ...next, baseRate: event.target.value }))
+                }
                 className={inputClass}
               />
             </div>
@@ -192,7 +216,9 @@ export const CurrencyRateEntryModal = ({
             <textarea
               value={form.notes}
               disabled={isDetailView}
-              onChange={event => setForm(next => ({ ...next, notes: event.target.value }))}
+              onChange={event =>
+                setForm(next => ({ ...next, notes: event.target.value }))
+              }
               className={inputClass}
               rows={2}
             />
@@ -207,11 +233,20 @@ export const CurrencyRateEntryModal = ({
 
         <div className="flex gap-3">
           {isDetailView ? null : (
-            <Button type="button" onClick={() => void onSubmit()} disabled={isSubmitting}>
+            <Button
+              type="button"
+              onClick={() => void onSubmit()}
+              disabled={isSubmitting}
+            >
               {isSubmitting ? 'Saving...' : 'Save Rate'}
             </Button>
           )}
-          <Button type="button" variant="ghost" onClick={onClose} disabled={isSubmitting}>
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={onClose}
+            disabled={isSubmitting}
+          >
             {isDetailView ? 'Close' : 'Cancel'}
           </Button>
         </div>

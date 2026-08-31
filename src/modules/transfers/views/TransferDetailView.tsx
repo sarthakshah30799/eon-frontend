@@ -3,7 +3,12 @@ import { Button } from '@/components/ui';
 import { Loader } from '@/components/ui/loader';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/lib/AuthContext';
-import { useAcceptTransfer, useGetTransfer, useRecordTransferPrint, useRejectTransfer } from '../hooks';
+import {
+  useAcceptTransfer,
+  useGetTransfer,
+  useRecordTransferPrint,
+  useRejectTransfer,
+} from '../hooks';
 import {
   buildTransferPrintHtml,
   getTransferPrintCopyLabel,
@@ -22,8 +27,16 @@ import {
 
 const buildReferenceOption = (
   id: string,
-  relation?: { code?: string | number | null; name?: string | null; counterNo?: string | number | null } | null,
-  snapshot?: { code?: string | null; name?: string | null; label?: string | null } | null,
+  relation?: {
+    code?: string | number | null;
+    name?: string | null;
+    counterNo?: string | number | null;
+  } | null,
+  snapshot?: {
+    code?: string | null;
+    name?: string | null;
+    label?: string | null;
+  } | null
 ) => ({
   value: id,
   label:
@@ -32,8 +45,11 @@ const buildReferenceOption = (
       relation?.counterNo ?? relation?.code ?? snapshot?.code,
       relation?.name ?? snapshot?.name,
     ]
-      .filter(value => value !== null && value !== undefined && String(value).trim())
-      .join(' - ') || id),
+      .filter(
+        value => value !== null && value !== undefined && String(value).trim()
+      )
+      .join(' - ') ||
+      id),
 });
 
 export const TransferDetailView = () => {
@@ -79,9 +95,14 @@ export const TransferDetailView = () => {
       });
 
       openPrintWindow(html, TRANSFER_PRINT_TEXT.popupBlocked);
-      toast.success(TRANSFER_PRINT_TEXT.printed(getTransferPrintCopyLabel(nextCopyType)));
+      toast.success(
+        TRANSFER_PRINT_TEXT.printed(getTransferPrintCopyLabel(nextCopyType))
+      );
     } catch (printError) {
-      const message = printError instanceof Error ? printError.message : TRANSFER_PRINT_TEXT.printFailed;
+      const message =
+        printError instanceof Error
+          ? printError.message
+          : TRANSFER_PRINT_TEXT.printFailed;
       toast.error(message);
     }
   };
@@ -95,11 +116,17 @@ export const TransferDetailView = () => {
   }
 
   if (error instanceof Error) {
-    return <div className="rounded border border-red-300 bg-red-50 p-4 text-sm text-red-700">{error.message}</div>;
+    return (
+      <div className="rounded border border-red-300 bg-red-50 p-4 text-sm text-red-700">
+        {error.message}
+      </div>
+    );
   }
 
   if (!data) {
-    return <div className="text-sm text-muted-foreground">Transfer not found.</div>;
+    return (
+      <div className="text-sm text-muted-foreground">Transfer not found.</div>
+    );
   }
 
   return (
@@ -110,10 +137,26 @@ export const TransferDetailView = () => {
       showSubmit={false}
       onCancel={() => window.history.back()}
       readOnlyOptions={{
-        sourceBranch: buildReferenceOption(data.sourceBranchId, data.sourceBranch, data.sourceBranchSnapshot),
-        sourceCounter: buildReferenceOption(data.sourceCounterId, data.sourceCounter, data.sourceCounterSnapshot),
-        destinationBranch: buildReferenceOption(data.destinationBranchId, data.destinationBranch, data.destinationBranchSnapshot),
-        destinationCounter: buildReferenceOption(data.destinationCounterId, data.destinationCounter, data.destinationCounterSnapshot),
+        sourceBranch: buildReferenceOption(
+          data.sourceBranchId,
+          data.sourceBranch,
+          data.sourceBranchSnapshot
+        ),
+        sourceCounter: buildReferenceOption(
+          data.sourceCounterId,
+          data.sourceCounter,
+          data.sourceCounterSnapshot
+        ),
+        destinationBranch: buildReferenceOption(
+          data.destinationBranchId,
+          data.destinationBranch,
+          data.destinationBranchSnapshot
+        ),
+        destinationCounter: buildReferenceOption(
+          data.destinationCounterId,
+          data.destinationCounter,
+          data.destinationCounterSnapshot
+        ),
       }}
       footerActions={
         <>
@@ -129,7 +172,9 @@ export const TransferDetailView = () => {
           <Button
             type="button"
             variant="outline"
-            disabled={data.status !== 'ACCEPTED' || recordTransferPrint.isPending}
+            disabled={
+              data.status !== 'ACCEPTED' || recordTransferPrint.isPending
+            }
             onClick={() => void handlePrint()}
           >
             {printButtonLabel}

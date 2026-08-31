@@ -18,7 +18,9 @@ const isStaticCategoryCode = (code?: CategoryOptionCode | string | null) => {
   return STATIC_CATEGORY_CODES.has(code.trim() as CategoryOptionCode);
 };
 
-const toAsyncSelectOption = (option: IStaticCategoryOption): AsyncSelectOption => ({
+const toAsyncSelectOption = (
+  option: IStaticCategoryOption
+): AsyncSelectOption => ({
   value: option.value,
   label: option.label,
 });

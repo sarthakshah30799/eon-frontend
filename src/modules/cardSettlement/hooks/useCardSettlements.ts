@@ -8,11 +8,20 @@ import {
 
 const key = ['card-stock', 'settlement-documents'] as const;
 
-export const useCardSettlements = (filters: CardStockSettlementDocumentFilters) =>
-  useQuery({ queryKey: [...key, filters], queryFn: () => cardSettlementApi.list(filters) });
+export const useCardSettlements = (
+  filters: Omit<CardStockSettlementDocumentFilters, 'limit' | 'offset'>
+) =>
+  useQuery({
+    queryKey: [...key, 'all', filters],
+    queryFn: () => cardSettlementApi.listAll(filters),
+  });
 
 export const useCardSettlement = (id: string) =>
-  useQuery({ queryKey: [...key, id], queryFn: () => cardSettlementApi.get(id), enabled: Boolean(id) });
+  useQuery({
+    queryKey: [...key, id],
+    queryFn: () => cardSettlementApi.get(id),
+    enabled: Boolean(id),
+  });
 
 export const useUnsettledCardSettlements = (
   filters: {
@@ -30,7 +39,9 @@ export const useUnsettledCardSettlements = (
     enabled,
   });
 
-const useSettlementMutation = <T>(mutationFn: (value: T) => Promise<unknown>) => {
+const useSettlementMutation = <T>(
+  mutationFn: (value: T) => Promise<unknown>
+) => {
   const client = useQueryClient();
   return useMutation({
     mutationFn,

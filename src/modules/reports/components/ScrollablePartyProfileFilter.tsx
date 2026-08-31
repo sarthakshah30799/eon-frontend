@@ -65,7 +65,9 @@ export const ScrollablePartyProfileFilter = ({
         <div className="text-[10px] font-semibold uppercase tracking-wider text-text-tertiary">
           Party Profiles
         </div>
-        <span className="text-[10px] text-text-tertiary">{selectedCount} selected</span>
+        <span className="text-[10px] text-text-tertiary">
+          {selectedCount} selected
+        </span>
       </div>
 
       <div className="flex items-center gap-2">
@@ -127,7 +129,11 @@ export const ScrollablePartyProfileFilter = ({
       </div>
 
       <div className="text-[10px] text-text-tertiary">
-        {isFetchingNextPage ? 'Loading more profiles...' : hasMore ? 'Scroll to load more.' : 'All matching profiles loaded.'}
+        {isFetchingNextPage
+          ? 'Loading more profiles...'
+          : hasMore
+            ? 'Scroll to load more.'
+            : 'All matching profiles loaded.'}
       </div>
     </div>
   );

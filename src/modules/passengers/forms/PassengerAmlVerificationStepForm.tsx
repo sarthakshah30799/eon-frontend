@@ -1,4 +1,7 @@
-import type { PassengerEntityType, PassengerAmlPartyProfile } from '../types/passengerTypes';
+import type {
+  PassengerEntityType,
+  PassengerAmlPartyProfile,
+} from '../types/passengerTypes';
 import { PassengerVerificationFields } from '../components/PassengerVerificationFields';
 
 interface PassengerAmlVerificationStepFormProps {

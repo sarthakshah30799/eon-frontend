@@ -1,12 +1,10 @@
 import type { AsyncSelectResponse } from '@/components/ui';
-import type {
-  IUserProfileOption,
-} from '../types';
-
+import type { IUserProfileOption } from '../types';
 
 export const USER_PROFILE_TEXTS = {
   LIST_TITLE: 'User Profile',
-  LIST_SUBTITLE: 'Manage users, edit details, and remove records from the list.',
+  LIST_SUBTITLE:
+    'Manage users, edit details, and remove records from the list.',
   CREATE_USER: 'Create User',
   SAVE_CHANGES: 'Save Changes',
   FORM_TITLE: 'User Details',

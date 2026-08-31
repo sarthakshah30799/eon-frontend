@@ -3,11 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { yupResolver } from '@hookform/resolvers/yup';
 import type { Resolver } from 'react-hook-form';
 import { CardSection } from '@/components/ui';
-import {
-  Form,
-  FormFieldCheckbox,
-  FormFieldInput,
-} from '@/components/forms';
+import { Form, FormFieldCheckbox, FormFieldInput } from '@/components/forms';
 import { UserProfileAssignmentsSection } from '../components/UserProfileAssignmentsSection';
 import type { ICreateUserProfile } from '../types';
 import { userProfileSchema } from '../schema';
@@ -36,7 +32,7 @@ const UserProfileFormFields = ({
         return false;
       }
 
-      const users = await userProfileApi.getUserProfiles();
+      const users = await userProfileApi.getAllUserProfiles();
       return users.some(
         user =>
           normalizeCodeValue(user.code) === normalizedCode &&

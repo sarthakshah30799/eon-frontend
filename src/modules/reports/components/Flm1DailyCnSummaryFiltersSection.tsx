@@ -20,8 +20,8 @@ export const Flm1DailyCnSummaryFiltersSection = ({
   filters,
 }: Flm1DailyCnSummaryFiltersSectionProps) => {
   const currentProductLabel =
-    filters.productOptions.find(option => option.id === filters.productId)?.label ??
-    FLM1_DAILY_CN_SUMMARY_TEXT.selectProduct;
+    filters.productOptions.find(option => option.id === filters.productId)
+      ?.label ?? FLM1_DAILY_CN_SUMMARY_TEXT.selectProduct;
 
   return (
     <section className="space-y-3 rounded-xl border border-border-primary bg-white p-3 shadow-sm">
@@ -42,7 +42,7 @@ export const Flm1DailyCnSummaryFiltersSection = ({
           emptyMessage="No branch options available."
           helperText={buildSelectionDescription(
             filters.branchIds.length,
-            filters.branchOptions.length,
+            filters.branchOptions.length
           )}
         />
 

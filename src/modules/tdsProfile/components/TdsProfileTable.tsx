@@ -3,14 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import { PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button1';
 import { Table, type TableColumnDef } from '@/components/ui/table';
+import type { PaginationControlsProps } from '@/components/ui';
 import { formatDateTime } from '@/utils';
 import type { ITdsProfile } from '../types';
 
-interface TdsProfileTableProps {
+interface TdsProfileTableProps extends PaginationControlsProps {
   tdsProfiles: ITdsProfile[];
   onDelete: (id: string) => void | Promise<void>;
   isDeleting?: boolean;
   loading?: boolean;
+  isFetching?: boolean;
   onSearch?: (value: string) => void;
   searchValue?: string;
   searchPlaceholder?: string;
@@ -28,15 +30,21 @@ interface TdsProfileTableRow {
   active: boolean;
 }
 
-
 export const TdsProfileTable = ({
   tdsProfiles,
   onDelete,
   isDeleting = false,
   loading = false,
+  isFetching = false,
   onSearch,
   searchValue = '',
   searchPlaceholder = 'Search',
+  page,
+  pageSize,
+  total,
+  totalPages,
+  onPageChange,
+  onPageSizeChange,
 }: TdsProfileTableProps) => {
   const navigate = useNavigate();
 
@@ -110,7 +118,11 @@ export const TdsProfileTable = ({
             disabled={isDeleting}
             onClick={async event => {
               event.stopPropagation();
-              if (window.confirm('Are you sure you want to delete this TDS profile?')) {
+              if (
+                window.confirm(
+                  'Are you sure you want to delete this TDS profile?'
+                )
+              ) {
                 await onDelete(row.original.id);
               }
             }}
@@ -128,10 +140,18 @@ export const TdsProfileTable = ({
       columns={columns}
       data={rows}
       enableFiltering={false}
-      enablePagination={false}
+      enablePagination
+      manualPagination
       enableRowSelection={false}
       enableColumnVisibility={false}
       loading={loading}
+      isFetching={isFetching}
+      page={page}
+      pageSize={pageSize}
+      total={total}
+      totalPages={totalPages}
+      onPageChange={onPageChange}
+      onPageSizeChange={onPageSizeChange}
       onSearch={onSearch}
       searchValue={searchValue}
       searchPlaceholder={searchPlaceholder}

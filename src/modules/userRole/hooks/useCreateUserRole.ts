@@ -23,4 +23,3 @@ export const useCreateUserRole = () => {
     submitUserRole: mutation.mutateAsync,
   };
 };
-

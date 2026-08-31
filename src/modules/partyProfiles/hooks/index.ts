@@ -46,11 +46,20 @@ export const useListPartyProfiles = (
   activeOnly = true
 ) => {
   return useQuery({
-    queryKey: ['party-profiles', normalizePartyProfileTypeKey(profileType), params, activeOnly],
-    queryFn: () => partyProfileApi.getPartyProfiles({
-      ...params,
-      activeOnly: params?.activeOnly ?? activeOnly,
-    }, profileType),
+    queryKey: [
+      'party-profiles',
+      normalizePartyProfileTypeKey(profileType),
+      params,
+      activeOnly,
+    ],
+    queryFn: () =>
+      partyProfileApi.getPartyProfiles(
+        {
+          ...params,
+          activeOnly: params?.activeOnly ?? activeOnly,
+        },
+        profileType
+      ),
     placeholderData: keepPreviousData,
     enabled,
   });
@@ -68,9 +77,7 @@ export const useGetPartyProfile = (
   });
 };
 
-export const useCreatePartyProfile = (
-  profileType?: PartyProfileType
-) => {
+export const useCreatePartyProfile = (profileType?: PartyProfileType) => {
   const queryClient = useQueryClient();
   const typeLabel = toPartyProfileDisplayLabel(profileType);
 
@@ -78,11 +85,15 @@ export const useCreatePartyProfile = (
     mutationFn: (data: ICreatePartyProfile) =>
       partyProfileApi.createPartyProfile(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['party-profiles', profileType] });
+      queryClient.invalidateQueries({
+        queryKey: ['party-profiles', profileType],
+      });
       toast.success(`${typeLabel} created successfully!`);
     },
     onError: (error: unknown) => {
-      toast.error(getErrorMessage(error, `Failed to create ${typeLabel.toLowerCase()}`));
+      toast.error(
+        getErrorMessage(error, `Failed to create ${typeLabel.toLowerCase()}`)
+      );
     },
   });
 
@@ -92,9 +103,7 @@ export const useCreatePartyProfile = (
   };
 };
 
-export const useUpdatePartyProfile = (
-  profileType?: PartyProfileType
-) => {
+export const useUpdatePartyProfile = (profileType?: PartyProfileType) => {
   const queryClient = useQueryClient();
   const typeLabel = toPartyProfileDisplayLabel(profileType);
 
@@ -106,7 +115,9 @@ export const useUpdatePartyProfile = (
         syncPartyProfileCache(queryClient, data);
       }
       void queryClient.invalidateQueries({ queryKey: ['party-profiles'] });
-      void queryClient.invalidateQueries({ queryKey: ['party-profile', profileType, variables.id] });
+      void queryClient.invalidateQueries({
+        queryKey: ['party-profile', profileType, variables.id],
+      });
       toast.success(
         data?.status === PartyProfileStatusEnum.PENDING
           ? `${typeLabel} submitted for review!`
@@ -114,7 +125,9 @@ export const useUpdatePartyProfile = (
       );
     },
     onError: (error: unknown) => {
-      toast.error(getErrorMessage(error, `Failed to update ${typeLabel.toLowerCase()}`));
+      toast.error(
+        getErrorMessage(error, `Failed to update ${typeLabel.toLowerCase()}`)
+      );
     },
   });
 
@@ -124,20 +137,22 @@ export const useUpdatePartyProfile = (
   };
 };
 
-export const useDeletePartyProfile = (
-  profileType?: PartyProfileType
-) => {
+export const useDeletePartyProfile = (profileType?: PartyProfileType) => {
   const queryClient = useQueryClient();
   const typeLabel = toPartyProfileDisplayLabel(profileType);
 
   const mutation = useMutation({
     mutationFn: (id: string) => partyProfileApi.deletePartyProfile(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['party-profiles', profileType] });
+      queryClient.invalidateQueries({
+        queryKey: ['party-profiles', profileType],
+      });
       toast.success(`${typeLabel} deleted successfully!`);
     },
     onError: (error: unknown) => {
-      toast.error(getErrorMessage(error, `Failed to delete ${typeLabel.toLowerCase()}`));
+      toast.error(
+        getErrorMessage(error, `Failed to delete ${typeLabel.toLowerCase()}`)
+      );
     },
   });
 
@@ -158,8 +173,13 @@ export const useReviewPartyProfile = () => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: IReviewPartyProfilePayload }) =>
-      partyProfileApi.reviewPartyProfile(id, data),
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: IReviewPartyProfilePayload;
+    }) => partyProfileApi.reviewPartyProfile(id, data),
     onMutate: async ({ id, data }) => {
       await queryClient.cancelQueries({ queryKey: ['party-profiles'] });
       await queryClient.cancelQueries({ queryKey: ['party-profile'] });
@@ -198,7 +218,9 @@ export const useReviewPartyProfile = () => {
       toast.error('Failed to update party profile status');
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['party-profiles', 'review-queue'] });
+      void queryClient.invalidateQueries({
+        queryKey: ['party-profiles', 'review-queue'],
+      });
       void queryClient.invalidateQueries({ queryKey: ['party-profiles'] });
     },
   });
@@ -245,7 +267,8 @@ export const useUploadAgentCommissionTemplate = (partyProfileId: string) => {
 export const useDownloadAgentCommissionTemplate = (partyProfileId: string) => {
   const mutation = useMutation({
     mutationFn: async () => {
-      const csv = await partyProfileApi.getAgentCommissionTemplate(partyProfileId);
+      const csv =
+        await partyProfileApi.getAgentCommissionTemplate(partyProfileId);
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -257,9 +280,7 @@ export const useDownloadAgentCommissionTemplate = (partyProfileId: string) => {
       URL.revokeObjectURL(url);
     },
     onError: (error: unknown) => {
-      toast.error(
-        getErrorMessage(error, 'Failed to download template')
-      );
+      toast.error(getErrorMessage(error, 'Failed to download template'));
     },
   });
 

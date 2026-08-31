@@ -10,7 +10,11 @@ import {
 } from '../hooks';
 import { PartyProfileForm } from '../forms/PartyProfileForm';
 import type { ICreatePartyProfile, IReviewPartyProfilePayload } from '../types';
-import { toPartyProfileApiType, toPartyProfileRouteType, PARTY_PROFILE_STATUS_TEXT } from '../constants';
+import {
+  toPartyProfileApiType,
+  toPartyProfileRouteType,
+  PARTY_PROFILE_STATUS_TEXT,
+} from '../constants';
 import { PartyProfileDocumentsActionButton } from '../components';
 import { NotFoundState } from '@/components/ui/not-found-state';
 import { AccessDeniedState } from '@/components/ui/access-denied-state';
@@ -221,7 +225,9 @@ export const PartyProfileEditView = () => {
   }
 
   if (error || !client) {
-    return <NotFoundState message={PARTY_PROFILE_STATUS_TEXT.detailsNotFound} />;
+    return (
+      <NotFoundState message={PARTY_PROFILE_STATUS_TEXT.detailsNotFound} />
+    );
   }
 
   const canEditPartyProfile =
@@ -236,7 +242,7 @@ export const PartyProfileEditView = () => {
           label="Upload Documents"
         />
       </div>
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
+      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
         <PartyProfileForm
           defaultValues={defaultValues}
           onSubmit={

@@ -16,10 +16,11 @@ import { expenseIncomeBookingSchema } from '../schema/expenseIncomeBookingSchema
 import type { ICreateExpenseIncomeBookingMaster } from '../types/expenseIncomeBookingTypes';
 import { accountProfileApi } from '@/api/accountProfile/accountProfile.api';
 import { normalizeCodeValue } from '@/utils';
+import { toPageQuery } from '@/utils/paginatedList';
 import { expenseIncomeBookingApi } from '@/api/expenseIncomeBooking/expenseIncomeBooking.api';
 
 const ACCOUNT_PROFILE_OPTION_PAGE_SIZE = 30;
- 
+
 interface ExpenseIncomeBookingFormProps {
   type: 'EXPENSE' | 'INCOME';
   defaultValues: ICreateExpenseIncomeBookingMaster;
@@ -29,7 +30,7 @@ interface ExpenseIncomeBookingFormProps {
   readOnly?: boolean;
   currentId?: string;
 }
- 
+
 const CodeField = ({
   isDisabled,
   currentId,
@@ -45,12 +46,12 @@ const CodeField = ({
       if (!normalizedCode) {
         return false;
       }
- 
-      const res = await expenseIncomeBookingApi.getBookingMasters({
+
+      const items = await expenseIncomeBookingApi.getAllBookingMasters({
         type,
       });
- 
-      return (res ?? []).some(
+
+      return items.some(
         item =>
           normalizeCodeValue(item.code) === normalizedCode &&
           item.id !== currentId
@@ -58,7 +59,7 @@ const CodeField = ({
     },
     [currentId, type]
   );
- 
+
   return (
     <FormFieldInput
       name="code"
@@ -74,13 +75,16 @@ const CodeField = ({
     />
   );
 };
- 
+
 const TdsFieldsSection = ({
   isDisabled,
   loadAccountOptions,
 }: {
   isDisabled: boolean;
-  loadAccountOptions: (inputValue: string, page?: number) => Promise<{
+  loadAccountOptions: (
+    inputValue: string,
+    page?: number
+  ) => Promise<{
     options: { value: string; label: string }[];
     hasMore?: boolean;
   }>;
@@ -222,8 +226,7 @@ export const ExpenseIncomeBookingForm = ({
     async (inputValue: string, page = 1) => {
       try {
         const response = await accountProfileApi.getAccountProfiles({
-          limit: ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
-          page,
+          ...toPageQuery(page, ACCOUNT_PROFILE_OPTION_PAGE_SIZE),
           active: true,
         });
         const options = (response.data ?? []).map(acc => ({
@@ -237,7 +240,7 @@ export const ExpenseIncomeBookingForm = ({
 
         return {
           options: filtered,
-          hasMore: (response.data ?? []).length === ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
+          hasMore: response.hasMore,
         };
       } catch (err) {
         console.error('Error fetching account profiles:', err);
@@ -262,7 +265,11 @@ export const ExpenseIncomeBookingForm = ({
       id="expense-income-booking-form"
       onSubmit={onSubmit}
       onError={handleSubmitErrors}
-      resolver={yupResolver(expenseIncomeBookingSchema) as Resolver<ICreateExpenseIncomeBookingMaster>}
+      resolver={
+        yupResolver(
+          expenseIncomeBookingSchema
+        ) as Resolver<ICreateExpenseIncomeBookingMaster>
+      }
       defaultValues={defaultValues}
       className="space-y-6"
       footer={{
@@ -272,17 +279,23 @@ export const ExpenseIncomeBookingForm = ({
         onCancel,
       }}
     >
-      <CardSection heading={`${type === 'EXPENSE' ? 'Expense' : 'Income'} Booking Details`}>
+      <CardSection
+        heading={`${type === 'EXPENSE' ? 'Expense' : 'Income'} Booking Details`}
+      >
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-4">
-            <CodeField isDisabled={isDisabled} currentId={currentId} type={type} />
+            <CodeField
+              isDisabled={isDisabled}
+              currentId={currentId}
+              type={type}
+            />
             <FormFieldCheckbox
               name="active"
               label="Active"
               disabled={isDisabled}
             />
           </div>
-          
+
           <FormFieldTextarea
             name="description"
             label="Description"
@@ -317,7 +330,10 @@ export const ExpenseIncomeBookingForm = ({
 
       <ApplicabilitySection type={type} isDisabled={isDisabled} />
 
-      <TdsFieldsSection isDisabled={isDisabled} loadAccountOptions={loadAccountOptions} />
+      <TdsFieldsSection
+        isDisabled={isDisabled}
+        loadAccountOptions={loadAccountOptions}
+      />
 
       <CardSection heading="Validity Period">
         <div className="grid gap-4 md:grid-cols-2">

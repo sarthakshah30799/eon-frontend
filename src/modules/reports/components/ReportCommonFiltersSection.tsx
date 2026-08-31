@@ -45,7 +45,7 @@ export const ReportCommonFiltersSection = ({
         emptyMessage="No state options available."
         helperText={buildSelectionDescription(
           filters.stateIds.length,
-          filters.stateOptions.length,
+          filters.stateOptions.length
         )}
       />
 
@@ -60,7 +60,7 @@ export const ReportCommonFiltersSection = ({
           emptyMessage="No branch options available."
           helperText={buildSelectionDescription(
             filters.branchIds.length,
-            filters.branchOptions.length,
+            filters.branchOptions.length
           )}
         />
 
@@ -74,7 +74,7 @@ export const ReportCommonFiltersSection = ({
           emptyMessage="Select a branch first."
           helperText={buildSelectionDescription(
             filters.counterIds.length,
-            filters.counterOptions.length,
+            filters.counterOptions.length
           )}
           disabled={filters.branchIds.length === 0}
         />
@@ -89,7 +89,7 @@ export const ReportCommonFiltersSection = ({
           emptyMessage="No party profile types found."
           helperText={buildSelectionDescription(
             filters.partyTypeCodes.length,
-            filters.partyTypeOptions.length,
+            filters.partyTypeOptions.length
           )}
         />
 
@@ -130,9 +130,14 @@ export const ReportCommonFiltersSection = ({
           <div className="flex flex-wrap items-center gap-2 rounded-md border border-slate-100 bg-slate-50 px-2 py-2">
             <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] text-text-primary">
               <Checkbox
-                checked={filters.transactionTypes.includes(ReportTransactionTypeEnum.PURCHASE)}
+                checked={filters.transactionTypes.includes(
+                  ReportTransactionTypeEnum.PURCHASE
+                )}
                 onChange={checked =>
-                  filters.toggleTransactionType(ReportTransactionTypeEnum.PURCHASE, checked)
+                  filters.toggleTransactionType(
+                    ReportTransactionTypeEnum.PURCHASE,
+                    checked
+                  )
                 }
                 id="transaction-type-purchase"
               />
@@ -140,9 +145,14 @@ export const ReportCommonFiltersSection = ({
             </div>
             <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] text-text-primary">
               <Checkbox
-                checked={filters.transactionTypes.includes(ReportTransactionTypeEnum.SALE)}
+                checked={filters.transactionTypes.includes(
+                  ReportTransactionTypeEnum.SALE
+                )}
                 onChange={checked =>
-                  filters.toggleTransactionType(ReportTransactionTypeEnum.SALE, checked)
+                  filters.toggleTransactionType(
+                    ReportTransactionTypeEnum.SALE,
+                    checked
+                  )
                 }
                 id="transaction-type-sale"
               />
@@ -152,10 +162,14 @@ export const ReportCommonFiltersSection = ({
               type="button"
               className="ml-auto text-[10px] font-medium text-primary-600 hover:text-primary-700"
               onClick={() =>
-                filters.toggleAllTransactionTypes(filters.transactionTypes.length !== 2)
+                filters.toggleAllTransactionTypes(
+                  filters.transactionTypes.length !== 2
+                )
               }
             >
-              {filters.transactionTypes.length === 2 ? 'Clear all' : 'Select all'}
+              {filters.transactionTypes.length === 2
+                ? 'Clear all'
+                : 'Select all'}
             </button>
           </div>
         </div>

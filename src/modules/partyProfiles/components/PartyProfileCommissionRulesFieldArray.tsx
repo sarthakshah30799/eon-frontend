@@ -5,7 +5,10 @@ import { Button, CardSection, type AsyncSelectResponse } from '@/components/ui';
 import { FormFieldInput, FormFieldSelect } from '@/components/forms';
 import { useLoadCurrencyOptions } from '@/modules/currencyProfile/hooks';
 import { useLoadProductOptions } from '@/modules/productProfile/hooks';
-import { useUploadAgentCommissionTemplate, useDownloadAgentCommissionTemplate } from '../hooks';
+import {
+  useUploadAgentCommissionTemplate,
+  useDownloadAgentCommissionTemplate,
+} from '../hooks';
 import type {
   ICreatePartyProfile,
   IPartyProfileCommissionRule,
@@ -49,7 +52,9 @@ const CommissionRuleRow = ({
       }));
       return {
         options: inputValue
-          ? opts.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+          ? opts.filter(opt =>
+              opt.label.toLowerCase().includes(inputValue.toLowerCase())
+            )
           : opts,
       };
     },

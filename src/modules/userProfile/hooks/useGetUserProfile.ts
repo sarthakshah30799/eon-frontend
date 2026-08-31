@@ -8,4 +8,3 @@ export const useGetUserProfile = (id: string) => {
     enabled: Boolean(id),
   });
 };
-

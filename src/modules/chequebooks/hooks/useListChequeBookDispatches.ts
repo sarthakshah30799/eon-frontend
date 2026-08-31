@@ -9,7 +9,7 @@ export const useListChequeBookDispatches = (activeBranchId: string | null) => {
         return [];
       }
 
-      return chequebookApi.findAll(activeBranchId);
+      return chequebookApi.findAllMatching({ branchId: activeBranchId });
     },
     enabled: Boolean(activeBranchId),
   });

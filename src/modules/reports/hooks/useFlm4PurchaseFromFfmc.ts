@@ -24,12 +24,12 @@ export const useFlm4PurchaseFromFfmc = () => {
       view: filters.appliedFilters?.view ?? filters.view,
       layout: filters.appliedFilters?.layout ?? filters.layout,
     }),
-    [filters.appliedFilters, filters.view, filters.layout],
+    [filters.appliedFilters, filters.view, filters.layout]
   );
 
   const reportQueryKey = useMemo(
     () => ['flm4-purchase-from-ffmc', requestParams],
-    [requestParams],
+    [requestParams]
   );
 
   const reportQuery = useQuery<IFlm4PurchaseFromFfmcResponse>({
@@ -50,10 +50,13 @@ export const useFlm4PurchaseFromFfmc = () => {
       {
         ...requestParams,
       },
-      exportFormat,
+      exportFormat
     );
 
-    downloadBlob(payload.blob, payload.filename || 'flm4-purchase-from-ffmc.xlsx');
+    downloadBlob(
+      payload.blob,
+      payload.filename || 'flm4-purchase-from-ffmc.xlsx'
+    );
   }, [exportFormat, filters.appliedFilters, requestParams]);
 
   return {

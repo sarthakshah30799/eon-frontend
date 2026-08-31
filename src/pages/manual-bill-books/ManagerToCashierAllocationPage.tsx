@@ -9,6 +9,7 @@ import {
   useListApprovedManualBillBooks,
   useGetManualBillBookAllocations,
   useSaveManualBillBookAllocations,
+  useGetManualBillBook,
 } from '@/modules/manual-bill-books/hooks';
 import { useCategoryOptions } from '@/hooks/useCategoryOptions';
 import {
@@ -55,8 +56,8 @@ const formatRanges = (nums: number[]): string => {
 };
 
 interface IAllocationRow {
-  id: string;                  // bookId_segmentFrom
-  bookId: string;              // manualBillBook ID
+  id: string; // bookId_segmentFrom
+  bookId: string; // manualBillBook ID
   requestNo: string;
   requestDate: string;
   transactionType: string;
@@ -66,12 +67,12 @@ interface IAllocationRow {
   mvNoTo: number;
   qty: number;
   hoRemarks: string;
-  allocatedCashierId: string;  // selected cashierId for this segment
+  allocatedCashierId: string; // selected cashierId for this segment
   remarks: string;
-  isCheck: boolean;            // selected for bulk assignment
-  isAlreadyAssigned: boolean;  // whether this segment is already assigned to a cashier
-  assignedToUserName: string;   // cashier who has this segment
-  assignedByUserName: string;   // manager who made the assignment
+  isCheck: boolean; // selected for bulk assignment
+  isAlreadyAssigned: boolean; // whether this segment is already assigned to a cashier
+  assignedToUserName: string; // cashier who has this segment
+  assignedByUserName: string; // manager who made the assignment
 }
 
 export const ManagerToCashierAllocationPage = () => {
@@ -79,18 +80,20 @@ export const ManagerToCashierAllocationPage = () => {
   const [searchParams] = useSearchParams();
   const bookId = searchParams.get('bookId');
   const isAutoProcessedRef = useRef(false);
-  
+
   // Filters
   const [txnType, setTxnType] = useState('ALL');
   const [bookNoFromStr, setBookNoFromStr] = useState('');
   const [bookNoToStr, setBookNoToStr] = useState('');
-  
+
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   // Table rows
   const [rows, setRows] = useState<IAllocationRow[]>([]);
-  const [existingAllocations, setExistingAllocations] = useState<IManualBookAllocation[]>([]);
+  const [existingAllocations, setExistingAllocations] = useState<
+    IManualBookAllocation[]
+  >([]);
   const [hasProcessed, setHasProcessed] = useState(false);
   const [allocatedWarning, setAllocatedWarning] = useState<string>('');
 
@@ -98,39 +101,31 @@ export const ManagerToCashierAllocationPage = () => {
   const [bulkCashierId, setBulkCashierId] = useState('');
 
   const loadCashierOptions = useLoadCashierOptions();
-  const { defaultOptions: categoryOptions } = useCategoryOptions(CategoryOptionCodeEnum.Transaction, true);
-  const txnTypes = categoryOptions ? categoryOptions.map(o => ({ id: String(o.value), label: o.label })) : [];
+  const { defaultOptions: categoryOptions } = useCategoryOptions(
+    CategoryOptionCodeEnum.Transaction,
+    true
+  );
+  const txnTypes = categoryOptions
+    ? categoryOptions.map(o => ({ id: String(o.value), label: o.label }))
+    : [];
 
-  const { data: cashiers = [], isLoading: isLoadingOptions } = useListManualBillBookAuthorizedUsers(activeBranchId || undefined);
+  const { data: cashiers = [], isLoading: isLoadingOptions } =
+    useListManualBillBookAuthorizedUsers(activeBranchId || undefined);
 
   const listApprovedManualBillBooks = useListApprovedManualBillBooks();
+  const { data: prefillBook } = useGetManualBillBook(bookId ?? undefined);
   const getManualBillBookAllocations = useGetManualBillBookAllocations();
-  const { mutateAsync: saveManualBillBookAllocations } = useSaveManualBillBookAllocations();
+  const { mutateAsync: saveManualBillBookAllocations } =
+    useSaveManualBillBookAllocations();
 
   useEffect(() => {
-    const prefillFromBook = async () => {
-      if (bookId && activeBranchId && !isAutoProcessedRef.current) {
-        isAutoProcessedRef.current = true;
-        try {
-          setIsProcessing(true);
-          const data = await listApprovedManualBillBooks(activeBranchId, ManualBillBookStatusEnum.APPROVE);
-          const book = data.find(b => b.id === bookId);
-          if (book) {
-            // Only pre-fill the form fields — do NOT render the table yet.
-            // The user must click Process to see the Dispatches Checklist.
-            setTxnType(book.transactionType);
-            setBookNoFromStr(String(book.bookNoFrom));
-            setBookNoToStr(String(book.bookNoTo));
-          }
-        } catch (err: unknown) {
-          console.error('Failed to pre-fill book details:', err);
-        } finally {
-          setIsProcessing(false);
-        }
-      }
-    };
-    prefillFromBook();
-  }, [bookId, activeBranchId, listApprovedManualBillBooks]);
+    if (prefillBook && !isAutoProcessedRef.current) {
+      isAutoProcessedRef.current = true;
+      setTxnType(prefillBook.transactionType);
+      setBookNoFromStr(String(prefillBook.bookNoFrom));
+      setBookNoToStr(String(prefillBook.bookNoTo));
+    }
+  }, [prefillBook]);
 
   const handleProcess = async () => {
     if (!activeBranchId) return;
@@ -138,28 +133,28 @@ export const ManagerToCashierAllocationPage = () => {
     const toVal = parseInt(bookNoToStr, 10);
 
     if (isNaN(fromVal) || isNaN(toVal) || fromVal < 1 || toVal < fromVal) {
-      toast.error("Please enter a valid book range (Book No From must be less than or equal to Book No To).");
+      toast.error(
+        'Please enter a valid book range (Book No From must be less than or equal to Book No To).'
+      );
       return;
     }
 
     try {
       setIsProcessing(true);
       setAllocatedWarning('');
-      // Fetch all dispatches for the branch (to query approved allocations)
-      const approvedBooks = await listApprovedManualBillBooks(activeBranchId, ManualBillBookStatusEnum.APPROVE);
-      // Filter by range and txnType in memory
-      const matched = approvedBooks.filter(book => {
-        if (txnType !== 'ALL' && book.transactionType !== txnType) {
-          return false;
-        }
-        // Check overlap of range
-        return book.bookNoFrom <= toVal && book.bookNoTo >= fromVal;
+      const matched = await listApprovedManualBillBooks({
+        branchId: activeBranchId,
+        status: ManualBillBookStatusEnum.APPROVE,
+        transactionType: txnType === 'ALL' ? undefined : txnType,
+        bookNoFrom: fromVal,
+        bookNoTo: toVal,
       });
 
       const matchedIds = matched.map(b => b.id);
-      const allocations = matchedIds.length > 0 
-        ? await getManualBillBookAllocations(matchedIds)
-        : [];
+      const allocations =
+        matchedIds.length > 0
+          ? await getManualBillBookAllocations(matchedIds)
+          : [];
       setExistingAllocations(allocations);
 
       // Build all contiguous segments (allocated + unallocated) for each matched book
@@ -176,16 +171,25 @@ export const ManagerToCashierAllocationPage = () => {
         const bookNoToCashierName = new Map<number, string>();
         const bookNoToAssignedByName = new Map<number, string>();
         for (const a of allocations) {
-          if (a.manualBookId === book.id && a.bookNo >= bookStart && a.bookNo <= bookEnd) {
+          if (
+            a.manualBookId === book.id &&
+            a.bookNo >= bookStart &&
+            a.bookNo <= bookEnd
+          ) {
             bookNoToUser.set(a.bookNo, a.cashierId);
             if (a.cashierName) bookNoToCashierName.set(a.bookNo, a.cashierName);
-            if (a.assignedByName) bookNoToAssignedByName.set(a.bookNo, a.assignedByName);
+            if (a.assignedByName)
+              bookNoToAssignedByName.set(a.bookNo, a.assignedByName);
             allAllocatedNos.push(a.bookNo);
           }
         }
 
         // Helper to emit one row segment
-        const emitSegment = (from: number, to: number, cashierId: string | null) => {
+        const emitSegment = (
+          from: number,
+          to: number,
+          cashierId: string | null
+        ) => {
           const totalBooks = to - from + 1;
           const totalQty = totalBooks * book.vouchersPerBook;
           const offsetFrom = from - book.bookNoFrom;
@@ -234,7 +238,8 @@ export const ManagerToCashierAllocationPage = () => {
       setRows(generatedRows);
       setHasProcessed(true);
 
-      const allAllocatedMsg = allAllocatedNos.length > 0 ? formatRanges(allAllocatedNos) : '';
+      const allAllocatedMsg =
+        allAllocatedNos.length > 0 ? formatRanges(allAllocatedNos) : '';
       setAllocatedWarning(allAllocatedMsg);
 
       const availableRows = generatedRows.filter(r => !r.isAlreadyAssigned);
@@ -242,26 +247,38 @@ export const ManagerToCashierAllocationPage = () => {
         toast.success(`Found ${availableRows.length} available book range(s).`);
       }
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Failed to search allocations.');
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to search allocations.'
+      );
     } finally {
       setIsProcessing(false);
     }
   };
 
   const handleRowCheckbox = (rowId: string) => {
-    setRows(prev => prev.map(r => r.id === rowId ? { ...r, isCheck: !r.isCheck } : r));
+    setRows(prev =>
+      prev.map(r => (r.id === rowId ? { ...r, isCheck: !r.isCheck } : r))
+    );
   };
 
   const handleHeaderCheckbox = (checked: boolean) => {
-    setRows(prev => prev.map(r => r.isAlreadyAssigned ? r : { ...r, isCheck: checked }));
+    setRows(prev =>
+      prev.map(r => (r.isAlreadyAssigned ? r : { ...r, isCheck: checked }))
+    );
   };
 
   const handleRowCashier = (rowId: string, cashierId: string) => {
-    setRows(prev => prev.map(r => r.id === rowId ? { ...r, allocatedCashierId: cashierId } : r));
+    setRows(prev =>
+      prev.map(r =>
+        r.id === rowId ? { ...r, allocatedCashierId: cashierId } : r
+      )
+    );
   };
 
   const handleRowRemarks = (rowId: string, val: string) => {
-    setRows(prev => prev.map(r => r.id === rowId ? { ...r, remarks: val } : r));
+    setRows(prev =>
+      prev.map(r => (r.id === rowId ? { ...r, remarks: val } : r))
+    );
   };
 
   const handleApplyBulkCashier = () => {
@@ -274,7 +291,11 @@ export const ManagerToCashierAllocationPage = () => {
       toast.error('No rows selected to allocate.');
       return;
     }
-    setRows(prev => prev.map(r => r.isCheck ? { ...r, allocatedCashierId: bulkCashierId } : r));
+    setRows(prev =>
+      prev.map(r =>
+        r.isCheck ? { ...r, allocatedCashierId: bulkCashierId } : r
+      )
+    );
     toast.success(`Set user for ${checkedCount} selected rows.`);
   };
 
@@ -292,7 +313,12 @@ export const ManagerToCashierAllocationPage = () => {
 
     try {
       setIsSaving(true);
-      const payload: Array<{ manualBookId: string; bookNo: number; userId: string; remarks?: string }> = [];
+      const payload: Array<{
+        manualBookId: string;
+        bookNo: number;
+        userId: string;
+        remarks?: string;
+      }> = [];
       for (const r of checkedRows) {
         for (let i = r.bookNoFrom; i <= r.bookNoTo; i++) {
           const alreadyAssigned = existingAllocations.some(
@@ -312,11 +338,13 @@ export const ManagerToCashierAllocationPage = () => {
 
       await saveManualBillBookAllocations(payload);
       toast.success('Manager to User page allocations saved successfully.');
-      
+
       // Reload values
       await handleProcess();
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Failed to save allocations.');
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to save allocations.'
+      );
     } finally {
       setIsSaving(false);
     }
@@ -325,20 +353,25 @@ export const ManagerToCashierAllocationPage = () => {
   if (!activeBranchId) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
-        <p className="text-slate-500 font-medium">Please select your active branch workplace to proceed.</p>
+        <p className="text-slate-500 font-medium">
+          Please select your active branch workplace to proceed.
+        </p>
       </div>
     );
   }
 
   const availableRows = rows.filter(r => !r.isAlreadyAssigned);
-  const allChecked = availableRows.length > 0 && availableRows.every(r => r.isCheck);
+  const allChecked =
+    availableRows.length > 0 && availableRows.every(r => r.isCheck);
   const selectedTxnType = txnTypes.find(t => t.id === txnType);
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-1.5 border-b border-slate-200 pb-5">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Manual Bill Book Allocation</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+          Manual Bill Book Allocation
+        </h1>
         <p className="text-sm text-slate-500">
           Allocate individual manual bill book pages to users at your branch.
         </p>
@@ -363,28 +396,32 @@ export const ManagerToCashierAllocationPage = () => {
                     : null
               }
               onChange={(
-                option: MultiValue<AsyncSelectOption> | SingleValue<AsyncSelectOption>
+                option:
+                  | MultiValue<AsyncSelectOption>
+                  | SingleValue<AsyncSelectOption>
               ) => {
                 const selectedOption = Array.isArray(option)
-                  ? option[0] ?? null
+                  ? (option[0] ?? null)
                   : option;
 
                 setTxnType(
-                  selectedOption?.value
-                    ? String(selectedOption.value)
-                    : 'ALL'
+                  selectedOption?.value ? String(selectedOption.value) : 'ALL'
                 );
               }}
               loadOptions={async (inputValue: string) => {
                 const opts = [
                   { value: 'ALL', label: 'ALL' },
-                  ...txnTypes.map(t => ({ value: t.id, label: t.label }))
+                  ...txnTypes.map(t => ({ value: t.id, label: t.label })),
                 ];
                 return {
                   options: inputValue
-                    ? opts.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+                    ? opts.filter(opt =>
+                        opt.label
+                          .toLowerCase()
+                          .includes(inputValue.toLowerCase())
+                      )
                     : opts,
-                  hasMore: false
+                  hasMore: false,
                 };
               }}
               isClearable={false}
@@ -431,10 +468,12 @@ export const ManagerToCashierAllocationPage = () => {
           <ExclamationTriangleIcon className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-500" />
           <div>
             <p className="text-sm font-semibold text-amber-800">
-              Book range <span className="font-mono">{allocatedWarning}</span> already assigned.
+              Book range <span className="font-mono">{allocatedWarning}</span>{' '}
+              already assigned.
             </p>
             <p className="text-xs text-amber-700 mt-0.5">
-              Please change your range — the table below shows only the available unassigned books.
+              Please change your range — the table below shows only the
+              available unassigned books.
             </p>
           </div>
         </div>
@@ -444,25 +483,33 @@ export const ManagerToCashierAllocationPage = () => {
       {hasProcessed && rows.length > 0 && (
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="px-5 py-4 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50">
-            <h3 className="font-semibold text-slate-800 text-sm">Dispatches Checklist</h3>
-            
+            <h3 className="font-semibold text-slate-800 text-sm">
+              Dispatches Checklist
+            </h3>
+
             {/* Bulk Assign Cashier Control */}
             {rows.length > 0 && (
               <div className="flex items-center gap-3">
-                <span className="text-xs font-semibold text-slate-600">Allocate User:</span>
+                <span className="text-xs font-semibold text-slate-600">
+                  Allocate User:
+                </span>
                 {isLoadingOptions ? (
                   <span className="text-xs text-slate-500">Loading...</span>
                 ) : (
                   <AsyncSelect
-                    value={
-                      (() => {
-                        const found = cashiers.find(c => c.id === bulkCashierId);
-                        return found ? { value: found.id, label: found.name } : null;
-                      })()
-                    }
+                    value={(() => {
+                      const found = cashiers.find(c => c.id === bulkCashierId);
+                      return found
+                        ? { value: found.id, label: found.name }
+                        : null;
+                    })()}
                     onChange={option => {
-                      const nextOption = Array.isArray(option) ? option[0] : option;
-                      setBulkCashierId(nextOption ? String(nextOption.value) : '');
+                      const nextOption = Array.isArray(option)
+                        ? option[0]
+                        : option;
+                      setBulkCashierId(
+                        nextOption ? String(nextOption.value) : ''
+                      );
                     }}
                     loadOptions={loadCashierOptions}
                     placeholder="Select User"
@@ -483,7 +530,9 @@ export const ManagerToCashierAllocationPage = () => {
 
           {rows.length === 0 ? (
             <div className="py-12 text-center">
-              <p className="text-sm text-slate-500">No books found in the specified range to allocate.</p>
+              <p className="text-sm text-slate-500">
+                No books found in the specified range to allocate.
+              </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -527,16 +576,22 @@ export const ManagerToCashierAllocationPage = () => {
                       </td>
                       <td className="px-4 py-4">
                         {row.isAlreadyAssigned ? (
-                          <span className="text-xs font-medium text-slate-600">{row.assignedToUserName || '—'}</span>
+                          <span className="text-xs font-medium text-slate-600">
+                            {row.assignedToUserName || '—'}
+                          </span>
                         ) : (
                           <select
                             value={row.allocatedCashierId}
-                            onChange={e => handleRowCashier(row.id, e.target.value)}
+                            onChange={e =>
+                              handleRowCashier(row.id, e.target.value)
+                            }
                             className="rounded border border-slate-300 px-2 py-1 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 w-32"
                           >
                             <option value="">Select User</option>
                             {cashiers.map(c => (
-                              <option key={c.id} value={c.id}>{c.name}</option>
+                              <option key={c.id} value={c.id}>
+                                {c.name}
+                              </option>
                             ))}
                           </select>
                         )}
@@ -546,28 +601,46 @@ export const ManagerToCashierAllocationPage = () => {
                           <textarea
                             rows={1}
                             value={row.remarks}
-                            onChange={e => handleRowRemarks(row.id, e.target.value)}
+                            onChange={e =>
+                              handleRowRemarks(row.id, e.target.value)
+                            }
                             placeholder="Note..."
                             className="w-full min-w-[120px] rounded border border-slate-300 px-2 py-1 text-xs focus:ring-1 focus:ring-sky-500 focus:border-sky-500 resize-none"
                           />
                         )}
                       </td>
-                      <td className="px-4 py-4 font-mono font-semibold text-slate-900">{row.requestNo}</td>
-                      <td className="px-4 py-4 text-xs whitespace-nowrap">{row.requestDate}</td>
-                      <td className="px-4 py-4 text-xs">{row.transactionType}</td>
+                      <td className="px-4 py-4 font-mono font-semibold text-slate-900">
+                        {row.requestNo}
+                      </td>
+                      <td className="px-4 py-4 text-xs whitespace-nowrap">
+                        {row.requestDate}
+                      </td>
+                      <td className="px-4 py-4 text-xs">
+                        {row.transactionType}
+                      </td>
                       <td className="px-4 py-4 font-semibold text-slate-800">
                         {row.bookNoFrom} - {row.bookNoTo}
                       </td>
                       <td className="px-4 py-4 text-xs font-medium">
-                        {row.isAlreadyAssigned && row.assignedByUserName
-                          ? <span className="text-slate-600">{row.assignedByUserName}</span>
-                          : <span className="text-slate-400">—</span>
-                        }
+                        {row.isAlreadyAssigned && row.assignedByUserName ? (
+                          <span className="text-slate-600">
+                            {row.assignedByUserName}
+                          </span>
+                        ) : (
+                          <span className="text-slate-400">—</span>
+                        )}
                       </td>
-                      <td className="px-4 py-4 font-mono text-xs">{row.mvNoFrom}</td>
-                      <td className="px-4 py-4 font-mono text-xs">{row.mvNoTo}</td>
+                      <td className="px-4 py-4 font-mono text-xs">
+                        {row.mvNoFrom}
+                      </td>
+                      <td className="px-4 py-4 font-mono text-xs">
+                        {row.mvNoTo}
+                      </td>
                       <td className="px-4 py-4">{row.qty}</td>
-                      <td className="px-4 py-4 text-xs max-w-[120px] truncate" title={row.hoRemarks}>
+                      <td
+                        className="px-4 py-4 text-xs max-w-[120px] truncate"
+                        title={row.hoRemarks}
+                      >
                         {row.hoRemarks}
                       </td>
                     </tr>

@@ -24,7 +24,7 @@ export const useCardUnsettledReport = () => {
       issuerPartyProfileIds: appliedFilters?.issuerPartyProfileIds ?? [],
       sortBy: appliedFilters?.sortBy,
     }),
-    [appliedFilters],
+    [appliedFilters]
   );
 
   const reportQuery = useQuery<ICardSettlementReportResponse>({
@@ -40,9 +40,12 @@ export const useCardUnsettledReport = () => {
 
     const payload = await reportsApi.downloadCardUnsettledReport(
       requestParams,
-      exportFormat,
+      exportFormat
     );
-    downloadBlob(payload.blob, payload.filename || 'card-unsettled-report.xlsx');
+    downloadBlob(
+      payload.blob,
+      payload.filename || 'card-unsettled-report.xlsx'
+    );
   }, [exportFormat, filters.appliedFilters, requestParams]);
 
   return {

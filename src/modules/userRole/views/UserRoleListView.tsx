@@ -1,10 +1,11 @@
 import { useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button1';
-import { useDebounce } from '@/hooks';
+import { useDebounce, useOffsetPaginatedList } from '@/hooks';
+import { PAGINATION_DEFAULTS } from '@/constants/paginationConstants';
+import { userRoleApi } from '@/api/userRole';
 import {
   useDeleteUserRole,
-  useListUserRoles,
   useUpdateUserRoleStatus,
 } from '../hooks';
 import { USER_ROLE_TEXTS } from '../constants';
@@ -15,12 +16,28 @@ export const UserRoleListView = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const search = searchParams.get('search') ?? '';
   const debouncedSearch = useDebounce(search, 400);
-  const query = useMemo(
-    () => debouncedSearch.trim() || undefined,
+  const filters = useMemo(
+    () => ({
+      search: debouncedSearch.trim() || undefined,
+    }),
     [debouncedSearch]
   );
-  const { data: roles = [], isLoading, isFetching, error } =
-    useListUserRoles(query);
+  const {
+    rows: roles,
+    isLoading,
+    isFetching,
+    error,
+    page,
+    limit,
+    total,
+    totalPages,
+    handlePageChange,
+    handlePageSizeChange,
+  } = useOffsetPaginatedList({
+    queryKey: ['user-roles'],
+    queryFn: params => userRoleApi.getUserRoles(params),
+    filters,
+  });
   const { deleteUserRole, isPending: isDeleting } = useDeleteUserRole();
   const { updateUserRoleStatus, isPending: isUpdatingStatus } =
     useUpdateUserRoleStatus();
@@ -38,6 +55,22 @@ export const UserRoleListView = () => {
     await updateUserRoleStatus({ id, isActive });
   };
 
+  const handleSearch = (value: string) => {
+    setSearchParams(prev => {
+      const nextParams = new URLSearchParams(prev);
+      if (value.trim()) {
+        nextParams.set('search', value.trim());
+      } else {
+        nextParams.delete('search');
+      }
+      nextParams.set('offset', String(PAGINATION_DEFAULTS.OFFSET));
+      if (!nextParams.get('limit')) {
+        nextParams.set('limit', String(PAGINATION_DEFAULTS.LIMIT));
+      }
+      return nextParams;
+    });
+  };
+
   if (error) {
     return (
       <div className="py-6 text-center text-error-600">
@@ -47,7 +80,7 @@ export const UserRoleListView = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <div className="flex justify-end">
         <Button
           type="button"
@@ -57,29 +90,24 @@ export const UserRoleListView = () => {
         </Button>
       </div>
 
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
+      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
         <UserRoleTable
           roles={roles}
           onToggleStatus={handleToggleStatus}
           onDelete={handleDelete}
           isUpdatingStatus={isUpdatingStatus}
           isDeleting={isDeleting}
-          onSearch={value =>
-            setSearchParams(prev => {
-              const nextParams = new URLSearchParams(prev);
-
-              if (value.trim()) {
-                nextParams.set('search', value.trim());
-              } else {
-                nextParams.delete('search');
-              }
-
-              return nextParams;
-            })
-          }
+          onSearch={handleSearch}
           searchValue={search}
           searchPlaceholder="Search role code or role name"
-          loading={isLoading || isFetching}
+          loading={isLoading}
+          isFetching={isFetching}
+          page={page}
+          pageSize={limit}
+          total={total}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
         />
       </section>
     </div>

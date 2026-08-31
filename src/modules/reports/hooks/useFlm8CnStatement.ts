@@ -24,12 +24,12 @@ export const useFlm8CnStatement = () => {
       apConnect: filters.appliedFilters?.apConnect || undefined,
       view: filters.appliedFilters?.view ?? filters.view,
     }),
-    [filters.appliedFilters, filters.view],
+    [filters.appliedFilters, filters.view]
   );
 
   const reportQueryKey = useMemo(
     () => ['flm8-cn-statement', requestParams],
-    [requestParams],
+    [requestParams]
   );
 
   const reportQuery = useQuery<IFlm8CnStatementResponse>({
@@ -50,7 +50,7 @@ export const useFlm8CnStatement = () => {
       {
         ...requestParams,
       },
-      exportFormat,
+      exportFormat
     );
 
     downloadBlob(payload.blob, payload.filename || 'flm8-cn-statement.xlsx');

@@ -27,4 +27,3 @@ export const useUpdateStateProfile = (id: string) => {
     submitStateProfile: mutation.mutateAsync,
   };
 };
-

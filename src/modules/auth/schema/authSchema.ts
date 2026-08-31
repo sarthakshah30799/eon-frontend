@@ -31,7 +31,10 @@ const buildPasswordSchema = (policy: Partial<IPasswordPolicy> = {}) => {
     );
   }
 
-  if (typeof policy.minSpecialCharCount === 'number' && policy.minSpecialCharCount > 0) {
+  if (
+    typeof policy.minSpecialCharCount === 'number' &&
+    policy.minSpecialCharCount > 0
+  ) {
     schema = schema.test(
       'min-special-characters',
       `Password must contain at least ${policy.minSpecialCharCount} special character(s)`,
@@ -39,12 +42,17 @@ const buildPasswordSchema = (policy: Partial<IPasswordPolicy> = {}) => {
         if (!value) {
           return true;
         }
-        return countMatches(value, /[^A-Za-z0-9]/g) >= policy.minSpecialCharCount!;
+        return (
+          countMatches(value, /[^A-Za-z0-9]/g) >= policy.minSpecialCharCount!
+        );
       }
     );
   }
 
-  if (typeof policy.minNumericCount === 'number' && policy.minNumericCount > 0) {
+  if (
+    typeof policy.minNumericCount === 'number' &&
+    policy.minNumericCount > 0
+  ) {
     schema = schema.test(
       'min-numeric-characters',
       `Password must contain at least ${policy.minNumericCount} numeric character(s)`,
@@ -78,9 +86,7 @@ export const loginSchema = yup.object({
     .string()
     .email('Please enter a valid email address')
     .required('Email is required'),
-  password: yup
-    .string()
-    .required('Password is required'),
+  password: yup.string().required('Password is required'),
 });
 
 export const buildLoginSchema = () => loginSchema;

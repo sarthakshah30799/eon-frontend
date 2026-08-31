@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import {
   Button,
@@ -8,12 +8,10 @@ import {
   type AsyncSelectResponse,
   type TableColumnDef,
 } from '@/components/ui';
-import {
-  FormFieldDatePicker,
-  FormFieldInput,
-  FormFieldSelect,
-} from '@/components/forms';
-import { useListBranchProfiles } from '@/modules/branchProfile/hooks';
+import { useQuery } from '@tanstack/react-query';
+import { FormFieldDatePicker, FormFieldInput, FormFieldSelect } from '@/components/forms';
+import { branchProfileApi } from '@/api/branchProfile';
+import { useLoadBranchOptions } from '@/modules/branchProfile/hooks';
 import { formatDateTime } from '@/utils';
 import type { CardTransferCard, CardTransferFormValues } from '../types';
 import type { TransactionDatePolicy } from '@/modules/transactionPolicies/utils/transactionDatePolicy';
@@ -162,7 +160,12 @@ const CardPicker = ({
     { accessorKey: 'currencyCode', header: 'Currency' },
     { accessorKey: 'denomination', header: 'Denomination' },
     { accessorKey: 'amount', header: 'Amount' },
-    { accessorKey: 'expirationDate', header: 'Expiration', cell: ({ row }) => formatDateTime(`${row.original.expirationDate}T00:00:00`, 'DD/MM/YYYY') },
+    {
+      accessorKey: 'expirationDate',
+      header: 'Expiration',
+      cell: ({ row }) =>
+        formatDateTime(`${row.original.expirationDate}T00:00:00`, 'DD/MM/YYYY'),
+    },
   ];
 
   return (
@@ -358,8 +361,11 @@ export const CardTransferForm = ({
   destinationBranchReadOnly = false,
 }: Props) => {
   const form = useFormContext<CardTransferFormValues>();
-  const { data: branches = [], isLoading: branchesLoading } =
-    useListBranchProfiles({ activeOnly: true });
+  const { data: branches = [], isLoading: branchesLoading } = useQuery({
+    queryKey: ['branch-profiles-all', { activeOnly: true }],
+    queryFn: () => branchProfileApi.getAllBranchProfiles({ activeOnly: true }),
+  });
+  const loadBranchOptions = useLoadBranchOptions({ activeOnly: true });
   const sourceBranchId = useWatch({
     control: form.control,
     name: 'sourceBranchId',
@@ -369,9 +375,6 @@ export const CardTransferForm = ({
     !readOnly && availableCards === undefined
   );
   const cardOptions = availableCards ?? sourceCards;
-  const branchOptions = optionsFrom(
-    branches.filter(branch => branch.isActive !== false)
-  );
   const hoBranchOptions = optionsFrom(
     branches.filter(branch => branch.isActive !== false && branch.isHeadOffice)
   );
@@ -392,10 +395,33 @@ export const CardTransferForm = ({
     control: form.control,
     name: 'destinationBranchId',
   });
-  const destinationBranchOptions = withSnapshotOption(
-    branchOptions.filter(option => option.value !== sourceBranchId),
-    destinationBranchId,
-    destinationBranchSnapshot
+  const loadDestinationBranchOptions = useCallback(
+    async (inputValue: string, page = 1) => {
+      const result = await loadBranchOptions(inputValue, page);
+      const options = result.options.filter(
+        option => option.value !== sourceBranchId
+      );
+      if (page === 1) {
+        const snapshot = snapshotOption(
+          destinationBranchId,
+          destinationBranchSnapshot
+        );
+        if (
+          snapshot &&
+          snapshot.value !== sourceBranchId &&
+          !options.some(option => option.value === snapshot.value)
+        ) {
+          options.unshift(snapshot);
+        }
+      }
+      return { options, hasMore: result.hasMore };
+    },
+    [
+      destinationBranchId,
+      destinationBranchSnapshot,
+      loadBranchOptions,
+      sourceBranchId,
+    ]
   );
 
   return (
@@ -424,9 +450,9 @@ export const CardTransferForm = ({
             name="destinationBranchId"
             label="Destination Branch"
             placeholder="Select destination branch"
-            loadOptions={staticLoader(destinationBranchOptions)}
-            defaultOptions={destinationBranchOptions}
-            isLoading={branchesLoading}
+            loadOptions={loadDestinationBranchOptions}
+            defaultOptions={true}
+            pagination
             disabled={readOnly || destinationBranchReadOnly || !sourceBranchId}
           />
           <div className="space-y-2">

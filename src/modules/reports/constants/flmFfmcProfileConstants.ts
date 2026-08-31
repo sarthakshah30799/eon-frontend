@@ -21,7 +21,7 @@ const LEGACY_PROFILE_TYPE_ALIASES: Record<string, FlmFfmcPartyProfileType> = {
 };
 
 export const normalizeFlmFfmcPartyProfileType = (
-  value: string,
+  value: string
 ): FlmFfmcPartyProfileType | null => {
   const normalized = String(value ?? '')
     .trim()
@@ -36,7 +36,7 @@ export const normalizeFlmFfmcPartyProfileType = (
   }
 
   return FLM_FFMC_PARTY_PROFILE_TYPES.includes(
-    normalized as FlmFfmcPartyProfileType,
+    normalized as FlmFfmcPartyProfileType
   )
     ? (normalized as FlmFfmcPartyProfileType)
     : null;
@@ -45,6 +45,6 @@ export const normalizeFlmFfmcPartyProfileType = (
 export const FLM_FFMC_PROFILE_IDS = [...FLM_FFMC_PARTY_PROFILE_TYPES];
 
 export const isFlmFfmcPartyProfileType = (
-  value: string,
+  value: string
 ): value is FlmFfmcPartyProfileType =>
   Boolean(normalizeFlmFfmcPartyProfileType(value));

@@ -14,9 +14,7 @@ const PurchaseCreatePage = () => {
   }
 
   if (!purchasePageType) {
-    return (
-      <NotFoundState message={PURCHASE_PAGE_STATUS_TEXT.pageNotFound} />
-    );
+    return <NotFoundState message={PURCHASE_PAGE_STATUS_TEXT.pageNotFound} />;
   }
 
   return <PurchaseCreateView purchasePageType={purchasePageType} />;

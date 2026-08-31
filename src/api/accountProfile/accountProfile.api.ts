@@ -5,6 +5,7 @@ import type {
   IAccountProfileListResponse,
   ICreateAccountProfile,
 } from '@/modules/accountProfile/types/accountProfileTypes';
+import { fetchAllMatching, normalizePaginatedResponse } from '@/utils';
 
 const buildQueryString = (params?: IAccountProfileListQuery) => {
   if (!params) {
@@ -33,21 +34,15 @@ export const accountProfileApi = {
       `/account-profiles${buildQueryString(params)}`
     );
     if (res.error) throw new Error(res.error);
-    if (!res.data) {
-      return {
-        data: [],
-        page: params?.page ?? 1,
-        limit: params?.limit ?? 10,
-        totalItems: 0,
-        totalPages: 0,
-      };
-    }
-
-    return {
-      ...res.data,
-      data: res.data.data || [],
-    };
+    return normalizePaginatedResponse(res.data, params?.limit, params?.offset);
   },
+
+  getAllAccountProfiles: async (
+    params?: Omit<IAccountProfileListQuery, 'limit' | 'offset'>
+  ): Promise<IAccountProfile[]> =>
+    fetchAllMatching(pagination =>
+      accountProfileApi.getAccountProfiles({ ...params, ...pagination })
+    ),
 
   getAccountProfileById: async (
     id: string
@@ -60,7 +55,10 @@ export const accountProfileApi = {
   createAccountProfile: async (
     values: ICreateAccountProfile
   ): Promise<IAccountProfile> => {
-    const res = await apiClient.post<IAccountProfile>('/account-profiles', values);
+    const res = await apiClient.post<IAccountProfile>(
+      '/account-profiles',
+      values
+    );
     if (res.error) throw new Error(res.error);
     if (!res.data) throw new Error('Failed to create account profile');
     return res.data;
@@ -70,15 +68,18 @@ export const accountProfileApi = {
     id: string,
     values: ICreateAccountProfile
   ): Promise<IAccountProfile | undefined> => {
-    const res = await apiClient.put<IAccountProfile>(`/account-profiles/${id}`, values);
+    const res = await apiClient.put<IAccountProfile>(
+      `/account-profiles/${id}`,
+      values
+    );
     if (res.error) throw new Error(res.error);
     return res.data;
   },
 
-  deleteAccountProfile: async (
-    id: string
-  ): Promise<{ message: string }> => {
-    const res = await apiClient.delete<{ message: string }>(`/account-profiles/${id}`);
+  deleteAccountProfile: async (id: string): Promise<{ message: string }> => {
+    const res = await apiClient.delete<{ message: string }>(
+      `/account-profiles/${id}`
+    );
     if (res.error) throw new Error(res.error);
     if (!res.data) throw new Error('Failed to delete account profile');
     return res.data;

@@ -72,7 +72,10 @@ export const PRODUCT_PROFILE_DETAIL_CHECKBOXES: IProductProfileCheckboxFieldConf
       name: 'productRequiresSettlement',
       label: 'Product Requires Settlement?',
     },
-    { name: 'passAutoReceiptOfStockWhenSold', label: 'Pass Auto Reciept of Stock when Sold?' },
+    {
+      name: 'passAutoReceiptOfStockWhenSold',
+      label: 'Pass Auto Reciept of Stock when Sold?',
+    },
     { name: 'reversalEffectOfProfits', label: 'Reversal effect of Profits?' },
     {
       name: 'allowChangingDenominationInSales',

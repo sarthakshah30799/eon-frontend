@@ -30,13 +30,25 @@ interface VolumeChartProps {
   emptyMessage?: string;
 }
 
-const ChartTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ name: string; value: number; color: string }>; label?: string }) => {
+const ChartTooltip = ({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  payload?: Array<{ name: string; value: number; color: string }>;
+  label?: string;
+}) => {
   if (!active || !payload?.length) return null;
   return (
     <div className="rounded-lg border border-border-primary bg-surface-primary p-3 shadow-lg">
       <p className="mb-1 text-xs text-text-secondary">{label}</p>
-      {payload.map((e) => (
-        <p key={e.name} className="text-sm font-medium" style={{ color: e.color }}>
+      {payload.map(e => (
+        <p
+          key={e.name}
+          className="text-sm font-medium"
+          style={{ color: e.color }}
+        >
           {e.name}: {formatCurrency(e.value)}
         </p>
       ))}
@@ -88,7 +100,10 @@ const VolumeChart = ({
         <Loader variant="inline" size="sm" />
       </div>
     ) : data.length === 0 ? (
-      <div className="flex items-center justify-center text-sm text-text-tertiary" style={{ height }}>
+      <div
+        className="flex items-center justify-center text-sm text-text-tertiary"
+        style={{ height }}
+      >
         {emptyMessage}
       </div>
     ) : (
@@ -107,16 +122,19 @@ const VolumeChart = ({
               tick={{ fontSize: 10, fill: '#5A6E87' }}
               tickLine={false}
               axisLine={{ stroke: '#D0DAE8' }}
-              tickFormatter={(v) => {
+              tickFormatter={v => {
                 const d = new Date(v + 'T00:00:00');
-                return d.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' });
+                return d.toLocaleDateString('en-US', {
+                  weekday: 'short',
+                  day: 'numeric',
+                });
               }}
             />
             <YAxis
               tick={{ fontSize: 10, fill: '#5A6E87' }}
               tickLine={false}
               axisLine={{ stroke: '#D0DAE8' }}
-              tickFormatter={(v) => formatCompact(v)}
+              tickFormatter={v => formatCompact(v)}
             />
             <Tooltip content={<ChartTooltip />} />
             <Area

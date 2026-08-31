@@ -38,7 +38,9 @@ export const useTransactionQuantityAvailability = ({
         productId: productId ?? '',
         excludeTransactionId,
       }),
-    enabled: Boolean(enabled && branchId && counterId && currencyId && productId),
+    enabled: Boolean(
+      enabled && branchId && counterId && currencyId && productId
+    ),
   });
 };
 

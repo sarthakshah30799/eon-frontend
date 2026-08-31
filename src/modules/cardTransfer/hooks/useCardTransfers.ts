@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { cardTransferApi } from '@/api/cardTransfer';
+import { cardTransferApi, type ICardTransferListQuery } from '@/api/cardTransfer';
 import type { CardTransferFormValues } from '../types';
 
 export const cardTransferQueryKeys = {
@@ -9,13 +9,12 @@ export const cardTransferQueryKeys = {
     ['card-transfer-source-cards', sourceBranchId] as const,
 };
 
-export const useListCardTransfers = (params?: {
-  status?: string;
-  search?: string;
-}) =>
+export const useListCardTransfers = (
+  params?: Omit<ICardTransferListQuery, 'limit' | 'offset'>
+) =>
   useQuery({
-    queryKey: [...cardTransferQueryKeys.all, params],
-    queryFn: () => cardTransferApi.list(params),
+    queryKey: [...cardTransferQueryKeys.all, 'all', params],
+    queryFn: () => cardTransferApi.listAll(params),
   });
 export const useGetCardTransfer = (id: string) =>
   useQuery({

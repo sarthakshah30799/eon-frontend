@@ -1,11 +1,11 @@
 import { useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button1';
-import { Loader } from '@/components/ui/loader';
-import { useDebounce, usePermission } from '@/hooks';
+import { useDebounce, useOffsetPaginatedList, usePermission } from '@/hooks';
+import { PAGINATION_DEFAULTS } from '@/constants/paginationConstants';
+import { stateProfileApi } from '@/api/stateProfile';
 import { STATE_PROFILE_TEXTS } from '../constants';
 import { StateProfileTable } from '../components';
-import { useListStateProfiles } from '../hooks';
 
 export const StateProfileListView = () => {
   const navigate = useNavigate();
@@ -13,19 +13,45 @@ export const StateProfileListView = () => {
   const { canAdd } = usePermission('/admin/state-profile');
   const search = searchParams.get('search') ?? '';
   const debouncedSearch = useDebounce(search, 400);
-  const query = useMemo(
+  const filters = useMemo(
     () => ({
       search: debouncedSearch.trim() || undefined,
     }),
     [debouncedSearch]
   );
-  const { data: stateResponse, isLoading, isFetching, error } =
-    useListStateProfiles(query);
-  const states = stateResponse?.data ?? [];
 
-  if (isLoading) {
-    return <Loader />;
-  }
+  const {
+    rows: states,
+    isLoading,
+    isFetching,
+    error,
+    page,
+    limit,
+    total,
+    totalPages,
+    handlePageChange,
+    handlePageSizeChange,
+  } = useOffsetPaginatedList({
+    queryKey: ['state-profiles'],
+    queryFn: params => stateProfileApi.getStateProfiles(params),
+    filters,
+  });
+
+  const handleSearch = (value: string) => {
+    setSearchParams(prev => {
+      const nextParams = new URLSearchParams(prev);
+      if (value.trim()) {
+        nextParams.set('search', value.trim());
+      } else {
+        nextParams.delete('search');
+      }
+      nextParams.set('offset', String(PAGINATION_DEFAULTS.OFFSET));
+      if (!nextParams.get('limit')) {
+        nextParams.set('limit', String(PAGINATION_DEFAULTS.LIMIT));
+      }
+      return nextParams;
+    });
+  };
 
   if (error) {
     return (
@@ -36,38 +62,31 @@ export const StateProfileListView = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <div className="flex justify-end">
         {canAdd && (
           <Button
             type="button"
             className="rounded-sm"
-            onClick={() =>
-              navigate('/admin/state-profile/create')
-            }
+            onClick={() => navigate('/admin/state-profile/create')}
           >
             {STATE_PROFILE_TEXTS.CREATE_STATE}
           </Button>
         )}
       </div>
 
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
+      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
         <StateProfileTable
           states={states}
-          loading={isLoading || isFetching}
-          onSearch={value =>
-            setSearchParams(prev => {
-              const nextParams = new URLSearchParams(prev);
-
-              if (value.trim()) {
-                nextParams.set('search', value.trim());
-              } else {
-                nextParams.delete('search');
-              }
-
-              return nextParams;
-            })
-          }
+          loading={isLoading}
+          isFetching={isFetching}
+          page={page}
+          pageSize={limit}
+          total={total}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+          onSearch={handleSearch}
           searchValue={search}
           searchPlaceholder="Search country, state name, state code, GST code, or CTR code"
         />

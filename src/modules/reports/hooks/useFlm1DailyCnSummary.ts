@@ -21,12 +21,12 @@ export const useFlm1DailyCnSummary = () => {
       productId: filters.appliedFilters?.productId,
       layout: filters.appliedFilters?.layout,
     }),
-    [filters.appliedFilters],
+    [filters.appliedFilters]
   );
 
   const reportQueryKey = useMemo(
     () => ['flm1-daily-cn-summary', filters.appliedFilters],
-    [filters.appliedFilters],
+    [filters.appliedFilters]
   );
 
   const reportQuery = useQuery<IFlm1DailyCnSummaryResponse>({
@@ -47,10 +47,13 @@ export const useFlm1DailyCnSummary = () => {
       {
         ...requestParams,
       },
-      exportFormat,
+      exportFormat
     );
 
-    downloadBlob(payload.blob, payload.filename || 'flm1-daily-cn-summary.xlsx');
+    downloadBlob(
+      payload.blob,
+      payload.filename || 'flm1-daily-cn-summary.xlsx'
+    );
   }, [exportFormat, filters.appliedFilters, requestParams]);
 
   return {

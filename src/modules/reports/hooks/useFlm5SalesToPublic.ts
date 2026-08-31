@@ -23,12 +23,12 @@ export const useFlm5SalesToPublic = () => {
       view: filters.appliedFilters?.view ?? filters.view,
       layout: filters.appliedFilters?.layout ?? filters.layout,
     }),
-    [filters.appliedFilters, filters.view, filters.layout],
+    [filters.appliedFilters, filters.view, filters.layout]
   );
 
   const reportQueryKey = useMemo(
     () => ['flm5-sales-to-public', requestParams],
-    [requestParams],
+    [requestParams]
   );
 
   const reportQuery = useQuery<IFlm5SalesToPublicResponse>({
@@ -49,7 +49,7 @@ export const useFlm5SalesToPublic = () => {
       {
         ...requestParams,
       },
-      exportFormat,
+      exportFormat
     );
 
     downloadBlob(payload.blob, payload.filename || 'flm5-sales-to-public.xlsx');

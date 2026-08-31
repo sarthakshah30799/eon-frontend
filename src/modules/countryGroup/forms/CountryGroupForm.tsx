@@ -33,14 +33,18 @@ export const CountryGroupForm = ({
   showFooter = true,
 }: CountryGroupFormProps) => {
   const navigate = useNavigate();
-  const { data: currencyProfiles = [], isLoading: isLoadingCurrencies } =
+  const { data: currencyProfilesPage, isLoading: isLoadingCurrencies } =
     useListCurrencyProfiles(undefined, true);
+  const currencyProfiles = currencyProfilesPage?.data ?? [];
 
   const currencyOptions = useMemo<AsyncSelectOption[]>(
     () =>
       currencyProfiles.map(currency => ({
         value: currency.id,
-        label: createCurrencyOptionLabel(currency.currencyCode, currency.currencyName),
+        label: createCurrencyOptionLabel(
+          currency.currencyCode,
+          currency.currencyName
+        ),
       })),
     [currencyProfiles]
   );
@@ -49,14 +53,18 @@ export const CountryGroupForm = ({
     async (inputValue: string): Promise<AsyncSelectResponse> => {
       const normalizedSearch = inputValue.trim().toLowerCase();
       const options = normalizedSearch
-        ? currencyOptions.filter(option => option.label.toLowerCase().includes(normalizedSearch))
+        ? currencyOptions.filter(option =>
+            option.label.toLowerCase().includes(normalizedSearch)
+          )
         : currencyOptions;
       return { options };
     },
     [currencyOptions]
   );
 
-  const handleSubmitErrors: SubmitErrorHandler<ICountryGroupFormValues> = errors => {
+  const handleSubmitErrors: SubmitErrorHandler<
+    ICountryGroupFormValues
+  > = errors => {
     console.log('CountryGroupForm submit errors:', errors);
   };
 
@@ -68,7 +76,9 @@ export const CountryGroupForm = ({
       id="country-group-form"
       onSubmit={values => onSubmit(sanitizeCountryGroupFormValues(values))}
       onError={handleSubmitErrors}
-      resolver={yupResolver(countryGroupSchema) as Resolver<ICountryGroupFormValues>}
+      resolver={
+        yupResolver(countryGroupSchema) as Resolver<ICountryGroupFormValues>
+      }
       defaultValues={defaultValues}
       className="space-y-6"
       footer={

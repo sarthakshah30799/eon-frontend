@@ -14,6 +14,7 @@ import {
   type TransactionType,
 } from '@/modules/transactions';
 import { getPurchaseTransactionAccountFilter } from '@/modules/purchase/utils/purchaseUtils';
+import { toPageQuery } from '@/utils/paginatedList';
 
 const ACCOUNT_PROFILE_OPTION_PAGE_SIZE = 30;
 import type { ITransactionAdditionalChargeFormRow } from './transactionAdditionalChargesTypes';
@@ -67,12 +68,13 @@ const AdditionalChargeRow = ({
     async (inputValue: string, page = 1): Promise<AsyncSelectResponse> => {
       const derivedQuery: IAccountProfileListQuery = {
         ...accountQuery,
-        page,
-        limit: ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
+        ...toPageQuery(page, ACCOUNT_PROFILE_OPTION_PAGE_SIZE),
         search: inputValue,
         active: true,
         accountType: AccountProfileLedgerLabelEnum.GeneralLedger,
-        ...getPurchaseTransactionAccountFilter(transactionType ?? TransactionTypeEnum.PURCHASE),
+        ...getPurchaseTransactionAccountFilter(
+          transactionType ?? TransactionTypeEnum.PURCHASE
+        ),
       };
 
       const response = await accountProfileApi.getAccountProfiles({
@@ -86,7 +88,7 @@ const AdditionalChargeRow = ({
           value: account.id,
           label: `${account.accountCode} - ${account.accountName}`,
         })),
-        hasMore: accounts.length === ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
+        hasMore: response.hasMore,
       };
     },
     [accountQuery, transactionType]
@@ -97,24 +99,24 @@ const AdditionalChargeRow = ({
       <div className="md:col-span-2 xl:col-span-1">
         <FormFieldSelect
           name={`${arrayName}.${index}.accountId`}
-        label="Account"
-        placeholder={
-          isSale ? 'Select bulk sell account' : 'Select bulk purchase account'
-        }
+          label="Account"
+          placeholder={
+            isSale ? 'Select bulk sell account' : 'Select bulk purchase account'
+          }
           loadOptions={loadAccountOptions}
           pagination
-        pageSize={ACCOUNT_PROFILE_OPTION_PAGE_SIZE}
-        disabled={disabled || isLocked}
-        isSearchable
-      />
-    </div>
+          pageSize={ACCOUNT_PROFILE_OPTION_PAGE_SIZE}
+          disabled={disabled || isLocked}
+          isSearchable
+        />
+      </div>
 
-    <FormFieldInput
-      name={`${arrayName}.${index}.amount`}
-      label="Amount"
-      type="number"
-      disabled={disabled || isLocked}
-    />
+      <FormFieldInput
+        name={`${arrayName}.${index}.amount`}
+        label="Amount"
+        type="number"
+        disabled={disabled || isLocked}
+      />
 
       <FormFieldInput
         name={`${arrayName}.${index}.gstRate`}
@@ -210,9 +212,12 @@ export const TransactionAdditionalChargesFieldArray = ({
     if (hasAutoRow) {
       const existingAutoRow = currentRows[autoRowIndex];
       const isSameAutoRow =
-        String(existingAutoRow?.accountId ?? '') === String(nextAutoRow.accountId ?? '') &&
-        String(existingAutoRow?.amount ?? '') === String(nextAutoRow.amount ?? '') &&
-        String(existingAutoRow?.chargeSource ?? '') === String(nextAutoRow.chargeSource ?? '');
+        String(existingAutoRow?.accountId ?? '') ===
+          String(nextAutoRow.accountId ?? '') &&
+        String(existingAutoRow?.amount ?? '') ===
+          String(nextAutoRow.amount ?? '') &&
+        String(existingAutoRow?.chargeSource ?? '') ===
+          String(nextAutoRow.chargeSource ?? '');
 
       if (isSameAutoRow) {
         return;
@@ -249,10 +254,7 @@ export const TransactionAdditionalChargesFieldArray = ({
       return;
     }
 
-    replace([
-      nextAutoRow,
-      ...nextRows,
-    ]);
+    replace([nextAutoRow, ...nextRows]);
   }, [charges, lockedRow, replace]);
 
   const totalAmount = useMemo(() => {
@@ -291,7 +293,15 @@ export const TransactionAdditionalChargesFieldArray = ({
                 accountQuery={accountQuery}
                 transactionType={transactionType}
                 disabled={disabled}
-                isLocked={String((charges?.[index] as ITransactionAdditionalChargeFormRow | undefined)?.chargeSource ?? '') === 'CORPORATE_HANDLING_FEE'}
+                isLocked={
+                  String(
+                    (
+                      charges?.[index] as
+                        | ITransactionAdditionalChargeFormRow
+                        | undefined
+                    )?.chargeSource ?? ''
+                  ) === 'CORPORATE_HANDLING_FEE'
+                }
                 onRemove={remove}
               />
             ))}

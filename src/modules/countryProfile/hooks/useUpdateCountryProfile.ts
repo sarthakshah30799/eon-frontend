@@ -27,4 +27,3 @@ export const useUpdateCountryProfile = (id: string) => {
     submitCountryProfile: mutation.mutateAsync,
   };
 };
-

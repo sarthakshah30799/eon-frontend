@@ -59,7 +59,10 @@ export const CardSettlementItemPicker = ({
         </Button>
       ),
     },
-    { accessorKey: 'maskedCardNumber', header: CARD_SETTLEMENT_TEXT.cardNumber },
+    {
+      accessorKey: 'maskedCardNumber',
+      header: CARD_SETTLEMENT_TEXT.cardNumber,
+    },
     { accessorKey: 'series', header: CARD_SETTLEMENT_TEXT.series },
     { accessorKey: 'kitNumber', header: CARD_SETTLEMENT_TEXT.kitNumber },
     ...(showBranch
@@ -67,11 +70,8 @@ export const CardSettlementItemPicker = ({
           {
             id: 'branch',
             header: CARD_SETTLEMENT_TEXT.sellingBranch,
-            cell: ({
-              row,
-            }: {
-              row: { original: CardStockUnsettledItem };
-            }) => snapshotLabel(row.original.branchSnapshot, row.original.branchId),
+            cell: ({ row }: { row: { original: CardStockUnsettledItem } }) =>
+              snapshotLabel(row.original.branchSnapshot, row.original.branchId),
           } satisfies TableColumnDef<CardStockUnsettledItem>,
         ]
       : []),

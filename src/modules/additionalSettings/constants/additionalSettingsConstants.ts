@@ -41,10 +41,14 @@ export const AdditionalSettingsCodeEnum = {
   CounterControlAccount: 'COUNTER_CONTROL_ACCOUNT',
   TaxRate: 'GST_RATE',
   PurchasePassengerRule: 'PURCHASE_PASSENGER_RULE',
-  PurchasePassengerRuleReferenceCurrencyCode: 'PURCHASE_PASSENGER_RULE_REFERENCE_CURRENCY_CODE',
-  PurchasePassengerRuleCdfThresholdAmount: 'PURCHASE_PASSENGER_RULE_CDF_THRESHOLD_AMOUNT',
-  PurchasePassengerRuleIndianCashLimitAmount: 'PURCHASE_PASSENGER_RULE_INDIAN_CASH_LIMIT_AMOUNT',
-  PurchasePassengerRuleNriCashLimitAmount: 'PURCHASE_PASSENGER_RULE_NRI_CASH_LIMIT_AMOUNT',
+  PurchasePassengerRuleReferenceCurrencyCode:
+    'PURCHASE_PASSENGER_RULE_REFERENCE_CURRENCY_CODE',
+  PurchasePassengerRuleCdfThresholdAmount:
+    'PURCHASE_PASSENGER_RULE_CDF_THRESHOLD_AMOUNT',
+  PurchasePassengerRuleIndianCashLimitAmount:
+    'PURCHASE_PASSENGER_RULE_INDIAN_CASH_LIMIT_AMOUNT',
+  PurchasePassengerRuleNriCashLimitAmount:
+    'PURCHASE_PASSENGER_RULE_NRI_CASH_LIMIT_AMOUNT',
   PurchasePassengerRuleWindowDays: 'PURCHASE_PASSENGER_RULE_WINDOW_DAYS',
   TransactionNumbering: 'TRANSACTION_NUMBERING',
   PurchaseFfmcNumberSeries: 'PURCHASE_FFMC',

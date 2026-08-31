@@ -210,24 +210,28 @@ export interface IPurchaseSubmitPayload {
     partyProfileId: string;
     transactionPartyProfileType?: TransactionPartyProfileType | null;
     purposeId?: string | null;
-  agentProfileId?: string | null;
-  loanAmount?: string | null;
-  declaredAmount?: string | null;
-  preTcsFinalAmount?: string | null;
-  tcsRatePercent?: string | null;
+    agentProfileId?: string | null;
+    loanAmount?: string | null;
+    declaredAmount?: string | null;
+    preTcsFinalAmount?: string | null;
+    tcsRatePercent?: string | null;
     tcsRateType?: PurposeRateType | null;
-  tcsAmount?: string | null;
-  itrFiled?: boolean | null;
-  tcsDeclarationAccepted?: boolean | null;
-  isProprietorship?: boolean | null;
-  cdfNo?: string | null;
-  cdfIssuingAuthority?: string | null;
-  cdfApprovedUsd?: string | null;
-  cdfArrivalDate?: string | null;
-  passenger?: import('@/modules/transactions').ICreateTransactionPassengerPayload | null;
-  passengerTravel?: import('@/modules/transactions').ICreateTransactionPassengerTravelPayload | null;
-  manualBookPageId?: string | null;
-  manualBookPageSnapshot?: Record<string, unknown> | null;
+    tcsAmount?: string | null;
+    itrFiled?: boolean | null;
+    tcsDeclarationAccepted?: boolean | null;
+    isProprietorship?: boolean | null;
+    cdfNo?: string | null;
+    cdfIssuingAuthority?: string | null;
+    cdfApprovedUsd?: string | null;
+    cdfArrivalDate?: string | null;
+    passenger?:
+      | import('@/modules/transactions').ICreateTransactionPassengerPayload
+      | null;
+    passengerTravel?:
+      | import('@/modules/transactions').ICreateTransactionPassengerTravelPayload
+      | null;
+    manualBookPageId?: string | null;
+    manualBookPageSnapshot?: Record<string, unknown> | null;
     transactionType: TransactionType;
     tradeMode: TradeMode;
     remarks?: string | null;

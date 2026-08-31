@@ -4,7 +4,9 @@ interface CalendarIconProps {
   className?: string;
 }
 
-export const CalendarIcon: React.FC<CalendarIconProps> = ({ className = 'h-4 w-4' }) => {
+export const CalendarIcon: React.FC<CalendarIconProps> = ({
+  className = 'h-4 w-4',
+}) => {
   return (
     <svg
       aria-hidden="true"

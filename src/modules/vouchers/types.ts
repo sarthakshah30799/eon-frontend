@@ -1,6 +1,12 @@
+import type { IOffsetPaginationParams } from '@/types/pagination';
+
 export type VoucherType = 'RECEIPT' | 'PAYMENT' | 'JOURNAL';
 export type VoucherDirection = 'DEBIT' | 'CREDIT';
-export type VoucherAccountMode = 'CASH' | 'BANK_CHEQUE' | 'PETTY_CASH' | 'CREDIT_CARD';
+export type VoucherAccountMode =
+  | 'CASH'
+  | 'BANK_CHEQUE'
+  | 'PETTY_CASH'
+  | 'CREDIT_CARD';
 
 export interface VoucherSnapshot {
   id?: string;
@@ -57,7 +63,10 @@ export interface VoucherFormValues {
   items: VoucherItem[];
 }
 
-export interface AccountingVoucher extends Omit<VoucherFormValues, 'number' | 'accountMode'> {
+export interface AccountingVoucher extends Omit<
+  VoucherFormValues,
+  'number' | 'accountMode'
+> {
   id: string;
   voucherType: VoucherType;
   number: string;
@@ -75,12 +84,12 @@ export interface AccountingVoucher extends Omit<VoucherFormValues, 'number' | 'a
   createdAt: string;
 }
 
-export interface VoucherListResponse {
-  data: AccountingVoucher[];
-  page: number;
-  limit: number;
-  totalItems: number;
-  totalPages: number;
+export interface VoucherListQuery extends IOffsetPaginationParams {
+  branchId?: string;
+  partyProfileId?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  search?: string;
 }
 
 export interface AvailableAdvance extends AccountingVoucher {

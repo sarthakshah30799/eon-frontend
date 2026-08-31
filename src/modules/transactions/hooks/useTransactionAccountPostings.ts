@@ -1,18 +1,14 @@
 import { useCallback, useMemo, useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { useDebounce } from '@/hooks';
+import { useDebounce, useOffsetPaginatedList } from '@/hooks';
+import { PAGINATION_DEFAULTS } from '@/constants/paginationConstants';
 import { transactionsApi } from '@/api/transactions';
 import { useListPartyProfiles } from '@/modules/partyProfiles/hooks';
-import {
-  formatDateTime,
-  formatReferenceLabel,
-} from '@/utils';
+import { formatDateTime, formatReferenceLabel } from '@/utils';
 import type { TransactionListRow } from '../components';
-import type {
-  ITransactionEntity,
-  TransactionType,
-} from '../types';
+import type { TransactionType } from '../types';
 import { TransactionTypeEnum } from '../types';
 
 export interface TransactionAccountPostingOption {
@@ -27,44 +23,79 @@ const transactionTypeOptions: TransactionAccountPostingOption[] = [
 
 export const useTransactionAccountPostings = (enabled = true) => {
   const queryClient = useQueryClient();
-  const [search, setSearch] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const search = searchParams.get('search') ?? '';
+  const debouncedSearch = useDebounce(search.trim(), 400);
   const [partyProfileId, setPartyProfileId] = useState('');
   const [transactionType, setTransactionType] = useState('');
-  const [activeTransactionId, setActiveTransactionId] = useState<string | null>(null);
-  const debouncedSearch = useDebounce(search.trim(), 400);
-
-  const {
-    data: partyProfilesResponse,
-    isLoading: isPartyProfilesLoading,
-  } = useListPartyProfiles(
-    {
-      page: 1,
-      limit: 500,
-      activeOnly: true,
-    },
-    undefined,
-    enabled,
-    true,
+  const [activeTransactionId, setActiveTransactionId] = useState<string | null>(
+    null
   );
+
+  const resetOffset = useCallback(() => {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      next.set('offset', String(PAGINATION_DEFAULTS.OFFSET));
+      if (!next.has('limit')) {
+        next.set('limit', String(PAGINATION_DEFAULTS.LIMIT));
+      }
+      return next;
+    });
+  }, [setSearchParams]);
+
+  const setSearch = useCallback(
+    (value: string) => {
+      setSearchParams(prev => {
+        const next = new URLSearchParams(prev);
+        if (value.trim()) {
+          next.set('search', value.trim());
+        } else {
+          next.delete('search');
+        }
+        next.set('offset', String(PAGINATION_DEFAULTS.OFFSET));
+        if (!next.has('limit')) {
+          next.set('limit', String(PAGINATION_DEFAULTS.LIMIT));
+        }
+        return next;
+      });
+    },
+    [setSearchParams]
+  );
+
+  const { data: partyProfilesResponse, isLoading: isPartyProfilesLoading } =
+    useListPartyProfiles(
+      {
+        limit: 500,
+        offset: 0,
+        activeOnly: true,
+      },
+      undefined,
+      enabled,
+      true
+    );
 
   const partyProfileOptions = useMemo<TransactionAccountPostingOption[]>(
     () =>
       (partyProfilesResponse?.data ?? []).map(profile => ({
         value: profile.id,
-        label: `${profile.code}${profile.name ? ` - ${profile.name}` : ''}` || profile.id,
+        label:
+          `${profile.code}${profile.name ? ` - ${profile.name}` : ''}` ||
+          profile.id,
       })),
     [partyProfilesResponse]
   );
 
   const selectedPartyProfile = useMemo(
     () =>
-      partyProfileOptions.find(option => option.value === partyProfileId) ?? null,
+      partyProfileOptions.find(option => option.value === partyProfileId) ??
+      null,
     [partyProfileId, partyProfileOptions]
   );
 
   const selectedTransactionType = useMemo(
     () =>
-      transactionTypeOptions.find(option => option.value === transactionType) ?? null,
+      transactionTypeOptions.find(option => option.value === transactionType) ??
+      null,
     [transactionType]
   );
 
@@ -100,26 +131,33 @@ export const useTransactionAccountPostings = (enabled = true) => {
     [filterOptions]
   );
 
+  const filters = useMemo(
+    () => ({
+      search: debouncedSearch || undefined,
+      partyProfileId: partyProfileId || undefined,
+      transactionType: transactionType
+        ? (transactionType as TransactionType)
+        : undefined,
+    }),
+    [debouncedSearch, partyProfileId, transactionType]
+  );
+
   const {
-    data: transactions = [],
+    rows: transactions,
     isLoading,
     isFetching,
     error,
-  } = useQuery({
-    queryKey: [
-      'transactions',
-      'account-postings',
-      debouncedSearch,
-      partyProfileId,
-      transactionType,
-    ],
+    page,
+    limit,
+    total,
+    totalPages,
+    handlePageChange,
+    handlePageSizeChange,
+  } = useOffsetPaginatedList({
+    queryKey: ['transactions', 'account-postings'],
+    queryFn: params => transactionsApi.getTransactions(params),
+    filters,
     enabled,
-    queryFn: () =>
-      transactionsApi.getTransactions({
-        search: debouncedSearch || undefined,
-        partyProfileId: partyProfileId || undefined,
-        transactionType: transactionType ? (transactionType as TransactionType) : undefined,
-      }),
   });
 
   const rebuildMutation = useMutation({
@@ -134,7 +172,9 @@ export const useTransactionAccountPostings = (enabled = true) => {
     },
     onError: error => {
       toast.error(
-        error instanceof Error ? error.message : 'Failed to queue account posting rebuild'
+        error instanceof Error
+          ? error.message
+          : 'Failed to queue account posting rebuild'
       );
     },
     onSettled: () => {
@@ -144,7 +184,7 @@ export const useTransactionAccountPostings = (enabled = true) => {
 
   const rows = useMemo<TransactionListRow[]>(
     () =>
-      (transactions as ITransactionEntity[]).map(transaction => ({
+      transactions.map(transaction => ({
         id: transaction.id,
         number: transaction.number ?? '-',
         branch: formatReferenceLabel(transaction.branchSnapshot),
@@ -157,11 +197,27 @@ export const useTransactionAccountPostings = (enabled = true) => {
     [transactions]
   );
 
+  const handlePartyProfileChange = useCallback(
+    (nextPartyProfileId: string) => {
+      setPartyProfileId(nextPartyProfileId);
+      resetOffset();
+    },
+    [resetOffset]
+  );
+
+  const handleTransactionTypeChange = useCallback(
+    (nextTransactionType: string) => {
+      setTransactionType(nextTransactionType);
+      resetOffset();
+    },
+    [resetOffset]
+  );
+
   const resetFilters = useCallback(() => {
     setSearch('');
     setPartyProfileId('');
     setTransactionType('');
-  }, []);
+  }, [setSearch]);
 
   const queueAccountPostingRebuild = useCallback(
     async (transactionId: string) => {
@@ -173,8 +229,8 @@ export const useTransactionAccountPostings = (enabled = true) => {
   return {
     search,
     setSearch,
-    setPartyProfileId,
-    setTransactionType,
+    setPartyProfileId: handlePartyProfileChange,
+    setTransactionType: handleTransactionTypeChange,
     selectedPartyProfile,
     selectedTransactionType,
     loadPartyProfileOptions,
@@ -188,6 +244,12 @@ export const useTransactionAccountPostings = (enabled = true) => {
     isRebuildPending: rebuildMutation.isPending,
     resetFilters,
     queueAccountPostingRebuild,
+    page,
+    limit,
+    total,
+    totalPages,
+    handlePageChange,
+    handlePageSizeChange,
   };
 };
 

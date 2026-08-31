@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button1';
 import { Table, type TableColumnDef } from '@/components/ui/table';
+import type { PaginationControlsProps } from '@/components/ui';
 import {
   formatPurposeRateLabel,
   formatPurposeScopeLabel,
@@ -10,11 +11,12 @@ import {
 } from '../utils/purposeUtils';
 import type { IPurpose } from '../types/purposeTypes';
 
-interface PurposeTableProps {
+interface PurposeTableProps extends PaginationControlsProps {
   purposes: IPurpose[];
   onDelete: (id: string) => void | Promise<void>;
   isDeleting?: boolean;
   loading?: boolean;
+  isFetching?: boolean;
   onSearch?: (value: string) => void;
   searchValue?: string;
   searchPlaceholder?: string;
@@ -37,9 +39,16 @@ export const PurposeTable = ({
   onDelete,
   isDeleting = false,
   loading = false,
+  isFetching = false,
   onSearch,
   searchValue = '',
   searchPlaceholder = 'Search',
+  page,
+  pageSize,
+  total,
+  totalPages,
+  onPageChange,
+  onPageSizeChange,
 }: PurposeTableProps) => {
   const navigate = useNavigate();
 
@@ -52,8 +61,14 @@ export const PurposeTable = ({
         threshold: Number(purpose.threshold || 0).toFixed(2),
         rate: Number(purpose.rate || 0).toFixed(2),
         rateType: purpose.rateType,
-        partyScope: formatPurposeScopeLabel(purpose.corporate, purpose.individual),
-        transactionScope: formatPurposeTransactionScopeLabel(purpose.sell, purpose.purchase),
+        partyScope: formatPurposeScopeLabel(
+          purpose.corporate,
+          purpose.individual
+        ),
+        transactionScope: formatPurposeTransactionScopeLabel(
+          purpose.sell,
+          purpose.purchase
+        ),
         slabCount: purpose.slabs?.length ?? 0,
       })),
     [purposes]
@@ -68,15 +83,21 @@ export const PurposeTable = ({
     {
       accessorKey: 'rate',
       header: 'Rate',
-      cell: ({ row }) => formatPurposeRateLabel(Number(row.original.rate), row.original.rateType),
+      cell: ({ row }) =>
+        formatPurposeRateLabel(
+          Number(row.original.rate),
+          row.original.rateType
+        ),
     },
     { accessorKey: 'slabCount', header: 'Slabs' },
     {
       id: 'actions',
       header: 'Actions',
       meta: {
-        headerClassName: 'sticky right-0 z-20 border-l border-border-primary bg-surface-secondary',
-        cellClassName: 'sticky right-0 z-10 border-l border-border-primary bg-surface-primary',
+        headerClassName:
+          'sticky right-0 z-20 border-l border-border-primary bg-surface-secondary',
+        cellClassName:
+          'sticky right-0 z-10 border-l border-border-primary bg-surface-primary',
       },
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
@@ -102,7 +123,9 @@ export const PurposeTable = ({
             disabled={isDeleting}
             onClick={async event => {
               event.stopPropagation();
-              if (window.confirm('Are you sure you want to delete this purpose?')) {
+              if (
+                window.confirm('Are you sure you want to delete this purpose?')
+              ) {
                 await onDelete(row.original.id);
               }
             }}
@@ -120,10 +143,18 @@ export const PurposeTable = ({
       columns={columns}
       data={rows}
       enableFiltering={false}
-      enablePagination={false}
+      enablePagination
+      manualPagination
       enableColumnVisibility={false}
       enableRowSelection={false}
       loading={loading}
+      isFetching={isFetching}
+      page={page}
+      pageSize={pageSize}
+      total={total}
+      totalPages={totalPages}
+      onPageChange={onPageChange}
+      onPageSizeChange={onPageSizeChange}
       onSearch={onSearch}
       searchValue={searchValue}
       searchPlaceholder={searchPlaceholder}

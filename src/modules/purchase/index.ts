@@ -13,4 +13,3 @@ export * from './views/AD1ListView';
 export * from './views/AD1EditView';
 export * from './forms/AD1Form';
 export * from './schema/ad1Schema';
-

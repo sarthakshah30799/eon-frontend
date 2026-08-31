@@ -41,7 +41,7 @@ export const CardSettlementReportFiltersSection = ({
           emptyMessage={CARD_SETTLEMENT_REPORT_TEXT.branchEmpty}
           helperText={buildSelectionDescription(
             filters.branchIds.length,
-            filters.branchOptions.length,
+            filters.branchOptions.length
           )}
           isLoading={filters.isLoadingBranches}
           loadingMessage={CARD_SETTLEMENT_REPORT_TEXT.loadingOptions}
@@ -57,7 +57,7 @@ export const CardSettlementReportFiltersSection = ({
           emptyMessage={CARD_SETTLEMENT_REPORT_TEXT.productEmpty}
           helperText={buildSelectionDescription(
             filters.productIds.length,
-            filters.productOptions.length,
+            filters.productOptions.length
           )}
           isLoading={filters.isLoadingProducts}
           loadingMessage={CARD_SETTLEMENT_REPORT_TEXT.loadingOptions}
@@ -73,7 +73,7 @@ export const CardSettlementReportFiltersSection = ({
           emptyMessage={CARD_SETTLEMENT_REPORT_TEXT.currencyEmpty}
           helperText={buildSelectionDescription(
             filters.currencyIds.length,
-            filters.currencyOptions.length,
+            filters.currencyOptions.length
           )}
           isLoading={filters.isLoadingCurrencies}
           loadingMessage={CARD_SETTLEMENT_REPORT_TEXT.loadingOptions}
@@ -89,7 +89,7 @@ export const CardSettlementReportFiltersSection = ({
           emptyMessage={CARD_SETTLEMENT_REPORT_TEXT.issuerEmpty}
           helperText={buildSelectionDescription(
             filters.issuerPartyProfileIds.length,
-            filters.issuerOptions.length,
+            filters.issuerOptions.length
           )}
           isLoading={filters.isLoadingIssuers}
           loadingMessage={CARD_SETTLEMENT_REPORT_TEXT.loadingOptions}
@@ -105,7 +105,11 @@ export const CardSettlementReportFiltersSection = ({
         >
           {CARD_SETTLEMENT_REPORT_TEXT.reset}
         </Button>
-        <Button type="button" onClick={filters.handleView} className="h-8 px-3 text-xs">
+        <Button
+          type="button"
+          onClick={filters.handleView}
+          className="h-8 px-3 text-xs"
+        >
           {CARD_SETTLEMENT_REPORT_TEXT.viewReport}
         </Button>
       </div>

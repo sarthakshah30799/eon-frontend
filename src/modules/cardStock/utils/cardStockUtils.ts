@@ -1,19 +1,40 @@
-import type { ICardStockFormCard, ICardStockFormItem, ICardStockFormValues } from '../types';
+import type {
+  ICardStockFormCard,
+  ICardStockFormItem,
+  ICardStockFormValues,
+} from '../types';
 import type { ICardStockReceipt } from '@/api/cardStock';
 
 export const emptyCard = (): ICardStockFormCard => ({
-  series: '', kitNumber: '', cardNumber: '', denomination: '', amount: '', expirationDate: '',
+  series: '',
+  kitNumber: '',
+  cardNumber: '',
+  denomination: '',
+  amount: '',
+  expirationDate: '',
 });
 
 export const emptyItem = (): ICardStockFormItem => ({
-  currencyId: '', per: '1', productId: '', issuerPartyProfileId: '', feAmount: '', cards: [emptyCard()],
+  currencyId: '',
+  per: '1',
+  productId: '',
+  issuerPartyProfileId: '',
+  feAmount: '',
+  cards: [emptyCard()],
 });
 
 export const emptyForm = (branchId = ''): ICardStockFormValues => ({
-  transactionNumber: '', receiptDate: '', issuerPartyProfileId: '', branchId, totalFeAmount: '', items: [emptyItem()],
+  transactionNumber: '',
+  receiptDate: '',
+  issuerPartyProfileId: '',
+  branchId,
+  totalFeAmount: '',
+  items: [emptyItem()],
 });
 
-export const mapReceiptToForm = (receipt: ICardStockReceipt): ICardStockFormValues => ({
+export const mapReceiptToForm = (
+  receipt: ICardStockReceipt
+): ICardStockFormValues => ({
   transactionNumber: receipt.transactionNumber ?? '',
   receiptDate: receipt.receiptDate?.slice(0, 10) ?? '',
   issuerPartyProfileId: receipt.issuerPartyProfileId,
@@ -26,9 +47,12 @@ export const mapReceiptToForm = (receipt: ICardStockReceipt): ICardStockFormValu
     issuerPartyProfileId: item.issuerPartyProfileId,
     feAmount: item.feAmount,
     cards: item.cards.map(card => ({
-      series: card.series, kitNumber: card.kitNumber,
-      cardNumber: card.maskedCardNumber ?? '', denomination: card.denomination,
-      amount: card.amount, expirationDate: card.expirationDate?.slice(0, 10) ?? '',
+      series: card.series,
+      kitNumber: card.kitNumber,
+      cardNumber: card.maskedCardNumber ?? '',
+      denomination: card.denomination,
+      amount: card.amount,
+      expirationDate: card.expirationDate?.slice(0, 10) ?? '',
     })),
   })),
 });

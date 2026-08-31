@@ -58,8 +58,14 @@ export const ChequeBookAllocationTable = ({
     [cashiers]
   );
 
-  const loadCashierOptions = async (inputValue: string): Promise<AsyncSelectResponse> => {
-    const data = await chequebookApi.getAuthorizedUsers('', AuthorizedUserRole.CASHIER, inputValue);
+  const loadCashierOptions = async (
+    inputValue: string
+  ): Promise<AsyncSelectResponse> => {
+    const data = await chequebookApi.getAuthorizedUsers(
+      '',
+      AuthorizedUserRole.CASHIER,
+      inputValue
+    );
     return {
       options: data.map(c => ({ value: c.id, label: c.name })),
       hasMore: false,
@@ -140,7 +146,8 @@ export const ChequeBookAllocationTable = ({
       {
         accessorKey: 'bankAccountCode',
         header: 'Bank Account Code',
-        cell: ({ row }) => row.original.bankAccountCodeName || row.original.bankAccountCode,
+        cell: ({ row }) =>
+          row.original.bankAccountCodeName || row.original.bankAccountCode,
       },
       {
         accessorKey: 'bookNo',
@@ -167,7 +174,10 @@ export const ChequeBookAllocationTable = ({
         accessorKey: 'hoRemarks',
         header: 'HO Remarks',
         cell: ({ row }) => (
-          <span className="block max-w-[120px] truncate" title={row.original.hoRemarks}>
+          <span
+            className="block max-w-[120px] truncate"
+            title={row.original.hoRemarks}
+          >
             {row.original.hoRemarks}
           </span>
         ),

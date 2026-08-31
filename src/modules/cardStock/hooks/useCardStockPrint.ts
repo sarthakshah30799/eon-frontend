@@ -19,16 +19,27 @@ import {
 export const useRecordCardStockReceiptPrint = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, payload }: { id: string; payload: Parameters<typeof cardStockApi.recordPrint>[1] }) =>
-      cardStockApi.recordPrint(id, payload),
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: string;
+      payload: Parameters<typeof cardStockApi.recordPrint>[1];
+    }) => cardStockApi.recordPrint(id, payload),
     onSuccess: (_data, variables) => {
-      queryClient.setQueryData<ICardStockReceipt>(['card-stock', 'receipts', variables.id], current =>
-        current
-          ? { ...current, printCount: (current.printCount ?? 0) + 1 }
-          : current,
+      queryClient.setQueryData<ICardStockReceipt>(
+        ['card-stock', 'receipts', variables.id],
+        current =>
+          current
+            ? { ...current, printCount: (current.printCount ?? 0) + 1 }
+            : current
       );
-      void queryClient.invalidateQueries({ queryKey: ['card-stock', 'receipts', variables.id] });
-      void queryClient.invalidateQueries({ queryKey: ['card-stock', 'receipts'] });
+      void queryClient.invalidateQueries({
+        queryKey: ['card-stock', 'receipts', variables.id],
+      });
+      void queryClient.invalidateQueries({
+        queryKey: ['card-stock', 'receipts'],
+      });
     },
   });
 };
@@ -58,9 +69,15 @@ export const usePrintCardStockReceipt = () => {
         payload: { copyType, kind: 'STOCK_IN', html },
       });
       openCardStockPrintWindow(html);
-      toast.success(CARD_STOCK_PRINT_TEXT.printed(getCardStockPrintCopyLabel(copyType)));
+      toast.success(
+        CARD_STOCK_PRINT_TEXT.printed(getCardStockPrintCopyLabel(copyType))
+      );
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : CARD_STOCK_PRINT_TEXT.printFailed);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : CARD_STOCK_PRINT_TEXT.printFailed
+      );
     } finally {
       setIsPrinting(false);
     }

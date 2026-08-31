@@ -1,8 +1,10 @@
 import { useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button1';
-import { useDebounce } from '@/hooks';
-import { useListMiscellaneousProfiles } from '../hooks';
+import { PaginationControls } from '@/components/ui';
+import { useDebounce, useOffsetPaginatedList } from '@/hooks';
+import { PAGINATION_DEFAULTS } from '@/constants/paginationConstants';
+import { categoryOptionsApi } from '@/api/categoryOptions';
 import { CATEGORY_OPTIONS_TEXTS } from '../constants';
 import { MiscellaneousProfileTable } from '../components';
 
@@ -11,12 +13,45 @@ export const MiscellaneousProfileListView = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const search = searchParams.get('search') ?? '';
   const debouncedSearch = useDebounce(search, 400);
-  const query = useMemo(
-    () => debouncedSearch.trim(),
+  const filters = useMemo(
+    () => ({
+      search: debouncedSearch.trim() || undefined,
+    }),
     [debouncedSearch]
   );
-  const { data: options = [], isLoading, isFetching, error } =
-    useListMiscellaneousProfiles(query);
+
+  const {
+    rows: options,
+    isLoading,
+    isFetching,
+    error,
+    page,
+    limit,
+    total,
+    totalPages,
+    handlePageChange,
+    handlePageSizeChange,
+  } = useOffsetPaginatedList({
+    queryKey: ['category-options'],
+    queryFn: params => categoryOptionsApi.getCategoryOptions(params),
+    filters,
+  });
+
+  const handleSearch = (value: string) => {
+    setSearchParams(prev => {
+      const nextParams = new URLSearchParams(prev);
+      if (value.trim()) {
+        nextParams.set('search', value.trim());
+      } else {
+        nextParams.delete('search');
+      }
+      nextParams.set('offset', String(PAGINATION_DEFAULTS.OFFSET));
+      if (!nextParams.get('limit')) {
+        nextParams.set('limit', String(PAGINATION_DEFAULTS.LIMIT));
+      }
+      return nextParams;
+    });
+  };
 
   if (error) {
     return (
@@ -27,7 +62,7 @@ export const MiscellaneousProfileListView = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <div className="flex justify-end">
         <Button
           type="button"
@@ -38,26 +73,26 @@ export const MiscellaneousProfileListView = () => {
         </Button>
       </div>
 
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm">
+      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
         <MiscellaneousProfileTable
           options={options}
-          onSearch={value =>
-            setSearchParams(prev => {
-              const nextParams = new URLSearchParams(prev);
-
-              if (value.trim()) {
-                nextParams.set('search', value.trim());
-              } else {
-                nextParams.delete('search');
-              }
-
-              return nextParams;
-            })
-          }
+          loading={isLoading || isFetching}
+          onSearch={handleSearch}
           searchValue={search}
           searchPlaceholder="Search code"
-          loading={isLoading || isFetching}
         />
+        {totalPages > 0 ? (
+          <div className="mt-3 border-t border-border-primary pt-3">
+            <PaginationControls
+              page={page}
+              pageSize={limit}
+              total={total}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
+            />
+          </div>
+        ) : null}
       </section>
     </div>
   );

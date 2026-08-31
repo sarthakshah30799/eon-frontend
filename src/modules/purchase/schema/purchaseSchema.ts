@@ -74,53 +74,53 @@ const signedDecimalStringSchema = yup
 
 const createPurchaseTransactionSchema = (transactionType: TransactionType) =>
   yup.object({
-  currencyId: yup.string().trim().required('Currency is required'),
-  currencyCode: yup.string().trim().default(''),
-  currencyName: yup.string().trim().default(''),
-  productId: yup.string().trim().required('Product is required'),
-  productCode: yup.string().trim().default(''),
-  productDescription: yup.string().trim().default(''),
-  quantity: quantityStringSchema.test(
-    'card-sale-fe-amount',
-    PURCHASE_TRANSACTION_TEXT.quantityRequired,
-    function (value) {
-      const isCardSale =
-        transactionType === TransactionTypeEnum.SALE &&
-        isCardProductCode(this.parent.productCode);
-      if (!String(value ?? '').trim()) {
-        return this.createError({
-          message: isCardSale
-            ? PURCHASE_TRANSACTION_TEXT.feAmountRequired
-            : PURCHASE_TRANSACTION_TEXT.quantityRequired,
-        });
-      }
-
-      if (isCardSale) {
-        const amount = Number(value);
-        if (!Number.isFinite(amount) || amount <= 0) {
+    currencyId: yup.string().trim().required('Currency is required'),
+    currencyCode: yup.string().trim().default(''),
+    currencyName: yup.string().trim().default(''),
+    productId: yup.string().trim().required('Product is required'),
+    productCode: yup.string().trim().default(''),
+    productDescription: yup.string().trim().default(''),
+    quantity: quantityStringSchema.test(
+      'card-sale-fe-amount',
+      PURCHASE_TRANSACTION_TEXT.quantityRequired,
+      function (value) {
+        const isCardSale =
+          transactionType === TransactionTypeEnum.SALE &&
+          isCardProductCode(this.parent.productCode);
+        if (!String(value ?? '').trim()) {
           return this.createError({
-            message: PURCHASE_TRANSACTION_TEXT.feAmountPositive,
+            message: isCardSale
+              ? PURCHASE_TRANSACTION_TEXT.feAmountRequired
+              : PURCHASE_TRANSACTION_TEXT.quantityRequired,
           });
         }
-      }
 
-      return true;
-    }
-  ),
-  per: decimalStringSchema.default(''),
-  rate: decimalStringSchema.default(''),
-  commission: decimalStringSchema.default(''),
-  commissionSnapshot: yup.mixed().nullable().default(null),
-  pricingRuleSnapshot: yup.mixed().nullable().default(null),
-  total: decimalStringSchema.default(''),
-  roundOff: signedDecimalStringSchema.default(''),
-  finalAmount: decimalStringSchema.default(''),
-  cardId: yup.string().default(''),
-  issuerPartyProfileId: yup.string().default(''),
-  issuerPartyProfileSnapshot: yup.mixed().nullable().default(null),
-  cardSnapshot: yup.mixed().nullable().default(null),
-  isReload: yup.boolean().default(false),
-});
+        if (isCardSale) {
+          const amount = Number(value);
+          if (!Number.isFinite(amount) || amount <= 0) {
+            return this.createError({
+              message: PURCHASE_TRANSACTION_TEXT.feAmountPositive,
+            });
+          }
+        }
+
+        return true;
+      }
+    ),
+    per: decimalStringSchema.default(''),
+    rate: decimalStringSchema.default(''),
+    commission: decimalStringSchema.default(''),
+    commissionSnapshot: yup.mixed().nullable().default(null),
+    pricingRuleSnapshot: yup.mixed().nullable().default(null),
+    total: decimalStringSchema.default(''),
+    roundOff: signedDecimalStringSchema.default(''),
+    finalAmount: decimalStringSchema.default(''),
+    cardId: yup.string().default(''),
+    issuerPartyProfileId: yup.string().default(''),
+    issuerPartyProfileSnapshot: yup.mixed().nullable().default(null),
+    cardSnapshot: yup.mixed().nullable().default(null),
+    isReload: yup.boolean().default(false),
+  });
 
 const additionalChargeSchema = yup.object({
   accountId: yup.string().trim().default(''),
@@ -137,13 +137,18 @@ const createPaymentDetailSchema = (transactionType: TransactionType) =>
       .mixed<'NORMAL' | 'ADVANCE'>()
       .oneOf(['NORMAL', 'ADVANCE'])
       .default('NORMAL'),
-    advanceVoucherId: yup.string().trim().when('settlementSource', {
-      is: 'ADVANCE',
-      then: schema => schema.required('Advance voucher is required'),
-      otherwise: schema => schema.default(''),
-    }),
+    advanceVoucherId: yup
+      .string()
+      .trim()
+      .when('settlementSource', {
+        is: 'ADVANCE',
+        then: schema => schema.required('Advance voucher is required'),
+        otherwise: schema => schema.default(''),
+      }),
     paymentMethod: yup
-      .mixed<(typeof TransactionPaymentMethodEnum)[keyof typeof TransactionPaymentMethodEnum]>()
+      .mixed<
+        (typeof TransactionPaymentMethodEnum)[keyof typeof TransactionPaymentMethodEnum]
+      >()
       .oneOf([
         TransactionPaymentMethodEnum.CASH,
         TransactionPaymentMethodEnum.CHEQUE,
@@ -151,32 +156,44 @@ const createPaymentDetailSchema = (transactionType: TransactionType) =>
       .required('Payment mode is required'),
     accountId: yup.string().trim().required('Account is required'),
     accountName: yup.string().trim().default(''),
-    chequePageId: yup.string().trim().when(['paymentMethod', 'settlementSource'], {
-      is: (paymentMethod: string, settlementSource: string) =>
-        paymentMethod === TransactionPaymentMethodEnum.CHEQUE &&
-        settlementSource !== 'ADVANCE',
-      then: schema =>
-        transactionType === TransactionTypeEnum.PURCHASE
-          ? schema.required('Cheque page is required')
-          : schema.default(''),
-      otherwise: schema => schema.default(''),
-    }),
+    chequePageId: yup
+      .string()
+      .trim()
+      .when(['paymentMethod', 'settlementSource'], {
+        is: (paymentMethod: string, settlementSource: string) =>
+          paymentMethod === TransactionPaymentMethodEnum.CHEQUE &&
+          settlementSource !== 'ADVANCE',
+        then: schema =>
+          transactionType === TransactionTypeEnum.PURCHASE
+            ? schema.required('Cheque page is required')
+            : schema.default(''),
+        otherwise: schema => schema.default(''),
+      }),
     chequePageSnapshot: yup.mixed().nullable().default(null),
-    chequeNumber: yup.string().trim().when('paymentMethod', {
-      is: TransactionPaymentMethodEnum.CHEQUE,
-      then: schema => schema.required('Cheque / book reference is required'),
-      otherwise: schema => schema.default(''),
-    }),
-    chequeDate: yup.string().trim().when('paymentMethod', {
-      is: TransactionPaymentMethodEnum.CHEQUE,
-      then: schema => schema.required('Cheque date is required'),
-      otherwise: schema => schema.default(''),
-    }),
-    branchName: yup.string().trim().when('paymentMethod', {
-      is: TransactionPaymentMethodEnum.CHEQUE,
-      then: schema => schema.required('Branch name is required'),
-      otherwise: schema => schema.default(''),
-    }),
+    chequeNumber: yup
+      .string()
+      .trim()
+      .when('paymentMethod', {
+        is: TransactionPaymentMethodEnum.CHEQUE,
+        then: schema => schema.required('Cheque / book reference is required'),
+        otherwise: schema => schema.default(''),
+      }),
+    chequeDate: yup
+      .string()
+      .trim()
+      .when('paymentMethod', {
+        is: TransactionPaymentMethodEnum.CHEQUE,
+        then: schema => schema.required('Cheque date is required'),
+        otherwise: schema => schema.default(''),
+      }),
+    branchName: yup
+      .string()
+      .trim()
+      .when('paymentMethod', {
+        is: TransactionPaymentMethodEnum.CHEQUE,
+        then: schema => schema.required('Branch name is required'),
+        otherwise: schema => schema.default(''),
+      }),
     drawnOn: yup.string().trim().default(''),
     amount: decimalStringSchema.required('Amount is required'),
     remarks: yup.string().trim().default(''),
@@ -189,20 +206,29 @@ const manualBookReferenceTypeSchema = yup
 
 const passengerOtherDocumentSchema = yup.object({
   documentType: yup
-    .mixed<(typeof PassengerOtherIdProofTypeEnum)[keyof typeof PassengerOtherIdProofTypeEnum] | ''>()
+    .mixed<
+      | (typeof PassengerOtherIdProofTypeEnum)[keyof typeof PassengerOtherIdProofTypeEnum]
+      | ''
+    >()
     .oneOf([...Object.values(PassengerOtherIdProofTypeEnum), ''] as const)
     .required('Document type is required'),
-  documentNumber: yup.string().trim().when('documentType', {
-    is: (documentType: string) => Boolean(documentType),
-    then: schema => schema.required('Document number is required'),
-    otherwise: schema => schema.default(''),
-  }),
-  validTill: yup.string().trim().when('documentType', {
-    is: (documentType: string) =>
-      shouldShowPassengerOtherDocumentValidityFields(documentType),
-    then: schema => schema.required('Valid till is required'),
-    otherwise: schema => schema.default(''),
-  }),
+  documentNumber: yup
+    .string()
+    .trim()
+    .when('documentType', {
+      is: (documentType: string) => Boolean(documentType),
+      then: schema => schema.required('Document number is required'),
+      otherwise: schema => schema.default(''),
+    }),
+  validTill: yup
+    .string()
+    .trim()
+    .when('documentType', {
+      is: (documentType: string) =>
+        shouldShowPassengerOtherDocumentValidityFields(documentType),
+      then: schema => schema.required('Valid till is required'),
+      otherwise: schema => schema.default(''),
+    }),
   issueAt: yup.string().trim().default(''),
   issueDate: yup.string().trim().default(''),
   expiryDate: yup.string().trim().default(''),
@@ -223,7 +249,10 @@ export const createPurchaseFormSchema = (transactionType: TransactionType) =>
     branchId: yup.string().trim().required('Branch is required'),
     branchSnapshot: yup.mixed().nullable().default(null),
     counterId: yup.string().trim().required('Counter is required'),
-    transactionDate: yup.string().trim().required('Transaction date is required'),
+    transactionDate: yup
+      .string()
+      .trim()
+      .required('Transaction date is required'),
     transactionType: yup
       .mixed<(typeof TransactionTypeEnum)[keyof typeof TransactionTypeEnum]>()
       .oneOf(Object.values(TransactionTypeEnum))
@@ -249,7 +278,10 @@ export const createPurchaseFormSchema = (transactionType: TransactionType) =>
     partyProfileContactName: yup.string().trim().default(''),
     partyProfileApplyTax: yup.boolean().default(false),
     transactionPartyProfileType: yup
-      .mixed<(typeof TransactionPartyProfileTypeEnum)[keyof typeof TransactionPartyProfileTypeEnum] | ''>()
+      .mixed<
+        | (typeof TransactionPartyProfileTypeEnum)[keyof typeof TransactionPartyProfileTypeEnum]
+        | ''
+      >()
       .oneOf([...Object.values(TransactionPartyProfileTypeEnum), ''] as const)
       .when('purchasePageType', {
         is: (value: PurchasePageType | null) =>
@@ -270,7 +302,10 @@ export const createPurchaseFormSchema = (transactionType: TransactionType) =>
     agentProfileCode: yup.string().trim().default(''),
     agentProfileName: yup.string().trim().default(''),
     entityType: yup
-      .mixed<(typeof PassengerEntityTypeEnum)[keyof typeof PassengerEntityTypeEnum] | ''>()
+      .mixed<
+        | (typeof PassengerEntityTypeEnum)[keyof typeof PassengerEntityTypeEnum]
+        | ''
+      >()
       .oneOf([...Object.values(PassengerEntityTypeEnum), ''] as const)
       .when('purchasePageType', {
         is: (value: PurchasePageType | null) =>
@@ -289,7 +324,10 @@ export const createPurchaseFormSchema = (transactionType: TransactionType) =>
       }),
     passengerId: yup.string().default(''),
     nationalityType: yup
-      .mixed<(typeof PassengerNationalityTypeEnum)[keyof typeof PassengerNationalityTypeEnum] | ''>()
+      .mixed<
+        | (typeof PassengerNationalityTypeEnum)[keyof typeof PassengerNationalityTypeEnum]
+        | ''
+      >()
       .oneOf([...Object.values(PassengerNationalityTypeEnum), ''] as const)
       .when('purchasePageType', {
         is: (value: PurchasePageType | null) =>
@@ -298,7 +336,10 @@ export const createPurchaseFormSchema = (transactionType: TransactionType) =>
         otherwise: schema => schema.default(''),
       }),
     residentStatus: yup
-      .mixed<(typeof PassengerResidentStatusEnum)[keyof typeof PassengerResidentStatusEnum] | ''>()
+      .mixed<
+        | (typeof PassengerResidentStatusEnum)[keyof typeof PassengerResidentStatusEnum]
+        | ''
+      >()
       .oneOf([...Object.values(PassengerResidentStatusEnum), ''] as const)
       .when('purchasePageType', {
         is: (value: PurchasePageType | null) =>
@@ -327,7 +368,9 @@ export const createPurchaseFormSchema = (transactionType: TransactionType) =>
     preTcsFinalAmount: decimalStringSchema.default(''),
     tcsRatePercent: decimalStringSchema.default(''),
     tcsRateType: yup
-      .mixed<(typeof PurposeRateTypeEnum)[keyof typeof PurposeRateTypeEnum] | ''>()
+      .mixed<
+        (typeof PurposeRateTypeEnum)[keyof typeof PurposeRateTypeEnum] | ''
+      >()
       .oneOf([...Object.values(PurposeRateTypeEnum), ''] as const)
       .default(''),
     tcsAmount: decimalStringSchema.default(''),
@@ -341,43 +384,63 @@ export const createPurchaseFormSchema = (transactionType: TransactionType) =>
     panNumber: yup
       .string()
       .trim()
-      .test('pan-required', PASSENGER_IDENTITY_TEXT.panNumberRequired, function (value) {
-        if (!requiresCorporateIndividualPassenger(this.parent.purchasePageType)) {
-          return true;
+      .test(
+        'pan-required',
+        PASSENGER_IDENTITY_TEXT.panNumberRequired,
+        function (value) {
+          if (
+            !requiresCorporateIndividualPassenger(this.parent.purchasePageType)
+          ) {
+            return true;
+          }
+          const error = getPassengerPanNumberError({
+            ...this.parent,
+            panNumber: value,
+          });
+          if (!error) {
+            return true;
+          }
+          return this.createError({ message: error });
         }
-        const error = getPassengerPanNumberError({
-          ...this.parent,
-          panNumber: value,
-        });
-        if (!error) {
-          return true;
-        }
-        return this.createError({ message: error });
-      }),
+      ),
     panHolderName: yup
       .string()
       .trim()
-      .test('pan-holder-name-required', PASSENGER_IDENTITY_TEXT.panHolderNameRequired, function (value) {
-        if (!requiresCorporateIndividualPassenger(this.parent.purchasePageType)) {
-          return true;
+      .test(
+        'pan-holder-name-required',
+        PASSENGER_IDENTITY_TEXT.panHolderNameRequired,
+        function (value) {
+          if (
+            !requiresCorporateIndividualPassenger(this.parent.purchasePageType)
+          ) {
+            return true;
+          }
+          if (
+            !isPassengerPanRequired({ ...this.parent, panHolderName: value })
+          ) {
+            return true;
+          }
+          return Boolean(String(value ?? '').trim());
         }
-        if (!isPassengerPanRequired({ ...this.parent, panHolderName: value })) {
-          return true;
-        }
-        return Boolean(String(value ?? '').trim());
-      }),
+      ),
     panDob: yup
       .string()
       .trim()
-      .test('pan-dob-required', PASSENGER_IDENTITY_TEXT.panDobRequired, function (value) {
-        if (!requiresCorporateIndividualPassenger(this.parent.purchasePageType)) {
-          return true;
+      .test(
+        'pan-dob-required',
+        PASSENGER_IDENTITY_TEXT.panDobRequired,
+        function (value) {
+          if (
+            !requiresCorporateIndividualPassenger(this.parent.purchasePageType)
+          ) {
+            return true;
+          }
+          if (!isPassengerPanRequired({ ...this.parent, panDob: value })) {
+            return true;
+          }
+          return Boolean(String(value ?? '').trim());
         }
-        if (!isPassengerPanRequired({ ...this.parent, panDob: value })) {
-          return true;
-        }
-        return Boolean(String(value ?? '').trim());
-      }),
+      ),
     panHolderRelationType: yup
       .string()
       .trim()
@@ -385,10 +448,17 @@ export const createPurchaseFormSchema = (transactionType: TransactionType) =>
         'pan-relation-required',
         PASSENGER_IDENTITY_TEXT.panHolderRelationRequired,
         function (value) {
-          if (!requiresCorporateIndividualPassenger(this.parent.purchasePageType)) {
+          if (
+            !requiresCorporateIndividualPassenger(this.parent.purchasePageType)
+          ) {
             return true;
           }
-          if (!isPassengerPanHolderRelationRequired({ ...this.parent, panHolderRelationType: value })) {
+          if (
+            !isPassengerPanHolderRelationRequired({
+              ...this.parent,
+              panHolderRelationType: value,
+            })
+          ) {
             return true;
           }
           return Boolean(String(value ?? '').trim());
@@ -407,10 +477,17 @@ export const createPurchaseFormSchema = (transactionType: TransactionType) =>
         'passport-number-required',
         PASSENGER_IDENTITY_TEXT.passportNumberRequired,
         function (value) {
-          if (!requiresCorporateIndividualPassenger(this.parent.purchasePageType)) {
+          if (
+            !requiresCorporateIndividualPassenger(this.parent.purchasePageType)
+          ) {
             return true;
           }
-          if (!isPassengerPassportRequired({ ...this.parent, passportNumber: value })) {
+          if (
+            !isPassengerPassportRequired({
+              ...this.parent,
+              passportNumber: value,
+            })
+          ) {
             return true;
           }
           return Boolean(String(value ?? '').trim());
@@ -423,10 +500,17 @@ export const createPurchaseFormSchema = (transactionType: TransactionType) =>
         'passport-issue-at-required',
         PASSENGER_IDENTITY_TEXT.passportIssuePlaceRequired,
         function (value) {
-          if (!requiresCorporateIndividualPassenger(this.parent.purchasePageType)) {
+          if (
+            !requiresCorporateIndividualPassenger(this.parent.purchasePageType)
+          ) {
             return true;
           }
-          if (!isPassengerPassportRequired({ ...this.parent, passportIssueAt: value })) {
+          if (
+            !isPassengerPassportRequired({
+              ...this.parent,
+              passportIssueAt: value,
+            })
+          ) {
             return true;
           }
           return Boolean(String(value ?? '').trim());
@@ -439,10 +523,17 @@ export const createPurchaseFormSchema = (transactionType: TransactionType) =>
         'passport-issue-date-required',
         PASSENGER_IDENTITY_TEXT.passportIssueDateRequired,
         function (value) {
-          if (!requiresCorporateIndividualPassenger(this.parent.purchasePageType)) {
+          if (
+            !requiresCorporateIndividualPassenger(this.parent.purchasePageType)
+          ) {
             return true;
           }
-          if (!isPassengerPassportRequired({ ...this.parent, passportIssueDate: value })) {
+          if (
+            !isPassengerPassportRequired({
+              ...this.parent,
+              passportIssueDate: value,
+            })
+          ) {
             return true;
           }
           return Boolean(String(value ?? '').trim());
@@ -455,10 +546,17 @@ export const createPurchaseFormSchema = (transactionType: TransactionType) =>
         'passport-expiry-date-required',
         PASSENGER_IDENTITY_TEXT.passportExpiryDateRequired,
         function (value) {
-          if (!requiresCorporateIndividualPassenger(this.parent.purchasePageType)) {
+          if (
+            !requiresCorporateIndividualPassenger(this.parent.purchasePageType)
+          ) {
             return true;
           }
-          if (!isPassengerPassportRequired({ ...this.parent, passportExpiryDate: value })) {
+          if (
+            !isPassengerPassportRequired({
+              ...this.parent,
+              passportExpiryDate: value,
+            })
+          ) {
             return true;
           }
           return Boolean(String(value ?? '').trim());
@@ -468,7 +566,9 @@ export const createPurchaseFormSchema = (transactionType: TransactionType) =>
         'passport-date-order',
         'Passport expiry date must be after issue date',
         function (value) {
-          if (!requiresCorporateIndividualPassenger(this.parent.purchasePageType)) {
+          if (
+            !requiresCorporateIndividualPassenger(this.parent.purchasePageType)
+          ) {
             return true;
           }
           const issueDate = this.parent.passportIssueDate as string | undefined;
@@ -485,10 +585,17 @@ export const createPurchaseFormSchema = (transactionType: TransactionType) =>
         'arrival-date-required',
         PASSENGER_IDENTITY_TEXT.arrivalDateRequired,
         function (value) {
-          if (!requiresCorporateIndividualPassenger(this.parent.purchasePageType)) {
+          if (
+            !requiresCorporateIndividualPassenger(this.parent.purchasePageType)
+          ) {
             return true;
           }
-          if (!isPassengerArrivalDateRequired({ ...this.parent, arrivalDate: value })) {
+          if (
+            !isPassengerArrivalDateRequired({
+              ...this.parent,
+              arrivalDate: value,
+            })
+          ) {
             return true;
           }
           return Boolean(String(value ?? '').trim());
@@ -497,10 +604,24 @@ export const createPurchaseFormSchema = (transactionType: TransactionType) =>
     travelAirlineId: yup.string().trim().default(''),
     travelTicketNo: yup.string().trim().default(''),
     travelRoute: yup.string().trim().default(''),
-    travelCountryId: yup.string().trim().default('').test('card-reload-travel-country', 'Travel country is required for CARD reload', function (value) {
-      const rows = Array.isArray(this.parent.transactions) ? this.parent.transactions : [];
-      return !rows.some((row: { cardId?: string; isReload?: boolean }) => Boolean(row?.cardId && row?.isReload)) || Boolean(value);
-    }),
+    travelCountryId: yup
+      .string()
+      .trim()
+      .default('')
+      .test(
+        'card-reload-travel-country',
+        'Travel country is required for CARD reload',
+        function (value) {
+          const rows = Array.isArray(this.parent.transactions)
+            ? this.parent.transactions
+            : [];
+          return (
+            !rows.some((row: { cardId?: string; isReload?: boolean }) =>
+              Boolean(row?.cardId && row?.isReload)
+            ) || Boolean(value)
+          );
+        }
+      ),
     travelNoOfDays: yup.string().trim().default(''),
     travelNoOfPax: yup.string().trim().default(''),
     travelDepartureDate: yup.string().trim().default(''),
@@ -512,21 +633,32 @@ export const createPurchaseFormSchema = (transactionType: TransactionType) =>
       .of(passengerOtherDocumentSchema)
       .default([])
       .transform(rows =>
-        Array.isArray(rows) ? rows.filter(row => isPassengerOtherDocumentFilled(row)) : []
+        Array.isArray(rows)
+          ? rows.filter(row => isPassengerOtherDocumentFilled(row))
+          : []
       ),
     manualBookReferenceType: manualBookReferenceTypeSchema,
-    manualBookId: yup.string().trim().required('Manual book reference is required'),
+    manualBookId: yup
+      .string()
+      .trim()
+      .required('Manual book reference is required'),
     manualBookNo: yup.string().trim().default(''),
-    manualBookPageId: yup.string().trim().required('Manual book page is required'),
+    manualBookPageId: yup
+      .string()
+      .trim()
+      .required('Manual book page is required'),
     manualBookPageSnapshot: yup.mixed().nullable().default(null),
     cashierUserId: yup.string().trim().default(''),
     cashierUserCode: yup.string().trim().default(''),
     cashierUserName: yup.string().trim().default(''),
-    deliveryBoyUserId: yup.string().trim().when('manualBookReferenceType', {
-      is: 'DELIVERY_BOY',
-      then: schema => schema.required('Delivery boy is required'),
-      otherwise: schema => schema.default(''),
-    }),
+    deliveryBoyUserId: yup
+      .string()
+      .trim()
+      .when('manualBookReferenceType', {
+        is: 'DELIVERY_BOY',
+        then: schema => schema.required('Delivery boy is required'),
+        otherwise: schema => schema.default(''),
+      }),
     deliveryBoyUserCode: yup.string().trim().default(''),
     deliveryBoyUserName: yup.string().trim().default(''),
     number: yup.string().trim().default(''),
@@ -540,9 +672,8 @@ export const createPurchaseFormSchema = (transactionType: TransactionType) =>
         'The same CARD cannot be selected more than once for the same currency',
         rows => {
           const keys = (rows ?? [])
-            .filter(
-              (row: { cardId?: string; currencyId?: string }) =>
-                Boolean(row?.cardId && row?.currencyId)
+            .filter((row: { cardId?: string; currencyId?: string }) =>
+              Boolean(row?.cardId && row?.currencyId)
             )
             .map(
               (row: { cardId?: string; currencyId?: string }) =>
@@ -565,7 +696,10 @@ export const createPurchaseFormSchema = (transactionType: TransactionType) =>
           return new Set(ccCardIds).size === ccCardIds.length;
         }
       ),
-    additionalCharges: yup.array().of(additionalChargeSchema).default([])
+    additionalCharges: yup
+      .array()
+      .of(additionalChargeSchema)
+      .default([])
       .test(
         'charge-amount-exceeds-total',
         'Total additional charges cannot exceed the total transaction amount',
@@ -591,16 +725,22 @@ export const createPurchaseFormSchema = (transactionType: TransactionType) =>
       .of(createPaymentDetailSchema(transactionType))
       .min(1, 'Add at least one payment detail')
       .required()
-      .test('same-method', 'All payment rows must use the same method', rows => {
-        const methods = (rows ?? [])
-          .map(row => row?.paymentMethod?.trim?.() ?? '')
-          .filter(Boolean);
-        if (methods.length <= 1) {
-          return true;
-        }
+      .test(
+        'same-method',
+        'All payment rows must use the same method',
+        rows => {
+          const methods = (rows ?? [])
+            .map(row => row?.paymentMethod?.trim?.() ?? '')
+            .filter(Boolean);
+          if (methods.length <= 1) {
+            return true;
+          }
 
-        return new Set(methods).size === 1;
-      }),
+          return new Set(methods).size === 1;
+        }
+      ),
   });
 
-export const purchaseFormSchema = createPurchaseFormSchema(TransactionTypeEnum.PURCHASE);
+export const purchaseFormSchema = createPurchaseFormSchema(
+  TransactionTypeEnum.PURCHASE
+);

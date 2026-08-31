@@ -1,4 +1,7 @@
-import type { ICreatePurposeGroup, IPurposeGroup } from '../types/purposeGroupTypes';
+import type {
+  ICreatePurposeGroup,
+  IPurposeGroup,
+} from '../types/purposeGroupTypes';
 
 export const createEmptyPurposeGroupFormValues = (): ICreatePurposeGroup => ({
   name: '',
@@ -9,7 +12,7 @@ export const createEmptyPurposeGroupFormValues = (): ICreatePurposeGroup => ({
 });
 
 export const mapPurposeGroupToFormValues = (
-  purposeGroup: IPurposeGroup,
+  purposeGroup: IPurposeGroup
 ): ICreatePurposeGroup => ({
   name: purposeGroup.name,
   title: purposeGroup.title,
@@ -19,7 +22,7 @@ export const mapPurposeGroupToFormValues = (
 });
 
 export const sanitizePurposeGroupFormValues = (
-  values: ICreatePurposeGroup,
+  values: ICreatePurposeGroup
 ): ICreatePurposeGroup => ({
   name: values.name.trim(),
   title: values.title.trim(),
@@ -29,4 +32,8 @@ export const sanitizePurposeGroupFormValues = (
 });
 
 export const formatPurposeGroupProfileLabel = (profileType: string) =>
-  profileType === 'AD' ? 'AD' : profileType === 'FFMC' ? 'FFMC' : profileType || '-';
+  profileType === 'AD'
+    ? 'AD'
+    : profileType === 'FFMC'
+      ? 'FFMC'
+      : profileType || '-';

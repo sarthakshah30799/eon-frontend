@@ -47,7 +47,10 @@ const formatDate = (value?: string | Date | null) => {
 };
 
 const joinAddress = (...parts: Array<string | null | undefined>) =>
-  parts.map(part => part?.trim()).filter(Boolean).join(', ');
+  parts
+    .map(part => part?.trim())
+    .filter(Boolean)
+    .join(', ');
 
 const currencyLabel = (snapshot: ICardStockReceiptItem['currencySnapshot']) =>
   snapshot?.currencyCode?.trim() || snapshot?.currencyName?.trim() || '-';
@@ -59,15 +62,45 @@ const lineAmount = (feAmount: string, per: string) => {
   const fe = Number(feAmount);
   const divisor = Number(per);
   const safePer = Number.isFinite(divisor) && divisor !== 0 ? divisor : 1;
-  const amount = (Number.isFinite(fe) ? fe : 0) * CARD_STOCK_PRINT_RATE / safePer;
+  const amount =
+    ((Number.isFinite(fe) ? fe : 0) * CARD_STOCK_PRINT_RATE) / safePer;
   return amount;
 };
 
 const units = [
-  '', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten',
-  'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen',
+  '',
+  'One',
+  'Two',
+  'Three',
+  'Four',
+  'Five',
+  'Six',
+  'Seven',
+  'Eight',
+  'Nine',
+  'Ten',
+  'Eleven',
+  'Twelve',
+  'Thirteen',
+  'Fourteen',
+  'Fifteen',
+  'Sixteen',
+  'Seventeen',
+  'Eighteen',
+  'Nineteen',
 ];
-const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+const tens = [
+  '',
+  '',
+  'Twenty',
+  'Thirty',
+  'Forty',
+  'Fifty',
+  'Sixty',
+  'Seventy',
+  'Eighty',
+  'Ninety',
+];
 
 const convertBelowHundred = (value: number) => {
   if (value < 20) return units[value];
@@ -102,7 +135,9 @@ const numberToWords = (input: number) => {
   return `${segments.join(' ')} Rupees${paiseText}`.replace(/\s+/g, ' ').trim();
 };
 
-export const getCardStockPrintCopyType = (printCount?: number | null): CardStockPrintCopyType =>
+export const getCardStockPrintCopyType = (
+  printCount?: number | null
+): CardStockPrintCopyType =>
   (printCount ?? 0) === 0 ? 'CUSTOMER_COPY' : 'DUPLICATE_COPY';
 
 export const getCardStockPrintCopyLabel = (copyType: CardStockPrintCopyType) =>
@@ -113,11 +148,13 @@ export const getCardStockPrintCopyLabel = (copyType: CardStockPrintCopyType) =>
 export const getCardStockPrintButtonLabel = (
   kind: CardStockPrintKind,
   copyType: CardStockPrintCopyType,
-  options?: { transfer?: boolean },
+  options?: { transfer?: boolean }
 ) => {
   const isDuplicate = copyType === 'DUPLICATE_COPY';
   if (!options?.transfer) {
-    return isDuplicate ? CARD_STOCK_PRINT_TEXT.printDuplicate : CARD_STOCK_PRINT_TEXT.printOriginal;
+    return isDuplicate
+      ? CARD_STOCK_PRINT_TEXT.printDuplicate
+      : CARD_STOCK_PRINT_TEXT.printOriginal;
   }
   if (kind === 'STOCK_OUT') {
     return isDuplicate
@@ -129,7 +166,9 @@ export const getCardStockPrintButtonLabel = (
     : CARD_STOCK_PRINT_TEXT.printStockInOriginal;
 };
 
-export const buildReceiptPrintLines = (receipt: ICardStockReceipt): CardStockPrintLine[] =>
+export const buildReceiptPrintLines = (
+  receipt: ICardStockReceipt
+): CardStockPrintLine[] =>
   (receipt.items ?? []).flatMap(item =>
     (item.cards ?? []).map(card => ({
       currency: currencyLabel(item.currencySnapshot),
@@ -138,10 +177,12 @@ export const buildReceiptPrintLines = (receipt: ICardStockReceipt): CardStockPri
       maskedCardNumber: card.maskedCardNumber || '-',
       feAmount: card.amount || card.denomination || '0',
       per: item.per || '1',
-    })),
+    }))
   );
 
-export const buildTransferPrintLines = (request: CardTransferRequest): CardStockPrintLine[] =>
+export const buildTransferPrintLines = (
+  request: CardTransferRequest
+): CardStockPrintLine[] =>
   (request.items ?? []).flatMap(item =>
     (item.cards ?? []).map(card => ({
       currency: card.currencyCode || currencyLabel(item.currencySnapshot),
@@ -150,7 +191,7 @@ export const buildTransferPrintLines = (request: CardTransferRequest): CardStock
       maskedCardNumber: card.maskedCardNumber || '-',
       feAmount: card.amount || card.denomination || '0',
       per: item.per || '1',
-    })),
+    }))
   );
 
 export const openCardStockPrintWindow = (html: string) => {
@@ -212,7 +253,7 @@ export const buildCardStockPrintHtml = ({
       acc.amount += lineAmount(line.feAmount, line.per);
       return acc;
     },
-    { fe: 0, amount: 0 },
+    { fe: 0, amount: 0 }
   );
   const itemRows = lines
     .map(
@@ -227,7 +268,7 @@ export const buildCardStockPrintHtml = ({
           <td class="right">${escapeHtml(formatAmount(line.per))}</td>
           <td class="right">${escapeHtml(rateLabel)}</td>
           <td class="right">${escapeHtml(formatAmount(lineAmount(line.feAmount, line.per)))}</td>
-        </tr>`,
+        </tr>`
     )
     .join('');
   const logoHtml = company?.logo
@@ -239,7 +280,7 @@ export const buildCardStockPrintHtml = ({
     branch?.address3,
     branch?.city,
     branch?.gstState,
-    branch?.pinCode,
+    branch?.pinCode
   );
 
   return `

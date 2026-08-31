@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 import { Button } from '../../../components/ui/button1/Button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../components/ui/tabs';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '../../../components/ui/tabs';
 import {
   Form,
   FormFieldInput,
@@ -86,22 +91,20 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         }}
       >
         <TabsList className="grid grid-cols-2 rounded-2xl p-1.5 shadow-sm shadow-primary-100/50">
-          <TabsTrigger
-            value="password"
-            className="w-full"
-          >
+          <TabsTrigger value="password" className="w-full">
             Password
           </TabsTrigger>
-          <TabsTrigger
-            value="otp"
-            className="w-full"
-          >
+          <TabsTrigger value="otp" className="w-full">
             OTP
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="password" className="border-0 mt-4 p-0">
-          <Form onSubmit={handleLogin} resolver={resolver} className="space-y-4">
+          <Form
+            onSubmit={handleLogin}
+            resolver={resolver}
+            className="space-y-4"
+          >
             <FormFieldInput
               name="email"
               label={AUTH_TEXTS.EMAIL_ADDRESS}
@@ -109,7 +112,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
               placeholder={AUTH_TEXTS.ENTER_YOUR_EMAIL}
               disabled={isLoading}
               classes={{
-                container: '!max-w-none'
+                container: '!max-w-none',
               }}
             />
 
@@ -119,7 +122,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
               placeholder={AUTH_TEXTS.ENTER_YOUR_PASSWORD}
               disabled={isLoading}
               classes={{
-                container: '!max-w-none'
+                container: '!max-w-none',
               }}
             />
 

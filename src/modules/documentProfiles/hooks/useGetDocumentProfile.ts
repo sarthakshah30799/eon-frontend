@@ -8,4 +8,3 @@ export const useGetDocumentProfile = (id?: string) => {
     enabled: Boolean(id),
   });
 };
-

@@ -6,7 +6,7 @@ import type { SalePurchaseReportFilters } from './useSalePurchaseReportFilters';
 const PAGE_SIZE = 200;
 
 export const useResolvedPartyProfileIds = (
-  filters: Pick<SalePurchaseReportFilters, 'appliedFilters'>,
+  filters: Pick<SalePurchaseReportFilters, 'appliedFilters'>
 ) => {
   return useCallback(async () => {
     const selection = filters.appliedFilters?.partyProfileSelection;
@@ -15,23 +15,26 @@ export const useResolvedPartyProfileIds = (
     }
 
     if (!selection.allSelected) {
-      return selection.selectedIds.length > 0 ? selection.selectedIds : undefined;
+      return selection.selectedIds.length > 0
+        ? selection.selectedIds
+        : undefined;
     }
 
     const resolvedIds = new Set<string>();
-    let page = 1;
+    let offset = 0;
 
     while (true) {
       const response = await partyProfileApi.getPartyProfiles(
         {
-          search: filters.appliedFilters?.partyProfileSearch?.trim() || undefined,
+          search:
+            filters.appliedFilters?.partyProfileSearch?.trim() || undefined,
           activeOnly: true,
-          page,
+          offset,
           limit: PAGE_SIZE,
         },
         filters.appliedFilters?.partyTypeCodes?.length
           ? (filters.appliedFilters.partyTypeCodes as PartyProfileType[])
-          : undefined,
+          : undefined
       );
 
       response.data.forEach(profile => {
@@ -40,11 +43,11 @@ export const useResolvedPartyProfileIds = (
         }
       });
 
-      if (!response.totalPages || page >= response.totalPages) {
+      if (!response.hasMore) {
         break;
       }
 
-      page += 1;
+      offset += PAGE_SIZE;
     }
 
     return [...resolvedIds];

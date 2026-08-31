@@ -1,7 +1,5 @@
 import { apiClient } from '../api';
-import type {
-  IPolicyContext,
-} from '@/modules/auth/types';
+import type { IPolicyContext } from '@/modules/auth/types';
 import type {
   ICountryAccessRule,
   ICreateMonthlyLocksPayload,
@@ -14,7 +12,9 @@ export const transactionPoliciesApi = {
     const params = new URLSearchParams();
     if (branchId) params.set('branchId', branchId);
     const query = params.toString() ? `?${params.toString()}` : '';
-    const res = await apiClient.get<IPolicyContext>(`/auth/policy-context${query}`);
+    const res = await apiClient.get<IPolicyContext>(
+      `/auth/policy-context${query}`
+    );
     if (res.error) throw new Error(res.error);
     if (!res.data) {
       throw new Error('Failed to load policy context');
@@ -24,31 +24,41 @@ export const transactionPoliciesApi = {
 
   createCountryAccessRules: async (
     countryId: string,
-    payload: ICreateCountryAccessRulesPayload,
+    payload: ICreateCountryAccessRulesPayload
   ): Promise<ICountryAccessRule[]> => {
-    const res = await apiClient.post<ICountryAccessRule[]>(`/countries/${countryId}/unblock-access`, payload);
+    const res = await apiClient.post<ICountryAccessRule[]>(
+      `/countries/${countryId}/unblock-access`,
+      payload
+    );
     if (res.error) throw new Error(res.error);
     return res.data ?? [];
   },
 
   listCountryAccessRules: async (
-    countryId: string,
+    countryId: string
   ): Promise<ICountryAccessRule[]> => {
-    const res = await apiClient.get<ICountryAccessRule[]>(`/countries/${countryId}/unblock-access`);
+    const res = await apiClient.get<ICountryAccessRule[]>(
+      `/countries/${countryId}/unblock-access`
+    );
     if (res.error) throw new Error(res.error);
     return res.data ?? [];
   },
 
   revokeCountryAccessRule: async (ruleId: string): Promise<boolean> => {
     const res = await apiClient.delete<{ message: string }>(
-      `/countries/unblock-access/${ruleId}`,
+      `/countries/unblock-access/${ruleId}`
     );
     if (res.error) throw new Error(res.error);
     return true;
   },
 
-  createBackdateWindows: async (payload: ICreateMonthlyLocksPayload): Promise<IMonthlyLockWindow[]> => {
-    const res = await apiClient.post<IMonthlyLockWindow[]>('/monthly-locks', payload);
+  createBackdateWindows: async (
+    payload: ICreateMonthlyLocksPayload
+  ): Promise<IMonthlyLockWindow[]> => {
+    const res = await apiClient.post<IMonthlyLockWindow[]>(
+      '/monthly-locks',
+      payload
+    );
     if (res.error) throw new Error(res.error);
     return res.data ?? [];
   },
@@ -61,18 +71,19 @@ export const transactionPoliciesApi = {
 
   revokeBackdateWindow: async (windowId: string): Promise<boolean> => {
     const res = await apiClient.delete<{ message: string }>(
-      `/monthly-locks/${windowId}`,
+      `/monthly-locks/${windowId}`
     );
     if (res.error) throw new Error(res.error);
     return true;
   },
 
-  completeDayEnd: async (
-    payload: { branchId?: string; answers?: Record<string, unknown> },
-  ): Promise<{ message: string }> => {
+  completeDayEnd: async (payload: {
+    branchId?: string;
+    answers?: Record<string, unknown>;
+  }): Promise<{ message: string }> => {
     const res = await apiClient.post<{ message: string }>(
       '/day-end-start-process/complete',
-      payload,
+      payload
     );
     if (res.error) throw new Error(res.error);
     if (!res.data) {
@@ -81,12 +92,13 @@ export const transactionPoliciesApi = {
     return res.data;
   },
 
-  startDay: async (
-    payload: { branchId?: string; answers?: Record<string, unknown> },
-  ): Promise<{ message: string }> => {
+  startDay: async (payload: {
+    branchId?: string;
+    answers?: Record<string, unknown>;
+  }): Promise<{ message: string }> => {
     const res = await apiClient.post<{ message: string }>(
       '/day-end-start-process/start',
-      payload,
+      payload
     );
     if (res.error) throw new Error(res.error);
     if (!res.data) {

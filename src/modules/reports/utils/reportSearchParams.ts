@@ -1,5 +1,9 @@
 import { buildReportDateRange } from './reportDateUtils';
-import { ReportDatePresetEnum, type IReportDateRange, type ReportDatePreset } from '../types';
+import {
+  ReportDatePresetEnum,
+  type IReportDateRange,
+  type ReportDatePreset,
+} from '../types';
 
 export const parseSearchParamList = (value: string | null): string[] => {
   if (!value) {
@@ -12,7 +16,10 @@ export const parseSearchParamList = (value: string | null): string[] => {
     .filter(Boolean);
 };
 
-export const readSearchParamList = (searchParams: URLSearchParams, key: string): string[] => {
+export const readSearchParamList = (
+  searchParams: URLSearchParams,
+  key: string
+): string[] => {
   const repeatedValues = searchParams.getAll(key);
   if (repeatedValues.length === 0) {
     return parseSearchParamList(searchParams.get(key));
@@ -23,13 +30,16 @@ export const readSearchParamList = (searchParams: URLSearchParams, key: string):
     .filter(Boolean);
 };
 
-export const readSearchParamValue = (searchParams: URLSearchParams, key: string): string => {
+export const readSearchParamValue = (
+  searchParams: URLSearchParams,
+  key: string
+): string => {
   return searchParams.get(key)?.trim() ?? '';
 };
 
 export const readSearchParamBoolean = (
   searchParams: URLSearchParams,
-  key: string,
+  key: string
 ): boolean => {
   const value = readSearchParamValue(searchParams, key).toLowerCase();
   return value === '1' || value === 'true' || value === 'yes';
@@ -38,7 +48,7 @@ export const readSearchParamBoolean = (
 export const setSearchParamList = (
   searchParams: URLSearchParams,
   key: string,
-  values: string[],
+  values: string[]
 ) => {
   searchParams.delete(key);
   values.forEach(value => {
@@ -52,7 +62,7 @@ export const setSearchParamList = (
 export const setSearchParamValue = (
   searchParams: URLSearchParams,
   key: string,
-  value?: string | null,
+  value?: string | null
 ) => {
   searchParams.delete(key);
   const normalized = String(value ?? '').trim();
@@ -64,7 +74,7 @@ export const setSearchParamValue = (
 export const setSearchParamBoolean = (
   searchParams: URLSearchParams,
   key: string,
-  value: boolean,
+  value: boolean
 ) => {
   searchParams.delete(key);
   if (value) {
@@ -74,7 +84,7 @@ export const setSearchParamBoolean = (
 
 export const buildSearchParams = (
   base?: URLSearchParams,
-  updater?: (next: URLSearchParams) => void,
+  updater?: (next: URLSearchParams) => void
 ) => {
   const next = new URLSearchParams(base);
   updater?.(next);
@@ -83,11 +93,14 @@ export const buildSearchParams = (
 
 export const readDateRangeSearchParams = (
   searchParams: URLSearchParams,
-  defaultPreset: ReportDatePreset = ReportDatePresetEnum.TODAY,
+  defaultPreset: ReportDatePreset = ReportDatePresetEnum.TODAY
 ): IReportDateRange => {
-  const presetRaw = readSearchParamValue(searchParams, 'datePreset').toUpperCase();
+  const presetRaw = readSearchParamValue(
+    searchParams,
+    'datePreset'
+  ).toUpperCase();
   const preset = Object.values(ReportDatePresetEnum).includes(
-    presetRaw as ReportDatePreset,
+    presetRaw as ReportDatePreset
   )
     ? (presetRaw as ReportDatePreset)
     : defaultPreset;

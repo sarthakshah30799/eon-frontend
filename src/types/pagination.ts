@@ -1,6 +1,6 @@
 /**
- * Common offset-based pagination contracts for BE that returns { data, total, limit, offset, hasMore }.
- * Kept in `src/types` so any module can `extends IPaginatedResponse<T>` and reuse.
+ * Offset-based pagination contract shared with the backend
+ * (`PaginatedResponseDto` / `PaginationQueryDto`).
  */
 
 export interface IOffsetPaginationParams {
@@ -9,10 +9,7 @@ export interface IOffsetPaginationParams {
 }
 
 export interface IOffsetPaginationMeta {
-  /** Total count from BE (`total` alias kept as `totalItems` for backward compat) */
   total: number;
-  /** Alias of `total` – some legacy BEs send `totalItems` */
-  totalItems: number;
   totalPages: number;
   limit: number;
   offset: number;

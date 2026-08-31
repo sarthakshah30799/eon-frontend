@@ -1,10 +1,13 @@
 import { useMemo, useRef, useState, type ChangeEvent } from 'react';
 import toast from 'react-hot-toast';
-import { Button, CardSection, Table, type TableColumnDef } from '@/components/ui';
-import { partyProfileApi } from '@/api/partyProfile';
 import {
-  useUploadAgentCommissionTemplate,
-} from '../hooks';
+  Button,
+  CardSection,
+  Table,
+  type TableColumnDef,
+} from '@/components/ui';
+import { partyProfileApi } from '@/api/partyProfile';
+import { useUploadAgentCommissionTemplate } from '../hooks';
 import type { IPartyProfileCommissionRule } from '../types/partyProfileTypes';
 
 interface AgentCommissionSectionProps {
@@ -73,7 +76,8 @@ export const AgentCommissionSection = ({
   const handleDownloadTemplate = async () => {
     try {
       setIsDownloadingTemplate(true);
-      const csv = await partyProfileApi.getAgentCommissionTemplate(partyProfileId);
+      const csv =
+        await partyProfileApi.getAgentCommissionTemplate(partyProfileId);
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');

@@ -43,7 +43,10 @@ export const mailApi = {
   },
 
   testConnection: async (config: ISmtpConfig): Promise<{ message: string }> => {
-    const res = await apiClient.post<{ message: string }>('/mail/test-connection', config);
+    const res = await apiClient.post<{ message: string }>(
+      '/mail/test-connection',
+      config
+    );
     if (res.error) {
       throw new Error(res.error);
     }
@@ -53,8 +56,13 @@ export const mailApi = {
     return res.data;
   },
 
-  sendMail: async (input: ISendMailInput): Promise<{ message: string; messageId: string }> => {
-    const res = await apiClient.post<{ message: string; messageId: string }>('/mail/send', input);
+  sendMail: async (
+    input: ISendMailInput
+  ): Promise<{ message: string; messageId: string }> => {
+    const res = await apiClient.post<{ message: string; messageId: string }>(
+      '/mail/send',
+      input
+    );
     if (res.error) {
       throw new Error(res.error);
     }

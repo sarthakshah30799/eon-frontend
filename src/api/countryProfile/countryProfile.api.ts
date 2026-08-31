@@ -7,6 +7,7 @@ import type {
   ICreateCountryProfile,
   ICountryProfile,
 } from '@/modules/countryProfile/types';
+import { fetchAllMatching, normalizePaginatedResponse } from '@/utils/paginatedList';
 
 const buildQueryString = (params?: ICountryProfileListQuery) => {
   if (!params) {
@@ -35,21 +36,15 @@ export const countryProfileApi = {
       `/countries${buildQueryString(params)}`
     );
     if (res.error) throw new Error(res.error);
-    if (!res.data) {
-      return {
-        data: [],
-        page: params?.page ?? 1,
-        limit: params?.limit ?? 10,
-        totalItems: 0,
-        totalPages: 0,
-      };
-    }
-
-    return {
-      ...res.data,
-      data: res.data.data || [],
-    };
+    return normalizePaginatedResponse(res.data, params?.limit, params?.offset);
   },
+
+  getAllCountryProfiles: async (
+    params?: Omit<ICountryProfileListQuery, 'limit' | 'offset'>
+  ): Promise<ICountryProfile[]> =>
+    fetchAllMatching(pagination =>
+      countryProfileApi.getCountryProfiles({ ...params, ...pagination })
+    ),
 
   getCountryProfileById: async (
     id: string

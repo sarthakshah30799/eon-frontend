@@ -1,35 +1,63 @@
 import { useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button1';
-import { Loader } from '@/components/ui/loader';
-import { useDebounce, usePermission } from '@/hooks';
+import { useDebounce, useOffsetPaginatedList, usePermission } from '@/hooks';
+import { PAGINATION_DEFAULTS } from '@/constants/paginationConstants';
+import { expenseIncomeBookingApi } from '@/api/expenseIncomeBooking/expenseIncomeBooking.api';
 import { ExpenseIncomeBookingTable } from '../components/ExpenseIncomeBookingTable';
-import { useListBookingMasters } from '../hooks/useListBookingMasters';
 
 interface ExpenseIncomeBookingListViewProps {
   type: 'EXPENSE' | 'INCOME';
 }
 
-export const ExpenseIncomeBookingListView = ({ type }: ExpenseIncomeBookingListViewProps) => {
+export const ExpenseIncomeBookingListView = ({
+  type,
+}: ExpenseIncomeBookingListViewProps) => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const basePath = type === 'EXPENSE' ? '/expense-booking' : '/income-booking';
   const { canAdd } = usePermission(basePath);
   const search = searchParams.get('search') ?? '';
   const debouncedSearch = useDebounce(search, 400);
-  const query = useMemo(
+  const filters = useMemo(
     () => ({
       type,
       search: debouncedSearch.trim() || undefined,
     }),
     [type, debouncedSearch]
   );
+  const {
+    rows: masters,
+    isLoading,
+    isFetching,
+    error,
+    page,
+    limit,
+    total,
+    totalPages,
+    handlePageChange,
+    handlePageSizeChange,
+  } = useOffsetPaginatedList({
+    queryKey: ['booking-masters', type],
+    queryFn: params => expenseIncomeBookingApi.getBookingMasters(params),
+    filters,
+  });
 
-  const { data: masters = [], isLoading, isFetching, error } = useListBookingMasters(query);
-
-  if (isLoading) {
-    return <Loader />;
-  }
+  const handleSearch = (value: string) => {
+    setSearchParams(prev => {
+      const nextParams = new URLSearchParams(prev);
+      if (value.trim()) {
+        nextParams.set('search', value.trim());
+      } else {
+        nextParams.delete('search');
+      }
+      nextParams.set('offset', String(PAGINATION_DEFAULTS.OFFSET));
+      if (!nextParams.get('limit')) {
+        nextParams.set('limit', String(PAGINATION_DEFAULTS.LIMIT));
+      }
+      return nextParams;
+    });
+  };
 
   if (error) {
     return (
@@ -40,41 +68,34 @@ export const ExpenseIncomeBookingListView = ({ type }: ExpenseIncomeBookingListV
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <div className="flex justify-end">
         {canAdd && (
           <Button
             type="button"
             className="rounded-sm"
-            onClick={() =>
-              navigate(`${basePath}/create`)
-            }
+            onClick={() => navigate(`${basePath}/create`)}
           >
             Create {type === 'EXPENSE' ? 'Expense' : 'Income'} Booking
           </Button>
         )}
       </div>
 
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
+      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
         <ExpenseIncomeBookingTable
           masters={masters}
           type={type}
-          loading={isLoading || isFetching}
-          onSearch={value =>
-            setSearchParams(prev => {
-              const nextParams = new URLSearchParams(prev);
-
-              if (value.trim()) {
-                nextParams.set('search', value.trim());
-              } else {
-                nextParams.delete('search');
-              }
-
-              return nextParams;
-            })
-          }
+          loading={isLoading}
+          isFetching={isFetching}
+          onSearch={handleSearch}
           searchValue={search}
           searchPlaceholder="Search code or description"
+          page={page}
+          pageSize={limit}
+          total={total}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
         />
       </section>
     </div>

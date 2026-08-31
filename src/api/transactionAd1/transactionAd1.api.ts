@@ -7,6 +7,12 @@ import type { IPartyProfile } from '@/modules/partyProfiles/types';
 import type { IAccountProfile } from '@/modules/accountProfile/types/accountProfileTypes';
 import type { IPurpose } from '@/modules/purpose/types';
 import type { ICategoryOption } from '@/types/categoryOptionTypes';
+import type {
+  IOffsetPaginationParams,
+  IPaginatedResponse,
+} from '@/types/pagination';
+import { buildQueryString } from '@/utils';
+import { fetchAllMatching, normalizePaginatedResponse } from '@/utils/paginatedList';
 
 export type Ad1TransactionStatus = 'DRAFT' | 'APPROVED' | 'REJECTED';
 
@@ -131,24 +137,41 @@ type ITransactionAd1WriteFields = Pick<
 export type ICreateTransactionAd1 = ITransactionAd1WriteFields & {
   requiresApproval?: boolean;
 };
-export type IUpdateTransactionAd1 = Partial<Omit<ICreateTransactionAd1, 'requiresApproval'>>;
+export type IUpdateTransactionAd1 = Partial<
+  Omit<ICreateTransactionAd1, 'requiresApproval'>
+>;
+
+export interface ITransactionAd1ListQuery extends IOffsetPaginationParams {
+  search?: string;
+  branchId?: string;
+}
 
 export const transactionAd1Api = {
   create: async (payload: ICreateTransactionAd1): Promise<ITransactionAd1> => {
-    const res = await apiClient.post<ITransactionAd1>('/transactions/ad1', payload);
+    const res = await apiClient.post<ITransactionAd1>(
+      '/transactions/ad1',
+      payload
+    );
     if (res.error) throw new Error(res.error);
     return res.data!;
   },
 
-  getAll: async (params?: { search?: string; branchId?: string }): Promise<ITransactionAd1[]> => {
-    const query = new URLSearchParams();
-    if (params?.search) query.set('search', params.search);
-    if (params?.branchId) query.set('branchId', params.branchId);
-    const suffix = query.toString() ? `?${query.toString()}` : '';
-    const res = await apiClient.get<ITransactionAd1[]>(`/transactions/ad1${suffix}`);
+  getAll: async (
+    params?: ITransactionAd1ListQuery
+  ): Promise<IPaginatedResponse<ITransactionAd1>> => {
+    const res = await apiClient.get<IPaginatedResponse<ITransactionAd1>>(
+      `/transactions/ad1${buildQueryString(params)}`
+    );
     if (res.error) throw new Error(res.error);
-    return res.data!;
+    return normalizePaginatedResponse(res.data, params?.limit, params?.offset);
   },
+
+  getAllMatching: async (
+    params?: Omit<ITransactionAd1ListQuery, 'limit' | 'offset'>
+  ): Promise<ITransactionAd1[]> =>
+    fetchAllMatching(pagination =>
+      transactionAd1Api.getAll({ ...params, ...pagination })
+    ),
 
   getById: async (id: string): Promise<ITransactionAd1> => {
     const res = await apiClient.get<ITransactionAd1>(`/transactions/ad1/${id}`);
@@ -156,29 +179,50 @@ export const transactionAd1Api = {
     return res.data!;
   },
 
-  update: async (id: string, payload: IUpdateTransactionAd1): Promise<ITransactionAd1> => {
-    const res = await apiClient.put<ITransactionAd1>(`/transactions/ad1/${id}`, payload);
-    if (res.error) throw new Error(res.error);
-    return res.data!;
-  },
-
-  approve: async (id: string, payload?: { approvalRemarks?: string }): Promise<ITransactionAd1> => {
-    const res = await apiClient.post<ITransactionAd1>(`/transactions/ad1/${id}/approve`, payload ?? {});
-    if (res.error) throw new Error(res.error);
-    return res.data!;
-  },
-
-  reject: async (id: string, payload?: { rejectionReason?: string }): Promise<ITransactionAd1> => {
-    const res = await apiClient.post<ITransactionAd1>(`/transactions/ad1/${id}/reject`, payload ?? {});
-    if (res.error) throw new Error(res.error);
-    return res.data!;
-  },
-
-  recordPrint: async (id: string): Promise<{ message: string; copyType: string; printCount: number }> => {
-    const res = await apiClient.post<{ message: string; copyType: string; printCount: number }>(
-      `/transactions/ad1/${id}/print`,
-      {},
+  update: async (
+    id: string,
+    payload: IUpdateTransactionAd1
+  ): Promise<ITransactionAd1> => {
+    const res = await apiClient.put<ITransactionAd1>(
+      `/transactions/ad1/${id}`,
+      payload
     );
+    if (res.error) throw new Error(res.error);
+    return res.data!;
+  },
+
+  approve: async (
+    id: string,
+    payload?: { approvalRemarks?: string }
+  ): Promise<ITransactionAd1> => {
+    const res = await apiClient.post<ITransactionAd1>(
+      `/transactions/ad1/${id}/approve`,
+      payload ?? {}
+    );
+    if (res.error) throw new Error(res.error);
+    return res.data!;
+  },
+
+  reject: async (
+    id: string,
+    payload?: { rejectionReason?: string }
+  ): Promise<ITransactionAd1> => {
+    const res = await apiClient.post<ITransactionAd1>(
+      `/transactions/ad1/${id}/reject`,
+      payload ?? {}
+    );
+    if (res.error) throw new Error(res.error);
+    return res.data!;
+  },
+
+  recordPrint: async (
+    id: string
+  ): Promise<{ message: string; copyType: string; printCount: number }> => {
+    const res = await apiClient.post<{
+      message: string;
+      copyType: string;
+      printCount: number;
+    }>(`/transactions/ad1/${id}/print`, {});
     if (res.error) throw new Error(res.error);
     return res.data!;
   },

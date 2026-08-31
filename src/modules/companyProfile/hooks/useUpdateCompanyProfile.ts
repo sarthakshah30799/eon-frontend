@@ -12,12 +12,12 @@ export const useUpdateCompanyProfile = (id: string) => {
       if (res.error) throw new Error(res.error);
       return res.data;
     },
-    onSuccess: (updatedData) => {
+    onSuccess: updatedData => {
       queryClient.invalidateQueries({ queryKey: ['company-profiles'] });
       queryClient.setQueryData(['company-profile', id], updatedData);
       toast.success('Company profile updated successfully');
     },
-    onError: (error) => {
+    onError: error => {
       toast.error(error.message || 'Failed to update company profile');
     },
   });

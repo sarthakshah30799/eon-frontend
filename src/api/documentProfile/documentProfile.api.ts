@@ -2,9 +2,11 @@ import { apiClient } from '../api';
 import type {
   IDocumentProfile,
   IDocumentProfileListQuery,
+  IDocumentProfileListResponse,
   ICreateDocumentProfile,
   IResolveDocumentProfileQuery,
 } from '@/modules/documentProfiles/types';
+import { fetchAllMatching, normalizePaginatedResponse } from '@/utils/paginatedList';
 
 const buildQueryString = (
   params?: IDocumentProfileListQuery | IResolveDocumentProfileQuery
@@ -28,8 +30,8 @@ const buildQueryString = (
 export const documentProfileApi = {
   getDocumentProfiles: async (
     params?: IDocumentProfileListQuery
-  ): Promise<IDocumentProfile[]> => {
-    const res = await apiClient.get<IDocumentProfile[]>(
+  ): Promise<IDocumentProfileListResponse> => {
+    const res = await apiClient.get<IDocumentProfileListResponse>(
       `/document-profiles${buildQueryString(params)}`
     );
 
@@ -37,13 +39,22 @@ export const documentProfileApi = {
       throw new Error(res.error);
     }
 
-    return res.data || [];
+    return normalizePaginatedResponse(res.data, params?.limit, params?.offset);
   },
+
+  getAllDocumentProfiles: async (
+    params?: Omit<IDocumentProfileListQuery, 'limit' | 'offset'>
+  ): Promise<IDocumentProfile[]> =>
+    fetchAllMatching(pagination =>
+      documentProfileApi.getDocumentProfiles({ ...params, ...pagination })
+    ),
 
   getDocumentProfileById: async (
     id: string
   ): Promise<IDocumentProfile | undefined> => {
-    const res = await apiClient.get<IDocumentProfile>(`/document-profiles/${id}`);
+    const res = await apiClient.get<IDocumentProfile>(
+      `/document-profiles/${id}`
+    );
 
     if (res.error) {
       throw new Error(res.error);
@@ -55,7 +66,10 @@ export const documentProfileApi = {
   createDocumentProfile: async (
     data: ICreateDocumentProfile
   ): Promise<IDocumentProfile> => {
-    const res = await apiClient.post<IDocumentProfile>('/document-profiles', data);
+    const res = await apiClient.post<IDocumentProfile>(
+      '/document-profiles',
+      data
+    );
 
     if (res.error) {
       throw new Error(res.error);

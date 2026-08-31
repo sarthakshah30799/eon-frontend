@@ -8,13 +8,23 @@ interface VolumeSliderProps {
 
 const VolumeSlider = ({ data }: VolumeSliderProps) => {
   const [idx, setIdx] = useState(0);
-  const items = data.length > 0
-    ? data
-    : [{ currencyCode: '\u2014', todayVolume: '0', yesterdayVolume: '0', changePercent: '0', currencyId: '', products: [] }];
+  const items =
+    data.length > 0
+      ? data
+      : [
+          {
+            currencyCode: '\u2014',
+            todayVolume: '0',
+            yesterdayVolume: '0',
+            changePercent: '0',
+            currencyId: '',
+            products: [],
+          },
+        ];
 
   useEffect(() => {
     if (data.length <= 1) return;
-    const timer = setInterval(() => setIdx((p) => (p + 1) % data.length), 3000);
+    const timer = setInterval(() => setIdx(p => (p + 1) % data.length), 3000);
     return () => clearInterval(timer);
   }, [data.length]);
 
@@ -27,8 +37,13 @@ const VolumeSlider = ({ data }: VolumeSliderProps) => {
         {items.map((c, i) => {
           const isUp = parseFloat(c.changePercent) >= 0;
           return (
-            <div key={i} className="flex h-10 items-center gap-1 text-xs text-text-secondary">
-              <span className="font-semibold text-text-primary">{c.currencyCode}</span>
+            <div
+              key={i}
+              className="flex h-10 items-center gap-1 text-xs text-text-secondary"
+            >
+              <span className="font-semibold text-text-primary">
+                {c.currencyCode}
+              </span>
               <span className={isUp ? 'text-success-600' : 'text-error-600'}>
                 {isUp ? '\u2191' : '\u2193'} {c.changePercent}%
               </span>

@@ -25,19 +25,26 @@ import { normalizeCodeValue } from '@/utils';
 
 const filterOptions = (opts: AsyncSelectOption[], inputValue: string) =>
   inputValue
-    ? opts.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+    ? opts.filter(opt =>
+        opt.label.toLowerCase().includes(inputValue.toLowerCase())
+      )
     : opts;
 
-const loadCalculationMethodOptions =
-  async (inputValue: string): Promise<AsyncSelectResponse> => ({
-    options: filterOptions(CURRENCY_CALCULATION_METHOD_OPTIONS, inputValue),
-  });
+const loadCalculationMethodOptions = async (
+  inputValue: string
+): Promise<AsyncSelectResponse> => ({
+  options: filterOptions(CURRENCY_CALCULATION_METHOD_OPTIONS, inputValue),
+});
 
-const loadGroupOptions = async (inputValue: string): Promise<AsyncSelectResponse> => ({
+const loadGroupOptions = async (
+  inputValue: string
+): Promise<AsyncSelectResponse> => ({
   options: filterOptions(CURRENCY_GROUP_OPTIONS, inputValue),
 });
 
-const loadProductAllowedOptions = async (inputValue: string): Promise<AsyncSelectResponse> => ({
+const loadProductAllowedOptions = async (
+  inputValue: string
+): Promise<AsyncSelectResponse> => ({
   options: filterOptions(CURRENCY_PRODUCT_ALLOWED_OPTIONS, inputValue),
 });
 

@@ -1,6 +1,12 @@
 import { apiClient } from '../api';
-import type { ICreateTdsProfile, ITdsProfile } from '@/modules/tdsProfile/types';
-import { normalizeCodeValue } from '@/utils';
+import type {
+  ICreateTdsProfile,
+  ITdsProfile,
+  ITdsProfileListQuery,
+  ITdsProfileListResponse,
+} from '@/modules/tdsProfile/types';
+import { buildQueryString, normalizeCodeValue } from '@/utils';
+import { fetchAllMatching, normalizePaginatedResponse } from '@/utils/paginatedList';
 
 interface BackendTdsProfile extends Omit<ITdsProfile, 'from' | 'to'> {
   from: string | null;
@@ -25,13 +31,43 @@ const preparePayload = (values: ICreateTdsProfile): ICreateTdsProfile => ({
 });
 
 export const tdsProfileApi = {
-  getTdsProfiles: async (search?: string): Promise<ITdsProfile[]> => {
-    const query = search?.trim() ? `?search=${encodeURIComponent(search.trim())}` : '';
-    const res = await apiClient.get<BackendTdsProfile[]>(`/tds-profiles${query}`);
+  getTdsProfiles: async (
+    params?: ITdsProfileListQuery | string
+  ): Promise<ITdsProfileListResponse> => {
+    const queryObj: ITdsProfileListQuery | undefined =
+      typeof params === 'string'
+        ? { search: params.trim() || undefined }
+        : params;
+    const res = await apiClient.get<ITdsProfileListResponse>(
+      `/tds-profiles${buildQueryString(queryObj)}`
+    );
 
     if (res.error) throw new Error(res.error);
-    return (res.data || []).map(mapBackendToFrontend);
+    const payload = normalizePaginatedResponse(
+      res.data
+        ? {
+            ...res.data,
+            data: (res.data.data || []).map(item =>
+              mapBackendToFrontend(item as BackendTdsProfile)
+            ),
+          }
+        : res.data,
+      queryObj?.limit,
+      queryObj?.offset
+    );
+    return payload;
   },
+
+  getAllTdsProfiles: async (
+    params?: Omit<ITdsProfileListQuery, 'limit' | 'offset'> | string
+  ): Promise<ITdsProfile[]> =>
+    fetchAllMatching(pagination =>
+      tdsProfileApi.getTdsProfiles(
+        typeof params === 'string'
+          ? { search: params.trim() || undefined, ...pagination }
+          : { ...params, ...pagination }
+      )
+    ),
 
   getTdsProfileById: async (id: string): Promise<ITdsProfile | undefined> => {
     const res = await apiClient.get<BackendTdsProfile>(`/tds-profiles/${id}`);
@@ -68,7 +104,9 @@ export const tdsProfileApi = {
   },
 
   deleteTdsProfile: async (id: string): Promise<{ message: string }> => {
-    const res = await apiClient.delete<{ message: string }>(`/tds-profiles/${id}`);
+    const res = await apiClient.delete<{ message: string }>(
+      `/tds-profiles/${id}`
+    );
 
     if (res.error) throw new Error(res.error);
     if (!res.data) {

@@ -2,8 +2,10 @@ import { apiClient } from '../api';
 import type {
   ICreateCounterProfile,
   ICounterProfile,
+  ICounterProfileListQuery,
 } from '@/modules/counterProfile/types';
-import { buildQueryString } from '@/utils';
+import type { IPaginatedResponse } from '@/types/pagination';
+import { buildQueryString, fetchAllMatching, normalizePaginatedResponse } from '@/utils';
 
 interface BackendCounter {
   id: string;
@@ -45,16 +47,26 @@ const mapFrontendToBackend = (values: ICreateCounterProfile) => {
 };
 
 export const counterProfileApi = {
-  getCounterProfiles: async (options?: {
-    activeOnly?: boolean;
-    search?: string;
-    branchId?: string;
-  }): Promise<ICounterProfile[]> => {
+  getCounterProfiles: async (
+    options?: ICounterProfileListQuery
+  ): Promise<IPaginatedResponse<ICounterProfile>> => {
     const endpoint = `/counters${buildQueryString(options)}`;
-    const res = await apiClient.get<BackendCounter[]>(endpoint);
+    const res =
+      await apiClient.get<IPaginatedResponse<BackendCounter>>(endpoint);
     if (res.error) throw new Error(res.error);
-    return (res.data || []).map(mapBackendToFrontend);
+    const payload = normalizePaginatedResponse(res.data, options?.limit, options?.offset);
+    return {
+      ...payload,
+      data: payload.data.map(mapBackendToFrontend),
+    };
   },
+
+  getAllCounterProfiles: async (
+    options?: Omit<ICounterProfileListQuery, 'limit' | 'offset'>
+  ): Promise<ICounterProfile[]> =>
+    fetchAllMatching(pagination =>
+      counterProfileApi.getCounterProfiles({ ...options, ...pagination })
+    ),
 
   getCounterProfileById: async (
     id: string
@@ -79,7 +91,10 @@ export const counterProfileApi = {
     values: ICreateCounterProfile
   ): Promise<ICounterProfile | undefined> => {
     const backendData = mapFrontendToBackend(values);
-    const res = await apiClient.put<BackendCounter>(`/counters/${id}`, backendData);
+    const res = await apiClient.put<BackendCounter>(
+      `/counters/${id}`,
+      backendData
+    );
     if (res.error) throw new Error(res.error);
     return res.data ? mapBackendToFrontend(res.data) : undefined;
   },

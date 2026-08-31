@@ -77,7 +77,8 @@ const REPORT_PAGE_TITLE_BY_TYPE: Record<ReportPageType, string> = {
   [ReportPageTypeEnum.CARD_BLANK_STOCK]: 'Blank Stock CARD Report',
   [ReportPageTypeEnum.FLM1_DAILY_CN_SUMMARY]: 'FLM1 Daily CN Summary',
   [ReportPageTypeEnum.FLM2_DAILY_ET_SUMMARY]: 'Encashed TC Balance',
-  [ReportPageTypeEnum.FLM3_PURCHASE_FROM_PUBLIC]: 'FLM 3 - Purchase from Public',
+  [ReportPageTypeEnum.FLM3_PURCHASE_FROM_PUBLIC]:
+    'FLM 3 - Purchase from Public',
   [ReportPageTypeEnum.FLM4_PURCHASE_FROM_FFMC]: 'FLM 4 - Purchase from FFMC',
   [ReportPageTypeEnum.FLM5_SALES_TO_PUBLIC]: 'FLM 5 - Sales to Public',
   [ReportPageTypeEnum.FLM6_SALES_TO_FFMC]: 'FLM 6 - Sales to FFMC',
@@ -100,15 +101,13 @@ export const getReportPageTypeFromSlug = (
   }
 
   return Object.values(ReportPageTypeEnum).includes(
-    normalizedSlug as ReportPageType,
+    normalizedSlug as ReportPageType
   )
     ? (normalizedSlug as ReportPageType)
     : null;
 };
 
-export const getReportPageTitle = (
-  pageType: ReportPageType | null
-): string => {
+export const getReportPageTitle = (pageType: ReportPageType | null): string => {
   if (!pageType) {
     return 'Reports';
   }

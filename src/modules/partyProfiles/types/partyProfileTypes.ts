@@ -2,6 +2,8 @@ import type { ICategoryOption } from '@/types/categoryOptionTypes';
 import type { IBranchProfile } from '@/modules/branchProfile/types/branchProfileTypes';
 import type { IUserReference } from '@/api/sharedTypes';
 
+import type { IOffsetPaginationParams, IPaginatedResponse } from '@/types/pagination';
+
 export const PartyProfileTypeEnum = {
   CORPORATE_CLIENT: 'CORPORATE_CLIENT',
   FFMC: 'FFMC',
@@ -169,7 +171,7 @@ export interface IReviewPartyProfilePayload {
   rejectReason?: string;
 }
 
-export interface IPartyProfileListQuery {
+export interface IPartyProfileListQuery extends IOffsetPaginationParams {
   search?: string;
   code?: string;
   name?: string;
@@ -180,18 +182,10 @@ export interface IPartyProfileListQuery {
   sale?: boolean;
   purchase?: boolean;
   type?: string | string[];
-  page?: number;
-  limit?: number;
   branchId?: string;
   branchIds?: string[];
   entityTypeId?: string;
   groupId?: string;
 }
 
-export interface IPartyProfileListResponse {
-  data: IPartyProfile[];
-  page: number;
-  limit: number;
-  totalItems: number;
-  totalPages: number;
-}
+export type IPartyProfileListResponse = IPaginatedResponse<IPartyProfile>;

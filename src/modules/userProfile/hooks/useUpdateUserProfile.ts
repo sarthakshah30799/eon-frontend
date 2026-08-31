@@ -9,7 +9,9 @@ interface UseUpdateUserProfileResult {
   isPending: boolean;
 }
 
-export const useUpdateUserProfile = (id: string): UseUpdateUserProfileResult => {
+export const useUpdateUserProfile = (
+  id: string
+): UseUpdateUserProfileResult => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
@@ -30,4 +32,3 @@ export const useUpdateUserProfile = (id: string): UseUpdateUserProfileResult => 
     isPending: mutation.isPending,
   };
 };
-

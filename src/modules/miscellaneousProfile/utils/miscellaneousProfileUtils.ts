@@ -9,7 +9,10 @@ const normalizeCategoryOptionText = (value: string): string =>
   value.trim().toUpperCase();
 
 const normalizeCategoryOptionCode = (value: string): string =>
-  value.trim().replace(/[_\s-]/g, '').toUpperCase();
+  value
+    .trim()
+    .replace(/[_\s-]/g, '')
+    .toUpperCase();
 
 export interface ICategoryOptionFormItemValues {
   id?: string;
@@ -33,13 +36,14 @@ export const createEmptyCategoryOptionsFormValues = (
   isActive: true,
 });
 
-export const createEmptyCategoryOptionFormValues = (): ICreateCategoryOption => ({
-  code: CategoryOptionCodeEnum.LocationType,
-  value: '',
-  label: '',
-  sortOrder: 0,
-  isActive: true,
-});
+export const createEmptyCategoryOptionFormValues =
+  (): ICreateCategoryOption => ({
+    code: CategoryOptionCodeEnum.LocationType,
+    value: '',
+    label: '',
+    sortOrder: 0,
+    isActive: true,
+  });
 
 export const createEmptyCategoryOptionsBulkFormValues =
   createEmptyCategoryOptionsFormValues;

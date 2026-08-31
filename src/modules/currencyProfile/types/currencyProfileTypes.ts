@@ -13,8 +13,12 @@ export const CurrencyGroup = {
   GULF: 'GULF',
 } as const;
 
-export type CurrencyGroup =
-  (typeof CurrencyGroup)[keyof typeof CurrencyGroup];
+export type CurrencyGroup = (typeof CurrencyGroup)[keyof typeof CurrencyGroup];
+
+import type {
+  IOffsetPaginationParams,
+  IPaginatedResponse,
+} from '@/types/pagination';
 
 export const CurrencyProductAllowed = {
   CN: 'CN',
@@ -78,3 +82,12 @@ export type ICreateCurrencyProfile = Omit<
 };
 
 export type IUpdateCurrencyProfile = Partial<ICreateCurrencyProfile>;
+
+export interface ICurrencyProfileListQuery extends IOffsetPaginationParams {
+  search?: string;
+  activeOnly?: boolean;
+  includeOnlyStocking?: boolean;
+  productAllowed?: string;
+}
+
+export type ICurrencyProfileListResponse = IPaginatedResponse<ICurrencyProfile>;

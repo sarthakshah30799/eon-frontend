@@ -5,7 +5,8 @@ export const CARD_SETTLEMENT_TEXT = {
   emptyUnsettled:
     'No unsettled CARD items match the selected issuer, currency, and HO branch.',
   createTitle: 'Create CARD Settlement',
-  createDescription: 'Select issuer and currency, then choose unsettled cards and enter rates.',
+  createDescription:
+    'Select issuer and currency, then choose unsettled cards and enter rates.',
   editTitle: 'CARD Settlement',
   readonlyDescription: 'This settlement is read-only.',
   pendingHoDescription: 'Review the settlement, then accept or reject.',

@@ -14,14 +14,14 @@ import {
 } from '@/components/forms';
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import { financialCodesApi } from '@/api/financialCodes/financialCodes.api';
-import { branchProfileApi } from '@/api/branchProfile/branchProfile.api';
 import { accountProfileApi } from '@/api/accountProfile';
 import { useGetFinancialCode } from '@/modules/financialCodes/hooks/useGetFinancialCode';
 import { useListCurrencyProfiles } from '@/modules/currencyProfile/hooks/useListCurrencyProfiles';
+import { useLoadBranchOptions } from '@/modules/branchProfile/hooks';
 import { accountProfileSchema } from '../schema/accountProfileSchema';
 import type { ICreateAccountProfile } from '../types/accountProfileTypes';
 import { isAccountProfileCurrencyOption } from '../utils/accountProfileUtils';
-import { normalizeCodeValue } from '@/utils';
+import { normalizeCodeValue, toPageQuery } from '@/utils';
 
 const ACCOUNT_PROFILE_OPTION_PAGE_SIZE = 30;
 
@@ -47,9 +47,12 @@ const FinancialCodeObserver = ({ isDisabled }: { isDisabled: boolean }) => {
   // Fetch all financial codes for looking up and filtering
   const { data: financialCodesRes } = useQuery({
     queryKey: ['financial-codes-lookup'],
-    queryFn: () => financialCodesApi.getFinancialCodes({ page: 1, limit: 100 }),
+    queryFn: () => financialCodesApi.getFinancialCodes({ limit: 100, offset: 0 }),
   });
-  const financialCodes = useMemo(() => financialCodesRes?.data || [], [financialCodesRes]);
+  const financialCodes = useMemo(
+    () => financialCodesRes?.data || [],
+    [financialCodesRes]
+  );
 
   // Sync Financial Type when Financial Code changes
   useEffect(() => {
@@ -67,7 +70,9 @@ const FinancialCodeObserver = ({ isDisabled }: { isDisabled: boolean }) => {
     if (financialType && prevFTypeRef.current !== financialType) {
       prevFTypeRef.current = financialType;
       // Find the first financial code matching this type
-      const matched = financialCodes.find(fc => fc.financialType?.id === financialType);
+      const matched = financialCodes.find(
+        fc => fc.financialType?.id === financialType
+      );
       if (matched && matched.id !== financialCodeId) {
         setValue('financialCodeId', matched.id);
         setValue('financialSubProfileId', ''); // Reset SubCode
@@ -91,29 +96,42 @@ const FinancialCodeObserver = ({ isDisabled }: { isDisabled: boolean }) => {
     }));
   }, [selectedFC]);
 
-  const loadSubProfileOptions = useCallback(async (inputValue: string) => {
-    return {
-      options: subProfileOptions.filter(opt =>
-        opt.label.toLowerCase().includes(inputValue.toLowerCase())
-      ),
-    };
-  }, [subProfileOptions]);
+  const loadSubProfileOptions = useCallback(
+    async (inputValue: string) => {
+      return {
+        options: subProfileOptions.filter(opt =>
+          opt.label.toLowerCase().includes(inputValue.toLowerCase())
+        ),
+      };
+    },
+    [subProfileOptions]
+  );
 
-  const loadFinancialCodeOptions = useCallback(async (inputValue: string) => {
-    const res = await financialCodesApi.getFinancialCodes({ page: 1, limit: 100, search: inputValue });
-    let data = res.data || [];
-    if (financialType) {
-      data = data.filter(fc => fc.financialType?.id === financialType);
-    }
-    const options = data.map(fc => ({
-      value: fc.id,
-      label: fc.financialCode, // Just show code
-    }));
-    return { options };
-  }, [financialType]);
+  const loadFinancialCodeOptions = useCallback(
+    async (inputValue: string) => {
+      const res = await financialCodesApi.getFinancialCodes({
+        limit: 100,
+        offset: 0,
+        search: inputValue,
+      });
+      let data = res.data || [];
+      if (financialType) {
+        data = data.filter(fc => fc.financialType?.id === financialType);
+      }
+      const options = data.map(fc => ({
+        value: fc.id,
+        label: fc.financialCode, // Just show code
+      }));
+      return { options };
+    },
+    [financialType]
+  );
 
   const loadFinancialTypeOptions = useCallback(async (inputValue: string) => {
-    const res = await financialCodesApi.getFinancialCodes({ page: 1, limit: 100 });
+    const res = await financialCodesApi.getFinancialCodes({
+      limit: 100,
+      offset: 0,
+    });
     const types = new Set<string>();
     const options: { value: string; label: string }[] = [];
     (res.data || []).forEach(fc => {
@@ -159,12 +177,17 @@ const FinancialCodeObserver = ({ isDisabled }: { isDisabled: boolean }) => {
           isLoading
             ? 'Loading subcodes...'
             : financialCodeId
-            ? subProfileOptions.length > 0
-              ? 'Search subcodes...'
-              : 'No subcodes available'
-            : 'Select code first'
+              ? subProfileOptions.length > 0
+                ? 'Search subcodes...'
+                : 'No subcodes available'
+              : 'Select code first'
         }
-        disabled={isDisabled || !financialCodeId || subProfileOptions.length === 0 || isLoading}
+        disabled={
+          isDisabled ||
+          !financialCodeId ||
+          subProfileOptions.length === 0 ||
+          isLoading
+        }
         loadOptions={loadSubProfileOptions}
         key={`${financialCodeId}_${subProfileOptions.length}`}
       />
@@ -182,17 +205,17 @@ export const AccountProfileForm = ({
 }: AccountProfileFormProps) => {
   const navigate = useNavigate();
   const isDisabled = isSubmitting || readOnly;
-  const { data: currencies = [], isLoading: isCurrenciesLoading } = useListCurrencyProfiles({
-    activeOnly: false,
-  });
+  const { data: currenciesPage, isLoading: isCurrenciesLoading } =
+    useListCurrencyProfiles({
+      activeOnly: false,
+    });
+  const currencies = currenciesPage?.data ?? [];
   const currencyOptions = useMemo(
     () =>
-      currencies
-        .filter(isAccountProfileCurrencyOption)
-        .map(currency => ({
-          value: currency.id,
-          label: `${currency.currencyCode} - ${currency.currencyName}`,
-        })),
+      currencies.filter(isAccountProfileCurrencyOption).map(currency => ({
+        value: currency.id,
+        label: `${currency.currencyCode} - ${currency.currencyName}`,
+      })),
     [currencies]
   );
 
@@ -200,47 +223,39 @@ export const AccountProfileForm = ({
     navigate('/admin/accounts-profile');
   };
 
-  const loadCurrencyOptions = useCallback(async (inputValue: string) => {
-    const query = inputValue.trim().toLowerCase();
-    const options = query
-      ? currencyOptions.filter(option => option.label.toLowerCase().includes(query))
-      : currencyOptions;
-    return { options };
-  }, [currencyOptions]);
+  const loadCurrencyOptions = useCallback(
+    async (inputValue: string) => {
+      const query = inputValue.trim().toLowerCase();
+      const options = query
+        ? currencyOptions.filter(option =>
+            option.label.toLowerCase().includes(query)
+          )
+        : currencyOptions;
+      return { options };
+    },
+    [currencyOptions]
+  );
 
-  const loadBranchOptions = useCallback(async (inputValue: string) => {
-    const data = await branchProfileApi.getBranchProfiles({
-      activeOnly: true,
-    });
-    const filtered = data.filter(
-      b =>
-        b.code.toLowerCase().includes(inputValue.toLowerCase()) ||
-        b.name.toLowerCase().includes(inputValue.toLowerCase())
-    );
-    return {
-      options: filtered.map(b => ({
-        value: b.id,
-        label: `${b.code} - ${b.name}`,
-      })),
-    };
-  }, []);
+  const loadBranchOptions = useLoadBranchOptions({ activeOnly: true });
 
-  const loadMapToAccountOptions = useCallback(async (inputValue: string, page = 1) => {
-    const res = await accountProfileApi.getAccountProfiles({
-      page,
-      limit: ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
-      search: inputValue,
-      active: true,
-    });
-    const filtered = (res.data || []).filter(a => a.id !== currentId);
-    return {
-      options: filtered.map(a => ({
-        value: a.id,
-        label: `${a.accountCode} - ${a.accountName}`,
-      })),
-      hasMore: (res.data || []).length === ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
-    };
-  }, [currentId]);
+  const loadMapToAccountOptions = useCallback(
+    async (inputValue: string, page = 1) => {
+      const res = await accountProfileApi.getAccountProfiles({
+        ...toPageQuery(page, ACCOUNT_PROFILE_OPTION_PAGE_SIZE),
+        search: inputValue,
+        active: true,
+      });
+      const filtered = (res.data || []).filter(a => a.id !== currentId);
+      return {
+        options: filtered.map(a => ({
+          value: a.id,
+          label: `${a.accountCode} - ${a.accountName}`,
+        })),
+        hasMore: res.hasMore,
+      };
+    },
+    [currentId]
+  );
 
   const validateAccountCode = useCallback(
     async (value: string) => {
@@ -250,8 +265,7 @@ export const AccountProfileForm = ({
       }
 
       const res = await accountProfileApi.getAccountProfiles({
-        page: 1,
-        limit: ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
+        ...toPageQuery(1, ACCOUNT_PROFILE_OPTION_PAGE_SIZE),
         search: normalizedCode,
       });
       return (res.data || []).some(
@@ -267,14 +281,20 @@ export const AccountProfileForm = ({
     <Form
       id="account-profile-form"
       onSubmit={onSubmit}
-      resolver={yupResolver(accountProfileSchema) as Resolver<ICreateAccountProfile>}
+      resolver={
+        yupResolver(accountProfileSchema) as Resolver<ICreateAccountProfile>
+      }
       defaultValues={defaultValues}
       className="space-y-6"
-      footer={!readOnly ? {
-        submitLabel,
-        onBackClick: onCancel,
-        onCancel,
-      } : undefined}
+      footer={
+        !readOnly
+          ? {
+              submitLabel,
+              onBackClick: onCancel,
+              onCancel,
+            }
+          : undefined
+      }
     >
       <CardSection heading="Account Detail">
         <div className="grid gap-4 md:grid-cols-2">
@@ -362,70 +382,116 @@ export const AccountProfileForm = ({
             placeholder="Select Branch"
             disabled={isDisabled}
             loadOptions={loadBranchOptions}
+            defaultOptions={true}
+            pagination
             isClearable
           />
-      <FormFieldSelect
-        name="mapToAccountId"
-        label="Map To Account"
-        placeholder="Select Account to Map"
-        disabled={isDisabled}
-        loadOptions={loadMapToAccountOptions}
-        pagination
-        pageSize={ACCOUNT_PROFILE_OPTION_PAGE_SIZE}
-        isClearable
-      />
+          <FormFieldSelect
+            name="mapToAccountId"
+            label="Map To Account"
+            placeholder="Select Account to Map"
+            disabled={isDisabled}
+            loadOptions={loadMapToAccountOptions}
+            pagination
+            pageSize={ACCOUNT_PROFILE_OPTION_PAGE_SIZE}
+            isClearable
+          />
         </div>
       </CardSection>
 
       <CardSection heading="Transaction Permissions">
         <div className="grid gap-3 grid-cols-2 md:grid-cols-4 lg:grid-cols-4">
           <div className="rounded-sm border border-border-primary bg-surface-primary p-3 hover:border-border-secondary transition-all">
-            <FormFieldCheckbox name="bulkSale" label="Bulk Sell" disabled={isDisabled} />
+            <FormFieldCheckbox
+              name="bulkSale"
+              label="Bulk Sell"
+              disabled={isDisabled}
+            />
           </div>
           <div className="rounded-sm border border-border-primary bg-surface-primary p-3 hover:border-border-secondary transition-all">
-            <FormFieldCheckbox name="bulkPurchase" label="Bulk Purchase" disabled={isDisabled} />
+            <FormFieldCheckbox
+              name="bulkPurchase"
+              label="Bulk Purchase"
+              disabled={isDisabled}
+            />
           </div>
           <div className="rounded-sm border border-border-primary bg-surface-primary p-3 hover:border-border-secondary transition-all">
-            <FormFieldCheckbox name="retailSale" label="Retail Sell" disabled={isDisabled} />
+            <FormFieldCheckbox
+              name="retailSale"
+              label="Retail Sell"
+              disabled={isDisabled}
+            />
           </div>
           <div className="rounded-sm border border-border-primary bg-surface-primary p-3 hover:border-border-secondary transition-all">
-            <FormFieldCheckbox name="retailPurchase" label="Retail Purchase" disabled={isDisabled} />
+            <FormFieldCheckbox
+              name="retailPurchase"
+              label="Retail Purchase"
+              disabled={isDisabled}
+            />
           </div>
           <div className="rounded-sm border border-border-primary bg-surface-primary p-3 hover:border-border-secondary transition-all">
-            <FormFieldCheckbox name="expense" label="Expense" disabled={isDisabled} />
+            <FormFieldCheckbox
+              name="expense"
+              label="Expense"
+              disabled={isDisabled}
+            />
           </div>
           <div className="rounded-sm border border-border-primary bg-surface-primary p-3 hover:border-border-secondary transition-all">
-            <FormFieldCheckbox name="receipt" label="Receipt" disabled={isDisabled} />
+            <FormFieldCheckbox
+              name="receipt"
+              label="Receipt"
+              disabled={isDisabled}
+            />
           </div>
           <div className="rounded-sm border border-border-primary bg-surface-primary p-3 hover:border-border-secondary transition-all">
-            <FormFieldCheckbox name="payment" label="Payment" disabled={isDisabled} />
+            <FormFieldCheckbox
+              name="payment"
+              label="Payment"
+              disabled={isDisabled}
+            />
           </div>
           <div className="rounded-sm border border-border-primary bg-surface-primary p-3 hover:border-border-secondary transition-all">
-            <FormFieldCheckbox name="journalVoucher" label="Journal Voucher (JV)" disabled={isDisabled} />
+            <FormFieldCheckbox
+              name="journalVoucher"
+              label="Journal Voucher (JV)"
+              disabled={isDisabled}
+            />
           </div>
           <div className="rounded-sm border border-border-primary bg-surface-primary p-3 hover:border-border-secondary transition-all">
-            <FormFieldCheckbox name="active" label="Active" disabled={isDisabled} />
+            <FormFieldCheckbox
+              name="active"
+              label="Active"
+              disabled={isDisabled}
+            />
           </div>
           <div className="rounded-sm border border-border-primary bg-surface-primary p-3 hover:border-border-secondary transition-all">
-            <FormFieldCheckbox name="cmsBank" label="CMS Bank" disabled={isDisabled} />
+            <FormFieldCheckbox
+              name="cmsBank"
+              label="CMS Bank"
+              disabled={isDisabled}
+            />
           </div>
           <div className="rounded-sm border border-border-primary bg-surface-primary p-3 hover:border-border-secondary transition-all">
-            <FormFieldCheckbox name="directRemittance" label="Direct Remittance" disabled={isDisabled} />
+            <FormFieldCheckbox
+              name="directRemittance"
+              label="Direct Remittance"
+              disabled={isDisabled}
+            />
           </div>
         </div>
 
         <div className="mt-4 flex items-center gap-2">
-          <FormFieldCheckbox name="zeroBalanceAtEod" label="Zero Balance at EOD" disabled={isDisabled} />
+          <FormFieldCheckbox
+            name="zeroBalanceAtEod"
+            label="Zero Balance at EOD"
+            disabled={isDisabled}
+          />
         </div>
       </CardSection>
 
       {readOnly && (
         <div className="flex justify-end border-t border-border-primary pt-4">
-          <Button
-            type="button"
-            onClick={onCancel}
-            variant="outline"
-          >
+          <Button type="button" onClick={onCancel} variant="outline">
             Close
           </Button>
         </div>

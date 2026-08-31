@@ -33,7 +33,8 @@ export const CardSettlementEditView = () => {
   const acceptMutation = useAcceptCardSettlement();
   const rejectMutation = useRejectCardSettlement();
   const cancelMutation = useCancelCardSettlement();
-  const [confirmationAction, setConfirmationAction] = useState<ConfirmationAction>(null);
+  const [confirmationAction, setConfirmationAction] =
+    useState<ConfirmationAction>(null);
   const [reason, setReason] = useState('');
   const document = query.data;
   const initialValues = useMemo<CardSettlementFormValues | null>(() => {
@@ -52,17 +53,22 @@ export const CardSettlementEditView = () => {
       transactionNumber: document.transactionNumber,
       reference: document.reference ?? '',
       remarks: document.remarks ?? '',
-      items: (document.items ?? []).map(item => toFormItem(item, document.kind)),
+      items: (document.items ?? []).map(item =>
+        toFormItem(item, document.kind)
+      ),
     };
   }, [document]);
 
   const canCancel =
     document?.kind === CardStockSettlementDocumentKind.BRANCH_HO &&
-    document.status === CardStockSettlementDocumentStatus.PENDING_HO_ACCEPTANCE &&
+    document.status ===
+      CardStockSettlementDocumentStatus.PENDING_HO_ACCEPTANCE &&
     !document.postingTransactionId;
   const canAccept = Boolean(isHo && canCancel);
   const isPending =
-    acceptMutation.isPending || rejectMutation.isPending || cancelMutation.isPending;
+    acceptMutation.isPending ||
+    rejectMutation.isPending ||
+    cancelMutation.isPending;
 
   const run = async (action: Promise<unknown>, message: string) => {
     await action;
@@ -74,7 +80,9 @@ export const CardSettlementEditView = () => {
   if (query.error || !document || !initialValues) {
     return (
       <div className="rounded border border-red-300 bg-red-50 p-4 text-sm text-red-700">
-        {query.error instanceof Error ? query.error.message : CARD_SETTLEMENT_TEXT.notFound}
+        {query.error instanceof Error
+          ? query.error.message
+          : CARD_SETTLEMENT_TEXT.notFound}
       </div>
     );
   }
@@ -109,7 +117,10 @@ export const CardSettlementEditView = () => {
                   loading={acceptMutation.isPending}
                   disabled={isPending}
                   onClick={() =>
-                    void run(acceptMutation.mutateAsync(id), CARD_SETTLEMENT_TEXT.accepted)
+                    void run(
+                      acceptMutation.mutateAsync(id),
+                      CARD_SETTLEMENT_TEXT.accepted
+                    )
                   }
                 >
                   {CARD_SETTLEMENT_TEXT.accept}
@@ -168,7 +179,11 @@ export const CardSettlementEditView = () => {
         }
         footer={
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setConfirmationAction(null)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setConfirmationAction(null)}
+            >
               {CARD_SETTLEMENT_TEXT.close}
             </Button>
             <Button

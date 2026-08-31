@@ -75,17 +75,21 @@ export const AdditionalSettingsView = ({
     );
   }, [activeCategoryId, categories]);
   const activeCategoryUsesAccountProfiles = Boolean(
-    getAdditionalSettingCategoryDefinition(activeCategory?.code)?.subcategories.some(
+    getAdditionalSettingCategoryDefinition(
+      activeCategory?.code
+    )?.subcategories.some(
       subcategory => subcategory.optionsSource === 'account-profile'
     )
   );
   const shouldLoadAccountProfiles =
     activeCategoryUsesAccountProfiles || categoryModalMode !== null;
-  const { data: accountProfileResponse, isFetching: areAccountProfilesFetching } =
-    useListAccountProfiles(
-      { page: 1, limit: 100 },
-      shouldLoadAccountProfiles
-    );
+  const {
+    data: accountProfileResponse,
+    isFetching: areAccountProfilesFetching,
+  } = useListAccountProfiles(
+    { limit: 100, offset: 0 },
+    shouldLoadAccountProfiles
+  );
   const accountProfiles = accountProfileResponse?.data ?? [];
 
   const handleCreateSubmit = async (
@@ -196,7 +200,9 @@ export const AdditionalSettingsView = ({
               ? ADDITIONAL_SETTINGS_TEXTS.UPDATE_CATEGORY
               : ADDITIONAL_SETTINGS_TEXTS.CREATE_CATEGORY
           }
-          currentId={categoryModalMode === 'edit' ? editingCategory?.id : undefined}
+          currentId={
+            categoryModalMode === 'edit' ? editingCategory?.id : undefined
+          }
         />
       </Modal>
     </section>

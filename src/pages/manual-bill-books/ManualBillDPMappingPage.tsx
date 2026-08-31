@@ -9,7 +9,11 @@ import {
   Input,
   type AsyncSelectOption,
 } from '@/components/ui';
-import { CashierBillBookListView, CashierDPUnmapView, type ICashierBookRow } from '@/modules/manual-bill-books/components';
+import {
+  CashierBillBookListView,
+  CashierDPUnmapView,
+  type ICashierBookRow,
+} from '@/modules/manual-bill-books/components';
 import type { MultiValue, SingleValue } from 'react-select';
 import toast from 'react-hot-toast';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
@@ -40,7 +44,9 @@ const ManualBillDPMappingPageContent = () => {
   const { activeBranchId, user } = useAuth();
   const location = useLocation();
 
-  const activeTab = location.pathname.includes('dp-unmapping') ? 'unmap' : 'map';
+  const activeTab = location.pathname.includes('dp-unmapping')
+    ? 'unmap'
+    : 'map';
   const isCashierOrDelivery = !!(user?.isCashier || user?.isDeliveryBoy);
 
   // Cashier: selected row from the list view
@@ -53,11 +59,11 @@ const ManualBillDPMappingPageContent = () => {
   const [mvNoToStr, setMvNoToStr] = useState('');
 
   // Options & table state
-  const [deliveryPersons, setDeliveryPersons] = useState<Array<{ id: string; name: string }>>([]);
-  const {
-    defaultOptions: txnTypes,
-    loadOptions: loadTxnTypeOptions,
-  } = useCategoryOptions(CategoryOptionCodeEnum.Transaction, true);
+  const [deliveryPersons, setDeliveryPersons] = useState<
+    Array<{ id: string; name: string }>
+  >([]);
+  const { defaultOptions: txnTypes, loadOptions: loadTxnTypeOptions } =
+    useCategoryOptions(CategoryOptionCodeEnum.Transaction, true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingDP, setIsLoadingDP] = useState(true);
@@ -70,14 +76,26 @@ const ManualBillDPMappingPageContent = () => {
   useEffect(() => {
     if (!activeBranchId) return;
     let cancelled = false;
-    Promise.resolve().then(() => {
-      if (!cancelled) setIsLoadingDP(true);
-      return manualBillBookApi.getDeliveryPersons();
-    })
-      .then(data => { if (!cancelled) setDeliveryPersons(data); })
-      .catch(err => { if (!cancelled) toast.error(getErrorMessage(err, 'Failed to load delivery person list.')); })
-      .finally(() => { if (!cancelled) setIsLoadingDP(false); });
-    return () => { cancelled = true; };
+    Promise.resolve()
+      .then(() => {
+        if (!cancelled) setIsLoadingDP(true);
+        return manualBillBookApi.getDeliveryPersons();
+      })
+      .then(data => {
+        if (!cancelled) setDeliveryPersons(data);
+      })
+      .catch(err => {
+        if (!cancelled)
+          toast.error(
+            getErrorMessage(err, 'Failed to load delivery person list.')
+          );
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoadingDP(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [activeBranchId]);
 
   // When cashier selects a row, pre-fill the form
@@ -86,7 +104,9 @@ const ManualBillDPMappingPageContent = () => {
     setTxnType(String(row.txnType));
     // Default: first book in their assigned range, MV pre-filled for that book
     const firstBookNo = row.assignedBookNoFrom;
-    const mvFrom = row.book.mvNoFrom + (firstBookNo - row.book.bookNoFrom) * row.book.vouchersPerBook;
+    const mvFrom =
+      row.book.mvNoFrom +
+      (firstBookNo - row.book.bookNoFrom) * row.book.vouchersPerBook;
     const mvTo = mvFrom + row.book.vouchersPerBook - 1;
     setBookNoStr(String(firstBookNo));
     setMvNoFromStr(String(Math.max(row.mvFrom, mvFrom)));
@@ -101,7 +121,8 @@ const ManualBillDPMappingPageContent = () => {
     if (!val || !cashierRow) return;
     const bookNo = parseInt(val, 10);
     const { book, mvFrom: assignedMvFrom, mvTo: assignedMvTo } = cashierRow;
-    const calcFrom = book.mvNoFrom + (bookNo - book.bookNoFrom) * book.vouchersPerBook;
+    const calcFrom =
+      book.mvNoFrom + (bookNo - book.bookNoFrom) * book.vouchersPerBook;
     const calcTo = calcFrom + book.vouchersPerBook - 1;
     setMvNoFromStr(String(Math.max(assignedMvFrom, calcFrom)));
     setMvNoToStr(String(Math.min(assignedMvTo, calcTo)));
@@ -133,7 +154,10 @@ const ManualBillDPMappingPageContent = () => {
         return;
       }
       // Book no must be within cashier's assigned book range
-      if (bookNo < cashierRow.assignedBookNoFrom || bookNo > cashierRow.assignedBookNoTo) {
+      if (
+        bookNo < cashierRow.assignedBookNoFrom ||
+        bookNo > cashierRow.assignedBookNoTo
+      ) {
         toast.error(
           `Book No must be within your assigned range: ${cashierRow.assignedBookNoFrom} – ${cashierRow.assignedBookNoTo}`
         );
@@ -151,20 +175,22 @@ const ManualBillDPMappingPageContent = () => {
         actionType: activeTab === 'map' ? 'MAP' : 'UNMAP',
       });
 
-      const mappedRows: IDPMappingRow[] = data.map((item: IManualBookDPMappingGroup) => ({
-        manualBookId: item.manualBookId,
-        bookNo: item.bookNo,
-        transactionType: item.transactionType,
-        mvNoFrom: item.mvNoFrom,
-        mvNoTo: item.mvNoTo,
-        qty: item.qty,
-        userId: item.userId,
-        assignedToUserName: item.assignedToUserName,
-        pageIds: item.pageIds,
-        remarks: item.remarks || '',
-        isCheck: false,
-        deliveryPersonId: '',
-      }));
+      const mappedRows: IDPMappingRow[] = data.map(
+        (item: IManualBookDPMappingGroup) => ({
+          manualBookId: item.manualBookId,
+          bookNo: item.bookNo,
+          transactionType: item.transactionType,
+          mvNoFrom: item.mvNoFrom,
+          mvNoTo: item.mvNoTo,
+          qty: item.qty,
+          userId: item.userId,
+          assignedToUserName: item.assignedToUserName,
+          pageIds: item.pageIds,
+          remarks: item.remarks || '',
+          isCheck: false,
+          deliveryPersonId: '',
+        })
+      );
 
       setRows(mappedRows);
       setHasProcessed(true);
@@ -181,16 +207,22 @@ const ManualBillDPMappingPageContent = () => {
   };
 
   const handleRowCheckbox = (idx: number) =>
-    setRows(prev => prev.map((r, i) => (i === idx ? { ...r, isCheck: !r.isCheck } : r)));
+    setRows(prev =>
+      prev.map((r, i) => (i === idx ? { ...r, isCheck: !r.isCheck } : r))
+    );
 
   const handleHeaderCheckbox = (checked: boolean) =>
     setRows(prev => prev.map(r => ({ ...r, isCheck: checked })));
 
   const handleRowRemarks = (idx: number, val: string) =>
-    setRows(prev => prev.map((r, i) => (i === idx ? { ...r, remarks: val } : r)));
+    setRows(prev =>
+      prev.map((r, i) => (i === idx ? { ...r, remarks: val } : r))
+    );
 
   const handleRowDP = (idx: number, val: string) =>
-    setRows(prev => prev.map((r, i) => (i === idx ? { ...r, deliveryPersonId: val } : r)));
+    setRows(prev =>
+      prev.map((r, i) => (i === idx ? { ...r, deliveryPersonId: val } : r))
+    );
 
   const handleSave = async () => {
     const checkedRows = rows.filter(r => r.isCheck);
@@ -252,7 +284,8 @@ const ManualBillDPMappingPageContent = () => {
             Unmap from Delivery Person
           </h1>
           <p className="text-sm text-slate-500">
-            Retrieve bill book pages that are currently assigned to a delivery person.
+            Retrieve bill book pages that are currently assigned to a delivery
+            person.
           </p>
         </div>
         <CashierDPUnmapView />
@@ -269,7 +302,8 @@ const ManualBillDPMappingPageContent = () => {
             Map to Delivery Person
           </h1>
           <p className="text-sm text-slate-500">
-            Select a bill book entry below to map its pages to a delivery person.
+            Select a bill book entry below to map its pages to a delivery
+            person.
           </p>
         </div>
         <CashierBillBookListView onRowClick={handleCashierRowSelect} />
@@ -287,7 +321,11 @@ const ManualBillDPMappingPageContent = () => {
         {cashierRow && (
           <button
             type="button"
-            onClick={() => { setCashierRow(null); setRows([]); setHasProcessed(false); }}
+            onClick={() => {
+              setCashierRow(null);
+              setRows([]);
+              setHasProcessed(false);
+            }}
             className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-700 mb-1 w-fit"
           >
             <ArrowLeftIcon className="h-3.5 w-3.5" />
@@ -298,7 +336,8 @@ const ManualBillDPMappingPageContent = () => {
           Manual Bill DP Mapping
         </h1>
         <p className="text-sm text-slate-500">
-          Map individual manual bill book pages to delivery persons, or deallocate them.
+          Map individual manual bill book pages to delivery persons, or
+          deallocate them.
         </p>
       </div>
 
@@ -322,14 +361,23 @@ const ManualBillDPMappingPageContent = () => {
                     ? { value: txnType, label: selectedTxnType.label }
                     : null
               }
-              onChange={(option: MultiValue<AsyncSelectOption> | SingleValue<AsyncSelectOption>) => {
-                const sel = Array.isArray(option) ? option[0] ?? null : option;
+              onChange={(
+                option:
+                  | MultiValue<AsyncSelectOption>
+                  | SingleValue<AsyncSelectOption>
+              ) => {
+                const sel = Array.isArray(option)
+                  ? (option[0] ?? null)
+                  : option;
                 setTxnType(sel?.value ? String(sel.value) : 'ALL');
               }}
               loadOptions={async (inputValue: string) => {
                 const response = await loadTxnTypeOptions(inputValue);
                 return {
-                  options: [{ value: 'ALL', label: 'ALL' }, ...response.options],
+                  options: [
+                    { value: 'ALL', label: 'ALL' },
+                    ...response.options,
+                  ],
                   hasMore: false,
                 };
               }}
@@ -344,7 +392,11 @@ const ManualBillDPMappingPageContent = () => {
               label="Book No *"
               min="1"
               value={bookNoStr}
-              onChange={e => cashierRow ? handleCashierBookNoChange(e.target.value) : setBookNoStr(e.target.value)}
+              onChange={e =>
+                cashierRow
+                  ? handleCashierBookNoChange(e.target.value)
+                  : setBookNoStr(e.target.value)
+              }
               placeholder="e.g. 11"
               valueTransform="none"
               classes={{ container: 'max-w-none' }}
@@ -356,7 +408,9 @@ const ManualBillDPMappingPageContent = () => {
             <label className="block text-xs font-semibold text-slate-600 mb-1">
               MV No From *
               {cashierRow && (
-                <span className="ml-1 text-slate-400 font-normal">(min: {cashierRow.mvFrom})</span>
+                <span className="ml-1 text-slate-400 font-normal">
+                  (min: {cashierRow.mvFrom})
+                </span>
               )}
             </label>
             <input
@@ -379,7 +433,9 @@ const ManualBillDPMappingPageContent = () => {
             <label className="block text-xs font-semibold text-slate-600 mb-1">
               MV No To *
               {cashierRow && (
-                <span className="ml-1 text-slate-400 font-normal">(max: {cashierRow.mvTo})</span>
+                <span className="ml-1 text-slate-400 font-normal">
+                  (max: {cashierRow.mvTo})
+                </span>
               )}
             </label>
             <input
@@ -409,7 +465,9 @@ const ManualBillDPMappingPageContent = () => {
       {hasProcessed && (
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
-            <h3 className="font-semibold text-slate-800 text-sm">Dispatches Checklist</h3>
+            <h3 className="font-semibold text-slate-800 text-sm">
+              Dispatches Checklist
+            </h3>
             {rows.length > 0 && activeTab === 'unmap' && (
               <div className="text-xs font-semibold text-slate-500">
                 Selected pages will be returned back to Cashier.
@@ -419,7 +477,9 @@ const ManualBillDPMappingPageContent = () => {
 
           {rows.length === 0 ? (
             <div className="py-12 text-center">
-              <p className="text-sm text-slate-500">No matching pages found to map.</p>
+              <p className="text-sm text-slate-500">
+                No matching pages found to map.
+              </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -433,7 +493,9 @@ const ManualBillDPMappingPageContent = () => {
                       />
                     </th>
                     <th className="px-4 py-3">Remarks</th>
-                    {activeTab === 'map' && <th className="px-4 py-3">Delivery Person</th>}
+                    {activeTab === 'map' && (
+                      <th className="px-4 py-3">Delivery Person</th>
+                    )}
                     <th className="px-4 py-3">Transaction Type</th>
                     <th className="px-4 py-3">Book No</th>
                     <th className="px-4 py-3">MV No From</th>
@@ -463,7 +525,9 @@ const ManualBillDPMappingPageContent = () => {
                       {activeTab === 'map' && (
                         <td className="px-4 py-4">
                           {isLoadingDP ? (
-                            <span className="text-xs text-slate-400">Loading...</span>
+                            <span className="text-xs text-slate-400">
+                              Loading...
+                            </span>
                           ) : (
                             <select
                               value={row.deliveryPersonId}
@@ -472,16 +536,26 @@ const ManualBillDPMappingPageContent = () => {
                             >
                               <option value="">Select DP</option>
                               {deliveryPersons.map(d => (
-                                <option key={d.id} value={d.id}>{d.name}</option>
+                                <option key={d.id} value={d.id}>
+                                  {d.name}
+                                </option>
                               ))}
                             </select>
                           )}
                         </td>
                       )}
-                      <td className="px-4 py-4 text-xs">{row.transactionType}</td>
-                      <td className="px-4 py-4 font-semibold text-slate-800">{row.bookNo}</td>
-                      <td className="px-4 py-4 font-mono text-xs">{row.mvNoFrom}</td>
-                      <td className="px-4 py-4 font-mono text-xs">{row.mvNoTo}</td>
+                      <td className="px-4 py-4 text-xs">
+                        {row.transactionType}
+                      </td>
+                      <td className="px-4 py-4 font-semibold text-slate-800">
+                        {row.bookNo}
+                      </td>
+                      <td className="px-4 py-4 font-mono text-xs">
+                        {row.mvNoFrom}
+                      </td>
+                      <td className="px-4 py-4 font-mono text-xs">
+                        {row.mvNoTo}
+                      </td>
                       <td className="px-4 py-4">{row.qty}</td>
                       <td className="px-4 py-4 text-xs font-semibold text-slate-600">
                         {row.assignedToUserName}
@@ -501,7 +575,11 @@ const ManualBillDPMappingPageContent = () => {
                 disabled={isSaving}
                 variant="default"
               >
-                {isSaving ? 'Processing...' : activeTab === 'map' ? 'Save' : 'Unmap'}
+                {isSaving
+                  ? 'Processing...'
+                  : activeTab === 'map'
+                    ? 'Save'
+                    : 'Unmap'}
               </Button>
             </div>
           )}

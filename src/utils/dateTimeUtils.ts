@@ -4,7 +4,10 @@ type ReferenceLike = {
   label?: string | null;
 };
 
-export const formatDateTime = (value?: string | Date | null, format = 'DD/MM/YYYY'): string => {
+export const formatDateTime = (
+  value?: string | Date | null,
+  format = 'DD/MM/YYYY'
+): string => {
   if (!value) {
     return '-';
   }
@@ -26,12 +29,13 @@ export const formatDateTime = (value?: string | Date | null, format = 'DD/MM/YYY
     ss: pad(date.getSeconds()),
   };
 
-  return format.replace(/DD|MM|YYYY|HH|mm|ss/g, match => tokens[match] ?? match);
+  return format.replace(
+    /DD|MM|YYYY|HH|mm|ss/g,
+    match => tokens[match] ?? match
+  );
 };
 
-export const formatReferenceLabel = (
-  value?: ReferenceLike | null
-): string => {
+export const formatReferenceLabel = (value?: ReferenceLike | null): string => {
   if (!value) {
     return '-';
   }

@@ -8,6 +8,7 @@ import type {
   IReviewPartyProfilePayload,
   IUpdatePartyProfile,
 } from '@/modules/partyProfiles/types/partyProfileTypes';
+import { fetchAllMatching, normalizePaginatedResponse } from '@/utils/paginatedList';
 
 const buildQueryString = (params?: IPartyProfileListQuery) => {
   if (!params) {
@@ -38,10 +39,13 @@ const buildQueryString = (params?: IPartyProfileListQuery) => {
 };
 
 export const partyProfileApi = {
-  getAd1Agents: async (
-    params: { branchId: string; search?: string }
-  ): Promise<IPartyProfile[]> => {
-    const res = await apiClient.get<IPartyProfile[]>(`/transactions/ad1/agents${buildQueryString(params)}`);
+  getAd1Agents: async (params: {
+    branchId: string;
+    search?: string;
+  }): Promise<IPartyProfile[]> => {
+    const res = await apiClient.get<IPartyProfile[]>(
+      `/transactions/ad1/agents${buildQueryString(params)}`
+    );
     if (res.error) throw new Error(res.error);
     return res.data || [];
   },
@@ -51,26 +55,26 @@ export const partyProfileApi = {
     profileType?: PartyProfileType | PartyProfileType[]
   ): Promise<IPartyProfileListResponse> => {
     const typeParam = profileType ?? params?.type;
-    const res = await apiClient.get<IPartyProfileListResponse>(`/party-profiles${buildQueryString({
-      ...params,
-      type: typeParam,
-    })}`);
+    const res = await apiClient.get<IPartyProfileListResponse>(
+      `/party-profiles${buildQueryString({
+        ...params,
+        type: typeParam,
+      })}`
+    );
     if (res.error) throw new Error(res.error);
-    if (!res.data) {
-      return {
-        data: [],
-        page: params?.page ?? 1,
-        limit: params?.limit ?? 10,
-        totalItems: 0,
-        totalPages: 0,
-      };
-    }
-
-    return {
-      ...res.data,
-      data: res.data.data || [],
-    };
+    return normalizePaginatedResponse(res.data, params?.limit, params?.offset);
   },
+
+  getAllPartyProfiles: async (
+    params?: Omit<IPartyProfileListQuery, 'limit' | 'offset'>,
+    profileType?: PartyProfileType | PartyProfileType[]
+  ): Promise<IPartyProfile[]> =>
+    fetchAllMatching(pagination =>
+      partyProfileApi.getPartyProfiles(
+        { ...params, ...pagination },
+        profileType
+      )
+    ),
 
   getPartyProfileById: async (
     id: string
@@ -93,21 +97,26 @@ export const partyProfileApi = {
     id: string,
     values: IUpdatePartyProfile
   ): Promise<IPartyProfile | undefined> => {
-    const res = await apiClient.put<IPartyProfile>(`/party-profiles/${id}`, values);
+    const res = await apiClient.put<IPartyProfile>(
+      `/party-profiles/${id}`,
+      values
+    );
     if (res.error) throw new Error(res.error);
     return res.data;
   },
 
-  deletePartyProfile: async (
-    id: string
-  ): Promise<{ message: string }> => {
-    const res = await apiClient.delete<{ message: string }>(`/party-profiles/${id}`);
+  deletePartyProfile: async (id: string): Promise<{ message: string }> => {
+    const res = await apiClient.delete<{ message: string }>(
+      `/party-profiles/${id}`
+    );
     if (res.error) throw new Error(res.error);
     if (!res.data) throw new Error('Failed to delete party profile');
     return res.data;
   },
 
-  getPartyProfileTypes: async (): Promise<{ value: string; label: string }[]> => {
+  getPartyProfileTypes: async (): Promise<
+    { value: string; label: string }[]
+  > => {
     const res = await apiClient.get<{ value: string; label: string }[]>(
       '/party-profiles/types'
     );
@@ -116,7 +125,9 @@ export const partyProfileApi = {
   },
 
   getPendingReviewQueue: async (): Promise<IPartyProfile[]> => {
-    const res = await apiClient.get<IPartyProfile[]>('/party-profiles/review-queue');
+    const res = await apiClient.get<IPartyProfile[]>(
+      '/party-profiles/review-queue'
+    );
     if (res.error) throw new Error(res.error);
     return res.data || [];
   },

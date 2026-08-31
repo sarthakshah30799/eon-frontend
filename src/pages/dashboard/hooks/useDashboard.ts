@@ -2,7 +2,10 @@ import { useMemo, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { dashboardApi } from '@/api/dashboard/dashboard.api';
-import type { RecentTransaction, PendingApproval } from '@/api/dashboard/dashboard.api';
+import type {
+  RecentTransaction,
+  PendingApproval,
+} from '@/api/dashboard/dashboard.api';
 import { currencyRatesApi } from '@/api/currencyRates';
 
 export type Trend = 'up' | 'down';
@@ -52,7 +55,7 @@ export const useDashboard = () => {
   });
 
   const chartVolume = useMemo(() => {
-    return (chartQuery.data ?? []).map((d) => ({
+    return (chartQuery.data ?? []).map(d => ({
       ...d,
       saleVolume: parseFloat(d.saleVolume),
       purchaseVolume: parseFloat(d.purchaseVolume),
@@ -65,7 +68,7 @@ export const useDashboard = () => {
     const t = parseFloat(stats.todayVolume);
     const y = parseFloat(stats.yesterdayVolume);
     if (y === 0) return { trend: 'up', label: 'vs yesterday' };
-    const pct = ((t - y) / y * 100).toFixed(1);
+    const pct = (((t - y) / y) * 100).toFixed(1);
     return {
       trend: t >= y ? 'up' : 'down',
       label: `${pct}% vs yesterday`,
@@ -82,37 +85,47 @@ export const useDashboard = () => {
     };
   }, [statsQuery.data]);
 
-  const handleTxnClick = useCallback((txn: RecentTransaction) => {
-    navigate(`/transactions/${txn.id}`);
-  }, [navigate]);
+  const handleTxnClick = useCallback(
+    (txn: RecentTransaction) => {
+      navigate(`/transactions/${txn.id}`);
+    },
+    [navigate]
+  );
 
-  const handleApprovalClick = useCallback((item: PendingApproval) => {
-    switch (item.entityType) {
-      case 'party-profile':
-        navigate(`/party-profiles/${item.subType?.toLowerCase() ?? item.type.toLowerCase()}/edit/${item.id}`);
-        break;
-      case 'transaction':
-        navigate(`/transactions/${item.id}`);
-        break;
-      case 'chequebook':
-        navigate(`/cheque-books?reviewId=${item.id}`);
-        break;
-      case 'manual-book':
-        navigate(`/manual-bill-books?reviewId=${item.id}`);
-        break;
-      case 'transfer':
-        navigate(`/transfer/${(item.subType ?? item.type).toLowerCase()}/edit/${item.id}`);
-        break;
-      case 'card-transfer':
-        navigate(`/card-transfer/edit/${item.id}`);
-        break;
-      default:
-        break;
-    }
-  }, [navigate]);
+  const handleApprovalClick = useCallback(
+    (item: PendingApproval) => {
+      switch (item.entityType) {
+        case 'party-profile':
+          navigate(
+            `/party-profiles/${item.subType?.toLowerCase() ?? item.type.toLowerCase()}/edit/${item.id}`
+          );
+          break;
+        case 'transaction':
+          navigate(`/transactions/${item.id}`);
+          break;
+        case 'chequebook':
+          navigate(`/cheque-books?reviewId=${item.id}`);
+          break;
+        case 'manual-book':
+          navigate(`/manual-bill-books?reviewId=${item.id}`);
+          break;
+        case 'transfer':
+          navigate(
+            `/transfer/${(item.subType ?? item.type).toLowerCase()}/edit/${item.id}`
+          );
+          break;
+        case 'card-transfer':
+          navigate(`/card-transfer/edit/${item.id}`);
+          break;
+        default:
+          break;
+      }
+    },
+    [navigate]
+  );
 
   const refreshChart = useCallback(() => {
-    setChartDays((d) => d);
+    setChartDays(d => d);
   }, []);
 
   return {

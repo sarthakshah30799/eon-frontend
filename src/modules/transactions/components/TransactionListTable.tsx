@@ -1,7 +1,8 @@
 import { useMemo, type ReactNode } from 'react';
-import { Table, type TableColumnDef } from '@/components/ui/table';
+import { Table, type TableColumnDef, type TableToolbarFilter } from '@/components/ui/table';
 import { Button } from '@/components/ui/button1';
 import { EyeIcon, PencilSquareIcon } from '@heroicons/react/24/outline';
+import type { PaginationControlsProps } from '@/components/ui';
 import { TransactionStatusEnum } from '../types';
 
 export interface TransactionListRow {
@@ -15,12 +16,14 @@ export interface TransactionListRow {
   createdAt: string;
 }
 
-interface TransactionListTableProps {
+interface TransactionListTableProps extends Partial<PaginationControlsProps> {
   rows: TransactionListRow[];
   loading?: boolean;
-  search: string;
-  onSearch: (value: string) => void;
+  isFetching?: boolean;
+  search?: string;
+  onSearch?: (value: string) => void;
   searchPlaceholder?: string;
+  toolbarFilters?: TableToolbarFilter[];
   onRowClick?: (row: TransactionListRow) => void;
   onActionClick?: (row: TransactionListRow) => void;
   actionLabel?: string;
@@ -29,6 +32,7 @@ interface TransactionListTableProps {
   isActionDisabled?: (row: TransactionListRow) => boolean;
   isActionLoading?: (row: TransactionListRow) => boolean;
   emptyMessage?: string;
+  manualPagination?: boolean;
 }
 
 const statusClassName = (status: string) =>
@@ -46,9 +50,11 @@ const statusClassName = (status: string) =>
 export const TransactionListTable = ({
   rows,
   loading = false,
+  isFetching = false,
   search,
   onSearch,
   searchPlaceholder = 'Search transaction number',
+  toolbarFilters,
   onRowClick,
   onActionClick,
   actionLabel = 'Edit transaction',
@@ -57,6 +63,13 @@ export const TransactionListTable = ({
   isActionDisabled,
   isActionLoading,
   emptyMessage = 'No transactions found.',
+  manualPagination = false,
+  page,
+  pageSize,
+  total,
+  totalPages,
+  onPageChange,
+  onPageSizeChange,
 }: TransactionListTableProps) => {
   const columns: TableColumnDef<TransactionListRow>[] = useMemo(
     () => [
@@ -108,11 +121,12 @@ export const TransactionListTable = ({
                   onActionClick(row.original);
                 }}
               >
-                {actionIcon ?? (actionMode === 'view' ? (
-                  <EyeIcon className="h-5 w-5" />
-                ) : (
-                  <PencilSquareIcon className="h-5 w-5" />
-                ))}
+                {actionIcon ??
+                  (actionMode === 'view' ? (
+                    <EyeIcon className="h-5 w-5" />
+                  ) : (
+                    <PencilSquareIcon className="h-5 w-5" />
+                  ))}
               </Button>
             ) : null}
           </div>
@@ -120,22 +134,33 @@ export const TransactionListTable = ({
         enableSorting: false,
       },
     ],
-    [actionLabel, actionMode, onActionClick]
+    [actionIcon, actionLabel, actionMode, isActionDisabled, isActionLoading, onActionClick]
   );
+
+  const useLegacySearch = Boolean(onSearch) && !toolbarFilters?.length;
 
   return (
     <Table
       columns={columns}
       data={rows}
       loading={loading}
+      isFetching={isFetching}
       enableFiltering={false}
-      enablePagination={false}
+      enablePagination={manualPagination}
+      manualPagination={manualPagination}
+      page={page}
+      pageSize={pageSize}
+      total={total}
+      totalPages={totalPages}
+      onPageChange={onPageChange}
+      onPageSizeChange={onPageSizeChange}
       enableColumnVisibility={false}
       enableRowSelection={false}
       enableSorting={false}
-      onSearch={onSearch}
-      searchValue={search}
+      onSearch={useLegacySearch ? onSearch : undefined}
+      searchValue={useLegacySearch ? search : undefined}
       searchPlaceholder={searchPlaceholder}
+      toolbarFilters={toolbarFilters}
       onRowClick={onRowClick}
       emptyMessage={emptyMessage}
     />

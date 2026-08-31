@@ -15,14 +15,12 @@ import {
   useLoadBankAccounts,
   useReassignChequeBookDispatch,
   useCreateChequeBook,
-  useLoadBranchOptions,
   useLoadCounterProfilesForBranch,
 } from './hooks';
+import { useLoadBranchOptions } from '@/modules/branchProfile/hooks';
 import { useAuth } from '@/lib/AuthContext';
 import toast from 'react-hot-toast';
-import {
-  bulkDispatchSchema,
-} from './bulkDispatchSchema';
+import { bulkDispatchSchema } from './bulkDispatchSchema';
 
 const ACCOUNT_PROFILE_OPTION_PAGE_SIZE = 30;
 
@@ -49,10 +47,14 @@ interface BulkDispatchFormFieldsProps {
   reassignId?: string;
 }
 
-const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => {
+const BulkDispatchFormFields = ({
+  reassignId,
+}: BulkDispatchFormFieldsProps) => {
   const form = useFormContext();
   const { user, activeBranchId } = useAuth();
-  const canSelectBranch = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
+  const canSelectBranch = Boolean(
+    user?.isAdmin || user?.isHo || user?.isHoStaff
+  );
   const branchId = useWatch({ name: 'branchId' });
   const dispatchDate = useWatch({ name: 'dispatchDate' });
   const bookNoFrom = useWatch({ name: 'bookNoFrom' });
@@ -64,14 +66,15 @@ const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => 
   const getNextNumber = useGetNextChequeBookNumber();
   const loadAssignedToRaw = useLoadChequeBookBranchManagers();
   const loadBankAccounts = useLoadBankAccounts();
-  const loadBranchesRaw = useLoadBranchOptions();
+  const loadBranchesRaw = useLoadBranchOptions({ activeOnly: true });
 
   // Pre-fill form when reassigning a rejected book
   useEffect(() => {
     if (!book) return;
-    const assignedToId = book.assignedTo && typeof book.assignedTo === 'object'
-      ? book.assignedTo.id
-      : (book.assignedTo as string) ?? '';
+    const assignedToId =
+      book.assignedTo && typeof book.assignedTo === 'object'
+        ? book.assignedTo.id
+        : ((book.assignedTo as string) ?? '');
     form.setValue('dispatchDate', new Date().toISOString().slice(0, 10));
     form.setValue('branchId', book.branchId || activeBranchId || '');
     form.setValue('bankAccountCode', book.bankAccountCode ?? '');
@@ -147,13 +150,16 @@ const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => 
   }, [mvNoFrom, mvNoTo, form]);
 
   const loadBranches = useCallback(
-    async (inputValue: string) => {
-      const res = await loadBranchesRaw(inputValue);
+    async (inputValue: string, page = 1) => {
+      const res = await loadBranchesRaw(inputValue, page);
       let options = res.options;
       if (!canSelectBranch) {
         options = options.filter(option => option.value === activeBranchId);
       }
-      return { options, hasMore: false };
+      return {
+        options,
+        hasMore: canSelectBranch ? Boolean(res.hasMore) : false,
+      };
     },
     [activeBranchId, canSelectBranch, loadBranchesRaw]
   );
@@ -186,6 +192,7 @@ const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => 
         label="Branch"
         loadOptions={loadBranches}
         defaultOptions={true}
+        pagination
         disabled={reassignId ? true : !canSelectBranch}
       />
       <FormFieldSelect
@@ -223,10 +230,15 @@ const BulkDispatchFormFields = ({ reassignId }: BulkDispatchFormFieldsProps) => 
   );
 };
 
-export const BulkDispatchForm = ({ onSuccess, reassignId }: BulkDispatchFormProps) => {
+export const BulkDispatchForm = ({
+  onSuccess,
+  reassignId,
+}: BulkDispatchFormProps) => {
   const navigate = useNavigate();
   const { user, activeBranchId, activeCounterId, setWorkplace } = useAuth();
-  const canSelectBranch = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
+  const canSelectBranch = Boolean(
+    user?.isAdmin || user?.isHo || user?.isHoStaff
+  );
 
   const onCancel = () => {
     navigate('/cheque-books');
@@ -259,7 +271,7 @@ export const BulkDispatchForm = ({ onSuccess, reassignId }: BulkDispatchFormProp
             vouchersPerBook: formatted.vouchersPerBook,
             mvNoFrom: formatted.mvNoFrom,
             remarks: formatted.remarks,
-          }
+          },
         });
         toast.success('ChequeBook dispatch reassigned successfully.');
       } else {
@@ -307,7 +319,9 @@ export const BulkDispatchForm = ({ onSuccess, reassignId }: BulkDispatchFormProp
       id="bulk-dispatch-form"
       onSubmit={handleSubmit}
       resolver={
-        yupResolver(bulkDispatchSchema) as unknown as Resolver<IBulkDispatchFormValues>
+        yupResolver(
+          bulkDispatchSchema
+        ) as unknown as Resolver<IBulkDispatchFormValues>
       }
       defaultValues={defaultValues}
       mode="all"

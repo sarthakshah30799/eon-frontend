@@ -6,6 +6,7 @@ import { CardSection } from '@/components/ui';
 import { Form, FormFieldInput, FormFieldSelect } from '@/components/forms';
 import type { AsyncSelectOption, AsyncSelectResponse } from '@/components/ui';
 import { useListPurposes } from '@/modules/purpose/hooks';
+import { PAGINATION_DEFAULTS, PAGINATION_MAX_LIMIT } from '@/constants/paginationConstants';
 import { TransactionTypeEnum } from '@/modules/transactions';
 import { purposeGroupSchema } from '../schema/purposeGroupSchema';
 import {
@@ -20,7 +21,7 @@ const createStaticLoadOptions =
   async (inputValue: string): Promise<AsyncSelectResponse> => ({
     options: inputValue
       ? options.filter(option =>
-          option.label.toLowerCase().includes(inputValue.toLowerCase()),
+          option.label.toLowerCase().includes(inputValue.toLowerCase())
         )
       : options,
   });
@@ -47,10 +48,14 @@ export const PurposeGroupForm = ({
   isSubmitting = false,
 }: PurposeGroupFormProps) => {
   const navigate = useNavigate();
-  const { data: purposes = [], isLoading: isLoadingPurposes } = useListPurposes(
-    undefined,
-    TransactionTypeEnum.SALE,
+  const { data: purposesPage, isLoading: isLoadingPurposes } = useListPurposes(
+    {
+      transactionType: TransactionTypeEnum.SALE,
+      limit: PAGINATION_MAX_LIMIT,
+      offset: PAGINATION_DEFAULTS.OFFSET,
+    }
   );
+  const purposes = purposesPage?.data ?? [];
 
   const purposeOptions: AsyncSelectOption[] = useMemo(
     () =>
@@ -58,15 +63,17 @@ export const PurposeGroupForm = ({
         value: purpose.id,
         label: `${purpose.code} - ${purpose.description}`,
       })),
-    [purposes],
+    [purposes]
   );
 
   const loadPurposeOptions = useMemo(
     () => createStaticLoadOptions(purposeOptions),
-    [purposeOptions],
+    [purposeOptions]
   );
 
-  const handleSubmitErrors: SubmitErrorHandler<ICreatePurposeGroup> = errors => {
+  const handleSubmitErrors: SubmitErrorHandler<
+    ICreatePurposeGroup
+  > = errors => {
     console.log('PurposeGroupForm submit errors:', errors);
   };
 
@@ -75,7 +82,9 @@ export const PurposeGroupForm = ({
       id="purpose-group-form"
       onSubmit={onSubmit}
       onError={handleSubmitErrors}
-      resolver={yupResolver(purposeGroupSchema) as Resolver<ICreatePurposeGroup>}
+      resolver={
+        yupResolver(purposeGroupSchema) as Resolver<ICreatePurposeGroup>
+      }
       defaultValues={{
         ...createEmptyPurposeGroupFormValues(),
         ...defaultValues,

@@ -8,7 +8,7 @@ export interface IFlm8HeaderCluster {
 }
 
 export const clusterFlm8HeaderColumns = (
-  columns: IFlm8ReportColumn[],
+  columns: IFlm8ReportColumn[]
 ): IFlm8HeaderCluster[] => {
   const clusters: IFlm8HeaderCluster[] = [];
 

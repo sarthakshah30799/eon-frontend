@@ -3,7 +3,8 @@ import type { ICreateMenu, IMenu, IUpdateMenu } from '@/types/menuTypes';
 
 export const menuApi = {
   getMenuTree: async (includeAdmin?: boolean) => {
-    const query = includeAdmin === undefined ? '' : `?includeAdmin=${includeAdmin}`;
+    const query =
+      includeAdmin === undefined ? '' : `?includeAdmin=${includeAdmin}`;
     const res = await apiClient.get<IMenu[]>(`/menus/tree${query}`);
     if (res.error) throw new Error(res.error);
     return res;
@@ -14,7 +15,8 @@ export const menuApi = {
     return res;
   },
   getMenus: async (includeAdmin?: boolean) => {
-    const query = includeAdmin === undefined ? '' : `?includeAdmin=${includeAdmin}`;
+    const query =
+      includeAdmin === undefined ? '' : `?includeAdmin=${includeAdmin}`;
     const res = await apiClient.get<IMenu[]>(`/menus${query}`);
     if (res.error) throw new Error(res.error);
     return res;
@@ -41,10 +43,8 @@ export const menuApi = {
   updateMenu: async (id: string, data: IUpdateMenu) => {
     const payload = {
       ...data,
-      path:
-        data.path !== undefined ? data.path.trim() || undefined : undefined,
-      icon:
-        data.icon !== undefined ? data.icon.trim() || undefined : undefined,
+      path: data.path !== undefined ? data.path.trim() || undefined : undefined,
+      icon: data.icon !== undefined ? data.icon.trim() || undefined : undefined,
       // Use ?? null so an explicit null (clearing the parent) is sent to the backend
       // Previously `null || undefined` was evaluated to `undefined`, omitting the key
       // entirely and leaving the parent unchanged on the server.

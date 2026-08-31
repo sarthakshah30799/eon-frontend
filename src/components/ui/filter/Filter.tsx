@@ -16,7 +16,9 @@ export const Filter: React.FC<FilterProps> = ({
   columns,
   className = '',
 }) => {
-  const [activeFilters, setActiveFilters] = useState<Record<string, string>>({});
+  const [activeFilters, setActiveFilters] = useState<Record<string, string>>(
+    {}
+  );
 
   const handleFilterChange = (columnId: string, value: string) => {
     const newActiveFilters = {
@@ -24,11 +26,11 @@ export const Filter: React.FC<FilterProps> = ({
       [columnId]: value,
     };
     setActiveFilters(newActiveFilters);
-    
+
     const filters = Object.entries(newActiveFilters)
       .filter(([, val]) => val.trim() !== '')
       .map(([key, val]) => ({ id: key, value: val }));
-    
+
     onFiltersChange(filters);
   };
 
@@ -59,7 +61,7 @@ export const Filter: React.FC<FilterProps> = ({
           </div>
         ))}
       </div>
-      
+
       {hasActiveFilters && (
         <div className="flex justify-end">
           <Button

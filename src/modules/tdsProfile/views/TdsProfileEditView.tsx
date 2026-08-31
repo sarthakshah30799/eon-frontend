@@ -19,7 +19,7 @@ export const TdsProfileEditView = () => {
     error,
   } = useGetTdsProfile(id || '', Boolean(id));
   const { updateTdsProfile, isPending } = useUpdateTdsProfile();
-console.log("id____", id);
+  console.log('id____', id);
 
   useEffect(() => {
     if (!id) {
@@ -56,7 +56,7 @@ console.log("id____", id);
   }
 
   return (
-    <section className="rounded-sm border border-border-primary bg-surface-primary p-4 shadow-sm sm:p-6">
+    <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
       <TdsProfileEditorView
         submitLabel={TDS_PROFILE_TEXTS.SAVE_CHANGES}
         defaultValues={defaultValues}

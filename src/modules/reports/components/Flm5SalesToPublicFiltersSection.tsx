@@ -20,8 +20,8 @@ export const Flm5SalesToPublicFiltersSection = ({
   filters,
 }: Flm5SalesToPublicFiltersSectionProps) => {
   const currentProductLabel =
-    filters.productOptions.find(option => option.id === filters.productId)?.label ??
-    FLM5_SALES_TO_PUBLIC_TEXT.selectProduct;
+    filters.productOptions.find(option => option.id === filters.productId)
+      ?.label ?? FLM5_SALES_TO_PUBLIC_TEXT.selectProduct;
 
   return (
     <section className="space-y-3 rounded-xl border border-border-primary bg-white p-3 shadow-sm">
@@ -41,7 +41,7 @@ export const Flm5SalesToPublicFiltersSection = ({
           emptyMessage="No branch options available."
           helperText={buildSelectionDescription(
             filters.branchIds.length,
-            filters.branchOptions.length,
+            filters.branchOptions.length
           )}
         />
 

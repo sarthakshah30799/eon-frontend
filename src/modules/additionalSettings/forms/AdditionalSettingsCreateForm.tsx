@@ -4,8 +4,16 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import type { Resolver } from 'react-hook-form';
 import { Button } from '@/components/ui/button1';
 import { CardSection, Checkbox } from '@/components/ui';
-import { Form, FormFieldInput, FormFieldSelect, FormFieldDatePicker, FormFieldTextarea } from '@/components/forms';
+import {
+  Form,
+  FormFieldInput,
+  FormFieldSelect,
+  FormFieldDatePicker,
+  FormFieldTextarea,
+} from '@/components/forms';
 import { currencyProfileApi } from '@/api/currencyProfile';
+import { PAGINATION_DEFAULTS } from '@/constants/paginationConstants';
+import { pageToOffset, toAsyncSelectPage } from '@/utils/paginatedList';
 import { additionalSettingsSchema } from '../schema';
 import {
   createEmptyAdditionalSettingCategoryFormValues,
@@ -29,7 +37,9 @@ interface AdditionalSettingsCreateFormProps {
   defaultValues?: IAdditionalSettingCategoryFormValues;
   accountProfiles?: IAccountProfile[];
   existingCategoryCodes?: string[];
-  onSubmit: (values: IAdditionalSettingCategoryFormValues) => void | Promise<void>;
+  onSubmit: (
+    values: IAdditionalSettingCategoryFormValues
+  ) => void | Promise<void>;
   isSubmitting?: boolean;
   submitLabel?: string;
   currentId?: string;
@@ -54,7 +64,12 @@ const SubcategoryRowFields = ({
   index: number;
   categoryCode?: string;
   isSubmitting: boolean;
-  loadTypeOptions: (inputValue?: string) => Promise<{ options: { value: string; label: string }[]; hasMore: boolean }>;
+  loadTypeOptions: (
+    inputValue?: string
+  ) => Promise<{
+    options: { value: string; label: string }[];
+    hasMore: boolean;
+  }>;
   remove: (index: number) => void;
   fieldsLength: number;
   isFixed?: boolean;
@@ -62,10 +77,14 @@ const SubcategoryRowFields = ({
   loadAccountProfileOptions: (
     inputValue?: string,
     page?: number
-  ) => Promise<{ options: { value: string; label: string }[]; hasMore: boolean }>;
+  ) => Promise<{
+    options: { value: string; label: string }[];
+    hasMore: boolean;
+  }>;
   accountProfilesById: Map<string, IAccountProfile>;
 }) => {
-  const { control, setValue } = useFormContext<IAdditionalSettingCategoryFormValues>();
+  const { control, setValue } =
+    useFormContext<IAdditionalSettingCategoryFormValues>();
 
   const subcategoryCode = useWatch({
     control,
@@ -112,7 +131,7 @@ const SubcategoryRowFields = ({
     if (subcategoryDefinition) {
       setValue(
         `subcategories.${index}.categoryType`,
-        subcategoryDefinition.valueType,
+        subcategoryDefinition.valueType
       );
     }
   }, [index, subcategoryDefinition, setValue]);
@@ -131,7 +150,9 @@ const SubcategoryRowFields = ({
   const loadAccountProfileOptionsForRow = useCallback(
     async (inputValue = '') => {
       const response = await loadAccountProfileOptions(inputValue);
-      const selectedAccount = accountProfilesById.get(String(subcategoryValue ?? ''));
+      const selectedAccount = accountProfilesById.get(
+        String(subcategoryValue ?? '')
+      );
 
       if (
         inputValue.trim() ||
@@ -155,17 +176,23 @@ const SubcategoryRowFields = ({
     [accountProfilesById, loadAccountProfileOptions, subcategoryValue]
   );
 
-  const loadCurrencyProfileOptions = useCallback(async (inputValue: string, page = 1) => {
-    const response = await currencyProfileApi.getCurrencyProfiles(inputValue);
+  const loadCurrencyProfileOptions = useCallback(
+    async (inputValue: string, page = 1) => {
+      const limit = PAGINATION_DEFAULTS.LIMIT;
+      const response = await currencyProfileApi.getCurrencyProfiles({
+        search: inputValue.trim() || undefined,
+        activeOnly: true,
+        limit,
+        offset: pageToOffset(page, limit),
+      });
 
-    return {
-      options: response.map(currency => ({
+      return toAsyncSelectPage(response, currency => ({
         value: currency.id,
         label: `${currency.currencyCode} - ${currency.currencyName}`,
-      })),
-      hasMore: response.length === 30 && page === 1,
-    };
-  }, []);
+      }));
+    },
+    []
+  );
 
   const selectValueOptions = useMemo(
     () =>
@@ -204,13 +231,17 @@ const SubcategoryRowFields = ({
   );
 
   const loadCodeOptions = async (inputValue: string) => {
-    const currentCode = String(subcategoryCode ?? '').trim().toUpperCase();
+    const currentCode = String(subcategoryCode ?? '')
+      .trim()
+      .toUpperCase();
     const blockedCodes = new Set(
       usedCodes.filter(code => code && code !== currentCode)
     );
 
     const opts = getAdditionalSettingSubcategoryCodeOptions(categoryCode)
-      .filter(option => !blockedCodes.has(String(option.value).trim().toUpperCase()))
+      .filter(
+        option => !blockedCodes.has(String(option.value).trim().toUpperCase())
+      )
       .map(option => ({
         value: option.value,
         label: option.label,
@@ -218,14 +249,16 @@ const SubcategoryRowFields = ({
 
     return {
       options: inputValue
-        ? opts.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+        ? opts.filter(opt =>
+            opt.label.toLowerCase().includes(inputValue.toLowerCase())
+          )
         : opts,
       hasMore: false,
     };
   };
 
   return (
-      <div className="relative rounded-sm border border-border-primary bg-surface-primary p-4">
+    <div className="relative rounded-sm border border-border-primary bg-surface-primary p-4">
       {fieldsLength > 0 && !isFixed && (
         <Button
           type="button"
@@ -278,7 +311,11 @@ const SubcategoryRowFields = ({
         {isBooleanType ? (
           <div className="flex items-center gap-3 rounded-sm border border-border-primary bg-surface-primary px-3 py-2">
             <Checkbox
-              checked={String(subcategoryValue ?? '').trim().toUpperCase() === 'YES'}
+              checked={
+                String(subcategoryValue ?? '')
+                  .trim()
+                  .toUpperCase() === 'YES'
+              }
               onChange={checked =>
                 setValue(`subcategories.${index}.value`, checked ? 'YES' : 'NO')
               }
@@ -339,7 +376,8 @@ const SubcategoryRowFields = ({
             />
             {isTransactionNumbering ? (
               <p className="text-[11px] leading-tight text-text-tertiary">
-                Enter exactly 8 digits. The final number is 5-digit branch code + 2-digit financial year + 8-digit series = 15 characters.
+                Enter exactly 8 digits. The final number is 5-digit branch code
+                + 2-digit financial year + 8-digit series = 15 characters.
               </p>
             ) : null}
           </div>
@@ -365,7 +403,8 @@ const SubcategoryFields = ({
   isSubmitting: boolean;
   accountProfiles: IAccountProfile[];
 }) => {
-  const { control, setValue } = useFormContext<IAdditionalSettingCategoryFormValues>();
+  const { control, setValue } =
+    useFormContext<IAdditionalSettingCategoryFormValues>();
   const { fields, append, remove, replace } = useFieldArray({
     control,
     name: 'subcategories',
@@ -382,7 +421,11 @@ const SubcategoryFields = ({
   const selectedSubcategoryCodes = Array.from(
     new Set(
       (subcategories ?? [])
-        .map(subcategory => String(subcategory?.code ?? '').trim().toUpperCase())
+        .map(subcategory =>
+          String(subcategory?.code ?? '')
+            .trim()
+            .toUpperCase()
+        )
         .filter(Boolean)
     )
   );
@@ -392,7 +435,8 @@ const SubcategoryFields = ({
   const isTransactionSacCategory =
     categoryCode?.trim().toUpperCase() ===
     AdditionalSettingsCodeEnum.TransactionSacCode;
-  const isFixedCategory = isTransactionApprovalCategory || isTransactionSacCategory;
+  const isFixedCategory =
+    isTransactionApprovalCategory || isTransactionSacCategory;
   const accountProfilesById = useMemo(
     () => new Map(accountProfiles.map(account => [account.id, account])),
     [accountProfiles]
@@ -428,7 +472,9 @@ const SubcategoryFields = ({
       return;
     }
 
-    const predefinedRows = getAdditionalSettingSubcategoryCodeOptions(categoryCode).map(option => {
+    const predefinedRows = getAdditionalSettingSubcategoryCodeOptions(
+      categoryCode
+    ).map(option => {
       const subcategoryDefinition = getAdditionalSettingSubcategoryDefinition(
         categoryCode,
         option.value
@@ -443,9 +489,15 @@ const SubcategoryFields = ({
     });
 
     const currentCodes = (subcategories ?? [])
-      .map(subcategory => String(subcategory?.code ?? '').trim().toUpperCase())
+      .map(subcategory =>
+        String(subcategory?.code ?? '')
+          .trim()
+          .toUpperCase()
+      )
       .filter(Boolean);
-    const requiredCodes = predefinedRows.map(row => row.code.trim().toUpperCase());
+    const requiredCodes = predefinedRows.map(row =>
+      row.code.trim().toUpperCase()
+    );
     const hasAllPredefinedRows =
       currentCodes.length === requiredCodes.length &&
       requiredCodes.every(code => currentCodes.includes(code));
@@ -457,11 +509,15 @@ const SubcategoryFields = ({
 
   useEffect(() => {
     const allowedCodes = new Set(
-      getAdditionalSettingSubcategoryCodeOptions(categoryCode).map(option => option.value)
+      getAdditionalSettingSubcategoryCodeOptions(categoryCode).map(
+        option => option.value
+      )
     );
 
     subcategories?.forEach((subcategory, index) => {
-      const code = String(subcategory?.code ?? '').trim().toUpperCase();
+      const code = String(subcategory?.code ?? '')
+        .trim()
+        .toUpperCase();
 
       if (code && !allowedCodes.has(code as never)) {
         setValue(`subcategories.${index}.code`, '');
@@ -475,7 +531,9 @@ const SubcategoryFields = ({
     const opts = valueTypes.map(t => ({ value: t, label: t.toUpperCase() }));
     return {
       options: inputValue
-        ? opts.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+        ? opts.filter(opt =>
+            opt.label.toLowerCase().includes(inputValue.toLowerCase())
+          )
         : opts,
       hasMore: false,
     };
@@ -524,7 +582,9 @@ const SubcategoryFields = ({
           variant="outline"
           size="sm"
           disabled={isSubmitting}
-          onClick={() => append(createEmptyAdditionalSettingSubcategoryFormValues())}
+          onClick={() =>
+            append(createEmptyAdditionalSettingSubcategoryFormValues())
+          }
         >
           {fields.length === 0
             ? ADDITIONAL_SETTINGS_TEXTS.ADD_SUBCATEGORY
@@ -547,7 +607,13 @@ export const AdditionalSettingsCreateForm = ({
   const initialValues =
     defaultValues ?? createEmptyAdditionalSettingCategoryFormValues();
   const normalizedExistingCategoryCodes = new Set(
-    existingCategoryCodes.map(code => String(code ?? '').trim().toUpperCase()).filter(Boolean)
+    existingCategoryCodes
+      .map(code =>
+        String(code ?? '')
+          .trim()
+          .toUpperCase()
+      )
+      .filter(Boolean)
   );
   const loadCategoryCodeOptions = async (inputValue: string) => {
     const opts = getAdditionalSettingCategoryCodeOptions()
@@ -558,7 +624,12 @@ export const AdditionalSettingsCreateForm = ({
         }
 
         if (currentId) {
-          return code === String(defaultValues?.code ?? '').trim().toUpperCase();
+          return (
+            code ===
+            String(defaultValues?.code ?? '')
+              .trim()
+              .toUpperCase()
+          );
         }
 
         return !normalizedExistingCategoryCodes.has(code);
@@ -570,7 +641,9 @@ export const AdditionalSettingsCreateForm = ({
 
     return {
       options: inputValue
-        ? opts.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+        ? opts.filter(opt =>
+            opt.label.toLowerCase().includes(inputValue.toLowerCase())
+          )
         : opts,
       hasMore: false,
     };
@@ -579,7 +652,11 @@ export const AdditionalSettingsCreateForm = ({
   return (
     <Form
       onSubmit={onSubmit}
-      resolver={yupResolver(additionalSettingsSchema) as Resolver<IAdditionalSettingCategoryFormValues>}
+      resolver={
+        yupResolver(
+          additionalSettingsSchema
+        ) as Resolver<IAdditionalSettingCategoryFormValues>
+      }
       defaultValues={initialValues}
       className="space-y-6"
     >

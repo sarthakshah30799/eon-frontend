@@ -3,7 +3,11 @@ import { Button } from '@/components/ui';
 import { AccessDeniedState } from '@/components/ui/access-denied-state';
 import { PAGE_STATUS_TEXTS } from '@/constants';
 import { useAuth } from '@/lib/AuthContext';
-import { CheckboxFilterGroup, ReportCommonFiltersSection, SalePurchaseReportTable } from '../components';
+import {
+  CheckboxFilterGroup,
+  ReportCommonFiltersSection,
+  SalePurchaseReportTable,
+} from '../components';
 import { useProductProfitReport } from '../hooks';
 import { ReportExportFormatEnum, ReportSortByEnum } from '../types';
 import { summarizeReportSelection } from '../utils';
@@ -22,14 +26,34 @@ export const ProductProfitReportView = () => {
   const canView = Boolean(user);
 
   const currentSummary = useMemo(() => {
-    const stateLabels = summarizeReportSelection(report.filters.stateIds, report.filters.stateOptions);
-    const branchLabels = summarizeReportSelection(report.filters.branchIds, report.filters.branchOptions);
-    const counterLabels = summarizeReportSelection(report.filters.counterIds, report.filters.counterOptions);
-    const typeLabels = summarizeReportSelection(report.filters.partyTypeCodes, report.filters.partyTypeOptions);
-    const currencyLabels = summarizeReportSelection(report.filters.currencyIds, report.filters.currencyOptions);
-    const productLabels = summarizeReportSelection(report.filters.productIds, report.filters.productOptions);
+    const stateLabels = summarizeReportSelection(
+      report.filters.stateIds,
+      report.filters.stateOptions
+    );
+    const branchLabels = summarizeReportSelection(
+      report.filters.branchIds,
+      report.filters.branchOptions
+    );
+    const counterLabels = summarizeReportSelection(
+      report.filters.counterIds,
+      report.filters.counterOptions
+    );
+    const typeLabels = summarizeReportSelection(
+      report.filters.partyTypeCodes,
+      report.filters.partyTypeOptions
+    );
+    const currencyLabels = summarizeReportSelection(
+      report.filters.currencyIds,
+      report.filters.currencyOptions
+    );
+    const productLabels = summarizeReportSelection(
+      report.filters.productIds,
+      report.filters.productOptions
+    );
     const sortLabel =
-      report.filters.sortBy === ReportSortByEnum.DATE_DESC ? 'Date Desc' : 'Date Asc';
+      report.filters.sortBy === ReportSortByEnum.DATE_DESC
+        ? 'Date Desc'
+        : 'Date Asc';
 
     return {
       states: stateLabels,
@@ -57,7 +81,9 @@ export const ProductProfitReportView = () => {
   ]);
 
   if (!canView) {
-    return <AccessDeniedState message={PAGE_STATUS_TEXTS.ACCESS_DENIED_MESSAGE} />;
+    return (
+      <AccessDeniedState message={PAGE_STATUS_TEXTS.ACCESS_DENIED_MESSAGE} />
+    );
   }
 
   return (
@@ -67,8 +93,8 @@ export const ProductProfitReportView = () => {
           Product Profit Reports
         </h1>
         <p className="max-w-3xl text-[11px] text-text-secondary">
-          Single-form product profit reporting with currency and product filters, plus CSV/XLSX
-          export.
+          Single-form product profit reporting with currency and product
+          filters, plus CSV/XLSX export.
         </p>
       </div>
 
@@ -87,7 +113,7 @@ export const ProductProfitReportView = () => {
               emptyMessage="No currency options available."
               helperText={buildSelectionDescription(
                 report.filters.currencyIds.length,
-                report.filters.currencyOptions.length,
+                report.filters.currencyOptions.length
               )}
             />
 
@@ -101,7 +127,7 @@ export const ProductProfitReportView = () => {
               emptyMessage="No product options available."
               helperText={buildSelectionDescription(
                 report.filters.productIds.length,
-                report.filters.productOptions.length,
+                report.filters.productOptions.length
               )}
             />
           </div>
@@ -111,13 +137,30 @@ export const ProductProfitReportView = () => {
       {report.filters.appliedFilters && (
         <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-[11px] text-text-secondary">
           Applied: {report.appliedDateRangeLabel} | States{' '}
-          {currentSummary.states.length ? currentSummary.states.join(', ') : 'All'} | Branches{' '}
-          {currentSummary.branches.length ? currentSummary.branches.join(', ') : 'All'} | Counters{' '}
-          {currentSummary.counters.length ? currentSummary.counters.join(', ') : 'All'} | Party Types{' '}
-          {currentSummary.types.length ? currentSummary.types.join(', ') : 'All'} | Currency{' '}
-          {currentSummary.currencies.length ? currentSummary.currencies.join(', ') : 'All'} | Product{' '}
-          {currentSummary.products.length ? currentSummary.products.join(', ') : 'All'} | Sort By{' '}
-          {currentSummary.sortLabel}
+          {currentSummary.states.length
+            ? currentSummary.states.join(', ')
+            : 'All'}{' '}
+          | Branches{' '}
+          {currentSummary.branches.length
+            ? currentSummary.branches.join(', ')
+            : 'All'}{' '}
+          | Counters{' '}
+          {currentSummary.counters.length
+            ? currentSummary.counters.join(', ')
+            : 'All'}{' '}
+          | Party Types{' '}
+          {currentSummary.types.length
+            ? currentSummary.types.join(', ')
+            : 'All'}{' '}
+          | Currency{' '}
+          {currentSummary.currencies.length
+            ? currentSummary.currencies.join(', ')
+            : 'All'}{' '}
+          | Product{' '}
+          {currentSummary.products.length
+            ? currentSummary.products.join(', ')
+            : 'All'}{' '}
+          | Sort By {currentSummary.sortLabel}
         </div>
       )}
 
@@ -125,9 +168,12 @@ export const ProductProfitReportView = () => {
         <section className="space-y-3 rounded-xl border border-border-primary bg-white p-3 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="space-y-0.5">
-              <h2 className="text-sm font-semibold text-text-primary">Report View</h2>
+              <h2 className="text-sm font-semibold text-text-primary">
+                Report View
+              </h2>
               <p className="text-[11px] text-text-secondary">
-                One row per matched transaction item, with a subtotal row at the end.
+                One row per matched transaction item, with a subtotal row at the
+                end.
               </p>
             </div>
 
@@ -142,7 +188,9 @@ export const ProductProfitReportView = () => {
                       : 'outline'
                   }
                   className="h-7 rounded-full px-3 text-[11px]"
-                  onClick={() => report.setExportFormat(ReportExportFormatEnum.XLSX)}
+                  onClick={() =>
+                    report.setExportFormat(ReportExportFormatEnum.XLSX)
+                  }
                 >
                   XLSX
                 </Button>
@@ -155,7 +203,9 @@ export const ProductProfitReportView = () => {
                       : 'outline'
                   }
                   className="h-7 rounded-full px-3 text-[11px]"
-                  onClick={() => report.setExportFormat(ReportExportFormatEnum.CSV)}
+                  onClick={() =>
+                    report.setExportFormat(ReportExportFormatEnum.CSV)
+                  }
                 >
                   CSV
                 </Button>

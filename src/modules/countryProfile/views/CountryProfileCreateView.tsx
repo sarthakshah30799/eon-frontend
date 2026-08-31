@@ -10,9 +10,7 @@ export const CountryProfileCreateView = () => {
   const { submitCountryProfile, isPending } = useCreateCountryProfile();
 
   const handleSubmit = async (values: ICreateCountryProfile) => {
-    const {
-      ...payload
-    } = values;
+    const { ...payload } = values;
     await submitCountryProfile(payload);
     navigate('/admin/country-profile');
   };

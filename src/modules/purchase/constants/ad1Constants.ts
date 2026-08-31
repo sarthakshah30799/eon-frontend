@@ -6,7 +6,8 @@ export const AD1_PRINT_TEXT = {
   preparing: 'Preparing Print...',
   printed: (label: string) => `${label} sent to printer`,
   printFailed: 'Failed to print AD1 copy',
-  popupBlocked: 'Unable to open print window. Please allow pop-ups and try again.',
+  popupBlocked:
+    'Unable to open print window. Please allow pop-ups and try again.',
   title: 'AD1 TRANSACTION',
   originalCopy: 'Original Copy',
   duplicateCopy: 'Duplicate Copy',

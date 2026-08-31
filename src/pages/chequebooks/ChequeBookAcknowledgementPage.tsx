@@ -5,6 +5,7 @@ import { chequebookApi, type IChequeBook } from '@/api';
 import toast from 'react-hot-toast';
 import { FormFieldSelect } from '@/components/forms';
 import { accountProfileApi } from '@/api/accountProfile/accountProfile.api';
+import { toPageQuery } from '@/utils/paginatedList';
 import {
   AsyncSelect,
   Button,
@@ -57,7 +58,9 @@ export const ChequeBookAcknowledgementPage = () => {
     Record<string, ChequeBookAcknowledgementRowEdit>
   >({});
 
-  const [prevBankAccountCode, setPrevBankAccountCode] = useState(watchedBankAccountCode);
+  const [prevBankAccountCode, setPrevBankAccountCode] = useState(
+    watchedBankAccountCode
+  );
   if (watchedBankAccountCode !== prevBankAccountCode) {
     setPrevBankAccountCode(watchedBankAccountCode);
     setSelectedBookId(null);
@@ -87,8 +90,8 @@ export const ChequeBookAcknowledgementPage = () => {
     const normalizedInput = inputValue.trim().toLowerCase();
     const options = normalizedInput
       ? statusOptions.filter(option =>
-        option.label.toLowerCase().includes(normalizedInput)
-      )
+          option.label.toLowerCase().includes(normalizedInput)
+        )
       : statusOptions;
 
     return { options };
@@ -116,11 +119,12 @@ export const ChequeBookAcknowledgementPage = () => {
     if (!activeBranchId) return;
     try {
       setIsProcessing(true);
-      const data = await chequebookApi.findAll(
-        activeBranchId,
-        searchStatus || undefined,
-        currentBankAccountCode === 'ALL' ? undefined : currentBankAccountCode,
-      );
+      const data = await chequebookApi.findAllMatching({
+        branchId: activeBranchId,
+        status: searchStatus || undefined,
+        bankAccountCode:
+          currentBankAccountCode === 'ALL' ? undefined : currentBankAccountCode,
+      });
       if (selectedBookId) {
         setQueryResults(data.filter(b => b.id === selectedBookId));
       } else {
@@ -138,7 +142,9 @@ export const ChequeBookAcknowledgementPage = () => {
 
   const handleCheckboxChange = (
     id: string,
-    status: typeof ChequeBookStatusEnum.APPROVE | typeof ChequeBookStatusEnum.REJECT
+    status:
+      | typeof ChequeBookStatusEnum.APPROVE
+      | typeof ChequeBookStatusEnum.REJECT
   ) => {
     setRowEdits(prev => {
       const current = prev[id] || { remarks: '' };
@@ -230,10 +236,7 @@ export const ChequeBookAcknowledgementPage = () => {
             ChequeBook Status
           </h1>
           {view === 'detail' && (
-            <Button
-              variant="ghost"
-              onClick={() => setView('list')}
-            >
+            <Button variant="ghost" onClick={() => setView('list')}>
               Back to List
             </Button>
           )}
@@ -314,25 +317,30 @@ export const ChequeBookAcknowledgementPage = () => {
                     placeholder="All"
                     loadOptions={async (inputValue: string, page = 1) => {
                       try {
-                        const response = await accountProfileApi.getAccountProfiles({
-                          page,
-                          limit: ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
-                          search: inputValue,
-                          active: true,
-                        });
-                        const bankAccounts = (response.data || []).filter(acc => {
-                          return (
-                            (acc.bankNature && acc.bankNature.value !== 'NONE') ||
-                            (acc.accountType && acc.accountType.value === 'BANK LEDGER') ||
-                            (acc.financialCode && acc.financialCode === 'BANKBL')
-                          );
-                        });
+                        const response =
+                          await accountProfileApi.getAccountProfiles({
+                            ...toPageQuery(page, ACCOUNT_PROFILE_OPTION_PAGE_SIZE),
+                            search: inputValue,
+                            active: true,
+                          });
+                        const bankAccounts = (response.data || []).filter(
+                          acc => {
+                            return (
+                              (acc.bankNature &&
+                                acc.bankNature.value !== 'NONE') ||
+                              (acc.accountType &&
+                                acc.accountType.value === 'BANK LEDGER') ||
+                              (acc.financialCode &&
+                                acc.financialCode === 'BANKBL')
+                            );
+                          }
+                        );
                         return {
                           options: bankAccounts.map(acc => ({
                             value: acc.id,
                             label: `${acc.accountCode} - ${acc.accountName}`,
                           })),
-                          hasMore: (response.data || []).length === ACCOUNT_PROFILE_OPTION_PAGE_SIZE,
+                          hasMore: response.hasMore,
                         };
                       } catch {
                         return {
@@ -345,7 +353,6 @@ export const ChequeBookAcknowledgementPage = () => {
                     pageSize={ACCOUNT_PROFILE_OPTION_PAGE_SIZE}
                   />
                 </div>
-
               </FormProvider>
             </div>
 

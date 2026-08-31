@@ -146,16 +146,12 @@ export const TableExample = () => {
     {
       accessorKey: 'createdAt',
       header: 'Created',
-      cell: ({ row }) => (
-        <div>{formatDateTime(row.getValue('createdAt'))}</div>
-      ),
+      cell: ({ row }) => <div>{formatDateTime(row.getValue('createdAt'))}</div>,
     },
     {
       accessorKey: 'lastLogin',
       header: 'Last Login',
-      cell: ({ row }) => (
-        <div>{formatDateTime(row.getValue('lastLogin'))}</div>
-      ),
+      cell: ({ row }) => <div>{formatDateTime(row.getValue('lastLogin'))}</div>,
     },
     {
       id: 'actions',

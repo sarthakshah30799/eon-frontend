@@ -2,8 +2,10 @@ import type { ButtonHTMLAttributes, ReactNode } from 'react';
 import { Loader } from '../loader';
 import { Label } from '../label';
 
-interface ToggleSwitchProps
-  extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'onChange'> {
+interface ToggleSwitchProps extends Omit<
+  ButtonHTMLAttributes<HTMLButtonElement>,
+  'onChange'
+> {
   checked: boolean;
   onCheckedChange: (checked: boolean) => void;
   label?: ReactNode;
@@ -43,25 +45,25 @@ export const ToggleSwitch = ({
         onCheckedChange(!checked);
       }}
       {...props}
+    >
+      <span
+        className={cn(
+          'relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border border-border-primary transition',
+          checked ? 'bg-primary-500' : 'bg-surface-secondary'
+        )}
       >
         <span
           className={cn(
-            'relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border border-border-primary transition',
-            checked ? 'bg-primary-500' : 'bg-surface-secondary'
+            'inline-block h-5 w-5 translate-x-0 rounded-full bg-surface-primary shadow-sm transition-transform',
+            checked && 'translate-x-5'
           )}
-        >
-          <span
-            className={cn(
-              'inline-block h-5 w-5 translate-x-0 rounded-full bg-surface-primary shadow-sm transition-transform',
-              checked && 'translate-x-5'
-            )}
-          />
-          {loading && (
-            <span className="absolute inset-0 flex items-center justify-center">
-              <Loader variant="spinner" size="sm" className="text-primary-600" />
-            </span>
-          )}
-        </span>
+        />
+        {loading && (
+          <span className="absolute inset-0 flex items-center justify-center">
+            <Loader variant="spinner" size="sm" className="text-primary-600" />
+          </span>
+        )}
+      </span>
 
       {(label || description) && (
         <span className="space-y-0.5">

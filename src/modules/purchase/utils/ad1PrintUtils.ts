@@ -25,7 +25,10 @@ const formatDate = (value?: string | Date | null) => {
 };
 
 const joinAddress = (...parts: Array<string | null | undefined>) =>
-  parts.map(part => part?.trim()).filter(Boolean).join(', ');
+  parts
+    .map(part => part?.trim())
+    .filter(Boolean)
+    .join(', ');
 
 const display = (value?: string | null) => value?.trim() || '-';
 
@@ -44,11 +47,15 @@ const agentName = (agent: ITransactionAd1['agentSnapshot']) =>
 const bankName = (bank: ITransactionAd1['bankSnapshot']) =>
   bank?.accountName?.trim() || bank?.accountCode?.trim() || '-';
 
-export const getAd1PrintCopyType = (printCount?: number | null): Ad1PrintCopyType =>
+export const getAd1PrintCopyType = (
+  printCount?: number | null
+): Ad1PrintCopyType =>
   (printCount ?? 0) === 0 ? 'CUSTOMER_COPY' : 'DUPLICATE_COPY';
 
 export const getAd1PrintCopyLabel = (copyType: Ad1PrintCopyType) =>
-  copyType === 'DUPLICATE_COPY' ? AD1_PRINT_TEXT.duplicateCopy : AD1_PRINT_TEXT.originalCopy;
+  copyType === 'DUPLICATE_COPY'
+    ? AD1_PRINT_TEXT.duplicateCopy
+    : AD1_PRINT_TEXT.originalCopy;
 
 export const buildAd1PrintHtml = ({
   copyType,
@@ -72,7 +79,7 @@ export const buildAd1PrintHtml = ({
     branch?.address3,
     branch?.city,
     branch?.gstState,
-    branch?.pinCode,
+    branch?.pinCode
   );
 
   const infoRow = (label: string, value: string) =>

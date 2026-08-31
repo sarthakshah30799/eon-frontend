@@ -7,7 +7,10 @@ import {
 } from '@/components/forms';
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import type { IPurchaseFormValues } from '@/modules/purchase/types/purchaseTypes';
-import { PassengerEntityTypeEnum, PassengerNationalityTypeEnum } from '../types/passengerTypes';
+import {
+  PassengerEntityTypeEnum,
+  PassengerNationalityTypeEnum,
+} from '../types/passengerTypes';
 
 interface PassengerIdentityFieldsProps {
   entityType: string;
@@ -43,7 +46,8 @@ export const PassengerIdentityFields = ({
   const isCorporate = entityType === PassengerEntityTypeEnum.CORPORATE;
   const isIndianNationality =
     nationalityType === PassengerNationalityTypeEnum.INDIAN;
-  const isPassportRequired = showPassport || (!isCorporate && !isIndianNationality);
+  const isPassportRequired =
+    showPassport || (!isCorporate && !isIndianNationality);
   const isPanRequired = showPan && (isCorporate || isIndianNationality);
   const showCountry = showNationality && !isIndianNationality;
 
@@ -67,14 +71,14 @@ export const PassengerIdentityFields = ({
               }
             />
             {showResident ? (
-            <FormFieldCategoryOption
-              name="residentStatus"
-              label="Resident Status"
-              placeholder="Select resident status"
-              code={CategoryOptionCodeEnum.PassengerResidentStatus}
-              useValueAsId
-              disabled={!isIndianNationality}
-            />
+              <FormFieldCategoryOption
+                name="residentStatus"
+                label="Resident Status"
+                placeholder="Select resident status"
+                code={CategoryOptionCodeEnum.PassengerResidentStatus}
+                useValueAsId
+                disabled={!isIndianNationality}
+              />
             ) : null}
           </div>
           {showCountry ? (

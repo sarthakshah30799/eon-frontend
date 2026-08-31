@@ -1,6 +1,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
-import { transfersApi, type ICreateTransferPayload } from '@/api/transfers/transfers.api';
+import {
+  transfersApi,
+  type ICreateTransferPayload,
+} from '@/api/transfers/transfers.api';
 import { getTransferHookErrorMessage } from '../utils/transferHooksUtils';
 
 export const useCreateBranchTransfer = () => {
@@ -13,7 +16,9 @@ export const useCreateBranchTransfer = () => {
       toast.success('Branch transfer created successfully');
     },
     onError: (error: unknown) => {
-      toast.error(getTransferHookErrorMessage(error, 'Failed to create branch transfer'));
+      toast.error(
+        getTransferHookErrorMessage(error, 'Failed to create branch transfer')
+      );
     },
   });
 
@@ -22,4 +27,3 @@ export const useCreateBranchTransfer = () => {
     createBranchTransfer: mutation.mutateAsync,
   };
 };
-

@@ -1,20 +1,30 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
-import { AsyncSelect, Button, CardSection, Checkbox, Input, type AsyncSelectOption } from '@/components/ui';
+import {
+  AsyncSelect,
+  Button,
+  CardSection,
+  Checkbox,
+  Input,
+  type AsyncSelectOption,
+} from '@/components/ui';
 import { Loader } from '@/components/ui/loader';
 import { useAuth } from '@/lib/AuthContext';
 import { transactionPoliciesApi } from '@/api/transactionPolicies/transactionPolicies.api';
 import type { IPolicyChecklistItem } from '@/modules/auth/types';
 import { formatDateTime } from '@/utils';
-import { useListBranchProfiles } from '@/modules/branchProfile/hooks';
+import { useLoadBranchOptions } from '@/modules/branchProfile/hooks';
 
 type ChecklistAnswers = Record<string, string | boolean>;
 type DayEndAction = 'start' | 'end';
 
-const createDefaultAnswers = (checklist: IPolicyChecklistItem[]): ChecklistAnswers =>
+const createDefaultAnswers = (
+  checklist: IPolicyChecklistItem[]
+): ChecklistAnswers =>
   checklist.reduce<ChecklistAnswers>((acc, item) => {
-    acc[item.code] = item.valueType.trim().toLowerCase() === 'boolean' ? false : '';
+    acc[item.code] =
+      item.valueType.trim().toLowerCase() === 'boolean' ? false : '';
     return acc;
   }, {});
 
@@ -54,35 +64,55 @@ const DayEndStartProcessForm = ({
   checkAuth,
 }: DayEndStartProcessFormProps) => {
   const { activeBranchId } = useAuth();
-  const canSelectWorkplace = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
-  const { data: branches = [] } = useListBranchProfiles({ activeOnly: true }, canSelectWorkplace);
+  const canSelectWorkplace = Boolean(
+    user?.isAdmin || user?.isHo || user?.isHoStaff
+  );
+  const loadBranchOptions = useLoadBranchOptions({ activeOnly: true });
+  const [selectedBranchOption, setSelectedBranchOption] =
+    useState<AsyncSelectOption | null>(
+      canSelectWorkplace
+        ? null
+        : activeBranchId
+          ? {
+              value: activeBranchId,
+              label: user?.branchName?.trim() || activeBranchId,
+            }
+          : null
+    );
   const [selectedBranchId, setSelectedBranchId] = useState(
-    canSelectWorkplace ? '' : activeBranchId ?? '',
+    canSelectWorkplace ? '' : (activeBranchId ?? '')
   );
 
-  const effectiveSelectedBranchId = canSelectWorkplace ? selectedBranchId : activeBranchId ?? '';
+  const effectiveSelectedBranchId = canSelectWorkplace
+    ? selectedBranchId
+    : (activeBranchId ?? '');
   const selectedPolicy = useQuery({
-    queryKey: ['day-end-start-process', 'policy-context', effectiveSelectedBranchId],
-    queryFn: () => transactionPoliciesApi.getPolicyContext(effectiveSelectedBranchId),
+    queryKey: [
+      'day-end-start-process',
+      'policy-context',
+      effectiveSelectedBranchId,
+    ],
+    queryFn: () =>
+      transactionPoliciesApi.getPolicyContext(effectiveSelectedBranchId),
     enabled: Boolean(effectiveSelectedBranchId),
   });
-  const effectivePolicyContext = selectedPolicy.data ?? (
-    effectiveSelectedBranchId === activeBranchId ? policyContext : null
-  );
-  const effectiveBranches = canSelectWorkplace
-    ? branches
+  const effectivePolicyContext =
+    selectedPolicy.data ??
+    (effectiveSelectedBranchId === activeBranchId ? policyContext : null);
+  const workplaceBranchOptions = canSelectWorkplace
+    ? []
     : activeBranchId
-      ? [{
-          id: activeBranchId,
-          code: '',
-          name: user?.branchName?.trim() || activeBranchId,
-        }]
+      ? [
+          {
+            value: activeBranchId,
+            label: user?.branchName?.trim() || activeBranchId,
+          },
+        ]
       : [];
-  const branchOptions = effectiveBranches.map(branch => ({
-    value: branch.id,
-    label: branch.code ? `${branch.code} - ${branch.name}` : branch.name,
-  }));
-  const checklist = useMemo(() => effectivePolicyContext?.checklist ?? [], [effectivePolicyContext?.checklist]);
+  const checklist = useMemo(
+    () => effectivePolicyContext?.checklist ?? [],
+    [effectivePolicyContext?.checklist]
+  );
   const [answers, setAnswers] = useState<ChecklistAnswers>(() =>
     createDefaultAnswers(checklist)
   );
@@ -90,14 +120,23 @@ const DayEndStartProcessForm = ({
 
   const hasBodCompleted = Boolean(effectivePolicyContext?.bodCompleted);
   const hasEodPending = Boolean(effectivePolicyContext?.eodIncomplete);
-  const canStartDay = Boolean(effectivePolicyContext?.canStartDay ?? !hasBodCompleted);
-  const canCompleteDayEnd = Boolean(effectivePolicyContext?.canCompleteDayEnd ?? hasEodPending);
-  const workflowState = effectivePolicyContext?.workflowState ?? (
-    hasEodPending ? 'PENDING_EOD' : hasBodCompleted ? 'READY_TO_START' : 'PENDING_BOD'
+  const canStartDay = Boolean(
+    effectivePolicyContext?.canStartDay ?? !hasBodCompleted
   );
+  const canCompleteDayEnd = Boolean(
+    effectivePolicyContext?.canCompleteDayEnd ?? hasEodPending
+  );
+  const workflowState =
+    effectivePolicyContext?.workflowState ??
+    (hasEodPending
+      ? 'PENDING_EOD'
+      : hasBodCompleted
+        ? 'READY_TO_START'
+        : 'PENDING_BOD');
   const currentBusinessDate = effectivePolicyContext?.currentBusinessDate ?? '';
   const transactionDate = effectivePolicyContext?.transactionDate ?? '';
-  const openBusinessDate = effectivePolicyContext?.openBusinessDate ?? currentBusinessDate;
+  const openBusinessDate =
+    effectivePolicyContext?.openBusinessDate ?? currentBusinessDate;
   const activeMonthlyLock = effectivePolicyContext?.activeMonthlyLock ?? null;
   const isPendingBod = workflowState === 'PENDING_BOD';
   const isPendingEod = workflowState === 'PENDING_EOD';
@@ -139,7 +178,11 @@ const DayEndStartProcessForm = ({
         type="text"
         value={String(value ?? '')}
         valueTransform="none"
-        placeholder={item.valueType.toLowerCase() === 'select' ? 'Enter selected value' : 'Enter answer'}
+        placeholder={
+          item.valueType.toLowerCase() === 'select'
+            ? 'Enter selected value'
+            : 'Enter answer'
+        }
         onChange={event => {
           setAnswers(prev => ({
             ...prev,
@@ -162,7 +205,7 @@ const DayEndStartProcessForm = ({
           ? 'Complete the pending EOD before starting a new day.'
           : isClosedToday
             ? `Day end is already completed for ${openBusinessDate || currentBusinessDate || 'today'}.`
-          : 'Day start is already completed for the open business date.'
+            : 'Day start is already completed for the open business date.'
       );
       return;
     }
@@ -190,7 +233,9 @@ const DayEndStartProcessForm = ({
       await checkAuth();
       await selectedPolicy.refetch();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Unable to save day process');
+      toast.error(
+        error instanceof Error ? error.message : 'Unable to save day process'
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -208,8 +253,9 @@ const DayEndStartProcessForm = ({
               Complete your working day before punching transactions
             </h1>
             <p className="max-w-3xl text-sm leading-6 text-text-secondary">
-              This screen is for the logged-in user. Advanced settings define the checklist,
-              and this workflow records BOD and EOD for the current branch and user.
+              This screen is for the logged-in user. Advanced settings define
+              the checklist, and this workflow records BOD and EOD for the
+              current branch and user.
             </p>
           </div>
 
@@ -243,7 +289,9 @@ const DayEndStartProcessForm = ({
                 Business Date
               </div>
               <div className="mt-2 text-sm font-medium text-text-primary">
-                {currentBusinessDate ? formatDateTime(currentBusinessDate, 'DD/MM/YYYY') : 'Not available'}
+                {currentBusinessDate
+                  ? formatDateTime(currentBusinessDate, 'DD/MM/YYYY')
+                  : 'Not available'}
               </div>
             </div>
           </div>
@@ -255,17 +303,25 @@ const DayEndStartProcessForm = ({
           <div className="grid gap-4 md:grid-cols-2">
             <AsyncSelect
               label="Branch"
-              value={branchOptions.find(option => option.value === effectiveSelectedBranchId) ?? null}
-              defaultOptions={branchOptions}
+              value={selectedBranchOption}
+              defaultOptions={true}
+              pagination={canSelectWorkplace}
               isSearchable
               isClearable={false}
               disabled={!canSelectWorkplace}
-              loadOptions={async input => ({
-                options: branchOptions.filter(option => option.label.toLowerCase().includes(input.toLowerCase())),
-              })}
+              loadOptions={async (input, page = 1) => {
+                if (!canSelectWorkplace) {
+                  return { options: workplaceBranchOptions, hasMore: false };
+                }
+                return loadBranchOptions(input, page);
+              }}
               onChange={option => {
                 const selected = Array.isArray(option) ? option[0] : option;
-                const nextBranchId = selected ? String((selected as AsyncSelectOption).value) : '';
+                const nextOption = (selected as AsyncSelectOption | null) ?? null;
+                setSelectedBranchOption(nextOption);
+                const nextBranchId = nextOption
+                  ? String(nextOption.value)
+                  : '';
                 setSelectedBranchId(nextBranchId);
               }}
             />
@@ -277,19 +333,23 @@ const DayEndStartProcessForm = ({
           </p>
         </CardSection>
         <CardSection heading="Current Status" className="space-y-3">
-          <div className={`rounded-lg border px-4 py-3 text-sm ${getStatusTone(hasBodCompleted && !isPendingBod)}`}>
+          <div
+            className={`rounded-lg border px-4 py-3 text-sm ${getStatusTone(hasBodCompleted && !isPendingBod)}`}
+          >
             <div className="font-semibold">BOD Status</div>
             <div>
               {isPendingBod
                 ? `Day start pending for ${openBusinessDate || 'the current business date'}`
                 : isClosedToday
                   ? `Day closed for ${openBusinessDate || currentBusinessDate || 'today'}`
-                : hasBodCompleted
-                  ? 'Day started'
-                  : 'Day start pending'}
+                  : hasBodCompleted
+                    ? 'Day started'
+                    : 'Day start pending'}
             </div>
           </div>
-          <div className={`rounded-lg border px-4 py-3 text-sm ${getStatusTone(!hasEodPending && !isPendingEod)}`}>
+          <div
+            className={`rounded-lg border px-4 py-3 text-sm ${getStatusTone(!hasEodPending && !isPendingEod)}`}
+          >
             <div className="font-semibold">EOD Status</div>
             <div>
               {isPendingEod
@@ -299,8 +359,10 @@ const DayEndStartProcessForm = ({
                   : 'No pending EOD'}
             </div>
           </div>
-            <div className="rounded-lg border border-border-primary bg-surface-secondary px-4 py-3 text-sm text-text-secondary">
-              <div className="font-semibold text-text-primary">Transaction Date</div>
+          <div className="rounded-lg border border-border-primary bg-surface-secondary px-4 py-3 text-sm text-text-secondary">
+            <div className="font-semibold text-text-primary">
+              Transaction Date
+            </div>
             <div>
               {transactionDate
                 ? formatDateTime(transactionDate, 'DD/MM/YYYY')
@@ -315,7 +377,8 @@ const DayEndStartProcessForm = ({
             <div className="rounded-lg border border-warning-200 bg-warning-50 px-4 py-3 text-sm text-warning-800">
               <div className="font-semibold">Monthly Lock Active</div>
               <div>
-                {formatDateTime(activeMonthlyLock.fromDate, 'DD/MM/YYYY')} to {formatDateTime(activeMonthlyLock.toDate, 'DD/MM/YYYY')}
+                {formatDateTime(activeMonthlyLock.fromDate, 'DD/MM/YYYY')} to{' '}
+                {formatDateTime(activeMonthlyLock.toDate, 'DD/MM/YYYY')}
               </div>
             </div>
           ) : null}
@@ -324,7 +387,8 @@ const DayEndStartProcessForm = ({
         <CardSection heading="Checklist" className="space-y-4 lg:col-span-2">
           {checklist.length > 0 ? (
             checklist.map(item => {
-              const isBoolean = item.valueType.trim().toLowerCase() === 'boolean';
+              const isBoolean =
+                item.valueType.trim().toLowerCase() === 'boolean';
               const isSelect = item.valueType.trim().toLowerCase() === 'select';
 
               return (
@@ -338,12 +402,15 @@ const DayEndStartProcessForm = ({
                         {item.label}
                       </div>
                       <div className="text-xs text-text-secondary">
-                        Code: {item.code} {item.required ? '(required)' : '(optional)'}
+                        Code: {item.code}{' '}
+                        {item.required ? '(required)' : '(optional)'}
                         {' · '}
                         Type: {item.valueType}
                       </div>
                     </div>
-                    <span className={`rounded-full border px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] ${item.required ? 'border-error-200 bg-error-50 text-error-700' : 'border-border-primary bg-surface-secondary text-text-tertiary'}`}>
+                    <span
+                      className={`rounded-full border px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] ${item.required ? 'border-error-200 bg-error-50 text-error-700' : 'border-border-primary bg-surface-secondary text-text-tertiary'}`}
+                    >
                       {item.required ? 'Required' : 'Optional'}
                     </span>
                   </div>
@@ -388,12 +455,17 @@ const DayEndStartProcessForm = ({
           ) : null}
 
           <div className="flex flex-wrap gap-3">
-              <Button
-                type="button"
-                onClick={() => void submitAction('start')}
-                loading={isSubmitting}
-                disabled={isSubmitting || !canStartDay || selectedPolicy.isFetching || !effectiveSelectedBranchId}
-              >
+            <Button
+              type="button"
+              onClick={() => void submitAction('start')}
+              loading={isSubmitting}
+              disabled={
+                isSubmitting ||
+                !canStartDay ||
+                selectedPolicy.isFetching ||
+                !effectiveSelectedBranchId
+              }
+            >
               {isPendingBod
                 ? 'Start Pending Day'
                 : isClosedToday
@@ -401,30 +473,48 @@ const DayEndStartProcessForm = ({
                   : hasBodCompleted
                     ? 'Day Already Started'
                     : 'Start Day'}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => void submitAction('end')}
-                loading={isSubmitting}
-                disabled={isSubmitting || !canCompleteDayEnd || selectedPolicy.isFetching || !effectiveSelectedBranchId}
-              >
-              {isPendingEod ? 'Complete Pending EOD' : isClosedToday ? 'Day End Completed' : 'Complete Day End'}
-              </Button>
-            </div>
-          {(isPendingBod || isPendingEod) ? (
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => void submitAction('end')}
+              loading={isSubmitting}
+              disabled={
+                isSubmitting ||
+                !canCompleteDayEnd ||
+                selectedPolicy.isFetching ||
+                !effectiveSelectedBranchId
+              }
+            >
+              {isPendingEod
+                ? 'Complete Pending EOD'
+                : isClosedToday
+                  ? 'Day End Completed'
+                  : 'Complete Day End'}
+            </Button>
+          </div>
+          {isPendingBod || isPendingEod ? (
             <div className="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-800">
               {isPendingBod ? (
-                <p>Day start is pending for {openBusinessDate || 'the current business date'}. Please start the day before using transactions.</p>
+                <p>
+                  Day start is pending for{' '}
+                  {openBusinessDate || 'the current business date'}. Please
+                  start the day before using transactions.
+                </p>
               ) : (
-                <p>EOD is pending for {openBusinessDate || 'the current business date'}. Please complete this day before starting the next day.</p>
+                <p>
+                  EOD is pending for{' '}
+                  {openBusinessDate || 'the current business date'}. Please
+                  complete this day before starting the next day.
+                </p>
               )}
             </div>
           ) : isClosedToday ? (
             <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
               <p>
-                Day end is already completed for {openBusinessDate || currentBusinessDate || 'today'}.
-                You can start again on the next working day.
+                Day end is already completed for{' '}
+                {openBusinessDate || currentBusinessDate || 'today'}. You can
+                start again on the next working day.
               </p>
             </div>
           ) : null}
@@ -438,7 +528,9 @@ export const DayEndStartProcessView = () => {
   const { user, policyContext, checkAuth, isLoading } = useAuth();
   const checklist = policyContext?.checklist ?? [];
   const checklistSignature = checklist
-    .map(item => `${item.code}:${item.valueType}:${item.required}:${item.label}`)
+    .map(
+      item => `${item.code}:${item.valueType}:${item.required}:${item.label}`
+    )
     .join('|');
 
   if (isLoading) {

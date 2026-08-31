@@ -25,7 +25,10 @@ const PRESET_BUTTONS: Array<{ value: ReportDatePreset; label: string }> = [
   { value: ReportDatePresetEnum.CUSTOM, label: 'Custom Range' },
 ];
 
-const SINGLE_DAY_PRESET_BUTTONS: Array<{ value: ReportDatePreset; label: string }> = [
+const SINGLE_DAY_PRESET_BUTTONS: Array<{
+  value: ReportDatePreset;
+  label: string;
+}> = [
   { value: ReportDatePresetEnum.TODAY, label: 'Today' },
   { value: ReportDatePresetEnum.YESTERDAY, label: 'Yesterday' },
   { value: ReportDatePresetEnum.CUSTOM, label: 'Date' },
@@ -41,16 +44,19 @@ export const ReportDatePresetFilter = ({
   const presetButtons = singleDayOnly
     ? SINGLE_DAY_PRESET_BUTTONS
     : showAllDates
-      ? [{ value: ReportDatePresetEnum.ALL, label: 'All Dates' }, ...PRESET_BUTTONS]
+      ? [
+          { value: ReportDatePresetEnum.ALL, label: 'All Dates' },
+          ...PRESET_BUTTONS,
+        ]
       : PRESET_BUTTONS;
 
   const selectedStartDate = useMemo(
     () => parseDateInput(value.startDate),
-    [value.startDate],
+    [value.startDate]
   );
   const selectedEndDate = useMemo(
     () => parseDateInput(value.endDate),
-    [value.endDate],
+    [value.endDate]
   );
 
   const handlePresetClick = (preset: ReportDatePreset) => {

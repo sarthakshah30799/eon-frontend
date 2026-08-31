@@ -21,22 +21,27 @@ export const PartyProfileTypeSelect = ({
     label: option.label.toUpperCase(),
   });
 
-  const loadOptions = useCallback(async (inputValue: string) => {
-    const normalizedInput = inputValue.trim().toLowerCase();
+  const loadOptions = useCallback(
+    async (inputValue: string) => {
+      const normalizedInput = inputValue.trim().toLowerCase();
 
-    const filteredOptions = options.filter(option => {
-      if (!normalizedInput) {
-        return true;
-      }
+      const filteredOptions = options.filter(option => {
+        if (!normalizedInput) {
+          return true;
+        }
 
-      return (
-        option.label.toLowerCase().includes(normalizedInput) ||
-        String(option.value).toLowerCase().includes(normalizedInput)
-      );
-    });
+        return (
+          option.label.toLowerCase().includes(normalizedInput) ||
+          String(option.value).toLowerCase().includes(normalizedInput)
+        );
+      });
 
-    return { options: filteredOptions.map(toDisplayOption) as AsyncSelectOption[] };
-  }, [options]);
+      return {
+        options: filteredOptions.map(toDisplayOption) as AsyncSelectOption[],
+      };
+    },
+    [options]
+  );
 
   return (
     <div className="space-y-1">

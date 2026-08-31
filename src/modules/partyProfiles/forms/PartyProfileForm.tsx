@@ -16,16 +16,19 @@ import {
 import { partyProfileSchema } from '../schema';
 import type { ICreatePartyProfile } from '../types';
 
-import { branchProfileApi } from '@/api/branchProfile/branchProfile.api';
 import { partyProfileApi } from '@/api/partyProfile';
 import { useAuth } from '@/lib/AuthContext';
+import { useLoadBranchOptions } from '@/modules/branchProfile/hooks';
 import { useGetStateProfile } from '@/modules/stateProfile';
 import {
   CARD_ISSUER_FORM_TEXT,
   toPartyProfileDisplayLabel,
   toPartyProfileApiType,
 } from '../constants';
-import { PartyProfileTypeEnum, type PartyProfileType } from '../types/partyProfileTypes';
+import {
+  PartyProfileTypeEnum,
+  type PartyProfileType,
+} from '../types/partyProfileTypes';
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import type { IReviewPartyProfilePayload } from '../types';
 import { PartyProfileReviewActionPanel } from '../components';
@@ -72,13 +75,17 @@ const PartyProfileFormFields = ({
   const { user } = useAuth();
   const isSubmitting = isSubmittingProp || disabled || reviewMode;
   const reviewActionsDisabled = isSubmittingProp;
-  const canEditBranch = allowBranchSelection && Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
+  const canEditBranch =
+    allowBranchSelection &&
+    Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
   const effectiveProfileType = profileType;
   const panNo = useWatch({ name: 'panNo' });
   const gstStateId = useWatch({ name: 'gstStateId' });
   const gstNo = useWatch({ name: 'gstNo' });
   const isTdsDeducted = useWatch({ name: 'isTdsDeducted' });
-  const { data: selectedGstState } = useGetStateProfile(String(gstStateId || ''));
+  const { data: selectedGstState } = useGetStateProfile(
+    String(gstStateId || '')
+  );
   const lastAutoFilledGstNoRef = useRef('');
   const adultDobMaxDate = useMemo(() => {
     const date = new Date();
@@ -116,10 +123,17 @@ const PartyProfileFormFields = ({
   }, [form, showTdsGroup]);
 
   useEffect(() => {
-    const normalizedPan = String(panNo || '').trim().toUpperCase();
-    const currentGstNo = String(gstNo || '').trim().toUpperCase();
-    const gstStateCode = String(selectedGstState?.gstStateCode || '').trim().toUpperCase();
-    const nextAutoFilledGstNo = gstStateCode && normalizedPan ? `${gstStateCode}${normalizedPan}` : '';
+    const normalizedPan = String(panNo || '')
+      .trim()
+      .toUpperCase();
+    const currentGstNo = String(gstNo || '')
+      .trim()
+      .toUpperCase();
+    const gstStateCode = String(selectedGstState?.gstStateCode || '')
+      .trim()
+      .toUpperCase();
+    const nextAutoFilledGstNo =
+      gstStateCode && normalizedPan ? `${gstStateCode}${normalizedPan}` : '';
 
     if (!nextAutoFilledGstNo) {
       if (!currentGstNo || currentGstNo === lastAutoFilledGstNoRef.current) {
@@ -144,24 +158,7 @@ const PartyProfileFormFields = ({
     }
   }, [form, gstNo, panNo, selectedGstState?.gstStateCode]);
 
-  const branchLoadOptions = useCallback(async (inputValue: string) => {
-    const branches = await branchProfileApi.getBranchProfiles({
-      activeOnly: true,
-    });
-    const options = branches
-      .filter(
-        branch =>
-          !inputValue ||
-          `${branch.code} - ${branch.name}`
-            .toLowerCase()
-            .includes(inputValue.toLowerCase())
-      )
-      .map(branch => ({
-        value: branch.id,
-        label: `${branch.code} - ${branch.name}`,
-      }));
-    return { options };
-  }, []);
+  const branchLoadOptions = useLoadBranchOptions({ activeOnly: true });
 
   const validatePartyCode = useCallback(
     async (value: string) => {
@@ -172,8 +169,8 @@ const PartyProfileFormFields = ({
 
       const partyProfiles = await partyProfileApi.getPartyProfiles(
         {
-          page: 1,
           limit: 20,
+          offset: 0,
           code: normalizedCode,
           type: effectiveProfileType,
         },
@@ -585,6 +582,8 @@ const PartyProfileFormFields = ({
             label="Current Branch"
             placeholder="Select current branch"
             loadOptions={branchLoadOptions}
+            defaultOptions={true}
+            pagination
             disabled={isSubmitting || !canEditBranch || Boolean(currentId)}
           />
         </div>
@@ -669,15 +668,15 @@ export const PartyProfileForm = ({
       }
       defaultValues={defaultValues}
       className="space-y-6"
-        footer={{
-          submitLabel,
-          onBackClick: () => {
-            void onCancel?.();
-          },
-          onCancel,
-          showSubmit,
-        }}
-      >
+      footer={{
+        submitLabel,
+        onBackClick: () => {
+          void onCancel?.();
+        },
+        onCancel,
+        showSubmit,
+      }}
+    >
       <PartyProfileFormFields
         isSubmitting={isSubmitting}
         disabled={disabled}

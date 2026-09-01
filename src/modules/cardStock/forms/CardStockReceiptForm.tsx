@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
+import { useFieldArray, useFormContext, useWatch, type FieldPath } from 'react-hook-form';
 import {
   Button,
   CardSection,
@@ -427,7 +427,9 @@ const ReceiptItems = ({
                       const nextProduct = products.find(
                         productRecord =>
                           productRecord.id ===
-                          form.getValues(`items.${itemIndex}.productId` as never)
+                          form.getValues(
+                            `items.${itemIndex}.productId` as FieldPath<ICardStockFormValues>
+                          )
                       );
                       if (
                         headerIssuerId &&

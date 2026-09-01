@@ -60,6 +60,7 @@ interface TransactionPaymentDetailsFieldArrayProps {
   allowCashPayment?: boolean;
   allowedPaymentMethods?: Array<'CASH' | 'CHEQUE'>;
   disabled?: boolean;
+  autoAppendDefaultRow?: boolean;
 }
 
 const formatAmount = (value?: string | number | null) => {
@@ -962,6 +963,7 @@ export const TransactionPaymentDetailsFieldArray = ({
   allowCashPayment = true,
   allowedPaymentMethods,
   disabled = false,
+  autoAppendDefaultRow = true,
 }: TransactionPaymentDetailsFieldArrayProps) => {
   const form = useFormContext();
   const canUseCash = allowCashPayment !== false;
@@ -1151,6 +1153,7 @@ export const TransactionPaymentDetailsFieldArray = ({
     const total = Number(maxAmount || 0);
     if (
       disabled ||
+      !autoAppendDefaultRow ||
       !Number.isFinite(total) ||
       total <= 0 ||
       fields.length > 0
@@ -1165,7 +1168,7 @@ export const TransactionPaymentDetailsFieldArray = ({
       }),
       { shouldFocus: false }
     );
-  }, [append, disabled, fields.length, maxAmount]);
+  }, [append, autoAppendDefaultRow, disabled, fields.length, maxAmount]);
 
   useEffect(() => {
     if (!syncPrimaryRowAmount) {

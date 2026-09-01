@@ -35,6 +35,7 @@ import type {
   PassengerNationalityType,
   PassengerResidentStatus,
 } from '@/modules/passengers/types/passengerTypes';
+import type { ITransactionPaymentDetailFormRow } from '@/components/forms/TransactionPaymentDetailsFieldArray/transactionPaymentDetailsTypes';
 import type {
   IPurchaseDocumentAttachment,
   IPurchaseFormValues,
@@ -323,6 +324,58 @@ export const createEmptyPurchasePaymentRow = (
   remarks: overrides.remarks ?? '',
 });
 
+export const shouldValidatePaymentDetailRow = (
+  row: Partial<ITransactionPaymentDetailFormRow> | null | undefined
+) => {
+  if (!row) {
+    return false;
+  }
+
+  if (String(row.accountId || '').trim()) {
+    return true;
+  }
+
+  return (
+    row.settlementSource === 'ADVANCE' &&
+    Boolean(String(row.advanceVoucherId || '').trim())
+  );
+};
+
+export const mapPaymentDetailsToSubmitPayload = (
+  paymentDetails: IPurchaseFormValues['paymentDetails']
+) =>
+  paymentDetails
+    .filter(shouldValidatePaymentDetailRow)
+    .map(row => ({
+      accountId: row.accountId,
+      settlementSource: row.settlementSource ?? 'NORMAL',
+      advanceVoucherId:
+        row.settlementSource === 'ADVANCE'
+          ? row.advanceVoucherId || null
+          : null,
+      paymentMethod:
+        row.paymentMethod === TransactionPaymentMethodEnum.CASH
+          ? TransactionPaymentMethodEnum.CASH
+          : TransactionPaymentMethodEnum.CHEQUE,
+      referenceNumber: row.chequeNumber,
+      referenceDate:
+        row.paymentMethod === TransactionPaymentMethodEnum.CHEQUE
+          ? row.chequeDate || null
+          : null,
+      branchName: row.branchName,
+      drawnOn: row.drawnOn || null,
+      chequePageId:
+        row.paymentMethod === TransactionPaymentMethodEnum.CHEQUE
+          ? (row.chequePageId ?? null)
+          : null,
+      chequePageSnapshot:
+        row.paymentMethod === TransactionPaymentMethodEnum.CHEQUE
+          ? (row.chequePageSnapshot ?? null)
+          : null,
+      amount: row.amount,
+      remarks: null,
+    }));
+
 export const mapPurchaseFormValuesToSubmitPayload = (
   values: IPurchaseFormValues,
   attachments: IPurchaseDocumentAttachment[],
@@ -466,35 +519,7 @@ export const mapPurchaseFormValuesToSubmitPayload = (
         applyTax: Boolean(values.partyProfileApplyTax),
         remarks: null,
       })),
-      payments: values.paymentDetails.map(row => ({
-        accountId: row.accountId,
-        settlementSource: row.settlementSource ?? 'NORMAL',
-        advanceVoucherId:
-          row.settlementSource === 'ADVANCE'
-            ? row.advanceVoucherId || null
-            : null,
-        paymentMethod:
-          row.paymentMethod === TransactionPaymentMethodEnum.CASH
-            ? TransactionPaymentMethodEnum.CASH
-            : TransactionPaymentMethodEnum.CHEQUE,
-        referenceNumber: row.chequeNumber,
-        referenceDate:
-          row.paymentMethod === TransactionPaymentMethodEnum.CHEQUE
-            ? row.chequeDate || null
-            : null,
-        branchName: row.branchName,
-        drawnOn: row.drawnOn || null,
-        chequePageId:
-          row.paymentMethod === TransactionPaymentMethodEnum.CHEQUE
-            ? (row.chequePageId ?? null)
-            : null,
-        chequePageSnapshot:
-          row.paymentMethod === TransactionPaymentMethodEnum.CHEQUE
-            ? (row.chequePageSnapshot ?? null)
-            : null,
-        amount: row.amount,
-        remarks: null,
-      })),
+      payments: mapPaymentDetailsToSubmitPayload(values.paymentDetails),
     },
     attachments,
   };

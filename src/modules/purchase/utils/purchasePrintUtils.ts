@@ -1,6 +1,10 @@
 import type { IBranchProfile } from '@/modules/branchProfile/types';
 import type { ICompanyProfile } from '@/modules/companyProfile/types';
-import { TransactionTypeEnum } from '@/modules/transactions';
+import {
+  TransactionTypeEnum,
+  type ITransactionTaxPreviewResponse,
+  type ITransactionTcsPreviewResponse,
+} from '@/modules/transactions';
 import { toDisplayDate } from '@/utils';
 import { PURCHASE_PRINT_TEXT } from '../constants/purchaseConstants';
 import type {
@@ -144,13 +148,34 @@ const formatPaymentMethodLabel = (value?: string | null) => {
   return formatReferenceValue(value);
 };
 
-const formatSignedAmount = (value?: string | null, decimals = 2) => {
-  const formatted = formatAmount(value, decimals);
-  if (formatted === '' || formatted === '0.00' || formatted === '0.0000') {
-    return formatted || Number(0).toFixed(decimals);
+const toPurchaseSignedValue = (
+  value: string | number | null | undefined,
+  isPurchase: boolean
+) => {
+  if (!isPurchase || value === undefined || value === null || value === '') {
+    return value;
   }
 
-  return formatted.startsWith('-') ? formatted : `-${formatted}`;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed === 0) {
+    return value;
+  }
+
+  return -Math.abs(parsed);
+};
+
+const formatPurchaseChargeAmount = (
+  value: string | number | null | undefined,
+  isPurchase: boolean,
+  decimals = 2
+) => {
+  const signedValue = toPurchaseSignedValue(value, isPurchase);
+
+  if (signedValue === undefined || signedValue === null || signedValue === '') {
+    return formatAmount(signedValue, decimals);
+  }
+
+  return formatAmount(String(signedValue), decimals);
 };
 
 const getCustomerCopyLabel = (copyType: PurchasePrintCopyType) =>
@@ -201,6 +226,103 @@ const buildCardItemRows = (rows: IPurchaseTransactionFormRow[]) =>
     )
     .join('');
 
+const buildChargeTableRow = ({
+  index,
+  description,
+  baseAmount,
+  rate,
+  gstAmount,
+  finalAmount,
+  isPurchase,
+}: {
+  index: number;
+  description: string;
+  baseAmount?: string | null;
+  rate?: string | null;
+  gstAmount?: string | null;
+  finalAmount?: string | null;
+  isPurchase: boolean;
+}) => `
+      <tr>
+          <td>${index}</td>
+          <td>${escapeHtml(description)}</td>
+          <td class="right">${escapeHtml(formatAmount(baseAmount))}</td>
+          <td class="right">${escapeHtml(formatAmount(rate))}</td>
+          <td class="right">${escapeHtml(formatAmount(gstAmount))}</td>
+          <td class="right">${escapeHtml(formatPurchaseChargeAmount(finalAmount, isPurchase))}</td>
+        </tr>`;
+
+const hasNumericChargeAmount = (value?: string | null) =>
+  Number.isFinite(Number(value)) && Number(value) !== 0;
+
+const formatTcsRateValue = (
+  ratePercent: string,
+  rateType: 'PERCENT' | 'RUPEES' | null | undefined,
+  tcsAmount: string
+) => (rateType === 'RUPEES' ? tcsAmount : ratePercent);
+
+const buildTcsChargeRows = ({
+  tcsSummary,
+  startIndex,
+  isPurchase,
+}: {
+  tcsSummary: ITransactionTcsPreviewResponse;
+  startIndex: number;
+  isPurchase: boolean;
+}) => {
+  const rows: string[] = [];
+  let rowIndex = startIndex;
+
+  if (tcsSummary.breakdowns.length > 0) {
+    tcsSummary.breakdowns.forEach((breakdown, breakdownIndex) => {
+      if (!hasNumericChargeAmount(breakdown.tcsAmount)) {
+        return;
+      }
+
+      rowIndex += 1;
+      rows.push(
+        buildChargeTableRow({
+          index: rowIndex,
+          description: `TCS Row ${breakdownIndex + 1}`,
+          baseAmount: breakdown.baseAmount,
+          rate: formatTcsRateValue(
+            breakdown.ratePercent,
+            breakdown.rateType,
+            breakdown.tcsAmount
+          ),
+          gstAmount: breakdown.tcsAmount,
+          finalAmount: breakdown.tcsAmount,
+          isPurchase,
+        })
+      );
+    });
+
+    return rows;
+  }
+
+  if (!hasNumericChargeAmount(tcsSummary.tcsAmount)) {
+    return rows;
+  }
+
+  rows.push(
+    buildChargeTableRow({
+      index: rowIndex + 1,
+      description: 'TCS',
+      baseAmount: tcsSummary.taxableAmount,
+      rate: formatTcsRateValue(
+        tcsSummary.tcsRatePercent,
+        tcsSummary.tcsRateType,
+        tcsSummary.tcsAmount
+      ),
+      gstAmount: tcsSummary.tcsAmount,
+      finalAmount: tcsSummary.tcsAmount,
+      isPurchase,
+    })
+  );
+
+  return rows;
+};
+
 export const buildPurchasePrintHtml = ({
   copyType,
   transactionNumber,
@@ -209,6 +331,8 @@ export const buildPurchasePrintHtml = ({
   branch,
   transaction,
   sacCode,
+  taxSummary,
+  tcsSummary,
 }: {
   copyType: PurchasePrintCopyType;
   transactionNumber: string;
@@ -217,6 +341,8 @@ export const buildPurchasePrintHtml = ({
   branch: IBranchProfile | null;
   transaction: IPurchaseFormValues;
   sacCode: string;
+  taxSummary?: ITransactionTaxPreviewResponse | null;
+  tcsSummary?: ITransactionTcsPreviewResponse | null;
 }) => {
   const isPurchase =
     transaction.transactionType === TransactionTypeEnum.PURCHASE;
@@ -232,7 +358,13 @@ export const buildPurchasePrintHtml = ({
       (isPurchase ? -Math.abs(normalizedTotal) : Math.abs(normalizedTotal))
     );
   }, 0);
-  const payableAmount = totalAmount + additionalCharges;
+  const taxSummaryFinalAmount = Number(taxSummary?.finalAmount ?? NaN);
+  const tcsSummaryFinalAmount = Number(tcsSummary?.finalAmount ?? NaN);
+  const payableAmount = Number.isFinite(tcsSummaryFinalAmount)
+    ? tcsSummaryFinalAmount
+    : Number.isFinite(taxSummaryFinalAmount)
+      ? taxSummaryFinalAmount
+      : totalAmount + additionalCharges;
   const amountInWords = numberToWords(payableAmount);
   const currencyRows = transaction.transactions.filter(
     row => !isCardTransactionRow(row)
@@ -241,25 +373,85 @@ export const buildPurchasePrintHtml = ({
   const itemRows = buildCurrencyItemRows(currencyRows);
   const cardItemRows = buildCardItemRows(cardRows);
 
-  const chargeRows = transaction.additionalCharges
-    .map(
-      (row, index) => `
-      <tr>
-          <td>${index + 1}</td>
-          <td>${escapeHtml(row.accountName || formatReferenceValue(row.accountId))}</td>
-          <td class="right">${escapeHtml(formatAmount(row.gstAmount))}</td>
-          <td class="right">${escapeHtml(
-            formatSignedAmount(
-              String(
-                isPurchase
-                  ? -Math.abs(Number(row.totalAmount || row.amount || 0))
-                  : Number(row.totalAmount || row.amount || 0)
-              )
-            )
-          )}</td>
-        </tr>`
-    )
-    .join('');
+  const additionalChargeRows = transaction.additionalCharges.map(
+    (row, index) => {
+      const taxRow = taxSummary?.additionalChargeRows?.[index];
+      const splitMode = taxRow?.splitMode;
+      const gstDescription =
+        splitMode === 'IGST'
+          ? 'IGST'
+          : splitMode === 'CGST_SGST'
+            ? 'CGST + SGST'
+            : 'GST';
+
+      return buildChargeTableRow({
+        index: index + 1,
+        description: `${row.accountName || formatReferenceValue(row.accountId)} (${gstDescription})`,
+        baseAmount: row.amount || taxRow?.amount || '0',
+        rate:
+          row.gstRate ||
+          taxRow?.taxRatePercent ||
+          taxRow?.gstRatePercent ||
+          '',
+        gstAmount: row.gstAmount || taxRow?.gstAmount || '0',
+        finalAmount: row.totalAmount || taxRow?.totalAmount || row.amount || '0',
+        isPurchase,
+      });
+    }
+  );
+
+  const gstRows: string[] = [];
+  if (taxSummary?.splitMode === 'IGST' && hasNumericChargeAmount(taxSummary.itemIgstAmount)) {
+    gstRows.push(
+      buildChargeTableRow({
+        index: additionalChargeRows.length + 1,
+        description: 'IGST',
+        baseAmount: taxSummary.itemTaxableAmount,
+        rate: taxSummary.itemIgstRatePercent,
+        gstAmount: taxSummary.itemIgstAmount,
+        finalAmount: taxSummary.itemIgstAmount,
+        isPurchase,
+      })
+    );
+  } else if (taxSummary?.splitMode === 'CGST_SGST') {
+    if (hasNumericChargeAmount(taxSummary.itemCgstAmount)) {
+      gstRows.push(
+        buildChargeTableRow({
+          index: additionalChargeRows.length + gstRows.length + 1,
+          description: 'CGST',
+          baseAmount: taxSummary.itemTaxableAmount,
+          rate: taxSummary.itemCgstRatePercent,
+          gstAmount: taxSummary.itemCgstAmount,
+          finalAmount: taxSummary.itemCgstAmount,
+          isPurchase,
+        })
+      );
+    }
+    if (hasNumericChargeAmount(taxSummary.itemSgstAmount)) {
+      gstRows.push(
+        buildChargeTableRow({
+          index: additionalChargeRows.length + gstRows.length + 1,
+          description: 'SGST',
+          baseAmount: taxSummary.itemTaxableAmount,
+          rate: taxSummary.itemSgstRatePercent,
+          gstAmount: taxSummary.itemSgstAmount,
+          finalAmount: taxSummary.itemSgstAmount,
+          isPurchase,
+        })
+      );
+    }
+  }
+
+  const tcsRows =
+    !isPurchase && tcsSummary
+      ? buildTcsChargeRows({
+          tcsSummary,
+          startIndex: additionalChargeRows.length + gstRows.length,
+          isPurchase,
+        })
+      : [];
+
+  const chargeRows = [...additionalChargeRows, ...gstRows, ...tcsRows].join('');
 
   const paymentRows = transaction.paymentDetails
     .map(
@@ -462,7 +654,7 @@ export const buildPurchasePrintHtml = ({
               </div>
             </div>
             <div class="header-center">
-              <h1>BILL OF SUPPLY - PURCHASE</h1>
+              <h1>CASH MEMO</h1>
               <p>${escapeHtml(transactionNumber)}</p>
             </div>
             <div class="header-right copy-mark">${escapeHtml(getCustomerCopyLabel(copyType))}</div>
@@ -562,12 +754,14 @@ export const buildPurchasePrintHtml = ({
                 <tr>
                   <th>Sr. No.</th>
                   <th>Description</th>
-                  <th class="right">GST Amount</th>
                   <th class="right">Amount</th>
+                  <th class="right">GST Rate (%)</th>
+                  <th class="right">GST Amount</th>
+                  <th class="right">Final Amount</th>
                 </tr>
               </thead>
               <tbody>
-                ${chargeRows || '<tr><td colspan="4">No additional charges</td></tr>'}
+                ${chargeRows || '<tr><td colspan="6">No additional charges</td></tr>'}
               </tbody>
             </table>
           </div>

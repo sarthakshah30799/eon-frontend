@@ -587,7 +587,7 @@ const PurchaseFormBody = ({
     selectedPartyProfile &&
     hasCompleteItemPreviewRows &&
     hasCompleteAdditionalChargePreviewRows &&
-    hasCompletePaymentPreviewRows &&
+    (!isCombinedPartyProfilePage || hasCompletePaymentPreviewRows) &&
     !savedTransaction?.id
   );
   const { data: purchaseRulePreview, isLoading: isPurchaseRulePreviewLoading } =
@@ -1150,6 +1150,8 @@ const PurchaseFormBody = ({
         branch: toPrintBranch(savedTransaction.branchSnapshot),
         transaction: formValues,
         sacCode,
+        taxSummary: resolvedTaxSummary,
+        tcsSummary: resolvedTcsSummary,
       });
 
       await transactionsApi.recordPrint(savedTransaction.id, {
@@ -1632,6 +1634,7 @@ const PurchaseFormBody = ({
         name="paymentDetails"
         maxAmount={totalPayableAmount}
         syncPrimaryRowAmount={!savedTransaction}
+        autoAppendDefaultRow={isCombinedPartyProfilePage}
         accountQuery={paymentAccountQuery}
         transactionType={transactionType}
         branchId={resolvedBranchId}
@@ -1642,7 +1645,11 @@ const PurchaseFormBody = ({
         }
         disabled={isReadOnly}
         title="Payment Details"
-        description="Store how this transaction will be settled. Payment accounts are filtered by ledger type and purchase/sale mode."
+        description={
+          isCombinedPartyProfilePage
+            ? 'Store how this transaction will be settled. At least one payment detail is required for corporate/individual transactions.'
+            : 'Store how this transaction will be settled. Payment details are optional for this transaction type.'
+        }
       />
 
       <CardSection heading="Transaction Documents" className="space-y-4">

@@ -20,9 +20,7 @@ export const useCurrencyBalanceReport = () => {
       endDate: filters.appliedFilters?.dateRange.endDate,
       branchIds: filters.appliedFilters?.branchIds ?? [],
       counterIds: filters.appliedFilters?.counterIds ?? [],
-      currencyIds: filters.appliedFilters?.currencyId
-        ? [filters.appliedFilters.currencyId]
-        : [],
+      currencyIds: filters.appliedFilters?.currencyIds ?? [],
     }),
     [filters.appliedFilters]
   );

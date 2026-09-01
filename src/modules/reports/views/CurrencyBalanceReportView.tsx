@@ -25,16 +25,16 @@ export const CurrencyBalanceReportView = () => {
       report.filters.counterIds,
       report.filters.counterOptions
     );
-    const currencyLabel =
-      report.filters.currencyOptions.find(
-        option => option.id === report.filters.currencyId
-      )?.label ?? 'All';
+    const currencyLabels = summarizeReportSelection(
+      report.filters.currencyIds,
+      report.filters.currencyOptions
+    );
     const sortLabel = 'Date Asc';
 
     return {
       branches: branchLabels,
       counters: counterLabels,
-      currency: currencyLabel,
+      currencies: currencyLabels,
       sortLabel,
     };
   }, [
@@ -42,7 +42,7 @@ export const CurrencyBalanceReportView = () => {
     report.filters.branchOptions,
     report.filters.counterIds,
     report.filters.counterOptions,
-    report.filters.currencyId,
+    report.filters.currencyIds,
     report.filters.currencyOptions,
     report.filters.appliedFilters,
   ]);
@@ -77,7 +77,11 @@ export const CurrencyBalanceReportView = () => {
           {currentSummary.counters.length
             ? currentSummary.counters.join(', ')
             : 'All'}{' '}
-          | Currency {currentSummary.currency} | Sort By{' '}
+          | Currency{' '}
+          {currentSummary.currencies.length
+            ? currentSummary.currencies.join(', ')
+            : 'All'}{' '}
+          | Sort By{' '}
           {currentSummary.sortLabel}
         </div>
       )}

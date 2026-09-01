@@ -8,7 +8,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { getTransactionDatePolicy } from '@/modules/transactionPolicies/utils/transactionDatePolicy';
 import toast from 'react-hot-toast';
 import { CardTransferForm } from '../forms';
-import { cardTransferSchema } from '../schema';
+import { createCardTransferSchema } from '../schema';
 import {
   useAcceptCardTransfer,
   useCancelCardTransfer,
@@ -19,6 +19,9 @@ import {
   useUpdateCardTransfer,
 } from '../hooks';
 import type { CardTransferFormValues } from '../types';
+import { CARD_TRANSFER_COPY } from '../constants';
+import { mapRequestToForm } from '../utils';
+import { useCardStockReferences } from '@/modules/cardStock/hooks';
 import { CARD_STOCK_PRINT_TEXT } from '@/modules/cardStock/constants/cardStockConstants';
 import {
   getCardStockPrintButtonLabel,
@@ -32,6 +35,7 @@ export const CardTransferEditView = () => {
   const { id = '' } = useParams();
   const { user, activeBranchId, policyContext } = useAuth();
   const { data: request, isLoading, error } = useGetCardTransfer(id);
+  const references = useCardStockReferences();
   const [confirmationAction, setConfirmationAction] =
     useState<ConfirmationAction>(null);
   const [remarks, setRemarks] = useState('');
@@ -41,13 +45,21 @@ export const CardTransferEditView = () => {
   const cancelMutation = useCancelCardTransfer();
   const deleteMutation = useDeleteCardTransfer();
   const { printTransfer, isPrinting } = usePrintCardTransferStock();
-  const initialValues = useMemo(() => request, [request]);
+  const initialValues = useMemo(
+    () => (request ? mapRequestToForm(request) : undefined),
+    [request]
+  );
+  const cardTransferSchema = useMemo(
+    () =>
+      createCardTransferSchema(references.currencies, references.products),
+    [references.currencies, references.products]
+  );
   const policy = useMemo(
     () => getTransactionDatePolicy(policyContext),
     [policyContext]
   );
 
-  if (isLoading) return <Loader />;
+  if (isLoading || references.isLoading) return <Loader />;
   if (error || !request || !initialValues) {
     return (
       <div className="rounded border border-red-300 bg-red-50 p-4 text-sm text-red-700">
@@ -132,6 +144,9 @@ export const CardTransferEditView = () => {
       defaultValues={initialValues}
       resolver={yupResolver(cardTransferSchema) as never}
       mode="onChange"
+      onError={() => {
+        toast.error(CARD_TRANSFER_COPY.validationFailed);
+      }}
       onSubmit={save}
       footer={{
         showSubmit: canManageHeldRequest,

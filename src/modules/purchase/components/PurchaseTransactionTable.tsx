@@ -17,7 +17,10 @@ interface PurchaseTransactionTableProps {
   excludeTransactionId?: string;
   pricingData: IPurchasePricingData;
   agentCommissionRules?: IPartyProfileCommissionRule[];
-  onOpenCurrencyPicker: (rowIndex: number) => void;
+  onOpenCurrencyPicker: (
+    rowIndex: number,
+    allowedCurrencyIds: string[]
+  ) => void;
   disabled?: boolean;
   rateEditable?: boolean;
   useAverageSellRate?: boolean;

@@ -12,8 +12,11 @@ export interface CardTransferCard {
   series: string;
   kitNumber: string;
   maskedCardNumber: string;
+  currencyId: string;
   currencyCode: string;
+  productId: string;
   productCode: string;
+  issuerPartyProfileId: string;
   issuerName: string;
   denomination: string;
   amount: string;

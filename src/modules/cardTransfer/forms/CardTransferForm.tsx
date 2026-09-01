@@ -1,5 +1,10 @@
-import { useCallback, useState } from 'react';
-import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
+import { useCallback, useMemo, useState } from 'react';
+import {
+  useFieldArray,
+  useFormContext,
+  useFormState,
+  useWatch,
+} from 'react-hook-form';
 import {
   Button,
   CardSection,
@@ -9,7 +14,11 @@ import {
   type TableColumnDef,
 } from '@/components/ui';
 import { useQuery } from '@tanstack/react-query';
-import { FormFieldDatePicker, FormFieldInput, FormFieldSelect } from '@/components/forms';
+import {
+  FormFieldDatePicker,
+  FormFieldInput,
+  FormFieldSelect,
+} from '@/components/forms';
 import { branchProfileApi } from '@/api/branchProfile';
 import { useLoadBranchOptions } from '@/modules/branchProfile/hooks';
 import { formatDateTime } from '@/utils';
@@ -19,10 +28,17 @@ import {
   calculateItemAmount,
   calculateTotalAmount,
   emptyTransferItem,
+  filterTransferCardsForItem,
+  filterTransferIssuerOptions,
+  getTransferItemCurrencies,
+  isTransferItemContextComplete,
+  pruneInvalidItemCards,
 } from '../utils';
 import { useListTransferCards } from '../hooks';
 import { CARD_TRANSFER_COPY } from '../constants';
 import { useCardStockReferences } from '@/modules/cardStock/hooks';
+import { toCardStockCurrencyOptions } from '@/modules/cardStock/utils/cardStockCurrencyUtils';
+import { isMultiCurrencyCardProduct } from '@/modules/purchase/utils/purchaseUtils';
 import type { IBranchProfile } from '@/modules/branchProfile/types/branchProfileTypes';
 import type { ICurrencyProfile } from '@/modules/currencyProfile/types';
 import type { IProductProfile } from '@/modules/productProfile/types';
@@ -31,6 +47,7 @@ import type { IPartyProfile } from '@/modules/partyProfiles/types';
 interface Props {
   readOnly?: boolean;
   availableCards?: CardTransferCard[];
+  cardsLoading?: boolean;
   transactionDatePolicy?: TransactionDatePolicy;
   onSourceBranchChange?: (branchId: string) => void;
   isTransactionDateLoading?: boolean;
@@ -46,6 +63,45 @@ const staticLoader =
         )
       : options,
   });
+
+const StaticFormFieldSelect = ({
+  name,
+  label,
+  placeholder,
+  options,
+  disabled,
+  isLoading,
+  onValueChange,
+  selectKey,
+}: {
+  name: string;
+  label: string;
+  placeholder?: string;
+  options: AsyncSelectOption[];
+  disabled?: boolean;
+  isLoading?: boolean;
+  onValueChange?: (value: string | string[] | null) => void;
+  selectKey?: string;
+}) => {
+  const loadOptions = useMemo(() => staticLoader(options), [options]);
+  return (
+    <FormFieldSelect
+      key={
+        selectKey
+          ? `${selectKey}-${options.length}`
+          : `${name}-${options.length}`
+      }
+      name={name}
+      label={label}
+      placeholder={placeholder}
+      loadOptions={loadOptions}
+      defaultOptions={true}
+      isLoading={isLoading}
+      disabled={disabled || isLoading}
+      onValueChange={onValueChange}
+    />
+  );
+};
 
 const optionsFrom = (
   items: Array<{ id: string; name?: string; code?: string; counterNo?: string }>
@@ -99,31 +155,39 @@ const CardPicker = ({
   itemIndex,
   readOnly,
   availableCards,
+  cardsLoading,
 }: {
   itemIndex: number;
   readOnly: boolean;
   availableCards: CardTransferCard[];
+  cardsLoading: boolean;
 }) => {
   const form = useFormContext<CardTransferFormValues>();
+  const { errors } = useFormState({ control: form.control });
   const [open, setOpen] = useState(false);
-  const selectedCards = (useWatch({
+  const item = useWatch({
     control: form.control,
-    name: `items.${itemIndex}.cards`,
-  }) ?? []) as CardTransferCard[];
+    name: `items.${itemIndex}`,
+  });
+  const allItems = useWatch({ control: form.control, name: 'items' }) ?? [];
+  const selectedCards = (item?.cards ?? []) as CardTransferCard[];
   const selectedIds = new Set(selectedCards.map(card => card.id));
-  const selectableCards = availableCards.filter(
-    card =>
-      ![...form.getValues('items')].some(
-        (item, index) =>
-          index !== itemIndex &&
-          item.cards.some(selected => selected.id === card.id)
-      )
+  const contextComplete = isTransferItemContextComplete(item ?? emptyTransferItem());
+  const excludedCardIds = allItems.flatMap((entry, index) =>
+    index === itemIndex ? [] : entry.cards.map(card => card.id)
   );
+  const selectableCards = filterTransferCardsForItem(
+    availableCards,
+    item ?? emptyTransferItem(),
+    excludedCardIds
+  );
+  const cardsError = errors.items?.[itemIndex]?.cards;
+  const cardsErrorMessage =
+    cardsError && typeof cardsError === 'object' && 'message' in cardsError
+      ? String(cardsError.message ?? '')
+      : '';
 
-  const toggleCard = (card: CardTransferCard) => {
-    const nextCards = selectedIds.has(card.id)
-      ? selectedCards.filter(selected => selected.id !== card.id)
-      : [...selectedCards, card];
+  const syncItemCards = (nextCards: CardTransferCard[]) => {
     form.setValue(`items.${itemIndex}.cards`, nextCards, {
       shouldDirty: true,
       shouldValidate: true,
@@ -131,11 +195,24 @@ const CardPicker = ({
     form.setValue(
       `items.${itemIndex}.feAmount`,
       calculateItemAmount({
-        ...form.getValues(`items.${itemIndex}`),
+        ...(item ?? emptyTransferItem()),
         cards: nextCards,
       }),
       { shouldDirty: true, shouldValidate: true }
     );
+    void form.trigger([
+      `items.${itemIndex}.cards` as never,
+      `items.${itemIndex}.feAmount` as never,
+      `items.${itemIndex}.currencyId` as never,
+      `items.${itemIndex}.productId` as never,
+    ]);
+  };
+
+  const toggleCard = (card: CardTransferCard) => {
+    const nextCards = selectedIds.has(card.id)
+      ? selectedCards.filter(selected => selected.id !== card.id)
+      : [...selectedCards, card];
+    syncItemCards(nextCards);
   };
 
   const columns: TableColumnDef<CardTransferCard>[] = [
@@ -148,7 +225,7 @@ const CardPicker = ({
           size="sm"
           variant={selectedIds.has(row.original.id) ? 'default' : 'outline'}
           onClick={() => toggleCard(row.original)}
-          disabled={readOnly}
+          disabled={readOnly || !contextComplete}
         >
           {selectedIds.has(row.original.id) ? 'Selected' : 'Select'}
         </Button>
@@ -157,6 +234,7 @@ const CardPicker = ({
     { accessorKey: 'series', header: 'Series' },
     { accessorKey: 'kitNumber', header: 'Kit Number' },
     { accessorKey: 'maskedCardNumber', header: 'Card Number' },
+    { accessorKey: 'productCode', header: 'Product' },
     { accessorKey: 'currencyCode', header: 'Currency' },
     { accessorKey: 'denomination', header: 'Denomination' },
     { accessorKey: 'amount', header: 'Amount' },
@@ -169,26 +247,43 @@ const CardPicker = ({
   ];
 
   return (
-    <div className="space-y-3 rounded-lg border border-border-secondary bg-surface-secondary p-4">
+    <div
+      className={`space-y-3 rounded-lg border bg-surface-secondary p-4 ${
+        cardsErrorMessage
+          ? 'border-error-500'
+          : 'border-border-secondary'
+      }`}
+    >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="font-medium text-text-primary">
             Cards selected: {selectedCards.length}
           </p>
           <p className="text-xs text-text-secondary">
-            Select cards from the source HO stock. Selected cards are reserved
-            after submission.
+            {contextComplete
+              ? 'Select cards that match this item product, currency, and issuer.'
+              : CARD_TRANSFER_COPY.selectItemContextFirst}
           </p>
+          {cardsErrorMessage ? (
+            <p className="mt-1 text-sm text-error-600" role="alert">
+              {cardsErrorMessage}
+            </p>
+          ) : null}
         </div>
         <Button
           type="button"
           variant="outline"
           onClick={() => setOpen(value => !value)}
-          disabled={readOnly}
+          disabled={readOnly || !contextComplete || cardsLoading}
         >
           {open ? 'Hide Card Stock' : 'Select Cards'}
         </Button>
       </div>
+      {cardsLoading ? (
+        <p className="text-xs text-text-secondary" role="status">
+          {CARD_TRANSFER_COPY.loadingCards}
+        </p>
+      ) : null}
       {selectedCards.length > 0 ? (
         <div className="flex flex-wrap gap-2">
           {selectedCards.map(card => (
@@ -196,7 +291,8 @@ const CardPicker = ({
               key={card.id}
               className="rounded-full border border-primary-200 bg-primary-50 px-3 py-1 text-xs text-primary-700"
             >
-              {card.maskedCardNumber} · {card.amount}
+              {card.productCode} · {card.currencyCode} · {card.maskedCardNumber}{' '}
+              · {card.amount}
             </span>
           ))}
         </div>
@@ -210,7 +306,12 @@ const CardPicker = ({
             enableFiltering={false}
             enablePagination={false}
             enableRowSelection={false}
-            emptyMessage="No available cards found."
+            loading={cardsLoading}
+            emptyMessage={
+              contextComplete
+                ? CARD_TRANSFER_COPY.noMatchingCards
+                : CARD_TRANSFER_COPY.selectItemContextFirst
+            }
           />
         </div>
       ) : null}
@@ -221,12 +322,25 @@ const CardPicker = ({
 const TransferItems = ({
   readOnly,
   availableCards,
+  cardsLoading,
+  currencies,
+  products,
+  issuers,
+  currenciesLoading,
+  productsLoading,
+  issuersLoading,
 }: {
   readOnly: boolean;
   availableCards: CardTransferCard[];
+  cardsLoading: boolean;
+  currencies: ICurrencyProfile[];
+  products: IProductProfile[];
+  issuers: IPartyProfile[];
+  currenciesLoading: boolean;
+  productsLoading: boolean;
+  issuersLoading: boolean;
 }) => {
   const form = useFormContext<CardTransferFormValues>();
-  const references = useCardStockReferences();
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: 'items',
@@ -234,24 +348,46 @@ const TransferItems = ({
   const items = (useWatch({ control: form.control, name: 'items' }) ??
     []) as CardTransferFormValues['items'];
   const total = calculateTotalAmount(items);
-  const currencyOptions = references.currencies.map(currency => ({
-    value: currency.id,
-    label: `${currency.currencyCode} - ${currency.currencyName}`,
-  }));
-  const productOptions = references.products.map(product => ({
+  const productOptions = products.map(product => ({
     value: product.id,
     label: `${product.productCode} - ${product.productDescription}`,
   }));
-  const issuerOptions = references.issuers.map(issuer => ({
-    value: issuer.id,
-    label: `${issuer.code} - ${issuer.name}`,
-  }));
+
+  const revalidateItem = (index: number) => {
+    void form.trigger([
+      `items.${index}.currencyId` as never,
+      `items.${index}.productId` as never,
+      `items.${index}.issuerPartyProfileId` as never,
+      `items.${index}.cards` as never,
+      `items.${index}.feAmount` as never,
+    ]);
+  };
+
+  const handleItemContextChange = (index: number) => {
+    const currentItem = form.getValues(`items.${index}`);
+    const pruned = pruneInvalidItemCards(currentItem);
+    form.setValue(`items.${index}.cards`, pruned.cards, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+    form.setValue(`items.${index}.feAmount`, pruned.feAmount, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+    revalidateItem(index);
+  };
+
   return (
     <CardSection heading="Transfer Items" className="space-y-5">
       {fields.map((field, index) => {
         const item = items[index];
-        const itemCurrencyOptions = withSnapshotOption(
-          currencyOptions,
+        const product = products.find(
+          productRecord => productRecord.id === item?.productId
+        );
+        const isMultiCurrency = isMultiCurrencyCardProduct(product?.productCode);
+        const itemCurrencies = getTransferItemCurrencies(currencies, product);
+        const currencyOptions = withSnapshotOption(
+          toCardStockCurrencyOptions(itemCurrencies),
           item?.currencyId,
           item?.currencySnapshot
         );
@@ -260,8 +396,11 @@ const TransferItems = ({
           item?.productId,
           item?.productSnapshot
         );
-        const itemIssuerOptions = withSnapshotOption(
-          issuerOptions,
+        const issuerOptions = withSnapshotOption(
+          filterTransferIssuerOptions(issuers, product).map(issuer => ({
+            value: issuer.id,
+            label: `${issuer.code} - ${issuer.name}`,
+          })),
           item?.issuerPartyProfileId,
           item?.issuerPartyProfileSnapshot
         );
@@ -285,14 +424,30 @@ const TransferItems = ({
               ) : null}
             </div>
             <div className="grid gap-4 xl:grid-cols-5">
-              <FormFieldSelect
+              <StaticFormFieldSelect
+                name={`items.${index}.productId`}
+                label="Product Type"
+                placeholder="Select product"
+                options={itemProductOptions}
+                isLoading={productsLoading}
+                disabled={readOnly}
+                selectKey={`product-${index}-${product?.id ?? 'none'}`}
+                onValueChange={() => {
+                  form.setValue(`items.${index}.issuerPartyProfileId`, '', {
+                    shouldValidate: true,
+                  });
+                  handleItemContextChange(index);
+                }}
+              />
+              <StaticFormFieldSelect
                 name={`items.${index}.currencyId`}
                 label="Currency"
                 placeholder="Select currency"
-                loadOptions={staticLoader(itemCurrencyOptions)}
-                defaultOptions={itemCurrencyOptions}
-                isLoading={references.currenciesLoading}
-                disabled={readOnly}
+                options={currencyOptions}
+                isLoading={currenciesLoading}
+                disabled={readOnly || !product}
+                selectKey={`currency-${index}-${product?.id ?? 'none'}-${isMultiCurrency ? 'cm' : 'cc'}-${currencyOptions.length}`}
+                onValueChange={() => handleItemContextChange(index)}
               />
               <FormFieldInput
                 name={`items.${index}.per`}
@@ -300,23 +455,15 @@ const TransferItems = ({
                 type="number"
                 disabled={readOnly}
               />
-              <FormFieldSelect
-                name={`items.${index}.productId`}
-                label="Product Type"
-                placeholder="Select product"
-                loadOptions={staticLoader(itemProductOptions)}
-                defaultOptions={itemProductOptions}
-                isLoading={references.productsLoading}
-                disabled={readOnly}
-              />
-              <FormFieldSelect
+              <StaticFormFieldSelect
                 name={`items.${index}.issuerPartyProfileId`}
                 label="Card Issuer"
                 placeholder="Select issuer"
-                loadOptions={staticLoader(itemIssuerOptions)}
-                defaultOptions={itemIssuerOptions}
-                isLoading={references.issuersLoading}
-                disabled={readOnly}
+                options={issuerOptions}
+                isLoading={issuersLoading}
+                disabled={readOnly || !product}
+                selectKey={`issuer-${index}-${product?.id ?? 'none'}`}
+                onValueChange={() => handleItemContextChange(index)}
               />
               <FormFieldInput
                 name={`items.${index}.feAmount`}
@@ -329,6 +476,7 @@ const TransferItems = ({
               itemIndex={index}
               readOnly={readOnly}
               availableCards={availableCards}
+              cardsLoading={cardsLoading}
             />
           </div>
         );
@@ -355,12 +503,14 @@ const TransferItems = ({
 export const CardTransferForm = ({
   readOnly = false,
   availableCards,
+  cardsLoading: cardsLoadingProp,
   transactionDatePolicy,
   onSourceBranchChange,
   isTransactionDateLoading = false,
   destinationBranchReadOnly = false,
 }: Props) => {
   const form = useFormContext<CardTransferFormValues>();
+  const references = useCardStockReferences();
   const { data: branches = [], isLoading: branchesLoading } = useQuery({
     queryKey: ['branch-profiles-all', { activeOnly: true }],
     queryFn: () => branchProfileApi.getAllBranchProfiles({ activeOnly: true }),
@@ -370,11 +520,17 @@ export const CardTransferForm = ({
     control: form.control,
     name: 'sourceBranchId',
   });
-  const { data: sourceCards = [] } = useListTransferCards(
+  const {
+    data: sourceCards = [],
+    isLoading: sourceCardsLoading,
+    isFetching: sourceCardsFetching,
+  } = useListTransferCards(
     sourceBranchId ?? '',
     !readOnly && availableCards === undefined
   );
   const cardOptions = availableCards ?? sourceCards;
+  const cardsLoading =
+    cardsLoadingProp ?? (sourceCardsLoading || sourceCardsFetching);
   const hoBranchOptions = optionsFrom(
     branches.filter(branch => branch.isActive !== false && branch.isHeadOffice)
   );
@@ -424,18 +580,29 @@ export const CardTransferForm = ({
     ]
   );
 
+  const resetItemsForSourceBranch = () => {
+    form.setValue('items', [emptyTransferItem()], {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+    form.setValue('destinationBranchId', '', {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+  };
+
   return (
     <div className="space-y-6">
       <CardSection heading="Transfer Details" className="space-y-4">
         <div className="grid gap-4 xl:grid-cols-4">
-          <FormFieldSelect
+          <StaticFormFieldSelect
             name="sourceBranchId"
             label="Source HO Branch"
             placeholder="Select HO branch"
-            loadOptions={staticLoader(sourceBranchOptions)}
-            defaultOptions={sourceBranchOptions}
+            options={sourceBranchOptions}
             isLoading={branchesLoading}
             disabled={readOnly}
+            selectKey="source-ho-branch"
             onValueChange={value => {
               const branchId = typeof value === 'string' ? value : '';
               form.setValue('transactionDate', '', {
@@ -443,6 +610,7 @@ export const CardTransferForm = ({
                 shouldTouch: false,
                 shouldValidate: true,
               });
+              resetItemsForSourceBranch();
               onSourceBranchChange?.(branchId);
             }}
           />
@@ -490,7 +658,17 @@ export const CardTransferForm = ({
           />
         </div>
       </CardSection>
-      <TransferItems readOnly={readOnly} availableCards={cardOptions} />
+      <TransferItems
+        readOnly={readOnly}
+        availableCards={cardOptions}
+        cardsLoading={cardsLoading}
+        currencies={references.currencies}
+        products={references.products}
+        issuers={references.issuers}
+        currenciesLoading={references.currenciesLoading}
+        productsLoading={references.productsLoading}
+        issuersLoading={references.issuersLoading}
+      />
     </div>
   );
 };

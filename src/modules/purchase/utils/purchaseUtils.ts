@@ -1,3 +1,4 @@
+import type { ICurrencyProfile } from '@/modules/currencyProfile/types';
 import type {
   ICurrencyRateComparisonPreview,
   ICurrencyRateMargin,
@@ -76,11 +77,21 @@ export const PURCHASE_TRANSACTION_TEXT = {
   quantityRequired: 'Quantity is required',
   feAmountRequired: 'FE Amount is required',
   feAmountPositive: 'FE Amount must be greater than 0',
+  selectProductFirst: 'Select product first',
   cardSaleHint:
     'Select an issuer and eligible card before entering the FE amount.',
   cardPurchaseHint:
     'Select an issuer and eligible card before entering the denomination.',
 } as const;
+
+export const filterTradableActiveCurrencies = (
+  currencies: ICurrencyProfile[] = []
+): ICurrencyProfile[] =>
+  currencies.filter(currency => currency.active && !currency.onlyStocking);
+
+export const getTradableActiveCurrencyIds = (
+  currencies: ICurrencyProfile[] = []
+): string[] => filterTradableActiveCurrencies(currencies).map(currency => currency.id);
 
 export const formatPurchaseDecimal = (
   value?: string | number | null,

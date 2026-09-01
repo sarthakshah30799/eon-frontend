@@ -86,6 +86,7 @@ export type IUpdateCurrencyProfile = Partial<ICreateCurrencyProfile>;
 export interface ICurrencyProfileListQuery extends IOffsetPaginationParams {
   search?: string;
   activeOnly?: boolean;
+  includeAllStockingTypes?: boolean;
   includeOnlyStocking?: boolean;
   productAllowed?: string;
 }

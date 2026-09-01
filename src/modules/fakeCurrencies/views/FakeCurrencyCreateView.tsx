@@ -98,9 +98,11 @@ const FakeCurrencyTotal = () => {
 
 const FakeCurrencyPicker = ({
   rowIndex,
+  allowedCurrencyIds,
   onClose,
 }: {
   rowIndex: number | null;
+  allowedCurrencyIds?: string[];
   onClose: () => void;
 }) => {
   const form = useFormContext<FakeCurrencyFormValues>();
@@ -111,6 +113,7 @@ const FakeCurrencyPicker = ({
       multiple={false}
       title="Select Currency"
       description="Choose a currency for this fake-currency entry."
+      allowedCurrencyIds={allowedCurrencyIds}
       onContinue={currencies => {
         const currency = currencies[0] as ICurrencyProfile | undefined;
         if (!currency || rowIndex === null) return;
@@ -235,9 +238,10 @@ export const FakeCurrencyCreateView = ({
     () => getTransactionDatePolicy(policyContext),
     [policyContext]
   );
-  const [currencyPickerRowIndex, setCurrencyPickerRowIndex] = useState<
-    number | null
-  >(null);
+  const [currencyPickerState, setCurrencyPickerState] = useState<{
+    rowIndex: number;
+    allowedCurrencyIds: string[];
+  } | null>(null);
   const [draftDocuments, setDraftDocuments] = useState<
     Record<string, File | null>
   >({});
@@ -407,7 +411,9 @@ export const FakeCurrencyCreateView = ({
           counterId={initialValues?.counterId ?? activeCounterId ?? ''}
           pricingData={resolvedPricingData}
           agentCommissionRules={[]}
-          onOpenCurrencyPicker={setCurrencyPickerRowIndex}
+          onOpenCurrencyPicker={(rowIndex, allowedCurrencyIds) =>
+            setCurrencyPickerState({ rowIndex, allowedCurrencyIds })
+          }
           disabled={readOnly}
           rateEditable={rateEditable}
           useAverageSellRate
@@ -462,8 +468,9 @@ export const FakeCurrencyCreateView = ({
       </div>
       {!readOnly ? (
         <FakeCurrencyPicker
-          rowIndex={currencyPickerRowIndex}
-          onClose={() => setCurrencyPickerRowIndex(null)}
+          rowIndex={currencyPickerState?.rowIndex ?? null}
+          allowedCurrencyIds={currencyPickerState?.allowedCurrencyIds}
+          onClose={() => setCurrencyPickerState(null)}
         />
       ) : null}
     </Form>

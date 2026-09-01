@@ -20,6 +20,10 @@ export const CARD_STOCK_VALIDATION_TEXT = {
   denomination: 'Denomination must be greater than zero',
   expirationFormat: 'Expiration date must use dd/mm/yyyy format',
   expirationFuture: 'Expiration date must be in the future',
+  ccOnlyTradableCurrency:
+    'CC cards must be stocked under a tradable (non-stocking) currency',
+  cmOnlyStockingCurrency:
+    'CM cards must be stocked under an only-stocking currency with product allowed CM',
   digits: (length: number) => `Card number must be ${length} digits`,
   mask: (length: number) => `Card number must be a ${length}-character mask`,
   digitsOrMask: (length: number) =>

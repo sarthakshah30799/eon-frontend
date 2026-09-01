@@ -22,6 +22,7 @@ import {
   getPurchaseTransactionPricingSideLabel,
   isCardProductCode,
   isMultiCurrencyCardProduct,
+  getTradableActiveCurrencyIds,
   PURCHASE_TRANSACTION_TEXT,
   resolveAgentCommissionRule,
   resolvePurchaseTransactionPreview,
@@ -50,7 +51,7 @@ interface PurchaseTransactionRowCellProps {
   excludeTransactionId?: string;
   pricingData: IPurchasePricingData;
   agentCommissionRules?: IPartyProfileCommissionRule[];
-  onOpenCurrencyPicker: (rowIndex: number) => void;
+  onOpenCurrencyPicker: (rowIndex: number, allowedCurrencyIds: string[]) => void;
   onRemove: (rowIndex: number) => void;
   canRemove: boolean;
   disabled?: boolean;
@@ -675,6 +676,81 @@ export const PurchaseTransactionRowCell = ({
       ),
     [pricingData.products, pricingSide]
   );
+  const allowedCurrencyIds = useMemo(
+    () => getTradableActiveCurrencyIds(pricingData.currencies ?? []),
+    [pricingData.currencies]
+  );
+  const clearProductDependentFields = useCallback(() => {
+    form.setValue(fieldPath('currencyId'), '', {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+    form.setValue(fieldPath('currencyCode'), '', {
+      shouldDirty: true,
+      shouldValidate: false,
+    });
+    form.setValue(fieldPath('currencyName'), '', {
+      shouldDirty: true,
+      shouldValidate: false,
+    });
+    form.setValue(fieldPath('per'), '', {
+      shouldDirty: false,
+      shouldTouch: false,
+      shouldValidate: false,
+    });
+    form.setValue(fieldPath('issuerPartyProfileId'), '', {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+    form.setValue(fieldPath('issuerPartyProfileSnapshot'), null, {
+      shouldDirty: true,
+    });
+    form.setValue(fieldPath('cardId'), '', {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+    form.setValue(fieldPath('cardSnapshot'), null, { shouldDirty: true });
+    form.setValue(fieldPath('isReload'), false, {
+      shouldDirty: true,
+      shouldValidate: false,
+    });
+    form.setValue(fieldPath('rate'), '', {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+    form.setValue(fieldPath('total'), '', {
+      shouldDirty: false,
+      shouldTouch: false,
+      shouldValidate: false,
+    });
+    form.setValue(fieldPath('roundOff'), '', {
+      shouldDirty: false,
+      shouldTouch: false,
+      shouldValidate: false,
+    });
+    form.setValue(fieldPath('finalAmount'), '', {
+      shouldDirty: false,
+      shouldTouch: false,
+      shouldValidate: false,
+    });
+    form.setValue(fieldPath('commission'), '', {
+      shouldDirty: false,
+      shouldTouch: false,
+      shouldValidate: false,
+    });
+    form.setValue(fieldPath('commissionSnapshot'), null, {
+      shouldDirty: false,
+      shouldTouch: false,
+      shouldValidate: false,
+    });
+    form.setValue(fieldPath('pricingRuleSnapshot'), null, {
+      shouldDirty: false,
+      shouldTouch: false,
+      shouldValidate: false,
+    });
+    setCardPickerOpen(false);
+    setIssuerPickerOpen(false);
+  }, [fieldPath, form]);
 
   return (
     <TransactionItemRowShell
@@ -710,31 +786,6 @@ export const PurchaseTransactionRowCell = ({
     >
       <div className="flex flex-wrap gap-2 px-1 py-1 lg:flex-nowrap">
         <div
-          className={`min-w-0 basis-[46%] sm:basis-[31%] md:basis-[18%] lg:basis-0 lg:flex-1 ${currencyCode ? 'lg:max-w-[60px]' : ''}`}
-        >
-          <EntityPickerField
-            label="Currency"
-            value={currencyCode ? `${currencyCode}` : ''}
-            placeholder="Select currency"
-            onClick={() => onOpenCurrencyPicker(rowIndex)}
-            disabled={disabled}
-            helperText={rateHelperText || undefined}
-            buttonPosition="bottom"
-          />
-        </div>
-        {isCardProduct ? (
-          <div className="min-w-0 basis-[46%] sm:basis-[31%] md:basis-[18%] lg:basis-0 lg:flex-1">
-            <EntityPickerField
-              label="Issuer"
-              value={String(issuerSnapshot?.name ?? issuerSnapshot?.code ?? '')}
-              placeholder="Select issuer"
-              disabled={disabled}
-              onClick={() => setIssuerPickerOpen(true)}
-              buttonPosition="bottom"
-            />
-          </div>
-        ) : null}
-        <div
           className={`min-w-0 basis-[46%] sm:basis-[31%] md:basis-[22%] lg:basis-0 lg:flex-1 ${productId ? 'lg:max-w-[130px]' : 'lg:max-w-[200px]'}`}
         >
           <FormFieldAsyncSelect
@@ -747,8 +798,51 @@ export const PurchaseTransactionRowCell = ({
             isSearchable
             className="w-full"
             displayValue="code"
+            onValueChange={() => {
+              clearProductDependentFields();
+            }}
           />
         </div>
+        <div
+          className={`min-w-0 basis-[46%] sm:basis-[31%] md:basis-[18%] lg:basis-0 lg:flex-1 ${currencyCode ? 'lg:max-w-[60px]' : ''}`}
+        >
+          <EntityPickerField
+            label="Currency"
+            value={currencyCode ? `${currencyCode}` : ''}
+            placeholder="Select currency"
+            onClick={() => {
+              if (!productId) {
+                return;
+              }
+
+              onOpenCurrencyPicker(rowIndex, allowedCurrencyIds);
+            }}
+            disabled={disabled || !productId}
+            helperText={
+              !productId
+                ? PURCHASE_TRANSACTION_TEXT.selectProductFirst
+                : rateHelperText || undefined
+            }
+            buttonPosition="bottom"
+          />
+        </div>
+        {isCardProduct ? (
+          <div className="min-w-0 basis-[46%] sm:basis-[31%] md:basis-[18%] lg:basis-0 lg:flex-1">
+            <EntityPickerField
+              label="Issuer"
+              value={String(issuerSnapshot?.name ?? issuerSnapshot?.code ?? '')}
+              placeholder="Select issuer"
+              disabled={disabled || !productId}
+              helperText={
+                !productId
+                  ? PURCHASE_TRANSACTION_TEXT.selectProductFirst
+                  : undefined
+              }
+              onClick={() => setIssuerPickerOpen(true)}
+              buttonPosition="bottom"
+            />
+          </div>
+        ) : null}
         <div className="relative min-w-0 basis-[46%] sm:basis-[31%] md:basis-[18%] lg:basis-auto lg:flex-none lg:w-[82px] lg:min-w-[82px] lg:max-w-[82px]">
           <FormFieldInput
             name={fieldPath('quantity')}

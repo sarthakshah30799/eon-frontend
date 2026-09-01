@@ -35,8 +35,15 @@ interface TransferFormBodyProps {
   transferType: TransferType;
   pricingData: NonNullable<ReturnType<typeof useCurrencyRatesViewData>['data']>;
   canSubmit: boolean;
-  currencyPickerRowIndex: number | null;
-  setCurrencyPickerRowIndex: (value: number | null) => void;
+  currencyPickerState: {
+    rowIndex: number;
+    allowedCurrencyIds: string[];
+  } | null;
+  onOpenCurrencyPicker: (
+    rowIndex: number,
+    allowedCurrencyIds: string[]
+  ) => void;
+  onCloseCurrencyPicker: () => void;
   readOnly: boolean;
   useTransferRateEditable: boolean;
   transactionDatePolicy: ReturnType<typeof getTransactionDatePolicy>;
@@ -48,8 +55,9 @@ const TransferFormBody = ({
   transferType,
   pricingData,
   canSubmit,
-  currencyPickerRowIndex,
-  setCurrencyPickerRowIndex,
+  currencyPickerState,
+  onOpenCurrencyPicker,
+  onCloseCurrencyPicker,
   readOnly,
   displayNumber,
   readOnlyOptions,
@@ -68,12 +76,12 @@ const TransferFormBody = ({
 
   const handleCurrencySelect = (currencies: ICurrencyProfile[]) => {
     const selectedCurrency = currencies[0];
-    if (selectedCurrency === undefined || currencyPickerRowIndex === null) {
+    if (selectedCurrency === undefined || currencyPickerState === null) {
       return;
     }
 
     form.setValue(
-      `items.${currencyPickerRowIndex}.currencyId`,
+      `items.${currencyPickerState.rowIndex}.currencyId`,
       selectedCurrency.id,
       {
         shouldDirty: true,
@@ -82,7 +90,7 @@ const TransferFormBody = ({
       }
     );
     form.setValue(
-      `items.${currencyPickerRowIndex}.currencyCode`,
+      `items.${currencyPickerState.rowIndex}.currencyCode`,
       selectedCurrency.currencyCode,
       {
         shouldDirty: true,
@@ -91,7 +99,7 @@ const TransferFormBody = ({
       }
     );
     form.setValue(
-      `items.${currencyPickerRowIndex}.currencyName`,
+      `items.${currencyPickerState.rowIndex}.currencyName`,
       selectedCurrency.currencyName,
       {
         shouldDirty: true,
@@ -99,7 +107,7 @@ const TransferFormBody = ({
         shouldValidate: false,
       }
     );
-    setCurrencyPickerRowIndex(null);
+    onCloseCurrencyPicker();
   };
 
   return (
@@ -166,20 +174,21 @@ const TransferFormBody = ({
           branchId=""
           counterId=""
           pricingData={pricingData}
-          onOpenCurrencyPicker={setCurrencyPickerRowIndex}
+          onOpenCurrencyPicker={onOpenCurrencyPicker}
           disabled={!canSubmit || readOnly}
           rateEditable={useTransferRateEditable}
         />
       </div>
 
       <SelectCurrencyProfiles
-        open={currencyPickerRowIndex !== null}
+        open={currencyPickerState !== null}
         selectable
         multiple={false}
         title="Select Currency"
         description="Choose a single currency for the selected transfer row."
+        allowedCurrencyIds={currencyPickerState?.allowedCurrencyIds}
         onContinue={handleCurrencySelect}
-        onClose={() => setCurrencyPickerRowIndex(null)}
+        onClose={onCloseCurrencyPicker}
       />
     </>
   );
@@ -211,9 +220,10 @@ export const TransferFormView = ({
   const transferPermission = usePermission(pathname);
   const { data: pricingData, isLoading, error } = useCurrencyRatesViewData();
   const { data: additionalSettings = [] } = useListAdditionalSettings();
-  const [currencyPickerRowIndex, setCurrencyPickerRowIndex] = useState<
-    number | null
-  >(null);
+  const [currencyPickerState, setCurrencyPickerState] = useState<{
+    rowIndex: number;
+    allowedCurrencyIds: string[];
+  } | null>(null);
   const createCounterTransfer = useCreateCounterTransfer();
   const createBranchTransfer = useCreateBranchTransfer();
 
@@ -342,8 +352,11 @@ export const TransferFormView = ({
         transferType={transferType}
         pricingData={pricingData}
         canSubmit={canSubmit}
-        currencyPickerRowIndex={currencyPickerRowIndex}
-        setCurrencyPickerRowIndex={setCurrencyPickerRowIndex}
+        currencyPickerState={currencyPickerState}
+        onOpenCurrencyPicker={(rowIndex, allowedCurrencyIds) =>
+          setCurrencyPickerState({ rowIndex, allowedCurrencyIds })
+        }
+        onCloseCurrencyPicker={() => setCurrencyPickerState(null)}
         readOnly={readOnly}
         displayNumber={initialValues?.number}
         readOnlyOptions={readOnlyOptions}

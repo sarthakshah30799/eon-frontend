@@ -3,13 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useFormContext } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
+import toast from 'react-hot-toast';
 import { Form } from '@/components/forms';
+import { Loader } from '@/components/ui/loader';
 import { useAuth } from '@/lib/AuthContext';
 import { transactionPoliciesApi } from '@/api/transactionPolicies';
 import { getTransactionDatePolicy } from '@/modules/transactionPolicies/utils/transactionDatePolicy';
-import toast from 'react-hot-toast';
+import { useCardStockReferences } from '@/modules/cardStock/hooks';
 import { CardTransferForm } from '../forms';
-import { cardTransferSchema } from '../schema';
+import { createCardTransferSchema } from '../schema';
+import { CARD_TRANSFER_COPY } from '../constants';
 import { emptyTransferForm } from '../utils';
 import { useCreateCardTransfer } from '../hooks';
 import type { CardTransferFormValues } from '../types';
@@ -40,6 +43,7 @@ const CardTransferTransactionDateSync = ({
 export const CardTransferCreateView = () => {
   const navigate = useNavigate();
   const { policyContext, activeBranchId } = useAuth();
+  const references = useCardStockReferences();
   const [sourceBranchId, setSourceBranchId] = useState('');
   const sourceBranchPolicy = useQuery({
     queryKey: ['card-transfer', 'transaction-date-policy', sourceBranchId],
@@ -54,16 +58,26 @@ export const CardTransferCreateView = () => {
     [selectedPolicyContext]
   );
   const initialValues = useMemo(() => emptyTransferForm(), []);
+  const cardTransferSchema = useMemo(
+    () =>
+      createCardTransferSchema(references.currencies, references.products),
+    [references.currencies, references.products]
+  );
   const createMutation = useCreateCardTransfer();
+
+  if (references.isLoading) {
+    return <Loader />;
+  }
+
   return (
     <Form<CardTransferFormValues>
       id="card-transfer-form"
       defaultValues={initialValues}
       resolver={yupResolver(cardTransferSchema) as never}
       mode="onChange"
-      onError={errors =>
-        console.error('[CardTransfer] validation failed', errors)
-      }
+      onError={() => {
+        toast.error(CARD_TRANSFER_COPY.validationFailed);
+      }}
       onSubmit={async values => {
         await createMutation.mutateAsync(values);
         toast.success('CARD transfer request submitted.');

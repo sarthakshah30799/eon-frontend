@@ -29,6 +29,14 @@ export const PURCHASE_PRINT_TEXT = {
   noCardItems: 'No CARD items',
 } as const;
 
+export const PURCHASE_PREVIEW_TEXT = {
+  loading: 'Loading...',
+  gstSummaryHeading: 'GST Summary',
+  tcsSummaryHeading: 'TCS Summary',
+  submitBlockedWhileLoading:
+    'Waiting for tax, TCS, and purchase rule calculations to finish.',
+} as const;
+
 export const PURCHASE_RULE_TEXT = {
   heading: 'Purchase Rule',
   passed: 'Purchase rule check passed',

@@ -1,7 +1,10 @@
 import * as yup from 'yup';
 import type { IPartyProfile } from '@/modules/partyProfiles/types';
+import type { ICurrencyProfile } from '@/modules/currencyProfile/types';
+import type { IProductProfile } from '@/modules/productProfile/types';
 import { CARD_STOCK_VALIDATION_TEXT } from '../constants/cardStockConstants';
 import { validateCardNumber } from '../utils/cardNumberValidation';
+import { validateCardStockProductCurrency } from '../utils/cardStockCurrencyUtils';
 
 const futureDate = () => {
   const today = new Date();
@@ -17,7 +20,11 @@ const issuerRule = (issuers: IPartyProfile[], issuerId?: string) => {
   };
 };
 
-export const createCardStockSchema = (issuers: IPartyProfile[] = []) =>
+export const createCardStockSchema = (
+  issuers: IPartyProfile[] = [],
+  currencies: ICurrencyProfile[] = [],
+  products: IProductProfile[] = []
+) =>
   yup.object({
     transactionNumber: yup.string().optional(),
     receiptDate: yup.string().required('Receipt date is required'),
@@ -28,7 +35,30 @@ export const createCardStockSchema = (issuers: IPartyProfile[] = []) =>
       .array()
       .of(
         yup.object({
-          currencyId: yup.string().required('Currency is required'),
+          currencyId: yup
+            .string()
+            .required('Currency is required')
+            .test(
+              'product-currency',
+              CARD_STOCK_VALIDATION_TEXT.ccOnlyTradableCurrency,
+              function validateItemCurrency(value) {
+                const item = this.parent as { productId?: string };
+                if (!value || !item.productId) return true;
+                const product = products.find(
+                  productRecord => productRecord.id === item.productId
+                );
+                const currency = currencies.find(
+                  currencyRecord => currencyRecord.id === value
+                );
+                const result = validateCardStockProductCurrency(
+                  currency,
+                  product?.productCode
+                );
+                return result.valid
+                  ? true
+                  : this.createError({ message: result.message });
+              }
+            ),
           per: yup
             .string()
             .required('Per is required')
@@ -37,7 +67,30 @@ export const createCardStockSchema = (issuers: IPartyProfile[] = []) =>
               'Per must be greater than zero',
               value => Number(value) > 0
             ),
-          productId: yup.string().required('Product is required'),
+          productId: yup
+            .string()
+            .required('Product is required')
+            .test(
+              'product-currency',
+              CARD_STOCK_VALIDATION_TEXT.ccOnlyTradableCurrency,
+              function validateItemProduct(value) {
+                const item = this.parent as { currencyId?: string };
+                if (!value || !item.currencyId) return true;
+                const product = products.find(
+                  productRecord => productRecord.id === value
+                );
+                const currency = currencies.find(
+                  currencyRecord => currencyRecord.id === item.currencyId
+                );
+                const result = validateCardStockProductCurrency(
+                  currency,
+                  product?.productCode
+                );
+                return result.valid
+                  ? true
+                  : this.createError({ message: result.message });
+              }
+            ),
           issuerPartyProfileId: yup.string().required('Issuer is required'),
           feAmount: yup.string().required(),
           cards: yup

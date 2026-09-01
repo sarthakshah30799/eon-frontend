@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import type { Resolver } from 'react-hook-form';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -60,7 +60,7 @@ import {
   formatPurchaseDecimal,
   mapPurchaseFormValuesToSubmitPayload,
 } from '../utils/purchaseUtils';
-import { PURCHASE_RULE_TEXT } from '../constants/purchaseConstants';
+import { PURCHASE_PREVIEW_TEXT, PURCHASE_RULE_TEXT } from '../constants/purchaseConstants';
 import { getTransactionDatePolicy } from '@/modules/transactionPolicies/utils/transactionDatePolicy';
 import {
   TransactionLogActionEnum,
@@ -78,7 +78,12 @@ import type {
   ITransactionTaxPreviewResponse,
   ITransactionTcsPreviewResponse,
 } from '@/modules/transactions';
-import { useTransactionTcsPreview } from '@/modules/transactions';
+import {
+  usePurchaseRulePreview,
+  useTransactionTaxPreview,
+  useTransactionTcsPreview,
+} from '@/modules/transactions';
+import { Loader } from '@/components/ui/loader';
 import { useAuth } from '@/lib/AuthContext';
 import { toPageQuery } from '@/utils/paginatedList';
 
@@ -148,6 +153,7 @@ interface PurchaseFormBodyProps {
     cdfThresholdAmount: string;
     referenceCurrencyCode: string;
   }) => void;
+  onTransactionPreviewLoadingChange: (isLoading: boolean) => void;
   transactionDatePolicy: ReturnType<typeof getTransactionDatePolicy>;
 }
 
@@ -171,14 +177,16 @@ const PurchaseFormBody = ({
   onClearDraftDocument,
   onPurchaseRuleBlockChange,
   onPurchaseRuleMetaChange,
+  onTransactionPreviewLoadingChange,
   transactionDatePolicy,
 }: PurchaseFormBodyProps) => {
   void _branchCode;
   void _isFreshlyCreated;
   const form = useFormContext<IPurchaseFormValues>();
-  const [currencyPickerRowIndex, setCurrencyPickerRowIndex] = useState<
-    number | null
-  >(null);
+  const [currencyPickerState, setCurrencyPickerState] = useState<{
+    rowIndex: number;
+    allowedCurrencyIds: string[];
+  } | null>(null);
   const [isPassengerAmlModalOpen, setIsPassengerAmlModalOpen] = useState(false);
   const [hasPrintedOnce, setHasPrintedOnce] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
@@ -582,20 +590,11 @@ const PurchaseFormBody = ({
     hasCompletePaymentPreviewRows &&
     !savedTransaction?.id
   );
-  const { data: purchaseRulePreview } = useQuery<
-    IPurchaseRulePreviewResponse,
-    Error
-  >({
-    queryKey: ['purchase-rule-preview', purchaseRulePreviewRequest],
-    queryFn: () => {
-      if (!purchaseRulePreviewRequest) {
-        throw new Error('Purchase rule preview request is missing');
-      }
-
-      return transactionsApi.previewPurchaseRule(purchaseRulePreviewRequest);
-    },
-    enabled: canPreviewPurchaseRule,
-  });
+  const { data: purchaseRulePreview, isLoading: isPurchaseRulePreviewLoading } =
+    usePurchaseRulePreview(
+      purchaseRulePreviewRequest,
+      canPreviewPurchaseRule
+    );
   const resolvedPurchaseRulePreview =
     useMemo<IPurchaseRulePreviewResponse | null>(
       () => purchaseRulePreview ?? null,
@@ -700,11 +699,8 @@ const PurchaseFormBody = ({
       transactions,
     ]
   );
-  const { data: taxPreview } = useQuery<ITransactionTaxPreviewResponse, Error>({
-    queryKey: ['purchase-tax-preview', taxPreviewRequest],
-    queryFn: () => transactionsApi.previewTax(taxPreviewRequest),
-    enabled: canPreviewTax,
-  });
+  const { data: taxPreview, isLoading: isTaxPreviewLoading } =
+    useTransactionTaxPreview(taxPreviewRequest, canPreviewTax);
   const resolvedTaxSummary =
     useMemo<ITransactionTaxPreviewResponse | null>(() => {
       if (taxPreview) {
@@ -871,10 +867,20 @@ const PurchaseFormBody = ({
     transactionType,
   ]);
   const canPreviewTcs = Boolean(tcsPreviewRequest);
-  const { data: tcsPreview } = useTransactionTcsPreview(
-    tcsPreviewRequest,
-    canPreviewTcs
-  );
+  const { data: tcsPreview, isLoading: isTcsPreviewLoading } =
+    useTransactionTcsPreview(tcsPreviewRequest, canPreviewTcs);
+  const isTransactionPreviewLoading =
+    (canPreviewPurchaseRule && isPurchaseRulePreviewLoading) ||
+    (canPreviewTax && isTaxPreviewLoading) ||
+    (canPreviewTcs && isTcsPreviewLoading);
+
+  useLayoutEffect(() => {
+    onTransactionPreviewLoadingChange(isTransactionPreviewLoading);
+
+    return () => {
+      onTransactionPreviewLoadingChange(false);
+    };
+  }, [isTransactionPreviewLoading, onTransactionPreviewLoadingChange]);
   const resolvedTcsSummary =
     useMemo<ITransactionTcsPreviewResponse | null>(() => {
       if (tcsPreview) {
@@ -1059,6 +1065,13 @@ const PurchaseFormBody = ({
     }
   }, [form, taxPreview]);
 
+  const handleOpenCurrencyPicker = (
+    rowIndex: number,
+    allowedCurrencyIds: string[]
+  ) => {
+    setCurrencyPickerState({ rowIndex, allowedCurrencyIds });
+  };
+
   const handleCurrencySelect = (
     currencies: Array<{
       id: string;
@@ -1067,11 +1080,14 @@ const PurchaseFormBody = ({
     }>
   ) => {
     const selectedCurrency = currencies[0];
-    if (selectedCurrency === undefined || currencyPickerRowIndex === null) {
+    if (
+      selectedCurrency === undefined ||
+      currencyPickerState === null
+    ) {
       return;
     }
 
-    const rowIndex = currencyPickerRowIndex;
+    const rowIndex = currencyPickerState.rowIndex;
     form.setValue(`transactions.${rowIndex}.currencyId`, selectedCurrency.id, {
       shouldDirty: true,
       shouldTouch: true,
@@ -1095,7 +1111,7 @@ const PurchaseFormBody = ({
         shouldValidate: false,
       }
     );
-    setCurrencyPickerRowIndex(null);
+    setCurrencyPickerState(null);
   };
 
   const getDocumentFile = (
@@ -1295,7 +1311,7 @@ const PurchaseFormBody = ({
         passengerId={passengerId || ''}
         excludeTransactionId={savedTransaction?.id ?? undefined}
         pricingData={pricingData}
-        onOpenCurrencyPicker={setCurrencyPickerRowIndex}
+        onOpenCurrencyPicker={handleOpenCurrencyPicker}
         disabled={isReadOnly}
         agentCommissionRules={agentCommissionRules}
       />
@@ -1312,12 +1328,20 @@ const PurchaseFormBody = ({
         description="Add optional charges for this transaction. The account list is filtered by ledger type and purchase/sale mode."
       />
 
-      {isPurchaseTransaction && resolvedPurchaseRulePreview ? (
+      {isPurchaseTransaction && canPreviewPurchaseRule && isPurchaseRulePreviewLoading ? (
+        <CardSection heading={PURCHASE_RULE_TEXT.heading}>
+          <Loader variant="inline" />
+        </CardSection>
+      ) : isPurchaseTransaction && resolvedPurchaseRulePreview ? (
         <PurchaseRulePreviewSection preview={resolvedPurchaseRulePreview} />
       ) : null}
 
-      {resolvedTaxSummary ? (
-        <CardSection heading="GST Summary" className="space-y-4">
+      {canPreviewTax && isTaxPreviewLoading ? (
+        <CardSection heading={PURCHASE_PREVIEW_TEXT.gstSummaryHeading}>
+          <Loader variant="inline" />
+        </CardSection>
+      ) : resolvedTaxSummary ? (
+        <CardSection heading={PURCHASE_PREVIEW_TEXT.gstSummaryHeading} className="space-y-4">
           <div className="space-y-4 rounded-xl border border-border-primary bg-surface-primary px-4 py-4 shadow-sm">
             <div className="space-y-3">
               <div className="text-sm font-semibold text-text-primary">
@@ -1469,8 +1493,14 @@ const PurchaseFormBody = ({
         </CardSection>
       ) : null}
 
-      {transactionType === TransactionTypeEnum.SALE && resolvedTcsSummary ? (
-        <CardSection heading="TCS Summary" className="space-y-4">
+      {transactionType === TransactionTypeEnum.SALE &&
+      canPreviewTcs &&
+      isTcsPreviewLoading ? (
+        <CardSection heading={PURCHASE_PREVIEW_TEXT.tcsSummaryHeading}>
+          <Loader variant="inline" />
+        </CardSection>
+      ) : transactionType === TransactionTypeEnum.SALE && resolvedTcsSummary ? (
+        <CardSection heading={PURCHASE_PREVIEW_TEXT.tcsSummaryHeading} className="space-y-4">
           <div className="space-y-4 rounded-xl border border-border-primary bg-surface-primary px-4 py-4 shadow-sm">
             <div className="space-y-3">
               <div className="text-sm font-semibold text-text-primary">
@@ -1708,13 +1738,14 @@ const PurchaseFormBody = ({
       ) : null}
 
       <SelectCurrencyProfiles
-        open={currencyPickerRowIndex !== null}
+        open={currencyPickerState !== null}
         selectable
         multiple={false}
         title="Select Currency"
         description="Choose a single currency for the selected transaction row."
+        allowedCurrencyIds={currencyPickerState?.allowedCurrencyIds}
         onContinue={handleCurrencySelect}
-        onClose={() => setCurrencyPickerRowIndex(null)}
+        onClose={() => setCurrencyPickerState(null)}
       />
     </>
   );
@@ -1744,6 +1775,8 @@ export const PurchaseForm = ({
     Record<string, File | null>
   >({});
   const [isPurchaseRuleBlocked, setIsPurchaseRuleBlocked] = useState(false);
+  const [isTransactionPreviewLoading, setIsTransactionPreviewLoading] =
+    useState(false);
   const [purchaseRuleMeta, setPurchaseRuleMeta] = useState({
     allowed: true,
     requiresCdf: false,
@@ -1845,6 +1878,10 @@ export const PurchaseForm = ({
       messages.push(PURCHASE_RULE_TEXT.cannotPunchTransactions);
     }
 
+    if (isTransactionPreviewLoading) {
+      messages.push(PURCHASE_PREVIEW_TEXT.submitBlockedWhileLoading);
+    }
+
     if (isPurchaseRuleBlocked) {
       const blockingMessages =
         purchaseRuleMeta.blockingReasons.length > 0
@@ -1866,6 +1903,7 @@ export const PurchaseForm = ({
     return messages.join(' ');
   }, [
     isPurchaseRuleBlocked,
+    isTransactionPreviewLoading,
     purchaseRuleMeta.blockingReason,
     purchaseRuleMeta.blockingReasons,
     purchaseRuleMeta.cdfThresholdAmount,
@@ -1896,7 +1934,9 @@ export const PurchaseForm = ({
         onCancel,
         showSubmit: !readOnly,
         isSubmitDisabled:
-          isPurchaseRuleBlocked || !transactionDatePolicy.canPunchTransactions,
+          isPurchaseRuleBlocked ||
+          isTransactionPreviewLoading ||
+          !transactionDatePolicy.canPunchTransactions,
         submitMessage: submitMessage || undefined,
       }}
     >
@@ -1919,6 +1959,7 @@ export const PurchaseForm = ({
         onClearDraftDocument={handleClearDraftDocument}
         onPurchaseRuleBlockChange={setIsPurchaseRuleBlocked}
         onPurchaseRuleMetaChange={setPurchaseRuleMeta}
+        onTransactionPreviewLoadingChange={setIsTransactionPreviewLoading}
         transactionDatePolicy={transactionDatePolicy}
       />
 

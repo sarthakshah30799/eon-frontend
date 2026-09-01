@@ -11,7 +11,10 @@ interface TransferItemsFieldArrayProps {
   branchId: string;
   counterId: string;
   pricingData: IPurchasePricingData;
-  onOpenCurrencyPicker: (rowIndex: number) => void;
+  onOpenCurrencyPicker: (
+    rowIndex: number,
+    allowedCurrencyIds: string[]
+  ) => void;
   disabled?: boolean;
   rateEditable?: boolean;
 }

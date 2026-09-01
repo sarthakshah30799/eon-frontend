@@ -27,6 +27,7 @@ import type { IPartyProfile } from '@/modules/partyProfiles/types';
 import { PartyProfileTypeEnum } from '@/modules/partyProfiles/types';
 import { SelectPartyProfiles } from '@/modules/partyProfiles/components';
 import type { IProductProfile } from '@/modules/productProfile/types';
+import { isMultiCurrencyCardProduct } from '@/modules/purchase/utils/purchaseUtils';
 import { createCardStockSchema } from '../schema';
 import { resolveCardNumberLength } from '../utils/cardNumberValidation';
 import type {
@@ -39,6 +40,10 @@ import {
   emptyItem,
   toReceiptPayload,
 } from '../utils/cardStockUtils';
+import {
+  filterCardStockCurrenciesByProduct,
+  toCardStockCurrencyOptions,
+} from '../utils/cardStockCurrencyUtils';
 import { useCardStockReferences } from '../hooks';
 import { CardStockUploadSection } from '../components/CardStockUploadSection';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -101,12 +106,14 @@ const StaticFormFieldSelect = ({
   label,
   options,
   disabled,
+  isLoading,
   onValueChange,
 }: {
   name: string;
   label: string;
   options: AsyncSelectOption[];
   disabled?: boolean;
+  isLoading?: boolean;
   onValueChange?: (value: string | string[] | null) => void;
 }) => {
   const loadOptions = useMemo(() => loadStaticOptions(options), [options]);
@@ -115,11 +122,45 @@ const StaticFormFieldSelect = ({
       name={name}
       label={label}
       loadOptions={loadOptions}
-      defaultOptions={options}
-      disabled={disabled}
+      defaultOptions={true}
+      isLoading={isLoading}
+      disabled={disabled || isLoading}
       onValueChange={onValueChange}
     />
   );
+};
+
+const CardStockHeaderIssuerSync = ({
+  products,
+}: {
+  products: IProductProfile[];
+}) => {
+  const form = useFormContext<ICardStockFormValues>();
+  const headerIssuerId = useWatch({
+    control: form.control,
+    name: 'issuerPartyProfileId',
+  });
+  const items = useWatch({ control: form.control, name: 'items' });
+
+  useEffect(() => {
+    if (!headerIssuerId) return;
+    (items ?? []).forEach((item, itemIndex) => {
+      if (!item?.productId) return;
+      const product = products.find(
+        productRecord => productRecord.id === item.productId
+      );
+      const allowedIssuerIds = product?.cardIssuerProfileIds ?? [];
+      if (!allowedIssuerIds.includes(headerIssuerId)) return;
+      if (item.issuerPartyProfileId === headerIssuerId) return;
+      form.setValue(
+        `items.${itemIndex}.issuerPartyProfileId` as never,
+        headerIssuerId as never,
+        { shouldValidate: true }
+      );
+    });
+  }, [form, headerIssuerId, items, products]);
+
+  return null;
 };
 
 const CardRows = ({
@@ -311,14 +352,14 @@ const CardRows = ({
 
 const ReceiptItems = ({
   readOnly,
-  tradableCurrencies,
-  cmStockingCurrencies,
+  currencies,
+  currenciesLoading,
   products,
   issuers,
 }: {
   readOnly: boolean;
-  tradableCurrencies: ICurrencyProfile[];
-  cmStockingCurrencies: ICurrencyProfile[];
+  currencies: ICurrencyProfile[];
+  currenciesLoading: boolean;
   products: IProductProfile[];
   issuers: IPartyProfile[];
 }) => {
@@ -344,11 +385,11 @@ const ReceiptItems = ({
           const product = products.find(
             productRecord => productRecord.id === item?.productId
           );
-          const isMultiCurrency =
-            String(product?.productCode ?? '').toUpperCase() === 'CM';
-          const currencySource = isMultiCurrency
-            ? cmStockingCurrencies
-            : tradableCurrencies;
+          const isMultiCurrency = isMultiCurrencyCardProduct(product?.productCode);
+          const itemCurrencies = filterCardStockCurrenciesByProduct(
+            currencies,
+            product?.productCode
+          );
           const issuerOptions = (
             product
               ? issuers.filter(issuer =>
@@ -359,10 +400,7 @@ const ReceiptItems = ({
             value: issuer.id,
             label: `${issuer.code} - ${issuer.name}`,
           }));
-          const currencyOptions = currencySource.map(currency => ({
-            value: currency.id,
-            label: `${currency.currencyCode} - ${currency.currencyName}`,
-          }));
+          const currencyOptions = toCardStockCurrencyOptions(itemCurrencies);
           const productOptions = products.map(productRecord => ({
             value: productRecord.id,
             label: `${productRecord.productCode} - ${productRecord.productDescription}`,
@@ -380,24 +418,46 @@ const ReceiptItems = ({
                     options={productOptions}
                     disabled={readOnly}
                     onValueChange={() => {
+                      const headerIssuerId = form.getValues('issuerPartyProfileId');
                       form.setValue(
                         `items.${itemIndex}.issuerPartyProfileId` as never,
                         '' as never,
                         { shouldValidate: true }
                       );
-                      form.setValue(
-                        `items.${itemIndex}.currencyId` as never,
-                        '' as never,
-                        { shouldValidate: true }
+                      const nextProduct = products.find(
+                        productRecord =>
+                          productRecord.id ===
+                          form.getValues(`items.${itemIndex}.productId` as never)
                       );
+                      if (
+                        headerIssuerId &&
+                        nextProduct?.cardIssuerProfileIds?.includes(headerIssuerId)
+                      ) {
+                        form.setValue(
+                          `items.${itemIndex}.issuerPartyProfileId` as never,
+                          headerIssuerId as never,
+                          { shouldValidate: true }
+                        );
+                      }
+                      void form.trigger([
+                        `items.${itemIndex}.currencyId` as never,
+                        `items.${itemIndex}.productId` as never,
+                      ]);
                     }}
                   />
                   <StaticFormFieldSelect
-                    key={`currency-${itemIndex}-${product?.id ?? 'none'}-${isMultiCurrency ? 'cm' : 'cc'}`}
+                    key={`currency-${itemIndex}-${product?.id ?? 'none'}-${isMultiCurrency ? 'cm' : 'cc'}-${currencyOptions.length}`}
                     name={`items.${itemIndex}.currencyId`}
                     label="Currency"
                     options={currencyOptions}
+                    isLoading={currenciesLoading}
                     disabled={readOnly || !product}
+                    onValueChange={() => {
+                      void form.trigger([
+                        `items.${itemIndex}.currencyId` as never,
+                        `items.${itemIndex}.productId` as never,
+                      ]);
+                    }}
                   />
                   <FormFieldInput
                     name={`items.${itemIndex}.per`}
@@ -637,8 +697,13 @@ export const CardStockReceiptForm = ({
     [initialValues, readOnly, transactionDatePolicy.defaultTransactionDate]
   );
   const cardStockSchema = useMemo(
-    () => createCardStockSchema(references.issuers),
-    [references.issuers]
+    () =>
+      createCardStockSchema(
+        references.issuers,
+        references.currencies,
+        references.products
+      ),
+    [references.currencies, references.issuers, references.products]
   );
   const formSubmit = async (values: ICardStockFormValues) =>
     onSubmit(toReceiptPayload(values));
@@ -680,6 +745,7 @@ export const CardStockReceiptForm = ({
         readOnly={readOnly}
         transactionDate={transactionDatePolicy.defaultTransactionDate}
       />
+      <CardStockHeaderIssuerSync products={references.products} />
       <ReceiptHeader
         readOnly={readOnly}
         issuers={references.issuers}
@@ -693,8 +759,8 @@ export const CardStockReceiptForm = ({
       />
       <ReceiptItems
         readOnly={readOnly}
-        tradableCurrencies={references.tradableCurrencies}
-        cmStockingCurrencies={references.cmStockingCurrencies}
+        currencies={references.currencies}
+        currenciesLoading={references.currenciesLoading}
         products={references.products}
         issuers={references.issuers}
       />

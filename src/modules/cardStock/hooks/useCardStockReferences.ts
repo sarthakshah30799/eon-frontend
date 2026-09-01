@@ -3,10 +3,7 @@ import { currencyProfileApi } from '@/api/currencyProfile';
 import { partyProfileApi } from '@/api/partyProfile';
 import { productProfileApi } from '@/api/productProfile';
 import { PartyProfileTypeEnum } from '@/modules/partyProfiles/types';
-import {
-  isCardProductCode,
-  MULTI_CURRENCY_CARD_PRODUCT_CODE,
-} from '@/modules/purchase/utils/purchaseUtils';
+import { isCardProductCode } from '@/modules/purchase/utils/purchaseUtils';
 
 export const useCardStockReferences = () => {
   const issuers = useQuery({
@@ -28,36 +25,25 @@ export const useCardStockReferences = () => {
       (await productProfileApi.getAllProductProfiles({ activeOnly: true })).filter(
         product => isCardProductCode(product.productCode)
       ),
+    staleTime: 0,
+    refetchOnMount: 'always',
   });
-  const tradableCurrencies = useQuery({
-    queryKey: ['card-stock', 'currencies', 'tradable'],
-    queryFn: () =>
-      currencyProfileApi.getAllCurrencyProfiles({ activeOnly: true }),
-  });
-  const cmStockingCurrencies = useQuery({
-    queryKey: ['card-stock', 'currencies', 'cm-stocking'],
+  const currencies = useQuery({
+    queryKey: ['card-stock', 'currencies', 'all-active'],
     queryFn: () =>
       currencyProfileApi.getAllCurrencyProfiles({
         activeOnly: true,
-        includeOnlyStocking: true,
-        productAllowed: MULTI_CURRENCY_CARD_PRODUCT_CODE,
+        includeAllStockingTypes: true,
       }),
   });
   return {
     issuers: issuers.data ?? [],
     products: products.data ?? [],
-    tradableCurrencies: tradableCurrencies.data ?? [],
-    cmStockingCurrencies: cmStockingCurrencies.data ?? [],
-    /** @deprecated prefer tradableCurrencies / cmStockingCurrencies by product */
-    currencies: tradableCurrencies.data ?? [],
+    currencies: currencies.data ?? [],
     issuersLoading: issuers.isLoading,
     productsLoading: products.isLoading,
-    currenciesLoading:
-      tradableCurrencies.isLoading || cmStockingCurrencies.isLoading,
+    currenciesLoading: currencies.isLoading,
     isLoading:
-      issuers.isLoading ||
-      products.isLoading ||
-      tradableCurrencies.isLoading ||
-      cmStockingCurrencies.isLoading,
+      issuers.isLoading || products.isLoading || currencies.isLoading,
   };
 };

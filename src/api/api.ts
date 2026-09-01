@@ -60,6 +60,10 @@ class ApiClient {
         : await response.text();
       return { data };
     } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw error;
+      }
+
       return {
         error:
           error instanceof Error ? error.message : 'An unknown error occurred',
@@ -111,6 +115,10 @@ class ApiClient {
         },
       };
     } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw error;
+      }
+
       return {
         error:
           error instanceof Error ? error.message : 'An unknown error occurred',

@@ -10,6 +10,7 @@ interface SelectCurrencyProfilesProps {
   multiple?: boolean;
   title?: string;
   description?: string;
+  allowedCurrencyIds?: string[];
   onContinue: (currencies: ICurrencyProfile[]) => void;
   onClose: () => void;
 }
@@ -96,6 +97,7 @@ export const SelectCurrencyProfiles = ({
   multiple = false,
   title = 'Select Currency',
   description = 'Search and choose a currency from the list.',
+  allowedCurrencyIds,
   onContinue,
   onClose,
 }: SelectCurrencyProfilesProps) => {
@@ -113,14 +115,19 @@ export const SelectCurrencyProfiles = ({
   });
   const currencies = currenciesPage?.data ?? [];
 
-  const rows = useMemo<SelectableCurrencyProfileRow[]>(
-    () =>
-      currencies.map(currency => ({
-        ...currency,
-        rowKey: currency.id,
-      })),
-    [currencies]
-  );
+  const rows = useMemo<SelectableCurrencyProfileRow[]>(() => {
+    const nextRows = currencies.map(currency => ({
+      ...currency,
+      rowKey: currency.id,
+    }));
+
+    if (!allowedCurrencyIds?.length) {
+      return nextRows;
+    }
+
+    const allowedIds = new Set(allowedCurrencyIds);
+    return nextRows.filter(currency => allowedIds.has(currency.id));
+  }, [allowedCurrencyIds, currencies]);
 
   const columns = useMemo(
     () => buildCurrencyColumns(selectable, multiple),

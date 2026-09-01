@@ -186,11 +186,13 @@ export const transactionsApi = {
   },
 
   previewTax: async (
-    payload: ITransactionTaxPreviewRequest
+    payload: ITransactionTaxPreviewRequest,
+    signal?: AbortSignal
   ): Promise<ITransactionTaxPreviewResponse> => {
     const res = await apiClient.post<ITransactionTaxPreviewResponse>(
       '/transactions/tax-preview',
-      payload
+      payload,
+      { signal }
     );
 
     if (res.error) {
@@ -205,11 +207,13 @@ export const transactionsApi = {
   },
 
   previewTcs: async (
-    payload: ITransactionTcsPreviewRequest
+    payload: ITransactionTcsPreviewRequest,
+    signal?: AbortSignal
   ): Promise<ITransactionTcsPreviewResponse> => {
     const res = await apiClient.post<ITransactionTcsPreviewResponse>(
       '/transactions/tcs-preview',
-      payload
+      payload,
+      { signal }
     );
 
     if (res.error) {
@@ -224,11 +228,13 @@ export const transactionsApi = {
   },
 
   previewPurchaseRule: async (
-    payload: IPurchaseRulePreviewRequest
+    payload: IPurchaseRulePreviewRequest,
+    signal?: AbortSignal
   ): Promise<IPurchaseRulePreviewResponse> => {
     const res = await apiClient.post<IPurchaseRulePreviewResponse>(
       '/transactions/purchase-rule-preview',
-      payload
+      payload,
+      { signal }
     );
 
     if (res.error) {

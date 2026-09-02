@@ -24,10 +24,14 @@ import {
 } from '@/modules/passengers/utils/passengerOtherDocumentRules';
 import {
   getPassengerPanNumberError,
+  getPassengerOtherDocumentNumberFormatError,
+  getPassengerPassportNumberFormatError,
+  getTravelTicketNumberFormatError,
   isPassengerPanHolderRelationRequired,
   isPassengerPanRequired,
   isPassengerPassportRequired,
   isPassengerArrivalDateRequired,
+  isPassengerTravelTicketFieldVisible,
 } from '@/modules/passengers/utils/passengerIdentityRules';
 import { PASSENGER_IDENTITY_TEXT } from '@/modules/passengers/constants/passengerConstants';
 import {
@@ -216,11 +220,23 @@ const passengerOtherDocumentSchema = yup.object({
   documentNumber: yup
     .string()
     .trim()
-    .when('documentType', {
-      is: (documentType: string) => Boolean(documentType),
-      then: schema => schema.required('Document number is required'),
-      otherwise: schema => schema.default(''),
-    }),
+    .default('')
+    .test(
+      'document-number-format',
+      PASSENGER_IDENTITY_TEXT.aadhaarNumberInvalid,
+      function (value) {
+        const formatError = getPassengerOtherDocumentNumberFormatError(
+          this.parent.documentType,
+          value
+        );
+
+        if (!formatError) {
+          return true;
+        }
+
+        return this.createError({ message: formatError });
+      }
+    ),
   validTill: yup
     .string()
     .trim()
@@ -493,6 +509,25 @@ export const createPurchaseFormSchema = (transactionType: TransactionType) =>
           }
           return Boolean(String(value ?? '').trim());
         }
+      )
+      .test(
+        'passport-number-format',
+        PASSENGER_IDENTITY_TEXT.passportNumberInvalid,
+        function (value) {
+          if (
+            !requiresCorporateIndividualPassenger(this.parent.purchasePageType)
+          ) {
+            return true;
+          }
+
+          const formatError = getPassengerPassportNumberFormatError(value);
+
+          if (!formatError) {
+            return true;
+          }
+
+          return this.createError({ message: formatError });
+        }
       ),
     passportIssueAt: yup
       .string()
@@ -603,7 +638,33 @@ export const createPurchaseFormSchema = (transactionType: TransactionType) =>
         }
       ),
     travelAirlineId: yup.string().trim().default(''),
-    travelTicketNo: yup.string().trim().default(''),
+    travelTicketNo: yup
+      .string()
+      .trim()
+      .default('')
+      .test(
+        'travel-ticket-format',
+        PASSENGER_IDENTITY_TEXT.travelTicketNoInvalid,
+        function (value) {
+          if (
+            !requiresCorporateIndividualPassenger(this.parent.purchasePageType)
+          ) {
+            return true;
+          }
+
+          if (!isPassengerTravelTicketFieldVisible(this.parent)) {
+            return true;
+          }
+
+          const formatError = getTravelTicketNumberFormatError(value);
+
+          if (!formatError) {
+            return true;
+          }
+
+          return this.createError({ message: formatError });
+        }
+      ),
     travelRoute: yup.string().trim().default(''),
     travelCountryId: yup
       .string()

@@ -15,6 +15,11 @@ import {
   isPassengerOtherDocumentComplete,
   shouldShowPassengerOtherDocumentValidityFields,
 } from '../utils/passengerOtherDocumentRules';
+import {
+  getPassengerOtherDocumentNumberFormatError,
+  getPassengerPassportNumberFormatError,
+} from '../utils/passengerIdentityRules';
+import { PASSENGER_IDENTITY_TEXT } from '../constants/passengerConstants';
 
 export const PASSENGER_PAN_VERIFICATION_FIELDS = [
   'panNumber',
@@ -59,11 +64,28 @@ const passengerOtherDocumentSchema = yup
       .mixed<PassengerOtherIdProofType | ''>()
       .oneOf([...Object.values(PassengerOtherIdProofTypeEnum), ''] as const)
       .required('Document type is required'),
-    documentNumber: optionalText().when('documentType', {
-      is: (documentType: string) => Boolean(documentType),
-      then: schema => schema.required('Document number is required'),
-      otherwise: schema => schema.default(''),
-    }),
+    documentNumber: optionalText()
+      .when('documentType', {
+        is: (documentType: string) => Boolean(documentType),
+        then: schema => schema.required('Document number is required'),
+        otherwise: schema => schema.default(''),
+      })
+      .test(
+        'document-number-format',
+        PASSENGER_IDENTITY_TEXT.aadhaarNumberInvalid,
+        function (value) {
+          const formatError = getPassengerOtherDocumentNumberFormatError(
+            this.parent.documentType,
+            value
+          );
+
+          if (!formatError) {
+            return true;
+          }
+
+          return this.createError({ message: formatError });
+        }
+      ),
     validTill: yup
       .string()
       .trim()
@@ -130,12 +152,26 @@ export const createPassengerPassportVerificationSchema = () =>
         ) as PassengerNationalityType[]
       )
       .required(),
-    passportNumber: optionalText().when('nationalityType', {
-      is: (nationalityType: string) =>
-        isPassportValidationRequired({ nationalityType }),
-      then: schema => schema.required('Passport number is required'),
-      otherwise: schema => schema.default(''),
-    }),
+    passportNumber: optionalText()
+      .when('nationalityType', {
+        is: (nationalityType: string) =>
+          isPassportValidationRequired({ nationalityType }),
+        then: schema => schema.required('Passport number is required'),
+        otherwise: schema => schema.default(''),
+      })
+      .test(
+        'passport-number-format',
+        PASSENGER_IDENTITY_TEXT.passportNumberInvalid,
+        function (value) {
+          const formatError = getPassengerPassportNumberFormatError(value);
+
+          if (!formatError) {
+            return true;
+          }
+
+          return this.createError({ message: formatError });
+        }
+      ),
     passportIssueAt: optionalText().when('nationalityType', {
       is: (nationalityType: string) =>
         isPassportValidationRequired({ nationalityType }),

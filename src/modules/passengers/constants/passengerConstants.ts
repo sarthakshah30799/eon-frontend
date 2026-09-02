@@ -15,4 +15,7 @@ export const PASSENGER_IDENTITY_TEXT = {
     'Required for NRI and foreign passengers. This is the date they entered India, not a passport detail.',
   passportOptionalHelper:
     'Passport stays visible for every passenger and is required for NRI or foreign residents.',
+  passportNumberInvalid: 'Passport number must be 8 alphanumeric characters',
+  travelTicketNoInvalid: 'Ticket number must be 13 numeric characters',
+  aadhaarNumberInvalid: 'Aadhaar number must be 12 numeric characters',
 } as const;

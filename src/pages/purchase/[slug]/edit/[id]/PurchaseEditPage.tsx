@@ -195,10 +195,8 @@ const PurchaseEditPage = () => {
         savedTransaction={transaction}
         isFreshlyCreated={false}
         readOnly
-        isSubmitting={false}
         existingDocuments={transaction.documents ?? []}
-        submitLabel="Save"
-        onSubmit={async () => undefined}
+        onSubmit={async () => {}}
         onCancel={() => navigate(`/${basePath}/${slug}`)}
       />
     </div>

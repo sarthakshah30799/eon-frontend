@@ -33,6 +33,7 @@ import { PASSENGER_IDENTITY_TEXT } from '@/modules/passengers/constants/passenge
 import {
   isCardProductCode,
   PURCHASE_TRANSACTION_TEXT,
+  shouldValidatePaymentDetailRow,
 } from '../utils/purchaseUtils';
 
 const requiresCorporateIndividualPassenger = (
@@ -722,9 +723,45 @@ export const createPurchaseFormSchema = (transactionType: TransactionType) =>
       ),
     paymentDetails: yup
       .array()
-      .of(createPaymentDetailSchema(transactionType))
-      .min(1, 'Add at least one payment detail')
-      .required()
+      .default([])
+      .when('purchasePageType', {
+        is: (value: PurchasePageType | null) =>
+          requiresCorporateIndividualPassenger(value),
+        then: schema =>
+          schema
+            .of(createPaymentDetailSchema(transactionType))
+            .min(1, 'Add at least one payment detail')
+            .required('Add at least one payment detail'),
+        otherwise: schema =>
+          schema.test(
+            'optional-payment-rows',
+            'Invalid payment detail',
+            function validateOptionalPaymentRows(rows) {
+              const paymentDetailSchema =
+                createPaymentDetailSchema(transactionType);
+
+              for (const row of rows ?? []) {
+                if (!shouldValidatePaymentDetailRow(row)) {
+                  continue;
+                }
+
+                try {
+                  paymentDetailSchema.validateSync(row, { abortEarly: true });
+                } catch (error) {
+                  if (error instanceof yup.ValidationError) {
+                    return this.createError({
+                      message: error.errors[0] ?? 'Invalid payment detail',
+                    });
+                  }
+
+                  throw error;
+                }
+              }
+
+              return true;
+            }
+          ),
+      })
       .test(
         'same-method',
         'All payment rows must use the same method',

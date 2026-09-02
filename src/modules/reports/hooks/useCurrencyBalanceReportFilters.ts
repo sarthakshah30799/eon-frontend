@@ -29,25 +29,27 @@ export interface CurrencyBalanceReportFiltersState {
   dateRange: IReportDateRange;
   branchIds: string[];
   counterIds: string[];
-  currencyId: string;
+  currencyIds: string[];
   branchOptions: IReportSelectOption[];
   counterOptions: IReportSelectOption[];
   currencyOptions: IReportSelectOption[];
   branchAllSelected: boolean;
   counterAllSelected: boolean;
+  currencyAllSelected: boolean;
   setDateRange: (value: IReportDateRange) => void;
-  setCurrencyId: (value: string) => void;
   toggleBranch: (id: string, checked: boolean) => void;
   toggleAllBranches: (checked: boolean) => void;
   toggleCounter: (id: string, checked: boolean) => void;
   toggleAllCounters: (checked: boolean) => void;
+  toggleCurrency: (id: string, checked: boolean) => void;
+  toggleAllCurrencies: (checked: boolean) => void;
   resetFilters: () => void;
   handleView: () => void;
   appliedFilters: {
     dateRange: IReportDateRange;
     branchIds: string[];
     counterIds: string[];
-    currencyId: string;
+    currencyIds: string[];
   } | null;
   appliedDateRangeLabel: string;
   canView: boolean;
@@ -78,11 +80,25 @@ export const useCurrencyBalanceReportFilters =
         parsedSearchParams,
         ReportDatePresetEnum.TODAY
       );
+      const currencyIdsFromList = readSearchParamList(
+        parsedSearchParams,
+        'currencyIds'
+      );
+      const legacyCurrencyId = readSearchParamValue(
+        parsedSearchParams,
+        'currencyId'
+      );
+
       return {
         dateRange,
         branchIds: readSearchParamList(parsedSearchParams, 'branchIds'),
         counterIds: readSearchParamList(parsedSearchParams, 'counterIds'),
-        currencyId: readSearchParamValue(parsedSearchParams, 'currencyId'),
+        currencyIds:
+          currencyIdsFromList.length > 0
+            ? currencyIdsFromList
+            : legacyCurrencyId
+              ? [legacyCurrencyId]
+              : [],
       };
     }, [parsedSearchParams]);
 
@@ -95,16 +111,18 @@ export const useCurrencyBalanceReportFilters =
     const [counterIds, setCounterIds] = useState<string[]>(
       hydratedRouteState.counterIds
     );
-    const [currencyId, setCurrencyId] = useState(hydratedRouteState.currencyId);
+    const [currencyIds, setCurrencyIds] = useState<string[]>(
+      hydratedRouteState.currencyIds
+    );
     const [appliedFilters, setAppliedFilters] = useState<
       CurrencyBalanceReportFiltersState['appliedFilters']
     >(
-      hydratedRouteState.currencyId
+      searchParamsKey
         ? {
             dateRange: hydratedRouteState.dateRange,
             branchIds: hydratedRouteState.branchIds,
             counterIds: hydratedRouteState.counterIds,
-            currencyId: hydratedRouteState.currencyId,
+            currencyIds: hydratedRouteState.currencyIds,
           }
         : null
     );
@@ -244,12 +262,23 @@ export const useCurrencyBalanceReportFilters =
       [currencyProfiles]
     );
 
+    const selectedCurrencyIds = useMemo(
+      () =>
+        currencyIds.filter(currencyId =>
+          currencyOptions.some(option => option.id === currencyId)
+        ),
+      [currencyIds, currencyOptions]
+    );
+
     const branchAllSelected =
       branchOptions.length > 0 &&
       selectedBranchIds.length === branchOptions.length;
     const counterAllSelected =
       counterOptions.length > 0 &&
       selectedCounterIds.length === counterOptions.length;
+    const currencyAllSelected =
+      currencyOptions.length > 0 &&
+      selectedCurrencyIds.length === currencyOptions.length;
 
     const toggleBranch = (id: string, checked: boolean) => {
       setBranchIds(current => toggleId(current, id, checked));
@@ -277,25 +306,29 @@ export const useCurrencyBalanceReportFilters =
       setCounterIds(checked ? counterOptions.map(option => option.id) : []);
     };
 
+    const toggleCurrency = (id: string, checked: boolean) => {
+      setCurrencyIds(current => toggleId(current, id, checked));
+    };
+
+    const toggleAllCurrencies = (checked: boolean) => {
+      setCurrencyIds(checked ? currencyOptions.map(option => option.id) : []);
+    };
+
     const resetFilters = () => {
       setDateRange(buildReportDateRange(ReportDatePresetEnum.TODAY));
       setBranchIds([]);
       setCounterIds([]);
-      setCurrencyId('');
+      setCurrencyIds([]);
       setAppliedFilters(null);
       setSearchParams(new URLSearchParams(), { replace: true });
     };
 
     const handleView = () => {
-      if (!currencyId) {
-        return;
-      }
-
       const nextAppliedFilters = {
         dateRange,
         branchIds: selectedBranchIds,
         counterIds: selectedCounterIds,
-        currencyId,
+        currencyIds: selectedCurrencyIds,
       };
 
       const nextSearchParams = buildSearchParams(undefined, next => {
@@ -306,7 +339,7 @@ export const useCurrencyBalanceReportFilters =
         }
         setSearchParamList(next, 'branchIds', selectedBranchIds);
         setSearchParamList(next, 'counterIds', selectedCounterIds);
-        setSearchParamValue(next, 'currencyId', currencyId);
+        setSearchParamList(next, 'currencyIds', selectedCurrencyIds);
       });
 
       setAppliedFilters(nextAppliedFilters);
@@ -321,23 +354,25 @@ export const useCurrencyBalanceReportFilters =
       dateRange,
       branchIds: selectedBranchIds,
       counterIds: selectedCounterIds,
-      currencyId,
+      currencyIds: selectedCurrencyIds,
       branchOptions,
       counterOptions,
       currencyOptions,
       branchAllSelected,
       counterAllSelected,
+      currencyAllSelected,
       setDateRange,
-      setCurrencyId,
       toggleBranch,
       toggleAllBranches,
       toggleCounter,
       toggleAllCounters,
+      toggleCurrency,
+      toggleAllCurrencies,
       resetFilters,
       handleView,
       appliedFilters,
       appliedDateRangeLabel,
-      canView: Boolean(currencyId),
+      canView: true,
     };
   };
 

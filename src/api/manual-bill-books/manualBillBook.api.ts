@@ -108,6 +108,8 @@ export interface IManualBookSelectablePagesQuery extends IOffsetPaginationParams
   transactionType?: string;
 }
 
+export type IManualBookSelectableBooksQuery = IManualBookSelectablePagesQuery;
+
 export type IManualBillBookListResponse = IPaginatedResponse<IManualBook>;
 
 export const manualBillBookApi = {
@@ -294,6 +296,17 @@ export const manualBillBookApi = {
     const { limit, offset, ...filters } = params;
     const res = await apiClient.get<IPaginatedResponse<IManualBookPageTracking>>(
       `/manual-bill-books/pages/selectable${buildQueryString({ ...filters, limit, offset })}`
+    );
+    if (res.error) throw new Error(res.error);
+    return normalizePaginatedResponse(res.data, limit, offset);
+  },
+
+  getSelectableBooks: async (
+    params: IManualBookSelectableBooksQuery = {}
+  ): Promise<IPaginatedResponse<IManualBookBookTracking>> => {
+    const { limit, offset, ...filters } = params;
+    const res = await apiClient.get<IPaginatedResponse<IManualBookBookTracking>>(
+      `/manual-bill-books/books/selectable${buildQueryString({ ...filters, limit, offset })}`
     );
     if (res.error) throw new Error(res.error);
     return normalizePaginatedResponse(res.data, limit, offset);
@@ -491,6 +504,18 @@ export interface IDPAllocatedPageRow {
   };
 }
 
+export interface IManualBookDispatchMeta {
+  id: string;
+  no: string;
+  bookNoFrom: number;
+  bookNoTo: number;
+  vouchersPerBook: number;
+  mvNoFrom: number;
+  mvNoTo: number;
+  branchId: string;
+  transactionType: string;
+}
+
 export interface IManualBookPageTracking {
   id: string;
   manualBookId: string;
@@ -503,15 +528,27 @@ export interface IManualBookPageTracking {
   updatedBy?: string;
   createdAt: string;
   updatedAt: string;
-  manualBook?: {
-    id: string;
-    no: string;
-    bookNoFrom: number;
-    bookNoTo: number;
-    vouchersPerBook: number;
-    mvNoFrom: number;
-    mvNoTo: number;
-    branchId: string;
-    transactionType: string;
-  } | null;
+  manualBook?: IManualBookDispatchMeta | null;
+}
+
+export interface IManualBookBookTracking {
+  id: string;
+  manualBookId: string;
+  pageNoFrom: number;
+  pageNoTo: number;
+  availablePageCount: number;
+  userId: string;
+  assignedBy?: string | null;
+  assignedByName?: string | null;
+  remarks?: string | null;
+  no: string;
+  bookNoFrom: number;
+  bookNoTo: number;
+  vouchersPerBook: number;
+  mvNoFrom: number;
+  mvNoTo: number;
+  branchId: string;
+  transactionType: string;
+  transactionTypeLabel?: string;
+  dispatchDate?: string;
 }

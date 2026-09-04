@@ -1191,32 +1191,8 @@ const PurchaseFormBody = ({
       </CardSection>
 
       <CardSection heading={pageTitle}>
-        <div className="mb-4 grid gap-4 lg:grid-cols-2">
-          {isCombinedPartyProfilePage ? (
-            <FormFieldPurposeSelect
-              name="purposeId"
-              label="Purpose"
-              placeholder="Select purpose"
-              transactionType={transactionType}
-              partyProfileType={getPurchasePurposePartyProfileType(
-                purchasePageType,
-                resolvedTransactionPartyProfileType
-              )}
-              disabled={isReadOnly}
-            />
-          ) : null}
-          <FormFieldDatePicker
-            name="transactionDate"
-            label="Transaction Date"
-            placeholder="Select transaction date"
-            disabled={isReadOnly || !transactionDatePolicy.canPunchTransactions}
-            minDate={transactionDatePolicy.minDate}
-            maxDate={transactionDatePolicy.maxDate}
-          />
-        </div>
-
         {isCombinedPartyProfilePage ? (
-          <div className="mb-4 grid gap-4 lg:grid-cols-2">
+          <div className="mb-4 grid gap-4 lg:grid-cols-3">
             <FormFieldSelect
               name="transactionPartyProfileType"
               label="Entity Type"
@@ -1275,8 +1251,38 @@ const PurchaseFormBody = ({
                 });
               }}
             />
+            <FormFieldPurposeSelect
+              name="purposeId"
+              label="Purpose"
+              placeholder="Select purpose"
+              transactionType={transactionType}
+              partyProfileType={getPurchasePurposePartyProfileType(
+                purchasePageType,
+                resolvedTransactionPartyProfileType
+              )}
+              disabled={isReadOnly}
+            />
+            <FormFieldDatePicker
+              name="transactionDate"
+              label="Transaction Date"
+              placeholder="Select transaction date"
+              disabled={isReadOnly || !transactionDatePolicy.canPunchTransactions}
+              minDate={transactionDatePolicy.minDate}
+              maxDate={transactionDatePolicy.maxDate}
+            />
           </div>
-        ) : null}
+        ) : (
+          <div className="mb-4 grid gap-4 lg:grid-cols-2">
+            <FormFieldDatePicker
+              name="transactionDate"
+              label="Transaction Date"
+              placeholder="Select transaction date"
+              disabled={isReadOnly || !transactionDatePolicy.canPunchTransactions}
+              minDate={transactionDatePolicy.minDate}
+              maxDate={transactionDatePolicy.maxDate}
+            />
+          </div>
+        )}
 
         <div className="grid gap-4 lg:grid-cols-3">
           <PurchasePartyProfileField

@@ -608,25 +608,23 @@ export const PassengerDetailsFields = ({
           />
         </section>
 
-        {!isIndianNationality && !isCorporateEntity ? (
-          <section className="space-y-4 rounded-sm border border-border-primary bg-surface-secondary p-4">
-            <div>
-              <h3 className="text-base font-semibold text-text-primary">
-                Arrival Date
-              </h3>
-              <p className="text-sm text-text-secondary">
-                {PASSENGER_IDENTITY_TEXT.arrivalDateHelper}
-              </p>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <FormFieldDatePicker
-                name="arrivalDate"
-                label="Arrival Date"
-                placeholder="Select arrival date"
-              />
-            </div>
-          </section>
-        ) : null}
+        <section className="space-y-4 rounded-sm border border-border-primary bg-surface-secondary p-4">
+          <div>
+            <h3 className="text-base font-semibold text-text-primary">
+              Arrival Date
+            </h3>
+            <p className="text-sm text-text-secondary">
+              {PASSENGER_IDENTITY_TEXT.arrivalDateHelper}
+            </p>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <FormFieldDatePicker
+              name="arrivalDate"
+              label="Arrival Date"
+              placeholder="Select arrival date"
+            />
+          </div>
+        </section>
 
         {showTravelDetails ? (
           <section className="space-y-4 rounded-sm border border-border-primary bg-surface-secondary p-4">
@@ -650,6 +648,8 @@ export const PassengerDetailsFields = ({
                 name="travelTicketNo"
                 label="Ticket No"
                 placeholder="Enter ticket number"
+                valueTransform="none"
+                maxLength={13}
               />
               <FormFieldInput
                 name="travelRoute"

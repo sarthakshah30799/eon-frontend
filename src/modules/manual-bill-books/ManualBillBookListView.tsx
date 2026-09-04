@@ -518,8 +518,36 @@ export const ManualBillBookListView = () => {
               : 'Dispatch Details'
           }
           size="md"
+          footer={
+            reviewBook?.status === ManualBillBookStatusEnum.PENDING ? (
+              <div className="flex justify-end gap-2">
+                <Button type="button" variant="outline" onClick={closeReview}>
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  form="manual-bill-book-review-form"
+                  variant="default"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting && <Loader variant="spinner" />}
+                  Submit Review
+                </Button>
+              </div>
+            ) : (
+              <div className="flex justify-end">
+                <Button type="button" variant="outline" onClick={closeReview}>
+                  Close
+                </Button>
+              </div>
+            )
+          }
         >
-          <form onSubmit={handleReviewSubmit} className="space-y-4">
+          <form
+            id="manual-bill-book-review-form"
+            onSubmit={handleReviewSubmit}
+            className="space-y-4"
+          >
             <div className="grid grid-cols-2 gap-4 text-xs bg-slate-50 p-4 border border-slate-200 rounded-md">
               <div>
                 <span className="block text-slate-400 font-semibold mb-0.5">
@@ -634,20 +662,6 @@ export const ManualBillBookListView = () => {
                       approvalStatus === ManualBillBookStatusEnum.REJECT
                     }
                   />
-                </div>
-
-                <div className="flex justify-end gap-2 pt-2">
-                  <Button type="button" variant="outline" onClick={closeReview}>
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    variant="default"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting && <Loader variant="spinner" />}
-                    Submit Review
-                  </Button>
                 </div>
               </div>
             ) : (
@@ -782,11 +796,6 @@ export const ManualBillBookListView = () => {
                   </div>
                 )}
 
-                <div className="flex justify-end pt-2 border-t border-slate-100">
-                  <Button type="button" variant="outline" onClick={closeReview}>
-                    Close
-                  </Button>
-                </div>
               </div>
             )}
           </form>

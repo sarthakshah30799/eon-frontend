@@ -14,6 +14,7 @@ import {
   CashierDPUnmapView,
   type ICashierBookRow,
 } from '@/modules/manual-bill-books/components';
+import { computeMVRangeForBook } from '@/modules/manual-bill-books/utils';
 import type { MultiValue, SingleValue } from 'react-select';
 import toast from 'react-hot-toast';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
@@ -104,10 +105,7 @@ const ManualBillDPMappingPageContent = () => {
     setTxnType(String(row.txnType));
     // Default: first book in their assigned range, MV pre-filled for that book
     const firstBookNo = row.assignedBookNoFrom;
-    const mvFrom =
-      row.book.mvNoFrom +
-      (firstBookNo - row.book.bookNoFrom) * row.book.vouchersPerBook;
-    const mvTo = mvFrom + row.book.vouchersPerBook - 1;
+    const { mvFrom, mvTo } = computeMVRangeForBook(firstBookNo, row.book);
     setBookNoStr(String(firstBookNo));
     setMvNoFromStr(String(Math.max(row.mvFrom, mvFrom)));
     setMvNoToStr(String(Math.min(row.mvTo, mvTo)));
@@ -121,9 +119,10 @@ const ManualBillDPMappingPageContent = () => {
     if (!val || !cashierRow) return;
     const bookNo = parseInt(val, 10);
     const { book, mvFrom: assignedMvFrom, mvTo: assignedMvTo } = cashierRow;
-    const calcFrom =
-      book.mvNoFrom + (bookNo - book.bookNoFrom) * book.vouchersPerBook;
-    const calcTo = calcFrom + book.vouchersPerBook - 1;
+    const { mvFrom: calcFrom, mvTo: calcTo } = computeMVRangeForBook(
+      bookNo,
+      book
+    );
     setMvNoFromStr(String(Math.max(assignedMvFrom, calcFrom)));
     setMvNoToStr(String(Math.min(assignedMvTo, calcTo)));
     setRows([]);
@@ -149,7 +148,7 @@ const ManualBillDPMappingPageContent = () => {
     if (cashierRow) {
       if (fromVal < cashierRow.mvFrom || toVal > cashierRow.mvTo) {
         toast.error(
-          `MV range must be within your assigned range: ${cashierRow.mvRange}`
+          `MV range must be within your assigned range: ${cashierRow.mvFrom} – ${cashierRow.mvTo}`
         );
         return;
       }

@@ -127,6 +127,7 @@ export const PassengerIdentityFields = ({
             label="Passport Number"
             placeholder="Enter passport number"
             valueTransform="uppercase"
+            maxLength={8}
             onBlur={onPassportNumberBlur}
           />
           <FormFieldInput

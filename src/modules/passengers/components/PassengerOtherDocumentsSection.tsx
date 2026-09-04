@@ -15,6 +15,7 @@ import type { IPurchaseFormValues } from '@/modules/purchase/types/purchaseTypes
 import { usePassengerOtherDocumentTypes } from '../hooks';
 import { shouldShowPassengerOtherDocumentValidityFields } from '../utils/passengerOtherDocumentRules';
 import { PASSENGER_IDENTITY_TEXT } from '../constants/passengerConstants';
+import { PassengerOtherIdProofTypeEnum } from '../types/passengerTypes';
 
 interface PassengerOtherDocumentsSectionProps {
   onDocumentChange?: () => void;
@@ -148,6 +149,12 @@ export const PassengerOtherDocumentsSection = ({
                   name={`otherDocuments.${index}.documentNumber`}
                   label="ID Number"
                   placeholder="Enter ID number"
+                  valueTransform="none"
+                  maxLength={
+                    documentType === PassengerOtherIdProofTypeEnum.AADHAAR
+                      ? 12
+                      : undefined
+                  }
                   onBlur={onDocumentChange}
                 />
                 {shouldShowPassengerOtherDocumentValidityFields(

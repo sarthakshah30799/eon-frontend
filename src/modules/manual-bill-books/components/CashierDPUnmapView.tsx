@@ -9,6 +9,11 @@ import {
   ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
+import {
+  computeMVRangeForBook,
+  formatBookRange,
+  mvToBookNo,
+} from '../utils';
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
@@ -27,25 +32,6 @@ interface ConfirmState {
   mvTo: number;
   remarks: string;
   isSubmitting: boolean;
-}
-
-/* ─── Helpers ────────────────────────────────────────────────────────────── */
-
-function mvToBookNo(pageNo: number, book: IDPAllocatedPageRow['book']): number {
-  return (
-    book.bookNoFrom +
-    Math.floor((pageNo - book.mvNoFrom) / book.vouchersPerBook)
-  );
-}
-
-function computeMVRangeForBook(
-  bookNo: number,
-  book: IDPAllocatedPageRow['book']
-): { mvFrom: number; mvTo: number } {
-  const mvFrom =
-    book.mvNoFrom + (bookNo - book.bookNoFrom) * book.vouchersPerBook;
-  const mvTo = mvFrom + book.vouchersPerBook - 1;
-  return { mvFrom, mvTo };
 }
 
 /* ─── Component ──────────────────────────────────────────────────────────── */
@@ -232,13 +218,9 @@ export const CashierDPUnmapView = () => {
         header: 'Book Range',
         cell: ({ row }) => {
           const r = row.original;
-          const range =
-            r.bookNoFrom === r.bookNoTo
-              ? String(r.bookNoFrom)
-              : `${r.bookNoFrom} – ${r.bookNoTo}`;
           return (
             <span className="font-semibold text-primary-700 whitespace-nowrap">
-              {range}
+              {formatBookRange(r.bookNoFrom, r.bookNoTo)}
             </span>
           );
         },

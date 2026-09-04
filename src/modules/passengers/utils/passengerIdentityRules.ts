@@ -1,9 +1,160 @@
 import {
   PassengerEntityTypeEnum,
   PassengerNationalityTypeEnum,
+  PassengerOtherIdProofTypeEnum,
 } from '../types/passengerTypes';
+import { TransactionTypeEnum } from '@/modules/transactions';
+import { isCorporateIndividualPurchasePage } from '@/pages/purchase/[slug]/purchasePage.enum';
+import type { PurchasePageType } from '@/pages/purchase/[slug]/purchasePage.enum';
 import { isPassengerOtherDocumentComplete } from './passengerOtherDocumentRules';
 import { PASSENGER_IDENTITY_TEXT } from '../constants/passengerConstants';
+
+export const PASSPORT_NUMBER_PATTERN = /^[A-Z0-9]{8}$/i;
+export const TRAVEL_TICKET_NUMBER_PATTERN = /^\d{13}$/;
+export const AADHAAR_NUMBER_PATTERN = /^\d{12}$/;
+
+const hasIdentityFieldValue = (value?: string | null) =>
+  Boolean(String(value ?? '').trim());
+
+export const isPassengerTravelTicketFieldVisible = (values: {
+  transactionType?: string | null;
+  entityType?: string | null;
+}) => {
+  if (values.transactionType !== TransactionTypeEnum.SALE) {
+    return false;
+  }
+
+  return (
+    values.entityType === PassengerEntityTypeEnum.CORPORATE ||
+    values.entityType === PassengerEntityTypeEnum.INDIVIDUAL
+  );
+};
+
+export const getPassengerPassportNumberFormatError = (
+  passportNumber?: string | null
+) => {
+  if (!hasIdentityFieldValue(passportNumber)) {
+    return undefined;
+  }
+
+  if (!PASSPORT_NUMBER_PATTERN.test(String(passportNumber).trim())) {
+    return PASSENGER_IDENTITY_TEXT.passportNumberInvalid;
+  }
+
+  return undefined;
+};
+
+export const getTravelTicketNumberFormatError = (
+  travelTicketNo?: string | null
+) => {
+  if (!hasIdentityFieldValue(travelTicketNo)) {
+    return undefined;
+  }
+
+  if (!TRAVEL_TICKET_NUMBER_PATTERN.test(String(travelTicketNo).trim())) {
+    return PASSENGER_IDENTITY_TEXT.travelTicketNoInvalid;
+  }
+
+  return undefined;
+};
+
+export const isValidPassportNumberFormat = (value?: string | null) =>
+  !getPassengerPassportNumberFormatError(value);
+
+export const isValidTravelTicketNumberFormat = (value?: string | null) =>
+  !getTravelTicketNumberFormatError(value);
+
+export const isValidAadhaarNumberFormat = (value?: string | null) =>
+  !hasIdentityFieldValue(value) ||
+  AADHAAR_NUMBER_PATTERN.test(String(value).trim());
+
+export const getPassengerOtherDocumentNumberFormatError = (
+  documentType?: string | null,
+  documentNumber?: string | null
+) => {
+  if (!hasIdentityFieldValue(documentNumber)) {
+    return undefined;
+  }
+
+  const normalizedType = String(documentType ?? '')
+    .trim()
+    .toUpperCase();
+
+  if (
+    normalizedType === PassengerOtherIdProofTypeEnum.AADHAAR &&
+    !isValidAadhaarNumberFormat(documentNumber)
+  ) {
+    return PASSENGER_IDENTITY_TEXT.aadhaarNumberInvalid;
+  }
+
+  return undefined;
+};
+
+type PassengerDetailsFormatValues = {
+  purchasePageType?: PurchasePageType | null;
+  transactionType?: string | null;
+  entityType?: string | null;
+  passportNumber?: string | null;
+  travelTicketNo?: string | null;
+  otherDocuments?: Array<{
+    documentType?: string | null;
+    documentNumber?: string | null;
+  } | null> | null;
+};
+
+export const applyPassengerDetailsFormatErrors = (
+  values: PassengerDetailsFormatValues,
+  setError: (field: string, error: { type: string; message: string }) => void
+) => {
+  if (!isCorporateIndividualPurchasePage(values.purchasePageType)) {
+    return true;
+  }
+
+  let isValid = true;
+
+  const passportFormatError = getPassengerPassportNumberFormatError(
+    values.passportNumber
+  );
+  if (passportFormatError) {
+    setError('passportNumber', {
+      type: 'manual',
+      message: passportFormatError,
+    });
+    isValid = false;
+  }
+
+  if (isPassengerTravelTicketFieldVisible(values)) {
+    const travelTicketFormatError = getTravelTicketNumberFormatError(
+      values.travelTicketNo
+    );
+    if (travelTicketFormatError) {
+      setError('travelTicketNo', {
+        type: 'manual',
+        message: travelTicketFormatError,
+      });
+      isValid = false;
+    }
+  }
+
+  (values.otherDocuments ?? []).forEach((document, index) => {
+    const documentFormatError = getPassengerOtherDocumentNumberFormatError(
+      document?.documentType,
+      document?.documentNumber
+    );
+
+    if (!documentFormatError) {
+      return;
+    }
+
+    setError(`otherDocuments.${index}.documentNumber`, {
+      type: 'manual',
+      message: documentFormatError,
+    });
+    isValid = false;
+  });
+
+  return isValid;
+};
 
 type PassengerIdentityValues = {
   entityType?: string | null;

@@ -28,6 +28,13 @@ import {
 import { PassengerAmlVerificationStepForm } from '../forms/PassengerAmlVerificationStepForm';
 import { PassengerAmlDetailsStepForm } from '../forms/PassengerAmlDetailsStepForm';
 import { mapPassengerSnapshotToPurchaseFormValues } from '../utils/passengerAmlUtils';
+import {
+  applyPassengerDetailsFormatErrors,
+  getPassengerPassportNumberFormatError,
+  getPassengerOtherDocumentNumberFormatError,
+  getTravelTicketNumberFormatError,
+  isPassengerTravelTicketFieldVisible,
+} from '../utils/passengerIdentityRules';
 
 interface PassengerAmlVerificationModalProps {
   open: boolean;
@@ -147,6 +154,16 @@ const getDetailsFieldNames = () =>
     'passportIssueDate',
     'passportExpiryDate',
     'arrivalDate',
+    'travelAirlineId',
+    'travelTicketNo',
+    'travelRoute',
+    'travelCountryId',
+    'travelNoOfDays',
+    'travelNoOfPax',
+    'travelDepartureDate',
+    'travelPnr',
+    'travelVisa',
+    'travelIsCisCountry',
     'otherDocuments',
   ] as const;
 
@@ -667,6 +684,16 @@ export const PassengerAmlVerificationModal = ({
       return;
     }
 
+    const passportFormatError =
+      getPassengerPassportNumberFormatError(passportNumber);
+    if (passportFormatError) {
+      form.setError('passportNumber', {
+        type: 'manual',
+        message: passportFormatError,
+      });
+      return;
+    }
+
     if (/test/i.test(passportNumber)) {
       setVerificationStatus('invalid');
       setVerificationMessage(
@@ -733,10 +760,50 @@ export const PassengerAmlVerificationModal = ({
       return;
     }
 
+    const currentValues = form.getValues() as IPurchaseFormValues;
+    const formatsValid = applyPassengerDetailsFormatErrors(
+      currentValues,
+      (field, error) => {
+        form.setError(field as never, error as never);
+      }
+    );
+
+    if (!formatsValid) {
+      if (
+        getPassengerPassportNumberFormatError(currentValues.passportNumber)
+      ) {
+        form.setFocus('passportNumber');
+      } else if (
+        isPassengerTravelTicketFieldVisible(currentValues) &&
+        getTravelTicketNumberFormatError(currentValues.travelTicketNo)
+      ) {
+        form.setFocus('travelTicketNo');
+      } else {
+        const invalidDocumentIndex = (currentValues.otherDocuments ?? []).findIndex(
+          document =>
+            Boolean(
+              getPassengerOtherDocumentNumberFormatError(
+                document?.documentType,
+                document?.documentNumber
+              )
+            )
+        );
+
+        if (invalidDocumentIndex >= 0) {
+          form.setFocus(
+            `otherDocuments.${invalidDocumentIndex}.documentNumber` as never
+          );
+        }
+      }
+
+      return;
+    }
+
     const detailsValidationFields = getDetailsFieldNames();
     const isValid = await form.trigger(detailsValidationFields as never, {
       shouldFocus: true,
     });
+
     if (!isValid) {
       console.warn(
         '[PassengerAmlVerificationModal] details validation failed',
@@ -749,7 +816,6 @@ export const PassengerAmlVerificationModal = ({
       return;
     }
 
-    const currentValues = form.getValues() as IPurchaseFormValues;
     form.clearErrors('otherDocuments' as never);
     resetIdentityLookup();
 
@@ -757,7 +823,7 @@ export const PassengerAmlVerificationModal = ({
       hasCompletePanValues(currentValues) &&
       !isSameSnapshot(verifiedPanSnapshot, getPanSnapshot(currentValues))
     ) {
-      const reverifiedPan = await verifyIdentity('pan', true, false, false);
+      const reverifiedPan = await verifyIdentity('pan', true, false, true);
       if (!reverifiedPan) {
         return;
       }
@@ -774,7 +840,7 @@ export const PassengerAmlVerificationModal = ({
         'passport',
         true,
         false,
-        false
+        true
       );
       if (!reverifiedPassport) {
         return;
@@ -799,7 +865,7 @@ export const PassengerAmlVerificationModal = ({
       form.setValue('passengerInfoCaptured', true, {
         shouldDirty: true,
         shouldTouch: true,
-        shouldValidate: true,
+        shouldValidate: false,
       });
       handleModalOpenChange(false);
     } catch {

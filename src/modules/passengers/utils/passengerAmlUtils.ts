@@ -16,6 +16,8 @@ import type { IPurchaseFormValues } from '@/modules/purchase/types/purchaseTypes
 import { shouldShowPassengerOtherDocumentValidityFields } from './passengerOtherDocumentRules';
 import {
   getPassengerPanNumberError,
+  getPassengerOtherDocumentNumberFormatError,
+  getPassengerPassportNumberFormatError,
   isPassengerPanHolderRelationRequired,
   isPassengerPanRequired,
   isPassengerPassportRequired,
@@ -309,12 +311,26 @@ export const createPassengerAmlVerificationSchema = () =>
         then: schema => schema.required('PAN holder DOB is required'),
         otherwise: schema => schema.default(''),
       }),
-    passportNumber: optionalText().when(['entityType', 'isIndianNationality'], {
-      is: (entityType: string, isIndianNationality: boolean) =>
-        isPassportValidationRequired({ entityType, isIndianNationality }),
-      then: schema => schema.required('Passport number is required'),
-      otherwise: schema => schema.default(''),
-    }),
+    passportNumber: optionalText()
+      .when(['entityType', 'isIndianNationality'], {
+        is: (entityType: string, isIndianNationality: boolean) =>
+          isPassportValidationRequired({ entityType, isIndianNationality }),
+        then: schema => schema.required('Passport number is required'),
+        otherwise: schema => schema.default(''),
+      })
+      .test(
+        'passport-number-format',
+        PASSENGER_IDENTITY_TEXT.passportNumberInvalid,
+        function (value) {
+          const formatError = getPassengerPassportNumberFormatError(value);
+
+          if (!formatError) {
+            return true;
+          }
+
+          return this.createError({ message: formatError });
+        }
+      ),
     passportIssueAt: optionalText().when(
       ['entityType', 'isIndianNationality'],
       {
@@ -375,11 +391,22 @@ const passengerOtherDocumentSchema = yup
       .mixed<PassengerOtherIdProofType | ''>()
       .oneOf([...Object.values(PassengerOtherIdProofTypeEnum), ''] as const)
       .required('Document type is required'),
-    documentNumber: optionalText().when('documentType', {
-      is: (documentType: string) => Boolean(documentType),
-      then: schema => schema.required('Document number is required'),
-      otherwise: schema => schema.default(''),
-    }),
+    documentNumber: optionalText().test(
+      'document-number-format',
+      PASSENGER_IDENTITY_TEXT.aadhaarNumberInvalid,
+      function (value) {
+        const formatError = getPassengerOtherDocumentNumberFormatError(
+          this.parent.documentType,
+          value
+        );
+
+        if (!formatError) {
+          return true;
+        }
+
+        return this.createError({ message: formatError });
+      }
+    ),
     validTill: yup
       .string()
       .trim()
@@ -479,21 +506,35 @@ export const createPassengerDetailsSchema = () =>
     gstNumber: yup.string().trim().default(''),
     gstStateId: yup.string().trim().default(''),
     isPep: yup.boolean().default(false),
-    passportNumber: optionalText().test(
-      'passport-number-required',
-      PASSENGER_IDENTITY_TEXT.passportNumberRequired,
-      function (value) {
-        if (
-          !isPassengerPassportRequired({
-            ...this.parent,
-            passportNumber: value,
-          })
-        ) {
-          return true;
+    passportNumber: optionalText()
+      .test(
+        'passport-number-required',
+        PASSENGER_IDENTITY_TEXT.passportNumberRequired,
+        function (value) {
+          if (
+            !isPassengerPassportRequired({
+              ...this.parent,
+              passportNumber: value,
+            })
+          ) {
+            return true;
+          }
+          return Boolean(String(value ?? '').trim());
         }
-        return Boolean(String(value ?? '').trim());
-      }
-    ),
+      )
+      .test(
+        'passport-number-format',
+        PASSENGER_IDENTITY_TEXT.passportNumberInvalid,
+        function (value) {
+          const formatError = getPassengerPassportNumberFormatError(value);
+
+          if (!formatError) {
+            return true;
+          }
+
+          return this.createError({ message: formatError });
+        }
+      ),
     passportIssueAt: optionalText().test(
       'passport-issue-at-required',
       PASSENGER_IDENTITY_TEXT.passportIssuePlaceRequired,

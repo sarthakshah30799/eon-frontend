@@ -75,7 +75,9 @@ export const CardTransferEditView = () => {
   const isAccepted = request.status === 'ACCEPTED';
   const isDestinationBranchReviewer =
     !hasHoAccess && activeBranchId === request.destinationBranchId;
-  const canManageHeldRequest = isHeld && hasHoAccess;
+  const canManageHeldRequest =
+    isHeld &&
+    (hasHoAccess || activeBranchId === request.sourceBranchId);
   const canReviewHeldRequest =
     isHeld && (hasHoAccess || isDestinationBranchReviewer);
   const canPrintStockOut =

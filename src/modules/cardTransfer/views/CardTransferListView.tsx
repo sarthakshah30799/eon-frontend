@@ -87,7 +87,7 @@ export const CardTransferListView = () => {
       },
       {
         accessorKey: 'sourceBranchId',
-        header: 'Source HO Branch',
+        header: 'Source Branch',
         cell: ({ row }) =>
           row.original.sourceBranch?.name ?? row.original.sourceBranchId,
       },

@@ -42,9 +42,12 @@ const CardTransferTransactionDateSync = ({
 
 export const CardTransferCreateView = () => {
   const navigate = useNavigate();
-  const { policyContext, activeBranchId } = useAuth();
+  const { user, policyContext, activeBranchId } = useAuth();
+  const isAdminOrHo = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
   const references = useCardStockReferences();
-  const [sourceBranchId, setSourceBranchId] = useState('');
+  const [sourceBranchId, setSourceBranchId] = useState(
+    () => (!isAdminOrHo && activeBranchId ? activeBranchId : '')
+  );
   const sourceBranchPolicy = useQuery({
     queryKey: ['card-transfer', 'transaction-date-policy', sourceBranchId],
     queryFn: () => transactionPoliciesApi.getPolicyContext(sourceBranchId),
@@ -57,7 +60,15 @@ export const CardTransferCreateView = () => {
     () => getTransactionDatePolicy(selectedPolicyContext),
     [selectedPolicyContext]
   );
-  const initialValues = useMemo(() => emptyTransferForm(), []);
+  const initialValues = useMemo(
+    () => ({
+      ...emptyTransferForm(),
+      ...(!isAdminOrHo && activeBranchId
+        ? { sourceBranchId: activeBranchId }
+        : {}),
+    }),
+    [activeBranchId, isAdminOrHo]
+  );
   const cardTransferSchema = useMemo(
     () =>
       createCardTransferSchema(references.currencies, references.products),
@@ -102,7 +113,7 @@ export const CardTransferCreateView = () => {
             Create CARD Transfer Sell
           </h1>
           <p className="text-sm text-text-secondary">
-            Select cards from an HO branch for transfer to another branch.
+            Select cards from a source branch for transfer to another branch.
             Purchase is created internally when accepted.
           </p>
         </div>

@@ -12,14 +12,14 @@ export const CARD_TRANSFER_COPY = {
   createTitle: 'Create CARD Transfer',
   editTitle: 'CARD Transfer Request',
   sourceDescription:
-    'Cards are reserved from the selected HO branch and counter when submitted.',
+    'Cards are reserved from the selected source branch when submitted.',
   loadingTransactionDate: 'Loading transaction date for selected branch...',
   loadingCards: 'Loading available cards from source branch...',
   validationFailed: 'Fix the highlighted transfer errors before submitting.',
   selectItemContextFirst:
     'Select product type, currency, and card issuer before choosing cards.',
   noMatchingCards:
-    'No available cards match the selected product, currency, and issuer at this HO branch.',
+    'No available cards match the selected product, currency, and issuer at this source branch.',
 } as const;
 
 export const CARD_TRANSFER_VALIDATION_TEXT = {

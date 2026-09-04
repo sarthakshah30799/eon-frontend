@@ -10,7 +10,7 @@ export const createCardTransferSchema = (
   products: IProductProfile[] = []
 ) =>
   yup.object({
-    sourceBranchId: yup.string().required('Source HO branch is required'),
+    sourceBranchId: yup.string().required('Source branch is required'),
     destinationBranchId: yup
       .string()
       .required('Destination branch is required')

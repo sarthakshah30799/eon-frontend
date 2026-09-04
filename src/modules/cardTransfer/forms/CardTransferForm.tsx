@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   useFieldArray,
   useFormContext,
@@ -21,6 +21,7 @@ import {
 } from '@/components/forms';
 import { branchProfileApi } from '@/api/branchProfile';
 import { useLoadBranchOptions } from '@/modules/branchProfile/hooks';
+import { useAuth } from '@/lib/AuthContext';
 import { formatDateTime } from '@/utils';
 import type { CardTransferCard, CardTransferFormValues } from '../types';
 import type { TransactionDatePolicy } from '@/modules/transactionPolicies/utils/transactionDatePolicy';
@@ -510,6 +511,9 @@ export const CardTransferForm = ({
   destinationBranchReadOnly = false,
 }: Props) => {
   const form = useFormContext<CardTransferFormValues>();
+  const { user, activeBranchId } = useAuth();
+  const isAdminOrHo = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
+  const canEditSourceBranch = isAdminOrHo && !readOnly;
   const references = useCardStockReferences();
   const { data: branches = [], isLoading: branchesLoading } = useQuery({
     queryKey: ['branch-profiles-all', { activeOnly: true }],
@@ -531,8 +535,8 @@ export const CardTransferForm = ({
   const cardOptions = availableCards ?? sourceCards;
   const cardsLoading =
     cardsLoadingProp ?? (sourceCardsLoading || sourceCardsFetching);
-  const hoBranchOptions = optionsFrom(
-    branches.filter(branch => branch.isActive !== false && branch.isHeadOffice)
+  const activeBranchOptions = optionsFrom(
+    branches.filter(branch => branch.isActive !== false)
   );
   const sourceBranchSnapshot = useWatch({
     control: form.control,
@@ -543,7 +547,7 @@ export const CardTransferForm = ({
     name: 'destinationBranchSnapshot',
   });
   const sourceBranchOptions = withSnapshotOption(
-    hoBranchOptions,
+    activeBranchOptions,
     sourceBranchId,
     sourceBranchSnapshot
   );
@@ -551,6 +555,24 @@ export const CardTransferForm = ({
     control: form.control,
     name: 'destinationBranchId',
   });
+
+  useEffect(() => {
+    if (readOnly || isAdminOrHo || !activeBranchId) return;
+    if (form.getValues('sourceBranchId') === activeBranchId) return;
+    form.setValue('sourceBranchId', activeBranchId, {
+      shouldDirty: false,
+      shouldTouch: false,
+      shouldValidate: true,
+    });
+    onSourceBranchChange?.(activeBranchId);
+  }, [
+    activeBranchId,
+    form,
+    isAdminOrHo,
+    onSourceBranchChange,
+    readOnly,
+  ]);
+
   const loadDestinationBranchOptions = useCallback(
     async (inputValue: string, page = 1) => {
       const result = await loadBranchOptions(inputValue, page);
@@ -597,12 +619,12 @@ export const CardTransferForm = ({
         <div className="grid gap-4 xl:grid-cols-4">
           <StaticFormFieldSelect
             name="sourceBranchId"
-            label="Source HO Branch"
-            placeholder="Select HO branch"
+            label="Source Branch"
+            placeholder="Select source branch"
             options={sourceBranchOptions}
             isLoading={branchesLoading}
-            disabled={readOnly}
-            selectKey="source-ho-branch"
+            disabled={!canEditSourceBranch}
+            selectKey="source-branch"
             onValueChange={value => {
               const branchId = typeof value === 'string' ? value : '';
               form.setValue('transactionDate', '', {

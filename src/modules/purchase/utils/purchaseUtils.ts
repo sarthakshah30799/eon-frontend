@@ -611,7 +611,9 @@ export const mapPurchaseTransactionToFormValues = (
     entityType: passengerSnapshot?.entityType
       ? String(passengerSnapshot.entityType)
       : '',
-    passengerInfoCaptured: Boolean(transaction.passengerId),
+    passengerInfoCaptured: Boolean(
+      transaction.passengerId || passengerSnapshot
+    ),
     passengerId: transaction.passengerId ?? '',
     panNumber: (passengerSnapshot?.panNumber as string | undefined) ?? '',
     panHolderName:

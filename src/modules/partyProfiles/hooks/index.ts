@@ -15,6 +15,7 @@ import type {
   IPartyProfileListQuery,
   IReviewPartyProfilePayload,
   IUpdatePartyProfile,
+  IUpgradePartyProfileCreditPolicy,
   PartyProfileType,
 } from '../types/partyProfileTypes';
 import { syncPartyProfileCache } from '../utils/partyProfileUtils';
@@ -134,6 +135,48 @@ export const useUpdatePartyProfile = (profileType?: PartyProfileType) => {
   return {
     ...mutation,
     updatePartyProfile: mutation.mutateAsync,
+  };
+};
+
+export const useUpgradePartyProfileCreditPolicy = (
+  profileType?: PartyProfileType
+) => {
+  const queryClient = useQueryClient();
+  const typeLabel = toPartyProfileDisplayLabel(profileType);
+
+  const mutation = useMutation({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: IUpgradePartyProfileCreditPolicy;
+    }) => partyProfileApi.upgradePartyProfileCreditPolicy(id, data),
+    onSuccess: (data, variables) => {
+      syncPartyProfileCache(queryClient, data);
+      void queryClient.invalidateQueries({ queryKey: ['party-profiles'] });
+      void queryClient.invalidateQueries({
+        queryKey: ['party-profile', profileType, variables.id],
+      });
+      toast.success(
+        data?.status === PartyProfileStatusEnum.PENDING
+          ? `${typeLabel} credit policy submitted for review!`
+          : `${typeLabel} credit policy updated successfully!`
+      );
+    },
+    onError: (error: unknown) => {
+      toast.error(
+        getErrorMessage(
+          error,
+          `Failed to upgrade ${typeLabel.toLowerCase()} credit policy`
+        )
+      );
+    },
+  });
+
+  return {
+    ...mutation,
+    upgradePartyProfileCreditPolicy: mutation.mutateAsync,
   };
 };
 

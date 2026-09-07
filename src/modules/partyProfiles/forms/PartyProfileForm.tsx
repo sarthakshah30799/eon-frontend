@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { useFormContext, useWatch } from 'react-hook-form';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useFormContext, useWatch, useFormState } from 'react-hook-form';
 import type { Resolver } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { CardSection } from '@/components/ui';
+import { CardSection, Button } from '@/components/ui';
 import {
   Form,
   FormFieldCategoryOption,
@@ -22,6 +22,7 @@ import { useLoadBranchOptions } from '@/modules/branchProfile/hooks';
 import { useGetStateProfile } from '@/modules/stateProfile';
 import {
   CARD_ISSUER_FORM_TEXT,
+  PARTY_PROFILE_CREDIT_POLICY_TEXT,
   toPartyProfileDisplayLabel,
   toPartyProfileApiType,
 } from '../constants';
@@ -34,12 +35,26 @@ import type { IReviewPartyProfilePayload } from '../types';
 import { PartyProfileReviewActionPanel } from '../components';
 import { PartyProfileCommissionRulesFieldArray } from '../components/PartyProfileCommissionRulesFieldArray';
 import { normalizeCodeValue } from '@/utils';
+import {
+  hasDirtyNonCreditPolicyFields,
+  pickDirtyPartyProfileCreditPolicyValues,
+} from '../utils/partyProfileCreditPolicyUtils';
+import type { IUpgradePartyProfileCreditPolicy } from '../types';
 
 type PartyProfileFormValues = Omit<ICreatePartyProfile, 'type'>;
 
+export type PartyProfileFormSubmitMeta = {
+  creditUpgradeMode: boolean;
+  creditPolicyPayload: IUpgradePartyProfileCreditPolicy;
+  hasNonCreditChanges: boolean;
+};
+
 interface PartyProfileFormProps {
   defaultValues: PartyProfileFormValues;
-  onSubmit: (values: PartyProfileFormValues) => void | Promise<void>;
+  onSubmit: (
+    values: PartyProfileFormValues,
+    meta?: PartyProfileFormSubmitMeta
+  ) => void | Promise<void>;
   submitLabel?: string;
   onCancel?: () => void | Promise<void>;
   isSubmitting?: boolean;
@@ -50,6 +65,7 @@ interface PartyProfileFormProps {
   currentId?: string;
   showSubmit?: boolean;
   allowBranchSelection?: boolean;
+  allowCreditPolicyUpgrade?: boolean;
 }
 
 const FORM_ID = 'party-profile-form';
@@ -62,6 +78,11 @@ const PartyProfileFormFields = ({
   onReviewSubmit,
   currentId,
   allowBranchSelection = false,
+  isCreditUpgradeMode = false,
+  onCreditUpgradeModeChange,
+  onSubmitDisabledChange,
+  onDirtyFieldsSnapshotChange,
+  allowCreditPolicyUpgrade = false,
 }: {
   isSubmitting?: boolean;
   disabled?: boolean;
@@ -70,10 +91,18 @@ const PartyProfileFormFields = ({
   onReviewSubmit?: (values: IReviewPartyProfilePayload) => void | Promise<void>;
   currentId?: string;
   allowBranchSelection?: boolean;
+  isCreditUpgradeMode?: boolean;
+  onCreditUpgradeModeChange?: (enabled: boolean) => void;
+  onSubmitDisabledChange?: (disabled: boolean) => void;
+  onDirtyFieldsSnapshotChange?: (
+    dirtyFields: Partial<Record<keyof PartyProfileFormValues, boolean | object>>
+  ) => void;
+  allowCreditPolicyUpgrade?: boolean;
 }) => {
   const form = useFormContext<PartyProfileFormValues>();
+  const { dirtyFields } = useFormState({ control: form.control });
   const { user } = useAuth();
-  const isSubmitting = isSubmittingProp || disabled || reviewMode;
+  const isSubmitting = isSubmittingProp || disabled;
   const reviewActionsDisabled = isSubmittingProp;
   const canEditBranch =
     allowBranchSelection &&
@@ -111,6 +140,40 @@ const PartyProfileFormFields = ({
   const showCardIssuerNumberRules =
     toPartyProfileApiType(effectiveProfileType) === 'CARD_ISSUER_PROFILE';
   const showTdsGroup = Boolean(isTdsDeducted);
+  const isEditMode = Boolean(currentId);
+  const isCreditPolicyLocked =
+    isEditMode && allowCreditPolicyUpgrade && !isCreditUpgradeMode;
+  const areCreditPolicyFieldsDisabled =
+    isSubmittingProp ||
+    (isEditMode && (!allowCreditPolicyUpgrade || !isCreditUpgradeMode));
+  const canShowUpgradeLimitButton =
+    isEditMode && allowCreditPolicyUpgrade && !isCreditUpgradeMode;
+
+  useEffect(() => {
+    onDirtyFieldsSnapshotChange?.(dirtyFields);
+  }, [dirtyFields, onDirtyFieldsSnapshotChange]);
+
+  useEffect(() => {
+    if (!onSubmitDisabledChange) {
+      return;
+    }
+
+    const hasNonCreditDirty = hasDirtyNonCreditPolicyFields(dirtyFields);
+    onSubmitDisabledChange(
+      Boolean(
+        isEditMode &&
+          allowCreditPolicyUpgrade &&
+          !isCreditUpgradeMode &&
+          !hasNonCreditDirty
+      )
+    );
+  }, [
+    allowCreditPolicyUpgrade,
+    dirtyFields,
+    isCreditUpgradeMode,
+    isEditMode,
+    onSubmitDisabledChange,
+  ]);
 
   useEffect(() => {
     if (!showTdsGroup) {
@@ -272,41 +335,60 @@ const PartyProfileFormFields = ({
         </CardSection>
       )}
 
-      <CardSection heading="Credit Policy">
+      <CardSection
+        heading={PARTY_PROFILE_CREDIT_POLICY_TEXT.sectionHeading}
+        headerActions={
+          canShowUpgradeLimitButton ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => onCreditUpgradeModeChange?.(true)}
+            >
+              {PARTY_PROFILE_CREDIT_POLICY_TEXT.upgradeLimit}
+            </Button>
+          ) : null
+        }
+      >
+        {isCreditPolicyLocked ? (
+          <p className="mb-3 text-sm text-text-secondary">
+            {PARTY_PROFILE_CREDIT_POLICY_TEXT.upgradeLimitHint}
+          </p>
+        ) : null}
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           {!shouldHideCreditLimitFields && (
             <FormFieldInput
               name="temporaryCreditLimit"
               label="Temporary Credit Limit"
               type="number"
-              disabled={isSubmitting}
+              disabled={areCreditPolicyFieldsDisabled}
             />
           )}
           <FormFieldInput
             name="temporaryCreditDays"
             label="Temporary Credit Days"
             type="number"
-            disabled={isSubmitting}
+            disabled={areCreditPolicyFieldsDisabled}
           />
           {!shouldHideCreditLimitFields && (
             <FormFieldInput
               name="permanentCreditLimit"
               label="Permanent Credit Limit"
               type="number"
-              disabled={isSubmitting}
+              disabled={areCreditPolicyFieldsDisabled}
             />
           )}
           <FormFieldInput
             name="permanentCreditDays"
             label="Permanent Credit Days"
             type="number"
-            disabled={isSubmitting}
+            disabled={areCreditPolicyFieldsDisabled}
           />
           <FormFieldInput
             name="chqTrxnLimit"
             label="Cheque Transaction Limit"
             type="number"
-            disabled={isSubmitting}
+            disabled={areCreditPolicyFieldsDisabled}
           />
         </div>
       </CardSection>
@@ -656,11 +738,61 @@ export const PartyProfileForm = ({
   currentId,
   showSubmit = true,
   allowBranchSelection = false,
+  allowCreditPolicyUpgrade = false,
 }: PartyProfileFormProps) => {
+  const [isCreditUpgradeMode, setIsCreditUpgradeMode] = useState(false);
+  const [isSubmitDisabled, setIsSubmitDisabled] = useState(
+    Boolean(currentId && allowCreditPolicyUpgrade)
+  );
+  const creditPolicyBaselineRef = useRef(defaultValues);
+  const dirtyFieldsSnapshotRef = useRef<
+    Partial<Record<keyof PartyProfileFormValues, boolean | object>>
+  >({});
+
+  useEffect(() => {
+    creditPolicyBaselineRef.current = defaultValues;
+  }, [defaultValues]);
+
+  const handleDirtyFieldsSnapshotChange = useCallback(
+    (
+      dirtyFields: Partial<Record<keyof PartyProfileFormValues, boolean | object>>
+    ) => {
+      dirtyFieldsSnapshotRef.current = dirtyFields;
+    },
+    []
+  );
+  const submitMessage =
+    currentId &&
+    allowCreditPolicyUpgrade &&
+    isSubmitDisabled &&
+    !isCreditUpgradeMode
+      ? PARTY_PROFILE_CREDIT_POLICY_TEXT.saveBlockedUntilUpgrade
+      : undefined;
+
+  const handleCreditUpgradeModeChange = useCallback((enabled: boolean) => {
+    setIsCreditUpgradeMode(enabled);
+    if (enabled) {
+      setIsSubmitDisabled(false);
+    }
+  }, []);
+
   return (
     <Form
       id={FORM_ID}
-      onSubmit={onSubmit}
+      onSubmit={values => {
+        const dirtyFields = dirtyFieldsSnapshotRef.current;
+        onSubmit(values, {
+          creditUpgradeMode: isCreditUpgradeMode,
+          creditPolicyPayload: isCreditUpgradeMode
+            ? pickDirtyPartyProfileCreditPolicyValues(
+                values,
+                dirtyFields,
+                creditPolicyBaselineRef.current
+              )
+            : {},
+          hasNonCreditChanges: hasDirtyNonCreditPolicyFields(dirtyFields),
+        });
+      }}
       resolver={
         yupResolver(
           partyProfileSchema
@@ -675,6 +807,8 @@ export const PartyProfileForm = ({
         },
         onCancel,
         showSubmit,
+        isSubmitDisabled,
+        submitMessage,
       }}
     >
       <PartyProfileFormFields
@@ -685,6 +819,11 @@ export const PartyProfileForm = ({
         onReviewSubmit={onReviewSubmit}
         currentId={currentId}
         allowBranchSelection={allowBranchSelection}
+        isCreditUpgradeMode={isCreditUpgradeMode}
+        onCreditUpgradeModeChange={handleCreditUpgradeModeChange}
+        onSubmitDisabledChange={setIsSubmitDisabled}
+        onDirtyFieldsSnapshotChange={handleDirtyFieldsSnapshotChange}
+        allowCreditPolicyUpgrade={allowCreditPolicyUpgrade}
       />
     </Form>
   );

@@ -608,6 +608,24 @@ const CARD_SETTING_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinitio
     },
   ];
 
+const TRANSACTION_CREDIT_POLICY_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] =
+  [
+    {
+      code: AdditionalSettingsCodeEnum.AllowOutstandingOnSale,
+      label: 'ALLOW OUTSTANDING ON SELL',
+      valueType: 'boolean',
+      required: true,
+      placeholder: 'YES or NO',
+    },
+    {
+      code: AdditionalSettingsCodeEnum.AllowOutstandingOnPurchase,
+      label: 'ALLOW OUTSTANDING ON PURCHASE',
+      valueType: 'boolean',
+      required: true,
+      placeholder: 'YES or NO',
+    },
+  ];
+
 const REPORTS_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] =
   [
     {
@@ -715,6 +733,13 @@ export const ADDITIONAL_SETTING_DEFINITIONS: readonly AdditionalSettingCategoryD
       rendererKey: 'default',
       titleLocked: true,
       subcategories: CARD_SETTING_SUBCATEGORIES,
+    },
+    {
+      code: AdditionalSettingsCodeEnum.TransactionCreditPolicy,
+      label: 'TRANSACTION CREDIT POLICY',
+      rendererKey: 'default',
+      titleLocked: true,
+      subcategories: TRANSACTION_CREDIT_POLICY_SUBCATEGORIES,
     },
     {
       code: AdditionalSettingsCodeEnum.Reports,

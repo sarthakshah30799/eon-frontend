@@ -7,14 +7,17 @@ import {
   usePartyProfileTypes,
   useReviewPartyProfile,
   useUpdatePartyProfile,
+  useUpgradePartyProfileCreditPolicy,
 } from '../hooks';
 import { PartyProfileForm } from '../forms/PartyProfileForm';
+import type { PartyProfileFormSubmitMeta } from '../forms/PartyProfileForm';
 import type { ICreatePartyProfile, IReviewPartyProfilePayload } from '../types';
 import {
   toPartyProfileApiType,
   toPartyProfileRouteType,
   PARTY_PROFILE_STATUS_TEXT,
 } from '../constants';
+import { omitPartyProfileCreditPolicyValues } from '../utils/partyProfileCreditPolicyUtils';
 import { PartyProfileDocumentsActionButton } from '../components';
 import { NotFoundState } from '@/components/ui/not-found-state';
 import { AccessDeniedState } from '@/components/ui/access-denied-state';
@@ -72,6 +75,8 @@ export const PartyProfileEditView = () => {
   );
   const { updatePartyProfile, isPending } =
     useUpdatePartyProfile(selectedApiType);
+  const { upgradePartyProfileCreditPolicy, isPending: isUpgradingCreditPolicy } =
+    useUpgradePartyProfileCreditPolicy(selectedApiType);
   const { reviewPartyProfile, isPending: isReviewing } =
     useReviewPartyProfile();
 
@@ -152,7 +157,10 @@ export const PartyProfileEditView = () => {
     [client]
   );
 
-  const handleSubmit = async (values: Omit<ICreatePartyProfile, 'type'>) => {
+  const handleSubmit = async (
+    values: Omit<ICreatePartyProfile, 'type'>,
+    meta?: PartyProfileFormSubmitMeta
+  ) => {
     if (!id) return;
     const sanitized: ICreatePartyProfile = {
       ...values,
@@ -165,7 +173,29 @@ export const PartyProfileEditView = () => {
       panDob: values.panDob || undefined,
       email: values.email || undefined,
     };
-    await updatePartyProfile({ id, data: sanitized });
+
+    const creditPolicyPayload = meta?.creditPolicyPayload ?? {};
+    const hasCreditUpdates =
+      meta?.creditUpgradeMode && Object.keys(creditPolicyPayload).length > 0;
+    const hasNonCreditChanges = Boolean(meta?.hasNonCreditChanges);
+
+    if (hasCreditUpdates) {
+      await upgradePartyProfileCreditPolicy({
+        id,
+        data: creditPolicyPayload,
+      });
+    }
+
+    if (hasNonCreditChanges) {
+      await updatePartyProfile({
+        id,
+        data: omitPartyProfileCreditPolicyValues(sanitized),
+      });
+    }
+
+    if (!hasCreditUpdates && !hasNonCreditChanges) {
+      return;
+    }
     navigate({
       pathname: `/party-profiles/${selectedType}`,
     });
@@ -245,18 +275,15 @@ export const PartyProfileEditView = () => {
       <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
         <PartyProfileForm
           defaultValues={defaultValues}
-          onSubmit={
-            showReviewControls || !canEditPartyProfile
-              ? async () => undefined
-              : handleSubmit
-          }
+          onSubmit={!canEditPartyProfile ? async () => undefined : handleSubmit}
           profileType={selectedApiType}
           onCancel={handleCancel}
           onReviewSubmit={handleReviewSubmit}
-          isSubmitting={isPending || isReviewing}
-          disabled={showReviewControls ? true : !canEditPartyProfile}
+          isSubmitting={isPending || isReviewing || isUpgradingCreditPolicy}
+          disabled={!canEditPartyProfile}
           reviewMode={showReviewControls}
-          showSubmit={!showReviewControls && canEditPartyProfile}
+          showSubmit={canEditPartyProfile}
+          allowCreditPolicyUpgrade={canEditPartyProfile}
           submitLabel="Save Changes"
           currentId={id}
         />

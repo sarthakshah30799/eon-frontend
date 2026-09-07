@@ -14,6 +14,8 @@ export const PURCHASE_WORKPLACE_TEXT = {
 } as const;
 
 export const PURCHASE_PRINT_TEXT = {
+  partyName: 'Party Name',
+  passportPassengerName: 'Passport Passenger Name',
   transactionDetails: 'Transaction Details',
   cardDetails: 'CARD Details',
   srNo: 'Sr. No.',

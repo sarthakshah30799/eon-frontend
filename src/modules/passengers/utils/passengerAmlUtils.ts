@@ -85,6 +85,7 @@ export const createPassengerAmlDefaultValues = (
     panDob: shouldPrefillFromPartyProfile
       ? (resolvedPartyProfile?.panDob ?? '')
       : '',
+    passportPassengerName: '',
     passportNumber: '',
     passportIssueAt: '',
     passportIssueDate: '',
@@ -129,6 +130,7 @@ export const createPassengerDetailsDefaultValues = (
     gstNumber: '',
     gstStateId: '',
     isPep: false,
+    passportPassengerName: verifiedAmlValues?.passportPassengerName ?? '',
     passportNumber: verifiedAmlValues?.passportNumber ?? '',
     passportIssueAt: verifiedAmlValues?.passportIssueAt ?? '',
     passportIssueDate: verifiedAmlValues?.passportIssueDate ?? '',
@@ -157,6 +159,16 @@ const resolveSnapshotId = (value: unknown): string => {
   return typeof snapshot.id === 'string' ? snapshot.id : '';
 };
 
+export const PASSENGER_PASSPORT_LOOKUP_EXCLUDED_FIELDS = [
+  'panNumber',
+  'panHolderName',
+  'panDob',
+  'panHolderRelationType',
+  'paidByPanNumber',
+  'paidByPanHolderName',
+  'paidByPanDob',
+] as const;
+
 export const mapPassengerSnapshotToPurchaseFormValues = (
   snapshot: Record<string, unknown>
 ): Partial<IPurchaseFormValues> => ({
@@ -169,6 +181,10 @@ export const mapPassengerSnapshotToPurchaseFormValues = (
   panDob: typeof snapshot.panDob === 'string' ? snapshot.panDob : '',
   passportNumber:
     typeof snapshot.passportNumber === 'string' ? snapshot.passportNumber : '',
+  passportPassengerName:
+    typeof snapshot.passportPassengerName === 'string'
+      ? snapshot.passportPassengerName
+      : '',
   passportIssueAt:
     typeof snapshot.passportIssueAt === 'string'
       ? snapshot.passportIssueAt
@@ -331,6 +347,21 @@ export const createPassengerAmlVerificationSchema = () =>
           return this.createError({ message: formatError });
         }
       ),
+    passportPassengerName: optionalText().test(
+      'passport-passenger-name-required',
+      PASSENGER_IDENTITY_TEXT.passportPassengerNameRequired,
+      function (value) {
+        if (
+          !isPassengerPassportRequired({
+            ...this.parent,
+            passportPassengerName: value,
+          })
+        ) {
+          return true;
+        }
+        return Boolean(String(value ?? '').trim());
+      }
+    ),
     passportIssueAt: optionalText().when(
       ['entityType', 'isIndianNationality'],
       {
@@ -535,6 +566,21 @@ export const createPassengerDetailsSchema = () =>
           return this.createError({ message: formatError });
         }
       ),
+    passportPassengerName: optionalText().test(
+      'passport-passenger-name-required',
+      PASSENGER_IDENTITY_TEXT.passportPassengerNameRequired,
+      function (value) {
+        if (
+          !isPassengerPassportRequired({
+            ...this.parent,
+            passportPassengerName: value,
+          })
+        ) {
+          return true;
+        }
+        return Boolean(String(value ?? '').trim());
+      }
+    ),
     passportIssueAt: optionalText().test(
       'passport-issue-at-required',
       PASSENGER_IDENTITY_TEXT.passportIssuePlaceRequired,

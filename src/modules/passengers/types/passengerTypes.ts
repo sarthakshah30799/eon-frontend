@@ -66,6 +66,7 @@ export interface IPassengerAmlVerificationValues {
   panNumber: string;
   panHolderName: string;
   panDob: string;
+  passportPassengerName: string;
   passportNumber: string;
   passportIssueAt: string;
   passportIssueDate: string;
@@ -84,6 +85,7 @@ export interface IPassengerPanVerificationRequest {
 export interface IPassengerPassportVerificationRequest {
   nationalityType: PassengerNationalityType;
   passportNumber?: string;
+  passportPassengerName?: string;
   passportIssueAt?: string;
   passportIssueDate?: string;
   passportExpiryDate?: string;
@@ -118,6 +120,7 @@ export interface IPassengerAmlVerifiedPayload {
   panNumber: string;
   panHolderName: string;
   panDob: string;
+  passportPassengerName: string;
   passportNumber: string;
   passportIssueAt: string;
   passportIssueDate: string;
@@ -156,6 +159,7 @@ export interface IPassengerPassengerDetailsValues {
   gstNumber: string;
   gstStateId: string;
   isPep: boolean;
+  passportPassengerName: string;
   passportNumber: string;
   passportIssueAt: string;
   passportIssueDate: string;

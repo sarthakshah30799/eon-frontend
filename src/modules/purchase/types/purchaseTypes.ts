@@ -75,6 +75,7 @@ export interface IPurchaseFormValues {
   panNumber: string;
   panHolderName: string;
   panDob: string;
+  passportPassengerName: string;
   passportNumber: string;
   passportIssueAt: string;
   passportIssueDate: string;

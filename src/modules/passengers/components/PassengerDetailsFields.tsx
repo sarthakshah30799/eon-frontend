@@ -381,17 +381,19 @@ export const PassengerDetailsFields = ({
                 }
               }}
             />
-            <FormFieldCountryDropdown
-              name="countryId"
-              label="Country"
-              placeholder="Select country"
-              hideBlockedCountry
-              hideRestrictedCountry
-              hideBaseCountry
-              onValueChange={() => {
-                // Country-driven resident synchronization happens in the effect above.
-              }}
-            />
+            {isIndianNationality ? (
+              <FormFieldCountryDropdown
+                name="countryId"
+                label="Country"
+                placeholder="Select country"
+                hideBlockedCountry
+                hideRestrictedCountry
+                hideBaseCountry
+                onValueChange={() => {
+                  // Country-driven resident synchronization happens in the effect above.
+                }}
+              />
+            ) : null}
           </div>
           {!isIndianNationality ? (
             <p className="text-xs text-text-secondary">
@@ -408,12 +410,14 @@ export const PassengerDetailsFields = ({
             />
           </div>
 
-          <PassengerIdentityFields
-            entityType={entityType}
-            onPanFieldBlur={onPanFieldBlur}
-            onPassportNumberBlur={onPassportNumberBlur}
-            showPassport={false}
-          />
+          {isIndianNationality ? (
+            <PassengerIdentityFields
+              entityType={entityType}
+              onPanFieldBlur={onPanFieldBlur}
+              onPassportNumberBlur={onPassportNumberBlur}
+              showPassport={false}
+            />
+          ) : null}
         </section>
 
         <section className="space-y-4 rounded-sm border border-border-primary bg-surface-secondary p-4">
@@ -603,6 +607,7 @@ export const PassengerDetailsFields = ({
             entityType={entityType}
             showPan={false}
             showPassport
+            showCountryInPassport={!isIndianNationality}
             onPassportNumberBlur={onPassportNumberBlur}
             onPassportFieldBlur={onPassportFieldBlur}
           />

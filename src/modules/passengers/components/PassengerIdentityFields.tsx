@@ -19,6 +19,7 @@ interface PassengerIdentityFieldsProps {
   showPanRelation?: boolean;
   showPan?: boolean;
   showPassport?: boolean;
+  showCountryInPassport?: boolean;
   onPanFieldBlur?: () => void;
   onPassportNumberBlur?: () => void;
   onPassportFieldBlur?: () => void;
@@ -32,6 +33,7 @@ export const PassengerIdentityFields = ({
   showPanRelation: _showPanRelation = false,
   showPan = true,
   showPassport = false,
+  showCountryInPassport = false,
   onPanFieldBlur,
   onPassportNumberBlur,
   onPassportFieldBlur,
@@ -46,9 +48,7 @@ export const PassengerIdentityFields = ({
   const isCorporate = entityType === PassengerEntityTypeEnum.CORPORATE;
   const isIndianNationality =
     nationalityType === PassengerNationalityTypeEnum.INDIAN;
-  const isPassportRequired =
-    showPassport || (!isCorporate && !isIndianNationality);
-  const isPanRequired = showPan && (isCorporate || isIndianNationality);
+  const isPanVisible = showPan && (isCorporate || isIndianNationality);
   const showCountry = showNationality && !isIndianNationality;
 
   return (
@@ -96,7 +96,7 @@ export const PassengerIdentityFields = ({
         </>
       ) : null}
 
-      {isPanRequired ? (
+      {isPanVisible ? (
         <div className="grid gap-4 md:grid-cols-3">
           <FormFieldInput
             name="panNumber"
@@ -120,7 +120,7 @@ export const PassengerIdentityFields = ({
         </div>
       ) : null}
 
-      {isPassportRequired ? (
+      {showPassport ? (
         <div className="grid gap-4 md:grid-cols-2">
           <FormFieldInput
             name="passportPassengerName"
@@ -136,22 +136,32 @@ export const PassengerIdentityFields = ({
             maxLength={8}
             onBlur={onPassportNumberBlur}
           />
-          <FormFieldInput
-            name="passportIssueAt"
-            label="Issue At"
-            placeholder="Enter issue place"
-            onBlur={onPassportFieldBlur}
-          />
           <FormFieldDatePicker
             name="passportIssueDate"
-            label="Issue Date"
+            label="Passport Issue Date"
             placeholder="Select issue date"
             onBlur={onPassportFieldBlur}
           />
           <FormFieldDatePicker
             name="passportExpiryDate"
-            label="Expiry Date"
+            label="Passport Expiry Date"
             placeholder="Select expiry date"
+            onBlur={onPassportFieldBlur}
+          />
+          {showCountryInPassport ? (
+            <FormFieldCountryDropdown
+              name="countryId"
+              label="Country"
+              placeholder="Select country"
+              hideBlockedCountry
+              hideRestrictedCountry
+              hideBaseCountry
+            />
+          ) : null}
+          <FormFieldInput
+            name="passportIssueAt"
+            label="Issue At"
+            placeholder="Enter issue place"
             onBlur={onPassportFieldBlur}
           />
         </div>

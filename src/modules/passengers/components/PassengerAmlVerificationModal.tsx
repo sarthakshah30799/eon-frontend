@@ -249,6 +249,10 @@ export const PassengerAmlVerificationModal = ({
     control: form.control,
     name: 'transactionDate',
   });
+  const watchedCountryId = useWatch({
+    control: form.control,
+    name: 'countryId',
+  });
   const passengerInfoCaptured = useWatch({
     control: form.control,
     name: 'passengerInfoCaptured',
@@ -664,7 +668,15 @@ export const PassengerAmlVerificationModal = ({
       : passportVerificationChanged
         ? 'Passport details changed. Please verify again before continuing.'
         : verificationMessage;
-  const canProceed = displayedVerificationStatus === 'valid';
+  const canProceedDetailsStep = displayedVerificationStatus === 'valid';
+  const canProceedVerificationStep =
+    verificationMode === 'pan'
+      ? canProceedDetailsStep
+      : Boolean(
+          watchedNationalityType &&
+          watchedNationalityType !== PassengerNationalityTypeEnum.INDIAN &&
+          String(watchedCountryId ?? '').trim()
+        );
   const isDetailsSubmitting =
     isVerifyingPan ||
     isVerifyingPassport ||
@@ -770,7 +782,7 @@ export const PassengerAmlVerificationModal = ({
   );
 
   const handleVerification = () => {
-    if (canProceed) {
+    if (canProceedVerificationStep) {
       setInternalStep('details');
     }
   };
@@ -902,7 +914,7 @@ export const PassengerAmlVerificationModal = ({
       >
         Cancel
       </Button>
-      <Button type="button" onClick={handleVerification} disabled={!canProceed}>
+      <Button type="button" onClick={handleVerification} disabled={!canProceedVerificationStep}>
         Next
       </Button>
     </div>
@@ -926,7 +938,7 @@ export const PassengerAmlVerificationModal = ({
       <Button
         type="button"
         onClick={() => void handleDetailsDone()}
-        disabled={!canProceed}
+        disabled={!canProceedDetailsStep}
         loading={isDetailsSubmitting}
       >
         Done

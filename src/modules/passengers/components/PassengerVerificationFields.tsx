@@ -60,6 +60,7 @@ export const PassengerVerificationFields = ({
         entityType={entityType}
         showNationality={isIndianPrompt}
         showPanRelation={showPanRelation}
+        showPassport={false}
         onPanFieldBlur={onPanFieldBlur}
         onPassportNumberBlur={onPassportNumberBlur}
         onPassportFieldBlur={onPassportFieldBlur}
@@ -90,7 +91,7 @@ export const PassengerVerificationFields = ({
                   ? 'AML details verified. You can continue.'
                   : verificationStatus === 'invalid'
                     ? 'Verification failed. Edit the details and blur the field again to re-check.'
-                    : 'Fill all required PAN or passport fields, then blur any field to validate against the backend.')}
+                    : 'Choose nationality and country, then continue to capture passport details.')}
             </span>
           )}
         </div>

@@ -65,6 +65,10 @@ export const PurchasePartyProfileField = ({
     control: form.control,
     name: 'panHolderName',
   });
+  const passportPassengerName = useWatch({
+    control: form.control,
+    name: 'passportPassengerName',
+  });
   const passportNumber = useWatch({
     control: form.control,
     name: 'passportNumber',
@@ -243,7 +247,14 @@ export const PurchasePartyProfileField = ({
                 ? `PAN: ${panNumber || '-'}`
                 : `Passport: ${passportNumber || '-'}`}
             </div>
-            {panHolderName ? <div className="mt-1">{panHolderName}</div> : null}
+            {panHolderName ? (
+              <div className="mt-1">PAN Holder Name: {panHolderName}</div>
+            ) : null}
+            {passportPassengerName ? (
+              <div className="mt-1">
+                Passport Passenger Name: {passportPassengerName}
+              </div>
+            ) : null}
           </div>
         ) : null}
       </div>

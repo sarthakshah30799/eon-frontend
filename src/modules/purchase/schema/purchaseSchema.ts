@@ -487,6 +487,29 @@ export const createPurchaseFormSchema = (transactionType: TransactionType) =>
     gstNumber: yup.string().trim().default(''),
     gstStateId: yup.string().trim().default(''),
     isPep: yup.boolean().default(false),
+    passportPassengerName: yup
+      .string()
+      .trim()
+      .test(
+        'passport-passenger-name-required',
+        PASSENGER_IDENTITY_TEXT.passportPassengerNameRequired,
+        function (value) {
+          if (
+            !requiresCorporateIndividualPassenger(this.parent.purchasePageType)
+          ) {
+            return true;
+          }
+          if (
+            !isPassengerPassportRequired({
+              ...this.parent,
+              passportPassengerName: value,
+            })
+          ) {
+            return true;
+          }
+          return Boolean(String(value ?? '').trim());
+        }
+      ),
     passportNumber: yup
       .string()
       .trim()

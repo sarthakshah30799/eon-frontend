@@ -207,8 +207,9 @@ export const createEmptyPurchaseFormValues = (
   panNumber: '',
   panHolderName: '',
   panDob: '',
-  passportNumber: '',
-  passportIssueAt: '',
+    passportNumber: '',
+    passportPassengerName: '',
+    passportIssueAt: '',
   passportIssueDate: '',
   passportExpiryDate: '',
   nationalityType: isCorporateIndividualPurchasePage(purchasePageType)
@@ -441,6 +442,7 @@ export const mapPurchaseFormValuesToSubmitPayload = (
             gstNumber: values.gstNumber || null,
             gstStateId: values.gstStateId || null,
             passportNumber: values.passportNumber || null,
+            passportPassengerName: values.passportPassengerName || null,
             passportIssueAt: values.passportIssueAt || null,
             passportIssueDate: values.passportIssueDate || null,
             passportExpiryDate: values.passportExpiryDate || null,
@@ -617,6 +619,8 @@ export const mapPurchaseTransactionToFormValues = (
     panDob: (passengerSnapshot?.panDob as string | undefined) ?? '',
     passportNumber:
       (passengerSnapshot?.passportNumber as string | undefined) ?? '',
+    passportPassengerName:
+      (passengerSnapshot?.passportPassengerName as string | undefined) ?? '',
     passportIssueAt:
       (passengerSnapshot?.passportIssueAt as string | undefined) ?? '',
     passportIssueDate:

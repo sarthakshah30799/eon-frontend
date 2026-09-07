@@ -163,6 +163,7 @@ type PassengerIdentityValues = {
   panHolderName?: string | null;
   panDob?: string | null;
   panHolderRelationType?: string | null;
+  passportPassengerName?: string | null;
   passportNumber?: string | null;
   passportIssueAt?: string | null;
   passportIssueDate?: string | null;
@@ -199,6 +200,7 @@ export const hasCompletePassengerPassportValues = (
   values: PassengerIdentityValues
 ) =>
   Boolean(
+    trim(values.passportPassengerName) &&
     trim(values.passportNumber) &&
     trim(values.passportIssueAt) &&
     trim(values.passportIssueDate) &&
@@ -207,6 +209,7 @@ export const hasCompletePassengerPassportValues = (
 
 export const hasAnyPassengerPassportValue = (values: PassengerIdentityValues) =>
   Boolean(
+    trim(values.passportPassengerName) ||
     trim(values.passportNumber) ||
     trim(values.passportIssueAt) ||
     trim(values.passportIssueDate) ||

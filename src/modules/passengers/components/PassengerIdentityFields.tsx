@@ -123,6 +123,12 @@ export const PassengerIdentityFields = ({
       {isPassportRequired ? (
         <div className="grid gap-4 md:grid-cols-2">
           <FormFieldInput
+            name="passportPassengerName"
+            label="Passport Passenger Name"
+            placeholder="Enter passport passenger name"
+            onBlur={onPassportFieldBlur}
+          />
+          <FormFieldInput
             name="passportNumber"
             label="Passport Number"
             placeholder="Enter passport number"

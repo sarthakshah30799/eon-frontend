@@ -648,6 +648,7 @@ export interface ICreateTransactionPassengerPayload {
   paidByPanDob?: string | null;
   gstNumber?: string | null;
   gstStateId?: string | null;
+  passportPassengerName?: string | null;
   passportNumber?: string | null;
   passportIssueAt?: string | null;
   passportIssueDate?: string | null;

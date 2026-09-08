@@ -1,6 +1,10 @@
 import type { IOffsetPaginationParams } from '@/types/pagination';
 
-export type VoucherType = 'RECEIPT' | 'PAYMENT' | 'JOURNAL';
+export type VoucherType =
+  | 'RECEIPT'
+  | 'PAYMENT'
+  | 'JOURNAL'
+  | 'DEPOSIT_WITHDRAWAL';
 export type VoucherDirection = 'DEBIT' | 'CREDIT';
 export type VoucherAccountMode =
   | 'CASH'
@@ -21,6 +25,7 @@ export interface VoucherItem {
   lineNumber?: number;
   itemTypeOptionId: string;
   itemTypeName?: string;
+  itemTypeValue?: string;
   itemTypeSnapshot?: VoucherSnapshot | null;
   subledgerPartyProfileId?: string | null;
   subledgerCode?: string;
@@ -31,6 +36,26 @@ export interface VoucherItem {
   accountSnapshot?: VoucherSnapshot | null;
   direction: VoucherDirection;
   amount: string;
+  settledTransactionId?: string | null;
+  settledTransactionNumber?: string;
+  settledTransactionSnapshot?: VoucherSnapshot | null;
+}
+
+export interface OutstandingBill {
+  id: string;
+  number: string;
+  transactionDate: string;
+  transactionType: string;
+  slug: string;
+  partyProfileId: string;
+  partyProfileSnapshot?: VoucherSnapshot | null;
+  passengerId?: string | null;
+  passengerSnapshot?: Record<string, unknown> | null;
+  finalAmount: string;
+  byCash: string;
+  byCheque: string;
+  outstanding: string;
+  branchId: string;
 }
 
 export interface VoucherFormValues {

@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
+import { categoryOptionsApi } from '@/api/categoryOptions';
+import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import { vouchersApi } from '@/api/vouchers';
 import type { VoucherFormValues, VoucherListQuery, VoucherType } from './types';
 
@@ -50,6 +52,47 @@ export const useAvailableAdvances = (
         params.paymentMethod
       ),
   });
+
+export type OutstandingBillQueryParams = {
+  partyProfileId: string;
+  slug: string;
+  branchId: string;
+  counterId: string;
+  transactionDate: string;
+  search?: string;
+  limit?: number;
+  offset?: number;
+};
+
+export const useOutstandingBills = (
+  type: 'RECEIPT' | 'PAYMENT',
+  params: OutstandingBillQueryParams,
+  enabled = true
+) =>
+  useQuery({
+    queryKey: ['outstanding-bills', type, params],
+    queryFn: () => vouchersApi.outstandingBills(type, params),
+    enabled:
+      enabled &&
+      Boolean(
+        params.partyProfileId &&
+        params.slug &&
+        params.branchId &&
+        params.counterId &&
+        params.transactionDate
+      ),
+  });
+
+export const useVoucherItemTypeCategoryOptions = () =>
+  useQuery({
+    queryKey: ['category-options', 'voucher_item_type'],
+    queryFn: () =>
+      categoryOptionsApi.getCategoryOptionsByCode(
+        CategoryOptionCodeEnum.VoucherItemType
+      ),
+    staleTime: 5 * 60 * 1000,
+  });
+
 export const useCreateVoucher = (type: VoucherType) => {
   const client = useQueryClient();
   const mutation = useMutation({
@@ -57,6 +100,7 @@ export const useCreateVoucher = (type: VoucherType) => {
     onSuccess: voucher => {
       void client.invalidateQueries({ queryKey: ['vouchers', type] });
       void client.invalidateQueries({ queryKey: ['available-advances'] });
+      void client.invalidateQueries({ queryKey: ['outstanding-bills'] });
       toast.success(`${voucher.number} created successfully`);
     },
     onError: error =>

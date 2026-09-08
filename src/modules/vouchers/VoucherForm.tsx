@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -25,14 +25,31 @@ import { PartyProfileTypeEnum } from '@/modules/partyProfiles/types/partyProfile
 import { AccountProfileLedgerLabelEnum } from '@/modules/accountProfile';
 import { PurchaseWorkplaceFields } from '@/modules/purchase/components/PurchaseWorkplaceFields';
 import type {
+  OutstandingBill,
   VoucherAccountMode,
   VoucherFormValues,
   VoucherType,
 } from './types';
-import { VOUCHER_FORM_TEXT, VOUCHER_LABELS } from './constants';
-import { useVoucherNextNumber } from './hooks';
+import {
+  DEPOSIT_WITHDRAWAL_TEXT,
+  OUTSTANDING_BILL_TEXT,
+  VOUCHER_FORM_TEXT,
+  VOUCHER_LABELS,
+} from './constants';
+import { SelectOutstandingBills } from './components/SelectOutstandingBills';
+import { useVoucherItemTypeCategoryOptions, useVoucherNextNumber } from './hooks';
 import { useVoucherPanVerification } from './useVoucherPanVerification';
-import { formatVoucherDateInput, isVoucherIndividualSelection } from './utils';
+import {
+  formatVoucherDateInput,
+  getVoucherItemTypeValueById,
+  isVoucherAccountItemTypeValue,
+  isVoucherBillItemTypeValue,
+  isVoucherIndividualSelection,
+  voucherBillDirection,
+} from './utils';
+import { useListAdditionalSettings } from '@/modules/additionalSettings/hooks';
+import { AdditionalSettingsCodeEnum } from '@/modules/additionalSettings/constants';
+import { getAdditionalSettingTextValue } from '@/modules/additionalSettings/utils';
 
 const modeFromLabel = (label: string): VoucherAccountMode => {
   const value = label.toUpperCase().replace(/[ /-]+/g, '_');
@@ -55,35 +72,36 @@ const toCents = (value: unknown) => {
   return Number.isFinite(numeric) ? Math.round(numeric * 100) : 0;
 };
 
-const voucherSchema = (type: VoucherType) =>
-  yup.object({
+const isPartyVoucherType = (type: VoucherType) =>
+  type === 'RECEIPT' || type === 'PAYMENT';
+
+const isDepositWithdrawalType = (type: VoucherType) =>
+  type === 'DEPOSIT_WITHDRAWAL';
+
+const voucherSchema = (type: VoucherType) => {
+  const partyVoucher = isPartyVoucherType(type);
+  const depositWithdrawal = isDepositWithdrawalType(type);
+
+  return yup.object({
     transactionDate: yup.string().required('Transaction date is required'),
     branchId: yup.string().required('Branch is required'),
     counterId: yup.string().required('Counter is required'),
-    accountTypeOptionId: yup
-      .string()
-      .when([], {
-        is: () => type !== 'JOURNAL',
-        then: schema => schema.required('A/C Type is required'),
-      }),
-    headerAccountId: yup
-      .string()
-      .when([], {
-        is: () => type !== 'JOURNAL',
-        then: schema => schema.required('A/C Code is required'),
-      }),
-    entityTypeOptionId: yup
-      .string()
-      .when([], {
-        is: () => type !== 'JOURNAL',
-        then: schema => schema.required('Party Type is required'),
-      }),
-    partyProfileId: yup
-      .string()
-      .when([], {
-        is: () => type !== 'JOURNAL',
-        then: schema => schema.required('Party Code is required'),
-      }),
+    accountTypeOptionId: yup.string().when([], {
+      is: () => partyVoucher,
+      then: schema => schema.required('A/C Type is required'),
+    }),
+    headerAccountId: yup.string().when([], {
+      is: () => partyVoucher,
+      then: schema => schema.required('A/C Code is required'),
+    }),
+    entityTypeOptionId: yup.string().when([], {
+      is: () => partyVoucher,
+      then: schema => schema.required('Party Type is required'),
+    }),
+    partyProfileId: yup.string().when([], {
+      is: () => partyVoucher,
+      then: schema => schema.required('Party Code is required'),
+    }),
     panNumber: yup
       .string()
       .trim()
@@ -99,83 +117,171 @@ const voucherSchema = (type: VoucherType) =>
       ),
     panName: yup.string().trim().optional().nullable(),
     panDob: yup.string().trim().optional().nullable(),
-    chequeNumber: yup
-      .string()
-      .when('accountMode', {
-        is: 'BANK_CHEQUE',
-        then: schema => schema.required('Cheque number is required'),
-      }),
-    chequeDate: yup
-      .string()
-      .when('accountMode', {
-        is: 'BANK_CHEQUE',
-        then: schema => schema.required('Cheque date is required'),
-      }),
-    chequeBranch: yup
-      .string()
-      .when('accountMode', {
-        is: 'BANK_CHEQUE',
-        then: schema => schema.required('Branch is required'),
-      }),
-    drawnOn: yup
-      .string()
-      .when('accountMode', {
-        is: 'BANK_CHEQUE',
-        then: schema => schema.required('Drawn on is required'),
-      }),
+    chequeNumber: yup.string().when(['accountMode'], {
+      is: (accountMode: string) =>
+        depositWithdrawal || accountMode === 'BANK_CHEQUE',
+      then: schema => schema.required('Cheque number is required'),
+    }),
+    chequeDate: yup.string().when(['accountMode'], {
+      is: (accountMode: string) =>
+        depositWithdrawal || accountMode === 'BANK_CHEQUE',
+      then: schema => schema.required('Cheque date is required'),
+    }),
+    chequeBranch: yup.string().when('accountMode', {
+      is: (accountMode: string) =>
+        partyVoucher && accountMode === 'BANK_CHEQUE',
+      then: schema => schema.required('Branch is required'),
+    }),
+    drawnOn: yup.string().when('accountMode', {
+      is: (accountMode: string) =>
+        partyVoucher && accountMode === 'BANK_CHEQUE',
+      then: schema => schema.required('Drawn on is required'),
+    }),
     narration: yup.string().trim().required('Narration is required'),
-    items: yup
-      .array()
-      .of(
-        yup.object({
-          itemTypeOptionId: yup.string().required('Type is required'),
-          subledgerPartyProfileId:
+    items: depositWithdrawal
+      ? yup
+          .array()
+          .of(
+            yup.object({
+              itemTypeOptionId: yup.string().required('Type is required'),
+              itemTypeValue: yup.string().optional(),
+              accountId: yup.string().optional().nullable(),
+              direction: yup
+                .string()
+                .oneOf(['DEBIT', 'CREDIT'])
+                .required('Sign is required'),
+              amount: yup.string().optional().nullable(),
+            })
+          )
+          .length(3, 'Deposit / Withdrawal requires three item rows')
+          .required()
+          .test(
+            'deposit-withdrawal-lines',
+            'Deposit / Withdrawal amounts and accounts are invalid',
+            function validateDepositWithdrawal(rows) {
+              const deposited = rows?.[0];
+              const withdrawal = rows?.[1];
+              const fee = rows?.[2];
+              if (!deposited?.accountId)
+                return this.createError({
+                  message: 'Deposited in account is required',
+                });
+              if (!withdrawal?.accountId)
+                return this.createError({
+                  message: 'Withdrawal from account is required',
+                });
+              if (deposited.accountId === withdrawal.accountId)
+                return this.createError({
+                  message:
+                    'Deposited in and Withdrawal from must use different accounts',
+                });
+              if (deposited.direction !== 'DEBIT')
+                return this.createError({
+                  message: 'Deposited in must be Debit',
+                });
+              if (withdrawal.direction !== 'CREDIT')
+                return this.createError({
+                  message: 'Withdrawal from must be Credit',
+                });
+              const depositedCents = toCents(deposited.amount);
+              const withdrawalCents = toCents(withdrawal.amount);
+              const feeRaw = String(fee?.amount ?? '').trim();
+              const feeCents = feeRaw ? toCents(feeRaw) : 0;
+              if (depositedCents <= 0 || withdrawalCents <= 0)
+                return this.createError({
+                  message:
+                    'Deposited in and Withdrawal from amounts must be greater than zero',
+                });
+              if (feeRaw && feeCents <= 0)
+                return this.createError({
+                  message: 'Handling fee must be blank or greater than zero',
+                });
+              if (feeRaw && fee?.direction !== 'DEBIT')
+                return this.createError({
+                  message: 'Handling fee must be Debit',
+                });
+              if (depositedCents + feeCents !== withdrawalCents)
+                return this.createError({
+                  message:
+                    'Withdrawal from must equal Deposited in plus optional Handling fee',
+                });
+              return true;
+            }
+          )
+      : yup
+          .array()
+          .of(
+            yup
+              .object({
+                itemTypeOptionId: yup.string().required('Type is required'),
+                itemTypeValue: yup.string().optional(),
+                subledgerPartyProfileId:
+                  type === 'JOURNAL'
+                    ? yup.string().nullable()
+                    : yup.string().required('Sub ledger is required'),
+                accountId: yup.string().when('itemTypeValue', {
+                  is: (value: string | undefined) =>
+                    isVoucherBillItemTypeValue(value),
+                  then: schema => schema.optional().nullable(),
+                  otherwise: schema => schema.required('Account is required'),
+                }),
+                settledTransactionId: yup.string().when('itemTypeValue', {
+                  is: (value: string | undefined) =>
+                    isVoucherBillItemTypeValue(value),
+                  then: schema =>
+                    schema.required('Outstanding bill is required'),
+                  otherwise: schema => schema.optional().nullable(),
+                }),
+                direction: yup
+                  .string()
+                  .oneOf(['DEBIT', 'CREDIT'])
+                  .required('Sign is required'),
+                amount: yup
+                  .string()
+                  .test(
+                    'positive',
+                    'Amount must be positive',
+                    value => Number(value) > 0
+                  )
+                  .required(),
+              })
+              .test(
+                'journal-account-only',
+                'Journal vouchers only support Account item lines',
+                item =>
+                  type !== 'JOURNAL' ||
+                  isVoucherAccountItemTypeValue(item?.itemTypeValue)
+              )
+          )
+          .min(1, 'At least one item is required')
+          .required()
+          .test(
+            'voucher-totals',
             type === 'JOURNAL'
-              ? yup.string().nullable()
-              : yup.string().required('Sub ledger is required'),
-          accountId: yup.string().required('Account is required'),
-          direction: yup
-            .string()
-            .oneOf(['DEBIT', 'CREDIT'])
-            .required('Sign is required'),
-          amount: yup
-            .string()
-            .test(
-              'positive',
-              'Amount must be positive',
-              value => Number(value) > 0
-            )
-            .required(),
-        })
-      )
-      .min(1, 'At least one item is required')
-      .required()
-      .test(
-        'voucher-totals',
-        type === 'JOURNAL'
-          ? 'Journal Voucher difference must be 0.00 and both totals must be positive.'
-          : 'Final amount must be positive',
-        rows => {
-          const totals = (rows ?? []).reduce(
-            (value, row) => {
-              value[row?.direction === 'CREDIT' ? 'credit' : 'debit'] +=
-                toCents(row?.amount);
-              return value;
-            },
-            { debit: 0, credit: 0 }
-          );
-          if (type === 'JOURNAL')
-            return (
-              totals.debit > 0 &&
-              totals.credit > 0 &&
-              totals.debit === totals.credit
-            );
-          return type === 'RECEIPT'
-            ? totals.credit - totals.debit > 0
-            : totals.debit - totals.credit > 0;
-        }
-      ),
+              ? 'Journal Voucher difference must be 0.00 and both totals must be positive.'
+              : 'Final amount must be positive',
+            rows => {
+              const totals = (rows ?? []).reduce(
+                (value, row) => {
+                  value[row?.direction === 'CREDIT' ? 'credit' : 'debit'] +=
+                    toCents(row?.amount);
+                  return value;
+                },
+                { debit: 0, credit: 0 }
+              );
+              if (type === 'JOURNAL')
+                return (
+                  totals.debit > 0 &&
+                  totals.credit > 0 &&
+                  totals.debit === totals.credit
+                );
+              return type === 'RECEIPT'
+                ? totals.credit - totals.debit > 0
+                : totals.debit - totals.credit > 0;
+            }
+          ),
   });
+};
 
 interface Props {
   type: VoucherType;
@@ -207,6 +313,9 @@ const VoucherFields = ({
   | 'onBranchChange'
 >) => {
   const form = useFormContext<VoucherFormValues>();
+  const [outstandingModalIndex, setOutstandingModalIndex] = useState<
+    number | null
+  >(null);
   const mode = useWatch({ control: form.control, name: 'accountMode' });
   const accountTypeOptionId = useWatch({
     control: form.control,
@@ -224,6 +333,11 @@ const VoucherFields = ({
     control: form.control,
     name: 'headerAccountId',
   });
+  const transactionDate = useWatch({
+    control: form.control,
+    name: 'transactionDate',
+  });
+  const counterId = useWatch({ control: form.control, name: 'counterId' });
   const watchedItems = useWatch({ control: form.control, name: 'items' });
   const items = useMemo(() => watchedItems ?? [], [watchedItems]);
   const branchId = useWatch({ control: form.control, name: 'branchId' });
@@ -235,6 +349,18 @@ const VoucherFields = ({
   const itemTypeOptions = useCategoryOptions(
     CategoryOptionCodeEnum.VoucherItemType
   ).defaultOptions;
+  const { data: itemTypeCategoryOptions = [] } =
+    useVoucherItemTypeCategoryOptions();
+  const journalItemTypeOptions = useMemo(
+    () =>
+      itemTypeCategoryOptions
+        .filter(option => isVoucherAccountItemTypeValue(option.value))
+        .map(option => ({
+          value: option.id,
+          label: option.label,
+        })),
+    [itemTypeCategoryOptions]
+  );
   const accountTypeOptions = useCategoryOptions(
     CategoryOptionCodeEnum.VoucherAccountType
   ).defaultOptions;
@@ -247,19 +373,33 @@ const VoucherFields = ({
     date.setFullYear(date.getFullYear() - 18);
     return date;
   }, []);
-  const { data: accountResponse } = useListAccountProfiles({
+  const { data: accountResponse, isLoading: accountsLoading } =
+    useListAccountProfiles({
     active: true,
     limit: 100,
     ...(type === 'RECEIPT'
       ? { receipt: true }
       : type === 'PAYMENT'
         ? { payment: true }
-        : { journalVoucher: true }),
+        : type === 'DEPOSIT_WITHDRAWAL'
+          ? {}
+          : { journalVoucher: true }),
   });
   const { data: headerAccountResponse } = useListAccountProfiles({
     active: true,
     limit: 100,
   });
+  const { data: additionalSettings = [] } = useListAdditionalSettings();
+  const handlingFeeControlAccountId = useMemo(
+    () =>
+      getAdditionalSettingTextValue(
+        additionalSettings,
+        AdditionalSettingsCodeEnum.TransactionAccounting,
+        AdditionalSettingsCodeEnum.HandlingChargeAccount,
+        ''
+      ),
+    [additionalSettings]
+  );
   const allPartyTypes = Object.values(PartyProfileTypeEnum);
   const { data: partyResponse } = useListPartyProfiles(
     {
@@ -287,13 +427,27 @@ const VoucherFields = ({
 
   const accounts = useMemo(
     () =>
-      (accountResponse?.data ?? []).filter(
-        account =>
+      (accountResponse?.data ?? []).filter(account => {
+        const isInr =
           String(account.currencyCode ?? account.currency?.currencyCode ?? '')
             .trim()
-            .toUpperCase() === 'INR'
-      ),
-    [accountResponse]
+            .toUpperCase() === 'INR';
+        if (!isInr) return false;
+        if (type !== 'DEPOSIT_WITHDRAWAL') return true;
+        const ledgerTypes = [
+          account.accountType?.value,
+          account.accountType?.label,
+        ].map(value =>
+          String(value ?? '')
+            .trim()
+            .toUpperCase()
+        );
+        return (
+          ledgerTypes.includes(AccountProfileLedgerLabelEnum.CashLedger) ||
+          ledgerTypes.includes(AccountProfileLedgerLabelEnum.BankLedger)
+        );
+      }),
+    [accountResponse, type]
   );
   const allHeaderAccounts = useMemo(
     () =>
@@ -332,6 +486,13 @@ const VoucherFields = ({
       })),
     [accounts]
   );
+  const handlingFeeAccountLabel = useMemo(() => {
+    const account = (headerAccountResponse?.data ?? []).find(
+      item => item.id === handlingFeeControlAccountId
+    );
+    if (!account) return DEPOSIT_WITHDRAWAL_TEXT.feeAccountHint;
+    return `${account.accountCode} - ${account.accountName}`;
+  }, [handlingFeeControlAccountId, headerAccountResponse]);
   const headerAccountOptions = useMemo(
     () =>
       headerAccounts.map(account => ({
@@ -410,8 +571,32 @@ const VoucherFields = ({
     form.setValue('panDob', formatVoucherDateInput(selectedParty?.panDob), {
       shouldValidate: false,
     });
+    const currentItems = form.getValues('items') ?? [];
+    currentItems.forEach((item, index) => {
+      const itemTypeValue =
+        item.itemTypeValue ||
+        getVoucherItemTypeValueById(
+          item.itemTypeOptionId,
+          itemTypeCategoryOptions
+        );
+      if (!isVoucherBillItemTypeValue(itemTypeValue)) {
+        return;
+      }
+      form.setValue(`items.${index}.settledTransactionId`, '', {
+        shouldValidate: true,
+      });
+      form.setValue(`items.${index}.settledTransactionNumber`, '', {
+        shouldValidate: false,
+      });
+      form.setValue(`items.${index}.amount`, '', { shouldValidate: true });
+      form.setValue(
+        `items.${index}.subledgerPartyProfileId`,
+        nextPartyId,
+        { shouldValidate: true }
+      );
+    });
     resetPanVerification();
-  }, [form, resetPanVerification, selectedParty]);
+  }, [form, itemTypeCategoryOptions, resetPanVerification, selectedParty]);
   useEffect(() => {
     const selected = accountTypeOptions.find(
       option => String(option.value) === String(accountTypeOptionId)
@@ -440,23 +625,215 @@ const VoucherFields = ({
       form.setValue('number', nextNumber, { shouldDirty: false });
   }, [form, nextNumber, readOnly]);
   useEffect(() => {
+    if (type !== 'DEPOSIT_WITHDRAWAL' || readOnly) return;
+    const accountOption = itemTypeCategoryOptions.find(
+      option => option.value.trim().toUpperCase() === 'ACCOUNT'
+    );
+    if (!accountOption) return;
+    const directions = ['DEBIT', 'CREDIT', 'DEBIT'] as const;
+    const labels = [
+      DEPOSIT_WITHDRAWAL_TEXT.depositedIn,
+      DEPOSIT_WITHDRAWAL_TEXT.withdrawalFrom,
+      DEPOSIT_WITHDRAWAL_TEXT.handlingFee,
+    ];
+    directions.forEach((direction, index) => {
+      form.setValue(`items.${index}.itemTypeOptionId`, accountOption.id, {
+        shouldDirty: false,
+      });
+      form.setValue(`items.${index}.itemTypeValue`, 'ACCOUNT', {
+        shouldDirty: false,
+      });
+      form.setValue(`items.${index}.itemTypeName`, labels[index], {
+        shouldDirty: false,
+      });
+      form.setValue(`items.${index}.direction`, direction, {
+        shouldDirty: false,
+      });
+      if (index === 2) {
+        form.setValue(
+          `items.${index}.accountId`,
+          handlingFeeControlAccountId || '',
+          { shouldDirty: false }
+        );
+        form.setValue(`items.${index}.accountName`, handlingFeeAccountLabel, {
+          shouldDirty: false,
+        });
+      }
+    });
+  }, [
+    form,
+    handlingFeeAccountLabel,
+    handlingFeeControlAccountId,
+    itemTypeCategoryOptions,
+    readOnly,
+    type,
+  ]);
+  useEffect(() => {
     const accountType = itemTypeOptions.find(
       option => option.label.toUpperCase() === 'ACCOUNT'
     );
     items.forEach((item, index) => {
-      if (!item.itemTypeOptionId && accountType)
+      const itemTypeValue =
+        item.itemTypeValue ||
+        getVoucherItemTypeValueById(
+          item.itemTypeOptionId,
+          itemTypeCategoryOptions
+        );
+      if (itemTypeValue && item.itemTypeValue !== itemTypeValue) {
+        form.setValue(`items.${index}.itemTypeValue`, itemTypeValue, {
+          shouldDirty: false,
+        });
+      }
+      if (
+        !item.itemTypeOptionId &&
+        accountType
+      ) {
         form.setValue(
           `items.${index}.itemTypeOptionId`,
           String(accountType.value),
           { shouldDirty: false }
         );
-      const account = accounts.find(value => value.id === item.accountId);
-      if (account && item.accountName !== account.accountName)
-        form.setValue(`items.${index}.accountName`, account.accountName, {
+        form.setValue(`items.${index}.itemTypeValue`, 'ACCOUNT', {
           shouldDirty: false,
         });
+      }
+      if (!isVoucherBillItemTypeValue(itemTypeValue)) {
+        const account = accounts.find(value => value.id === item.accountId);
+        if (account && item.accountName !== account.accountName) {
+          form.setValue(`items.${index}.accountName`, account.accountName, {
+            shouldDirty: false,
+          });
+        }
+      }
+      if (
+        isVoucherBillItemTypeValue(itemTypeValue) &&
+        partyProfileId &&
+        item.subledgerPartyProfileId !== partyProfileId
+      ) {
+        form.setValue(
+          `items.${index}.subledgerPartyProfileId`,
+          partyProfileId,
+          { shouldDirty: false }
+        );
+      }
     });
-  }, [accounts, form, itemTypeOptions, items]);
+  }, [
+    accounts,
+    form,
+    itemTypeCategoryOptions,
+    itemTypeOptions,
+    items,
+    partyProfileId,
+    type,
+  ]);
+
+  const selectedSettledTransactionIds = useMemo(
+    () =>
+      items
+        .map(item => item.settledTransactionId)
+        .filter((id): id is string => Boolean(id)),
+    [items]
+  );
+
+  const outstandingModalItem =
+    outstandingModalIndex === null ? null : items[outstandingModalIndex];
+  const outstandingModalItemTypeValue = outstandingModalItem
+    ? outstandingModalItem.itemTypeValue ||
+      getVoucherItemTypeValueById(
+        outstandingModalItem.itemTypeOptionId,
+        itemTypeCategoryOptions
+      )
+    : '';
+  const outstandingModalItemTypeLabel =
+    itemTypeCategoryOptions.find(
+      option => option.value.toUpperCase() === outstandingModalItemTypeValue
+    )?.label ?? '';
+  const outstandingModalCurrentId =
+    outstandingModalItem?.settledTransactionId ?? undefined;
+
+  const handleItemTypeChange = (index: number, itemTypeOptionId: string) => {
+    const itemTypeValue = getVoucherItemTypeValueById(
+      itemTypeOptionId,
+      itemTypeCategoryOptions
+    );
+    form.setValue(`items.${index}.itemTypeValue`, itemTypeValue, {
+      shouldValidate: true,
+    });
+    form.setValue(`items.${index}.settledTransactionId`, '', {
+      shouldValidate: true,
+    });
+    form.setValue(`items.${index}.settledTransactionNumber`, '', {
+      shouldValidate: false,
+    });
+    form.setValue(`items.${index}.accountId`, '', { shouldValidate: true });
+    form.setValue(`items.${index}.accountName`, '', { shouldValidate: false });
+
+    if (isVoucherBillItemTypeValue(itemTypeValue)) {
+      form.setValue(
+        `items.${index}.subledgerPartyProfileId`,
+        partyProfileId ?? '',
+        { shouldValidate: true }
+      );
+      const direction = voucherBillDirection(itemTypeValue);
+      if (direction) {
+        form.setValue(`items.${index}.direction`, direction, {
+          shouldValidate: true,
+        });
+      }
+      return;
+    }
+
+    if (type === 'JOURNAL' && !isVoucherAccountItemTypeValue(itemTypeValue)) {
+      toast.error('Journal vouchers only support Account item lines');
+      form.setValue(`items.${index}.itemTypeOptionId`, '', {
+        shouldValidate: true,
+      });
+      form.setValue(`items.${index}.itemTypeValue`, '', {
+        shouldValidate: true,
+      });
+    }
+  };
+
+  const applyOutstandingBills = (
+    rowIndex: number,
+    bills: OutstandingBill[]
+  ) => {
+    if (!bills.length) {
+      return;
+    }
+
+    const currentItem = form.getValues(`items.${rowIndex}`);
+    const itemTypeOptionId = currentItem.itemTypeOptionId;
+    const itemTypeValue =
+      currentItem.itemTypeValue ||
+      getVoucherItemTypeValueById(itemTypeOptionId, itemTypeCategoryOptions);
+    const direction = voucherBillDirection(itemTypeValue) ?? 'DEBIT';
+
+    bills.forEach((bill, billIndex) => {
+      const row = {
+        itemTypeOptionId,
+        itemTypeValue,
+        subledgerPartyProfileId: partyProfileId ?? '',
+        accountId: '',
+        accountName: '',
+        direction,
+        amount: bill.outstanding,
+        settledTransactionId: bill.id,
+        settledTransactionNumber: bill.number,
+      };
+
+      if (billIndex === 0) {
+        form.setValue(`items.${rowIndex}`, row, {
+          shouldDirty: true,
+          shouldValidate: true,
+        });
+        return;
+      }
+
+      append(row);
+    });
+    setOutstandingModalIndex(null);
+  };
 
   const totals = items.reduce(
     (value, item) => {
@@ -489,7 +866,7 @@ const VoucherFields = ({
           />
           <FormFieldInput name="number" label="Transaction Number" disabled />
         </div>
-        {type !== 'JOURNAL' && (
+        {isPartyVoucherType(type) && (
           <>
             <div className="mt-4 grid gap-4 md:grid-cols-2">
               {readOnly ? (
@@ -619,6 +996,21 @@ const VoucherFields = ({
             )}
           </>
         )}
+        {isDepositWithdrawalType(type) && (
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <FormFieldInput
+              name="chequeNumber"
+              label="Cheque Number"
+              disabled={readOnly}
+            />
+            <FormFieldDatePicker
+              name="chequeDate"
+              label="Cheque Date"
+              dateFormat="dd/MM/yyyy"
+              disabled={readOnly}
+            />
+          </div>
+        )}
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           {readOnly ? (
             <FormFieldInput name="remarkName" label="Remark" disabled />
@@ -639,7 +1031,104 @@ const VoucherFields = ({
       </CardSection>
       <CardSection heading="Items">
         <div className="space-y-3">
-          {fields.map((field, index) => (
+          {isDepositWithdrawalType(type)
+            ? fields.map((field, index) => {
+                const rowLabel =
+                  index === 0
+                    ? DEPOSIT_WITHDRAWAL_TEXT.depositedIn
+                    : index === 1
+                      ? DEPOSIT_WITHDRAWAL_TEXT.withdrawalFrom
+                      : DEPOSIT_WITHDRAWAL_TEXT.handlingFee;
+                const isFeeRow = index === 2;
+                return (
+                  <div
+                    key={field.id}
+                    className="grid gap-3 rounded-lg border p-3 md:grid-cols-2 lg:grid-cols-7"
+                  >
+                    <FormFieldInput
+                      name={`items.${index}.lineNumber`}
+                      label="Sr. No."
+                      disabled
+                      value={String(index + 1)}
+                    />
+                    <FormFieldInput
+                      name={`items.${index}.itemTypeName`}
+                      label="Line"
+                      disabled
+                      value={rowLabel}
+                    />
+                    <FormFieldInput
+                      name={`items.${index}.itemTypeValue`}
+                      label="Type"
+                      disabled
+                      value={DEPOSIT_WITHDRAWAL_TEXT.typeAccount}
+                    />
+                    {isFeeRow ? (
+                      <FormFieldInput
+                        name={`items.${index}.accountName`}
+                        label="Account"
+                        disabled
+                        value={handlingFeeAccountLabel}
+                      />
+                    ) : readOnly ? (
+                      <FormFieldInput
+                        name={`items.${index}.accountCode`}
+                        label="Account Code"
+                        disabled
+                      />
+                    ) : (
+                      <FormFieldSelect
+                        name={`items.${index}.accountId`}
+                        label="Account Code"
+                        loadOptions={optionFilter(accountOptions)}
+                        defaultOptions={accountOptions}
+                        isLoading={accountsLoading}
+                      />
+                    )}
+                    {!isFeeRow ? (
+                      <FormFieldInput
+                        name={`items.${index}.accountName`}
+                        label="Account Name"
+                        disabled
+                      />
+                    ) : (
+                      <div className="hidden lg:block" aria-hidden="true" />
+                    )}
+                    <FormFieldSelect
+                      name={`items.${index}.direction`}
+                      label="Sign"
+                      loadOptions={optionFilter([
+                        { value: 'DEBIT', label: 'Debit' },
+                        { value: 'CREDIT', label: 'Credit' },
+                      ])}
+                      defaultOptions={[
+                        { value: 'DEBIT', label: 'Debit' },
+                        { value: 'CREDIT', label: 'Credit' },
+                      ]}
+                      disabled
+                    />
+                    <FormFieldInput
+                      name={`items.${index}.amount`}
+                      label="Amount"
+                      type="number"
+                      valueTransform="none"
+                      disabled={readOnly}
+                      placeholder={isFeeRow ? 'Optional' : undefined}
+                    />
+                  </div>
+                );
+              })
+            : fields.map((field, index) => {
+            const itemTypeValue =
+              items[index]?.itemTypeValue ||
+              getVoucherItemTypeValueById(
+                items[index]?.itemTypeOptionId ?? '',
+                itemTypeCategoryOptions
+              );
+            const isBillLine = isVoucherBillItemTypeValue(itemTypeValue);
+            const isBillLineLocked = isBillLine && Boolean(items[index]?.settledTransactionId);
+
+            return (
             <div
               key={field.id}
               className="grid gap-3 rounded-lg border p-3 md:grid-cols-2 lg:grid-cols-8"
@@ -656,12 +1145,31 @@ const VoucherFields = ({
                   label="Type"
                   disabled
                 />
+              ) : type === 'JOURNAL' ? (
+                <FormFieldSelect
+                  name={`items.${index}.itemTypeOptionId`}
+                  label="Type"
+                  loadOptions={optionFilter(journalItemTypeOptions)}
+                  defaultOptions={journalItemTypeOptions}
+                  onValueChange={value =>
+                    handleItemTypeChange(index, value ?? '')
+                  }
+                />
               ) : (
                 <FormFieldCategoryOption
                   name={`items.${index}.itemTypeOptionId`}
                   label="Type"
                   code={CategoryOptionCodeEnum.VoucherItemType}
                   isCreatable={false}
+                  onChange={option => {
+                    const selected = Array.isArray(option)
+                      ? option[0]
+                      : option;
+                    handleItemTypeChange(
+                      index,
+                      String(selected?.value ?? '')
+                    );
+                  }}
                 />
               )}
               {readOnly ? (
@@ -676,10 +1184,38 @@ const VoucherFields = ({
                   label="Sub Ledger Code"
                   loadOptions={optionFilter(subledgerOptions)}
                   defaultOptions={subledgerOptions}
-                  disabled={type !== 'JOURNAL' && !partyProfileId}
+                  disabled={
+                    isBillLine || (type !== 'JOURNAL' && !partyProfileId)
+                  }
                 />
               )}
-              {readOnly ? (
+              {isBillLine ? (
+                readOnly ? (
+                  <FormFieldInput
+                    name={`items.${index}.settledTransactionNumber`}
+                    label={OUTSTANDING_BILL_TEXT.settledBill}
+                    disabled
+                  />
+                ) : (
+                  <div className="space-y-2">
+                    <FormFieldInput
+                      name={`items.${index}.settledTransactionNumber`}
+                      label={OUTSTANDING_BILL_TEXT.settledBill}
+                      disabled
+                      placeholder="Not selected"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={!isBillLine || !partyProfileId}
+                      onClick={() => setOutstandingModalIndex(index)}
+                    >
+                      {OUTSTANDING_BILL_TEXT.selectOutstanding}
+                    </Button>
+                  </div>
+                )
+              ) : readOnly ? (
                 <FormFieldInput
                   name={`items.${index}.accountCode`}
                   label="Account Code"
@@ -693,11 +1229,15 @@ const VoucherFields = ({
                   defaultOptions={accountOptions}
                 />
               )}
-              <FormFieldInput
-                name={`items.${index}.accountName`}
-                label="Account Name"
-                disabled
-              />
+              {!isBillLine ? (
+                <FormFieldInput
+                  name={`items.${index}.accountName`}
+                  label="Account Name"
+                  disabled
+                />
+              ) : (
+                <div className="hidden lg:block" aria-hidden="true" />
+              )}
               <FormFieldSelect
                 name={`items.${index}.direction`}
                 label="Sign"
@@ -709,14 +1249,14 @@ const VoucherFields = ({
                   { value: 'DEBIT', label: 'Debit' },
                   { value: 'CREDIT', label: 'Credit' },
                 ]}
-                disabled={readOnly}
+                disabled={readOnly || isBillLine}
               />
               <FormFieldInput
                 name={`items.${index}.amount`}
                 label="Amount"
                 type="number"
                 valueTransform="none"
-                disabled={readOnly}
+                disabled={readOnly || isBillLineLocked}
               />
               {!readOnly && (
                 <Button
@@ -729,9 +1269,10 @@ const VoucherFields = ({
                 </Button>
               )}
             </div>
-          ))}
+            );
+          })}
         </div>
-        {!readOnly && (
+        {!readOnly && !isDepositWithdrawalType(type) && (
           <Button
             className="mt-3"
             type="button"
@@ -739,11 +1280,14 @@ const VoucherFields = ({
             onClick={() =>
               append({
                 itemTypeOptionId: '',
+                itemTypeValue: '',
                 subledgerPartyProfileId: '',
                 accountId: '',
                 accountName: '',
                 direction: 'DEBIT',
                 amount: '',
+                settledTransactionId: '',
+                settledTransactionNumber: '',
               })
             }
           >
@@ -765,12 +1309,39 @@ const VoucherFields = ({
           />
           <FormFieldInput
             name="finalAmountDisplay"
-            label={type === 'JOURNAL' ? 'Difference' : 'Final Amount'}
+            label={
+              type === 'JOURNAL' || type === 'DEPOSIT_WITHDRAWAL'
+                ? 'Difference'
+                : 'Final Amount'
+            }
             disabled
             value={(final / 100).toFixed(2)}
           />
         </div>
       </CardSection>
+      {outstandingModalIndex !== null &&
+      (type === 'RECEIPT' || type === 'PAYMENT') ? (
+        <SelectOutstandingBills
+          open
+          type={type}
+          params={{
+            partyProfileId: partyProfileId ?? '',
+            slug: outstandingModalItemTypeValue,
+            branchId: branchId ?? '',
+            counterId: counterId ?? '',
+            transactionDate: transactionDate ?? '',
+          }}
+          itemTypeLabel={outstandingModalItemTypeLabel}
+          excludedTransactionIds={selectedSettledTransactionIds.filter(
+            id => id !== outstandingModalCurrentId
+          )}
+          selectedTransactionIds={
+            outstandingModalCurrentId ? [outstandingModalCurrentId] : []
+          }
+          onContinue={bills => applyOutstandingBills(outstandingModalIndex, bills)}
+          onClose={() => setOutstandingModalIndex(null)}
+        />
+      ) : null}
     </div>
   );
 };

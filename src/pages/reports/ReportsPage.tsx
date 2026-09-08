@@ -1,5 +1,8 @@
 import { Navigate, useLocation, useParams } from 'react-router-dom';
 import ReportSalePurchaseView, {
+  BankReportView,
+  CashReportView,
+  GenerateLedgerView,
   CardBlankStockReportView,
   CardSettledReportView,
   CardUnsettledReportView,
@@ -58,6 +61,12 @@ const ReportsPage = () => {
       return <SpecialReportView key={`${slug}${location.search}`} />;
     case ReportPageTypeEnum.CURRENCY_BALANCE:
       return <CurrencyBalanceReportView key={`${slug}${location.search}`} />;
+    case ReportPageTypeEnum.BANK_REPORT:
+      return <BankReportView key={`${slug}${location.search}`} />;
+    case ReportPageTypeEnum.CASH_REPORT:
+      return <CashReportView key={`${slug}${location.search}`} />;
+    case ReportPageTypeEnum.GENERATE_LEDGER:
+      return <GenerateLedgerView key={`${slug}${location.search}`} />;
     case ReportPageTypeEnum.PRODUCT_PROFIT:
       return <ProductProfitReportView key={`${slug}${location.search}`} />;
     case ReportPageTypeEnum.CARD_UNSETTLED:

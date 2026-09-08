@@ -28,6 +28,15 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
     path: '/journal-vouchers/edit/:id',
     meta: { title: 'Journal Voucher Details' },
   },
+  { path: '/deposit-withdrawals', meta: { title: 'Deposit / Withdrawals' } },
+  {
+    path: '/deposit-withdrawals/create',
+    meta: { title: 'Create Deposit / Withdrawal' },
+  },
+  {
+    path: '/deposit-withdrawals/edit/:id',
+    meta: { title: 'Deposit / Withdrawal Details' },
+  },
   { path: '/fake-currencies', meta: { title: 'Fake Currencies' } },
   { path: '/fake-currencies/create', meta: { title: 'Create Fake Currency' } },
   {
@@ -35,6 +44,9 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
     meta: { title: 'Fake Currency Details' },
   },
   { path: '/reports/stock-revaluations', meta: { title: 'Stock Revaluation' } },
+  { path: '/reports/bank-report', meta: { title: 'Bank Report' } },
+  { path: '/reports/cash-report', meta: { title: 'Cash Report' } },
+  { path: '/reports/generate-ledger', meta: { title: 'Generate Ledger' } },
   {
     path: '/reports/card-unsettled-report',
     meta: { title: 'Unsettled CARD Report' },

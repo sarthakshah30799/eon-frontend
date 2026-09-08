@@ -32,6 +32,15 @@ const JournalVoucherCreatePage = lazy(
 const JournalVoucherEditPage = lazy(
   () => import('../pages/journal-vouchers/edit')
 );
+const DepositWithdrawalListPage = lazy(
+  () => import('../pages/deposit-withdrawals')
+);
+const DepositWithdrawalCreatePage = lazy(
+  () => import('../pages/deposit-withdrawals/create')
+);
+const DepositWithdrawalEditPage = lazy(
+  () => import('../pages/deposit-withdrawals/edit')
+);
 
 const UserCreatePage = lazy(
   () => import('../pages/users/create/UserCreatePage')
@@ -1446,6 +1455,30 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <JournalVoucherEditPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/deposit-withdrawals',
+    element: (
+      <ProtectedLayout>
+        <DepositWithdrawalListPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/deposit-withdrawals/create',
+    element: (
+      <ProtectedLayout>
+        <DepositWithdrawalCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/deposit-withdrawals/edit/:id',
+    element: (
+      <ProtectedLayout>
+        <DepositWithdrawalEditPage />
       </ProtectedLayout>
     ),
   },

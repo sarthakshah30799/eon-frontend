@@ -165,6 +165,17 @@ export type ICreatePartyProfile = Omit<
 
 export type IUpdatePartyProfile = Partial<ICreatePartyProfile>;
 
+export type IUpgradePartyProfileCreditPolicy = Partial<
+  Pick<
+    ICreatePartyProfile,
+    | 'permanentCreditLimit'
+    | 'permanentCreditDays'
+    | 'temporaryCreditLimit'
+    | 'temporaryCreditDays'
+    | 'chqTrxnLimit'
+  >
+>;
+
 export interface IReviewPartyProfilePayload {
   status: Exclude<PartyProfileStatus, typeof PartyProfileStatusEnum.PENDING>;
   active: boolean;

@@ -13,3 +13,12 @@ export const CARD_ISSUER_FORM_TEXT = {
   lengthPlaceholder: 'Default 16',
   maskingLabel: 'Allow masked card numbers',
 } as const;
+
+export const PARTY_PROFILE_CREDIT_POLICY_TEXT = {
+  sectionHeading: 'Credit Policy',
+  upgradeLimit: 'Upgrade Limit',
+  upgradeLimitHint:
+    'Credit policy fields are locked on edit. Click Upgrade Limit to change limits and save.',
+  saveBlockedUntilUpgrade:
+    'Click Upgrade Limit to edit credit policy fields, or change another section to save.',
+} as const;

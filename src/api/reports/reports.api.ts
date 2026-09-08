@@ -7,6 +7,12 @@ import type {
   ICardSettlementReportResponse,
   ICurrencyBalanceReportRequest,
   ICurrencyBalanceReportResponse,
+  IBankReportRequest,
+  IBankReportResponse,
+  ICashReportRequest,
+  ICashReportResponse,
+  IGenerateLedgerRequest,
+  IGenerateLedgerResponse,
   IProductProfitReportRequest,
   IProductProfitReportResponse,
   ISpecialReportRequest,
@@ -119,6 +125,72 @@ export const reportsApi = {
       return {
         columns: [],
         rows: [],
+      };
+    }
+
+    return res.data;
+  },
+
+  getBankReport: async (
+    params: IBankReportRequest
+  ): Promise<IBankReportResponse> => {
+    const res = await apiClient.get<IBankReportResponse>(
+      `/reports/bank-report${buildQueryString(params)}`
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      return {
+        columns: [],
+        layout: 'BRANCH_WISE',
+        sections: [],
+      };
+    }
+
+    return res.data;
+  },
+
+  getCashReport: async (
+    params: ICashReportRequest
+  ): Promise<ICashReportResponse> => {
+    const res = await apiClient.get<ICashReportResponse>(
+      `/reports/cash-report${buildQueryString(params)}`
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      return {
+        columns: [],
+        layout: 'BRANCH_WISE',
+        sections: [],
+      };
+    }
+
+    return res.data;
+  },
+
+  getGenerateLedger: async (
+    params: IGenerateLedgerRequest
+  ): Promise<IGenerateLedgerResponse> => {
+    const res = await apiClient.get<IGenerateLedgerResponse>(
+      `/reports/generate-ledger${buildQueryString(params)}`
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      return {
+        columns: [],
+        layout: 'BRANCH_WISE',
+        sections: [],
       };
     }
 
@@ -244,6 +316,87 @@ export const reportsApi = {
       filename:
         res.data.filename ||
         buildExportFilename('currency-balance-report', 'single', format),
+    };
+  },
+
+  downloadBankReport: async (
+    params: IBankReportRequest,
+    format: ReportExportFormat
+  ): Promise<{ blob: Blob; filename?: string }> => {
+    const query = buildQueryString({
+      ...params,
+      format,
+    });
+
+    const res = await apiClient.getDownload(
+      `/reports/bank-report/export${query}`
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      throw new Error('Failed to download bank report');
+    }
+
+    return {
+      blob: res.data.blob,
+      filename: res.data.filename || `bank-report.${format}`,
+    };
+  },
+
+  downloadCashReport: async (
+    params: ICashReportRequest,
+    format: ReportExportFormat
+  ): Promise<{ blob: Blob; filename?: string }> => {
+    const query = buildQueryString({
+      ...params,
+      format,
+    });
+
+    const res = await apiClient.getDownload(
+      `/reports/cash-report/export${query}`
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      throw new Error('Failed to download cash report');
+    }
+
+    return {
+      blob: res.data.blob,
+      filename: res.data.filename || `cash-report.${format}`,
+    };
+  },
+
+  downloadGenerateLedger: async (
+    params: IGenerateLedgerRequest,
+    format: ReportExportFormat
+  ): Promise<{ blob: Blob; filename?: string }> => {
+    const query = buildQueryString({
+      ...params,
+      format,
+    });
+
+    const res = await apiClient.getDownload(
+      `/reports/generate-ledger/export${query}`
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      throw new Error('Failed to download generate ledger report');
+    }
+
+    return {
+      blob: res.data.blob,
+      filename: res.data.filename || `generate-ledger.${format}`,
     };
   },
 

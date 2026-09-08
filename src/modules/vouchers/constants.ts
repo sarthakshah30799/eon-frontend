@@ -4,7 +4,21 @@ export const VOUCHER_LABELS: Record<VoucherType, string> = {
   RECEIPT: 'Receipt',
   PAYMENT: 'Payment',
   JOURNAL: 'Journal Voucher',
+  DEPOSIT_WITHDRAWAL: 'Deposit / Withdrawal',
 };
+
+export const VOUCHER_LIST_TEXT = {
+  description: (label: string) => `Immutable ${label.toLowerCase()} records`,
+  add: (label: string) => `Add ${label}`,
+  empty: (label: string) => `No ${label.toLowerCase()} records found.`,
+  number: 'Number',
+  transactionDate: 'Date',
+  party: 'Party',
+  amount: 'Amount',
+  accountMode: 'Account Mode',
+  actions: 'Actions',
+  view: 'View',
+} as const;
 
 export const VOUCHER_FORM_TEXT = {
   panNumber: 'PAN Number',
@@ -19,6 +33,44 @@ export const VOUCHER_FORM_TEXT = {
   panVerifySuccess: 'PAN details verified successfully',
   panVerifyFailed:
     'PAN verification failed. Please review the entered details.',
+} as const;
+
+export const DEPOSIT_WITHDRAWAL_TEXT = {
+  depositedIn: 'Deposited in',
+  withdrawalFrom: 'Withdrawal from',
+  handlingFee: 'Handling fees',
+  typeAccount: 'Account',
+  feeAccountHint: 'Handling fee control account',
+  balanceError:
+    'Withdrawal from must equal Deposited in, or Deposited in plus Handling fee.',
+  bankRequired:
+    'At least one of Deposited in or Withdrawal from must be a Bank Ledger account.',
+} as const;
+
+export const OUTSTANDING_BILL_TEXT = {
+  titleReceipt: 'Select Outstanding Bills (Receipt)',
+  titlePayment: 'Select Outstanding Bills (Payment)',
+  description: (count: number, itemTypeLabel: string) =>
+    itemTypeLabel
+      ? `${count} outstanding bill${count === 1 ? '' : 's'} for ${itemTypeLabel}. Select one or more to settle.`
+      : `${count} outstanding bill${count === 1 ? '' : 's'} for this party. Select one or more to settle.`,
+  empty: 'No outstanding bills found for this party, branch, and bill type.',
+  missingContext:
+    'Select party, branch, counter, transaction date, and bill type before choosing outstanding bills.',
+  searchPlaceholder: 'Search bill number',
+  number: 'Bill No',
+  date: 'Date',
+  passenger: 'Passenger',
+  finalAmount: 'Final Amount',
+  paidAmount: 'Paid',
+  outstanding: 'Outstanding',
+  continueLabel: 'Apply Bills',
+  cancelLabel: 'Cancel',
+  selectedSummary: (count: number, total: string) =>
+    `${count} selected | Combined outstanding ${total}`,
+  selectAll: 'Select all outstanding bills',
+  selectOutstanding: 'Select outstanding',
+  settledBill: 'Settled Bill',
 } as const;
 
 export const AVAILABLE_ADVANCE_TEXT = {
@@ -53,6 +105,7 @@ export const VOUCHER_PATHS: Record<VoucherType, string> = {
   RECEIPT: '/receipts',
   PAYMENT: '/payments',
   JOURNAL: '/journal-vouchers',
+  DEPOSIT_WITHDRAWAL: '/deposit-withdrawals',
 };
 
 export const createVoucherIdempotencyKey = () =>

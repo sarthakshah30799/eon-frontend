@@ -1,16 +1,18 @@
 import { useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Button, PaginationControls } from '@/components/ui';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Button, Table, type TableColumnDef } from '@/components/ui';
 import { Loader } from '@/components/ui/loader';
 import { useAuth } from '@/lib/AuthContext';
 import { useOffsetPaginatedList } from '@/hooks';
 import { getTransactionDatePolicy } from '@/modules/transactionPolicies/utils/transactionDatePolicy';
 import { transactionPoliciesApi } from '@/api/transactionPolicies/transactionPolicies.api';
 import { useQuery } from '@tanstack/react-query';
+import { formatDateTime } from '@/utils';
 import { VoucherForm } from './VoucherForm';
 import {
   createVoucherIdempotencyKey,
   VOUCHER_LABELS,
+  VOUCHER_LIST_TEXT,
   VOUCHER_PATHS,
 } from './constants';
 import { useCreateVoucher, useVoucher } from './hooks';
@@ -21,10 +23,25 @@ import type {
   VoucherType,
 } from './types';
 
+const emptyItem = (
+  direction: 'DEBIT' | 'CREDIT' = 'DEBIT'
+): VoucherFormValues['items'][number] => ({
+  itemTypeOptionId: '',
+  itemTypeValue: '',
+  subledgerPartyProfileId: '',
+  accountId: '',
+  accountName: '',
+  direction,
+  amount: '',
+  settledTransactionId: '',
+  settledTransactionNumber: '',
+});
+
 const emptyValues = (
   date: string,
   branchId: string,
-  counterId: string
+  counterId: string,
+  type: VoucherType = 'JOURNAL'
 ): VoucherFormValues => ({
   transactionDate: date,
   branchId,
@@ -52,22 +69,11 @@ const emptyValues = (
   remarkName: '',
   narration: '',
   idempotencyKey: createVoucherIdempotencyKey(),
-  items: [
-    {
-      itemTypeOptionId: '',
-      subledgerPartyProfileId: '',
-      accountId: '',
-      accountName: '',
-      direction: 'DEBIT',
-      amount: '',
-    },
-  ],
+  items:
+    type === 'DEPOSIT_WITHDRAWAL'
+      ? [emptyItem('DEBIT'), emptyItem('CREDIT'), emptyItem('DEBIT')]
+      : [emptyItem('DEBIT')],
 });
-
-const displayDate = (value: string) => {
-  const [year, month, day] = value.slice(0, 10).split('-');
-  return year && month && day ? `${day}/${month}/${year}` : value;
-};
 
 const fromEntity = (voucher: AccountingVoucher): VoucherFormValues => ({
   transactionDate: voucher.transactionDate,
@@ -107,18 +113,49 @@ const fromEntity = (voucher: AccountingVoucher): VoucherFormValues => ({
     voucher.remarkSnapshot?.label ?? voucher.remarkSnapshot?.name ?? '',
   narration: voucher.narration,
   idempotencyKey: voucher.idempotencyKey,
-  items: voucher.items.map(item => ({
-    ...item,
-    itemTypeName:
-      item.itemTypeSnapshot?.label ?? item.itemTypeSnapshot?.name ?? '',
-    subledgerCode: item.subledgerPartyProfileSnapshot?.code ?? '',
-    accountCode: item.accountSnapshot?.code ?? '',
-    accountName:
-      item.accountSnapshot?.name ?? item.accountSnapshot?.label ?? '',
-  })),
+  items: (() => {
+    const mapped = voucher.items.map(item => ({
+      ...item,
+      itemTypeName:
+        item.itemTypeSnapshot?.label ?? item.itemTypeSnapshot?.name ?? '',
+      itemTypeValue:
+        (item.itemTypeSnapshot as { value?: string } | null | undefined)
+          ?.value ??
+        item.itemTypeSnapshot?.code ??
+        '',
+      subledgerCode: item.subledgerPartyProfileSnapshot?.code ?? '',
+      accountCode: item.accountSnapshot?.code ?? '',
+      accountName:
+        item.accountSnapshot?.name ?? item.accountSnapshot?.label ?? '',
+      settledTransactionNumber:
+        (
+          item.settledTransactionSnapshot as
+            | { number?: string }
+            | null
+            | undefined
+        )?.number ??
+        item.settledTransactionSnapshot?.code ??
+        item.settledTransactionSnapshot?.name ??
+        item.settledTransactionSnapshot?.label ??
+        '',
+    }));
+    if (
+      voucher.voucherType === 'DEPOSIT_WITHDRAWAL' &&
+      mapped.length === 2
+    ) {
+      mapped.push({
+        ...emptyItem('DEBIT'),
+        itemTypeName: 'Handling fees',
+        itemTypeValue: 'ACCOUNT',
+        amount: '',
+      });
+    }
+    return mapped;
+  })(),
 });
 
 export const VoucherListView = ({ type }: { type: VoucherType }) => {
+  const navigate = useNavigate();
   const {
     rows,
     isLoading,
@@ -135,62 +172,105 @@ export const VoucherListView = ({ type }: { type: VoucherType }) => {
     queryFn: params => vouchersApi.list(type, params),
   });
   const label = VOUCHER_LABELS[type];
-  if (isLoading)
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <Loader />
-      </div>
-    );
+
+  const columns = useMemo<TableColumnDef<AccountingVoucher>[]>(
+    () => [
+      {
+        accessorKey: 'number',
+        header: VOUCHER_LIST_TEXT.number,
+        cell: ({ row }) => (
+          <span className="font-semibold text-text-primary">
+            {row.original.number}
+          </span>
+        ),
+      },
+      {
+        accessorKey: 'transactionDate',
+        header: VOUCHER_LIST_TEXT.transactionDate,
+        cell: ({ row }) =>
+          formatDateTime(
+            `${row.original.transactionDate?.slice(0, 10)}T00:00:00`,
+            'DD/MM/YYYY'
+          ),
+      },
+      {
+        id: 'party',
+        header: VOUCHER_LIST_TEXT.party,
+        cell: ({ row }) =>
+          row.original.partyProfileSnapshot?.name ??
+          row.original.partyProfileSnapshot?.label ??
+          '-',
+      },
+      {
+        accessorKey: 'finalAmount',
+        header: VOUCHER_LIST_TEXT.amount,
+      },
+      {
+        accessorKey: 'accountMode',
+        header: VOUCHER_LIST_TEXT.accountMode,
+        cell: ({ row }) => row.original.accountMode ?? '-',
+      },
+      {
+        id: 'actions',
+        header: VOUCHER_LIST_TEXT.actions,
+        cell: ({ row }) => (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              navigate(`${VOUCHER_PATHS[type]}/edit/${row.original.id}`)
+            }
+          >
+            {VOUCHER_LIST_TEXT.view}
+          </Button>
+        ),
+      },
+    ],
+    [navigate, type]
+  );
+
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">{label}s</h1>
+          <h1 className="text-2xl font-semibold text-text-primary">
+            {label}s
+          </h1>
           <p className="text-sm text-text-secondary">
-            Immutable {label.toLowerCase()} records
+            {VOUCHER_LIST_TEXT.description(label)}
           </p>
         </div>
-        <Link to={`${VOUCHER_PATHS[type]}/create`}>
-          <Button>Add {label}</Button>
-        </Link>
+        <Button
+          type="button"
+          onClick={() => navigate(`${VOUCHER_PATHS[type]}/create`)}
+        >
+          {VOUCHER_LIST_TEXT.add(label)}
+        </Button>
       </div>
-      {error && (
-        <p className="text-error-600">
-          {error instanceof Error ? error.message : 'Failed to load vouchers'}
-        </p>
-      )}
-      <div className="space-y-2">
-        {rows.map(voucher => (
-          <Link
-            key={voucher.id}
-            to={`${VOUCHER_PATHS[type]}/edit/${voucher.id}`}
-            className="grid gap-2 rounded-lg border bg-white p-4 hover:border-primary-300 md:grid-cols-5"
-          >
-            <span className="font-medium">{voucher.number}</span>
-            <span>{displayDate(voucher.transactionDate)}</span>
-            <span>{voucher.partyProfileSnapshot?.name ?? '-'}</span>
-            <span>{voucher.finalAmount}</span>
-            <span>{voucher.accountMode ?? '-'}</span>
-          </Link>
-        ))}
-        {!rows.length && (
-          <div className="rounded-lg border bg-white p-8 text-center text-text-secondary">
-            No {label.toLowerCase()} records found.
-          </div>
-        )}
-      </div>
-      <PaginationControls
-        page={page}
-        pageSize={limit}
-        total={total}
-        totalPages={totalPages}
-        onPageChange={handlePageChange}
-        onPageSizeChange={handlePageSizeChange}
-        itemLabel={`${label.toLowerCase()} records`}
-      />
-      {isFetching && !isLoading ? (
-        <p className="text-sm text-text-secondary">Refreshing...</p>
-      ) : null}
+      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+        <Table
+          columns={columns}
+          data={rows}
+          loading={isLoading}
+          isFetching={isFetching}
+          enableSorting={false}
+          enableFiltering={false}
+          enablePagination
+          manualPagination
+          page={page}
+          pageSize={limit}
+          total={total}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+          emptyMessage={
+            error instanceof Error
+              ? error.message
+              : VOUCHER_LIST_TEXT.empty(label)
+          }
+        />
+      </section>
     </div>
   );
 };
@@ -223,13 +303,15 @@ export const VoucherCreateView = ({ type }: { type: VoucherType }) => {
       emptyValues(
         policy.defaultTransactionDate,
         canSelectWorkplace ? '' : (activeBranchId ?? ''),
-        canSelectWorkplace ? '' : (activeCounterId ?? '')
+        canSelectWorkplace ? '' : (activeCounterId ?? ''),
+        type
       ),
     [
       activeBranchId,
       activeCounterId,
       canSelectWorkplace,
       policy.defaultTransactionDate,
+      type,
     ]
   );
   return (

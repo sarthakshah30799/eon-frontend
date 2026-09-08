@@ -557,6 +557,13 @@ const VOUCHER_NUMBERING_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefi
       required: true,
       placeholder: 'Enter starting sequence number',
     },
+    {
+      code: AdditionalSettingsCodeEnum.DepositWithdrawalVoucherNumberSeries,
+      label: 'DEPOSIT / WITHDRAWAL VOUCHER',
+      valueType: 'number',
+      required: true,
+      placeholder: 'Enter starting sequence number',
+    },
   ];
 
 const FAKE_CURRENCY_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] =

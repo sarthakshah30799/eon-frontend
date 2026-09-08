@@ -1,4 +1,48 @@
-import type { VoucherSnapshot } from './types';
+import type { VoucherDirection, VoucherSnapshot } from './types';
+
+export const VOUCHER_ITEM_TYPE_ACCOUNT = 'ACCOUNT';
+
+export const isVoucherAccountItemTypeValue = (value?: string | null) =>
+  String(value ?? '')
+    .trim()
+    .toUpperCase() === VOUCHER_ITEM_TYPE_ACCOUNT;
+
+export const isVoucherBillItemTypeValue = (value?: string | null) => {
+  const normalized = String(value ?? '')
+    .trim()
+    .toUpperCase();
+  return (
+    (normalized.startsWith('PURCHASE_') || normalized.startsWith('SALE_')) &&
+    !isVoucherAccountItemTypeValue(normalized)
+  );
+};
+
+export const voucherBillDirection = (
+  value?: string | null
+): VoucherDirection | null => {
+  const normalized = String(value ?? '')
+    .trim()
+    .toUpperCase();
+  if (normalized.startsWith('SALE_')) return 'CREDIT';
+  if (normalized.startsWith('PURCHASE_')) return 'DEBIT';
+  return null;
+};
+
+export const getVoucherItemTypeValueById = (
+  itemTypeOptionId: string,
+  options: Array<{ id: string; value: string }>
+) =>
+  options
+    .find(option => option.id === itemTypeOptionId)
+    ?.value.trim()
+    .toUpperCase() ?? '';
+
+export const formatOutstandingBillPassengerLabel = (
+  snapshot?: Record<string, unknown> | null
+) => {
+  const name = snapshot?.panHolderName;
+  return typeof name === 'string' && name.trim() ? name.trim() : '-';
+};
 
 export const formatAdvanceAccountLabel = (
   snapshot?: VoucherSnapshot | null

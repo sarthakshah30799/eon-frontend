@@ -33,6 +33,9 @@ export const ReportPageTypeEnum = {
   PRODUCT_PROFIT: 'product-profit-report',
   SPECIAL: 'special-reports',
   CURRENCY_BALANCE: 'currency-balance-report',
+  BANK_REPORT: 'bank-report',
+  CASH_REPORT: 'cash-report',
+  GENERATE_LEDGER: 'generate-ledger',
   CARD_UNSETTLED: 'card-unsettled-report',
   CARD_SETTLED: 'card-settled-report',
   CARD_BLANK_STOCK: 'card-blank-stock-report',
@@ -72,6 +75,9 @@ const REPORT_PAGE_TITLE_BY_TYPE: Record<ReportPageType, string> = {
   [ReportPageTypeEnum.PRODUCT_PROFIT]: 'Product Profit Reports',
   [ReportPageTypeEnum.SPECIAL]: 'Special Reports',
   [ReportPageTypeEnum.CURRENCY_BALANCE]: 'Currency Balance',
+  [ReportPageTypeEnum.BANK_REPORT]: 'Bank Report',
+  [ReportPageTypeEnum.CASH_REPORT]: 'Cash Report',
+  [ReportPageTypeEnum.GENERATE_LEDGER]: 'Generate Ledger',
   [ReportPageTypeEnum.CARD_UNSETTLED]: 'Unsettled CARD Report',
   [ReportPageTypeEnum.CARD_SETTLED]: 'Settled CARD Report',
   [ReportPageTypeEnum.CARD_BLANK_STOCK]: 'Blank Stock CARD Report',
@@ -273,6 +279,161 @@ export interface ICurrencyBalanceReportRequest {
   branchIds?: string[];
   counterIds?: string[];
   currencyIds?: string[];
+}
+
+export const BankReportLayoutEnum = {
+  BRANCH_WISE: 'BRANCH_WISE',
+  CONSOLIDATED: 'CONSOLIDATED',
+} as const;
+
+export type BankReportLayout =
+  (typeof BankReportLayoutEnum)[keyof typeof BankReportLayoutEnum];
+
+export interface IBankReportColumn {
+  key: string;
+  label: string;
+}
+
+export interface IBankReportRow {
+  transactionType: string;
+  date: string;
+  createdAt: string;
+  number: string;
+  chequeNumber: string;
+  chequeDate: string;
+  party: string;
+  narration: string;
+  receipts: string;
+  payments: string;
+  runningBalance: string;
+}
+
+export interface IBankReportSection {
+  branchId: string | null;
+  branchLabel: string;
+  accountId: string;
+  accountLabel: string;
+  openingBalance: string;
+  totalReceipts: string;
+  totalPayments: string;
+  closingBalance: string;
+  rows: IBankReportRow[];
+}
+
+export interface IBankReportResponse {
+  columns: IBankReportColumn[];
+  layout: BankReportLayout;
+  sections: IBankReportSection[];
+}
+
+export interface IBankReportRequest {
+  startDate?: string;
+  endDate?: string;
+  layout?: BankReportLayout;
+  branchIds?: string[];
+  accountIds?: string[];
+}
+
+export const CashReportLayoutEnum = {
+  BRANCH_WISE: 'BRANCH_WISE',
+  CONSOLIDATED: 'CONSOLIDATED',
+} as const;
+
+export type CashReportLayout =
+  (typeof CashReportLayoutEnum)[keyof typeof CashReportLayoutEnum];
+
+export interface ICashReportColumn {
+  key: string;
+  label: string;
+}
+
+export interface ICashReportRow {
+  transactionType: string;
+  date: string;
+  type: string;
+  number: string;
+  party: string;
+  narration: string;
+  receipts: string;
+  payments: string;
+  runningBalance: string;
+}
+
+export interface ICashReportSection {
+  branchId: string | null;
+  branchLabel: string;
+  accountId: string;
+  accountLabel: string;
+  openingBalance: string;
+  totalReceipts: string;
+  totalPayments: string;
+  closingBalance: string;
+  rows: ICashReportRow[];
+}
+
+export interface ICashReportResponse {
+  columns: ICashReportColumn[];
+  layout: CashReportLayout;
+  sections: ICashReportSection[];
+}
+
+export interface ICashReportRequest {
+  startDate?: string;
+  endDate?: string;
+  layout?: CashReportLayout;
+  branchIds?: string[];
+  accountIds?: string[];
+}
+
+export const GenerateLedgerLayoutEnum = {
+  BRANCH_WISE: 'BRANCH_WISE',
+  CONSOLIDATED: 'CONSOLIDATED',
+} as const;
+
+export type GenerateLedgerLayout =
+  (typeof GenerateLedgerLayoutEnum)[keyof typeof GenerateLedgerLayoutEnum];
+
+export interface IGenerateLedgerColumn {
+  key: string;
+  label: string;
+}
+
+export interface IGenerateLedgerRow {
+  date: string;
+  type: string;
+  number: string;
+  subledger: string;
+  particulars: string;
+  debit: string;
+  credit: string;
+  runningTotal: string;
+}
+
+export interface IGenerateLedgerSection {
+  branchId: string | null;
+  branchLabel: string;
+  accountId: string | null;
+  accountLabel: string;
+  openingBalance: string;
+  totalDebit: string;
+  totalCredit: string;
+  closingBalance: string;
+  rows: IGenerateLedgerRow[];
+}
+
+export interface IGenerateLedgerResponse {
+  columns: IGenerateLedgerColumn[];
+  layout: GenerateLedgerLayout;
+  sections: IGenerateLedgerSection[];
+}
+
+export interface IGenerateLedgerRequest {
+  startDate?: string;
+  endDate?: string;
+  layout?: GenerateLedgerLayout;
+  branchIds?: string[];
+  accountTypeIds?: string[];
+  accountIds?: string[];
 }
 
 export interface ICardSettlementReportFiltersState {

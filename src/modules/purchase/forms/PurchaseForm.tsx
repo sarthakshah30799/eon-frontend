@@ -42,6 +42,7 @@ import { PurchasePartyProfileField } from '../components/PurchasePartyProfileFie
 import { PurchaseReferenceNumberField } from '../components/PurchaseReferenceNumberField';
 import { PurchaseWorkplaceFields } from '../components/PurchaseWorkplaceFields';
 import { PurchaseRulePreviewSection } from '../components/PurchaseRulePreviewSection';
+import { PurchaseCreditPreviewSection } from '../components/PurchaseCreditPreviewSection';
 import {
   PurchaseCdfDeclarationModal,
   type IPurchaseCdfDeclarationValues,
@@ -60,7 +61,7 @@ import {
   formatPurchaseDecimal,
   mapPurchaseFormValuesToSubmitPayload,
 } from '../utils/purchaseUtils';
-import { PURCHASE_PREVIEW_TEXT, PURCHASE_RULE_TEXT } from '../constants/purchaseConstants';
+import { PURCHASE_PREVIEW_TEXT, PURCHASE_RULE_TEXT, PURCHASE_CREDIT_TEXT } from '../constants/purchaseConstants';
 import { getTransactionDatePolicy } from '@/modules/transactionPolicies/utils/transactionDatePolicy';
 import {
   TransactionLogActionEnum,
@@ -75,11 +76,14 @@ import {
 import type {
   IPurchaseRulePreviewRequest,
   IPurchaseRulePreviewResponse,
+  ICreditPreviewRequest,
+  ICreditPreviewResponse,
   ITransactionTaxPreviewResponse,
   ITransactionTcsPreviewResponse,
 } from '@/modules/transactions';
 import {
   usePurchaseRulePreview,
+  useCreditPreview,
   useTransactionTaxPreview,
   useTransactionTcsPreview,
 } from '@/modules/transactions';
@@ -145,6 +149,7 @@ interface PurchaseFormBodyProps {
   ) => void | Promise<void>;
   onClearDraftDocument: (documentProfileId: string) => void | Promise<void>;
   onPurchaseRuleBlockChange: (isBlocked: boolean) => void;
+  onCreditBlockChange: (isBlocked: boolean) => void;
   onPurchaseRuleMetaChange: (meta: {
     allowed: boolean;
     requiresCdf: boolean;
@@ -176,6 +181,7 @@ const PurchaseFormBody = ({
   onSelectDraftDocument,
   onClearDraftDocument,
   onPurchaseRuleBlockChange,
+  onCreditBlockChange,
   onPurchaseRuleMetaChange,
   onTransactionPreviewLoadingChange,
   transactionDatePolicy,
@@ -226,6 +232,10 @@ const PurchaseFormBody = ({
   const passengerId = useWatch({
     control: form.control,
     name: 'passengerId',
+  });
+  const transactionDate = useWatch({
+    control: form.control,
+    name: 'transactionDate',
   });
   const paymentDetails = useWatch({
     control: form.control,
@@ -382,6 +392,7 @@ const PurchaseFormBody = ({
       'paidByPanDob',
       'gstNumber',
       'gstStateId',
+      'passportPassengerName',
       'passportNumber',
       'passportIssueAt',
       'passportIssueDate',
@@ -415,6 +426,7 @@ const PurchaseFormBody = ({
     purchaseRulePaidByPanDob,
     purchaseRuleGstNumber,
     purchaseRuleGstStateId,
+    purchaseRulePassportPassengerName,
     purchaseRulePassportNumber,
     purchaseRulePassportIssueAt,
     purchaseRulePassportIssueDate,
@@ -466,6 +478,7 @@ const PurchaseFormBody = ({
         paidByPanDob: purchaseRulePaidByPanDob ?? '',
         gstNumber: purchaseRuleGstNumber ?? '',
         gstStateId: purchaseRuleGstStateId ?? '',
+        passportPassengerName: purchaseRulePassportPassengerName ?? '',
         passportNumber: purchaseRulePassportNumber ?? '',
         passportIssueAt: purchaseRulePassportIssueAt ?? '',
         passportIssueDate: purchaseRulePassportIssueDate ?? '',
@@ -501,6 +514,7 @@ const PurchaseFormBody = ({
       purchaseRulePanHolderName,
       purchaseRulePanHolderRelationType,
       purchaseRulePanNumber,
+      purchaseRulePassportPassengerName,
       purchaseRulePassportExpiryDate,
       purchaseRulePassportIssueAt,
       purchaseRulePassportIssueDate,
@@ -869,18 +883,6 @@ const PurchaseFormBody = ({
   const canPreviewTcs = Boolean(tcsPreviewRequest);
   const { data: tcsPreview, isLoading: isTcsPreviewLoading } =
     useTransactionTcsPreview(tcsPreviewRequest, canPreviewTcs);
-  const isTransactionPreviewLoading =
-    (canPreviewPurchaseRule && isPurchaseRulePreviewLoading) ||
-    (canPreviewTax && isTaxPreviewLoading) ||
-    (canPreviewTcs && isTcsPreviewLoading);
-
-  useLayoutEffect(() => {
-    onTransactionPreviewLoadingChange(isTransactionPreviewLoading);
-
-    return () => {
-      onTransactionPreviewLoadingChange(false);
-    };
-  }, [isTransactionPreviewLoading, onTransactionPreviewLoadingChange]);
   const resolvedTcsSummary =
     useMemo<ITransactionTcsPreviewResponse | null>(() => {
       if (tcsPreview) {
@@ -968,6 +970,79 @@ const PurchaseFormBody = ({
       transactionType,
     ]
   );
+  const currentOutstandingPreview = useMemo(() => {
+    const totalPaid = (paymentDetails ?? []).reduce(
+      (sum, row) => sum + Number(row?.amount ?? 0),
+      0
+    );
+
+    return Math.max(0, Number(totalPayableAmount || 0) - totalPaid);
+  }, [paymentDetails, totalPayableAmount]);
+  const creditPreviewRequest = useMemo<ICreditPreviewRequest | null>(() => {
+    if (
+      !partyProfileId ||
+      !transactionType ||
+      !transactionDate ||
+      !Number(totalPayableAmount)
+    ) {
+      return null;
+    }
+
+    return {
+      partyProfileId: String(partyProfileId),
+      transactionType,
+      transactionDate: String(transactionDate),
+      payableAmount: Number(totalPayableAmount),
+      payments: (paymentDetails ?? []).map(row => ({
+        amount: row?.amount ?? null,
+      })),
+    };
+  }, [
+    partyProfileId,
+    paymentDetails,
+    totalPayableAmount,
+    transactionDate,
+    transactionType,
+  ]);
+  const canPreviewCredit = Boolean(
+    creditPreviewRequest &&
+      currentOutstandingPreview > 0 &&
+      !savedTransaction?.id
+  );
+  const { data: creditPreview, isLoading: isCreditPreviewLoading } =
+    useCreditPreview(creditPreviewRequest, canPreviewCredit);
+  const resolvedCreditPreview = useMemo<ICreditPreviewResponse | null>(
+    () => creditPreview ?? null,
+    [creditPreview]
+  );
+  const isTransactionPreviewLoading =
+    (canPreviewPurchaseRule && isPurchaseRulePreviewLoading) ||
+    (canPreviewTax && isTaxPreviewLoading) ||
+    (canPreviewTcs && isTcsPreviewLoading) ||
+    (canPreviewCredit && isCreditPreviewLoading);
+
+  useLayoutEffect(() => {
+    onTransactionPreviewLoadingChange(isTransactionPreviewLoading);
+
+    return () => {
+      onTransactionPreviewLoadingChange(false);
+    };
+  }, [isTransactionPreviewLoading, onTransactionPreviewLoadingChange]);
+
+  useEffect(() => {
+    if (!canPreviewCredit) {
+      onCreditBlockChange(false);
+      return;
+    }
+
+    onCreditBlockChange(
+      Boolean(resolvedCreditPreview && !resolvedCreditPreview.allowed)
+    );
+  }, [
+    canPreviewCredit,
+    onCreditBlockChange,
+    resolvedCreditPreview,
+  ]);
   const getDocumentLabel = (document: IPurchaseTransactionDocument) => {
     const snapshot = document.documentProfileSnapshot as
       | { label?: unknown; name?: unknown }
@@ -1658,6 +1733,14 @@ const PurchaseFormBody = ({
         }
       />
 
+      {canPreviewCredit && isCreditPreviewLoading ? (
+        <CardSection heading={PURCHASE_CREDIT_TEXT.heading}>
+          <Loader variant="inline" />
+        </CardSection>
+      ) : canPreviewCredit && resolvedCreditPreview ? (
+        <PurchaseCreditPreviewSection preview={resolvedCreditPreview} />
+      ) : null}
+
       <CardSection heading="Transaction Documents" className="space-y-4">
         <p className="text-sm text-text-secondary">
           Attach any transaction documents now.
@@ -1788,6 +1871,7 @@ export const PurchaseForm = ({
     Record<string, File | null>
   >({});
   const [isPurchaseRuleBlocked, setIsPurchaseRuleBlocked] = useState(false);
+  const [isCreditBlocked, setIsCreditBlocked] = useState(false);
   const [isTransactionPreviewLoading, setIsTransactionPreviewLoading] =
     useState(false);
   const [purchaseRuleMeta, setPurchaseRuleMeta] = useState({
@@ -1913,8 +1997,13 @@ export const PurchaseForm = ({
       );
     }
 
+    if (isCreditBlocked) {
+      messages.push(PURCHASE_CREDIT_TEXT.failedFallback);
+    }
+
     return messages.join(' ');
   }, [
+    isCreditBlocked,
     isPurchaseRuleBlocked,
     isTransactionPreviewLoading,
     purchaseRuleMeta.blockingReason,
@@ -1948,6 +2037,7 @@ export const PurchaseForm = ({
         showSubmit: !readOnly,
         isSubmitDisabled:
           isPurchaseRuleBlocked ||
+          isCreditBlocked ||
           isTransactionPreviewLoading ||
           !transactionDatePolicy.canPunchTransactions,
         submitMessage: submitMessage || undefined,
@@ -1971,6 +2061,7 @@ export const PurchaseForm = ({
         onSelectDraftDocument={handleSelectDraftDocument}
         onClearDraftDocument={handleClearDraftDocument}
         onPurchaseRuleBlockChange={setIsPurchaseRuleBlocked}
+        onCreditBlockChange={setIsCreditBlocked}
         onPurchaseRuleMetaChange={setPurchaseRuleMeta}
         onTransactionPreviewLoadingChange={setIsTransactionPreviewLoading}
         transactionDatePolicy={transactionDatePolicy}

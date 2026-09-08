@@ -604,6 +604,37 @@ export interface IPurchaseRulePreviewResponse {
   paymentMethodsAllowed: Array<'CASH' | 'CHEQUE'>;
 }
 
+export interface ICreditPreviewRequest {
+  partyProfileId: string;
+  transactionType: TransactionType;
+  transactionDate: string;
+  payableAmount: number;
+  payments?: Array<{ amount?: string | number | null }>;
+  excludeTransactionId?: string | null;
+}
+
+export interface ICreditPreviewResponse {
+  allowed: boolean;
+  ruleType:
+    | 'OK'
+    | 'OUTSTANDING_NOT_ALLOWED'
+    | 'CREDIT_LIMIT_EXCEEDED'
+    | 'CREDIT_DAYS_OVER'
+    | 'CREDIT_NOT_CONFIGURED';
+  blockingReason: string | null;
+  blockingReasons: string[];
+  outstandingAllowed: boolean;
+  creditConfigured: boolean;
+  applicableCreditLimit: string;
+  applicableCreditDays: number | null;
+  existingOutstanding: string;
+  currentOutstanding: string;
+  totalExposure: string;
+  availableCredit: string;
+  payableAmount: string;
+  totalPaid: string;
+}
+
 export interface ICreateTransactionPassengerOtherDocumentPayload {
   documentType: string;
   documentNumber: string;
@@ -648,6 +679,7 @@ export interface ICreateTransactionPassengerPayload {
   paidByPanDob?: string | null;
   gstNumber?: string | null;
   gstStateId?: string | null;
+  passportPassengerName?: string | null;
   passportNumber?: string | null;
   passportIssueAt?: string | null;
   passportIssueDate?: string | null;

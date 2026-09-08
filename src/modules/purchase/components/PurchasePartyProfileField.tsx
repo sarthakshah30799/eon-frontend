@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { Button } from '@/components/ui';
 import { SelectPartyProfiles } from '@/modules/partyProfiles/components';
+import { resolvePassengerDisplayName } from '@/modules/passengers/utils/passengerDisplayName';
 import { HighRiskPartyProfileWarningModal } from './HighRiskPartyProfileWarningModal';
 import type { PartyProfileType } from '@/modules/partyProfiles/types';
 import type {
@@ -65,9 +66,33 @@ export const PurchasePartyProfileField = ({
     control: form.control,
     name: 'panHolderName',
   });
+  const passportPassengerName = useWatch({
+    control: form.control,
+    name: 'passportPassengerName',
+  });
   const passportNumber = useWatch({
     control: form.control,
     name: 'passportNumber',
+  });
+  const passportIssueAt = useWatch({
+    control: form.control,
+    name: 'passportIssueAt',
+  });
+  const passportIssueDate = useWatch({
+    control: form.control,
+    name: 'passportIssueDate',
+  });
+  const passportExpiryDate = useWatch({
+    control: form.control,
+    name: 'passportExpiryDate',
+  });
+  const panDob = useWatch({
+    control: form.control,
+    name: 'panDob',
+  });
+  const paidByPanHolderName = useWatch({
+    control: form.control,
+    name: 'paidByPanHolderName',
   });
   const transactionType = useWatch({
     control: form.control,
@@ -91,6 +116,44 @@ export const PurchasePartyProfileField = ({
 
   const isCombinedPartyProfilePage =
     isCorporateIndividualPurchasePage(purchasePageType);
+
+  const partyProfileDisplayValue = useMemo(() => {
+    if (disabled && passengerInfoCaptured) {
+      const resolvedName = resolvePassengerDisplayName({
+        passportPassengerName,
+        passportNumber,
+        passportIssueAt,
+        passportIssueDate,
+        passportExpiryDate,
+        panHolderName,
+        panNumber,
+        panDob,
+        paidByPanHolderName,
+        partyProfileName,
+      });
+
+      return formatPurchaseEntityLabel(
+        partyProfileCode,
+        resolvedName || partyProfileName
+      );
+    }
+
+    return formatPurchaseEntityLabel(partyProfileCode, partyProfileName);
+  }, [
+    disabled,
+    passengerInfoCaptured,
+    partyProfileCode,
+    partyProfileName,
+    passportPassengerName,
+    passportNumber,
+    passportIssueAt,
+    passportIssueDate,
+    passportExpiryDate,
+    panHolderName,
+    panNumber,
+    panDob,
+    paidByPanHolderName,
+  ]);
 
   const proceedWithProfileSelection = (selectedProfile: IPartyProfile) => {
     form.setValue('partyProfileId', selectedProfile.id, {
@@ -202,7 +265,7 @@ export const PurchasePartyProfileField = ({
       <div className="space-y-2">
         <EntityPickerField
           label="Party Profile"
-          value={formatPurchaseEntityLabel(partyProfileCode, partyProfileName)}
+          value={partyProfileDisplayValue}
           placeholder="Select party profile"
           onClick={() => setOpen(true)}
           disabled={disabled}
@@ -243,7 +306,14 @@ export const PurchasePartyProfileField = ({
                 ? `PAN: ${panNumber || '-'}`
                 : `Passport: ${passportNumber || '-'}`}
             </div>
-            {panHolderName ? <div className="mt-1">{panHolderName}</div> : null}
+            {panHolderName ? (
+              <div className="mt-1">PAN Holder Name: {panHolderName}</div>
+            ) : null}
+            {passportPassengerName ? (
+              <div className="mt-1">
+                Passport Passenger Name: {passportPassengerName}
+              </div>
+            ) : null}
           </div>
         ) : null}
       </div>

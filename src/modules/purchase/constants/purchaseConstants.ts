@@ -14,6 +14,8 @@ export const PURCHASE_WORKPLACE_TEXT = {
 } as const;
 
 export const PURCHASE_PRINT_TEXT = {
+  partyName: 'Party Name',
+  passportPassengerName: 'Passport Passenger Name',
   transactionDetails: 'Transaction Details',
   cardDetails: 'CARD Details',
   srNo: 'Sr. No.',
@@ -34,7 +36,7 @@ export const PURCHASE_PREVIEW_TEXT = {
   gstSummaryHeading: 'GST Summary',
   tcsSummaryHeading: 'TCS Summary',
   submitBlockedWhileLoading:
-    'Waiting for tax, TCS, and purchase rule calculations to finish.',
+    'Waiting for tax, TCS, purchase rule, and credit calculations to finish.',
 } as const;
 
 export const PURCHASE_RULE_TEXT = {
@@ -52,4 +54,21 @@ export const PURCHASE_RULE_TEXT = {
   cashLimit: 'Cash limit:',
   cdfThreshold: 'CDF threshold:',
   historyAmount: 'History amount:',
+} as const;
+
+export const PURCHASE_CREDIT_TEXT = {
+  heading: 'Credit Check',
+  passed: 'Credit check passed',
+  notConfigured:
+    'Outstanding is allowed. Party credit limit/days are not configured.',
+  failedFallback: 'Credit check failed',
+  fixBeforeSave: 'Fix these before saving:',
+  payableAmount: 'Payable amount:',
+  totalPaid: 'Total paid:',
+  currentOutstanding: 'Current outstanding:',
+  existingOutstanding: 'Existing outstanding:',
+  totalExposure: 'Total exposure:',
+  availableCredit: 'Available credit:',
+  applicableLimit: 'Applicable credit limit:',
+  applicableDays: 'Applicable credit days:',
 } as const;

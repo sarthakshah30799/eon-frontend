@@ -5,6 +5,8 @@ import type {
   IRecordTransactionPrintPayload,
   IPurchaseRulePreviewRequest,
   IPurchaseRulePreviewResponse,
+  ICreditPreviewRequest,
+  ICreditPreviewResponse,
   ITransactionTaxPreviewRequest,
   ITransactionTaxPreviewResponse,
   ITransactionTcsPreviewRequest,
@@ -243,6 +245,27 @@ export const transactionsApi = {
 
     if (!res.data) {
       throw new Error('Failed to preview purchase rules');
+    }
+
+    return res.data;
+  },
+
+  previewCredit: async (
+    payload: ICreditPreviewRequest,
+    signal?: AbortSignal
+  ): Promise<ICreditPreviewResponse> => {
+    const res = await apiClient.post<ICreditPreviewResponse>(
+      '/transactions/credit-preview',
+      payload,
+      { signal }
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      throw new Error('Failed to preview party credit');
     }
 
     return res.data;

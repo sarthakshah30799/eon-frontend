@@ -88,6 +88,9 @@ export const AdditionalSettingsCodeEnum = {
   StockRevaluationFrequency: 'STOCK_REVALUATION_FREQUENCY',
   CardSettings: 'CARD_SETTINGS',
   CardAutoSettleWithHo: 'AUTO_SETTLE_CARD_WITH_HO',
+  TransactionCreditPolicy: 'TRANSACTION_CREDIT_POLICY',
+  AllowOutstandingOnSale: 'ALLOW_OUTSTANDING_ON_SALE',
+  AllowOutstandingOnPurchase: 'ALLOW_OUTSTANDING_ON_PURCHASE',
   Reports: 'REPORTS',
   Flm1CurrencyColumnCount: 'FLM1_CURRENCY_COLUMN_COUNT',
 } as const;

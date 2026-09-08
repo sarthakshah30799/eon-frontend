@@ -27,7 +27,10 @@ import {
 } from '../hooks';
 import { PassengerAmlVerificationStepForm } from '../forms/PassengerAmlVerificationStepForm';
 import { PassengerAmlDetailsStepForm } from '../forms/PassengerAmlDetailsStepForm';
-import { mapPassengerSnapshotToPurchaseFormValues } from '../utils/passengerAmlUtils';
+import {
+  mapPassengerSnapshotToPurchaseFormValues,
+  PASSENGER_PASSPORT_LOOKUP_EXCLUDED_FIELDS,
+} from '../utils/passengerAmlUtils';
 import {
   applyPassengerDetailsFormatErrors,
   getPassengerPassportNumberFormatError,
@@ -64,6 +67,7 @@ const getPanSnapshot = (values: IPurchaseFormValues) => ({
 });
 
 const getPassportSnapshot = (values: IPurchaseFormValues) => ({
+  passportPassengerName: values.passportPassengerName,
   passportNumber: values.passportNumber,
   passportIssueAt: values.passportIssueAt,
   passportIssueDate: values.passportIssueDate,
@@ -90,6 +94,7 @@ const hasCompletePanValues = (values: IPurchaseFormValues) =>
 
 const hasCompletePassportValues = (values: IPurchaseFormValues) =>
   Boolean(
+    values.passportPassengerName &&
     values.passportNumber &&
     values.passportIssueAt &&
     values.passportIssueDate &&
@@ -149,6 +154,7 @@ const getDetailsFieldNames = () =>
     'panNumber',
     'panHolderName',
     'panDob',
+    'passportPassengerName',
     'passportNumber',
     'passportIssueAt',
     'passportIssueDate',
@@ -232,6 +238,7 @@ export const PassengerAmlVerificationModal = ({
   const watchedPassportValues = useWatch({
     control: form.control,
     name: [
+      'passportPassengerName',
       'passportNumber',
       'passportIssueAt',
       'passportIssueDate',
@@ -241,6 +248,10 @@ export const PassengerAmlVerificationModal = ({
   const watchedTransactionDate = useWatch({
     control: form.control,
     name: 'transactionDate',
+  });
+  const watchedCountryId = useWatch({
+    control: form.control,
+    name: 'countryId',
   });
   const passengerInfoCaptured = useWatch({
     control: form.control,
@@ -280,11 +291,19 @@ export const PassengerAmlVerificationModal = ({
     setVerificationMessage(null);
   }, []);
   const applyPassengerLookupSnapshot = useCallback(
-    (snapshot: Record<string, unknown>) => {
+    (
+      snapshot: Record<string, unknown>,
+      options?: { excludePanIdentityFields?: boolean }
+    ) => {
       const mappedValues = mapPassengerSnapshotToPurchaseFormValues(snapshot);
+      const excludedFields = new Set(
+        options?.excludePanIdentityFields
+          ? PASSENGER_PASSPORT_LOOKUP_EXCLUDED_FIELDS
+          : []
+      );
 
       for (const [fieldName, fieldValue] of Object.entries(mappedValues)) {
-        if (fieldValue === undefined) {
+        if (fieldValue === undefined || excludedFields.has(fieldName as never)) {
           continue;
         }
 
@@ -424,6 +443,7 @@ export const PassengerAmlVerificationModal = ({
                 nationalityType: (currentValues.nationalityType ||
                   PassengerNationalityTypeEnum.NRI) as PassengerNationalityType,
                 passportNumber: currentValues.passportNumber,
+                passportPassengerName: currentValues.passportPassengerName,
                 passportIssueAt: currentValues.passportIssueAt,
                 passportIssueDate: currentValues.passportIssueDate,
                 passportExpiryDate: currentValues.passportExpiryDate,
@@ -481,6 +501,7 @@ export const PassengerAmlVerificationModal = ({
             panNumber: currentValues.panNumber || '',
             panHolderName: currentValues.panHolderName || '',
             panDob: currentValues.panDob || '',
+            passportPassengerName: currentValues.passportPassengerName || '',
             passportNumber: currentValues.passportNumber || '',
             passportIssueAt: currentValues.passportIssueAt || '',
             passportIssueDate: currentValues.passportIssueDate || '',
@@ -618,10 +639,11 @@ export const PassengerAmlVerificationModal = ({
     panDob: watchedPanValues[2] ?? '',
   };
   const currentPassportSnapshot = {
-    passportNumber: watchedPassportValues[0] ?? '',
-    passportIssueAt: watchedPassportValues[1] ?? '',
-    passportIssueDate: watchedPassportValues[2] ?? '',
-    passportExpiryDate: watchedPassportValues[3] ?? '',
+    passportPassengerName: watchedPassportValues[0] ?? '',
+    passportNumber: watchedPassportValues[1] ?? '',
+    passportIssueAt: watchedPassportValues[2] ?? '',
+    passportIssueDate: watchedPassportValues[3] ?? '',
+    passportExpiryDate: watchedPassportValues[4] ?? '',
   };
   const panVerificationChanged =
     verificationStatus === 'valid' &&
@@ -646,7 +668,15 @@ export const PassengerAmlVerificationModal = ({
       : passportVerificationChanged
         ? 'Passport details changed. Please verify again before continuing.'
         : verificationMessage;
-  const canProceed = displayedVerificationStatus === 'valid';
+  const canProceedDetailsStep = displayedVerificationStatus === 'valid';
+  const canProceedVerificationStep =
+    verificationMode === 'pan'
+      ? canProceedDetailsStep
+      : Boolean(
+          watchedNationalityType &&
+          watchedNationalityType !== PassengerNationalityTypeEnum.INDIAN &&
+          String(watchedCountryId ?? '').trim()
+        );
   const isDetailsSubmitting =
     isVerifyingPan ||
     isVerifyingPassport ||
@@ -709,7 +739,9 @@ export const PassengerAmlVerificationModal = ({
       const lookupResult = await lookupPassport({ passportNumber });
 
       if (lookupResult.found && lookupResult.passenger) {
-        applyPassengerLookupSnapshot(lookupResult.passenger);
+        applyPassengerLookupSnapshot(lookupResult.passenger, {
+          excludePanIdentityFields: true,
+        });
         setVerificationStatus('valid');
         setVerificationMessage(
           'Passenger details loaded successfully. You can continue.'
@@ -750,7 +782,7 @@ export const PassengerAmlVerificationModal = ({
   );
 
   const handleVerification = () => {
-    if (canProceed) {
+    if (canProceedVerificationStep) {
       setInternalStep('details');
     }
   };
@@ -882,7 +914,7 @@ export const PassengerAmlVerificationModal = ({
       >
         Cancel
       </Button>
-      <Button type="button" onClick={handleVerification} disabled={!canProceed}>
+      <Button type="button" onClick={handleVerification} disabled={!canProceedVerificationStep}>
         Next
       </Button>
     </div>
@@ -906,7 +938,7 @@ export const PassengerAmlVerificationModal = ({
       <Button
         type="button"
         onClick={() => void handleDetailsDone()}
-        disabled={!canProceed}
+        disabled={!canProceedDetailsStep}
         loading={isDetailsSubmitting}
       >
         Done

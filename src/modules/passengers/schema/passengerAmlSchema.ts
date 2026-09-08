@@ -28,6 +28,7 @@ export const PASSENGER_PAN_VERIFICATION_FIELDS = [
 ] as const;
 
 export const PASSENGER_PASSPORT_VERIFICATION_FIELDS = [
+  'passportPassengerName',
   'passportNumber',
   'passportIssueAt',
   'passportIssueDate',
@@ -152,6 +153,12 @@ export const createPassengerPassportVerificationSchema = () =>
         ) as PassengerNationalityType[]
       )
       .required(),
+    passportPassengerName: optionalText().when('nationalityType', {
+      is: (nationalityType: string) =>
+        isPassportValidationRequired({ nationalityType }),
+      then: schema => schema.required('Passport passenger name is required'),
+      otherwise: schema => schema.default(''),
+    }),
     passportNumber: optionalText()
       .when('nationalityType', {
         is: (nationalityType: string) =>
@@ -258,6 +265,7 @@ export const createPassengerAmlDefaultValues = (
     panDob: shouldPrefillFromPartyProfile
       ? (resolvedPartyProfile?.panDob ?? '')
       : '',
+    passportPassengerName: '',
     passportNumber: '',
     passportIssueAt: '',
     passportIssueDate: '',
@@ -330,6 +338,7 @@ export const createPassengerDetailsDefaultValues = (
       ? (selectedPartyProfile?.gstStateId ?? '')
       : '',
     isPep: false,
+    passportPassengerName: verifiedAmlValues?.passportPassengerName ?? '',
     passportNumber: verifiedAmlValues?.passportNumber ?? '',
     passportIssueAt: verifiedAmlValues?.passportIssueAt ?? '',
     passportIssueDate: verifiedAmlValues?.passportIssueDate ?? '',

@@ -6,6 +6,10 @@ import {
   type ITransactionTcsPreviewResponse,
 } from '@/modules/transactions';
 import { toDisplayDate } from '@/utils';
+import {
+  resolvePassengerDisplayName,
+  shouldShowPassportPassengerNameOnDocument,
+} from '@/modules/passengers/utils/passengerDisplayName';
 import { PURCHASE_PRINT_TEXT } from '../constants/purchaseConstants';
 import type {
   IPurchaseFormValues,
@@ -372,6 +376,25 @@ export const buildPurchasePrintHtml = ({
   const cardRows = transaction.transactions.filter(isCardTransactionRow);
   const itemRows = buildCurrencyItemRows(currencyRows);
   const cardItemRows = buildCardItemRows(cardRows);
+  const billedPersonName = transaction.passengerInfoCaptured
+    ? resolvePassengerDisplayName({
+        passportPassengerName: transaction.passportPassengerName,
+        passportNumber: transaction.passportNumber,
+        passportIssueAt: transaction.passportIssueAt,
+        passportIssueDate: transaction.passportIssueDate,
+        passportExpiryDate: transaction.passportExpiryDate,
+        panHolderName: transaction.panHolderName,
+        panNumber: transaction.panNumber,
+        panDob: transaction.panDob,
+        paidByPanHolderName: transaction.paidByPanHolderName,
+        partyProfileName: transaction.partyProfileName,
+      })
+    : transaction.partyProfileName || '';
+  const passportPassengerNameRow = shouldShowPassportPassengerNameOnDocument(
+    transaction
+  )
+    ? `<div class="info-row"><span class="info-label">${escapeHtml(PURCHASE_PRINT_TEXT.passportPassengerName)}:</span><span>${escapeHtml(transaction.passportPassengerName || '-')}</span></div>`
+    : '';
 
   const additionalChargeRows = transaction.additionalCharges.map(
     (row, index) => {
@@ -680,7 +703,8 @@ export const buildPurchasePrintHtml = ({
             <div class="panel">
               <p class="panel-title">Details of Person Whom the Invoice is Billed</p>
               <div class="info-list">
-                <div class="info-row"><span class="info-label">Party Name:</span><span>${escapeHtml(transaction.partyProfileName || '-')}</span></div>
+                <div class="info-row"><span class="info-label">${escapeHtml(PURCHASE_PRINT_TEXT.partyName)}:</span><span>${escapeHtml(billedPersonName || '-')}</span></div>
+                ${passportPassengerNameRow}
                 <div class="info-row"><span class="info-label">PAN:</span><span>${escapeHtml(transaction.partyProfilePanNo || '-')}</span></div>
                 <div class="info-row"><span class="info-label">Address:</span><span>${escapeHtml(joinAddress(transaction.partyProfileAddress1, transaction.partyProfileAddress2, transaction.partyProfileAddress3, transaction.partyProfileCity, transaction.partyProfilePinCode))}</span></div>
                 <div class="info-row"><span class="info-label">Contact No:</span><span>${escapeHtml(transaction.partyProfilePhoneNo || '-')}</span></div>

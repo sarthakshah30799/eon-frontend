@@ -18,7 +18,7 @@ export const TransactionAccountPostingsView = () => {
   const {
     search,
     setSearch,
-    setPartyProfileId,
+    setSelectedPartyProfile,
     setTransactionType,
     selectedPartyProfile,
     selectedTransactionType,
@@ -28,7 +28,6 @@ export const TransactionAccountPostingsView = () => {
     isLoading,
     isFetching,
     error,
-    isPartyProfilesLoading,
     activeTransactionId,
     isRebuildPending,
     resetFilters,
@@ -55,14 +54,20 @@ export const TransactionAccountPostingsView = () => {
         value: selectedPartyProfile,
         loadOptions: loadPartyProfileOptions,
         defaultOptions: true,
-        pagination: false,
+        pagination: true,
         isSearchable: true,
         isClearable: true,
-        isDisabled: isPartyProfilesLoading,
         placeholder: 'All party profiles',
         className: 'w-56 shrink-0',
         onChange: option => {
-          setPartyProfileId(option?.value ? String(option.value) : '');
+          setSelectedPartyProfile(
+            option?.value
+              ? {
+                  value: String(option.value),
+                  label: String(option.label ?? option.value),
+                }
+              : null
+          );
         },
       },
       {
@@ -98,14 +103,13 @@ export const TransactionAccountPostingsView = () => {
       },
     ],
     [
-      isPartyProfilesLoading,
       loadPartyProfileOptions,
       loadTransactionTypeOptions,
       resetFilters,
       search,
       selectedPartyProfile,
       selectedTransactionType,
-      setPartyProfileId,
+      setSelectedPartyProfile,
       setSearch,
       setTransactionType,
     ]

@@ -259,6 +259,14 @@ const TRANSACTION_ACCOUNTING_SUBCATEGORIES: readonly AdditionalSettingSubcategor
       optionsSource: 'account-profile',
     },
     {
+      code: AdditionalSettingsCodeEnum.TcsControlAccount,
+      label: 'TCS CONTROL ACCOUNT',
+      valueType: 'select',
+      required: true,
+      placeholder: 'Select TCS control account',
+      optionsSource: 'account-profile',
+    },
+    {
       code: AdditionalSettingsCodeEnum.CommissionControlAccount,
       label: 'COMMISSION CONTROL ACCOUNT',
       valueType: 'select',

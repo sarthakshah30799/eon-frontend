@@ -5,7 +5,10 @@ export const TRANSACTION_PREVIEW_DEBOUNCE_MS = 400;
 
 export interface DebouncedPreviewQueryResult<TData> {
   data: TData | undefined;
+  /** True only when enabled and there is no cached preview to show yet. */
   isLoading: boolean;
+  /** True while the request is debouncing or the query is in flight. */
+  isRefreshing: boolean;
 }
 
 export const useDebouncedPreviewQuery = <TRequest, TData>(
@@ -25,14 +28,15 @@ export const useDebouncedPreviewQuery = <TRequest, TData>(
     queryKey: [queryKeyPrefix, debouncedRequest],
     queryFn: ({ signal }) => queryFn(debouncedRequest as TRequest, signal),
     enabled: queryEnabled,
+    placeholderData: previousData => previousData,
   });
 
-  const isLoading =
+  const data = enabled ? query.data : undefined;
+  const isRefreshing =
     enabled &&
     (isDebouncing ||
       (queryEnabled && (query.isFetching || query.isPending)));
+  const isLoading = isRefreshing && data === undefined;
 
-  const data = enabled && !isDebouncing ? query.data : undefined;
-
-  return { data, isLoading };
+  return { data, isLoading, isRefreshing };
 };

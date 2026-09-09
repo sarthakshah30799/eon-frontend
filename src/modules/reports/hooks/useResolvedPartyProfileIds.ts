@@ -3,8 +3,6 @@ import { partyProfileApi } from '@/api';
 import type { PartyProfileType } from '@/modules/partyProfiles/types';
 import type { SalePurchaseReportFilters } from './useSalePurchaseReportFilters';
 
-const PAGE_SIZE = 200;
-
 export const useResolvedPartyProfileIds = (
   filters: Pick<SalePurchaseReportFilters, 'appliedFilters'>
 ) => {
@@ -20,35 +18,22 @@ export const useResolvedPartyProfileIds = (
         : undefined;
     }
 
+    const profiles = await partyProfileApi.getAllPartyProfiles(
+      {
+        search: filters.appliedFilters?.partyProfileSearch?.trim() || undefined,
+        activeOnly: true,
+      },
+      filters.appliedFilters?.partyTypeCodes?.length
+        ? (filters.appliedFilters.partyTypeCodes as PartyProfileType[])
+        : undefined
+    );
+
     const resolvedIds = new Set<string>();
-    let offset = 0;
-
-    while (true) {
-      const response = await partyProfileApi.getPartyProfiles(
-        {
-          search:
-            filters.appliedFilters?.partyProfileSearch?.trim() || undefined,
-          activeOnly: true,
-          offset,
-          limit: PAGE_SIZE,
-        },
-        filters.appliedFilters?.partyTypeCodes?.length
-          ? (filters.appliedFilters.partyTypeCodes as PartyProfileType[])
-          : undefined
-      );
-
-      response.data.forEach(profile => {
-        if (!selection.excludedIds.includes(profile.id)) {
-          resolvedIds.add(profile.id);
-        }
-      });
-
-      if (!response.hasMore) {
-        break;
+    profiles.forEach(profile => {
+      if (!selection.excludedIds.includes(profile.id)) {
+        resolvedIds.add(profile.id);
       }
-
-      offset += PAGE_SIZE;
-    }
+    });
 
     return [...resolvedIds];
   }, [filters.appliedFilters]);

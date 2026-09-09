@@ -2,9 +2,8 @@ import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
-import { branchProfileApi } from '@/api';
+import { branchProfileApi, partyProfileApi } from '@/api';
 import { useListCurrencyProfiles } from '@/modules/currencyProfile/hooks';
-import { useListPartyProfiles } from '@/modules/partyProfiles/hooks';
 import { PartyProfileTypeEnum } from '@/modules/partyProfiles/types';
 import { useListProductProfiles } from '@/modules/productProfile/hooks';
 import { isCardProductCode } from '@/modules/purchase/utils/purchaseUtils';
@@ -31,8 +30,6 @@ import {
   type IReportSelectOption,
   type ReportSortBy,
 } from '../types';
-
-const ISSUER_PAGE_SIZE = 200;
 
 const toOption = (id: string, label: string): IReportSelectOption => ({
   id,
@@ -130,13 +127,17 @@ export const useCardSettlementReportFilters = () => {
   const productProfiles = productProfilesPage?.data ?? [];
 
   const {
-    data: issuerResponse,
+    data: issuers = [],
     isLoading: isLoadingIssuers,
     isFetching: isFetchingIssuers,
-  } = useListPartyProfiles(
-    { limit: ISSUER_PAGE_SIZE, offset: 0, activeOnly: true },
-    PartyProfileTypeEnum.CARD_ISSUER_PROFILE
-  );
+  } = useQuery({
+    queryKey: ['reports-card-settlement', 'issuers'],
+    queryFn: () =>
+      partyProfileApi.getAllPartyProfiles(
+        { activeOnly: true },
+        PartyProfileTypeEnum.CARD_ISSUER_PROFILE
+      ),
+  });
 
   const accessibleBranchProfiles = useMemo(
     () =>
@@ -194,11 +195,11 @@ export const useCardSettlementReportFilters = () => {
   const issuerOptions = useMemo<IReportSelectOption[]>(
     () =>
       uniqueOptions(
-        (issuerResponse?.data ?? []).map(issuer =>
+        issuers.map(issuer =>
           toOption(issuer.id, buildReportOptionLabel(issuer.code, issuer.name))
         )
       ),
-    [issuerResponse?.data]
+    [issuers]
   );
 
   const selectedBranchIds = useMemo(

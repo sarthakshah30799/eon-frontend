@@ -36,6 +36,7 @@ export const AdditionalSettingsCodeEnum = {
   HandlingChargeAccount: 'HANDLING_CHARGE_ACCOUNT',
   AgentControlAccount: 'AGENT_CRDAGT',
   TdsControlAccount: 'TDSFXCOM',
+  TcsControlAccount: 'TCS_CONTROL_ACCOUNT',
   CommissionControlAccount: 'COMGCN',
   BranchControlAccount: 'BRANCH_CONTROL_ACCOUNT',
   CounterControlAccount: 'COUNTER_CONTROL_ACCOUNT',

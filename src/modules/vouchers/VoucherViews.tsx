@@ -27,9 +27,12 @@ const emptyItem = (
   direction: 'DEBIT' | 'CREDIT' = 'DEBIT'
 ): VoucherFormValues['items'][number] => ({
   itemTypeOptionId: '',
+  itemTypeName: '',
   itemTypeValue: '',
   subledgerPartyProfileId: '',
+  subledgerCode: '',
   accountId: '',
+  accountCode: '',
   accountName: '',
   direction,
   amount: '',
@@ -114,7 +117,7 @@ const fromEntity = (voucher: AccountingVoucher): VoucherFormValues => ({
   narration: voucher.narration,
   idempotencyKey: voucher.idempotencyKey,
   items: (() => {
-    const mapped = voucher.items.map(item => ({
+    const mapped: VoucherFormValues['items'] = voucher.items.map(item => ({
       ...item,
       itemTypeName:
         item.itemTypeSnapshot?.label ?? item.itemTypeSnapshot?.name ?? '',

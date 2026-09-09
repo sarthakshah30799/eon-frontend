@@ -156,7 +156,7 @@ export const applyPassengerDetailsFormatErrors = (
   return isValid;
 };
 
-type PassengerIdentityValues = {
+export type PassengerIdentityValues = {
   entityType?: string | null;
   nationalityType?: string | null;
   panNumber?: string | null;

@@ -68,6 +68,7 @@ const emptyValues = (
   chequeDate: '',
   chequeBranch: '',
   drawnOn: '',
+  paymentMethod: '',
   remarkOptionId: '',
   remarkName: '',
   narration: '',
@@ -111,6 +112,7 @@ const fromEntity = (voucher: AccountingVoucher): VoucherFormValues => ({
   chequeDate: voucher.chequeDate,
   chequeBranch: voucher.chequeBranch,
   drawnOn: voucher.drawnOn,
+  paymentMethod: voucher.paymentMethod ?? '',
   remarkOptionId: voucher.remarkOptionId,
   remarkName:
     voucher.remarkSnapshot?.label ?? voucher.remarkSnapshot?.name ?? '',

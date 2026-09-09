@@ -81,6 +81,7 @@ export interface VoucherFormValues {
   chequeDate: string;
   chequeBranch: string;
   drawnOn: string;
+  paymentMethod: string;
   remarkOptionId: string;
   remarkName: string;
   narration: string;

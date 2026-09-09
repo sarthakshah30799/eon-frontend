@@ -1,7 +1,9 @@
 import type { IBranchProfile } from '@/modules/branchProfile/types';
 import type { ICompanyProfile } from '@/modules/companyProfile/types';
 import {
+  TransactionPaymentMethodEnum,
   TransactionTypeEnum,
+  isElectronicPaymentMethod,
   type ITransactionTaxPreviewResponse,
   type ITransactionTcsPreviewResponse,
 } from '@/modules/transactions';
@@ -141,15 +143,32 @@ const formatReferenceValue = (value?: string | null) => value?.trim() || '-';
 
 const formatPaymentMethodLabel = (value?: string | null) => {
   const normalized = value?.trim().toUpperCase();
-  if (normalized === 'CASH') {
+  if (normalized === TransactionPaymentMethodEnum.CASH) {
     return 'Cash';
   }
 
-  if (normalized === 'CHEQUE') {
+  if (normalized === TransactionPaymentMethodEnum.CHEQUE) {
     return 'Cheque';
   }
 
+  if (isElectronicPaymentMethod(normalized)) {
+    return normalized ?? '-';
+  }
+
   return formatReferenceValue(value);
+};
+
+const formatPaymentChequeReference = (
+  paymentMethod?: string | null,
+  referenceNumber?: string | null
+) => {
+  if (isElectronicPaymentMethod(paymentMethod)) {
+    return String(paymentMethod ?? '')
+      .trim()
+      .toUpperCase();
+  }
+
+  return formatReferenceValue(referenceNumber);
 };
 
 const toPurchaseSignedValue = (
@@ -484,7 +503,7 @@ export const buildPurchasePrintHtml = ({
       <td>${escapeHtml(formatPaymentMethodLabel(row.paymentMethod))}</td>
       <td>${escapeHtml(row.accountName || formatReferenceValue(row.accountId))}</td>
           <td class="right">${escapeHtml(formatAmount(row.amount))}</td>
-          <td>${escapeHtml(formatReferenceValue(row.chequeNumber))}</td>
+          <td>${escapeHtml(formatPaymentChequeReference(row.paymentMethod, row.chequeNumber))}</td>
           <td>${escapeHtml(formatDate(row.chequeDate))}</td>
           <td>${escapeHtml(formatReferenceValue(row.drawnOn))}</td>
         </tr>`

@@ -108,6 +108,43 @@ export const TransactionPaymentMethodEnum = {
 export type TransactionPaymentMethod =
   (typeof TransactionPaymentMethodEnum)[keyof typeof TransactionPaymentMethodEnum];
 
+export const isElectronicPaymentMethod = (value?: unknown) => {
+  const normalized = String(value ?? '')
+    .trim()
+    .toUpperCase();
+  return (
+    normalized === TransactionPaymentMethodEnum.UPI ||
+    normalized === TransactionPaymentMethodEnum.NEFT ||
+    normalized === TransactionPaymentMethodEnum.RTGS
+  );
+};
+
+export const isChequeFamilyPaymentMethod = (value?: unknown) => {
+  const normalized = String(value ?? '')
+    .trim()
+    .toUpperCase();
+  return (
+    normalized === TransactionPaymentMethodEnum.CHEQUE ||
+    isElectronicPaymentMethod(normalized)
+  );
+};
+
+export const coerceTransactionPaymentMethod = (value?: unknown) => {
+  const normalized = String(value ?? '')
+    .trim()
+    .toUpperCase();
+  if (normalized === TransactionPaymentMethodEnum.CASH) {
+    return TransactionPaymentMethodEnum.CASH;
+  }
+  if (normalized === TransactionPaymentMethodEnum.CHEQUE) {
+    return TransactionPaymentMethodEnum.CHEQUE;
+  }
+  if (isElectronicPaymentMethod(normalized)) {
+    return normalized as TransactionPaymentMethod;
+  }
+  return TransactionPaymentMethodEnum.CHEQUE;
+};
+
 export const TransactionPaymentDirectionEnum = {
   PAYMENT: 'PAYMENT',
   RECEIPT: 'RECEIPT',

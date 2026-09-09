@@ -1,5 +1,7 @@
 export const TRANSACTION_PAYMENT_TEXT = {
   settlementSource: 'Settlement Source',
+  paymentMode: 'Payment Mode',
+  cashNotAllowed: 'Cash payment is not allowed for this transaction type.',
   normal: 'Normal',
   advance: 'Advance',
   receiptAdvance: 'Receipt Advance',
@@ -15,6 +17,10 @@ export const TRANSACTION_PAYMENT_TEXT = {
   advanceControlAccount: 'Advance Control Account',
   availableAmountForRow: 'Available amount for this row',
   remainingAfterRow: 'Remaining after this row',
+  electronicPaymentHint:
+    'Cheque details are not required for UPI, NEFT, or RTGS.',
+  electronicNotAllowedForAdvance:
+    'UPI, NEFT, and RTGS are not allowed for advance settlement',
 } as const;
 
 export const SETTLEMENT_SOURCE_OPTIONS = [

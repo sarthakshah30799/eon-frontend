@@ -1152,7 +1152,10 @@ const VoucherFields = ({
                   loadOptions={optionFilter(journalItemTypeOptions)}
                   defaultOptions={journalItemTypeOptions}
                   onValueChange={value =>
-                    handleItemTypeChange(index, value ?? '')
+                    handleItemTypeChange(
+                      index,
+                      Array.isArray(value) ? String(value[0] ?? '') : (value ?? '')
+                    )
                   }
                 />
               ) : (

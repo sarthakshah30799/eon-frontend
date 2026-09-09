@@ -4,6 +4,8 @@ import {
   TransactionTypeEnum,
   TransactionTypeProfileEnum,
   TransactionPartyProfileTypeEnum,
+  isChequeFamilyPaymentMethod,
+  isElectronicPaymentMethod,
 } from '@/modules/transactions';
 import type { TransactionType } from '@/modules/transactions';
 import {
@@ -39,6 +41,7 @@ import {
   PURCHASE_TRANSACTION_TEXT,
   shouldValidatePaymentDetailRow,
 } from '../utils/purchaseUtils';
+import { TRANSACTION_PAYMENT_TEXT } from '@/components/forms/TransactionPaymentDetailsFieldArray/transactionPaymentDetailsConstants';
 
 const requiresCorporateIndividualPassenger = (
   purchasePageType: PurchasePageType | null | undefined
@@ -157,8 +160,21 @@ const createPaymentDetailSchema = (transactionType: TransactionType) =>
       .oneOf([
         TransactionPaymentMethodEnum.CASH,
         TransactionPaymentMethodEnum.CHEQUE,
+        TransactionPaymentMethodEnum.UPI,
+        TransactionPaymentMethodEnum.NEFT,
+        TransactionPaymentMethodEnum.RTGS,
       ])
-      .required('Payment mode is required'),
+      .required('Payment mode is required')
+      .test(
+        'advance-not-electronic',
+        TRANSACTION_PAYMENT_TEXT.electronicNotAllowedForAdvance,
+        function (value) {
+          return !(
+            this.parent.settlementSource === 'ADVANCE' &&
+            isElectronicPaymentMethod(value)
+          );
+        }
+      ),
     accountId: yup.string().trim().required('Account is required'),
     accountName: yup.string().trim().default(''),
     chequePageId: yup
@@ -187,7 +203,9 @@ const createPaymentDetailSchema = (transactionType: TransactionType) =>
       .string()
       .trim()
       .when('paymentMethod', {
-        is: TransactionPaymentMethodEnum.CHEQUE,
+        is: (paymentMethod: string) =>
+          paymentMethod === TransactionPaymentMethodEnum.CHEQUE ||
+          isElectronicPaymentMethod(paymentMethod),
         then: schema => schema.required('Cheque date is required'),
         otherwise: schema => schema.default(''),
       }),
@@ -840,14 +858,24 @@ export const createPurchaseFormSchema = (transactionType: TransactionType) =>
         'same-method',
         'All payment rows must use the same method',
         rows => {
-          const methods = (rows ?? [])
+          const validRows = (rows ?? []).filter(shouldValidatePaymentDetailRow);
+          const methods = validRows
             .map(row => row?.paymentMethod?.trim?.() ?? '')
             .filter(Boolean);
-          if (methods.length <= 1) {
-            return true;
+          const hasCash = methods.includes(TransactionPaymentMethodEnum.CASH);
+          const hasChequeFamily = methods.some(method =>
+            isChequeFamilyPaymentMethod(method)
+          );
+          if (hasCash && hasChequeFamily) {
+            return false;
           }
 
-          return new Set(methods).size === 1;
+          const normalMethods = validRows
+            .filter(row => row?.settlementSource !== 'ADVANCE')
+            .map(row => row?.paymentMethod?.trim?.() ?? '')
+            .filter(Boolean);
+
+          return new Set(normalMethods).size <= 1;
         }
       ),
   });

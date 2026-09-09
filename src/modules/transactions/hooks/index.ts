@@ -9,4 +9,5 @@ export { default as defaultUseTransactionTcsPreview } from './useTransactionTcsP
 export { useTransactionQuantityAvailability } from './useTransactionQuantityAvailability';
 export { default as defaultUseTransactionQuantityAvailability } from './useTransactionQuantityAvailability';
 export { useTransactionNextNumber } from './useTransactionNextNumber';
+export { useTransactionPaymentMethods } from './useTransactionPaymentMethods';
 export { useCounterHoldCost } from './useCounterHoldCost';

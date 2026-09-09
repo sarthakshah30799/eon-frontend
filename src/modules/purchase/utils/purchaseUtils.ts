@@ -11,6 +11,8 @@ import {
   TradeModeEnum,
   TransactionTypeEnum,
   TransactionTypeProfileEnum,
+  coerceTransactionPaymentMethod,
+  isElectronicPaymentMethod,
 } from '@/modules/transactions';
 import type { TradeMode, TransactionType } from '@/modules/transactions';
 import {
@@ -347,35 +349,37 @@ export const mapPaymentDetailsToSubmitPayload = (
 ) =>
   paymentDetails
     .filter(shouldValidatePaymentDetailRow)
-    .map(row => ({
-      accountId: row.accountId,
-      settlementSource: row.settlementSource ?? 'NORMAL',
-      advanceVoucherId:
-        row.settlementSource === 'ADVANCE'
-          ? row.advanceVoucherId || null
-          : null,
-      paymentMethod:
-        row.paymentMethod === TransactionPaymentMethodEnum.CASH
-          ? TransactionPaymentMethodEnum.CASH
-          : TransactionPaymentMethodEnum.CHEQUE,
-      referenceNumber: row.chequeNumber,
-      referenceDate:
-        row.paymentMethod === TransactionPaymentMethodEnum.CHEQUE
-          ? row.chequeDate || null
-          : null,
-      branchName: row.branchName,
-      drawnOn: row.drawnOn || null,
-      chequePageId:
-        row.paymentMethod === TransactionPaymentMethodEnum.CHEQUE
-          ? (row.chequePageId ?? null)
-          : null,
-      chequePageSnapshot:
-        row.paymentMethod === TransactionPaymentMethodEnum.CHEQUE
-          ? (row.chequePageSnapshot ?? null)
-          : null,
-      amount: row.amount,
-      remarks: null,
-    }));
+    .map(row => {
+      const paymentMethod = coerceTransactionPaymentMethod(row.paymentMethod);
+      const isElectronic = isElectronicPaymentMethod(paymentMethod);
+
+      return {
+        accountId: row.accountId,
+        settlementSource: row.settlementSource ?? 'NORMAL',
+        advanceVoucherId:
+          row.settlementSource === 'ADVANCE'
+            ? row.advanceVoucherId || null
+            : null,
+        paymentMethod,
+        referenceNumber: isElectronic ? null : row.chequeNumber,
+        referenceDate:
+          paymentMethod === TransactionPaymentMethodEnum.CHEQUE || isElectronic
+            ? row.chequeDate || null
+            : null,
+        branchName: row.branchName || null,
+        drawnOn: row.drawnOn || null,
+        chequePageId:
+          paymentMethod === TransactionPaymentMethodEnum.CHEQUE
+            ? (row.chequePageId ?? null)
+            : null,
+        chequePageSnapshot:
+          paymentMethod === TransactionPaymentMethodEnum.CHEQUE
+            ? (row.chequePageSnapshot ?? null)
+            : null,
+        amount: row.amount,
+        remarks: null,
+      };
+    });
 
 export const mapPurchaseFormValuesToSubmitPayload = (
   values: IPurchaseFormValues,
@@ -815,7 +819,7 @@ export const mapPurchaseTransactionToFormValues = (
       advanceVoucherNumber: payment.advanceApplication?.voucher?.number ?? '',
       advanceAvailableAmount:
         payment.advanceApplication?.amount ?? payment.amount ?? '',
-      paymentMethod: payment.paymentMethod,
+      paymentMethod: coerceTransactionPaymentMethod(payment.paymentMethod),
       accountId: payment.accountId,
       accountName:
         payment.accountSnapshot?.label ??

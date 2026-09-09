@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -39,6 +39,8 @@ import {
 import { SelectOutstandingBills } from './components/SelectOutstandingBills';
 import { useVoucherItemTypeCategoryOptions, useVoucherNextNumber } from './hooks';
 import { useVoucherPanVerification } from './useVoucherPanVerification';
+import { useTransactionPaymentMethods } from '@/modules/transactions/hooks';
+import { isElectronicPaymentMethod } from '@/modules/transactions';
 import {
   formatVoucherDateInput,
   getVoucherItemTypeValueById,
@@ -50,6 +52,13 @@ import {
 import { useListAdditionalSettings } from '@/modules/additionalSettings/hooks';
 import { AdditionalSettingsCodeEnum } from '@/modules/additionalSettings/constants';
 import { getAdditionalSettingTextValue } from '@/modules/additionalSettings/utils';
+
+const toLocalDateString = (date = new Date()) => {
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, '0');
+  const day = `${date.getDate()}`.padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 const modeFromLabel = (label: string): VoucherAccountMode => {
   const value = label.toUpperCase().replace(/[ /-]+/g, '_');
@@ -117,9 +126,11 @@ const voucherSchema = (type: VoucherType) => {
       ),
     panName: yup.string().trim().optional().nullable(),
     panDob: yup.string().trim().optional().nullable(),
-    chequeNumber: yup.string().when(['accountMode'], {
-      is: (accountMode: string) =>
-        depositWithdrawal || accountMode === 'BANK_CHEQUE',
+    chequeNumber: yup.string().when(['accountMode', 'paymentMethod'], {
+      is: (accountMode: string, paymentMethod: string) =>
+        depositWithdrawal ||
+        (accountMode === 'BANK_CHEQUE' &&
+          !isElectronicPaymentMethod(paymentMethod)),
       then: schema => schema.required('Cheque number is required'),
     }),
     chequeDate: yup.string().when(['accountMode'], {
@@ -127,16 +138,24 @@ const voucherSchema = (type: VoucherType) => {
         depositWithdrawal || accountMode === 'BANK_CHEQUE',
       then: schema => schema.required('Cheque date is required'),
     }),
-    chequeBranch: yup.string().when('accountMode', {
-      is: (accountMode: string) =>
-        partyVoucher && accountMode === 'BANK_CHEQUE',
+    chequeBranch: yup.string().when(['accountMode', 'paymentMethod'], {
+      is: (accountMode: string, paymentMethod: string) =>
+        partyVoucher &&
+        accountMode === 'BANK_CHEQUE' &&
+        !isElectronicPaymentMethod(paymentMethod),
       then: schema => schema.required('Branch is required'),
     }),
-    drawnOn: yup.string().when('accountMode', {
-      is: (accountMode: string) =>
-        partyVoucher && accountMode === 'BANK_CHEQUE',
+    drawnOn: yup.string().when(['accountMode', 'paymentMethod'], {
+      is: (accountMode: string, paymentMethod: string) =>
+        partyVoucher &&
+        accountMode === 'BANK_CHEQUE' &&
+        !isElectronicPaymentMethod(paymentMethod),
       then: schema => schema.required('Drawn on is required'),
     }),
+    paymentMethod: yup
+      .string()
+      .oneOf(['', 'UPI', 'NEFT', 'RTGS'])
+      .default(''),
     narration: yup.string().trim().required('Narration is required'),
     items: depositWithdrawal
       ? yup
@@ -317,6 +336,10 @@ const VoucherFields = ({
     number | null
   >(null);
   const mode = useWatch({ control: form.control, name: 'accountMode' });
+  const paymentMethod = useWatch({
+    control: form.control,
+    name: 'paymentMethod',
+  });
   const accountTypeOptionId = useWatch({
     control: form.control,
     name: 'accountTypeOptionId',
@@ -361,6 +384,34 @@ const VoucherFields = ({
         })),
     [itemTypeCategoryOptions]
   );
+  const { data: paymentMethodOptions = [], isLoading: isPaymentMethodsLoading } =
+    useTransactionPaymentMethods(isPartyVoucherType(type));
+  const electronicPaymentModeOptions = useMemo(
+    () =>
+      paymentMethodOptions.filter(option =>
+        isElectronicPaymentMethod(option.value)
+      ),
+    [paymentMethodOptions]
+  );
+  const loadElectronicPaymentModeOptions = useCallback(
+    async (inputValue: string) => {
+      const normalized = inputValue.trim().toLowerCase();
+      return {
+        options: electronicPaymentModeOptions.filter(option => {
+          if (!normalized) {
+            return true;
+          }
+          return (
+            option.label.toLowerCase().includes(normalized) ||
+            option.value.toLowerCase().includes(normalized)
+          );
+        }),
+        hasMore: false,
+      };
+    },
+    [electronicPaymentModeOptions]
+  );
+  const isElectronic = isElectronicPaymentMethod(paymentMethod);
   const accountTypeOptions = useCategoryOptions(
     CategoryOptionCodeEnum.VoucherAccountType
   ).defaultOptions;
@@ -368,6 +419,7 @@ const VoucherFields = ({
     CategoryOptionCodeEnum.EntityType
   ).defaultOptions;
   const lastPartyIdRef = useRef('');
+  const previousElectronicRef = useRef(false);
   const adultDobMaxDate = useMemo(() => {
     const date = new Date();
     date.setFullYear(date.getFullYear() - 18);
@@ -608,12 +660,24 @@ const VoucherFields = ({
     form.setValue('headerAccountId', '');
     form.setValue('headerAccountName', '');
     if (nextMode !== 'BANK_CHEQUE') {
+      form.setValue('paymentMethod', '');
       form.setValue('chequeNumber', '');
       form.setValue('chequeDate', '');
       form.setValue('chequeBranch', '');
       form.setValue('drawnOn', '');
     }
   }, [accountTypeOptionId, accountTypeOptions, form, mode]);
+  useEffect(() => {
+    if (readOnly || mode !== 'BANK_CHEQUE') {
+      previousElectronicRef.current = isElectronic;
+      return;
+    }
+    if (!previousElectronicRef.current && isElectronic) {
+      form.setValue('chequeNumber', '', { shouldValidate: true });
+      form.setValue('chequeDate', toLocalDateString(), { shouldValidate: true });
+    }
+    previousElectronicRef.current = isElectronic;
+  }, [form, isElectronic, mode, readOnly]);
   useEffect(() => {
     const account = headerAccounts.find(item => item.id === headerAccountId);
     form.setValue('headerAccountName', account?.accountName ?? '', {
@@ -970,17 +1034,37 @@ const VoucherFields = ({
               </p>
             ) : null}
             {mode === 'BANK_CHEQUE' && (
-              <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <>
+                <div className="mt-4 w-full max-w-xs">
+                  <FormFieldSelect
+                    key={`voucher-payment-mode-${electronicPaymentModeOptions.map(option => option.value).join('-') || 'empty'}`}
+                    name="paymentMethod"
+                    label={VOUCHER_FORM_TEXT.paymentMode}
+                    loadOptions={loadElectronicPaymentModeOptions}
+                    defaultOptions={true}
+                    isLoading={isPaymentMethodsLoading}
+                    isClearable
+                    disabled={readOnly}
+                    onValueChange={value => {
+                      form.setValue(
+                        'paymentMethod',
+                        String(value ?? '').trim(),
+                        { shouldDirty: true, shouldValidate: true }
+                      );
+                    }}
+                  />
+                </div>
+                <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <FormFieldInput
                   name="chequeNumber"
                   label="Cheque Number"
-                  disabled={readOnly}
+                  disabled={readOnly || isElectronic}
                 />
                 <FormFieldDatePicker
                   name="chequeDate"
                   label="Cheque Date"
                   dateFormat="dd/MM/yyyy"
-                  disabled={readOnly}
+                  disabled={readOnly || isElectronic}
                 />
                 <FormFieldInput
                   name="chequeBranch"
@@ -992,7 +1076,13 @@ const VoucherFields = ({
                   label="Drawn On"
                   disabled={readOnly}
                 />
-              </div>
+                </div>
+                {isElectronic ? (
+                  <p className="mt-2 text-xs text-text-tertiary">
+                    {VOUCHER_FORM_TEXT.electronicPaymentHint}
+                  </p>
+                ) : null}
+              </>
             )}
           </>
         )}

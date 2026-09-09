@@ -9,6 +9,8 @@ interface FormFieldYesNoToggleProps {
   className?: string;
   yesLabel?: string;
   noLabel?: string;
+  compact?: boolean;
+  onChange?: (checked: boolean) => void;
 }
 
 export const FormFieldYesNoToggle = ({
@@ -18,6 +20,8 @@ export const FormFieldYesNoToggle = ({
   className = '',
   yesLabel = 'Yes',
   noLabel = 'No',
+  compact = false,
+  onChange,
 }: FormFieldYesNoToggleProps) => {
   const form = useFormContext();
 
@@ -31,8 +35,18 @@ export const FormFieldYesNoToggle = ({
 
   const value = Boolean(field.value);
 
+  const setChecked = (checked: boolean) => {
+    if (value === checked) {
+      return;
+    }
+    field.onChange(checked);
+    onChange?.(checked);
+  };
+
   return (
-    <div className={`max-w-[350px] space-y-2 ${className}`}>
+    <div
+      className={`${compact ? 'w-max max-w-none' : 'max-w-[350px]'} space-y-2 ${className}`}
+    >
       {label && <Label>{label}</Label>}
 
       <div className="inline-flex rounded-sm border border-border-secondary bg-surface-primary p-1">
@@ -40,8 +54,12 @@ export const FormFieldYesNoToggle = ({
           type="button"
           variant={value ? 'default' : 'ghost'}
           disabled={disabled}
-          onClick={() => field.onChange(true)}
-          className="rounded-sm px-3 py-2 text-sm font-medium transition"
+          onClick={() => setChecked(true)}
+          className={
+            compact
+              ? 'h-8 rounded-sm px-2 py-0 text-xs font-medium transition'
+              : 'rounded-sm px-3 py-2 text-sm font-medium transition'
+          }
         >
           {yesLabel}
         </Button>
@@ -49,8 +67,12 @@ export const FormFieldYesNoToggle = ({
           type="button"
           variant={!value ? 'default' : 'ghost'}
           disabled={disabled}
-          onClick={() => field.onChange(false)}
-          className="rounded-sm px-3 py-2 text-sm font-medium transition"
+          onClick={() => setChecked(false)}
+          className={
+            compact
+              ? 'h-8 rounded-sm px-2 py-0 text-xs font-medium transition'
+              : 'rounded-sm px-3 py-2 text-sm font-medium transition'
+          }
         >
           {noLabel}
         </Button>

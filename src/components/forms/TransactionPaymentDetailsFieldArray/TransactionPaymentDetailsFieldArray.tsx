@@ -22,8 +22,11 @@ import {
 import {
   TransactionPaymentMethodEnum,
   TransactionTypeEnum,
+  isChequeFamilyPaymentMethod,
+  isElectronicPaymentMethod,
   type TransactionType,
 } from '@/modules/transactions';
+import { useTransactionPaymentMethods } from '@/modules/transactions/hooks';
 import { useAuth } from '@/lib/AuthContext';
 import type { ITransactionPaymentDetailFormRow } from './transactionPaymentDetailsTypes';
 import { SelectAvailableAdvances } from '@/modules/vouchers/components/SelectAvailableAdvances';
@@ -40,6 +43,7 @@ import {
   TRANSACTION_PAYMENT_TEXT,
 } from './transactionPaymentDetailsConstants';
 
+const PAYMENT_MODE_FIELD = 'paymentMode';
 const ACCOUNT_PROFILE_OPTION_PAGE_SIZE = 30;
 const EMPTY_AVAILABLE_ADVANCES: AvailableAdvance[] = [];
 
@@ -87,6 +91,16 @@ const amountCents = (value?: string | number | null) => {
   const numeric = Number(value ?? 0);
   return Number.isFinite(numeric) ? Math.round(numeric * 100) : 0;
 };
+
+const toLocalDateString = (date = new Date()) => {
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, '0');
+  const day = `${date.getDate()}`.padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const isBankSettlementMethod = (method?: string | null) =>
+  isChequeFamilyPaymentMethod(method);
 
 const buildAdvancePaymentRow = (
   base: ITransactionPaymentDetailFormRow,
@@ -408,7 +422,7 @@ const PaymentDetailRow = ({
 
     if (
       !canUseCheque &&
-      paymentMethod === TransactionPaymentMethodEnum.CHEQUE
+      isBankSettlementMethod(paymentMethod)
     ) {
       form.setValue(
         `${arrayName}.${index}.paymentMethod`,
@@ -516,6 +530,26 @@ const PaymentDetailRow = ({
         shouldValidate: false,
       });
     }
+
+    if (isElectronicPaymentMethod(paymentMethod)) {
+      form.setValue(`${arrayName}.${index}.chequePageId`, '', {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: true,
+      });
+      form.setValue(`${arrayName}.${index}.chequePageSnapshot`, null, {
+        shouldDirty: true,
+        shouldValidate: false,
+      });
+      form.setValue(`${arrayName}.${index}.chequeNumber`, '', {
+        shouldDirty: true,
+        shouldValidate: false,
+      });
+      form.setValue(`${arrayName}.${index}.chequeDate`, toLocalDateString(), {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    }
   }, [arrayName, canUseCash, canUseCheque, form, index, paymentMethod]);
 
   useEffect(() => {
@@ -523,6 +557,7 @@ const PaymentDetailRow = ({
       if (
         paymentMethod !== TransactionPaymentMethodEnum.CHEQUE ||
         settlementSource === 'ADVANCE' ||
+        isElectronicPaymentMethod(paymentMethod) ||
         !isPurchase ||
         !accountId ||
         !resolvedBranchId
@@ -571,7 +606,11 @@ const PaymentDetailRow = ({
 
     previousSelectionKeyRef.current = nextSelectionKey;
 
-    if (!accountId || paymentMethod !== TransactionPaymentMethodEnum.CHEQUE) {
+    if (
+      !accountId ||
+      paymentMethod !== TransactionPaymentMethodEnum.CHEQUE ||
+      isElectronicPaymentMethod(paymentMethod)
+    ) {
       return;
     }
 
@@ -698,11 +737,16 @@ const PaymentDetailRow = ({
   }, [pageOptions, selectedChequePage]);
 
   const isCash = paymentMethod === TransactionPaymentMethodEnum.CASH;
-  const isCheque = paymentMethod === TransactionPaymentMethodEnum.CHEQUE;
+  const isElectronic = isElectronicPaymentMethod(paymentMethod);
+  const isBankPayment = isBankSettlementMethod(paymentMethod);
+  const chequeDateDisabled =
+    disabled || !isBankPayment || settlementSource === 'ADVANCE' || isElectronic;
+  const chequeDetailDisabled =
+    disabled || !isBankPayment || settlementSource === 'ADVANCE';
 
   return (
     <>
-      <div className="grid gap-4 rounded-sm border border-border-secondary bg-surface-primary p-4 md:grid-cols-2 xl:grid-cols-[1fr_1.3fr_1.5fr_1.25fr_1fr_1fr_1.25fr_auto]">
+      <div className="grid gap-4 rounded-sm border border-border-secondary bg-surface-primary p-4 md:grid-cols-2 xl:grid-cols-[1fr_1.3fr_1.5fr_1.25fr_1fr_1fr_1.25fr_auto] xl:items-start">
         <div className="md:col-span-2 xl:col-span-1">
           <FormFieldSelect
             name={`${arrayName}.${index}.settlementSource`}
@@ -712,6 +756,16 @@ const PaymentDetailRow = ({
             disabled={disabled || Boolean(advanceVoucherId)}
             onValueChange={value => {
               if (String(value) === 'ADVANCE') {
+                if (isElectronic) {
+                  form.setValue(
+                    `${arrayName}.${index}.paymentMethod`,
+                    TransactionPaymentMethodEnum.CHEQUE,
+                    {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    }
+                  );
+                }
                 setIsAdvanceModalOpen(true);
               }
             }}
@@ -781,7 +835,7 @@ const PaymentDetailRow = ({
           />
         </div>
 
-        {isCheque && isPurchase && settlementSource !== 'ADVANCE' ? (
+        {isBankPayment && isPurchase && settlementSource !== 'ADVANCE' ? (
           <div className="md:col-span-2 xl:col-span-1">
             <FormFieldSelect
               key={`cheque-page-${accountId || 'empty'}-${pageOptions.length}-${String(chequePageId || 'empty')}`}
@@ -832,7 +886,9 @@ const PaymentDetailRow = ({
                 }
                 return option.label;
               }}
-              disabled={disabled || !accountId || isLoadingPages}
+              disabled={
+                disabled || !accountId || isLoadingPages || isElectronic
+              }
               isSearchable
               cacheOptions={false}
             />
@@ -856,34 +912,39 @@ const PaymentDetailRow = ({
                     ? 'Enter customer cheque number'
                     : 'Page no will fill here'
               }
-              disabled={disabled || isCash || settlementSource === 'ADVANCE'}
+              disabled={
+                disabled ||
+                isCash ||
+                settlementSource === 'ADVANCE' ||
+                isElectronic
+              }
             />
           </div>
         )}
 
-        <div className="md:col-span-2 xl:col-span-1">
+        <div className="min-w-0 md:col-span-2 xl:col-span-1">
           <FormFieldDatePicker
             name={`${arrayName}.${index}.chequeDate`}
             label="Cheque Date"
-            disabled={disabled || !isCheque || settlementSource === 'ADVANCE'}
+            disabled={chequeDateDisabled}
           />
         </div>
 
-        <div className="md:col-span-2 xl:col-span-1">
+        <div className="min-w-0 md:col-span-2 xl:col-span-1">
           <FormFieldInput
             name={`${arrayName}.${index}.branchName`}
             label="Branch Name"
             placeholder="Branch name"
-            disabled={disabled || !isCheque || settlementSource === 'ADVANCE'}
+            disabled={chequeDetailDisabled}
           />
         </div>
 
-        <div className="md:col-span-2 xl:col-span-1">
+        <div className="min-w-0 md:col-span-2 xl:col-span-1">
           <FormFieldInput
             name={`${arrayName}.${index}.drawnOn`}
             label="Drawn On"
             placeholder="Drawn on"
-            disabled={disabled || !isCheque || settlementSource === 'ADVANCE'}
+            disabled={chequeDetailDisabled}
           />
         </div>
 
@@ -898,7 +959,7 @@ const PaymentDetailRow = ({
           />
         </div>
 
-        <div className="flex items-start justify-end pt-7">
+        <div className="flex shrink-0 items-start justify-end pt-7">
           <Button
             type="button"
             variant="destructive"
@@ -911,7 +972,7 @@ const PaymentDetailRow = ({
           </Button>
         </div>
 
-        <div className="md:col-span-2 xl:col-span-8">
+        <div className="col-span-full">
           <p className="text-xs text-text-secondary">
             Available amount for this row: {formatAmount(availableAmount)}
             {maxAmount !== undefined
@@ -921,6 +982,10 @@ const PaymentDetailRow = ({
           {paymentMethod === TransactionPaymentMethodEnum.CASH ? (
             <p className="mt-1 text-xs text-text-tertiary">
               Cash mode requires an active INR Cash Ledger account.
+            </p>
+          ) : isElectronic ? (
+            <p className="mt-1 text-xs text-text-tertiary">
+              {TRANSACTION_PAYMENT_TEXT.electronicPaymentHint}
             </p>
           ) : isSale ? (
             <p className="mt-1 text-xs text-text-tertiary">
@@ -970,6 +1035,11 @@ export const TransactionPaymentDetailsFieldArray = ({
   const canUseCheque =
     !allowedPaymentMethods?.length ||
     allowedPaymentMethods.includes(TransactionPaymentMethodEnum.CHEQUE);
+  const defaultPaymentMethod = canUseCheque
+    ? TransactionPaymentMethodEnum.CHEQUE
+    : TransactionPaymentMethodEnum.CASH;
+  const { data: paymentMethodOptions = [], isLoading: isPaymentMethodsLoading } =
+    useTransactionPaymentMethods();
   const { fields, append, remove, replace } = useFieldArray({
     control: form.control,
     name,
@@ -997,11 +1067,47 @@ export const TransactionPaymentDetailsFieldArray = ({
   }, [maxAmount, totalApplied]);
 
   const activePaymentMethod = useMemo(() => {
-    return (
-      (paymentRows ?? []).find(row => Boolean(row?.paymentMethod?.trim()))
-        ?.paymentMethod || TransactionPaymentMethodEnum.CHEQUE
-    );
-  }, [paymentRows]);
+    const normalMethod = (paymentRows ?? []).find(
+      row =>
+        row.settlementSource !== 'ADVANCE' && Boolean(row?.paymentMethod?.trim())
+    )?.paymentMethod;
+
+    return normalMethod || defaultPaymentMethod;
+  }, [defaultPaymentMethod, paymentRows]);
+
+  const visiblePaymentModeOptions = useMemo(
+    () =>
+      paymentMethodOptions.filter(option => {
+        if (option.value === TransactionPaymentMethodEnum.CASH) {
+          return canUseCash;
+        }
+        if (
+          option.value === TransactionPaymentMethodEnum.CHEQUE ||
+          isElectronicPaymentMethod(option.value)
+        ) {
+          return canUseCheque;
+        }
+        return false;
+      }),
+    [canUseCash, canUseCheque, paymentMethodOptions]
+  );
+
+  const loadPaymentModeOptions = useCallback(
+    async (inputValue: string) => {
+      const normalized = inputValue.trim().toLowerCase();
+      const options = visiblePaymentModeOptions.filter(option => {
+        if (!normalized) {
+          return true;
+        }
+        return (
+          option.label.toLowerCase().includes(normalized) ||
+          option.value.toLowerCase().includes(normalized)
+        );
+      });
+      return { options, hasMore: false };
+    },
+    [visiblePaymentModeOptions]
+  );
 
   const selectedAdvanceVoucherIds = useMemo(
     () =>
@@ -1072,6 +1178,13 @@ export const TransactionPaymentDetailsFieldArray = ({
         amountCents(maxAmount) - usedByOthersCents,
         0
       );
+      const resolvedAdvanceMethod =
+        paymentMethod === TransactionPaymentMethodEnum.CASH
+          ? TransactionPaymentMethodEnum.CASH
+          : TransactionPaymentMethodEnum.CHEQUE;
+      const remainderMethod = isElectronicPaymentMethod(paymentMethod)
+        ? paymentMethod
+        : resolvedAdvanceMethod;
       const advanceRows: ITransactionPaymentDetailFormRow[] = [];
 
       uniqueVouchers.forEach(voucher => {
@@ -1091,7 +1204,7 @@ export const TransactionPaymentDetailsFieldArray = ({
             baseRow,
             voucher,
             (appliedCents / 100).toFixed(2),
-            paymentMethod
+            resolvedAdvanceMethod
           )
         );
       });
@@ -1109,7 +1222,10 @@ export const TransactionPaymentDetailsFieldArray = ({
         nextRows.push(
           createEmptyPurchasePaymentRow({
             settlementSource: 'NORMAL',
-            paymentMethod,
+            paymentMethod: remainderMethod,
+            chequeDate: isElectronicPaymentMethod(remainderMethod)
+              ? toLocalDateString()
+              : '',
             amount: (remainingCents / 100).toFixed(2),
             isAdvanceRemainder: true,
             amountLocked: true,
@@ -1163,12 +1279,19 @@ export const TransactionPaymentDetailsFieldArray = ({
 
     append(
       createEmptyPurchasePaymentRow({
-        paymentMethod: TransactionPaymentMethodEnum.CHEQUE,
+        paymentMethod: defaultPaymentMethod,
         amount: normalizeAmount(maxAmount),
       }),
       { shouldFocus: false }
     );
-  }, [append, autoAppendDefaultRow, disabled, fields.length, maxAmount]);
+  }, [
+    append,
+    autoAppendDefaultRow,
+    defaultPaymentMethod,
+    disabled,
+    fields.length,
+    maxAmount,
+  ]);
 
   useEffect(() => {
     if (!syncPrimaryRowAmount) {
@@ -1220,6 +1343,9 @@ export const TransactionPaymentDetailsFieldArray = ({
         append(
           createEmptyPurchasePaymentRow({
             paymentMethod: method,
+            chequeDate: isElectronicPaymentMethod(method)
+              ? toLocalDateString()
+              : '',
             amount: normalizeAmount(maxAmount),
           }),
           { shouldFocus: false }
@@ -1298,10 +1424,33 @@ export const TransactionPaymentDetailsFieldArray = ({
           return;
         }
 
-        if (row.paymentMethod !== method) {
+        if (
+          row.paymentMethod !== method &&
+          !isBankSettlementMethod(row.paymentMethod)
+        ) {
           form.setValue(`${name}.${index}.accountId`, '', {
             shouldDirty: true,
             shouldTouch: true,
+            shouldValidate: true,
+          });
+        }
+
+        if (isElectronicPaymentMethod(method)) {
+          form.setValue(`${name}.${index}.chequePageId`, '', {
+            shouldDirty: true,
+            shouldTouch: true,
+            shouldValidate: true,
+          });
+          form.setValue(`${name}.${index}.chequePageSnapshot`, null, {
+            shouldDirty: true,
+            shouldValidate: false,
+          });
+          form.setValue(`${name}.${index}.chequeNumber`, '', {
+            shouldDirty: true,
+            shouldValidate: false,
+          });
+          form.setValue(`${name}.${index}.chequeDate`, toLocalDateString(), {
+            shouldDirty: true,
             shouldValidate: true,
           });
         }
@@ -1310,53 +1459,41 @@ export const TransactionPaymentDetailsFieldArray = ({
     [append, form, maxAmount, name]
   );
 
+  useEffect(() => {
+    const current = String(form.getValues(PAYMENT_MODE_FIELD) ?? '');
+    if (current !== activePaymentMethod) {
+      form.setValue(PAYMENT_MODE_FIELD, activePaymentMethod, {
+        shouldDirty: false,
+        shouldValidate: false,
+      });
+    }
+  }, [activePaymentMethod, form]);
+
   return (
     <CardSection heading={title}>
       <div className="space-y-4">
         <p className="text-sm text-text-secondary">{description}</p>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-semibold uppercase tracking-wider text-text-tertiary">
-            Payment Mode
-          </span>
-          <Button
-            type="button"
-            size="sm"
-            variant={
-              activePaymentMethod === TransactionPaymentMethodEnum.CASH
-                ? 'default'
-                : 'outline'
-            }
-            disabled={disabled || !canUseCash}
-            onClick={() =>
-              canUseCash
-                ? applyPaymentMethod(TransactionPaymentMethodEnum.CASH)
-                : undefined
-            }
-          >
-            Cash
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant={
-              activePaymentMethod === TransactionPaymentMethodEnum.CHEQUE
-                ? 'default'
-                : 'outline'
-            }
-            disabled={disabled || !canUseCheque}
-            onClick={() =>
-              canUseCheque
-                ? applyPaymentMethod(TransactionPaymentMethodEnum.CHEQUE)
-                : undefined
-            }
-          >
-            Cheque
-          </Button>
+        <div className="w-full max-w-xs">
+          <FormFieldSelect
+            key={`payment-mode-${visiblePaymentModeOptions.map(option => option.value).join('-') || 'empty'}`}
+            name={PAYMENT_MODE_FIELD}
+            label={TRANSACTION_PAYMENT_TEXT.paymentMode}
+            loadOptions={loadPaymentModeOptions}
+            defaultOptions={true}
+            isLoading={isPaymentMethodsLoading}
+            disabled={disabled}
+            onValueChange={value => {
+              const method = String(value ?? '').trim();
+              if (method) {
+                applyPaymentMethod(method);
+              }
+            }}
+          />
           {!canUseCash ? (
-            <span className="text-xs text-error-600">
-              Cash payment is not allowed for this transaction type.
-            </span>
+            <p className="mt-1 text-xs text-error-600">
+              {TRANSACTION_PAYMENT_TEXT.cashNotAllowed}
+            </p>
           ) : null}
         </div>
 
@@ -1404,8 +1541,10 @@ export const TransactionPaymentDetailsFieldArray = ({
             onClick={() =>
               append(
                 createEmptyPurchasePaymentRow({
-                  paymentMethod:
-                    activePaymentMethod || TransactionPaymentMethodEnum.CHEQUE,
+                  paymentMethod: activePaymentMethod,
+                  chequeDate: isElectronicPaymentMethod(activePaymentMethod)
+                    ? toLocalDateString()
+                    : '',
                   amount: normalizeAmount(remainingAmount || maxAmount),
                 }),
                 { shouldFocus: false }

@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useMemo, useState, type ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { yupResolver } from '@hookform/resolvers/yup';
 import type { Resolver } from 'react-hook-form';
@@ -224,6 +224,15 @@ export const TransferFormView = ({
     rowIndex: number;
     allowedCurrencyIds: string[];
   } | null>(null);
+  const handleOpenCurrencyPicker = useCallback(
+    (rowIndex: number, allowedCurrencyIds: string[]) => {
+      setCurrencyPickerState({ rowIndex, allowedCurrencyIds });
+    },
+    []
+  );
+  const handleCloseCurrencyPicker = useCallback(() => {
+    setCurrencyPickerState(null);
+  }, []);
   const createCounterTransfer = useCreateCounterTransfer();
   const createBranchTransfer = useCreateBranchTransfer();
 
@@ -353,10 +362,8 @@ export const TransferFormView = ({
         pricingData={pricingData}
         canSubmit={canSubmit}
         currencyPickerState={currencyPickerState}
-        onOpenCurrencyPicker={(rowIndex, allowedCurrencyIds) =>
-          setCurrencyPickerState({ rowIndex, allowedCurrencyIds })
-        }
-        onCloseCurrencyPicker={() => setCurrencyPickerState(null)}
+        onOpenCurrencyPicker={handleOpenCurrencyPicker}
+        onCloseCurrencyPicker={handleCloseCurrencyPicker}
         readOnly={readOnly}
         displayNumber={initialValues?.number}
         readOnlyOptions={readOnlyOptions}

@@ -1,6 +1,4 @@
-import { useMemo } from 'react';
 import { useFieldArray, useFormContext } from 'react-hook-form';
-import type { TableColumnDef } from '@/components/ui';
 import type {
   IPurchaseFormValues,
   IPurchasePricingData,
@@ -44,58 +42,31 @@ export const PurchaseTransactionTable = ({
     name: 'transactions',
   });
 
-  const columns = useMemo<TableColumnDef<{ id: string }>[]>(() => {
-    return [
-      {
-        id: 'row',
-        header: () => null,
-        cell: ({ row }) => (
-          <PurchaseTransactionRowCell
-            rowIndex={row.index}
-            branchId={branchId}
-            counterId={counterId}
-            passengerId={passengerId}
-            excludeTransactionId={excludeTransactionId}
-            pricingData={pricingData}
-            agentCommissionRules={agentCommissionRules}
-            onOpenCurrencyPicker={onOpenCurrencyPicker}
-            onRemove={remove}
-            canRemove={fields.length > 1}
-            disabled={disabled}
-            rateEditable={rateEditable}
-            useAverageSellRate={useAverageSellRate}
-          />
-        ),
-        meta: {
-          headerClassName: 'hidden',
-          cellClassName: '!px-1 !py-1',
-        },
-      },
-    ];
-  }, [
-    agentCommissionRules,
-    branchId,
-    counterId,
-    passengerId,
-    excludeTransactionId,
-    disabled,
-    fields.length,
-    onOpenCurrencyPicker,
-    pricingData,
-    remove,
-    rateEditable,
-    useAverageSellRate,
-  ]);
-
   return (
     <TransactionItemsFieldArray
       heading="Transaction Details"
       emptyMessage="No transaction rows found."
       addLabel="Add Row"
       data={fields}
-      columns={columns}
       disabled={disabled}
       onAdd={() => append(createEmptyPurchaseTransactionRow())}
+      renderRow={(_item, index) => (
+        <PurchaseTransactionRowCell
+          rowIndex={index}
+          branchId={branchId}
+          counterId={counterId}
+          passengerId={passengerId}
+          excludeTransactionId={excludeTransactionId}
+          pricingData={pricingData}
+          agentCommissionRules={agentCommissionRules}
+          onOpenCurrencyPicker={onOpenCurrencyPicker}
+          onRemove={remove}
+          canRemove={fields.length > 1}
+          disabled={disabled}
+          rateEditable={rateEditable}
+          useAverageSellRate={useAverageSellRate}
+        />
+      )}
     />
   );
 };

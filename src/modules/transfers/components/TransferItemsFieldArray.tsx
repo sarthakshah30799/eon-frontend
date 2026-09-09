@@ -1,6 +1,4 @@
-import { useMemo } from 'react';
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
-import type { TableColumnDef } from '@/components/ui';
 import type { IPurchasePricingData } from '@/modules/purchase/types/purchaseTypes';
 import type { ITransferFormValues } from '../types';
 import { createEmptyTransferFormItem } from '../utils/transferFormUtils';
@@ -42,42 +40,6 @@ export const TransferItemsFieldArray = ({
     control: form.control,
     name: 'items',
   });
-  const columns = useMemo<TableColumnDef<{ id: string }>[]>(() => {
-    return [
-      {
-        id: 'row',
-        header: () => null,
-        cell: ({ row }) => (
-          <PurchaseTransactionRowCell
-            rowIndex={row.index}
-            fieldPrefix="items"
-            branchId={resolvedBranchId}
-            counterId={resolvedCounterId}
-            pricingData={pricingData}
-            onOpenCurrencyPicker={onOpenCurrencyPicker}
-            disabled={disabled}
-            canRemove={fields.length > 1}
-            onRemove={remove}
-            rateEditable={rateEditable}
-            useCounterHoldCostRate
-          />
-        ),
-        meta: {
-          headerClassName: 'hidden',
-          cellClassName: '!px-1 !py-1',
-        },
-      },
-    ];
-  }, [
-    disabled,
-    fields.length,
-    pricingData,
-    onOpenCurrencyPicker,
-    remove,
-    resolvedBranchId,
-    resolvedCounterId,
-    rateEditable,
-  ]);
 
   return (
     <TransactionItemsFieldArray
@@ -85,9 +47,23 @@ export const TransferItemsFieldArray = ({
       emptyMessage="No transfer items added yet."
       addLabel="Add Item"
       data={fields}
-      columns={columns}
       disabled={disabled}
       onAdd={() => append(createEmptyTransferFormItem())}
+      renderRow={(_item, index) => (
+        <PurchaseTransactionRowCell
+          rowIndex={index}
+          fieldPrefix="items"
+          branchId={resolvedBranchId}
+          counterId={resolvedCounterId}
+          pricingData={pricingData}
+          onOpenCurrencyPicker={onOpenCurrencyPicker}
+          disabled={disabled}
+          canRemove={fields.length > 1}
+          onRemove={remove}
+          rateEditable={rateEditable}
+          useCounterHoldCostRate
+        />
+      )}
     />
   );
 };

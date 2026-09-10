@@ -119,6 +119,7 @@ const fromEntity = (voucher: AccountingVoucher): VoucherFormValues => ({
   items: (() => {
     const mapped: VoucherFormValues['items'] = voucher.items.map(item => ({
       ...item,
+      amount: String(item.amount ?? ''),
       itemTypeName:
         item.itemTypeSnapshot?.label ?? item.itemTypeSnapshot?.name ?? '',
       itemTypeValue:
@@ -318,9 +319,9 @@ export const VoucherCreateView = ({ type }: { type: VoucherType }) => {
     ]
   );
   return (
-    <div className="space-y-5">
+    <div className="space-y-3">
       <div>
-        <h1 className="text-2xl font-semibold">
+        <h1 className="text-xl font-semibold">
           Create {VOUCHER_LABELS[type]}
         </h1>
         {policy.helperText && (
@@ -366,9 +367,9 @@ export const VoucherEditView = ({ type }: { type: VoucherType }) => {
       </div>
     );
   return (
-    <div className="space-y-5">
+    <div className="space-y-3">
       <div>
-        <h1 className="text-2xl font-semibold">
+        <h1 className="text-xl font-semibold">
           {VOUCHER_LABELS[type]} {data.number}
         </h1>
         <p className="text-sm text-text-secondary">Read-only posted record</p>

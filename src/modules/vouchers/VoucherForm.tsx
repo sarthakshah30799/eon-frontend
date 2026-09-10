@@ -25,7 +25,9 @@ import { useCategoryOptions } from '@/hooks';
 import { PartyProfileTypeEnum } from '@/modules/partyProfiles/types/partyProfileTypes';
 import { AccountProfileLedgerLabelEnum } from '@/modules/accountProfile';
 import { PurchaseWorkplaceFields } from '@/modules/purchase/components/PurchaseWorkplaceFields';
+import type { ICompanyProfile } from '@/modules/companyProfile/types';
 import type {
+  AccountingVoucher,
   OutstandingBill,
   VoucherAccountMode,
   VoucherFormValues,
@@ -36,15 +38,26 @@ import {
   OUTSTANDING_BILL_TEXT,
   VOUCHER_FORM_TEXT,
   VOUCHER_LABELS,
+  VOUCHER_PRINT_TEXT,
 } from './constants';
 import { SelectOutstandingBills } from './components/SelectOutstandingBills';
-import { useVoucherItemTypeCategoryOptions, useVoucherNextNumber } from './hooks';
+import {
+  useRecordVoucherPrint,
+  useVoucherItemTypeCategoryOptions,
+  useVoucherNextNumber,
+} from './hooks';
 import { useVoucherPanVerification } from './useVoucherPanVerification';
 import {
   TransactionPaymentMethodEnum,
   getTransactionPaymentMethodOptions,
   isNonChequeBankPaymentMethod,
 } from '@/modules/transactions';
+import {
+  buildVoucherPrintHtml,
+  getVoucherPrintCopyLabel,
+  isVoucherPrintableType,
+} from './voucherPrintUtils';
+import { openPrintWindow } from '@/modules/transactions/utils/printSnapshotUtils';
 import {
   formatVoucherDateInput,
   getVoucherItemTypeValueById,
@@ -326,6 +339,8 @@ interface Props {
   type: VoucherType;
   defaultValues: VoucherFormValues;
   readOnly?: boolean;
+  voucher?: AccountingVoucher | null;
+  company?: ICompanyProfile | null;
   minDate?: Date;
   maxDate?: Date;
   policyTransactionDate?: string;
@@ -338,6 +353,8 @@ interface Props {
 const VoucherFields = ({
   type,
   readOnly,
+  voucher,
+  company,
   minDate,
   maxDate,
   policyTransactionDate,
@@ -346,15 +363,20 @@ const VoucherFields = ({
   Props,
   | 'type'
   | 'readOnly'
+  | 'voucher'
+  | 'company'
   | 'minDate'
   | 'maxDate'
   | 'policyTransactionDate'
   | 'onBranchChange'
 >) => {
   const form = useFormContext<VoucherFormValues>();
+  const [hasPrintedOnce, setHasPrintedOnce] = useState(false);
+  const [isPrinting, setIsPrinting] = useState(false);
   const [outstandingModalIndex, setOutstandingModalIndex] = useState<
     number | null
   >(null);
+  const { recordVoucherPrint } = useRecordVoucherPrint(type);
   const mode = useWatch({ control: form.control, name: 'accountMode' });
   const paymentMethod = useWatch({
     control: form.control,
@@ -992,6 +1014,62 @@ const VoucherFields = ({
         ? totals.debit - totals.credit
         : totals.credit - totals.debit;
 
+  const canPrint = Boolean(
+    readOnly &&
+      voucher?.id &&
+      voucher?.number &&
+      isVoucherPrintableType(type)
+  );
+  const hasPrintedHistory = (voucher?.printCount ?? 0) > 0;
+  const nextCopyType =
+    !hasPrintedOnce && !hasPrintedHistory
+      ? 'CUSTOMER_COPY'
+      : 'DUPLICATE_COPY';
+
+  const handlePrintCopy = async () => {
+    if (!voucher?.id || !voucher.number) {
+      toast.error('Save the voucher before printing.');
+      return;
+    }
+    if (isPrinting) {
+      return;
+    }
+
+    try {
+      setIsPrinting(true);
+      const copyType =
+        !hasPrintedOnce && !hasPrintedHistory
+          ? 'CUSTOMER_COPY'
+          : 'DUPLICATE_COPY';
+      const html = buildVoucherPrintHtml({
+        copyType,
+        voucher,
+        company: company ?? null,
+      });
+      await recordVoucherPrint({
+        id: voucher.id,
+        payload: {
+          copyType,
+          subject: `${voucher.number} - ${getVoucherPrintCopyLabel(copyType)}`,
+          text: `Printed ${getVoucherPrintCopyLabel(copyType).toLowerCase()} for voucher ${voucher.number}.`,
+          html,
+          sendEmail: false,
+        },
+      });
+      openPrintWindow(html, VOUCHER_PRINT_TEXT.popupBlocked);
+      setHasPrintedOnce(true);
+      toast.success(
+        VOUCHER_PRINT_TEXT.printed(getVoucherPrintCopyLabel(copyType))
+      );
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : VOUCHER_PRINT_TEXT.printFailed
+      );
+    } finally {
+      setIsPrinting(false);
+    }
+  };
+
   return (
     <div className="space-y-3 [&_div.max-w-\[350px\]]:!max-w-none">
       <CardSection heading="Transaction">
@@ -1585,6 +1663,25 @@ const VoucherFields = ({
           onClose={() => setOutstandingModalIndex(null)}
         />
       ) : null}
+
+      {canPrint ? (
+        <CardSection heading={VOUCHER_PRINT_TEXT.heading} className="space-y-4">
+          <p className="text-sm text-text-secondary">
+            {hasPrintedOnce || hasPrintedHistory
+              ? VOUCHER_PRINT_TEXT.duplicateHint
+              : VOUCHER_PRINT_TEXT.originalHint}
+          </p>
+          <Button
+            type="button"
+            onClick={() => void handlePrintCopy()}
+            disabled={isPrinting}
+          >
+            {isPrinting
+              ? VOUCHER_PRINT_TEXT.preparing
+              : `${VOUCHER_PRINT_TEXT.printCopy} (${getVoucherPrintCopyLabel(nextCopyType)})`}
+          </Button>
+        </CardSection>
+      ) : null}
     </div>
   );
 };
@@ -1593,6 +1690,8 @@ export const VoucherForm = ({
   type,
   defaultValues,
   readOnly = false,
+  voucher = null,
+  company = null,
   onSubmit,
   onBack,
   minDate,
@@ -1632,6 +1731,8 @@ export const VoucherForm = ({
     <VoucherFields
       type={type}
       readOnly={readOnly}
+      voucher={voucher}
+      company={company}
       minDate={minDate}
       maxDate={maxDate}
       policyTransactionDate={policyTransactionDate}

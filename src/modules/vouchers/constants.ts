@@ -111,6 +111,48 @@ export const VOUCHER_PATHS: Record<VoucherType, string> = {
   DEPOSIT_WITHDRAWAL: '/deposit-withdrawals',
 };
 
+export const VOUCHER_PRINT_TEXT = {
+  heading: 'Print Copy',
+  originalHint: 'Print the original copy for this saved voucher.',
+  duplicateHint: 'Print the duplicate copy for this saved voucher.',
+  printCopy: 'Print Copy',
+  preparing: 'Preparing Print...',
+  popupBlocked:
+    'Unable to open print window. Please allow pop-ups and try again.',
+  printed: (label: string) => `${label} sent to printer`,
+  printFailed: 'Failed to print voucher copy',
+  originalCopy: 'Original Copy',
+  duplicateCopy: 'Duplicate Copy',
+  receivedFrom: 'Received From',
+  paidTo: 'Paid To',
+  sumOfAmount: 'The Sum Of Amount',
+  paymentDetails: 'Payment Details',
+  chequeNumber: 'Cheque No',
+  chequeDate: 'Cheque Date',
+  drawnOn: 'Drawn On',
+  panNumber: 'PAN No',
+  accountCode: 'Acc Code',
+  docDate: 'Doc Date',
+  billNo: 'Bill No',
+  subLedger: 'S/L Code',
+  particulars: 'Particulars',
+  debit: 'Debit',
+  credit: 'Credit',
+  narration: 'Narration',
+  total: 'Total',
+  noItems: 'No items',
+  branchGst: 'Branch GST',
+  rbiLicNo: 'RBI Lic. No',
+  companyPan: 'PAN No',
+  address: 'Address',
+  contact: 'Contact',
+  email: 'Email',
+  voucherNo: 'Voucher No',
+  date: 'Date',
+  companyBranch: 'Company & Branch',
+  authorizedSignatory: 'Authorized Signatory',
+} as const;
+
 export const createVoucherIdempotencyKey = () =>
   globalThis.crypto?.randomUUID?.() ??
   `${Date.now()}-${Math.random().toString(36).slice(2)}`;

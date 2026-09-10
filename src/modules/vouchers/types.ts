@@ -97,6 +97,8 @@ export interface AccountingVoucher extends Omit<
   voucherType: VoucherType;
   number: string;
   accountMode: VoucherAccountMode | null;
+  branchSnapshot?: VoucherSnapshot | null;
+  counterSnapshot?: VoucherSnapshot | null;
   accountTypeSnapshot?: VoucherSnapshot | null;
   headerAccountSnapshot?: VoucherSnapshot | null;
   entityTypeSnapshot?: VoucherSnapshot | null;
@@ -105,6 +107,7 @@ export interface AccountingVoucher extends Omit<
   totalDebit: string;
   totalCredit: string;
   finalAmount: string;
+  printCount?: number;
   advanceControlAccountId?: string | null;
   advanceControlAccountSnapshot?: VoucherSnapshot | null;
   createdAt: string;

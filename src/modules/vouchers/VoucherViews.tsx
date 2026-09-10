@@ -8,6 +8,7 @@ import { getTransactionDatePolicy } from '@/modules/transactionPolicies/utils/tr
 import { transactionPoliciesApi } from '@/api/transactionPolicies/transactionPolicies.api';
 import { useQuery } from '@tanstack/react-query';
 import { formatDateTime } from '@/utils';
+import { useListCompanyProfiles } from '@/modules/companyProfile/hooks';
 import { VoucherForm } from './VoucherForm';
 import {
   createVoucherIdempotencyKey,
@@ -23,6 +24,7 @@ import type {
   VoucherType,
 } from './types';
 import { paymentMethodForVoucherAccountMode } from './utils';
+import { isVoucherPrintableType } from './voucherPrintUtils';
 
 const emptyItem = (
   direction: 'DEBIT' | 'CREDIT' = 'DEBIT'
@@ -359,6 +361,12 @@ export const VoucherEditView = ({ type }: { type: VoucherType }) => {
   const navigate = useNavigate();
   const { id = '' } = useParams();
   const { data, isLoading, error } = useVoucher(type, id);
+  const { data: companiesPage } = useListCompanyProfiles(
+    { limit: 1 },
+    isVoucherPrintableType(type)
+  );
+  const company = companiesPage?.data?.[0] ?? null;
+
   if (isLoading)
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
@@ -382,6 +390,8 @@ export const VoucherEditView = ({ type }: { type: VoucherType }) => {
       <VoucherForm
         type={type}
         defaultValues={fromEntity(data)}
+        voucher={data}
+        company={company}
         readOnly
         onBack={() => navigate(VOUCHER_PATHS[type])}
         onSubmit={async () => undefined}

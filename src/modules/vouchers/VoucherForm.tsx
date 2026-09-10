@@ -3,6 +3,7 @@ import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { toast } from 'react-hot-toast';
+import { TrashIcon } from '@heroicons/react/24/outline';
 import {
   Button,
   CardSection,
@@ -50,6 +51,7 @@ import {
   isVoucherAccountItemTypeValue,
   isVoucherBillItemTypeValue,
   isVoucherIndividualSelection,
+  paymentMethodForVoucherAccountMode,
   voucherBillDirection,
 } from './utils';
 import { useListAdditionalSettings } from '@/modules/additionalSettings/hooks';
@@ -160,10 +162,20 @@ const voucherSchema = (type: VoucherType) => {
           paymentMethod === TransactionPaymentMethodEnum.CHEQUE),
       then: schema => schema.required('Drawn on is required'),
     }),
-    paymentMethod: yup
-      .string()
-      .oneOf(['', ...Object.values(TransactionPaymentMethodEnum)])
-      .default(''),
+    paymentMethod: yup.string().when([], {
+      is: () => partyVoucher,
+      then: schema =>
+        schema
+          .required('Payment mode is required')
+          .oneOf(
+            Object.values(TransactionPaymentMethodEnum),
+            'Payment mode is required'
+          ),
+      otherwise: schema =>
+        schema
+          .oneOf(['', ...Object.values(TransactionPaymentMethodEnum)])
+          .default(''),
+    }),
     narration: yup.string().trim().required('Narration is required'),
     items: depositWithdrawal
       ? yup
@@ -393,7 +405,10 @@ const VoucherFields = ({
     [itemTypeCategoryOptions]
   );
   const paymentMethodOptions = useMemo(
-    () => getTransactionPaymentMethodOptions(),
+    () =>
+      getTransactionPaymentMethodOptions().filter(
+        option => option.value !== TransactionPaymentMethodEnum.CASH
+      ),
     []
   );
   const loadPaymentModeOptions = useCallback(
@@ -423,8 +438,8 @@ const VoucherFields = ({
   const entityTypeOptions = useCategoryOptions(
     CategoryOptionCodeEnum.EntityType
   ).defaultOptions;
-  const lastPartyIdRef = useRef('');
   const previousElectronicRef = useRef(false);
+  const lastPartyIdRef = useRef(form.getValues('partyProfileId') || '');
   const adultDobMaxDate = useMemo(() => {
     const date = new Date();
     date.setFullYear(date.getFullYear() - 18);
@@ -628,6 +643,10 @@ const VoucherFields = ({
     form.setValue('panDob', formatVoucherDateInput(selectedParty?.panDob), {
       shouldValidate: false,
     });
+    // Edit/view is immutable; do not wipe settled bill lines when party options load.
+    if (readOnly) {
+      return;
+    }
     const currentItems = form.getValues('items') ?? [];
     currentItems.forEach((item, index) => {
       const itemTypeValue =
@@ -653,7 +672,7 @@ const VoucherFields = ({
       );
     });
     resetPanVerification();
-  }, [form, itemTypeCategoryOptions, resetPanVerification, selectedParty]);
+  }, [form, itemTypeCategoryOptions, readOnly, resetPanVerification, selectedParty]);
   useEffect(() => {
     const selected = accountTypeOptions.find(
       option => String(option.value) === String(accountTypeOptionId)
@@ -664,14 +683,38 @@ const VoucherFields = ({
     form.setValue('accountMode', nextMode);
     form.setValue('headerAccountId', '');
     form.setValue('headerAccountName', '');
+    form.setValue(
+      'paymentMethod',
+      paymentMethodForVoucherAccountMode(nextMode),
+      { shouldDirty: true, shouldValidate: true }
+    );
     if (nextMode !== 'BANK_CHEQUE') {
-      form.setValue('paymentMethod', '');
       form.setValue('chequeNumber', '');
       form.setValue('chequeDate', '');
       form.setValue('chequeBranch', '');
       form.setValue('drawnOn', '');
     }
   }, [accountTypeOptionId, accountTypeOptions, form, mode]);
+  useEffect(() => {
+    if (readOnly || !isPartyVoucherType(type) || !mode) return;
+    if (mode === 'BANK_CHEQUE') {
+      if (
+        !paymentMethod ||
+        paymentMethod === TransactionPaymentMethodEnum.CASH
+      ) {
+        form.setValue(
+          'paymentMethod',
+          TransactionPaymentMethodEnum.CHEQUE,
+          { shouldValidate: true }
+        );
+      }
+      return;
+    }
+    const implied = paymentMethodForVoucherAccountMode(mode);
+    if (implied && paymentMethod !== implied) {
+      form.setValue('paymentMethod', implied, { shouldValidate: true });
+    }
+  }, [form, mode, paymentMethod, readOnly, type]);
   useEffect(() => {
     if (readOnly || mode !== 'BANK_CHEQUE') {
       previousElectronicRef.current = isBankNonCheque;
@@ -826,6 +869,29 @@ const VoucherFields = ({
   const outstandingModalCurrentId =
     outstandingModalItem?.settledTransactionId ?? undefined;
 
+  const createEmptyVoucherItem = (): VoucherFormValues['items'][number] => ({
+    itemTypeOptionId: '',
+    itemTypeValue: '',
+    subledgerPartyProfileId: '',
+    accountId: '',
+    accountName: '',
+    direction: 'DEBIT',
+    amount: '',
+    settledTransactionId: '',
+    settledTransactionNumber: '',
+  });
+
+  const handleRemoveItem = (index: number) => {
+    if (fields.length === 1) {
+      form.setValue(`items.${index}`, createEmptyVoucherItem(), {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+      return;
+    }
+    remove(index);
+  };
+
   const handleItemTypeChange = (index: number, itemTypeOptionId: string) => {
     const itemTypeValue = getVoucherItemTypeValueById(
       itemTypeOptionId,
@@ -927,10 +993,12 @@ const VoucherFields = ({
         : totals.credit - totals.debit;
 
   return (
-    <div className="space-y-4">
-      <CardSection heading="Voucher Details">
-        <PurchaseWorkplaceFields readOnly={readOnly} />
-        <div className="mt-4 grid gap-4 md:grid-cols-2">
+    <div className="space-y-3 [&_div.max-w-\[350px\]]:!max-w-none">
+      <CardSection heading="Transaction">
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+          <div className="md:col-span-2 lg:col-span-2 [&_.grid]:gap-3">
+            <PurchaseWorkplaceFields readOnly={readOnly} />
+          </div>
           <FormFieldDatePicker
             name="transactionDate"
             label="Transaction Date"
@@ -941,9 +1009,27 @@ const VoucherFields = ({
           />
           <FormFieldInput name="number" label="Transaction Number" disabled />
         </div>
-        {isPartyVoucherType(type) && (
-          <>
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
+        {isDepositWithdrawalType(type) ? (
+          <div className="mt-3 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+            <FormFieldInput
+              name="chequeNumber"
+              label="Cheque Number"
+              disabled={readOnly}
+            />
+            <FormFieldDatePicker
+              name="chequeDate"
+              label="Cheque Date"
+              dateFormat="dd/MM/yyyy"
+              disabled={readOnly}
+            />
+          </div>
+        ) : null}
+      </CardSection>
+
+      {isPartyVoucherType(type) ? (
+        <div className="grid gap-3 lg:grid-cols-2">
+          <CardSection heading="Account">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {readOnly ? (
                 <FormFieldInput
                   name="accountTypeName"
@@ -977,6 +1063,62 @@ const VoucherFields = ({
                 label="A/C Name"
                 disabled
               />
+            </div>
+            {mode === 'BANK_CHEQUE' ? (
+              <>
+                <div className="mt-3 w-full max-w-xs">
+                  <FormFieldSelect
+                    key={`voucher-payment-mode-${paymentMethodOptions.map(option => option.value).join('-') || 'empty'}`}
+                    name="paymentMethod"
+                    label={VOUCHER_FORM_TEXT.paymentMode}
+                    loadOptions={loadPaymentModeOptions}
+                    defaultOptions={paymentMethodOptions}
+                    isClearable={false}
+                    disabled={readOnly}
+                    onValueChange={value => {
+                      form.setValue(
+                        'paymentMethod',
+                        String(value ?? '').trim() ||
+                          TransactionPaymentMethodEnum.CHEQUE,
+                        { shouldDirty: true, shouldValidate: true }
+                      );
+                    }}
+                  />
+                </div>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                  <FormFieldInput
+                    name="chequeNumber"
+                    label="Cheque Number"
+                    disabled={readOnly || isBankNonCheque || isCashPaymentMode}
+                  />
+                  <FormFieldDatePicker
+                    name="chequeDate"
+                    label="Cheque Date"
+                    dateFormat="dd/MM/yyyy"
+                    disabled={readOnly || isBankNonCheque || isCashPaymentMode}
+                  />
+                  <FormFieldInput
+                    name="chequeBranch"
+                    label="Branch"
+                    disabled={readOnly || isCashPaymentMode}
+                  />
+                  <FormFieldInput
+                    name="drawnOn"
+                    label="Drawn On"
+                    disabled={readOnly || isCashPaymentMode}
+                  />
+                </div>
+                {isBankNonCheque ? (
+                  <p className="mt-2 text-xs text-text-tertiary">
+                    {VOUCHER_FORM_TEXT.electronicPaymentHint}
+                  </p>
+                ) : null}
+              </>
+            ) : null}
+          </CardSection>
+
+          <CardSection heading="Party">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {readOnly ? (
                 <FormFieldInput
                   name="entityTypeName"
@@ -1003,115 +1145,59 @@ const VoucherFields = ({
                 />
               )}
               <FormFieldInput name="partyName" label="Party Name" disabled />
-              <FormFieldInput
-                name="panNumber"
-                label={VOUCHER_FORM_TEXT.panNumber}
-                placeholder={VOUCHER_FORM_TEXT.panNumberPlaceholder}
-                valueTransform="uppercase"
-                disabled={panFieldsDisabled || isVerifyingPan}
-                onKeyDown={handlePanKeyDown}
-              />
-              <FormFieldInput
-                name="panName"
-                label={VOUCHER_FORM_TEXT.panName}
-                placeholder={VOUCHER_FORM_TEXT.panNamePlaceholder}
-                disabled={panFieldsDisabled || isVerifyingPan}
-                onKeyDown={handlePanKeyDown}
-              />
-              <FormFieldDatePicker
-                name="panDob"
-                label={VOUCHER_FORM_TEXT.panDob}
-                placeholder={VOUCHER_FORM_TEXT.panDobPlaceholder}
-                dateFormat="dd/MM/yyyy"
-                maxDate={adultDobMaxDate}
-                disabled={panFieldsDisabled || isVerifyingPan}
-                onKeyDown={handlePanKeyDown}
-              />
             </div>
-            {!panFieldsDisabled ? (
-              <p
-                className={`mt-2 text-xs ${
-                  panVerificationStatus === 'checking'
-                    ? 'text-info-700'
-                    : panVerificationStatus === 'valid'
-                      ? 'text-success-700'
-                      : panVerificationStatus === 'invalid'
-                        ? 'text-error-600'
-                        : 'text-text-secondary'
-                }`}
-              >
-                {panVerificationMessage ||
-                  VOUCHER_FORM_TEXT.panVerifyIncomplete}
-              </p>
-            ) : null}
-            {mode === 'BANK_CHEQUE' && (
+            {isIndividualSelection ? (
               <>
-                <div className="mt-4 w-full max-w-xs">
-                  <FormFieldSelect
-                    key={`voucher-payment-mode-${paymentMethodOptions.map(option => option.value).join('-') || 'empty'}`}
-                    name="paymentMethod"
-                    label={VOUCHER_FORM_TEXT.paymentMode}
-                    loadOptions={loadPaymentModeOptions}
-                    defaultOptions={paymentMethodOptions}
-                    isClearable
-                    disabled={readOnly}
-                    onValueChange={value => {
-                      form.setValue(
-                        'paymentMethod',
-                        String(value ?? '').trim(),
-                        { shouldDirty: true, shouldValidate: true }
-                      );
-                    }}
+                <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                  <FormFieldInput
+                    name="panNumber"
+                    label={VOUCHER_FORM_TEXT.panNumber}
+                    placeholder={VOUCHER_FORM_TEXT.panNumberPlaceholder}
+                    valueTransform="uppercase"
+                    disabled={panFieldsDisabled || isVerifyingPan}
+                    onKeyDown={handlePanKeyDown}
+                  />
+                  <FormFieldInput
+                    name="panName"
+                    label={VOUCHER_FORM_TEXT.panName}
+                    placeholder={VOUCHER_FORM_TEXT.panNamePlaceholder}
+                    disabled={panFieldsDisabled || isVerifyingPan}
+                    onKeyDown={handlePanKeyDown}
+                  />
+                  <FormFieldDatePicker
+                    name="panDob"
+                    label={VOUCHER_FORM_TEXT.panDob}
+                    placeholder={VOUCHER_FORM_TEXT.panDobPlaceholder}
+                    dateFormat="dd/MM/yyyy"
+                    maxDate={adultDobMaxDate}
+                    disabled={panFieldsDisabled || isVerifyingPan}
+                    onKeyDown={handlePanKeyDown}
                   />
                 </div>
-                <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <FormFieldInput
-                  name="chequeNumber"
-                  label="Cheque Number"
-                  disabled={readOnly || isBankNonCheque || isCashPaymentMode}
-                />
-                <FormFieldDatePicker
-                  name="chequeDate"
-                  label="Cheque Date"
-                  dateFormat="dd/MM/yyyy"
-                  disabled={readOnly || isBankNonCheque || isCashPaymentMode}
-                />
-                <FormFieldInput
-                  name="chequeBranch"
-                  label="Branch"
-                  disabled={readOnly || isCashPaymentMode}
-                />
-                <FormFieldInput
-                  name="drawnOn"
-                  label="Drawn On"
-                  disabled={readOnly || isCashPaymentMode}
-                />
-                </div>
-                {isBankNonCheque ? (
-                  <p className="mt-2 text-xs text-text-tertiary">
-                    {VOUCHER_FORM_TEXT.electronicPaymentHint}
+                {!panFieldsDisabled ? (
+                  <p
+                    className={`mt-1 text-xs ${
+                      panVerificationStatus === 'checking'
+                        ? 'text-info-700'
+                        : panVerificationStatus === 'valid'
+                          ? 'text-success-700'
+                          : panVerificationStatus === 'invalid'
+                            ? 'text-error-600'
+                            : 'text-text-secondary'
+                    }`}
+                  >
+                    {panVerificationMessage ||
+                      VOUCHER_FORM_TEXT.panVerifyIncomplete}
                   </p>
                 ) : null}
               </>
-            )}
-          </>
-        )}
-        {isDepositWithdrawalType(type) && (
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
-            <FormFieldInput
-              name="chequeNumber"
-              label="Cheque Number"
-              disabled={readOnly}
-            />
-            <FormFieldDatePicker
-              name="chequeDate"
-              label="Cheque Date"
-              dateFormat="dd/MM/yyyy"
-              disabled={readOnly}
-            />
-          </div>
-        )}
-        <div className="mt-4 grid gap-4 md:grid-cols-2">
+            ) : null}
+          </CardSection>
+        </div>
+      ) : null}
+
+      <CardSection heading="Narration">
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           {readOnly ? (
             <FormFieldInput name="remarkName" label="Remark" disabled />
           ) : (
@@ -1126,13 +1212,39 @@ const VoucherFields = ({
             name="narration"
             label="Narration"
             disabled={readOnly}
+            rows={2}
+            wrapperClassName="max-w-none md:col-span-1 lg:col-span-3"
           />
         </div>
       </CardSection>
-      <CardSection heading="Items">
-        <div className="space-y-3">
-          {isDepositWithdrawalType(type)
-            ? fields.map((field, index) => {
+
+      <CardSection
+        heading="Items"
+        headerActions={
+          !readOnly && !isDepositWithdrawalType(type) ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => append(createEmptyVoucherItem())}
+            >
+              Add Item
+            </Button>
+          ) : null
+        }
+      >
+        <div className="overflow-x-auto">
+          {isDepositWithdrawalType(type) ? (
+            <div className="min-w-[52rem] space-y-1">
+              <div className="grid grid-cols-[2rem_minmax(0,1.2fr)_minmax(0,1.35fr)_minmax(0,1.35fr)_minmax(7.5rem,0.9fr)_minmax(8.5rem,1fr)] gap-2 px-2 text-xs font-semibold uppercase tracking-wide text-text-tertiary">
+                <div>#</div>
+                <div>Line</div>
+                <div>Account Code</div>
+                <div>Account Name</div>
+                <div>Sign</div>
+                <div>Amount</div>
+              </div>
+              {fields.map((field, index) => {
                 const rowLabel =
                   index === 0
                     ? DEPOSIT_WITHDRAWAL_TEXT.depositedIn
@@ -1143,282 +1255,311 @@ const VoucherFields = ({
                 return (
                   <div
                     key={field.id}
-                    className="grid gap-3 rounded-lg border p-3 md:grid-cols-2 lg:grid-cols-7"
+                    className="grid grid-cols-[2rem_minmax(0,1.2fr)_minmax(0,1.35fr)_minmax(0,1.35fr)_minmax(7.5rem,0.9fr)_minmax(8.5rem,1fr)] items-center gap-2 rounded-md border border-border-secondary px-2 py-1.5 [&_.space-y-2]:space-y-0"
                   >
-                    <FormFieldInput
-                      name={`items.${index}.lineNumber`}
-                      label="Sr. No."
-                      disabled
-                      value={String(index + 1)}
-                    />
-                    <FormFieldInput
-                      name={`items.${index}.itemTypeName`}
-                      label="Line"
-                      disabled
-                      value={rowLabel}
-                    />
-                    <FormFieldInput
-                      name={`items.${index}.itemTypeValue`}
-                      label="Type"
-                      disabled
-                      value={DEPOSIT_WITHDRAWAL_TEXT.typeAccount}
-                    />
-                    {isFeeRow ? (
+                    <div className="text-center text-xs text-text-tertiary">
+                      {index + 1}
+                    </div>
+                    <div>
                       <FormFieldInput
-                        name={`items.${index}.accountName`}
-                        label="Account"
+                        name={`items.${index}.itemTypeName`}
                         disabled
-                        value={handlingFeeAccountLabel}
+                        value={rowLabel}
+                        aria-label={`Line ${index + 1}`}
                       />
-                    ) : readOnly ? (
-                      <FormFieldInput
-                        name={`items.${index}.accountCode`}
-                        label="Account Code"
-                        disabled
-                      />
-                    ) : (
+                    </div>
+                    <div>
+                      {isFeeRow ? (
+                        <FormFieldInput
+                          name={`items.${index}.accountName`}
+                          disabled
+                          value={handlingFeeAccountLabel}
+                          aria-label="Account"
+                        />
+                      ) : readOnly ? (
+                        <FormFieldInput
+                          name={`items.${index}.accountCode`}
+                          disabled
+                          aria-label="Account Code"
+                        />
+                      ) : (
+                        <FormFieldSelect
+                          name={`items.${index}.accountId`}
+                          loadOptions={optionFilter(accountOptions)}
+                          defaultOptions={accountOptions}
+                          isLoading={accountsLoading}
+                          placeholder="Account Code"
+                          aria-label="Account Code"
+                        />
+                      )}
+                    </div>
+                    <div>
+                      {isFeeRow ? (
+                        <span className="text-xs text-text-tertiary">—</span>
+                      ) : (
+                        <FormFieldInput
+                          name={`items.${index}.accountName`}
+                          disabled
+                          aria-label="Account Name"
+                        />
+                      )}
+                    </div>
+                    <div className="min-w-0">
                       <FormFieldSelect
-                        name={`items.${index}.accountId`}
-                        label="Account Code"
-                        loadOptions={optionFilter(accountOptions)}
-                        defaultOptions={accountOptions}
-                        isLoading={accountsLoading}
-                      />
-                    )}
-                    {!isFeeRow ? (
-                      <FormFieldInput
-                        name={`items.${index}.accountName`}
-                        label="Account Name"
+                        name={`items.${index}.direction`}
+                        loadOptions={optionFilter([
+                          { value: 'DEBIT', label: 'Debit' },
+                          { value: 'CREDIT', label: 'Credit' },
+                        ])}
+                        defaultOptions={[
+                          { value: 'DEBIT', label: 'Debit' },
+                          { value: 'CREDIT', label: 'Credit' },
+                        ]}
                         disabled
+                        aria-label="Sign"
                       />
-                    ) : (
-                      <div className="hidden lg:block" aria-hidden="true" />
-                    )}
-                    <FormFieldSelect
-                      name={`items.${index}.direction`}
-                      label="Sign"
-                      loadOptions={optionFilter([
-                        { value: 'DEBIT', label: 'Debit' },
-                        { value: 'CREDIT', label: 'Credit' },
-                      ])}
-                      defaultOptions={[
-                        { value: 'DEBIT', label: 'Debit' },
-                        { value: 'CREDIT', label: 'Credit' },
-                      ]}
-                      disabled
-                    />
-                    <FormFieldInput
-                      name={`items.${index}.amount`}
-                      label="Amount"
-                      type="number"
-                      valueTransform="none"
-                      disabled={readOnly}
-                      placeholder={isFeeRow ? 'Optional' : undefined}
-                    />
+                    </div>
+                    <div>
+                      <FormFieldInput
+                        name={`items.${index}.amount`}
+                        type="number"
+                        valueTransform="none"
+                        disabled={readOnly}
+                        placeholder={isFeeRow ? 'Optional' : 'Amount'}
+                        aria-label="Amount"
+                      />
+                    </div>
                   </div>
                 );
-              })
-            : fields.map((field, index) => {
-            const itemTypeValue =
-              items[index]?.itemTypeValue ||
-              getVoucherItemTypeValueById(
-                items[index]?.itemTypeOptionId ?? '',
-                itemTypeCategoryOptions
-              );
-            const isBillLine = isVoucherBillItemTypeValue(itemTypeValue);
-            const isBillLineLocked = isBillLine && Boolean(items[index]?.settledTransactionId);
-
-            return (
-            <div
-              key={field.id}
-              className="grid gap-3 rounded-lg border p-3 md:grid-cols-2 lg:grid-cols-8"
-            >
-              <FormFieldInput
-                name={`items.${index}.lineNumber`}
-                label="Sr. No."
-                disabled
-                value={String(index + 1)}
-              />
-              {readOnly ? (
-                <FormFieldInput
-                  name={`items.${index}.itemTypeName`}
-                  label="Type"
-                  disabled
-                />
-              ) : type === 'JOURNAL' ? (
-                <FormFieldSelect
-                  name={`items.${index}.itemTypeOptionId`}
-                  label="Type"
-                  loadOptions={optionFilter(journalItemTypeOptions)}
-                  defaultOptions={journalItemTypeOptions}
-                  onValueChange={value =>
-                    handleItemTypeChange(index, value ?? '')
-                  }
-                />
-              ) : (
-                <FormFieldCategoryOption
-                  name={`items.${index}.itemTypeOptionId`}
-                  label="Type"
-                  code={CategoryOptionCodeEnum.VoucherItemType}
-                  isCreatable={false}
-                  onChange={option => {
-                    const selected = Array.isArray(option)
-                      ? option[0]
-                      : option;
-                    handleItemTypeChange(
-                      index,
-                      String(selected?.value ?? '')
-                    );
-                  }}
-                />
-              )}
-              {readOnly ? (
-                <FormFieldInput
-                  name={`items.${index}.subledgerCode`}
-                  label="Sub Ledger Code"
-                  disabled
-                />
-              ) : (
-                <FormFieldSelect
-                  name={`items.${index}.subledgerPartyProfileId`}
-                  label="Sub Ledger Code"
-                  loadOptions={optionFilter(subledgerOptions)}
-                  defaultOptions={subledgerOptions}
-                  disabled={
-                    isBillLine || (type !== 'JOURNAL' && !partyProfileId)
-                  }
-                />
-              )}
-              {isBillLine ? (
-                readOnly ? (
-                  <FormFieldInput
-                    name={`items.${index}.settledTransactionNumber`}
-                    label={OUTSTANDING_BILL_TEXT.settledBill}
-                    disabled
-                  />
-                ) : (
-                  <div className="space-y-2">
-                    <FormFieldInput
-                      name={`items.${index}.settledTransactionNumber`}
-                      label={OUTSTANDING_BILL_TEXT.settledBill}
-                      disabled
-                      placeholder="Not selected"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      disabled={!isBillLine || !partyProfileId}
-                      onClick={() => setOutstandingModalIndex(index)}
-                    >
-                      {OUTSTANDING_BILL_TEXT.selectOutstanding}
-                    </Button>
-                  </div>
-                )
-              ) : readOnly ? (
-                <FormFieldInput
-                  name={`items.${index}.accountCode`}
-                  label="Account Code"
-                  disabled
-                />
-              ) : (
-                <FormFieldSelect
-                  name={`items.${index}.accountId`}
-                  label="Account Code"
-                  loadOptions={optionFilter(accountOptions)}
-                  defaultOptions={accountOptions}
-                />
-              )}
-              {!isBillLine ? (
-                <FormFieldInput
-                  name={`items.${index}.accountName`}
-                  label="Account Name"
-                  disabled
-                />
-              ) : (
-                <div className="hidden lg:block" aria-hidden="true" />
-              )}
-              <FormFieldSelect
-                name={`items.${index}.direction`}
-                label="Sign"
-                loadOptions={optionFilter([
-                  { value: 'DEBIT', label: 'Debit' },
-                  { value: 'CREDIT', label: 'Credit' },
-                ])}
-                defaultOptions={[
-                  { value: 'DEBIT', label: 'Debit' },
-                  { value: 'CREDIT', label: 'Credit' },
-                ]}
-                disabled={readOnly || isBillLine}
-              />
-              <FormFieldInput
-                name={`items.${index}.amount`}
-                label="Amount"
-                type="number"
-                valueTransform="none"
-                disabled={readOnly || isBillLineLocked}
-              />
-              {!readOnly && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => remove(index)}
-                  disabled={fields.length === 1}
-                >
-                  Remove
-                </Button>
-              )}
+              })}
             </div>
-            );
-          })}
+          ) : (
+            <div className="min-w-[64rem] space-y-1">
+              <div className="grid grid-cols-[2rem_minmax(0,1.15fr)_minmax(0,1.15fr)_minmax(0,1.3fr)_minmax(0,1.1fr)_minmax(7.5rem,0.9fr)_minmax(8.5rem,1fr)_2.25rem] gap-2 px-2 text-xs font-semibold uppercase tracking-wide text-text-tertiary">
+                <div>#</div>
+                <div>Type</div>
+                <div>Sub Ledger</div>
+                <div>Account / Bill</div>
+                <div>Account Name</div>
+                <div>Sign</div>
+                <div>Amount</div>
+                <div />
+              </div>
+              {fields.map((field, index) => {
+                const itemTypeValue =
+                  items[index]?.itemTypeValue ||
+                  getVoucherItemTypeValueById(
+                    items[index]?.itemTypeOptionId ?? '',
+                    itemTypeCategoryOptions
+                  );
+                const isBillLine = isVoucherBillItemTypeValue(itemTypeValue);
+                const isBillLineLocked =
+                  isBillLine && Boolean(items[index]?.settledTransactionId);
+
+                return (
+                  <div
+                    key={field.id}
+                    className="grid grid-cols-[2rem_minmax(0,1.15fr)_minmax(0,1.15fr)_minmax(0,1.3fr)_minmax(0,1.1fr)_minmax(7.5rem,0.9fr)_minmax(8.5rem,1fr)_2.25rem] items-center gap-2 rounded-md border border-border-secondary px-2 py-1.5 [&_.space-y-2]:space-y-0"
+                  >
+                    <div className="text-center text-xs text-text-tertiary">
+                      {index + 1}
+                    </div>
+                    <div>
+                      {readOnly ? (
+                        <FormFieldInput
+                          name={`items.${index}.itemTypeName`}
+                          disabled
+                          aria-label="Type"
+                        />
+                      ) : type === 'JOURNAL' ? (
+                        <FormFieldSelect
+                          name={`items.${index}.itemTypeOptionId`}
+                          loadOptions={optionFilter(journalItemTypeOptions)}
+                          defaultOptions={journalItemTypeOptions}
+                          placeholder="Type"
+                          aria-label="Type"
+                          onValueChange={value =>
+                            handleItemTypeChange(
+                              index,
+                              Array.isArray(value)
+                                ? String(value[0] ?? '')
+                                : (value ?? '')
+                            )
+                          }
+                        />
+                      ) : (
+                        <FormFieldCategoryOption
+                          name={`items.${index}.itemTypeOptionId`}
+                          code={CategoryOptionCodeEnum.VoucherItemType}
+                          isCreatable={false}
+                          placeholder="Type"
+                          aria-label="Type"
+                          onValueChange={value =>
+                            handleItemTypeChange(
+                              index,
+                              Array.isArray(value)
+                                ? String(value[0] ?? '')
+                                : (value ?? '')
+                            )
+                          }
+                        />
+                      )}
+                    </div>
+                    <div>
+                      {readOnly ? (
+                        <FormFieldInput
+                          name={`items.${index}.subledgerCode`}
+                          disabled
+                          aria-label="Sub Ledger"
+                        />
+                      ) : (
+                        <FormFieldSelect
+                          name={`items.${index}.subledgerPartyProfileId`}
+                          loadOptions={optionFilter(subledgerOptions)}
+                          defaultOptions={subledgerOptions}
+                          placeholder="Sub Ledger"
+                          aria-label="Sub Ledger"
+                          disabled={
+                            isBillLine ||
+                            (type !== 'JOURNAL' && !partyProfileId)
+                          }
+                        />
+                      )}
+                    </div>
+                    <div>
+                      {isBillLine ? (
+                        readOnly ? (
+                          <FormFieldInput
+                            name={`items.${index}.settledTransactionNumber`}
+                            disabled
+                            aria-label={OUTSTANDING_BILL_TEXT.settledBill}
+                          />
+                        ) : (
+                          <div className="flex items-center gap-1">
+                            <div className="min-w-0 flex-1">
+                              <FormFieldInput
+                                name={`items.${index}.settledTransactionNumber`}
+                                disabled
+                                placeholder="Bill"
+                                aria-label={OUTSTANDING_BILL_TEXT.settledBill}
+                              />
+                            </div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="shrink-0 px-2"
+                              disabled={!isBillLine || !partyProfileId}
+                              onClick={() => setOutstandingModalIndex(index)}
+                            >
+                              Select
+                            </Button>
+                          </div>
+                        )
+                      ) : readOnly ? (
+                        <FormFieldInput
+                          name={`items.${index}.accountCode`}
+                          disabled
+                          aria-label="Account Code"
+                        />
+                      ) : (
+                        <FormFieldSelect
+                          name={`items.${index}.accountId`}
+                          loadOptions={optionFilter(accountOptions)}
+                          defaultOptions={accountOptions}
+                          placeholder="Account Code"
+                          aria-label="Account Code"
+                        />
+                      )}
+                    </div>
+                    <div>
+                      {isBillLine ? (
+                        <span className="text-xs text-text-tertiary">—</span>
+                      ) : (
+                        <FormFieldInput
+                          name={`items.${index}.accountName`}
+                          disabled
+                          aria-label="Account Name"
+                        />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <FormFieldSelect
+                        name={`items.${index}.direction`}
+                        loadOptions={optionFilter([
+                          { value: 'DEBIT', label: 'Debit' },
+                          { value: 'CREDIT', label: 'Credit' },
+                        ])}
+                        defaultOptions={[
+                          { value: 'DEBIT', label: 'Debit' },
+                          { value: 'CREDIT', label: 'Credit' },
+                        ]}
+                        disabled={readOnly || isBillLine}
+                        aria-label="Sign"
+                      />
+                    </div>
+                    <div>
+                      <FormFieldInput
+                        name={`items.${index}.amount`}
+                        type="number"
+                        valueTransform="none"
+                        disabled={readOnly || isBillLineLocked}
+                        placeholder="0.00"
+                        aria-label="Amount"
+                      />
+                    </div>
+                    <div className="flex justify-end">
+                      {!readOnly ? (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleRemoveItem(index)}
+                          aria-label={`Remove item ${index + 1}`}
+                        >
+                          <TrashIcon className="h-4 w-4" aria-hidden="true" />
+                        </Button>
+                      ) : null}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
-        {!readOnly && !isDepositWithdrawalType(type) && (
-          <Button
-            className="mt-3"
-            type="button"
-            variant="outline"
-            onClick={() =>
-              append({
-                itemTypeOptionId: '',
-                itemTypeValue: '',
-                subledgerPartyProfileId: '',
-                accountId: '',
-                accountName: '',
-                direction: 'DEBIT',
-                amount: '',
-                settledTransactionId: '',
-                settledTransactionNumber: '',
-              })
-            }
-          >
-            Add Item
-          </Button>
-        )}
-        <div className="mt-4 grid gap-3 md:grid-cols-3">
-          <FormFieldInput
-            name="totalDebitDisplay"
-            label="Total Debit"
-            disabled
-            value={(totals.debit / 100).toFixed(2)}
-          />
-          <FormFieldInput
-            name="totalCreditDisplay"
-            label="Total Credit"
-            disabled
-            value={(totals.credit / 100).toFixed(2)}
-          />
-          <FormFieldInput
-            name="finalAmountDisplay"
-            label={
-              type === 'JOURNAL' || type === 'DEPOSIT_WITHDRAWAL'
-                ? 'Difference'
-                : 'Final Amount'
-            }
-            disabled
-            value={(final / 100).toFixed(2)}
-          />
+
+        <div className="mt-3 flex flex-wrap items-end gap-3 border-t border-border-secondary pt-3 md:gap-4">
+          <div className="min-w-[8rem] flex-1 sm:max-w-[11rem]">
+            <FormFieldInput
+              name="totalDebitDisplay"
+              label="Total Debit"
+              disabled
+              value={(totals.debit / 100).toFixed(2)}
+            />
+          </div>
+          <div className="min-w-[8rem] flex-1 sm:max-w-[11rem]">
+            <FormFieldInput
+              name="totalCreditDisplay"
+              label="Total Credit"
+              disabled
+              value={(totals.credit / 100).toFixed(2)}
+            />
+          </div>
+          <div className="min-w-[8rem] flex-1 sm:max-w-[11rem]">
+            <FormFieldInput
+              name="finalAmountDisplay"
+              label={
+                type === 'JOURNAL' || type === 'DEPOSIT_WITHDRAWAL'
+                  ? 'Difference'
+                  : 'Final Amount'
+              }
+              disabled
+              value={(final / 100).toFixed(2)}
+            />
+          </div>
         </div>
       </CardSection>
+
       {outstandingModalIndex !== null &&
       (type === 'RECEIPT' || type === 'PAYMENT') ? (
         <SelectOutstandingBills
@@ -1438,7 +1579,9 @@ const VoucherFields = ({
           selectedTransactionIds={
             outstandingModalCurrentId ? [outstandingModalCurrentId] : []
           }
-          onContinue={bills => applyOutstandingBills(outstandingModalIndex, bills)}
+          onContinue={bills =>
+            applyOutstandingBills(outstandingModalIndex, bills)
+          }
           onClose={() => setOutstandingModalIndex(null)}
         />
       ) : null}

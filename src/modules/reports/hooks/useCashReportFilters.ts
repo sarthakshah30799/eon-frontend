@@ -180,10 +180,9 @@ export const useCashReportFilters = (): CashReportFiltersState => {
     accountIds: string[];
   }) => {
     const params = buildSearchParams();
-    const range = buildReportDateRange(next.dateRange);
     setSearchParamValue(params, 'preset', next.dateRange.preset);
-    setSearchParamValue(params, 'startDate', range.startDate);
-    setSearchParamValue(params, 'endDate', range.endDate);
+    setSearchParamValue(params, 'startDate', next.dateRange.startDate);
+    setSearchParamValue(params, 'endDate', next.dateRange.endDate);
     setSearchParamValue(params, 'layout', next.layout);
     setSearchParamList(params, 'branchIds', next.branchIds);
     setSearchParamList(params, 'accountIds', next.accountIds);
@@ -220,11 +219,7 @@ export const useCashReportFilters = (): CashReportFiltersState => {
       setAccountIds(checked ? accountOptions.map(option => option.id) : []);
     },
     resetFilters: () => {
-      const nextDateRange = buildReportDateRange({
-        preset: ReportDatePresetEnum.TODAY,
-        startDate: '',
-        endDate: '',
-      });
+      const nextDateRange = buildReportDateRange(ReportDatePresetEnum.TODAY);
       setDateRange(nextDateRange);
       setLayout(CashReportLayoutEnum.BRANCH_WISE);
       setBranchIds([]);
@@ -238,7 +233,10 @@ export const useCashReportFilters = (): CashReportFiltersState => {
       });
     },
     handleView: () => {
-      const resolvedDateRange = buildReportDateRange(dateRange);
+      const resolvedDateRange =
+        dateRange.preset === ReportDatePresetEnum.CUSTOM
+          ? dateRange
+          : buildReportDateRange(dateRange.preset);
       const next = {
         dateRange: resolvedDateRange,
         layout,

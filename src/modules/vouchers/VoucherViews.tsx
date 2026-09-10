@@ -22,14 +22,18 @@ import type {
   VoucherFormValues,
   VoucherType,
 } from './types';
+import { paymentMethodForVoucherAccountMode } from './utils';
 
 const emptyItem = (
   direction: 'DEBIT' | 'CREDIT' = 'DEBIT'
 ): VoucherFormValues['items'][number] => ({
   itemTypeOptionId: '',
+  itemTypeName: '',
   itemTypeValue: '',
   subledgerPartyProfileId: '',
+  subledgerCode: '',
   accountId: '',
+  accountCode: '',
   accountName: '',
   direction,
   amount: '',
@@ -109,15 +113,18 @@ const fromEntity = (voucher: AccountingVoucher): VoucherFormValues => ({
   chequeDate: voucher.chequeDate,
   chequeBranch: voucher.chequeBranch,
   drawnOn: voucher.drawnOn,
-  paymentMethod: voucher.paymentMethod ?? '',
+  paymentMethod:
+    voucher.paymentMethod ||
+    paymentMethodForVoucherAccountMode(voucher.accountMode),
   remarkOptionId: voucher.remarkOptionId,
   remarkName:
     voucher.remarkSnapshot?.label ?? voucher.remarkSnapshot?.name ?? '',
   narration: voucher.narration,
   idempotencyKey: voucher.idempotencyKey,
   items: (() => {
-    const mapped = voucher.items.map(item => ({
+    const mapped: VoucherFormValues['items'] = voucher.items.map(item => ({
       ...item,
+      amount: String(item.amount ?? ''),
       itemTypeName:
         item.itemTypeSnapshot?.label ?? item.itemTypeSnapshot?.name ?? '',
       itemTypeValue:
@@ -317,9 +324,9 @@ export const VoucherCreateView = ({ type }: { type: VoucherType }) => {
     ]
   );
   return (
-    <div className="space-y-5">
+    <div className="space-y-3">
       <div>
-        <h1 className="text-2xl font-semibold">
+        <h1 className="text-xl font-semibold">
           Create {VOUCHER_LABELS[type]}
         </h1>
         {policy.helperText && (
@@ -365,9 +372,9 @@ export const VoucherEditView = ({ type }: { type: VoucherType }) => {
       </div>
     );
   return (
-    <div className="space-y-5">
+    <div className="space-y-3">
       <div>
-        <h1 className="text-2xl font-semibold">
+        <h1 className="text-xl font-semibold">
           {VOUCHER_LABELS[type]} {data.number}
         </h1>
         <p className="text-sm text-text-secondary">Read-only posted record</p>

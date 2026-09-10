@@ -8,16 +8,12 @@ import { isCardProductCode } from '@/modules/purchase/utils/purchaseUtils';
 export const useCardStockReferences = () => {
   const issuers = useQuery({
     queryKey: ['card-stock', 'issuers'],
-    queryFn: async () => {
-      const response = await partyProfileApi.getPartyProfiles({
+    queryFn: () =>
+      partyProfileApi.getAllPartyProfiles({
         activeOnly: true,
         status: 'APPROVE',
-        limit: 100,
-        offset: 0,
         type: PartyProfileTypeEnum.CARD_ISSUER_PROFILE,
-      });
-      return response.data;
-    },
+      }),
   });
   const products = useQuery({
     queryKey: ['card-stock', 'products'],

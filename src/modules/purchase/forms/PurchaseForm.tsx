@@ -1,4 +1,10 @@
-import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useState,
+} from 'react';
 import type { Resolver } from 'react-hook-form';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -604,8 +610,11 @@ const PurchaseFormBody = ({
     (!isCombinedPartyProfilePage || hasCompletePaymentPreviewRows) &&
     !savedTransaction?.id
   );
-  const { data: purchaseRulePreview, isLoading: isPurchaseRulePreviewLoading } =
-    usePurchaseRulePreview(
+  const {
+    data: purchaseRulePreview,
+    isLoading: isPurchaseRulePreviewLoading,
+    isRefreshing: isPurchaseRulePreviewRefreshing,
+  } = usePurchaseRulePreview(
       purchaseRulePreviewRequest,
       canPreviewPurchaseRule
     );
@@ -713,8 +722,11 @@ const PurchaseFormBody = ({
       transactions,
     ]
   );
-  const { data: taxPreview, isLoading: isTaxPreviewLoading } =
-    useTransactionTaxPreview(taxPreviewRequest, canPreviewTax);
+  const {
+    data: taxPreview,
+    isLoading: isTaxPreviewLoading,
+    isRefreshing: isTaxPreviewRefreshing,
+  } = useTransactionTaxPreview(taxPreviewRequest, canPreviewTax);
   const resolvedTaxSummary =
     useMemo<ITransactionTaxPreviewResponse | null>(() => {
       if (taxPreview) {
@@ -881,8 +893,11 @@ const PurchaseFormBody = ({
     transactionType,
   ]);
   const canPreviewTcs = Boolean(tcsPreviewRequest);
-  const { data: tcsPreview, isLoading: isTcsPreviewLoading } =
-    useTransactionTcsPreview(tcsPreviewRequest, canPreviewTcs);
+  const {
+    data: tcsPreview,
+    isLoading: isTcsPreviewLoading,
+    isRefreshing: isTcsPreviewRefreshing,
+  } = useTransactionTcsPreview(tcsPreviewRequest, canPreviewTcs);
   const resolvedTcsSummary =
     useMemo<ITransactionTcsPreviewResponse | null>(() => {
       if (tcsPreview) {
@@ -1009,17 +1024,20 @@ const PurchaseFormBody = ({
       currentOutstandingPreview > 0 &&
       !savedTransaction?.id
   );
-  const { data: creditPreview, isLoading: isCreditPreviewLoading } =
-    useCreditPreview(creditPreviewRequest, canPreviewCredit);
+  const {
+    data: creditPreview,
+    isLoading: isCreditPreviewLoading,
+    isRefreshing: isCreditPreviewRefreshing,
+  } = useCreditPreview(creditPreviewRequest, canPreviewCredit);
   const resolvedCreditPreview = useMemo<ICreditPreviewResponse | null>(
     () => creditPreview ?? null,
     [creditPreview]
   );
   const isTransactionPreviewLoading =
-    (canPreviewPurchaseRule && isPurchaseRulePreviewLoading) ||
-    (canPreviewTax && isTaxPreviewLoading) ||
-    (canPreviewTcs && isTcsPreviewLoading) ||
-    (canPreviewCredit && isCreditPreviewLoading);
+    (canPreviewPurchaseRule && isPurchaseRulePreviewRefreshing) ||
+    (canPreviewTax && isTaxPreviewRefreshing) ||
+    (canPreviewTcs && isTcsPreviewRefreshing) ||
+    (canPreviewCredit && isCreditPreviewRefreshing);
 
   useLayoutEffect(() => {
     onTransactionPreviewLoadingChange(isTransactionPreviewLoading);
@@ -1140,12 +1158,12 @@ const PurchaseFormBody = ({
     }
   }, [form, taxPreview]);
 
-  const handleOpenCurrencyPicker = (
-    rowIndex: number,
-    allowedCurrencyIds: string[]
-  ) => {
-    setCurrencyPickerState({ rowIndex, allowedCurrencyIds });
-  };
+  const handleOpenCurrencyPicker = useCallback(
+    (rowIndex: number, allowedCurrencyIds: string[]) => {
+      setCurrencyPickerState({ rowIndex, allowedCurrencyIds });
+    },
+    []
+  );
 
   const handleCurrencySelect = (
     currencies: Array<{

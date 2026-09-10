@@ -857,6 +857,7 @@ export const PurchaseTransactionRowCell = ({
             inputMode="decimal"
             step={`0.${'0'.repeat(PURCHASE_RATE_DECIMALS - 1)}1`}
             maxDecimalPlaces={PURCHASE_RATE_DECIMALS}
+            valueTransform="none"
             disabled={disabled}
             classes={{ container: 'w-full' }}
           />
@@ -882,6 +883,7 @@ export const PurchaseTransactionRowCell = ({
             type="number"
             step={`0.${'0'.repeat(PURCHASE_RATE_DECIMALS - 1)}1`}
             maxDecimalPlaces={PURCHASE_RATE_DECIMALS}
+            valueTransform="none"
             disabled={disabled || !rateEditable}
             onChange={() => {
               hasManualRateChangeRef.current = true;

@@ -4,9 +4,11 @@ import { useSearchParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { useDebounce, useOffsetPaginatedList } from '@/hooks';
 import { PAGINATION_DEFAULTS } from '@/constants/paginationConstants';
+import { partyProfileApi } from '@/api/partyProfile';
 import { transactionsApi } from '@/api/transactions';
-import { useListPartyProfiles } from '@/modules/partyProfiles/hooks';
+import { pageToOffset, toAsyncSelectPage } from '@/utils/paginatedList';
 import { formatDateTime, formatReferenceLabel } from '@/utils';
+import type { AsyncSelectResponse } from '@/components/ui';
 import type { TransactionListRow } from '../components';
 import type { TransactionType } from '../types';
 import { TransactionTypeEnum } from '../types';
@@ -26,8 +28,10 @@ export const useTransactionAccountPostings = (enabled = true) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const search = searchParams.get('search') ?? '';
   const debouncedSearch = useDebounce(search.trim(), 400);
-  const [partyProfileId, setPartyProfileId] = useState('');
+  const [selectedPartyProfile, setSelectedPartyProfile] =
+    useState<TransactionAccountPostingOption | null>(null);
   const [transactionType, setTransactionType] = useState('');
+
   const [activeTransactionId, setActiveTransactionId] = useState<string | null>(
     null
   );
@@ -62,43 +66,6 @@ export const useTransactionAccountPostings = (enabled = true) => {
     [setSearchParams]
   );
 
-  const { data: partyProfilesResponse, isLoading: isPartyProfilesLoading } =
-    useListPartyProfiles(
-      {
-        limit: 500,
-        offset: 0,
-        activeOnly: true,
-      },
-      undefined,
-      enabled,
-      true
-    );
-
-  const partyProfileOptions = useMemo<TransactionAccountPostingOption[]>(
-    () =>
-      (partyProfilesResponse?.data ?? []).map(profile => ({
-        value: profile.id,
-        label:
-          `${profile.code}${profile.name ? ` - ${profile.name}` : ''}` ||
-          profile.id,
-      })),
-    [partyProfilesResponse]
-  );
-
-  const selectedPartyProfile = useMemo(
-    () =>
-      partyProfileOptions.find(option => option.value === partyProfileId) ??
-      null,
-    [partyProfileId, partyProfileOptions]
-  );
-
-  const selectedTransactionType = useMemo(
-    () =>
-      transactionTypeOptions.find(option => option.value === transactionType) ??
-      null,
-    [transactionType]
-  );
-
   const filterOptions = useCallback(
     (options: TransactionAccountPostingOption[], inputValue: string) => {
       const normalizedInput = inputValue.trim().toLowerCase();
@@ -118,10 +85,27 @@ export const useTransactionAccountPostings = (enabled = true) => {
   );
 
   const loadPartyProfileOptions = useCallback(
-    async (inputValue: string) => ({
-      options: filterOptions(partyProfileOptions, inputValue),
-    }),
-    [filterOptions, partyProfileOptions]
+    async (inputValue: string, page = 1): Promise<AsyncSelectResponse> => {
+      if (!enabled) {
+        return { options: [], hasMore: false };
+      }
+
+      const limit = PAGINATION_DEFAULTS.LIMIT;
+      const response = await partyProfileApi.getPartyProfiles({
+        search: inputValue.trim() || undefined,
+        activeOnly: true,
+        limit,
+        offset: pageToOffset(page, limit),
+      });
+
+      return toAsyncSelectPage(response, profile => ({
+        value: profile.id,
+        label:
+          `${profile.code}${profile.name ? ` - ${profile.name}` : ''}` ||
+          profile.id,
+      }));
+    },
+    [enabled]
   );
 
   const loadTransactionTypeOptions = useCallback(
@@ -134,12 +118,12 @@ export const useTransactionAccountPostings = (enabled = true) => {
   const filters = useMemo(
     () => ({
       search: debouncedSearch || undefined,
-      partyProfileId: partyProfileId || undefined,
+      partyProfileId: selectedPartyProfile?.value || undefined,
       transactionType: transactionType
         ? (transactionType as TransactionType)
         : undefined,
     }),
-    [debouncedSearch, partyProfileId, transactionType]
+    [debouncedSearch, selectedPartyProfile, transactionType]
   );
 
   const {
@@ -197,9 +181,16 @@ export const useTransactionAccountPostings = (enabled = true) => {
     [transactions]
   );
 
+  const selectedTransactionType = useMemo(
+    () =>
+      transactionTypeOptions.find(option => option.value === transactionType) ??
+      null,
+    [transactionType]
+  );
+
   const handlePartyProfileChange = useCallback(
-    (nextPartyProfileId: string) => {
-      setPartyProfileId(nextPartyProfileId);
+    (option: TransactionAccountPostingOption | null) => {
+      setSelectedPartyProfile(option);
       resetOffset();
     },
     [resetOffset]
@@ -215,7 +206,7 @@ export const useTransactionAccountPostings = (enabled = true) => {
 
   const resetFilters = useCallback(() => {
     setSearch('');
-    setPartyProfileId('');
+    setSelectedPartyProfile(null);
     setTransactionType('');
   }, [setSearch]);
 
@@ -229,7 +220,7 @@ export const useTransactionAccountPostings = (enabled = true) => {
   return {
     search,
     setSearch,
-    setPartyProfileId: handlePartyProfileChange,
+    setSelectedPartyProfile: handlePartyProfileChange,
     setTransactionType: handleTransactionTypeChange,
     selectedPartyProfile,
     selectedTransactionType,
@@ -239,7 +230,6 @@ export const useTransactionAccountPostings = (enabled = true) => {
     isLoading,
     isFetching,
     error,
-    isPartyProfilesLoading,
     activeTransactionId,
     isRebuildPending: rebuildMutation.isPending,
     resetFilters,

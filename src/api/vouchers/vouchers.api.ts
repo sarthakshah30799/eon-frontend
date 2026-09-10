@@ -122,7 +122,7 @@ export const vouchersApi = {
               chequeDate: values.chequeDate || undefined,
               chequeBranch: values.chequeBranch || undefined,
               drawnOn: values.drawnOn || undefined,
-              paymentMethod: values.paymentMethod || undefined,
+              paymentMethod: values.paymentMethod,
             }),
     };
     const response = await apiClient.post<AccountingVoucher>(

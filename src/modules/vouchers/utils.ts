@@ -1,4 +1,28 @@
-import type { VoucherDirection, VoucherSnapshot } from './types';
+import {
+  TransactionPaymentMethodEnum,
+  type TransactionPaymentMethod,
+} from '@/modules/transactions';
+import type {
+  VoucherAccountMode,
+  VoucherDirection,
+  VoucherSnapshot,
+} from './types';
+
+/** Payment method implied by Receipt/Payment A/C Type (never blank for party vouchers). */
+export const paymentMethodForVoucherAccountMode = (
+  accountMode: VoucherAccountMode | '' | null | undefined
+): TransactionPaymentMethod | '' => {
+  if (accountMode === 'CASH' || accountMode === 'PETTY_CASH') {
+    return TransactionPaymentMethodEnum.CASH;
+  }
+  if (accountMode === 'CREDIT_CARD') {
+    return TransactionPaymentMethodEnum.CARD;
+  }
+  if (accountMode === 'BANK_CHEQUE') {
+    return TransactionPaymentMethodEnum.CHEQUE;
+  }
+  return '';
+};
 
 export const VOUCHER_ITEM_TYPE_ACCOUNT = 'ACCOUNT';
 

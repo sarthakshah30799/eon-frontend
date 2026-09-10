@@ -5,7 +5,7 @@ import {
   TransactionTypeProfileEnum,
   TransactionPartyProfileTypeEnum,
   isChequeFamilyPaymentMethod,
-  isElectronicPaymentMethod,
+  isNonChequeBankPaymentMethod,
 } from '@/modules/transactions';
 import type { TransactionType } from '@/modules/transactions';
 import {
@@ -157,13 +157,7 @@ const createPaymentDetailSchema = (transactionType: TransactionType) =>
       .mixed<
         (typeof TransactionPaymentMethodEnum)[keyof typeof TransactionPaymentMethodEnum]
       >()
-      .oneOf([
-        TransactionPaymentMethodEnum.CASH,
-        TransactionPaymentMethodEnum.CHEQUE,
-        TransactionPaymentMethodEnum.UPI,
-        TransactionPaymentMethodEnum.NEFT,
-        TransactionPaymentMethodEnum.RTGS,
-      ])
+      .oneOf(Object.values(TransactionPaymentMethodEnum))
       .required('Payment mode is required')
       .test(
         'advance-not-electronic',
@@ -171,7 +165,7 @@ const createPaymentDetailSchema = (transactionType: TransactionType) =>
         function (value) {
           return !(
             this.parent.settlementSource === 'ADVANCE' &&
-            isElectronicPaymentMethod(value)
+            isNonChequeBankPaymentMethod(value)
           );
         }
       ),
@@ -205,7 +199,7 @@ const createPaymentDetailSchema = (transactionType: TransactionType) =>
       .when('paymentMethod', {
         is: (paymentMethod: string) =>
           paymentMethod === TransactionPaymentMethodEnum.CHEQUE ||
-          isElectronicPaymentMethod(paymentMethod),
+          isNonChequeBankPaymentMethod(paymentMethod),
         then: schema => schema.required('Cheque date is required'),
         otherwise: schema => schema.default(''),
       }),

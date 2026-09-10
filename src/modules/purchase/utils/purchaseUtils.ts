@@ -12,7 +12,7 @@ import {
   TransactionTypeEnum,
   TransactionTypeProfileEnum,
   coerceTransactionPaymentMethod,
-  isElectronicPaymentMethod,
+  isNonChequeBankPaymentMethod,
 } from '@/modules/transactions';
 import type { TradeMode, TransactionType } from '@/modules/transactions';
 import {
@@ -351,7 +351,7 @@ export const mapPaymentDetailsToSubmitPayload = (
     .filter(shouldValidatePaymentDetailRow)
     .map(row => {
       const paymentMethod = coerceTransactionPaymentMethod(row.paymentMethod);
-      const isElectronic = isElectronicPaymentMethod(paymentMethod);
+      const isElectronic = isNonChequeBankPaymentMethod(paymentMethod);
 
       return {
         accountId: row.accountId,

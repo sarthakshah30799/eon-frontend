@@ -39,8 +39,11 @@ import {
 import { SelectOutstandingBills } from './components/SelectOutstandingBills';
 import { useVoucherItemTypeCategoryOptions, useVoucherNextNumber } from './hooks';
 import { useVoucherPanVerification } from './useVoucherPanVerification';
-import { useTransactionPaymentMethods } from '@/modules/transactions/hooks';
-import { isElectronicPaymentMethod } from '@/modules/transactions';
+import {
+  TransactionPaymentMethodEnum,
+  getTransactionPaymentMethodOptions,
+  isNonChequeBankPaymentMethod,
+} from '@/modules/transactions';
 import {
   formatVoucherDateInput,
   getVoucherItemTypeValueById,
@@ -130,31 +133,36 @@ const voucherSchema = (type: VoucherType) => {
       is: (accountMode: string, paymentMethod: string) =>
         depositWithdrawal ||
         (accountMode === 'BANK_CHEQUE' &&
-          !isElectronicPaymentMethod(paymentMethod)),
+          (!paymentMethod ||
+            paymentMethod === TransactionPaymentMethodEnum.CHEQUE)),
       then: schema => schema.required('Cheque number is required'),
     }),
-    chequeDate: yup.string().when(['accountMode'], {
-      is: (accountMode: string) =>
-        depositWithdrawal || accountMode === 'BANK_CHEQUE',
+    chequeDate: yup.string().when(['accountMode', 'paymentMethod'], {
+      is: (accountMode: string, paymentMethod: string) =>
+        depositWithdrawal ||
+        (accountMode === 'BANK_CHEQUE' &&
+          paymentMethod !== TransactionPaymentMethodEnum.CASH),
       then: schema => schema.required('Cheque date is required'),
     }),
     chequeBranch: yup.string().when(['accountMode', 'paymentMethod'], {
       is: (accountMode: string, paymentMethod: string) =>
         partyVoucher &&
         accountMode === 'BANK_CHEQUE' &&
-        !isElectronicPaymentMethod(paymentMethod),
+        (!paymentMethod ||
+          paymentMethod === TransactionPaymentMethodEnum.CHEQUE),
       then: schema => schema.required('Branch is required'),
     }),
     drawnOn: yup.string().when(['accountMode', 'paymentMethod'], {
       is: (accountMode: string, paymentMethod: string) =>
         partyVoucher &&
         accountMode === 'BANK_CHEQUE' &&
-        !isElectronicPaymentMethod(paymentMethod),
+        (!paymentMethod ||
+          paymentMethod === TransactionPaymentMethodEnum.CHEQUE),
       then: schema => schema.required('Drawn on is required'),
     }),
     paymentMethod: yup
       .string()
-      .oneOf(['', 'UPI', 'NEFT', 'RTGS'])
+      .oneOf(['', ...Object.values(TransactionPaymentMethodEnum)])
       .default(''),
     narration: yup.string().trim().required('Narration is required'),
     items: depositWithdrawal
@@ -384,20 +392,15 @@ const VoucherFields = ({
         })),
     [itemTypeCategoryOptions]
   );
-  const { data: paymentMethodOptions = [], isLoading: isPaymentMethodsLoading } =
-    useTransactionPaymentMethods(isPartyVoucherType(type));
-  const electronicPaymentModeOptions = useMemo(
-    () =>
-      paymentMethodOptions.filter(option =>
-        isElectronicPaymentMethod(option.value)
-      ),
-    [paymentMethodOptions]
+  const paymentMethodOptions = useMemo(
+    () => getTransactionPaymentMethodOptions(),
+    []
   );
-  const loadElectronicPaymentModeOptions = useCallback(
+  const loadPaymentModeOptions = useCallback(
     async (inputValue: string) => {
       const normalized = inputValue.trim().toLowerCase();
       return {
-        options: electronicPaymentModeOptions.filter(option => {
+        options: paymentMethodOptions.filter(option => {
           if (!normalized) {
             return true;
           }
@@ -409,9 +412,11 @@ const VoucherFields = ({
         hasMore: false,
       };
     },
-    [electronicPaymentModeOptions]
+    [paymentMethodOptions]
   );
-  const isElectronic = isElectronicPaymentMethod(paymentMethod);
+  const isBankNonCheque = isNonChequeBankPaymentMethod(paymentMethod);
+  const isCashPaymentMode =
+    paymentMethod === TransactionPaymentMethodEnum.CASH;
   const accountTypeOptions = useCategoryOptions(
     CategoryOptionCodeEnum.VoucherAccountType
   ).defaultOptions;
@@ -669,15 +674,21 @@ const VoucherFields = ({
   }, [accountTypeOptionId, accountTypeOptions, form, mode]);
   useEffect(() => {
     if (readOnly || mode !== 'BANK_CHEQUE') {
-      previousElectronicRef.current = isElectronic;
+      previousElectronicRef.current = isBankNonCheque;
       return;
     }
-    if (!previousElectronicRef.current && isElectronic) {
+    if (!previousElectronicRef.current && isBankNonCheque) {
       form.setValue('chequeNumber', '', { shouldValidate: true });
       form.setValue('chequeDate', toLocalDateString(), { shouldValidate: true });
     }
-    previousElectronicRef.current = isElectronic;
-  }, [form, isElectronic, mode, readOnly]);
+    if (isCashPaymentMode) {
+      form.setValue('chequeNumber', '', { shouldValidate: true });
+      form.setValue('chequeDate', '', { shouldValidate: true });
+      form.setValue('chequeBranch', '', { shouldValidate: true });
+      form.setValue('drawnOn', '', { shouldValidate: true });
+    }
+    previousElectronicRef.current = isBankNonCheque;
+  }, [form, isBankNonCheque, isCashPaymentMode, mode, readOnly]);
   useEffect(() => {
     const account = headerAccounts.find(item => item.id === headerAccountId);
     form.setValue('headerAccountName', account?.accountName ?? '', {
@@ -1037,12 +1048,11 @@ const VoucherFields = ({
               <>
                 <div className="mt-4 w-full max-w-xs">
                   <FormFieldSelect
-                    key={`voucher-payment-mode-${electronicPaymentModeOptions.map(option => option.value).join('-') || 'empty'}`}
+                    key={`voucher-payment-mode-${paymentMethodOptions.map(option => option.value).join('-') || 'empty'}`}
                     name="paymentMethod"
                     label={VOUCHER_FORM_TEXT.paymentMode}
-                    loadOptions={loadElectronicPaymentModeOptions}
-                    defaultOptions={true}
-                    isLoading={isPaymentMethodsLoading}
+                    loadOptions={loadPaymentModeOptions}
+                    defaultOptions={paymentMethodOptions}
                     isClearable
                     disabled={readOnly}
                     onValueChange={value => {
@@ -1058,26 +1068,26 @@ const VoucherFields = ({
                 <FormFieldInput
                   name="chequeNumber"
                   label="Cheque Number"
-                  disabled={readOnly || isElectronic}
+                  disabled={readOnly || isBankNonCheque || isCashPaymentMode}
                 />
                 <FormFieldDatePicker
                   name="chequeDate"
                   label="Cheque Date"
                   dateFormat="dd/MM/yyyy"
-                  disabled={readOnly || isElectronic}
+                  disabled={readOnly || isBankNonCheque || isCashPaymentMode}
                 />
                 <FormFieldInput
                   name="chequeBranch"
                   label="Branch"
-                  disabled={readOnly}
+                  disabled={readOnly || isCashPaymentMode}
                 />
                 <FormFieldInput
                   name="drawnOn"
                   label="Drawn On"
-                  disabled={readOnly}
+                  disabled={readOnly || isCashPaymentMode}
                 />
                 </div>
-                {isElectronic ? (
+                {isBankNonCheque ? (
                   <p className="mt-2 text-xs text-text-tertiary">
                     {VOUCHER_FORM_TEXT.electronicPaymentHint}
                   </p>

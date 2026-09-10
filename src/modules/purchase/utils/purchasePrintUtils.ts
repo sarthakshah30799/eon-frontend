@@ -1,9 +1,9 @@
 import type { IBranchProfile } from '@/modules/branchProfile/types';
 import type { ICompanyProfile } from '@/modules/companyProfile/types';
 import {
-  TransactionPaymentMethodEnum,
   TransactionTypeEnum,
-  isElectronicPaymentMethod,
+  formatTransactionPaymentMethodLabel,
+  isNonChequeBankPaymentMethod,
   type ITransactionTaxPreviewResponse,
   type ITransactionTcsPreviewResponse,
 } from '@/modules/transactions';
@@ -141,28 +141,14 @@ const joinAddress = (...parts: Array<string | null | undefined>) =>
 
 const formatReferenceValue = (value?: string | null) => value?.trim() || '-';
 
-const formatPaymentMethodLabel = (value?: string | null) => {
-  const normalized = value?.trim().toUpperCase();
-  if (normalized === TransactionPaymentMethodEnum.CASH) {
-    return 'Cash';
-  }
-
-  if (normalized === TransactionPaymentMethodEnum.CHEQUE) {
-    return 'Cheque';
-  }
-
-  if (isElectronicPaymentMethod(normalized)) {
-    return normalized ?? '-';
-  }
-
-  return formatReferenceValue(value);
-};
+const formatPaymentMethodLabel = (value?: string | null) =>
+  formatTransactionPaymentMethodLabel(value);
 
 const formatPaymentChequeReference = (
   paymentMethod?: string | null,
   referenceNumber?: string | null
 ) => {
-  if (isElectronicPaymentMethod(paymentMethod)) {
+  if (isNonChequeBankPaymentMethod(paymentMethod)) {
     return String(paymentMethod ?? '')
       .trim()
       .toUpperCase();

@@ -35,7 +35,7 @@ export const VOUCHER_FORM_TEXT = {
     'PAN verification failed. Please review the entered details.',
   paymentMode: 'Payment Mode',
   electronicPaymentHint:
-    'Cheque number is not required for UPI, NEFT, or RTGS.',
+    'Cheque number is not required for bank payment modes.',
 } as const;
 
 export const DEPOSIT_WITHDRAWAL_TEXT = {

@@ -119,14 +119,47 @@ export const isElectronicPaymentMethod = (value?: unknown) => {
   );
 };
 
-export const isChequeFamilyPaymentMethod = (value?: unknown) => {
+export const isTransactionPaymentMethod = (
+  value?: unknown
+): value is TransactionPaymentMethod =>
+  Object.values(TransactionPaymentMethodEnum).includes(
+    String(value ?? '')
+      .trim()
+      .toUpperCase() as TransactionPaymentMethod
+  );
+
+export const formatTransactionPaymentMethodLabel = (value?: unknown) => {
   const normalized = String(value ?? '')
     .trim()
     .toUpperCase();
+  if (normalized === TransactionPaymentMethodEnum.CASH) return 'Cash';
+  if (normalized === TransactionPaymentMethodEnum.CHEQUE) return 'Cheque';
+  if (normalized === TransactionPaymentMethodEnum.BANK_TRANSFER) {
+    return 'Bank Transfer';
+  }
+  if (normalized === TransactionPaymentMethodEnum.CARD) return 'Card';
+  if (normalized === TransactionPaymentMethodEnum.OTHER) return 'Other';
+  return normalized || '-';
+};
+
+export const getTransactionPaymentMethodOptions = () =>
+  Object.values(TransactionPaymentMethodEnum).map(value => ({
+    value,
+    label: formatTransactionPaymentMethodLabel(value),
+  }));
+
+export const isNonChequeBankPaymentMethod = (value?: unknown) => {
+  if (!isTransactionPaymentMethod(value)) return false;
+  const normalized = String(value).trim().toUpperCase();
   return (
-    normalized === TransactionPaymentMethodEnum.CHEQUE ||
-    isElectronicPaymentMethod(normalized)
+    normalized !== TransactionPaymentMethodEnum.CASH &&
+    normalized !== TransactionPaymentMethodEnum.CHEQUE
   );
+};
+
+export const isChequeFamilyPaymentMethod = (value?: unknown) => {
+  if (!isTransactionPaymentMethod(value)) return false;
+  return String(value).trim().toUpperCase() !== TransactionPaymentMethodEnum.CASH;
 };
 
 export const coerceTransactionPaymentMethod = (value?: unknown) => {
@@ -136,11 +169,8 @@ export const coerceTransactionPaymentMethod = (value?: unknown) => {
   if (normalized === TransactionPaymentMethodEnum.CASH) {
     return TransactionPaymentMethodEnum.CASH;
   }
-  if (normalized === TransactionPaymentMethodEnum.CHEQUE) {
-    return TransactionPaymentMethodEnum.CHEQUE;
-  }
-  if (isElectronicPaymentMethod(normalized)) {
-    return normalized as TransactionPaymentMethod;
+  if (isTransactionPaymentMethod(normalized)) {
+    return normalized;
   }
   return TransactionPaymentMethodEnum.CHEQUE;
 };

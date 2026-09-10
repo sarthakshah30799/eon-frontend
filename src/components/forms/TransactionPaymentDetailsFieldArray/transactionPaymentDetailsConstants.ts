@@ -18,9 +18,9 @@ export const TRANSACTION_PAYMENT_TEXT = {
   availableAmountForRow: 'Available amount for this row',
   remainingAfterRow: 'Remaining after this row',
   electronicPaymentHint:
-    'Cheque details are not required for UPI, NEFT, or RTGS.',
+    'Cheque details are not required for bank payment modes.',
   electronicNotAllowedForAdvance:
-    'UPI, NEFT, and RTGS are not allowed for advance settlement',
+    'Bank payment modes are not allowed for advance settlement',
 } as const;
 
 export const SETTLEMENT_SOURCE_OPTIONS = [

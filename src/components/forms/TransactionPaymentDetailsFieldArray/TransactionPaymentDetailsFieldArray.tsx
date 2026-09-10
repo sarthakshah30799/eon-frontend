@@ -23,10 +23,10 @@ import {
   TransactionPaymentMethodEnum,
   TransactionTypeEnum,
   isChequeFamilyPaymentMethod,
-  isElectronicPaymentMethod,
+  isNonChequeBankPaymentMethod,
+  getTransactionPaymentMethodOptions,
   type TransactionType,
 } from '@/modules/transactions';
-import { useTransactionPaymentMethods } from '@/modules/transactions/hooks';
 import { useAuth } from '@/lib/AuthContext';
 import type { ITransactionPaymentDetailFormRow } from './transactionPaymentDetailsTypes';
 import { SelectAvailableAdvances } from '@/modules/vouchers/components/SelectAvailableAdvances';
@@ -531,7 +531,7 @@ const PaymentDetailRow = ({
       });
     }
 
-    if (isElectronicPaymentMethod(paymentMethod)) {
+    if (isNonChequeBankPaymentMethod(paymentMethod)) {
       form.setValue(`${arrayName}.${index}.chequePageId`, '', {
         shouldDirty: true,
         shouldTouch: true,
@@ -557,7 +557,7 @@ const PaymentDetailRow = ({
       if (
         paymentMethod !== TransactionPaymentMethodEnum.CHEQUE ||
         settlementSource === 'ADVANCE' ||
-        isElectronicPaymentMethod(paymentMethod) ||
+        isNonChequeBankPaymentMethod(paymentMethod) ||
         !isPurchase ||
         !accountId ||
         !resolvedBranchId
@@ -609,7 +609,7 @@ const PaymentDetailRow = ({
     if (
       !accountId ||
       paymentMethod !== TransactionPaymentMethodEnum.CHEQUE ||
-      isElectronicPaymentMethod(paymentMethod)
+      isNonChequeBankPaymentMethod(paymentMethod)
     ) {
       return;
     }
@@ -737,7 +737,7 @@ const PaymentDetailRow = ({
   }, [pageOptions, selectedChequePage]);
 
   const isCash = paymentMethod === TransactionPaymentMethodEnum.CASH;
-  const isElectronic = isElectronicPaymentMethod(paymentMethod);
+  const isElectronic = isNonChequeBankPaymentMethod(paymentMethod);
   const isBankPayment = isBankSettlementMethod(paymentMethod);
   const chequeDateDisabled =
     disabled || !isBankPayment || settlementSource === 'ADVANCE' || isElectronic;
@@ -1038,8 +1038,6 @@ export const TransactionPaymentDetailsFieldArray = ({
   const defaultPaymentMethod = canUseCheque
     ? TransactionPaymentMethodEnum.CHEQUE
     : TransactionPaymentMethodEnum.CASH;
-  const { data: paymentMethodOptions = [], isLoading: isPaymentMethodsLoading } =
-    useTransactionPaymentMethods();
   const { fields, append, remove, replace } = useFieldArray({
     control: form.control,
     name,
@@ -1077,19 +1075,13 @@ export const TransactionPaymentDetailsFieldArray = ({
 
   const visiblePaymentModeOptions = useMemo(
     () =>
-      paymentMethodOptions.filter(option => {
+      getTransactionPaymentMethodOptions().filter(option => {
         if (option.value === TransactionPaymentMethodEnum.CASH) {
           return canUseCash;
         }
-        if (
-          option.value === TransactionPaymentMethodEnum.CHEQUE ||
-          isElectronicPaymentMethod(option.value)
-        ) {
-          return canUseCheque;
-        }
-        return false;
+        return canUseCheque;
       }),
-    [canUseCash, canUseCheque, paymentMethodOptions]
+    [canUseCash, canUseCheque]
   );
 
   const loadPaymentModeOptions = useCallback(
@@ -1182,7 +1174,7 @@ export const TransactionPaymentDetailsFieldArray = ({
         paymentMethod === TransactionPaymentMethodEnum.CASH
           ? TransactionPaymentMethodEnum.CASH
           : TransactionPaymentMethodEnum.CHEQUE;
-      const remainderMethod = isElectronicPaymentMethod(paymentMethod)
+      const remainderMethod = isNonChequeBankPaymentMethod(paymentMethod)
         ? paymentMethod
         : resolvedAdvanceMethod;
       const advanceRows: ITransactionPaymentDetailFormRow[] = [];
@@ -1223,7 +1215,7 @@ export const TransactionPaymentDetailsFieldArray = ({
           createEmptyPurchasePaymentRow({
             settlementSource: 'NORMAL',
             paymentMethod: remainderMethod,
-            chequeDate: isElectronicPaymentMethod(remainderMethod)
+            chequeDate: isNonChequeBankPaymentMethod(remainderMethod)
               ? toLocalDateString()
               : '',
             amount: (remainingCents / 100).toFixed(2),
@@ -1343,7 +1335,7 @@ export const TransactionPaymentDetailsFieldArray = ({
         append(
           createEmptyPurchasePaymentRow({
             paymentMethod: method,
-            chequeDate: isElectronicPaymentMethod(method)
+            chequeDate: isNonChequeBankPaymentMethod(method)
               ? toLocalDateString()
               : '',
             amount: normalizeAmount(maxAmount),
@@ -1435,7 +1427,7 @@ export const TransactionPaymentDetailsFieldArray = ({
           });
         }
 
-        if (isElectronicPaymentMethod(method)) {
+        if (isNonChequeBankPaymentMethod(method)) {
           form.setValue(`${name}.${index}.chequePageId`, '', {
             shouldDirty: true,
             shouldTouch: true,
@@ -1480,8 +1472,7 @@ export const TransactionPaymentDetailsFieldArray = ({
             name={PAYMENT_MODE_FIELD}
             label={TRANSACTION_PAYMENT_TEXT.paymentMode}
             loadOptions={loadPaymentModeOptions}
-            defaultOptions={true}
-            isLoading={isPaymentMethodsLoading}
+            defaultOptions={visiblePaymentModeOptions}
             disabled={disabled}
             onValueChange={value => {
               const method = String(value ?? '').trim();
@@ -1542,7 +1533,7 @@ export const TransactionPaymentDetailsFieldArray = ({
               append(
                 createEmptyPurchasePaymentRow({
                   paymentMethod: activePaymentMethod,
-                  chequeDate: isElectronicPaymentMethod(activePaymentMethod)
+                  chequeDate: isNonChequeBankPaymentMethod(activePaymentMethod)
                     ? toLocalDateString()
                     : '',
                   amount: normalizeAmount(remainingAmount || maxAmount),

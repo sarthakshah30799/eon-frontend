@@ -42,6 +42,7 @@ export interface RecentTransaction {
   currencyCode: string;
   productCode: string;
   transactionType: string;
+  slug: string;
   fcyAmount: string;
   lcyAmount: string;
   status: string;

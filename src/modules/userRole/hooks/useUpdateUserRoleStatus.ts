@@ -15,7 +15,7 @@ export const useUpdateUserRoleStatus = () => {
       await queryClient.cancelQueries({ queryKey: ['user-roles'] });
       await queryClient.cancelQueries({ queryKey: ['user-role', id] });
 
-      const previousRoles = queryClient.getQueriesData<IUserRole[]>({
+      const previousRoles = queryClient.getQueriesData({
         queryKey: ['user-roles'],
       });
       const previousRole = queryClient.getQueryData<IUserRole>([
@@ -23,14 +23,7 @@ export const useUpdateUserRoleStatus = () => {
         id,
       ]);
 
-      queryClient.setQueriesData<IUserRole[]>(
-        { queryKey: ['user-roles'] },
-        currentRoles =>
-          currentRoles?.map(role =>
-            role.id === id ? { ...role, isActive } : role
-          ) ?? currentRoles
-      );
-
+      // Detail cache only here; list cache shape is paginated and synced on success.
       queryClient.setQueryData<IUserRole | undefined>(
         ['user-role', id],
         currentRole =>

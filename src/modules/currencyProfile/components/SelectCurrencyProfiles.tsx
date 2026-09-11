@@ -109,6 +109,7 @@ export const SelectCurrencyProfiles = ({
     isFetching,
   } = useListCurrencyProfiles({
     search: search.trim() || undefined,
+    // Operational picker: active tradable only (only-stocking excluded by API default).
     activeOnly: true,
     limit: PAGINATION_MAX_LIMIT,
     offset: PAGINATION_DEFAULTS.OFFSET,

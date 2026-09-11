@@ -15,8 +15,9 @@ export const CurrencyProfileListView = () => {
   const filters = useMemo(
     () => ({
       search: debouncedSearch.trim() || undefined,
+      // Master list: every currency (tradable + stocking, active + inactive).
+      includeAllStockingTypes: true as const,
       activeOnly: false as const,
-      includeOnlyStocking: true as const,
     }),
     [debouncedSearch]
   );

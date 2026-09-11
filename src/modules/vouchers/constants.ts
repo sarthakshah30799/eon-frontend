@@ -5,6 +5,7 @@ export const VOUCHER_LABELS: Record<VoucherType, string> = {
   PAYMENT: 'Payment',
   JOURNAL: 'Journal Voucher',
   DEPOSIT_WITHDRAWAL: 'Deposit / Withdrawal',
+  ADVICE: 'Advice of Debit/Credit',
 };
 
 export const VOUCHER_LIST_TEXT = {
@@ -50,6 +51,7 @@ export const DEPOSIT_WITHDRAWAL_TEXT = {
 export const OUTSTANDING_BILL_TEXT = {
   titleReceipt: 'Select Outstanding Bills (Receipt)',
   titlePayment: 'Select Outstanding Bills (Payment)',
+  titleAdvice: 'Select Outstanding Bills (Advice)',
   description: (count: number, itemTypeLabel: string) =>
     itemTypeLabel
       ? `${count} outstanding bill${count === 1 ? '' : 's'} for ${itemTypeLabel}. Select one or more to settle.`
@@ -71,6 +73,16 @@ export const OUTSTANDING_BILL_TEXT = {
   selectAll: 'Select all outstanding bills',
   selectOutstanding: 'Select outstanding',
   settledBill: 'Settled Bill',
+} as const;
+
+export const ADVICE_TEXT = {
+  honourSave: 'Save',
+  destinationBranch: 'Destination Branch',
+  sourceBranch: 'Source Branch',
+  headerDirection: 'Header Direction',
+  honourPreviewNote:
+    'Directions below are shown as they will post at the destination branch.',
+  pendingHonour: 'Pending honour at destination branch',
 } as const;
 
 export const AVAILABLE_ADVANCE_TEXT = {
@@ -106,6 +118,7 @@ export const VOUCHER_PATHS: Record<VoucherType, string> = {
   PAYMENT: '/payments',
   JOURNAL: '/journal-vouchers',
   DEPOSIT_WITHDRAWAL: '/deposit-withdrawals',
+  ADVICE: '/advice-debit-credit',
 };
 
 export const createVoucherIdempotencyKey = () =>

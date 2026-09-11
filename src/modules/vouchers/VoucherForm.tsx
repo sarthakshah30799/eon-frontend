@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -20,6 +20,7 @@ import {
 } from '@/components/forms';
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import { useListAccountProfiles } from '@/modules/accountProfile/hooks';
+import { useLoadBranchOptions } from '@/modules/branchProfile/hooks';
 import { useListPartyProfiles } from '@/modules/partyProfiles/hooks';
 import { useCategoryOptions } from '@/hooks';
 import { PartyProfileTypeEnum } from '@/modules/partyProfiles/types/partyProfileTypes';
@@ -28,10 +29,12 @@ import { PurchaseWorkplaceFields } from '@/modules/purchase/components/PurchaseW
 import type {
   OutstandingBill,
   VoucherAccountMode,
+  VoucherDirection,
   VoucherFormValues,
   VoucherType,
 } from './types';
 import {
+  ADVICE_TEXT,
   DEPOSIT_WITHDRAWAL_TEXT,
   OUTSTANDING_BILL_TEXT,
   VOUCHER_FORM_TEXT,
@@ -76,11 +79,27 @@ const toCents = (value: unknown) => {
 const isPartyVoucherType = (type: VoucherType) =>
   type === 'RECEIPT' || type === 'PAYMENT';
 
+const isAdviceType = (type: VoucherType) => type === 'ADVICE';
+
+const hasPartyFields = (type: VoucherType) =>
+  isPartyVoucherType(type) || isAdviceType(type);
+
 const isDepositWithdrawalType = (type: VoucherType) =>
   type === 'DEPOSIT_WITHDRAWAL';
 
+const adviceHeaderDirection = (
+  debitCents: number,
+  creditCents: number
+): VoucherDirection | '' => {
+  if (creditCents > debitCents) return 'DEBIT';
+  if (debitCents > creditCents) return 'CREDIT';
+  return '';
+};
+
 const voucherSchema = (type: VoucherType) => {
   const partyVoucher = isPartyVoucherType(type);
+  const adviceVoucher = isAdviceType(type);
+  const partyFields = hasPartyFields(type);
   const depositWithdrawal = isDepositWithdrawalType(type);
 
   return yup.object({
@@ -95,12 +114,25 @@ const voucherSchema = (type: VoucherType) => {
       is: () => partyVoucher,
       then: schema => schema.required('A/C Code is required'),
     }),
+    destinationBranchId: yup.string().when([], {
+      is: () => adviceVoucher,
+      then: schema =>
+        schema
+          .required('Destination branch is required')
+          .test(
+            'different-branch',
+            'Destination branch must be different from the source branch',
+            function validateDestination(value) {
+              return !value || value !== this.parent.branchId;
+            }
+          ),
+    }),
     entityTypeOptionId: yup.string().when([], {
-      is: () => partyVoucher,
+      is: () => partyFields,
       then: schema => schema.required('Party Type is required'),
     }),
     partyProfileId: yup.string().when([], {
-      is: () => partyVoucher,
+      is: () => partyFields,
       then: schema => schema.required('Party Code is required'),
     }),
     panNumber: yup
@@ -276,6 +308,8 @@ const voucherSchema = (type: VoucherType) => {
                   totals.credit > 0 &&
                   totals.debit === totals.credit
                 );
+              if (type === 'ADVICE')
+                return Math.abs(totals.debit - totals.credit) > 0;
               return type === 'RECEIPT'
                 ? totals.credit - totals.debit > 0
                 : totals.debit - totals.credit > 0;
@@ -288,14 +322,36 @@ interface Props {
   type: VoucherType;
   defaultValues: VoucherFormValues;
   readOnly?: boolean;
+  /** Honour/accept posts via API and must not re-run create-time form validation. */
+  skipValidation?: boolean;
   minDate?: Date;
   maxDate?: Date;
   policyTransactionDate?: string;
   onBranchChange?: (branchId: string) => void;
   submitDisabled?: boolean;
+  submitLabel?: string;
+  showSubmit?: boolean;
+  honourPreviewNote?: string;
   onSubmit: (values: VoucherFormValues) => Promise<void>;
   onBack: () => void;
 }
+
+const collectFormErrorMessages = (value: unknown, messages: string[] = []) => {
+  if (!value || typeof value !== 'object') {
+    return messages;
+  }
+  if (
+    'message' in value &&
+    typeof (value as { message?: unknown }).message === 'string' &&
+    (value as { message: string }).message.trim()
+  ) {
+    messages.push((value as { message: string }).message.trim());
+  }
+  Object.values(value as Record<string, unknown>).forEach(child => {
+    collectFormErrorMessages(child, messages);
+  });
+  return messages;
+};
 
 const VoucherFields = ({
   type,
@@ -304,6 +360,7 @@ const VoucherFields = ({
   maxDate,
   policyTransactionDate,
   onBranchChange,
+  honourPreviewNote,
 }: Pick<
   Props,
   | 'type'
@@ -312,6 +369,7 @@ const VoucherFields = ({
   | 'maxDate'
   | 'policyTransactionDate'
   | 'onBranchChange'
+  | 'honourPreviewNote'
 >) => {
   const form = useFormContext<VoucherFormValues>();
   const [outstandingModalIndex, setOutstandingModalIndex] = useState<
@@ -342,6 +400,17 @@ const VoucherFields = ({
   const watchedItems = useWatch({ control: form.control, name: 'items' });
   const items = useMemo(() => watchedItems ?? [], [watchedItems]);
   const branchId = useWatch({ control: form.control, name: 'branchId' });
+  const loadBranchOptions = useLoadBranchOptions({ activeOnly: true });
+  const loadDestinationBranchOptions = useCallback(
+    async (inputValue: string, page = 1) => {
+      const result = await loadBranchOptions(inputValue, page);
+      return {
+        ...result,
+        options: result.options.filter(option => option.value !== branchId),
+      };
+    },
+    [branchId, loadBranchOptions]
+  );
   const { data: nextNumber } = useVoucherNextNumber(type, branchId);
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -732,6 +801,32 @@ const VoucherFields = ({
     type,
   ]);
 
+  useEffect(() => {
+    if (type !== 'ADVICE') return;
+    const debit = items.reduce(
+      (sum, item) =>
+        sum + (item.direction === 'DEBIT' ? toCents(item.amount) : 0),
+      0
+    );
+    const credit = items.reduce(
+      (sum, item) =>
+        sum + (item.direction === 'CREDIT' ? toCents(item.amount) : 0),
+      0
+    );
+    form.setValue('headerDirection', adviceHeaderDirection(debit, credit), {
+      shouldDirty: false,
+      shouldValidate: false,
+    });
+  }, [form, items, type]);
+
+  useEffect(() => {
+    if (type !== 'ADVICE' || readOnly) return;
+    const destination = form.getValues('destinationBranchId');
+    if (destination && destination === branchId) {
+      form.setValue('destinationBranchId', '', { shouldValidate: true });
+    }
+  }, [branchId, form, readOnly, type]);
+
   const selectedSettledTransactionIds = useMemo(
     () =>
       items
@@ -872,15 +967,24 @@ const VoucherFields = ({
     },
     { debit: 0, credit: 0 }
   );
+  const computedHeaderDirection = adviceHeaderDirection(
+    totals.debit,
+    totals.credit
+  );
   const final =
     type === 'RECEIPT'
       ? totals.credit - totals.debit
       : type === 'PAYMENT'
         ? totals.debit - totals.credit
-        : totals.credit - totals.debit;
+        : type === 'ADVICE'
+          ? Math.abs(totals.debit - totals.credit)
+          : totals.credit - totals.debit;
 
   return (
     <div className="space-y-3 [&_div.max-w-\[350px\]]:!max-w-none">
+      {honourPreviewNote ? (
+        <p className="text-sm text-text-secondary">{honourPreviewNote}</p>
+      ) : null}
       <CardSection heading="Transaction">
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           <div className="md:col-span-2 lg:col-span-2 [&_.grid]:gap-3">
@@ -908,6 +1012,43 @@ const VoucherFields = ({
               label="Cheque Date"
               dateFormat="dd/MM/yyyy"
               disabled={readOnly}
+            />
+          </div>
+        ) : null}
+        {isAdviceType(type) ? (
+          <div className="mt-3 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+            {readOnly ? (
+              <FormFieldSelect
+                name="sourceBranchId"
+                label={ADVICE_TEXT.sourceBranch}
+                loadOptions={loadBranchOptions}
+                defaultOptions={true}
+                pagination
+                disabled
+              />
+            ) : null}
+            <FormFieldSelect
+              name="destinationBranchId"
+              label={ADVICE_TEXT.destinationBranch}
+              loadOptions={loadDestinationBranchOptions}
+              defaultOptions={true}
+              pagination
+              disabled={readOnly}
+            />
+            <FormFieldInput
+              name="headerDirectionDisplay"
+              label={ADVICE_TEXT.headerDirection}
+              disabled
+              valueTransform="none"
+              value={computedHeaderDirection || ''}
+              placeholder="Auto from items"
+            />
+            <FormFieldInput
+              name="adviceFinalAmountDisplay"
+              label="Final Amount"
+              disabled
+              valueTransform="none"
+              value={(final / 100).toFixed(2)}
             />
           </div>
         ) : null}
@@ -1055,6 +1196,85 @@ const VoucherFields = ({
             ) : null}
           </CardSection>
         </div>
+      ) : null}
+
+      {isAdviceType(type) ? (
+        <CardSection heading="Party">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {readOnly ? (
+              <FormFieldInput
+                name="entityTypeName"
+                label="Party Type"
+                disabled
+              />
+            ) : (
+              <FormFieldCategoryOption
+                name="entityTypeOptionId"
+                label="Party Type"
+                code={CategoryOptionCodeEnum.EntityType}
+                isCreatable={false}
+              />
+            )}
+            {readOnly ? (
+              <FormFieldInput name="partyCode" label="Party Code" disabled />
+            ) : (
+              <FormFieldSelect
+                name="partyProfileId"
+                label="Party Code"
+                loadOptions={optionFilter(partyOptions)}
+                defaultOptions={partyOptions}
+                disabled={!entityTypeOptionId}
+              />
+            )}
+            <FormFieldInput name="partyName" label="Party Name" disabled />
+          </div>
+          {isIndividualSelection ? (
+            <>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                <FormFieldInput
+                  name="panNumber"
+                  label={VOUCHER_FORM_TEXT.panNumber}
+                  placeholder={VOUCHER_FORM_TEXT.panNumberPlaceholder}
+                  valueTransform="uppercase"
+                  disabled={panFieldsDisabled || isVerifyingPan}
+                  onKeyDown={handlePanKeyDown}
+                />
+                <FormFieldInput
+                  name="panName"
+                  label={VOUCHER_FORM_TEXT.panName}
+                  placeholder={VOUCHER_FORM_TEXT.panNamePlaceholder}
+                  disabled={panFieldsDisabled || isVerifyingPan}
+                  onKeyDown={handlePanKeyDown}
+                />
+                <FormFieldDatePicker
+                  name="panDob"
+                  label={VOUCHER_FORM_TEXT.panDob}
+                  placeholder={VOUCHER_FORM_TEXT.panDobPlaceholder}
+                  dateFormat="dd/MM/yyyy"
+                  maxDate={adultDobMaxDate}
+                  disabled={panFieldsDisabled || isVerifyingPan}
+                  onKeyDown={handlePanKeyDown}
+                />
+              </div>
+              {!panFieldsDisabled ? (
+                <p
+                  className={`mt-1 text-xs ${
+                    panVerificationStatus === 'checking'
+                      ? 'text-info-700'
+                      : panVerificationStatus === 'valid'
+                        ? 'text-success-700'
+                        : panVerificationStatus === 'invalid'
+                          ? 'text-error-600'
+                          : 'text-text-secondary'
+                  }`}
+                >
+                  {panVerificationMessage ||
+                    VOUCHER_FORM_TEXT.panVerifyIncomplete}
+                </p>
+              ) : null}
+            </>
+          ) : null}
+        </CardSection>
       ) : null}
 
       <CardSection heading="Narration">
@@ -1422,7 +1642,7 @@ const VoucherFields = ({
       </CardSection>
 
       {outstandingModalIndex !== null &&
-      (type === 'RECEIPT' || type === 'PAYMENT') ? (
+      (type === 'RECEIPT' || type === 'PAYMENT' || type === 'ADVICE') ? (
         <SelectOutstandingBills
           open
           type={type}
@@ -1454,6 +1674,7 @@ export const VoucherForm = ({
   type,
   defaultValues,
   readOnly = false,
+  skipValidation = false,
   onSubmit,
   onBack,
   minDate,
@@ -1461,32 +1682,32 @@ export const VoucherForm = ({
   policyTransactionDate,
   onBranchChange,
   submitDisabled = false,
+  submitLabel,
+  showSubmit,
+  honourPreviewNote,
 }: Props) => (
   <Form<VoucherFormValues>
     id={`${type.toLowerCase()}-voucher-form`}
     defaultValues={defaultValues}
-    resolver={yupResolver(voucherSchema(type)) as never}
+    resolver={
+      skipValidation ? undefined : (yupResolver(voucherSchema(type)) as never)
+    }
     mode="onChange"
     onSubmit={onSubmit}
     onError={errors => {
-      const itemMessage = (errors.items as { message?: string } | undefined)
-        ?.message;
-      const narrationMessage = errors.narration?.message;
+      const messages = collectFormErrorMessages(errors);
       toast.error(
-        String(
-          itemMessage ??
-            narrationMessage ??
-            (type === 'JOURNAL'
-              ? 'Journal Voucher difference must be 0.00 before saving.'
-              : 'Please correct the highlighted voucher fields.')
-        )
+        messages[0] ??
+          (type === 'JOURNAL'
+            ? 'Journal Voucher difference must be 0.00 before saving.'
+            : 'Please correct the highlighted voucher fields.')
       );
     }}
     footer={{
-      submitLabel: `Save ${VOUCHER_LABELS[type]}`,
+      submitLabel: submitLabel ?? `Save ${VOUCHER_LABELS[type]}`,
       backLabel: 'Back',
       onBackClick: onBack,
-      showSubmit: !readOnly,
+      showSubmit: showSubmit ?? !readOnly,
       isSubmitDisabled: submitDisabled,
     }}
   >
@@ -1497,6 +1718,7 @@ export const VoucherForm = ({
       maxDate={maxDate}
       policyTransactionDate={policyTransactionDate}
       onBranchChange={onBranchChange}
+      honourPreviewNote={honourPreviewNote}
     />
   </Form>
 );

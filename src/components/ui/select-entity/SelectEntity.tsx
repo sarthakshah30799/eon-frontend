@@ -11,11 +11,17 @@ interface SelectEntityProps<T extends { id: string }> {
   columns: TableColumnDef<T>[];
   data: T[];
   loading?: boolean;
+  isFetching?: boolean;
   selectable?: boolean;
   multiple?: boolean;
   enablePagination?: boolean;
+  manualPagination?: boolean;
+  page?: number;
   pageSize?: number;
   pageSizeOptions?: number[];
+  total?: number;
+  totalPages?: number;
+  onPageChange?: (page: number) => void;
   onPageSizeChange?: (pageSize: number) => void;
   searchValue?: string;
   onSearch?: (value: string) => void;
@@ -41,11 +47,17 @@ export const SelectEntity = <T extends { id: string }>({
   columns,
   data,
   loading = false,
+  isFetching = false,
   selectable = true,
   multiple = false,
   enablePagination = true,
+  manualPagination = false,
+  page = 1,
   pageSize = 10,
   pageSizeOptions,
+  total,
+  totalPages,
+  onPageChange,
   onPageSizeChange,
   searchValue = '',
   onSearch,
@@ -167,13 +179,19 @@ export const SelectEntity = <T extends { id: string }>({
           data={data}
           getRowId={getRowId}
           loading={loading}
+          isFetching={isFetching}
           enableSorting={false}
           enableFiltering={false}
           enablePagination={enablePagination}
+          manualPagination={manualPagination}
+          page={page}
           pageSize={pageSize}
           pageSizeOptions={pageSizeOptions}
+          total={total}
+          totalPages={totalPages}
           enableRowSelection={selectable}
           rowSelection={displayedRowSelection}
+          onPageChange={onPageChange}
           onPageSizeChange={onPageSizeChange}
           onRowSelectionChange={handleRowSelectionChange}
           onSearch={onSearch}

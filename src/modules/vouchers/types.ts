@@ -4,13 +4,16 @@ export type VoucherType =
   | 'RECEIPT'
   | 'PAYMENT'
   | 'JOURNAL'
-  | 'DEPOSIT_WITHDRAWAL';
+  | 'DEPOSIT_WITHDRAWAL'
+  | 'ADVICE';
 export type VoucherDirection = 'DEBIT' | 'CREDIT';
 export type VoucherAccountMode =
   | 'CASH'
   | 'BANK_CHEQUE'
   | 'PETTY_CASH'
   | 'CREDIT_CARD';
+export type VoucherAdviceRole = 'ISSUER' | 'HONOUR';
+export type VoucherAdviceStatus = 'PENDING_HONOUR' | 'HONOURED';
 
 export interface VoucherSnapshot {
   id?: string;
@@ -54,6 +57,9 @@ export interface OutstandingBill {
   finalAmount: string;
   byCash: string;
   byCheque: string;
+  byCard?: string;
+  byTransfer?: string;
+  byOther?: string;
   outstanding: string;
   branchId: string;
 }
@@ -85,12 +91,18 @@ export interface VoucherFormValues {
   remarkName: string;
   narration: string;
   idempotencyKey: string;
+  destinationBranchId: string;
+  sourceBranchId: string;
+  headerDirection: VoucherDirection | '';
+  adviceRole: VoucherAdviceRole | '';
+  adviceStatus: VoucherAdviceStatus | '';
+  pairedVoucherId: string;
   items: VoucherItem[];
 }
 
 export interface AccountingVoucher extends Omit<
   VoucherFormValues,
-  'number' | 'accountMode'
+  'number' | 'accountMode' | 'headerDirection' | 'adviceRole' | 'adviceStatus'
 > {
   id: string;
   voucherType: VoucherType;
@@ -101,9 +113,14 @@ export interface AccountingVoucher extends Omit<
   entityTypeSnapshot?: VoucherSnapshot | null;
   partyProfileSnapshot?: VoucherSnapshot | null;
   remarkSnapshot?: VoucherSnapshot | null;
+  sourceBranchSnapshot?: VoucherSnapshot | null;
+  destinationBranchSnapshot?: VoucherSnapshot | null;
   totalDebit: string;
   totalCredit: string;
   finalAmount: string;
+  headerDirection: VoucherDirection | null;
+  adviceRole: VoucherAdviceRole | null;
+  adviceStatus: VoucherAdviceStatus | null;
   advanceControlAccountId?: string | null;
   advanceControlAccountSnapshot?: VoucherSnapshot | null;
   createdAt: string;

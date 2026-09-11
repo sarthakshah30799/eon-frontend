@@ -10,15 +10,17 @@ import { useQuery } from '@tanstack/react-query';
 import { formatDateTime } from '@/utils';
 import { VoucherForm } from './VoucherForm';
 import {
+  ADVICE_TEXT,
   createVoucherIdempotencyKey,
   VOUCHER_LABELS,
   VOUCHER_LIST_TEXT,
   VOUCHER_PATHS,
 } from './constants';
-import { useCreateVoucher, useVoucher } from './hooks';
+import { useCreateVoucher, useHonourAdvice, useVoucher } from './hooks';
 import { vouchersApi } from '@/api/vouchers';
 import type {
   AccountingVoucher,
+  VoucherDirection,
   VoucherFormValues,
   VoucherType,
 } from './types';
@@ -72,91 +74,122 @@ const emptyValues = (
   remarkName: '',
   narration: '',
   idempotencyKey: createVoucherIdempotencyKey(),
+  destinationBranchId: '',
+  sourceBranchId: '',
+  headerDirection: '',
+  adviceRole: '',
+  adviceStatus: '',
+  pairedVoucherId: '',
   items:
     type === 'DEPOSIT_WITHDRAWAL'
       ? [emptyItem('DEBIT'), emptyItem('CREDIT'), emptyItem('DEBIT')]
       : [emptyItem('DEBIT')],
 });
 
-const fromEntity = (voucher: AccountingVoucher): VoucherFormValues => ({
-  transactionDate: voucher.transactionDate,
-  branchId: voucher.branchId,
-  counterId: voucher.counterId,
-  number: voucher.number,
-  accountTypeOptionId: voucher.accountTypeOptionId,
-  accountTypeName:
-    voucher.accountTypeSnapshot?.label ??
-    voucher.accountTypeSnapshot?.name ??
-    '',
-  accountMode: voucher.accountMode ?? '',
-  headerAccountId: voucher.headerAccountId,
-  headerAccountCode: voucher.headerAccountSnapshot?.code ?? '',
-  headerAccountName:
-    voucher.headerAccountSnapshot?.name ??
-    voucher.headerAccountSnapshot?.label ??
-    '',
-  entityTypeOptionId: voucher.entityTypeOptionId,
-  entityTypeName:
-    voucher.entityTypeSnapshot?.label ?? voucher.entityTypeSnapshot?.name ?? '',
-  partyProfileId: voucher.partyProfileId,
-  partyCode: voucher.partyProfileSnapshot?.code ?? '',
-  panNumber: voucher.panNumber ?? '',
-  panName: voucher.panName ?? '',
-  panDob: voucher.panDob ?? '',
-  partyName:
-    voucher.partyProfileSnapshot?.name ??
-    voucher.partyProfileSnapshot?.label ??
-    '',
-  chequeNumber: voucher.chequeNumber,
-  chequeDate: voucher.chequeDate,
-  chequeBranch: voucher.chequeBranch,
-  drawnOn: voucher.drawnOn,
-  remarkOptionId: voucher.remarkOptionId,
-  remarkName:
-    voucher.remarkSnapshot?.label ?? voucher.remarkSnapshot?.name ?? '',
-  narration: voucher.narration,
-  idempotencyKey: voucher.idempotencyKey,
-  items: (() => {
-    const mapped: VoucherFormValues['items'] = voucher.items.map(item => ({
-      ...item,
-      amount: String(item.amount ?? ''),
-      itemTypeName:
-        item.itemTypeSnapshot?.label ?? item.itemTypeSnapshot?.name ?? '',
-      itemTypeValue:
-        (item.itemTypeSnapshot as { value?: string } | null | undefined)
-          ?.value ??
-        item.itemTypeSnapshot?.code ??
-        '',
-      subledgerCode: item.subledgerPartyProfileSnapshot?.code ?? '',
-      accountCode: item.accountSnapshot?.code ?? '',
-      accountName:
-        item.accountSnapshot?.name ?? item.accountSnapshot?.label ?? '',
-      settledTransactionNumber:
-        (
-          item.settledTransactionSnapshot as
-            | { number?: string }
-            | null
-            | undefined
-        )?.number ??
-        item.settledTransactionSnapshot?.code ??
-        item.settledTransactionSnapshot?.name ??
-        item.settledTransactionSnapshot?.label ??
-        '',
-    }));
-    if (
-      voucher.voucherType === 'DEPOSIT_WITHDRAWAL' &&
-      mapped.length === 2
-    ) {
-      mapped.push({
-        ...emptyItem('DEBIT'),
-        itemTypeName: 'Handling fees',
-        itemTypeValue: 'ACCOUNT',
-        amount: '',
-      });
-    }
-    return mapped;
-  })(),
-});
+const oppositeDirection = (
+  direction?: VoucherDirection | null
+): VoucherDirection | '' => {
+  if (direction === 'DEBIT') return 'CREDIT';
+  if (direction === 'CREDIT') return 'DEBIT';
+  return '';
+};
+
+const fromEntity = (
+  voucher: AccountingVoucher,
+  options?: { mirrorDirections?: boolean }
+): VoucherFormValues => {
+  const mirror = Boolean(options?.mirrorDirections);
+  return {
+    transactionDate: voucher.transactionDate,
+    branchId: voucher.branchId,
+    counterId: voucher.counterId,
+    number: voucher.number,
+    accountTypeOptionId: voucher.accountTypeOptionId,
+    accountTypeName:
+      voucher.accountTypeSnapshot?.label ??
+      voucher.accountTypeSnapshot?.name ??
+      '',
+    accountMode: voucher.accountMode ?? '',
+    headerAccountId: voucher.headerAccountId,
+    headerAccountCode: voucher.headerAccountSnapshot?.code ?? '',
+    headerAccountName:
+      voucher.headerAccountSnapshot?.name ??
+      voucher.headerAccountSnapshot?.label ??
+      '',
+    entityTypeOptionId: voucher.entityTypeOptionId,
+    entityTypeName:
+      voucher.entityTypeSnapshot?.label ?? voucher.entityTypeSnapshot?.name ?? '',
+    partyProfileId: voucher.partyProfileId,
+    partyCode: voucher.partyProfileSnapshot?.code ?? '',
+    panNumber: voucher.panNumber ?? '',
+    panName: voucher.panName ?? '',
+    panDob: voucher.panDob ?? '',
+    partyName:
+      voucher.partyProfileSnapshot?.name ??
+      voucher.partyProfileSnapshot?.label ??
+      '',
+    chequeNumber: voucher.chequeNumber,
+    chequeDate: voucher.chequeDate,
+    chequeBranch: voucher.chequeBranch,
+    drawnOn: voucher.drawnOn,
+    remarkOptionId: voucher.remarkOptionId,
+    remarkName:
+      voucher.remarkSnapshot?.label ?? voucher.remarkSnapshot?.name ?? '',
+    narration: voucher.narration,
+    idempotencyKey: voucher.idempotencyKey,
+    destinationBranchId: voucher.destinationBranchId ?? '',
+    sourceBranchId: voucher.sourceBranchId ?? '',
+    headerDirection: mirror
+      ? oppositeDirection(voucher.headerDirection)
+      : (voucher.headerDirection ?? ''),
+    adviceRole: voucher.adviceRole ?? '',
+    adviceStatus: voucher.adviceStatus ?? '',
+    pairedVoucherId: voucher.pairedVoucherId ?? '',
+    items: (() => {
+      const mapped: VoucherFormValues['items'] = voucher.items.map(item => ({
+        ...item,
+        amount: String(item.amount ?? ''),
+        itemTypeName:
+          item.itemTypeSnapshot?.label ?? item.itemTypeSnapshot?.name ?? '',
+        itemTypeValue:
+          (item.itemTypeSnapshot as { value?: string } | null | undefined)
+            ?.value ??
+          item.itemTypeSnapshot?.code ??
+          '',
+        subledgerCode: item.subledgerPartyProfileSnapshot?.code ?? '',
+        accountCode: item.accountSnapshot?.code ?? '',
+        accountName:
+          item.accountSnapshot?.name ?? item.accountSnapshot?.label ?? '',
+        settledTransactionNumber:
+          (
+            item.settledTransactionSnapshot as
+              | { number?: string }
+              | null
+              | undefined
+          )?.number ??
+          item.settledTransactionSnapshot?.code ??
+          item.settledTransactionSnapshot?.name ??
+          item.settledTransactionSnapshot?.label ??
+          '',
+        direction: mirror
+          ? ((oppositeDirection(item.direction) || item.direction) as VoucherDirection)
+          : item.direction,
+      }));
+      if (
+        voucher.voucherType === 'DEPOSIT_WITHDRAWAL' &&
+        mapped.length === 2
+      ) {
+        mapped.push({
+          ...emptyItem('DEBIT'),
+          itemTypeName: 'Handling fees',
+          itemTypeValue: 'ACCOUNT',
+          amount: '',
+        });
+      }
+      return mapped;
+    })(),
+  };
+};
 
 export const VoucherListView = ({ type }: { type: VoucherType }) => {
   const navigate = useNavigate();
@@ -212,7 +245,12 @@ export const VoucherListView = ({ type }: { type: VoucherType }) => {
       {
         accessorKey: 'accountMode',
         header: VOUCHER_LIST_TEXT.accountMode,
-        cell: ({ row }) => row.original.accountMode ?? '-',
+        cell: ({ row }) =>
+          type === 'ADVICE'
+            ? (row.original.headerDirection ??
+              row.original.adviceStatus ??
+              '-')
+            : (row.original.accountMode ?? '-'),
       },
       {
         id: 'actions',
@@ -353,7 +391,24 @@ export const VoucherCreateView = ({ type }: { type: VoucherType }) => {
 export const VoucherEditView = ({ type }: { type: VoucherType }) => {
   const navigate = useNavigate();
   const { id = '' } = useParams();
+  const { user, activeBranchId, activeCounterId } = useAuth();
   const { data, isLoading, error } = useVoucher(type, id);
+  const { honourAdvice, isPending: isHonouring } = useHonourAdvice();
+
+  const canHonour = useMemo(() => {
+    if (type !== 'ADVICE' || !data) return false;
+    if (
+      data.adviceRole !== 'ISSUER' ||
+      data.adviceStatus !== 'PENDING_HONOUR'
+    ) {
+      return false;
+    }
+    const privileged = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
+    return privileged || data.destinationBranchId === activeBranchId;
+  }, [activeBranchId, data, type, user]);
+
+  const mirrorDirections = canHonour;
+
   if (isLoading)
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
@@ -366,20 +421,46 @@ export const VoucherEditView = ({ type }: { type: VoucherType }) => {
         {error instanceof Error ? error.message : 'Voucher not found'}
       </div>
     );
+
   return (
     <div className="space-y-3">
       <div>
         <h1 className="text-xl font-semibold">
           {VOUCHER_LABELS[type]} {data.number}
         </h1>
-        <p className="text-sm text-text-secondary">Read-only posted record</p>
+        <p className="text-sm text-text-secondary">
+          {canHonour
+            ? ADVICE_TEXT.pendingHonour
+            : 'Read-only posted record'}
+        </p>
       </div>
       <VoucherForm
         type={type}
-        defaultValues={fromEntity(data)}
+        defaultValues={fromEntity(data, { mirrorDirections })}
         readOnly
+        skipValidation={canHonour}
+        showSubmit={canHonour}
+        submitLabel={ADVICE_TEXT.honourSave}
+        submitDisabled={isHonouring}
+        honourPreviewNote={
+          mirrorDirections ? ADVICE_TEXT.honourPreviewNote : undefined
+        }
         onBack={() => navigate(VOUCHER_PATHS[type])}
-        onSubmit={async () => undefined}
+        onSubmit={async () => {
+          if (!canHonour) return;
+          // Form workplace fields are the issuer snapshot (readonly). Honour uses
+          // destination branch; backend picks a destination counter when session
+          // workplace is empty (admin/HO with no active counter).
+          const saved = await honourAdvice({
+            id: data.id,
+            branchId: data.destinationBranchId || undefined,
+            counterId:
+              activeBranchId === data.destinationBranchId
+                ? activeCounterId || undefined
+                : undefined,
+          });
+          navigate(`${VOUCHER_PATHS[type]}/edit/${saved.id}`);
+        }}
       />
     </div>
   );

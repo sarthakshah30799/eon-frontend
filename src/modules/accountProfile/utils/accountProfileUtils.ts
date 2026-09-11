@@ -2,17 +2,11 @@ import type { ICreateAccountProfile } from '../types/accountProfileTypes';
 
 export const ACCOUNT_PROFILE_BASE_CURRENCY_CODE = 'INR';
 
+/** Account Profile currency dropdown: active currencies only (tradable via API default). */
 export const isAccountProfileCurrencyOption = (currency: {
   active?: boolean;
   currencyCode?: string;
-}) => {
-  const isBaseCurrency =
-    String(currency.currencyCode ?? '')
-      .trim()
-      .toUpperCase() === ACCOUNT_PROFILE_BASE_CURRENCY_CODE;
-
-  return currency.active !== false || isBaseCurrency;
-};
+}) => currency.active !== false;
 
 export const createEmptyAccountProfileFormValues =
   (): ICreateAccountProfile => ({

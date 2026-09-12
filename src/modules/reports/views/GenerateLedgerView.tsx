@@ -97,8 +97,8 @@ export const GenerateLedgerView = () => {
               </h2>
               <p className="text-[11px] text-text-secondary">
                 First and last rows are Opening and Closing. Mid-rows come from
-                transaction account postings. Summary totals follow each
-                section.
+                combined transaction and voucher account postings. Summary
+                totals follow each section.
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">

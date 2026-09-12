@@ -86,8 +86,8 @@ export const SpecialReportView = () => {
                 Report View
               </h2>
               <p className="text-[11px] text-text-secondary">
-                Every account posting is shown as a single row using transaction
-                snapshots only.
+                Every account posting is shown as a single row from combined
+                transaction and voucher account postings.
               </p>
             </div>
 

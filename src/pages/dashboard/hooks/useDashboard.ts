@@ -7,6 +7,8 @@ import type {
   PendingApproval,
 } from '@/api/dashboard/dashboard.api';
 import { currencyRatesApi } from '@/api/currencyRates';
+import { toPartyProfileRouteType } from '@/modules/partyProfiles/constants';
+import { getDashboardTransactionEditPath } from '../utils/getDashboardTransactionEditPath';
 
 export type Trend = 'up' | 'down';
 
@@ -87,7 +89,10 @@ export const useDashboard = () => {
 
   const handleTxnClick = useCallback(
     (txn: RecentTransaction) => {
-      navigate(`/transactions/${txn.id}`);
+      const path = getDashboardTransactionEditPath(txn);
+      if (path) {
+        navigate(path);
+      }
     },
     [navigate]
   );
@@ -97,12 +102,19 @@ export const useDashboard = () => {
       switch (item.entityType) {
         case 'party-profile':
           navigate(
-            `/party-profiles/${item.subType?.toLowerCase() ?? item.type.toLowerCase()}/edit/${item.id}`
+            `/party-profiles/${toPartyProfileRouteType(item.subType ?? item.type)}/edit/${item.id}`
           );
           break;
-        case 'transaction':
-          navigate(`/transactions/${item.id}`);
+        case 'transaction': {
+          const path = getDashboardTransactionEditPath({
+            id: item.id,
+            slug: item.subType,
+          });
+          if (path) {
+            navigate(path);
+          }
           break;
+        }
         case 'chequebook':
           navigate(`/cheque-books?reviewId=${item.id}`);
           break;
@@ -116,6 +128,9 @@ export const useDashboard = () => {
           break;
         case 'card-transfer':
           navigate(`/card-transfer/edit/${item.id}`);
+          break;
+        case 'advice':
+          navigate(`/advice-debit-credit/edit/${item.id}`);
           break;
         default:
           break;

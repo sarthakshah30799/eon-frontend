@@ -37,6 +37,15 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
     path: '/deposit-withdrawals/edit/:id',
     meta: { title: 'Deposit / Withdrawal Details' },
   },
+  { path: '/advice-debit-credit', meta: { title: 'Advice of Debit/Credit' } },
+  {
+    path: '/advice-debit-credit/create',
+    meta: { title: 'Create Advice of Debit/Credit' },
+  },
+  {
+    path: '/advice-debit-credit/edit/:id',
+    meta: { title: 'Advice of Debit/Credit Details' },
+  },
   { path: '/fake-currencies', meta: { title: 'Fake Currencies' } },
   { path: '/fake-currencies/create', meta: { title: 'Create Fake Currency' } },
   {

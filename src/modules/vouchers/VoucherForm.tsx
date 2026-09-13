@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -20,37 +20,66 @@ import {
 } from '@/components/forms';
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import { useListAccountProfiles } from '@/modules/accountProfile/hooks';
+import { useLoadBranchOptions } from '@/modules/branchProfile/hooks';
 import { useListPartyProfiles } from '@/modules/partyProfiles/hooks';
 import { useCategoryOptions } from '@/hooks';
 import { PartyProfileTypeEnum } from '@/modules/partyProfiles/types/partyProfileTypes';
 import { AccountProfileLedgerLabelEnum } from '@/modules/accountProfile';
 import { PurchaseWorkplaceFields } from '@/modules/purchase/components/PurchaseWorkplaceFields';
+import type { ICompanyProfile } from '@/modules/companyProfile/types';
 import type {
+  AccountingVoucher,
   OutstandingBill,
   VoucherAccountMode,
+  VoucherDirection,
   VoucherFormValues,
   VoucherType,
 } from './types';
 import {
+  ADVICE_TEXT,
   DEPOSIT_WITHDRAWAL_TEXT,
   OUTSTANDING_BILL_TEXT,
   VOUCHER_FORM_TEXT,
   VOUCHER_LABELS,
+  VOUCHER_PRINT_TEXT,
 } from './constants';
 import { SelectOutstandingBills } from './components/SelectOutstandingBills';
-import { useVoucherItemTypeCategoryOptions, useVoucherNextNumber } from './hooks';
+import {
+  useRecordVoucherPrint,
+  useVoucherItemTypeCategoryOptions,
+  useVoucherNextNumber,
+} from './hooks';
 import { useVoucherPanVerification } from './useVoucherPanVerification';
+import {
+  TransactionPaymentMethodEnum,
+  getTransactionPaymentMethodOptions,
+  isNonChequeBankPaymentMethod,
+} from '@/modules/transactions';
+import {
+  buildVoucherPrintHtml,
+  getVoucherPrintCopyLabel,
+  isVoucherPrintableType,
+} from './voucherPrintUtils';
+import { openPrintWindow } from '@/modules/transactions/utils/printSnapshotUtils';
 import {
   formatVoucherDateInput,
   getVoucherItemTypeValueById,
   isVoucherAccountItemTypeValue,
   isVoucherBillItemTypeValue,
   isVoucherIndividualSelection,
+  paymentMethodForVoucherAccountMode,
   voucherBillDirection,
 } from './utils';
 import { useListAdditionalSettings } from '@/modules/additionalSettings/hooks';
 import { AdditionalSettingsCodeEnum } from '@/modules/additionalSettings/constants';
 import { getAdditionalSettingTextValue } from '@/modules/additionalSettings/utils';
+
+const toLocalDateString = (date = new Date()) => {
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, '0');
+  const day = `${date.getDate()}`.padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 const modeFromLabel = (label: string): VoucherAccountMode => {
   const value = label.toUpperCase().replace(/[ /-]+/g, '_');
@@ -76,11 +105,27 @@ const toCents = (value: unknown) => {
 const isPartyVoucherType = (type: VoucherType) =>
   type === 'RECEIPT' || type === 'PAYMENT';
 
+const isAdviceType = (type: VoucherType) => type === 'ADVICE';
+
+const hasPartyFields = (type: VoucherType) =>
+  isPartyVoucherType(type) || isAdviceType(type);
+
 const isDepositWithdrawalType = (type: VoucherType) =>
   type === 'DEPOSIT_WITHDRAWAL';
 
+const adviceHeaderDirection = (
+  debitCents: number,
+  creditCents: number
+): VoucherDirection | '' => {
+  if (creditCents > debitCents) return 'DEBIT';
+  if (debitCents > creditCents) return 'CREDIT';
+  return '';
+};
+
 const voucherSchema = (type: VoucherType) => {
   const partyVoucher = isPartyVoucherType(type);
+  const adviceVoucher = isAdviceType(type);
+  const partyFields = hasPartyFields(type);
   const depositWithdrawal = isDepositWithdrawalType(type);
 
   return yup.object({
@@ -95,12 +140,25 @@ const voucherSchema = (type: VoucherType) => {
       is: () => partyVoucher,
       then: schema => schema.required('A/C Code is required'),
     }),
+    destinationBranchId: yup.string().when([], {
+      is: () => adviceVoucher,
+      then: schema =>
+        schema
+          .required('Destination branch is required')
+          .test(
+            'different-branch',
+            'Destination branch must be different from the source branch',
+            function validateDestination(value) {
+              return !value || value !== this.parent.branchId;
+            }
+          ),
+    }),
     entityTypeOptionId: yup.string().when([], {
-      is: () => partyVoucher,
+      is: () => partyFields,
       then: schema => schema.required('Party Type is required'),
     }),
     partyProfileId: yup.string().when([], {
-      is: () => partyVoucher,
+      is: () => partyFields,
       then: schema => schema.required('Party Code is required'),
     }),
     panNumber: yup
@@ -118,25 +176,50 @@ const voucherSchema = (type: VoucherType) => {
       ),
     panName: yup.string().trim().optional().nullable(),
     panDob: yup.string().trim().optional().nullable(),
-    chequeNumber: yup.string().when(['accountMode'], {
-      is: (accountMode: string) =>
-        depositWithdrawal || accountMode === 'BANK_CHEQUE',
+    chequeNumber: yup.string().when(['accountMode', 'paymentMethod'], {
+      is: (accountMode: string, paymentMethod: string) =>
+        depositWithdrawal ||
+        (accountMode === 'BANK_CHEQUE' &&
+          (!paymentMethod ||
+            paymentMethod === TransactionPaymentMethodEnum.CHEQUE)),
       then: schema => schema.required('Cheque number is required'),
     }),
-    chequeDate: yup.string().when(['accountMode'], {
-      is: (accountMode: string) =>
-        depositWithdrawal || accountMode === 'BANK_CHEQUE',
+    chequeDate: yup.string().when(['accountMode', 'paymentMethod'], {
+      is: (accountMode: string, paymentMethod: string) =>
+        depositWithdrawal ||
+        (accountMode === 'BANK_CHEQUE' &&
+          paymentMethod !== TransactionPaymentMethodEnum.CASH),
       then: schema => schema.required('Cheque date is required'),
     }),
-    chequeBranch: yup.string().when('accountMode', {
-      is: (accountMode: string) =>
-        partyVoucher && accountMode === 'BANK_CHEQUE',
+    chequeBranch: yup.string().when(['accountMode', 'paymentMethod'], {
+      is: (accountMode: string, paymentMethod: string) =>
+        partyVoucher &&
+        accountMode === 'BANK_CHEQUE' &&
+        (!paymentMethod ||
+          paymentMethod === TransactionPaymentMethodEnum.CHEQUE),
       then: schema => schema.required('Branch is required'),
     }),
-    drawnOn: yup.string().when('accountMode', {
-      is: (accountMode: string) =>
-        partyVoucher && accountMode === 'BANK_CHEQUE',
+    drawnOn: yup.string().when(['accountMode', 'paymentMethod'], {
+      is: (accountMode: string, paymentMethod: string) =>
+        partyVoucher &&
+        accountMode === 'BANK_CHEQUE' &&
+        (!paymentMethod ||
+          paymentMethod === TransactionPaymentMethodEnum.CHEQUE),
       then: schema => schema.required('Drawn on is required'),
+    }),
+    paymentMethod: yup.string().when([], {
+      is: () => partyVoucher,
+      then: schema =>
+        schema
+          .required('Payment mode is required')
+          .oneOf(
+            Object.values(TransactionPaymentMethodEnum),
+            'Payment mode is required'
+          ),
+      otherwise: schema =>
+        schema
+          .oneOf(['', ...Object.values(TransactionPaymentMethodEnum)])
+          .default(''),
     }),
     narration: yup.string().trim().required('Narration is required'),
     items: depositWithdrawal
@@ -276,6 +359,8 @@ const voucherSchema = (type: VoucherType) => {
                   totals.credit > 0 &&
                   totals.debit === totals.credit
                 );
+              if (type === 'ADVICE')
+                return Math.abs(totals.debit - totals.credit) > 0;
               return type === 'RECEIPT'
                 ? totals.credit - totals.debit > 0
                 : totals.debit - totals.credit > 0;
@@ -288,36 +373,73 @@ interface Props {
   type: VoucherType;
   defaultValues: VoucherFormValues;
   readOnly?: boolean;
+  voucher?: AccountingVoucher | null;
+  company?: ICompanyProfile | null;
+  /** Honour/accept posts via API and must not re-run create-time form validation. */
+  skipValidation?: boolean;
   minDate?: Date;
   maxDate?: Date;
   policyTransactionDate?: string;
   onBranchChange?: (branchId: string) => void;
   submitDisabled?: boolean;
+  submitLabel?: string;
+  showSubmit?: boolean;
+  honourPreviewNote?: string;
   onSubmit: (values: VoucherFormValues) => Promise<void>;
   onBack: () => void;
 }
 
+const collectFormErrorMessages = (value: unknown, messages: string[] = []) => {
+  if (!value || typeof value !== 'object') {
+    return messages;
+  }
+  if (
+    'message' in value &&
+    typeof (value as { message?: unknown }).message === 'string' &&
+    (value as { message: string }).message.trim()
+  ) {
+    messages.push((value as { message: string }).message.trim());
+  }
+  Object.values(value as Record<string, unknown>).forEach(child => {
+    collectFormErrorMessages(child, messages);
+  });
+  return messages;
+};
+
 const VoucherFields = ({
   type,
   readOnly,
+  voucher,
+  company,
   minDate,
   maxDate,
   policyTransactionDate,
   onBranchChange,
+  honourPreviewNote,
 }: Pick<
   Props,
   | 'type'
   | 'readOnly'
+  | 'voucher'
+  | 'company'
   | 'minDate'
   | 'maxDate'
   | 'policyTransactionDate'
   | 'onBranchChange'
+  | 'honourPreviewNote'
 >) => {
   const form = useFormContext<VoucherFormValues>();
+  const [hasPrintedOnce, setHasPrintedOnce] = useState(false);
+  const [isPrinting, setIsPrinting] = useState(false);
   const [outstandingModalIndex, setOutstandingModalIndex] = useState<
     number | null
   >(null);
+  const { recordVoucherPrint } = useRecordVoucherPrint(type);
   const mode = useWatch({ control: form.control, name: 'accountMode' });
+  const paymentMethod = useWatch({
+    control: form.control,
+    name: 'paymentMethod',
+  });
   const accountTypeOptionId = useWatch({
     control: form.control,
     name: 'accountTypeOptionId',
@@ -342,6 +464,17 @@ const VoucherFields = ({
   const watchedItems = useWatch({ control: form.control, name: 'items' });
   const items = useMemo(() => watchedItems ?? [], [watchedItems]);
   const branchId = useWatch({ control: form.control, name: 'branchId' });
+  const loadBranchOptions = useLoadBranchOptions({ activeOnly: true });
+  const loadDestinationBranchOptions = useCallback(
+    async (inputValue: string, page = 1) => {
+      const result = await loadBranchOptions(inputValue, page);
+      return {
+        ...result,
+        options: result.options.filter(option => option.value !== branchId),
+      };
+    },
+    [branchId, loadBranchOptions]
+  );
   const { data: nextNumber } = useVoucherNextNumber(type, branchId);
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -362,12 +495,41 @@ const VoucherFields = ({
         })),
     [itemTypeCategoryOptions]
   );
+  const paymentMethodOptions = useMemo(
+    () =>
+      getTransactionPaymentMethodOptions().filter(
+        option => option.value !== TransactionPaymentMethodEnum.CASH
+      ),
+    []
+  );
+  const loadPaymentModeOptions = useCallback(
+    async (inputValue: string) => {
+      const normalized = inputValue.trim().toLowerCase();
+      return {
+        options: paymentMethodOptions.filter(option => {
+          if (!normalized) {
+            return true;
+          }
+          return (
+            option.label.toLowerCase().includes(normalized) ||
+            option.value.toLowerCase().includes(normalized)
+          );
+        }),
+        hasMore: false,
+      };
+    },
+    [paymentMethodOptions]
+  );
+  const isBankNonCheque = isNonChequeBankPaymentMethod(paymentMethod);
+  const isCashPaymentMode =
+    paymentMethod === TransactionPaymentMethodEnum.CASH;
   const accountTypeOptions = useCategoryOptions(
     CategoryOptionCodeEnum.VoucherAccountType
   ).defaultOptions;
   const entityTypeOptions = useCategoryOptions(
     CategoryOptionCodeEnum.EntityType
   ).defaultOptions;
+  const previousElectronicRef = useRef(false);
   const lastPartyIdRef = useRef(form.getValues('partyProfileId') || '');
   const adultDobMaxDate = useMemo(() => {
     const date = new Date();
@@ -612,6 +774,11 @@ const VoucherFields = ({
     form.setValue('accountMode', nextMode);
     form.setValue('headerAccountId', '');
     form.setValue('headerAccountName', '');
+    form.setValue(
+      'paymentMethod',
+      paymentMethodForVoucherAccountMode(nextMode),
+      { shouldDirty: true, shouldValidate: true }
+    );
     if (nextMode !== 'BANK_CHEQUE') {
       form.setValue('chequeNumber', '');
       form.setValue('chequeDate', '');
@@ -619,6 +786,43 @@ const VoucherFields = ({
       form.setValue('drawnOn', '');
     }
   }, [accountTypeOptionId, accountTypeOptions, form, mode]);
+  useEffect(() => {
+    if (readOnly || !isPartyVoucherType(type) || !mode) return;
+    if (mode === 'BANK_CHEQUE') {
+      if (
+        !paymentMethod ||
+        paymentMethod === TransactionPaymentMethodEnum.CASH
+      ) {
+        form.setValue(
+          'paymentMethod',
+          TransactionPaymentMethodEnum.CHEQUE,
+          { shouldValidate: true }
+        );
+      }
+      return;
+    }
+    const implied = paymentMethodForVoucherAccountMode(mode);
+    if (implied && paymentMethod !== implied) {
+      form.setValue('paymentMethod', implied, { shouldValidate: true });
+    }
+  }, [form, mode, paymentMethod, readOnly, type]);
+  useEffect(() => {
+    if (readOnly || mode !== 'BANK_CHEQUE') {
+      previousElectronicRef.current = isBankNonCheque;
+      return;
+    }
+    if (!previousElectronicRef.current && isBankNonCheque) {
+      form.setValue('chequeNumber', '', { shouldValidate: true });
+      form.setValue('chequeDate', toLocalDateString(), { shouldValidate: true });
+    }
+    if (isCashPaymentMode) {
+      form.setValue('chequeNumber', '', { shouldValidate: true });
+      form.setValue('chequeDate', '', { shouldValidate: true });
+      form.setValue('chequeBranch', '', { shouldValidate: true });
+      form.setValue('drawnOn', '', { shouldValidate: true });
+    }
+    previousElectronicRef.current = isBankNonCheque;
+  }, [form, isBankNonCheque, isCashPaymentMode, mode, readOnly]);
   useEffect(() => {
     const account = headerAccounts.find(item => item.id === headerAccountId);
     form.setValue('headerAccountName', account?.accountName ?? '', {
@@ -731,6 +935,32 @@ const VoucherFields = ({
     partyProfileId,
     type,
   ]);
+
+  useEffect(() => {
+    if (type !== 'ADVICE') return;
+    const debit = items.reduce(
+      (sum, item) =>
+        sum + (item.direction === 'DEBIT' ? toCents(item.amount) : 0),
+      0
+    );
+    const credit = items.reduce(
+      (sum, item) =>
+        sum + (item.direction === 'CREDIT' ? toCents(item.amount) : 0),
+      0
+    );
+    form.setValue('headerDirection', adviceHeaderDirection(debit, credit), {
+      shouldDirty: false,
+      shouldValidate: false,
+    });
+  }, [form, items, type]);
+
+  useEffect(() => {
+    if (type !== 'ADVICE' || readOnly) return;
+    const destination = form.getValues('destinationBranchId');
+    if (destination && destination === branchId) {
+      form.setValue('destinationBranchId', '', { shouldValidate: true });
+    }
+  }, [branchId, form, readOnly, type]);
 
   const selectedSettledTransactionIds = useMemo(
     () =>
@@ -872,15 +1102,80 @@ const VoucherFields = ({
     },
     { debit: 0, credit: 0 }
   );
+  const computedHeaderDirection = adviceHeaderDirection(
+    totals.debit,
+    totals.credit
+  );
   const final =
     type === 'RECEIPT'
       ? totals.credit - totals.debit
       : type === 'PAYMENT'
         ? totals.debit - totals.credit
-        : totals.credit - totals.debit;
+        : type === 'ADVICE'
+          ? Math.abs(totals.debit - totals.credit)
+          : totals.credit - totals.debit;
+
+  const canPrint = Boolean(
+    readOnly &&
+      voucher?.id &&
+      voucher?.number &&
+      isVoucherPrintableType(type)
+  );
+  const hasPrintedHistory = (voucher?.printCount ?? 0) > 0;
+  const nextCopyType =
+    !hasPrintedOnce && !hasPrintedHistory
+      ? 'CUSTOMER_COPY'
+      : 'DUPLICATE_COPY';
+
+  const handlePrintCopy = async () => {
+    if (!voucher?.id || !voucher.number) {
+      toast.error('Save the voucher before printing.');
+      return;
+    }
+    if (isPrinting) {
+      return;
+    }
+
+    try {
+      setIsPrinting(true);
+      const copyType =
+        !hasPrintedOnce && !hasPrintedHistory
+          ? 'CUSTOMER_COPY'
+          : 'DUPLICATE_COPY';
+      const html = buildVoucherPrintHtml({
+        copyType,
+        voucher,
+        company: company ?? null,
+      });
+      await recordVoucherPrint({
+        id: voucher.id,
+        payload: {
+          copyType,
+          subject: `${voucher.number} - ${getVoucherPrintCopyLabel(copyType)}`,
+          text: `Printed ${getVoucherPrintCopyLabel(copyType).toLowerCase()} for voucher ${voucher.number}.`,
+          html,
+          sendEmail: false,
+        },
+      });
+      openPrintWindow(html, VOUCHER_PRINT_TEXT.popupBlocked);
+      setHasPrintedOnce(true);
+      toast.success(
+        VOUCHER_PRINT_TEXT.printed(getVoucherPrintCopyLabel(copyType))
+      );
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : VOUCHER_PRINT_TEXT.printFailed
+      );
+    } finally {
+      setIsPrinting(false);
+    }
+  };
 
   return (
     <div className="space-y-3 [&_div.max-w-\[350px\]]:!max-w-none">
+      {honourPreviewNote ? (
+        <p className="text-sm text-text-secondary">{honourPreviewNote}</p>
+      ) : null}
       <CardSection heading="Transaction">
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           <div className="md:col-span-2 lg:col-span-2 [&_.grid]:gap-3">
@@ -908,6 +1203,43 @@ const VoucherFields = ({
               label="Cheque Date"
               dateFormat="dd/MM/yyyy"
               disabled={readOnly}
+            />
+          </div>
+        ) : null}
+        {isAdviceType(type) ? (
+          <div className="mt-3 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+            {readOnly ? (
+              <FormFieldSelect
+                name="sourceBranchId"
+                label={ADVICE_TEXT.sourceBranch}
+                loadOptions={loadBranchOptions}
+                defaultOptions={true}
+                pagination
+                disabled
+              />
+            ) : null}
+            <FormFieldSelect
+              name="destinationBranchId"
+              label={ADVICE_TEXT.destinationBranch}
+              loadOptions={loadDestinationBranchOptions}
+              defaultOptions={true}
+              pagination
+              disabled={readOnly}
+            />
+            <FormFieldInput
+              name="headerDirectionDisplay"
+              label={ADVICE_TEXT.headerDirection}
+              disabled
+              valueTransform="none"
+              value={computedHeaderDirection || ''}
+              placeholder="Auto from items"
+            />
+            <FormFieldInput
+              name="adviceFinalAmountDisplay"
+              label="Final Amount"
+              disabled
+              valueTransform="none"
+              value={(final / 100).toFixed(2)}
             />
           </div>
         ) : null}
@@ -952,29 +1284,55 @@ const VoucherFields = ({
               />
             </div>
             {mode === 'BANK_CHEQUE' ? (
-              <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                <FormFieldInput
-                  name="chequeNumber"
-                  label="Cheque Number"
-                  disabled={readOnly}
-                />
-                <FormFieldDatePicker
-                  name="chequeDate"
-                  label="Cheque Date"
-                  dateFormat="dd/MM/yyyy"
-                  disabled={readOnly}
-                />
-                <FormFieldInput
-                  name="chequeBranch"
-                  label="Branch"
-                  disabled={readOnly}
-                />
-                <FormFieldInput
-                  name="drawnOn"
-                  label="Drawn On"
-                  disabled={readOnly}
-                />
-              </div>
+              <>
+                <div className="mt-3 w-full max-w-xs">
+                  <FormFieldSelect
+                    key={`voucher-payment-mode-${paymentMethodOptions.map(option => option.value).join('-') || 'empty'}`}
+                    name="paymentMethod"
+                    label={VOUCHER_FORM_TEXT.paymentMode}
+                    loadOptions={loadPaymentModeOptions}
+                    defaultOptions={paymentMethodOptions}
+                    isClearable={false}
+                    disabled={readOnly}
+                    onValueChange={value => {
+                      form.setValue(
+                        'paymentMethod',
+                        String(value ?? '').trim() ||
+                          TransactionPaymentMethodEnum.CHEQUE,
+                        { shouldDirty: true, shouldValidate: true }
+                      );
+                    }}
+                  />
+                </div>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                  <FormFieldInput
+                    name="chequeNumber"
+                    label="Cheque Number"
+                    disabled={readOnly || isBankNonCheque || isCashPaymentMode}
+                  />
+                  <FormFieldDatePicker
+                    name="chequeDate"
+                    label="Cheque Date"
+                    dateFormat="dd/MM/yyyy"
+                    disabled={readOnly || isBankNonCheque || isCashPaymentMode}
+                  />
+                  <FormFieldInput
+                    name="chequeBranch"
+                    label="Branch"
+                    disabled={readOnly || isCashPaymentMode}
+                  />
+                  <FormFieldInput
+                    name="drawnOn"
+                    label="Drawn On"
+                    disabled={readOnly || isCashPaymentMode}
+                  />
+                </div>
+                {isBankNonCheque ? (
+                  <p className="mt-2 text-xs text-text-tertiary">
+                    {VOUCHER_FORM_TEXT.electronicPaymentHint}
+                  </p>
+                ) : null}
+              </>
             ) : null}
           </CardSection>
 
@@ -1055,6 +1413,85 @@ const VoucherFields = ({
             ) : null}
           </CardSection>
         </div>
+      ) : null}
+
+      {isAdviceType(type) ? (
+        <CardSection heading="Party">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {readOnly ? (
+              <FormFieldInput
+                name="entityTypeName"
+                label="Party Type"
+                disabled
+              />
+            ) : (
+              <FormFieldCategoryOption
+                name="entityTypeOptionId"
+                label="Party Type"
+                code={CategoryOptionCodeEnum.EntityType}
+                isCreatable={false}
+              />
+            )}
+            {readOnly ? (
+              <FormFieldInput name="partyCode" label="Party Code" disabled />
+            ) : (
+              <FormFieldSelect
+                name="partyProfileId"
+                label="Party Code"
+                loadOptions={optionFilter(partyOptions)}
+                defaultOptions={partyOptions}
+                disabled={!entityTypeOptionId}
+              />
+            )}
+            <FormFieldInput name="partyName" label="Party Name" disabled />
+          </div>
+          {isIndividualSelection ? (
+            <>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                <FormFieldInput
+                  name="panNumber"
+                  label={VOUCHER_FORM_TEXT.panNumber}
+                  placeholder={VOUCHER_FORM_TEXT.panNumberPlaceholder}
+                  valueTransform="uppercase"
+                  disabled={panFieldsDisabled || isVerifyingPan}
+                  onKeyDown={handlePanKeyDown}
+                />
+                <FormFieldInput
+                  name="panName"
+                  label={VOUCHER_FORM_TEXT.panName}
+                  placeholder={VOUCHER_FORM_TEXT.panNamePlaceholder}
+                  disabled={panFieldsDisabled || isVerifyingPan}
+                  onKeyDown={handlePanKeyDown}
+                />
+                <FormFieldDatePicker
+                  name="panDob"
+                  label={VOUCHER_FORM_TEXT.panDob}
+                  placeholder={VOUCHER_FORM_TEXT.panDobPlaceholder}
+                  dateFormat="dd/MM/yyyy"
+                  maxDate={adultDobMaxDate}
+                  disabled={panFieldsDisabled || isVerifyingPan}
+                  onKeyDown={handlePanKeyDown}
+                />
+              </div>
+              {!panFieldsDisabled ? (
+                <p
+                  className={`mt-1 text-xs ${
+                    panVerificationStatus === 'checking'
+                      ? 'text-info-700'
+                      : panVerificationStatus === 'valid'
+                        ? 'text-success-700'
+                        : panVerificationStatus === 'invalid'
+                          ? 'text-error-600'
+                          : 'text-text-secondary'
+                  }`}
+                >
+                  {panVerificationMessage ||
+                    VOUCHER_FORM_TEXT.panVerifyIncomplete}
+                </p>
+              ) : null}
+            </>
+          ) : null}
+        </CardSection>
       ) : null}
 
       <CardSection heading="Narration">
@@ -1422,7 +1859,7 @@ const VoucherFields = ({
       </CardSection>
 
       {outstandingModalIndex !== null &&
-      (type === 'RECEIPT' || type === 'PAYMENT') ? (
+      (type === 'RECEIPT' || type === 'PAYMENT' || type === 'ADVICE') ? (
         <SelectOutstandingBills
           open
           type={type}
@@ -1446,6 +1883,25 @@ const VoucherFields = ({
           onClose={() => setOutstandingModalIndex(null)}
         />
       ) : null}
+
+      {canPrint ? (
+        <CardSection heading={VOUCHER_PRINT_TEXT.heading} className="space-y-4">
+          <p className="text-sm text-text-secondary">
+            {hasPrintedOnce || hasPrintedHistory
+              ? VOUCHER_PRINT_TEXT.duplicateHint
+              : VOUCHER_PRINT_TEXT.originalHint}
+          </p>
+          <Button
+            type="button"
+            onClick={() => void handlePrintCopy()}
+            disabled={isPrinting}
+          >
+            {isPrinting
+              ? VOUCHER_PRINT_TEXT.preparing
+              : `${VOUCHER_PRINT_TEXT.printCopy} (${getVoucherPrintCopyLabel(nextCopyType)})`}
+          </Button>
+        </CardSection>
+      ) : null}
     </div>
   );
 };
@@ -1454,6 +1910,9 @@ export const VoucherForm = ({
   type,
   defaultValues,
   readOnly = false,
+  voucher = null,
+  company = null,
+  skipValidation = false,
   onSubmit,
   onBack,
   minDate,
@@ -1461,42 +1920,45 @@ export const VoucherForm = ({
   policyTransactionDate,
   onBranchChange,
   submitDisabled = false,
+  submitLabel,
+  showSubmit,
+  honourPreviewNote,
 }: Props) => (
   <Form<VoucherFormValues>
     id={`${type.toLowerCase()}-voucher-form`}
     defaultValues={defaultValues}
-    resolver={yupResolver(voucherSchema(type)) as never}
+    resolver={
+      skipValidation ? undefined : (yupResolver(voucherSchema(type)) as never)
+    }
     mode="onChange"
     onSubmit={onSubmit}
     onError={errors => {
-      const itemMessage = (errors.items as { message?: string } | undefined)
-        ?.message;
-      const narrationMessage = errors.narration?.message;
+      const messages = collectFormErrorMessages(errors);
       toast.error(
-        String(
-          itemMessage ??
-            narrationMessage ??
-            (type === 'JOURNAL'
-              ? 'Journal Voucher difference must be 0.00 before saving.'
-              : 'Please correct the highlighted voucher fields.')
-        )
+        messages[0] ??
+          (type === 'JOURNAL'
+            ? 'Journal Voucher difference must be 0.00 before saving.'
+            : 'Please correct the highlighted voucher fields.')
       );
     }}
     footer={{
-      submitLabel: `Save ${VOUCHER_LABELS[type]}`,
+      submitLabel: submitLabel ?? `Save ${VOUCHER_LABELS[type]}`,
       backLabel: 'Back',
       onBackClick: onBack,
-      showSubmit: !readOnly,
+      showSubmit: showSubmit ?? !readOnly,
       isSubmitDisabled: submitDisabled,
     }}
   >
     <VoucherFields
       type={type}
       readOnly={readOnly}
+      voucher={voucher}
+      company={company}
       minDate={minDate}
       maxDate={maxDate}
       policyTransactionDate={policyTransactionDate}
       onBranchChange={onBranchChange}
+      honourPreviewNote={honourPreviewNote}
     />
   </Form>
 );

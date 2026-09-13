@@ -11,15 +11,26 @@ import { normalizeCodeValue } from '@/utils';
 import { pageToOffset, toAsyncSelectPage } from '@/utils/paginatedList';
 import type { ICurrencyProfileListQuery } from '../types';
 
+/**
+ * Operational currency lists (sale/purchase/account/reports/selects):
+ * - activeOnly defaults to true
+ * - only-stocking is excluded unless the caller sets includeOnlyStocking
+ *   (multi-currency CARD / CM) or includeAllStockingTypes (master list / card merge)
+ *
+ * Currency Profile master list must pass activeOnly: false + includeAllStockingTypes.
+ */
 export const useListCurrencyProfiles = (
   options?: ICurrencyProfileListQuery | string,
   activeOnlyParam = true,
   enabled = true
 ) => {
-  const queryParams: ICurrencyProfileListQuery | undefined =
+  const queryParams: ICurrencyProfileListQuery =
     typeof options === 'string'
       ? { search: options || undefined, activeOnly: activeOnlyParam }
-      : { ...options, activeOnly: options?.activeOnly ?? activeOnlyParam };
+      : {
+          ...options,
+          activeOnly: options?.activeOnly ?? activeOnlyParam,
+        };
 
   return useQuery({
     queryKey: ['currency-profiles', queryParams],
@@ -42,8 +53,8 @@ export const useValidateCurrencyCode = (currentId?: string) => {
         queryKey: [
           'currency-profiles',
           {
-            activeOnly: true,
-            includeOnlyStocking: true,
+            activeOnly: false,
+            includeAllStockingTypes: true,
             limit: PAGINATION_DEFAULTS.LIMIT,
             offset: PAGINATION_DEFAULTS.OFFSET,
             search: normalizedCode,
@@ -51,8 +62,8 @@ export const useValidateCurrencyCode = (currentId?: string) => {
         ],
         queryFn: () =>
           currencyProfileApi.getCurrencyProfiles({
-            activeOnly: true,
-            includeOnlyStocking: true,
+            activeOnly: false,
+            includeAllStockingTypes: true,
             limit: PAGINATION_DEFAULTS.LIMIT,
             offset: PAGINATION_DEFAULTS.OFFSET,
             search: normalizedCode,
@@ -68,6 +79,7 @@ export const useValidateCurrencyCode = (currentId?: string) => {
   );
 };
 
+/** Async select loader for operational forms: active tradable currencies only. */
 export const useLoadCurrencyOptions = () => {
   const queryClient = useQueryClient();
   return useCallback(

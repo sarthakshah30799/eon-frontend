@@ -5,6 +5,7 @@ export const VOUCHER_LABELS: Record<VoucherType, string> = {
   PAYMENT: 'Payment',
   JOURNAL: 'Journal Voucher',
   DEPOSIT_WITHDRAWAL: 'Deposit / Withdrawal',
+  ADVICE: 'Advice of Debit/Credit',
 };
 
 export const VOUCHER_LIST_TEXT = {
@@ -33,6 +34,9 @@ export const VOUCHER_FORM_TEXT = {
   panVerifySuccess: 'PAN details verified successfully',
   panVerifyFailed:
     'PAN verification failed. Please review the entered details.',
+  paymentMode: 'Payment Mode',
+  electronicPaymentHint:
+    'Cheque number is not required for bank payment modes.',
 } as const;
 
 export const DEPOSIT_WITHDRAWAL_TEXT = {
@@ -50,6 +54,7 @@ export const DEPOSIT_WITHDRAWAL_TEXT = {
 export const OUTSTANDING_BILL_TEXT = {
   titleReceipt: 'Select Outstanding Bills (Receipt)',
   titlePayment: 'Select Outstanding Bills (Payment)',
+  titleAdvice: 'Select Outstanding Bills (Advice)',
   description: (count: number, itemTypeLabel: string) =>
     itemTypeLabel
       ? `${count} outstanding bill${count === 1 ? '' : 's'} for ${itemTypeLabel}. Select one or more to settle.`
@@ -71,6 +76,16 @@ export const OUTSTANDING_BILL_TEXT = {
   selectAll: 'Select all outstanding bills',
   selectOutstanding: 'Select outstanding',
   settledBill: 'Settled Bill',
+} as const;
+
+export const ADVICE_TEXT = {
+  honourSave: 'Save',
+  destinationBranch: 'Destination Branch',
+  sourceBranch: 'Source Branch',
+  headerDirection: 'Header Direction',
+  honourPreviewNote:
+    'Directions below are shown as they will post at the destination branch.',
+  pendingHonour: 'Pending honour at destination branch',
 } as const;
 
 export const AVAILABLE_ADVANCE_TEXT = {
@@ -106,7 +121,50 @@ export const VOUCHER_PATHS: Record<VoucherType, string> = {
   PAYMENT: '/payments',
   JOURNAL: '/journal-vouchers',
   DEPOSIT_WITHDRAWAL: '/deposit-withdrawals',
+  ADVICE: '/advice-debit-credit',
 };
+
+export const VOUCHER_PRINT_TEXT = {
+  heading: 'Print Copy',
+  originalHint: 'Print the original copy for this saved voucher.',
+  duplicateHint: 'Print the duplicate copy for this saved voucher.',
+  printCopy: 'Print Copy',
+  preparing: 'Preparing Print...',
+  popupBlocked:
+    'Unable to open print window. Please allow pop-ups and try again.',
+  printed: (label: string) => `${label} sent to printer`,
+  printFailed: 'Failed to print voucher copy',
+  originalCopy: 'Original Copy',
+  duplicateCopy: 'Duplicate Copy',
+  receivedFrom: 'Received From',
+  paidTo: 'Paid To',
+  sumOfAmount: 'The Sum Of Amount',
+  paymentDetails: 'Payment Details',
+  chequeNumber: 'Cheque No',
+  chequeDate: 'Cheque Date',
+  drawnOn: 'Drawn On',
+  panNumber: 'PAN No',
+  accountCode: 'Acc Code',
+  docDate: 'Doc Date',
+  billNo: 'Bill No',
+  subLedger: 'S/L Code',
+  particulars: 'Particulars',
+  debit: 'Debit',
+  credit: 'Credit',
+  narration: 'Narration',
+  total: 'Total',
+  noItems: 'No items',
+  branchGst: 'Branch GST',
+  rbiLicNo: 'RBI Lic. No',
+  companyPan: 'PAN No',
+  address: 'Address',
+  contact: 'Contact',
+  email: 'Email',
+  voucherNo: 'Voucher No',
+  date: 'Date',
+  companyBranch: 'Company & Branch',
+  authorizedSignatory: 'Authorized Signatory',
+} as const;
 
 export const createVoucherIdempotencyKey = () =>
   globalThis.crypto?.randomUUID?.() ??

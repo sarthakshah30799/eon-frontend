@@ -27,6 +27,7 @@ export const FormFieldInput = ({
   className = '',
   valueTransform = 'uppercase',
   asyncValidation,
+  value: valueProp,
   ...rest
 }: FormFieldInputProps) => {
   const form = useFormContext();
@@ -132,6 +133,7 @@ export const FormFieldInput = ({
       onChange={handleChange}
       error={error?.message}
       valueTransform={valueTransform}
+      value={valueProp !== undefined ? valueProp : field.value}
     />
   );
 };

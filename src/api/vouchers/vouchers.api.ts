@@ -32,6 +32,7 @@ const pathFor = (type: VoucherType) => {
   if (type === 'RECEIPT') return 'receipts';
   if (type === 'PAYMENT') return 'payments';
   if (type === 'DEPOSIT_WITHDRAWAL') return 'deposit-withdrawals';
+  if (type === 'ADVICE') return 'advice-debit-credit';
   return 'journal-vouchers';
 };
 
@@ -126,20 +127,29 @@ export const vouchersApi = {
               chequeNumber: values.chequeNumber,
               chequeDate: values.chequeDate,
             }
-          : {
-              accountTypeOptionId: values.accountTypeOptionId,
-              headerAccountId: values.headerAccountId,
-              entityTypeOptionId: values.entityTypeOptionId,
-              partyProfileId: values.partyProfileId,
-              panNumber: values.panNumber || undefined,
-              panName: values.panName || undefined,
-              panDob: values.panDob || undefined,
-              chequeNumber: values.chequeNumber || undefined,
-              chequeDate: values.chequeDate || undefined,
-              chequeBranch: values.chequeBranch || undefined,
-              drawnOn: values.drawnOn || undefined,
-              paymentMethod: values.paymentMethod,
-            }),
+          : type === 'ADVICE'
+            ? {
+                destinationBranchId: values.destinationBranchId,
+                entityTypeOptionId: values.entityTypeOptionId,
+                partyProfileId: values.partyProfileId,
+                panNumber: values.panNumber || undefined,
+                panName: values.panName || undefined,
+                panDob: values.panDob || undefined,
+              }
+            : {
+                accountTypeOptionId: values.accountTypeOptionId,
+                headerAccountId: values.headerAccountId,
+                entityTypeOptionId: values.entityTypeOptionId,
+                partyProfileId: values.partyProfileId,
+                panNumber: values.panNumber || undefined,
+                panName: values.panName || undefined,
+                panDob: values.panDob || undefined,
+                chequeNumber: values.chequeNumber || undefined,
+                chequeDate: values.chequeDate || undefined,
+                chequeBranch: values.chequeBranch || undefined,
+                drawnOn: values.drawnOn || undefined,
+                paymentMethod: values.paymentMethod,
+              }),
     };
     const response = await apiClient.post<AccountingVoucher>(
       `/${pathFor(type)}`,
@@ -147,6 +157,21 @@ export const vouchersApi = {
     );
     if (response.error) throw new Error(response.error);
     if (!response.data) throw new Error('Failed to create voucher');
+    return response.data;
+  },
+  honour: async (
+    id: string,
+    params: { branchId?: string; counterId?: string } = {}
+  ) => {
+    const response = await apiClient.post<AccountingVoucher>(
+      `/advice-debit-credit/${id}/honour`,
+      {
+        branchId: params.branchId || undefined,
+        counterId: params.counterId || undefined,
+      }
+    );
+    if (response.error) throw new Error(response.error);
+    if (!response.data) throw new Error('Failed to honour advice voucher');
     return response.data;
   },
   available: async (
@@ -168,7 +193,7 @@ export const vouchersApi = {
     return response.data ?? [];
   },
   outstandingBills: async (
-    type: 'RECEIPT' | 'PAYMENT',
+    type: 'RECEIPT' | 'PAYMENT' | 'ADVICE',
     params: {
       partyProfileId: string;
       slug: string;

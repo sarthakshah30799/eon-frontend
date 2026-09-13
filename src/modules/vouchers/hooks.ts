@@ -65,7 +65,7 @@ export type OutstandingBillQueryParams = {
 };
 
 export const useOutstandingBills = (
-  type: 'RECEIPT' | 'PAYMENT',
+  type: 'RECEIPT' | 'PAYMENT' | 'ADVICE',
   params: OutstandingBillQueryParams,
   enabled = true
 ) =>
@@ -131,4 +131,32 @@ export const useRecordVoucherPrint = (type: VoucherType) => {
     ...mutation,
     recordVoucherPrint: mutation.mutateAsync,
   };
+};
+
+export const useHonourAdvice = () => {
+  const client = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: ({
+      id,
+      branchId,
+      counterId,
+    }: {
+      id: string;
+      branchId?: string;
+      counterId?: string;
+    }) => vouchersApi.honour(id, { branchId, counterId }),
+    onSuccess: voucher => {
+      void client.invalidateQueries({ queryKey: ['vouchers', 'ADVICE'] });
+      void client.invalidateQueries({ queryKey: ['voucher', 'ADVICE'] });
+      void client.invalidateQueries({
+        queryKey: ['dashboard', 'pending-approvals'],
+      });
+      toast.success(`${voucher.number} honoured successfully`);
+    },
+    onError: error =>
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to honour advice'
+      ),
+  });
+  return { ...mutation, honourAdvice: mutation.mutateAsync };
 };

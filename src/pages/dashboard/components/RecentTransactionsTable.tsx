@@ -1,7 +1,4 @@
 import { useMemo } from 'react';
-import { EyeIcon } from '@heroicons/react/24/outline';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button1';
 import { Table, type TableColumnDef } from '@/components/ui/table/Table';
 import type { RecentTransaction } from '@/api/dashboard/dashboard.api';
 import { formatCurrency } from '@/utils';
@@ -24,8 +21,6 @@ const RecentTransactionsTable = ({
   loading = false,
   onRowClick,
 }: RecentTransactionsTableProps) => {
-  const navigate = useNavigate();
-
   const columns: TableColumnDef<RecentTransaction>[] = useMemo(
     () => [
       {
@@ -109,20 +104,10 @@ const RecentTransactionsTable = ({
 
   return (
     <section className="rounded-lg border border-border-primary bg-surface-primary shadow-sm">
-      <div className="flex items-center justify-between border-b border-border-primary px-4 pb-3 pt-4">
+      <div className="border-b border-border-primary px-4 pb-3 pt-4">
         <h2 className="text-sm font-semibold text-text-primary">
           Recent Transactions
         </h2>
-        {transactions.length > 0 && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate('/purchase')}
-          >
-            <EyeIcon className="w-3 h-3" />
-            View All
-          </Button>
-        )}
       </div>
       <Table<RecentTransaction>
         columns={columns}

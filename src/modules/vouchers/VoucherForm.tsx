@@ -42,6 +42,7 @@ import {
   VOUCHER_FORM_TEXT,
   VOUCHER_LABELS,
   VOUCHER_PRINT_TEXT,
+  VoucherLogActionEnum,
 } from './constants';
 import { SelectOutstandingBills } from './components/SelectOutstandingBills';
 import {
@@ -1121,7 +1122,9 @@ const VoucherFields = ({
       voucher?.number &&
       isVoucherPrintableType(type)
   );
-  const hasPrintedHistory = (voucher?.printCount ?? 0) > 0;
+  const hasPrintedHistory = Boolean(
+    voucher?.logs?.some(log => log.action === VoucherLogActionEnum.PRINT)
+  );
   const nextCopyType =
     !hasPrintedOnce && !hasPrintedHistory
       ? 'CUSTOMER_COPY'

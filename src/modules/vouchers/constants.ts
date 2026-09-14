@@ -166,6 +166,10 @@ export const VOUCHER_PRINT_TEXT = {
   authorizedSignatory: 'Authorized Signatory',
 } as const;
 
+export const VoucherLogActionEnum = {
+  PRINT: 'PRINT',
+} as const;
+
 export const createVoucherIdempotencyKey = () =>
   globalThis.crypto?.randomUUID?.() ??
   `${Date.now()}-${Math.random().toString(36).slice(2)}`;

@@ -174,11 +174,6 @@ const asPrintBranch = (
   return toPrintBranch(snapshot as unknown as IBranchProfile);
 };
 
-export const getVoucherPrintCopyType = (
-  printCount?: number | null
-): VoucherPrintCopyType =>
-  (printCount ?? 0) === 0 ? 'CUSTOMER_COPY' : 'DUPLICATE_COPY';
-
 export const getVoucherPrintCopyLabel = (copyType: VoucherPrintCopyType) =>
   copyType === 'DUPLICATE_COPY'
     ? VOUCHER_PRINT_TEXT.duplicateCopy

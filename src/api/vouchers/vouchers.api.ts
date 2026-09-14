@@ -25,7 +25,6 @@ export type IRecordVoucherPrintPayload = {
 export type IRecordVoucherPrintResponse = {
   message: string;
   copyType: VoucherPrintCopyType;
-  printCount: number;
 };
 
 const pathFor = (type: VoucherType) => {

@@ -23,6 +23,17 @@ export interface VoucherSnapshot {
   label?: string;
 }
 
+export interface VoucherLog {
+  id: string;
+  voucherId: string;
+  action: 'PRINT' | string;
+  message: string;
+  metadata?: Record<string, unknown> | null;
+  performedById?: string | null;
+  performedAt?: string;
+  createdAt?: string;
+}
+
 export interface VoucherItem {
   id?: string;
   lineNumber?: number;
@@ -121,12 +132,12 @@ export interface AccountingVoucher extends Omit<
   totalDebit: string;
   totalCredit: string;
   finalAmount: string;
-  printCount?: number;
   headerDirection: VoucherDirection | null;
   adviceRole: VoucherAdviceRole | null;
   adviceStatus: VoucherAdviceStatus | null;
   advanceControlAccountId?: string | null;
   advanceControlAccountSnapshot?: VoucherSnapshot | null;
+  logs?: VoucherLog[];
   createdAt: string;
 }
 

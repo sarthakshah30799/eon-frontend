@@ -21,7 +21,7 @@ export const MiscellaneousProfileListView = () => {
   );
 
   const {
-    rows: options,
+    rows: groups,
     isLoading,
     isFetching,
     error,
@@ -32,8 +32,8 @@ export const MiscellaneousProfileListView = () => {
     handlePageChange,
     handlePageSizeChange,
   } = useOffsetPaginatedList({
-    queryKey: ['category-options'],
-    queryFn: params => categoryOptionsApi.getCategoryOptions(params),
+    queryKey: ['category-options', 'grouped'],
+    queryFn: params => categoryOptionsApi.getCategoryOptionGroups(params),
     filters,
   });
 
@@ -56,7 +56,7 @@ export const MiscellaneousProfileListView = () => {
   if (error) {
     return (
       <div className="py-6 text-center text-error-600">
-        Failed to load miscellaneous profiles.
+        {CATEGORY_OPTIONS_TEXTS.LIST_LOAD_ERROR}
       </div>
     );
   }
@@ -75,11 +75,11 @@ export const MiscellaneousProfileListView = () => {
 
       <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
         <MiscellaneousProfileTable
-          options={options}
+          groups={groups}
           loading={isLoading || isFetching}
           onSearch={handleSearch}
           searchValue={search}
-          searchPlaceholder="Search code"
+          searchPlaceholder={CATEGORY_OPTIONS_TEXTS.LIST_SEARCH_PLACEHOLDER}
         />
         {totalPages > 0 ? (
           <div className="mt-3 border-t border-border-primary pt-3">
@@ -88,6 +88,7 @@ export const MiscellaneousProfileListView = () => {
               pageSize={limit}
               total={total}
               totalPages={totalPages}
+              itemLabel={CATEGORY_OPTIONS_TEXTS.LIST_ITEM_LABEL}
               onPageChange={handlePageChange}
               onPageSizeChange={handlePageSizeChange}
             />

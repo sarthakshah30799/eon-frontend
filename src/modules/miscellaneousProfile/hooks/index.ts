@@ -6,3 +6,4 @@ export * from './useGetMiscellaneousProfilesByCode';
 export * from './useUpdateMiscellaneousProfile';
 export * from './useSaveMiscellaneousProfiles';
 export * from './useStaticMiscellaneousProfileOptions';
+export * from './useExistingMiscellaneousProfileCodes';

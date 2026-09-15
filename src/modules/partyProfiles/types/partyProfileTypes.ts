@@ -48,6 +48,13 @@ export const PartyProfileStatusEnum = {
 export type PartyProfileStatus =
   (typeof PartyProfileStatusEnum)[keyof typeof PartyProfileStatusEnum];
 
+export interface IPartyProfileReference {
+  id: string;
+  code: string;
+  name: string;
+  type: PartyProfileType;
+}
+
 export interface IPartyProfile {
   id: string;
   createdBy: IUserReference;
@@ -70,7 +77,7 @@ export interface IPartyProfile {
   kycRiskCategory?: ICategoryOption | null;
   chqTrxnLimit?: number;
   defaultHandlingCharges?: number;
-  defaultAgent?: ICategoryOption | null;
+  defaultAgent?: IPartyProfileReference | null;
   phoneNo?: string;
   blockDateFrom?: string;
   establishmentDate?: string;
@@ -83,7 +90,7 @@ export interface IPartyProfile {
   panName?: string;
   panDob?: string;
   panNo?: string;
-  marketingExecutive?: ICategoryOption | null;
+  marketingExecutive?: IPartyProfileReference | null;
   businessNature?: ICategoryOption | null;
   isTdsDeducted: boolean;
   tdsGroup?: ICategoryOption | null;

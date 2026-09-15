@@ -49,7 +49,92 @@ const MIGRATION_TABLE_GROUPS: MigrationTableGroup[] = [
         note: 'Old company master.',
       },
       { id: 'mstcompany', name: 'mstcompany', note: 'Old branch master.' },
-      { id: 'mstcounter', name: 'mstcounter', note: 'Old counter master.' },
+      {
+        id: 'mstcounter',
+        name: 'mstcounter',
+        note: 'Old counter master. Counters are independent; branch links come from mstBranchCounterLink.',
+      },
+    ],
+  },
+  {
+    title: 'Geography',
+    description:
+      'Country and Indian state masters. CTRCOUNTRY is read if it exists and is combined with ctrcountry2. City tables are lookup-only: ids on later records are resolved to names, not migrated as a cities master.',
+    tables: [
+      {
+        id: 'ctrcountry2',
+        name: 'ctrcountry2',
+        note: 'CTR country names/codes. Also reads CTRCOUNTRY when that table exists and unions both into countries.',
+      },
+      {
+        id: 'tb_MstCountry',
+        name: 'tb_MstCountry',
+        note: 'ISO/LRS, risk, restricted, grey-list, and base-country overlay for countries.',
+      },
+      {
+        id: 'LRSCountry',
+        name: 'LRSCountry',
+        note: 'LRS ISO codes merged into the same countries rows by name.',
+      },
+      {
+        id: 'CTRSTATE',
+        name: 'CTRSTATE',
+        note: 'Combined with CTR_CUSTOMERSTATE and GSTSTATE into states. All rows attach to India.',
+      },
+      {
+        id: 'mstLocationType',
+        name: 'mstLocationType',
+        note: 'Branch location type lookup. Stored as category_options LOCATIONTYPE, not a separate table.',
+      },
+    ],
+  },
+  {
+    title: 'Currency',
+    description:
+      'Operational currency master from old master DB. MASTCURR and MCURRENCYLIST are catalogs only; rows are not inserted without an mCurrency record. Country resolves from nCountryID maps, then ISO hint (INR→IN).',
+    tables: [
+      {
+        id: 'mCurrency',
+        name: 'mCurrency',
+        note: 'Canonical source for currencies. vCalculationMethod M → MULTIPLICATION; bTradedCurrency → onlyStocking.',
+      },
+      {
+        id: 'MASTCURR',
+        name: 'MASTCURR',
+        note: 'Name/code catalog (CNNAMENEW/CNCODENEW). Logged when a code has no mCurrency row.',
+      },
+      {
+        id: 'MCURRENCYLIST',
+        name: 'MCURRENCYLIST',
+        note: 'Allowed-code list. Logged when a code has no mCurrency row; not inserted on its own.',
+      },
+    ],
+  },
+  {
+    title: 'Financial & Products',
+    description:
+      'Financial codes → accounts → products → currency-product allow-list. Run after countries/currencies. AccountsBankDtls is empty and skipped. Party issuers (mstCodes TC) are a later wave.',
+    tables: [
+      {
+        id: 'FinancialProfile',
+        name: 'FinancialProfile',
+        note: '→ financial_codes. Also reads FinancialSubProfile. vFinType B/P/T; blank sign → NONE.',
+      },
+      {
+        id: 'AccountsProfile',
+        name: 'AccountsProfile',
+        note: '→ account_profiles. Needs financial codes + INR currency for nCurrencyID 0.',
+      },
+      {
+        id: 'mProductM',
+        name: 'mProductM',
+        note: '→ products. Account FKs resolved by v*AccountCode when accounts exist.',
+      },
+      {
+        id: 'mCurrencyProductLink',
+        name: 'mCurrencyProductLink',
+        note: '→ product_currency_rates with null margins. Needs currencies + products.',
+      },
     ],
   },
   {
@@ -77,7 +162,7 @@ const MIGRATION_TABLE_GROUPS: MigrationTableGroup[] = [
       {
         id: 'mstBranchCounterLink',
         name: 'mstBranchCounterLink',
-        note: 'Branch to counter relation source.',
+        note: 'Branch to counter relation. Writes branch_counters (many-to-many).',
       },
       {
         id: 'mstBranchUserLink',

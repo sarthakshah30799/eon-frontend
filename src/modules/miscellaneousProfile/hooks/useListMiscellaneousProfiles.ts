@@ -6,8 +6,8 @@ export const useListMiscellaneousProfiles = (
   params?: ICategoryOptionListQuery
 ) => {
   return useQuery({
-    queryKey: ['category-options', params],
-    queryFn: () => categoryOptionsApi.getCategoryOptions(params),
+    queryKey: ['category-options', 'grouped', params],
+    queryFn: () => categoryOptionsApi.getCategoryOptionGroups(params),
     placeholderData: keepPreviousData,
   });
 };

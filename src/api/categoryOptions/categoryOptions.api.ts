@@ -1,11 +1,12 @@
 import { apiClient } from '../api';
 import type {
   ICategoryOption,
+  ICategoryOptionGroup,
   ICreateCategoryOption,
   CategoryOptionCode,
 } from '@/types/categoryOptionTypes';
 import type { IOffsetPaginationParams, IPaginatedResponse } from '@/types/pagination';
-import { fetchAllMatching, normalizePaginatedResponse } from '@/utils/paginatedList';
+import { normalizePaginatedResponse } from '@/utils/paginatedList';
 import { buildQueryString } from '@/utils';
 
 const normalizeCode = (code: CategoryOptionCode): CategoryOptionCode =>
@@ -15,7 +16,8 @@ export interface ICategoryOptionListQuery extends IOffsetPaginationParams {
   search?: string;
 }
 
-export type ICategoryOptionListResponse = IPaginatedResponse<ICategoryOption>;
+export type ICategoryOptionGroupListResponse =
+  IPaginatedResponse<ICategoryOptionGroup>;
 
 export interface IStaticCategoryOption {
   value: string;
@@ -23,31 +25,23 @@ export interface IStaticCategoryOption {
 }
 
 export const categoryOptionsApi = {
-  getCategoryOptions: async (
-    params?: ICategoryOptionListQuery | string
-  ): Promise<ICategoryOptionListResponse> => {
-    const queryObj: ICategoryOptionListQuery | undefined =
-      typeof params === 'string'
-        ? { search: params.trim() || undefined }
-        : params;
-    const res = await apiClient.get<ICategoryOptionListResponse>(
-      `/select-options/all${buildQueryString(queryObj)}`
+  getCategoryOptionGroups: async (
+    params?: ICategoryOptionListQuery
+  ): Promise<ICategoryOptionGroupListResponse> => {
+    const res = await apiClient.get<ICategoryOptionGroupListResponse>(
+      `/select-options/all${buildQueryString(params)}`
     );
 
     if (res.error) throw new Error(res.error);
-    return normalizePaginatedResponse(
-      res.data,
-      queryObj?.limit,
-      queryObj?.offset
-    );
+    return normalizePaginatedResponse(res.data, params?.limit, params?.offset);
   },
 
-  getAllCategoryOptions: async (
-    params?: Omit<ICategoryOptionListQuery, 'limit' | 'offset'>
-  ): Promise<ICategoryOption[]> =>
-    fetchAllMatching(pagination =>
-      categoryOptionsApi.getCategoryOptions({ ...params, ...pagination })
-    ),
+  getCategoryOptionCodes: async (): Promise<string[]> => {
+    const res = await apiClient.get<string[]>('/select-options/codes');
+
+    if (res.error) throw new Error(res.error);
+    return res.data ?? [];
+  },
 
   getCategoryOptionsByCode: async (
     code: CategoryOptionCode,

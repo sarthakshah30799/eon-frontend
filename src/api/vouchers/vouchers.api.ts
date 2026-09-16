@@ -7,10 +7,25 @@ import type {
   VoucherListQuery,
   VoucherType,
 } from '@/modules/vouchers/types';
+import type { VoucherPrintCopyType } from '@/modules/vouchers/voucherPrintUtils';
 import { isVoucherBillItemTypeValue } from '@/modules/vouchers/utils';
 import type { IPaginatedResponse } from '@/types/pagination';
 import { buildQueryString } from '@/utils';
 import { normalizePaginatedResponse } from '@/utils/paginatedList';
+
+export type IRecordVoucherPrintPayload = {
+  copyType?: VoucherPrintCopyType;
+  recipientEmail?: string;
+  subject?: string;
+  text?: string;
+  html?: string;
+  sendEmail?: boolean;
+};
+
+export type IRecordVoucherPrintResponse = {
+  message: string;
+  copyType: VoucherPrintCopyType;
+};
 
 const pathFor = (type: VoucherType) => {
   if (type === 'RECEIPT') return 'receipts';
@@ -132,6 +147,7 @@ export const vouchersApi = {
                 chequeDate: values.chequeDate || undefined,
                 chequeBranch: values.chequeBranch || undefined,
                 drawnOn: values.drawnOn || undefined,
+                paymentMethod: values.paymentMethod,
               }),
     };
     const response = await apiClient.post<AccountingVoucher>(
@@ -197,5 +213,18 @@ export const vouchersApi = {
       params.limit,
       params.offset
     );
+  },
+  recordPrint: async (
+    type: VoucherType,
+    id: string,
+    payload: IRecordVoucherPrintPayload
+  ): Promise<IRecordVoucherPrintResponse> => {
+    const response = await apiClient.post<IRecordVoucherPrintResponse>(
+      `/${pathFor(type)}/${id}/print`,
+      payload
+    );
+    if (response.error) throw new Error(response.error);
+    if (!response.data) throw new Error('Failed to record voucher print');
+    return response.data;
   },
 };

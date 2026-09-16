@@ -111,6 +111,28 @@ export const useCreateVoucher = (type: VoucherType) => {
   return { ...mutation, createVoucher: mutation.mutateAsync };
 };
 
+export const useRecordVoucherPrint = (type: VoucherType) => {
+  const client = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: string;
+      payload: Parameters<typeof vouchersApi.recordPrint>[2];
+    }) => vouchersApi.recordPrint(type, id, payload),
+    onSuccess: (_data, variables) => {
+      void client.invalidateQueries({ queryKey: ['voucher', type, variables.id] });
+      void client.invalidateQueries({ queryKey: ['vouchers', type] });
+    },
+  });
+
+  return {
+    ...mutation,
+    recordVoucherPrint: mutation.mutateAsync,
+  };
+};
+
 export const useHonourAdvice = () => {
   const client = useQueryClient();
   const mutation = useMutation({

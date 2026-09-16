@@ -10,6 +10,10 @@ export interface CategoryOptionCodeOption {
 export const CATEGORY_OPTIONS_TEXTS = {
   LIST_TITLE: 'Miscellaneous Profile',
   LIST_SUBTITLE: 'Manage reusable dropdown values for miscellaneous profiles.',
+  LIST_SEARCH_PLACEHOLDER: 'Search code',
+  LIST_ITEM_LABEL: 'categories',
+  LIST_LOAD_ERROR: 'Failed to load miscellaneous profiles.',
+  LIST_EMPTY: 'No miscellaneous profiles found. Create your first profile.',
   CREATE_TITLE: 'Create Miscellaneous Profile',
   CREATE_SUBTITLE: 'Add one or more options for the selected profile.',
   EDIT_TITLE: 'Edit Miscellaneous Profile',

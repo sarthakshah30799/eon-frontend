@@ -49,6 +49,11 @@ export interface ICategoryOption {
   updatedAt: string;
 }
 
+export interface ICategoryOptionGroup {
+  code: string;
+  options: ICategoryOption[];
+}
+
 export interface ICreateCategoryOption {
   code: CategoryOptionCode;
   value: string;

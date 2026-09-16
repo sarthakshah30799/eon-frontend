@@ -1,14 +1,17 @@
 import { useNavigate } from 'react-router-dom';
 import { useMemo } from 'react';
-import { CATEGORY_OPTIONS_TEXTS } from '../constants';
-import { CATEGORY_OPTION_CODE_OPTIONS } from '../constants';
+import {
+  CATEGORY_OPTION_CODE_OPTIONS,
+  CATEGORY_OPTIONS_TEXTS,
+} from '../constants';
 import {
   buildCategoryOptionPayloads,
   createEmptyCategoryOptionsFormValues,
 } from '../utils';
-import { useBulkCreateMiscellaneousProfiles } from '../hooks';
-import { categoryOptionsApi } from '@/api/categoryOptions';
-import { useQuery } from '@tanstack/react-query';
+import {
+  useBulkCreateMiscellaneousProfiles,
+  useExistingMiscellaneousProfileCodes,
+} from '../hooks';
 import { MiscellaneousProfileForm } from '../forms';
 import type { ICategoryOptionsFormValues } from '../utils';
 
@@ -16,20 +19,17 @@ export const MiscellaneousProfileCreateView = () => {
   const navigate = useNavigate();
   const { submitCategoryOptions, isPending } =
     useBulkCreateMiscellaneousProfiles();
-  const { data: existingOptions = [] } = useQuery({
-    queryKey: ['category-options', 'all'],
-    queryFn: () => categoryOptionsApi.getAllCategoryOptions(),
-  });
+  const { data: existingCodes = [] } = useExistingMiscellaneousProfileCodes();
 
   const availableCodeOptions = useMemo(() => {
-    const existingCodes = new Set(
-      existingOptions.map(option => option.code.trim().toUpperCase())
+    const existingCodeSet = new Set(
+      existingCodes.map(code => code.trim().toUpperCase())
     );
 
     return CATEGORY_OPTION_CODE_OPTIONS.filter(
-      option => !existingCodes.has(option.value)
+      option => !existingCodeSet.has(option.value)
     );
-  }, [existingOptions]);
+  }, [existingCodes]);
 
   const handleSubmit = async (values: ICategoryOptionsFormValues) => {
     await submitCategoryOptions(buildCategoryOptionPayloads(values));

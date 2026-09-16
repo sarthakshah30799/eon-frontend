@@ -4,11 +4,17 @@ import { PencilSquareIcon } from '@heroicons/react/24/outline';
 import { Button, Table, type TableColumnDef } from '@/components/ui';
 import { Accordion } from '@/components/ui/accordion';
 import { Input } from '@/components/ui/input';
-import { CATEGORY_OPTION_CODE_LABELS } from '../constants';
-import type { ICategoryOption } from '@/types/categoryOptionTypes';
+import {
+  CATEGORY_OPTION_CODE_LABELS,
+  CATEGORY_OPTIONS_TEXTS,
+} from '../constants';
+import type {
+  ICategoryOption,
+  ICategoryOptionGroup,
+} from '@/types/categoryOptionTypes';
 
 interface MiscellaneousProfileTableProps {
-  options: ICategoryOption[];
+  groups: ICategoryOptionGroup[];
   onSearch?: (value: string) => void;
   searchValue?: string;
   searchPlaceholder?: string;
@@ -32,27 +38,13 @@ const getCategoryLabel = (code: string) =>
   ] ?? code;
 
 const buildGroupedOptions = (
-  options: ICategoryOption[]
-): GroupedMiscellaneousProfiles[] => {
-  const grouped = new Map<string, GroupedMiscellaneousProfiles>();
-
-  options.forEach(option => {
-    const current = grouped.get(option.code);
-
-    if (current) {
-      current.options.push(option);
-      return;
-    }
-
-    grouped.set(option.code, {
-      code: option.code,
-      label: getCategoryLabel(option.code),
-      options: [option],
-    });
-  });
-
-  return Array.from(grouped.values());
-};
+  groups: ICategoryOptionGroup[]
+): GroupedMiscellaneousProfiles[] =>
+  groups.map(group => ({
+    code: group.code,
+    label: getCategoryLabel(group.code),
+    options: group.options ?? [],
+  }));
 
 const renderSkeletonGroupRows = (count = 3) =>
   Array.from({ length: count }).map((_, index) => (
@@ -83,16 +75,16 @@ const renderSkeletonGroupRows = (count = 3) =>
   ));
 
 export const MiscellaneousProfileTable = ({
-  options,
+  groups,
   onSearch,
   searchValue = '',
-  searchPlaceholder = 'Search',
+  searchPlaceholder = CATEGORY_OPTIONS_TEXTS.LIST_SEARCH_PLACEHOLDER,
   loading = false,
 }: MiscellaneousProfileTableProps) => {
   const navigate = useNavigate();
   const [openCategories, setOpenCategories] = useState<string[]>([]);
 
-  const groupedOptions = useMemo(() => buildGroupedOptions(options), [options]);
+  const groupedOptions = useMemo(() => buildGroupedOptions(groups), [groups]);
   const optionColumns = useMemo<TableColumnDef<ICategoryOption>[]>(
     () => [
       {
@@ -257,7 +249,7 @@ export const MiscellaneousProfileTable = ({
         </>
       ) : (
         <div className="rounded-sm border border-dashed border-border-primary bg-surface-primary p-8 text-center text-sm text-text-secondary">
-          No miscellaneous profiles found. Create your first profile.
+          {CATEGORY_OPTIONS_TEXTS.LIST_EMPTY}
         </div>
       )}
     </div>

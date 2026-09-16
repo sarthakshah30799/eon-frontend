@@ -23,6 +23,17 @@ export interface VoucherSnapshot {
   label?: string;
 }
 
+export interface VoucherLog {
+  id: string;
+  voucherId: string;
+  action: 'PRINT' | string;
+  message: string;
+  metadata?: Record<string, unknown> | null;
+  performedById?: string | null;
+  performedAt?: string;
+  createdAt?: string;
+}
+
 export interface VoucherItem {
   id?: string;
   lineNumber?: number;
@@ -87,6 +98,7 @@ export interface VoucherFormValues {
   chequeDate: string;
   chequeBranch: string;
   drawnOn: string;
+  paymentMethod: string;
   remarkOptionId: string;
   remarkName: string;
   narration: string;
@@ -108,6 +120,8 @@ export interface AccountingVoucher extends Omit<
   voucherType: VoucherType;
   number: string;
   accountMode: VoucherAccountMode | null;
+  branchSnapshot?: VoucherSnapshot | null;
+  counterSnapshot?: VoucherSnapshot | null;
   accountTypeSnapshot?: VoucherSnapshot | null;
   headerAccountSnapshot?: VoucherSnapshot | null;
   entityTypeSnapshot?: VoucherSnapshot | null;
@@ -123,6 +137,7 @@ export interface AccountingVoucher extends Omit<
   adviceStatus: VoucherAdviceStatus | null;
   advanceControlAccountId?: string | null;
   advanceControlAccountSnapshot?: VoucherSnapshot | null;
+  logs?: VoucherLog[];
   createdAt: string;
 }
 

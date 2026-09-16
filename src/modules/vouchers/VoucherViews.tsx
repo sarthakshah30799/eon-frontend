@@ -8,6 +8,7 @@ import { getTransactionDatePolicy } from '@/modules/transactionPolicies/utils/tr
 import { transactionPoliciesApi } from '@/api/transactionPolicies/transactionPolicies.api';
 import { useQuery } from '@tanstack/react-query';
 import { formatDateTime } from '@/utils';
+import { useListCompanyProfiles } from '@/modules/companyProfile/hooks';
 import { VoucherForm } from './VoucherForm';
 import {
   ADVICE_TEXT,
@@ -24,6 +25,8 @@ import type {
   VoucherFormValues,
   VoucherType,
 } from './types';
+import { paymentMethodForVoucherAccountMode } from './utils';
+import { isVoucherPrintableType } from './voucherPrintUtils';
 
 const emptyItem = (
   direction: 'DEBIT' | 'CREDIT' = 'DEBIT'
@@ -70,6 +73,7 @@ const emptyValues = (
   chequeDate: '',
   chequeBranch: '',
   drawnOn: '',
+  paymentMethod: '',
   remarkOptionId: '',
   remarkName: '',
   narration: '',
@@ -132,6 +136,9 @@ const fromEntity = (
     chequeDate: voucher.chequeDate,
     chequeBranch: voucher.chequeBranch,
     drawnOn: voucher.drawnOn,
+    paymentMethod:
+      voucher.paymentMethod ||
+      paymentMethodForVoucherAccountMode(voucher.accountMode),
     remarkOptionId: voucher.remarkOptionId,
     remarkName:
       voucher.remarkSnapshot?.label ?? voucher.remarkSnapshot?.name ?? '',
@@ -393,6 +400,11 @@ export const VoucherEditView = ({ type }: { type: VoucherType }) => {
   const { id = '' } = useParams();
   const { user, activeBranchId, activeCounterId } = useAuth();
   const { data, isLoading, error } = useVoucher(type, id);
+  const { data: companiesPage } = useListCompanyProfiles(
+    { limit: 1 },
+    isVoucherPrintableType(type)
+  );
+  const company = companiesPage?.data?.[0] ?? null;
   const { honourAdvice, isPending: isHonouring } = useHonourAdvice();
 
   const canHonour = useMemo(() => {
@@ -437,6 +449,8 @@ export const VoucherEditView = ({ type }: { type: VoucherType }) => {
       <VoucherForm
         type={type}
         defaultValues={fromEntity(data, { mirrorDirections })}
+        voucher={data}
+        company={company}
         readOnly
         skipValidation={canHonour}
         showSubmit={canHonour}

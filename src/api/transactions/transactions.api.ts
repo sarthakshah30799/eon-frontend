@@ -37,6 +37,11 @@ export interface ITransactionListQuery extends IOffsetPaginationParams {
   transactionType?: TransactionType;
 }
 
+export interface ITransactionPaymentMethodOption {
+  value: string;
+  label: string;
+}
+
 export const transactionsApi = {
   getTransactionDocumentDownloadUrl: (
     transactionId: string,
@@ -56,6 +61,18 @@ export const transactionsApi = {
     }
 
     return normalizePaginatedResponse(res.data, params?.limit, params?.offset);
+  },
+
+  getPaymentMethods: async (): Promise<ITransactionPaymentMethodOption[]> => {
+    const res = await apiClient.get<ITransactionPaymentMethodOption[]>(
+      '/transactions/payment-methods'
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    return res.data ?? [];
   },
 
   getAllTransactions: async (

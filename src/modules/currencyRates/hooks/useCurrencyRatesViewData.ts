@@ -38,7 +38,7 @@ const loadCurrencyRatesViewData = async (): Promise<CurrencyRatesViewData> => {
           list.filter(product => product.isActiveProduct !== false)
         ),
       currencyProfileApi
-        .getAllCurrencyProfiles()
+        .getAllCurrencyProfiles({ activeOnly: true })
         .then(list => list.filter(currency => currency.active !== false)),
       currencyRatesApi.getLatestRates(),
       currencyRatesApi.getProductCurrencyRates(),

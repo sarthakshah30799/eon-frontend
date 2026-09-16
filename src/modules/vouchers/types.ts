@@ -4,13 +4,16 @@ export type VoucherType =
   | 'RECEIPT'
   | 'PAYMENT'
   | 'JOURNAL'
-  | 'DEPOSIT_WITHDRAWAL';
+  | 'DEPOSIT_WITHDRAWAL'
+  | 'ADVICE';
 export type VoucherDirection = 'DEBIT' | 'CREDIT';
 export type VoucherAccountMode =
   | 'CASH'
   | 'BANK_CHEQUE'
   | 'PETTY_CASH'
   | 'CREDIT_CARD';
+export type VoucherAdviceRole = 'ISSUER' | 'HONOUR';
+export type VoucherAdviceStatus = 'PENDING_HONOUR' | 'HONOURED';
 
 export interface VoucherSnapshot {
   id?: string;
@@ -18,6 +21,17 @@ export interface VoucherSnapshot {
   key?: string;
   name?: string;
   label?: string;
+}
+
+export interface VoucherLog {
+  id: string;
+  voucherId: string;
+  action: 'PRINT' | string;
+  message: string;
+  metadata?: Record<string, unknown> | null;
+  performedById?: string | null;
+  performedAt?: string;
+  createdAt?: string;
 }
 
 export interface VoucherItem {
@@ -54,6 +68,9 @@ export interface OutstandingBill {
   finalAmount: string;
   byCash: string;
   byCheque: string;
+  byCard?: string;
+  byTransfer?: string;
+  byOther?: string;
   outstanding: string;
   branchId: string;
 }
@@ -81,31 +98,46 @@ export interface VoucherFormValues {
   chequeDate: string;
   chequeBranch: string;
   drawnOn: string;
+  paymentMethod: string;
   remarkOptionId: string;
   remarkName: string;
   narration: string;
   idempotencyKey: string;
+  destinationBranchId: string;
+  sourceBranchId: string;
+  headerDirection: VoucherDirection | '';
+  adviceRole: VoucherAdviceRole | '';
+  adviceStatus: VoucherAdviceStatus | '';
+  pairedVoucherId: string;
   items: VoucherItem[];
 }
 
 export interface AccountingVoucher extends Omit<
   VoucherFormValues,
-  'number' | 'accountMode'
+  'number' | 'accountMode' | 'headerDirection' | 'adviceRole' | 'adviceStatus'
 > {
   id: string;
   voucherType: VoucherType;
   number: string;
   accountMode: VoucherAccountMode | null;
+  branchSnapshot?: VoucherSnapshot | null;
+  counterSnapshot?: VoucherSnapshot | null;
   accountTypeSnapshot?: VoucherSnapshot | null;
   headerAccountSnapshot?: VoucherSnapshot | null;
   entityTypeSnapshot?: VoucherSnapshot | null;
   partyProfileSnapshot?: VoucherSnapshot | null;
   remarkSnapshot?: VoucherSnapshot | null;
+  sourceBranchSnapshot?: VoucherSnapshot | null;
+  destinationBranchSnapshot?: VoucherSnapshot | null;
   totalDebit: string;
   totalCredit: string;
   finalAmount: string;
+  headerDirection: VoucherDirection | null;
+  adviceRole: VoucherAdviceRole | null;
+  adviceStatus: VoucherAdviceStatus | null;
   advanceControlAccountId?: string | null;
   advanceControlAccountSnapshot?: VoucherSnapshot | null;
+  logs?: VoucherLog[];
   createdAt: string;
 }
 

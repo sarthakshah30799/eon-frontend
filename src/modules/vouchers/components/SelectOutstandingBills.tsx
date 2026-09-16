@@ -1,5 +1,9 @@
 import { useMemo, useState } from 'react';
 import { Checkbox, SelectEntity, type TableColumnDef } from '@/components/ui';
+import {
+  PAGINATION_DEFAULTS,
+  PAGINATION_PAGE_SIZE_OPTIONS,
+} from '@/constants/paginationConstants';
 import { useDebounce } from '@/hooks';
 import { toDisplayDate } from '@/utils';
 import { OUTSTANDING_BILL_TEXT } from '../constants';
@@ -14,7 +18,7 @@ const EMPTY_OUTSTANDING_BILLS: OutstandingBill[] = [];
 
 interface SelectOutstandingBillsProps {
   open: boolean;
-  type: 'RECEIPT' | 'PAYMENT';
+  type: 'RECEIPT' | 'PAYMENT' | 'ADVICE';
   params: OutstandingBillQueryParams;
   itemTypeLabel?: string;
   excludedTransactionIds?: string[];
@@ -29,7 +33,11 @@ const formatAmount = (value?: string | number | null) => {
 };
 
 const paidAmount = (bill: OutstandingBill) =>
-  Number(bill.byCash || 0) + Number(bill.byCheque || 0);
+  Number(bill.byCash || 0) +
+  Number(bill.byCheque || 0) +
+  Number(bill.byCard || 0) +
+  Number(bill.byTransfer || 0) +
+  Number(bill.byOther || 0);
 
 const buildColumns = (): TableColumnDef<OutstandingBill>[] => [
   {
@@ -107,6 +115,7 @@ export const SelectOutstandingBills = ({
   onClose,
 }: SelectOutstandingBillsProps) => {
   const [search, setSearch] = useState('');
+  const [pageSize, setPageSize] = useState<number>(PAGINATION_DEFAULTS.LIMIT);
   const [selectedIds, setSelectedIds] = useState<string[]>(
     selectedTransactionIds
   );
@@ -119,14 +128,30 @@ export const SelectOutstandingBills = ({
     params.counterId &&
     params.transactionDate
   );
+
+  // Reset page when filters change without setState-in-effect.
+  const pageResetKey = [
+    debouncedSearch,
+    params.partyProfileId,
+    params.slug,
+    params.branchId,
+    params.counterId,
+    params.transactionDate,
+    pageSize,
+  ].join('|');
+  const [pageState, setPageState] = useState({ key: pageResetKey, page: 1 });
+  const page = pageState.key === pageResetKey ? pageState.page : 1;
+  const setPage = (nextPage: number) =>
+    setPageState({ key: pageResetKey, page: nextPage });
+
   const queryParams = useMemo(
     () => ({
       ...params,
       search: debouncedSearch.trim() || undefined,
-      limit: params.limit ?? 100,
-      offset: params.offset ?? 0,
+      limit: pageSize,
+      offset: (page - 1) * pageSize,
     }),
-    [debouncedSearch, params]
+    [debouncedSearch, page, pageSize, params]
   );
   const {
     data: response,
@@ -135,6 +160,8 @@ export const SelectOutstandingBills = ({
     error,
   } = useOutstandingBills(type, queryParams, open && canLoad);
   const data = response?.data ?? EMPTY_OUTSTANDING_BILLS;
+  const total = response?.total ?? 0;
+  const totalPages = response?.totalPages ?? 0;
 
   const rows = useMemo(() => {
     const excluded = new Set(
@@ -155,18 +182,29 @@ export const SelectOutstandingBills = ({
       title={
         type === 'RECEIPT'
           ? OUTSTANDING_BILL_TEXT.titleReceipt
-          : OUTSTANDING_BILL_TEXT.titlePayment
+          : type === 'PAYMENT'
+            ? OUTSTANDING_BILL_TEXT.titlePayment
+            : OUTSTANDING_BILL_TEXT.titleAdvice
       }
       description={
         canLoad
-          ? OUTSTANDING_BILL_TEXT.description(rows.length, itemTypeLabel)
+          ? OUTSTANDING_BILL_TEXT.description(total, itemTypeLabel)
           : OUTSTANDING_BILL_TEXT.missingContext
       }
       columns={columns}
       data={rows}
       loading={isLoading || (isFetching && data.length === 0)}
+      isFetching={isFetching}
       selectable
       multiple
+      manualPagination
+      page={page}
+      pageSize={pageSize}
+      pageSizeOptions={[...PAGINATION_PAGE_SIZE_OPTIONS]}
+      total={total}
+      totalPages={totalPages}
+      onPageChange={setPage}
+      onPageSizeChange={setPageSize}
       searchValue={search}
       onSearch={setSearch}
       searchPlaceholder={OUTSTANDING_BILL_TEXT.searchPlaceholder}

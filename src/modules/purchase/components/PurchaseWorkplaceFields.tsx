@@ -100,6 +100,11 @@ export const PurchaseWorkplaceFields = ({
   }, [branchId, counters, selectedBranch]);
 
   useEffect(() => {
+    if (readOnly) {
+      previousBranchIdRef.current = branchId || '';
+      return;
+    }
+
     if (
       previousBranchIdRef.current &&
       previousBranchIdRef.current !== branchId
@@ -108,10 +113,10 @@ export const PurchaseWorkplaceFields = ({
     }
 
     previousBranchIdRef.current = branchId || '';
-  }, [branchId, form]);
+  }, [branchId, form, readOnly]);
 
   useEffect(() => {
-    if (!canEditWorkplace) {
+    if (readOnly || !canEditWorkplace) {
       return;
     }
 
@@ -132,6 +137,7 @@ export const PurchaseWorkplaceFields = ({
     counterId,
     counters.length,
     form,
+    readOnly,
     selectedBranch,
   ]);
 

@@ -207,7 +207,7 @@ export const AccountProfileForm = ({
   const isDisabled = isSubmitting || readOnly;
   const { data: currenciesPage, isLoading: isCurrenciesLoading } =
     useListCurrencyProfiles({
-      activeOnly: false,
+      activeOnly: true,
     });
   const currencies = currenciesPage?.data ?? [];
   const currencyOptions = useMemo(

@@ -41,6 +41,15 @@ const DepositWithdrawalCreatePage = lazy(
 const DepositWithdrawalEditPage = lazy(
   () => import('../pages/deposit-withdrawals/edit')
 );
+const AdviceDebitCreditListPage = lazy(
+  () => import('../pages/advice-debit-credit')
+);
+const AdviceDebitCreditCreatePage = lazy(
+  () => import('../pages/advice-debit-credit/create')
+);
+const AdviceDebitCreditEditPage = lazy(
+  () => import('../pages/advice-debit-credit/edit')
+);
 
 const UserCreatePage = lazy(
   () => import('../pages/users/create/UserCreatePage')
@@ -1479,6 +1488,30 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <DepositWithdrawalEditPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/advice-debit-credit',
+    element: (
+      <ProtectedLayout>
+        <AdviceDebitCreditListPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/advice-debit-credit/create',
+    element: (
+      <ProtectedLayout>
+        <AdviceDebitCreditCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/advice-debit-credit/edit/:id',
+    element: (
+      <ProtectedLayout>
+        <AdviceDebitCreditEditPage />
       </ProtectedLayout>
     ),
   },

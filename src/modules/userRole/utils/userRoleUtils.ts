@@ -1,4 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query';
+import type { IPaginatedResponse } from '@/types/pagination';
 import type { ICreateUserRole, IUserRole, UserRightsRowState } from '../types';
 
 export const createEmptyUserRoleFormValues = (): ICreateUserRole => ({
@@ -55,16 +56,43 @@ export const mapFormValuesToRecord = (
   ...values,
 });
 
+const mapUserRoles = (
+  roles: IUserRole[],
+  updatedRole: IUserRole
+): IUserRole[] =>
+  roles.map(role => (role.id === updatedRole.id ? updatedRole : role));
+
+type UserRolesQueryData = IUserRole[] | IPaginatedResponse<IUserRole>;
+
+const updateUserRolesQueryData = (
+  current: UserRolesQueryData | undefined,
+  updatedRole: IUserRole
+): UserRolesQueryData | undefined => {
+  if (!current) {
+    return current;
+  }
+
+  if (Array.isArray(current)) {
+    return mapUserRoles(current, updatedRole);
+  }
+
+  if (Array.isArray(current.data)) {
+    return {
+      ...current,
+      data: mapUserRoles(current.data, updatedRole),
+    };
+  }
+
+  return current;
+};
+
 export const syncUserRoleCache = (
   queryClient: QueryClient,
   updatedRole: IUserRole
 ): void => {
-  queryClient.setQueriesData<IUserRole[]>(
+  queryClient.setQueriesData<UserRolesQueryData>(
     { queryKey: ['user-roles'] },
-    currentRoles =>
-      currentRoles?.map(role =>
-        role.id === updatedRole.id ? updatedRole : role
-      ) ?? currentRoles
+    currentRoles => updateUserRolesQueryData(currentRoles, updatedRole)
   );
 
   queryClient.setQueryData(['user-role', updatedRole.id], updatedRole);

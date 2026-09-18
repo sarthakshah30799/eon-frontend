@@ -1,5 +1,4 @@
 export const CARD_TRANSFER_STATUS_OPTIONS = [
-  { value: 'ALL', label: 'All' },
   { value: 'HELD', label: 'Held' },
   { value: 'ACCEPTED', label: 'Accepted' },
   { value: 'REJECTED', label: 'Rejected' },
@@ -11,6 +10,8 @@ export const CARD_TRANSFER_COPY = {
   listDescription: 'Review CARD transfer requests between branches.',
   createTitle: 'Create CARD Transfer',
   editTitle: 'CARD Transfer Request',
+  status: 'Status',
+  statusPlaceholder: 'All Statuses',
   sourceDescription:
     'Cards are reserved from the selected source branch when submitted.',
   loadingTransactionDate: 'Loading transaction date for selected branch...',

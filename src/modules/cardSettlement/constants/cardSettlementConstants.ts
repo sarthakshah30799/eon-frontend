@@ -61,11 +61,13 @@ export const CARD_SETTLEMENT_TEXT = {
   notFound: 'CARD settlement not found.',
   itemsCount: 'Items',
   status: 'Status',
+  statusPlaceholder: 'All Statuses',
+  search: 'Search',
+  searchPlaceholder: 'Search transaction, issuer, currency, or branch',
   actions: 'Actions',
 } as const;
 
 export const CARD_SETTLEMENT_STATUS_OPTIONS = [
-  { value: 'ALL', label: 'All' },
   { value: 'PENDING_HO_ACCEPTANCE', label: 'Pending HO Acceptance' },
   { value: 'ACCEPTED', label: 'Accepted' },
   { value: 'ISSUER_SETTLED', label: 'Issuer Settled' },

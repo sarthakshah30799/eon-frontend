@@ -4,13 +4,26 @@ import type {
   ICardStockFormValues,
 } from '../types';
 import type { ICardStockReceipt } from '@/api/cardStock';
+import { CARD_STOCK_FIXED_DENOMINATION } from '../constants/cardStockConstants';
+
+export const cardStockDenominationAmount = (
+  denomination = CARD_STOCK_FIXED_DENOMINATION
+) => Number(denomination || 0).toFixed(2);
+
+export const withFixedCardDenomination = (
+  card: ICardStockFormCard
+): ICardStockFormCard => ({
+  ...card,
+  denomination: CARD_STOCK_FIXED_DENOMINATION,
+  amount: cardStockDenominationAmount(),
+});
 
 export const emptyCard = (): ICardStockFormCard => ({
   series: '',
   kitNumber: '',
   cardNumber: '',
-  denomination: '',
-  amount: '',
+  denomination: CARD_STOCK_FIXED_DENOMINATION,
+  amount: cardStockDenominationAmount(),
   expirationDate: '',
 });
 
@@ -57,7 +70,19 @@ export const mapReceiptToForm = (
   })),
 });
 
-export const toReceiptPayload = (values: ICardStockFormValues) => ({
-  ...values,
-  items: values.items.map((item, index) => ({ ...item, lineNo: index + 1 })),
-});
+export const toReceiptPayload = (values: ICardStockFormValues) => {
+  const items = values.items.map((item, index) => {
+    const cards = item.cards.map(withFixedCardDenomination);
+    const feAmount = cards
+      .reduce(
+        (sum, card) => sum + Number(card.denomination || 0),
+        0
+      )
+      .toFixed(2);
+    return { ...item, lineNo: index + 1, cards, feAmount };
+  });
+  const totalFeAmount = items
+    .reduce((sum, item) => sum + Number(item.feAmount || 0), 0)
+    .toFixed(2);
+  return { ...values, items, totalFeAmount };
+};

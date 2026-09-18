@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useFieldArray, useFormContext, useWatch, type FieldPath } from 'react-hook-form';
 import {
@@ -36,6 +37,12 @@ import type {
   ICardStockFormValues,
 } from '../types';
 import {
+  CARD_STOCK_FIXED_DENOMINATION,
+  CARD_STOCK_SUBMIT_TEXT,
+} from '../constants/cardStockConstants';
+
+import {
+  cardStockDenominationAmount,
   emptyCard,
   emptyItem,
   toReceiptPayload,
@@ -190,9 +197,9 @@ const CardRows = ({
     selectedIssuer?.cardNumberLength
   );
   const allowMasking = Boolean(selectedIssuer?.allowCardNumberMasking);
-  const cardCalculationKey = (cards ?? [])
+  const cardCalculationKey = `${(cards ?? []).length}|${(cards ?? [])
     .map(card => card.denomination ?? '')
-    .join('|');
+    .join('|')}`;
 
   useEffect(() => {
     const nextCards =
@@ -200,7 +207,22 @@ const CardRows = ({
         | ICardStockFormCard[]
         | undefined) ?? [];
     nextCards.forEach((card, cardIndex) => {
-      const amount = Number(card.denomination || 0).toFixed(2);
+      if (!readOnly) {
+        const denominationPath = `items.${itemIndex}.cards.${cardIndex}.denomination`;
+        if (
+          (form.getValues(denominationPath as never) as unknown as string) !==
+          CARD_STOCK_FIXED_DENOMINATION
+        ) {
+          form.setValue(
+            denominationPath as never,
+            CARD_STOCK_FIXED_DENOMINATION as never,
+            { shouldValidate: true }
+          );
+        }
+      }
+      const amount = cardStockDenominationAmount(
+        readOnly ? card.denomination : CARD_STOCK_FIXED_DENOMINATION
+      );
       const amountPath = `items.${itemIndex}.cards.${cardIndex}.amount`;
       if ((form.getValues(amountPath as never) as unknown as string) !== amount)
         form.setValue(amountPath as never, amount as never, {
@@ -208,14 +230,21 @@ const CardRows = ({
         });
     });
     const total = nextCards
-      .reduce((sum, card) => sum + Number(card.denomination || 0), 0)
+      .reduce(
+        (sum, card) =>
+          sum +
+          Number(
+            (readOnly ? card.denomination : CARD_STOCK_FIXED_DENOMINATION) || 0
+          ),
+        0
+      )
       .toFixed(2);
     const totalPath = `items.${itemIndex}.feAmount`;
     if ((form.getValues(totalPath as never) as unknown as string) !== total)
       form.setValue(totalPath as never, total as never, {
         shouldValidate: true,
       });
-  }, [cardCalculationKey, itemIndex, form]);
+  }, [cardCalculationKey, itemIndex, form, readOnly]);
 
   const columns = useMemo<TableColumnDef<{ id: string }>[]>(
     () => [
@@ -266,7 +295,7 @@ const CardRows = ({
             name={`items.${itemIndex}.cards.${row.index}.denomination`}
             label=""
             type="number"
-            disabled={readOnly}
+            disabled
           />
         ),
       },
@@ -643,6 +672,7 @@ export const CardStockReceiptForm = ({
   footerActions,
   onSubmit,
 }: CardStockFormProps) => {
+  const navigate = useNavigate();
   const references = useCardStockReferences();
   const { user, policyContext, activeBranchId } = useAuth();
   const canSelectBranch = Boolean(
@@ -709,6 +739,30 @@ export const CardStockReceiptForm = ({
   );
   const formSubmit = async (values: ICardStockFormValues) =>
     onSubmit(toReceiptPayload(values));
+  const isSubmitDisabled =
+    !readOnly &&
+    (!selectedBranchId ||
+      selectedBranchPolicy.isPending ||
+      !transactionDatePolicy.canPunchTransactions);
+  const submitMessage = useMemo(() => {
+    if (readOnly) return '';
+    if (!selectedBranchId) return CARD_STOCK_SUBMIT_TEXT.blockedNoBranch;
+    if (selectedBranchPolicy.isPending)
+      return CARD_STOCK_SUBMIT_TEXT.blockedLoadingPolicy;
+    if (!transactionDatePolicy.canPunchTransactions) {
+      return (
+        transactionDatePolicy.helperText ||
+        CARD_STOCK_SUBMIT_TEXT.blockedCannotPunch
+      );
+    }
+    return '';
+  }, [
+    readOnly,
+    selectedBranchId,
+    selectedBranchPolicy.isPending,
+    transactionDatePolicy.canPunchTransactions,
+    transactionDatePolicy.helperText,
+  ]);
   useEffect(() => {
     if (!import.meta.env.DEV || readOnly) return;
     console.info('[CARD STOCK] transaction date policy', transactionDatePolicy);
@@ -733,12 +787,16 @@ export const CardStockReceiptForm = ({
       footer={{
         submitLabel: 'Submit Receipt Stock',
         showSubmit: !readOnly,
-        isSubmitDisabled:
-          !readOnly &&
-          (!transactionDatePolicy.canPunchTransactions ||
-            selectedBranchPolicy.isFetching ||
-            !selectedBranchId),
-        onCancel: () => window.history.back(),
+        isSubmitDisabled,
+        submitMessage: submitMessage || undefined,
+        ...(readOnly
+          ? {
+              backLabel: CARD_STOCK_SUBMIT_TEXT.back,
+              onBackClick: () => navigate('/card-stock'),
+            }
+          : {
+              onCancel: () => navigate('/card-stock'),
+            }),
         actions: footerActions,
       }}
     >

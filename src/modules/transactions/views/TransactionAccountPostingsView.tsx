@@ -1,6 +1,6 @@
 import { ArrowPathIcon } from '@heroicons/react/24/outline';
 import { useMemo } from 'react';
-import { Button } from '@/components/ui';
+import { Button, type AsyncSelectOption } from '@/components/ui';
 import {
   buildSearchToolbarFilter,
   type TableToolbarFilter,
@@ -57,9 +57,10 @@ export const TransactionAccountPostingsView = () => {
         pagination: true,
         isSearchable: true,
         isClearable: true,
+        isMulti: false,
         placeholder: 'All party profiles',
         className: 'w-56 shrink-0',
-        onChange: option => {
+        onChange: (option: AsyncSelectOption | null) => {
           setSelectedPartyProfile(
             option?.value
               ? {
@@ -80,9 +81,10 @@ export const TransactionAccountPostingsView = () => {
         pagination: false,
         isSearchable: true,
         isClearable: true,
+        isMulti: false,
         placeholder: 'All types',
         className: 'w-44 shrink-0',
-        onChange: option => {
+        onChange: (option: AsyncSelectOption | null) => {
           setTransactionType(option?.value ? String(option.value) : '');
         },
       },

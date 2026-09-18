@@ -1,6 +1,16 @@
 export const DEFAULT_CARD_NUMBER_LENGTH = 16;
 export const MIN_CARD_NUMBER_LENGTH = 8;
 export const MAX_CARD_NUMBER_LENGTH = 19;
+export const CARD_STOCK_FIXED_DENOMINATION = '1';
+
+export const CARD_STOCK_SUBMIT_TEXT = {
+  back: 'Back',
+  blockedNoBranch: 'Select a branch before submitting receipt stock.',
+  blockedLoadingPolicy:
+    'Loading transaction date rules for the selected branch.',
+  blockedCannotPunch:
+    'Receipt stock cannot be submitted. Complete Day Start, or check that the transaction date is within the active monthwise-lock window and that Day End is not already completed.',
+} as const;
 
 export const CARD_STOCK_UPLOAD_TEXT = {
   heading: (itemIndex: number) => `Upload Cards for Item ${itemIndex + 1}`,
@@ -17,7 +27,7 @@ export const CARD_STOCK_VALIDATION_TEXT = {
   series:
     'Series prefix must be 1 to 4 alphanumeric characters (for example, CC)',
   kitNumber: 'Kit number is required',
-  denomination: 'Denomination must be greater than zero',
+  denomination: 'Denomination is fixed at 1',
   expirationFormat: 'Expiration date must use dd/mm/yyyy format',
   expirationFuture: 'Expiration date must be in the future',
   ccOnlyTradableCurrency:

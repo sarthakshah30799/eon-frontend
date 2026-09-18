@@ -2,7 +2,10 @@ import * as yup from 'yup';
 import type { IPartyProfile } from '@/modules/partyProfiles/types';
 import type { ICurrencyProfile } from '@/modules/currencyProfile/types';
 import type { IProductProfile } from '@/modules/productProfile/types';
-import { CARD_STOCK_VALIDATION_TEXT } from '../constants/cardStockConstants';
+import {
+  CARD_STOCK_FIXED_DENOMINATION,
+  CARD_STOCK_VALIDATION_TEXT,
+} from '../constants/cardStockConstants';
 import { validateCardNumber } from '../utils/cardNumberValidation';
 import { validateCardStockProductCurrency } from '../utils/cardStockCurrencyUtils';
 
@@ -131,9 +134,9 @@ export const createCardStockSchema = (
                 denomination: yup
                   .string()
                   .test(
-                    'positive',
+                    'fixed',
                     CARD_STOCK_VALIDATION_TEXT.denomination,
-                    value => Number(value) > 0
+                    value => Number(value) === Number(CARD_STOCK_FIXED_DENOMINATION)
                   )
                   .required('Denomination is required'),
                 amount: yup.string().required(),

@@ -97,7 +97,8 @@ export interface CardStockUnsettledItem {
 }
 
 export interface CardStockSettlementDocumentFilters extends IOffsetPaginationParams {
-  status?: CardStockSettlementDocumentStatus;
+  status?: CardStockSettlementDocumentStatus | CardStockSettlementDocumentStatus[];
+  search?: string;
   kind?: CardStockSettlementDocumentKind;
   issuerPartyProfileId?: string;
   currencyId?: string;

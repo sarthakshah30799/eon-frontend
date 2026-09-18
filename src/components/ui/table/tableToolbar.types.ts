@@ -15,13 +15,11 @@ export type TableToolbarSearchFilter = {
   hidden?: boolean;
 };
 
-export type TableToolbarAsyncSelectFilter = {
+type TableToolbarAsyncSelectFilterBase = {
   id: string;
   type: 'asyncSelect';
   label: string;
-  value: AsyncSelectOption | null;
   loadOptions: NonNullable<AsyncSelectProps['loadOptions']>;
-  onChange: (option: AsyncSelectOption | null) => void;
   placeholder?: string;
   defaultOptions?: boolean;
   pagination?: boolean;
@@ -31,6 +29,24 @@ export type TableToolbarAsyncSelectFilter = {
   className?: string;
   hidden?: boolean;
 };
+
+export type TableToolbarSingleAsyncSelectFilter =
+  TableToolbarAsyncSelectFilterBase & {
+    isMulti?: false;
+    value: AsyncSelectOption | null;
+    onChange: (option: AsyncSelectOption | null) => void;
+  };
+
+export type TableToolbarMultiAsyncSelectFilter =
+  TableToolbarAsyncSelectFilterBase & {
+    isMulti: true;
+    value: AsyncSelectOption[];
+    onChange: (option: AsyncSelectOption[]) => void;
+  };
+
+export type TableToolbarAsyncSelectFilter =
+  | TableToolbarSingleAsyncSelectFilter
+  | TableToolbarMultiAsyncSelectFilter;
 
 export type TableToolbarCustomFilter = {
   id: string;

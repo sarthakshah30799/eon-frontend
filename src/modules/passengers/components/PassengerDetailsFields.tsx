@@ -96,6 +96,12 @@ export const PassengerDetailsFields = ({
   );
   const isIndianNationality =
     nationalityType === PassengerNationalityTypeEnum.INDIAN;
+  const isForeignerOrNonResident =
+    residentStatus === PassengerResidentStatusEnum.FOREIGNER ||
+    residentStatus === PassengerResidentStatusEnum.NON_RESIDENT ||
+    nationalityType === PassengerNationalityTypeEnum.FOREIGNER ||
+    nationalityType === PassengerNationalityTypeEnum.NRI;
+  const showStateField = !isForeignerOrNonResident;
   const isSaleTransaction = transactionType === TransactionTypeEnum.SALE;
   const showTravelDetails =
     isSaleTransaction &&
@@ -225,6 +231,22 @@ export const PassengerDetailsFields = ({
       }
     }
   }, [form, isIndiaCountry, nationalityType, residentStatus]);
+
+  useEffect(() => {
+    if (showStateField) {
+      return;
+    }
+
+    if (!form.getValues('stateId')) {
+      return;
+    }
+
+    form.setValue('stateId', '', {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: false,
+    });
+  }, [form, showStateField]);
 
   const clearCountrySelection = useCallback(() => {
     form.setValue('countryId', '', {
@@ -401,14 +423,16 @@ export const PassengerDetailsFields = ({
             </p>
           ) : null}
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <FormFieldStateDropdown
-              name="stateId"
-              label="State"
-              placeholder="Select state"
-              countryId={countryId || undefined}
-            />
-          </div>
+          {showStateField ? (
+            <div className="grid gap-4 md:grid-cols-2">
+              <FormFieldStateDropdown
+                name="stateId"
+                label="State"
+                placeholder="Select state"
+                countryId={countryId || undefined}
+              />
+            </div>
+          ) : null}
 
           {isIndianNationality ? (
             <PassengerIdentityFields

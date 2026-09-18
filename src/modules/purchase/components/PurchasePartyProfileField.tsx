@@ -22,6 +22,7 @@ import { EntityPickerField } from './EntityPickerField';
 interface PurchasePartyProfileFieldProps {
   partyProfileTypes: PartyProfileType[];
   purchasePageType?: PurchasePageType | null;
+  branchId?: string;
   disabled?: boolean;
   showPassengerAction?: boolean;
   onAddPassengerInfo?: () => void;
@@ -30,6 +31,7 @@ interface PurchasePartyProfileFieldProps {
 export const PurchasePartyProfileField = ({
   partyProfileTypes,
   purchasePageType = null,
+  branchId = '',
   disabled = false,
   showPassengerAction = false,
   onAddPassengerInfo,
@@ -39,6 +41,10 @@ export const PurchasePartyProfileField = ({
   const [warningModalOpen, setWarningModalOpen] = useState(false);
   const [selectedProfileForWarning, setSelectedProfileForWarning] =
     useState<IPartyProfile | null>(null);
+
+  const resolvedBranchId = branchId.trim();
+  const isBranchMissing = !resolvedBranchId;
+  const isPickerDisabled = disabled || isBranchMissing;
 
   const partyProfileCode = form.watch('partyProfileCode');
   const partyProfileName = form.watch('partyProfileName');
@@ -109,9 +115,10 @@ export const PurchasePartyProfileField = ({
       transactionPartyProfileType
     ),
     activeOnly: true,
+    ...(resolvedBranchId ? { branchId: resolvedBranchId } : {}),
   } satisfies Pick<
     IPartyProfileListQuery,
-    'sale' | 'purchase' | 'activeOnly' | 'isIndividual'
+    'sale' | 'purchase' | 'activeOnly' | 'isIndividual' | 'branchId'
   >;
 
   const isCombinedPartyProfilePage =
@@ -267,8 +274,13 @@ export const PurchasePartyProfileField = ({
           label="Party Profile"
           value={partyProfileDisplayValue}
           placeholder="Select party profile"
-          onClick={() => setOpen(true)}
-          disabled={disabled}
+          onClick={() => {
+            if (isPickerDisabled) {
+              return;
+            }
+            setOpen(true);
+          }}
+          disabled={isPickerDisabled}
           helperText="Choose a party profile for this transaction."
         />
 
@@ -278,7 +290,7 @@ export const PurchasePartyProfileField = ({
             variant={passengerInfoCaptured ? 'secondary' : 'default'}
             className="w-full shadow-sm transition-transform duration-200 hover:-translate-y-0.5"
             disabled={
-              disabled ||
+              isPickerDisabled ||
               !partyProfileId ||
               !entityType ||
               (isCombinedPartyProfilePage && !transactionPartyProfileType)
@@ -319,7 +331,7 @@ export const PurchasePartyProfileField = ({
       </div>
 
       <SelectPartyProfiles
-        open={open}
+        open={open && !isBranchMissing}
         types={partyProfileTypes}
         selectable
         multiple={false}

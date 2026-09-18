@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { useCategoryOptions } from '@/hooks';
-import { branchProfileApi } from '@/api';
-import { useListAccountProfiles } from '@/modules/accountProfile/hooks';
+import { accountProfileApi, branchProfileApi } from '@/api';
+import { PAGINATION_MAX_LIMIT } from '@/constants/paginationConstants';
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import {
   buildReportDateRange,
@@ -41,6 +41,10 @@ export interface GenerateLedgerFiltersState {
   branchAllSelected: boolean;
   accountTypeAllSelected: boolean;
   accountAllSelected: boolean;
+  isAccountsLoading: boolean;
+  isAccountsFetchingMore: boolean;
+  hasMoreAccounts: boolean;
+  loadMoreAccounts: () => void;
   setDateRange: (value: IReportDateRange) => void;
   setLayout: (value: GenerateLedgerLayout) => void;
   toggleBranch: (id: string, checked: boolean) => void;
@@ -138,7 +142,23 @@ export const useGenerateLedgerFilters = (): GenerateLedgerFiltersState => {
     queryKey: ['generate-ledger-branches'],
     queryFn: () => branchProfileApi.getAllBranchProfiles({ activeOnly: true }),
   });
-  const accountsQuery = useListAccountProfiles({ active: true, limit: 500 });
+  const serverAccountTypeId =
+    accountTypeIds.length === 1 ? accountTypeIds[0] : undefined;
+  const accountsQuery = useInfiniteQuery({
+    queryKey: ['generate-ledger-accounts', serverAccountTypeId ?? 'all'],
+    initialPageParam: 0,
+    queryFn: async ({ pageParam }) =>
+      accountProfileApi.getAccountProfiles({
+        active: true,
+        accountType: serverAccountTypeId,
+        offset: Number(pageParam) || 0,
+        limit: PAGINATION_MAX_LIMIT,
+      }),
+    getNextPageParam: (lastPage, _allPages, lastPageParam) =>
+      lastPage.hasMore
+        ? (Number(lastPageParam) || 0) + lastPage.limit
+        : undefined,
+  });
   const accountTypeCategory = useCategoryOptions(
     CategoryOptionCodeEnum.AccountType
   );
@@ -169,12 +189,13 @@ export const useGenerateLedgerFilters = (): GenerateLedgerFiltersState => {
   );
 
   const accountOptions = useMemo(() => {
-    const rows = accountsQuery.data?.data ?? [];
+    const rows =
+      accountsQuery.data?.pages.flatMap(page => page.data ?? []) ?? [];
     const selectedTypeSet = new Set(accountTypeIds);
     return uniqueOptions(
       rows
         .filter(account => {
-          if (!accountTypeIds.length) return true;
+          if (!accountTypeIds.length || serverAccountTypeId) return true;
           return selectedTypeSet.has(account.accountType?.id ?? '');
         })
         .map(account =>
@@ -184,7 +205,7 @@ export const useGenerateLedgerFilters = (): GenerateLedgerFiltersState => {
           )
         )
     );
-  }, [accountTypeIds, accountsQuery.data]);
+  }, [accountTypeIds, accountsQuery.data, serverAccountTypeId]);
 
   const selectedAccountIds = useMemo(() => {
     const allowed = new Set(accountOptions.map(option => option.id));
@@ -232,6 +253,12 @@ export const useGenerateLedgerFilters = (): GenerateLedgerFiltersState => {
     branchAllSelected,
     accountTypeAllSelected,
     accountAllSelected,
+    isAccountsLoading: accountsQuery.isLoading,
+    isAccountsFetchingMore: accountsQuery.isFetchingNextPage,
+    hasMoreAccounts: Boolean(accountsQuery.hasNextPage),
+    loadMoreAccounts: () => {
+      void accountsQuery.fetchNextPage();
+    },
     setDateRange: value => {
       setDateRange(value);
     },

@@ -98,6 +98,10 @@ export const GenerateLedgerFiltersSection = ({
             filters.accountIds.length,
             filters.accountOptions.length
           )}
+          isLoading={filters.isAccountsLoading}
+          hasMore={filters.hasMoreAccounts}
+          isFetchingMore={filters.isAccountsFetchingMore}
+          onLoadMore={filters.loadMoreAccounts}
         />
       </div>
 

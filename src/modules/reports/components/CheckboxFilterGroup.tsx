@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { Checkbox } from '@/components/ui';
 import type { IReportSelectOption } from '../types';
 
@@ -14,6 +15,9 @@ interface CheckboxFilterGroupProps {
   compact?: boolean;
   isLoading?: boolean;
   loadingMessage?: string;
+  hasMore?: boolean;
+  isFetchingMore?: boolean;
+  onLoadMore?: () => void;
 }
 
 export const CheckboxFilterGroup = ({
@@ -29,8 +33,27 @@ export const CheckboxFilterGroup = ({
   compact = true,
   isLoading = false,
   loadingMessage = 'Loading options...',
+  hasMore = false,
+  isFetchingMore = false,
+  onLoadMore,
 }: CheckboxFilterGroupProps) => {
   const selectedCount = selectedIds.length;
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+
+  const handleScroll = () => {
+    const container = scrollRef.current;
+    if (!container || !hasMore || isFetchingMore || disabled || !onLoadMore) {
+      return;
+    }
+
+    const threshold = 120;
+    if (
+      container.scrollTop + container.clientHeight >=
+      container.scrollHeight - threshold
+    ) {
+      onLoadMore();
+    }
+  };
 
   return (
     <div className="space-y-1.5 rounded-md border border-slate-200 bg-white p-2 shadow-sm">
@@ -67,6 +90,8 @@ export const CheckboxFilterGroup = ({
         </div>
       ) : (
         <div
+          ref={scrollRef}
+          onScroll={handleScroll}
           className={[
             compact ? 'max-h-40' : 'max-h-56',
             'space-y-1 overflow-y-auto pr-1',
@@ -98,6 +123,16 @@ export const CheckboxFilterGroup = ({
           ))}
         </div>
       )}
+
+      {onLoadMore ? (
+        <div className="text-[10px] text-text-tertiary">
+          {isFetchingMore
+            ? 'Loading more...'
+            : hasMore
+              ? 'Scroll to load more.'
+              : 'All matching options loaded.'}
+        </div>
+      ) : null}
     </div>
   );
 };

@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
-import { branchProfileApi } from '@/api';
-import { useListAccountProfiles } from '@/modules/accountProfile/hooks';
+import { accountProfileApi, branchProfileApi } from '@/api';
 import { AccountProfileLedgerLabelEnum } from '@/modules/accountProfile';
+import { PAGINATION_MAX_LIMIT } from '@/constants/paginationConstants';
 import {
   buildReportDateRange,
   formatReportDateRangeLabel,
@@ -37,6 +37,10 @@ export interface CashReportFiltersState {
   accountOptions: IReportSelectOption[];
   branchAllSelected: boolean;
   accountAllSelected: boolean;
+  isAccountsLoading: boolean;
+  isAccountsFetchingMore: boolean;
+  hasMoreAccounts: boolean;
+  loadMoreAccounts: () => void;
   setDateRange: (value: IReportDateRange) => void;
   setLayout: (value: CashReportLayout) => void;
   toggleBranch: (id: string, checked: boolean) => void;
@@ -59,18 +63,6 @@ const toOption = (id: string, label: string): IReportSelectOption => ({
   id,
   label,
 });
-
-const isCashLedger = (account: {
-  accountType?: { value?: string | null; label?: string | null } | null;
-}) => {
-  const tokens = [account.accountType?.value, account.accountType?.label].map(
-    value =>
-      String(value ?? '')
-        .trim()
-        .toUpperCase()
-  );
-  return tokens.includes(AccountProfileLedgerLabelEnum.CashLedger);
-};
 
 export const useCashReportFilters = (): CashReportFiltersState => {
   const { user } = useAuth();
@@ -137,7 +129,21 @@ export const useCashReportFilters = (): CashReportFiltersState => {
     queryKey: ['cash-report-branches'],
     queryFn: () => branchProfileApi.getAllBranchProfiles({ activeOnly: true }),
   });
-  const accountsQuery = useListAccountProfiles({ active: true, limit: 500 });
+  const accountsQuery = useInfiniteQuery({
+    queryKey: ['cash-report-accounts', AccountProfileLedgerLabelEnum.CashLedger],
+    initialPageParam: 0,
+    queryFn: async ({ pageParam }) =>
+      accountProfileApi.getAccountProfiles({
+        active: true,
+        accountType: AccountProfileLedgerLabelEnum.CashLedger,
+        offset: Number(pageParam) || 0,
+        limit: PAGINATION_MAX_LIMIT,
+      }),
+    getNextPageParam: (lastPage, _allPages, lastPageParam) =>
+      lastPage.hasMore
+        ? (Number(lastPageParam) || 0) + lastPage.limit
+        : undefined,
+  });
 
   const branchOptions = useMemo(() => {
     const rows = branchesQuery.data ?? [];
@@ -155,16 +161,15 @@ export const useCashReportFilters = (): CashReportFiltersState => {
   }, [branchesQuery.data, isRestrictedUser, userAssignments]);
 
   const accountOptions = useMemo(() => {
-    const rows = accountsQuery.data?.data ?? [];
+    const rows =
+      accountsQuery.data?.pages.flatMap(page => page.data ?? []) ?? [];
     return uniqueOptions(
-      rows
-        .filter(isCashLedger)
-        .map(account =>
-          toOption(
-            account.id,
-            buildReportOptionLabel(account.accountCode, account.accountName)
-          )
+      rows.map(account =>
+        toOption(
+          account.id,
+          buildReportOptionLabel(account.accountCode, account.accountName)
         )
+      )
     );
   }, [accountsQuery.data]);
 
@@ -200,6 +205,12 @@ export const useCashReportFilters = (): CashReportFiltersState => {
     accountOptions,
     branchAllSelected,
     accountAllSelected,
+    isAccountsLoading: accountsQuery.isLoading,
+    isAccountsFetchingMore: accountsQuery.isFetchingNextPage,
+    hasMoreAccounts: Boolean(accountsQuery.hasNextPage),
+    loadMoreAccounts: () => {
+      void accountsQuery.fetchNextPage();
+    },
     setDateRange: value => {
       setDateRange(value);
     },

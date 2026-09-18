@@ -1,10 +1,12 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button1';
+import type { AsyncSelectOption } from '@/components/ui';
 import {
   Table,
   type TableColumnDef,
   buildSearchToolbarFilter,
+  buildStaticAsyncSelectToolbarFilter,
 } from '@/components/ui/table';
 import { useDebounce, useOffsetPaginatedList } from '@/hooks';
 import { PAGINATION_DEFAULTS } from '@/constants/paginationConstants';
@@ -13,19 +15,59 @@ import { formatDateTime } from '@/utils';
 import { CARD_TRANSFER_STATUS_OPTIONS, CARD_TRANSFER_COPY } from '../constants';
 import type { CardTransferRequest } from '../types';
 
+const readStatusValues = (searchParams: URLSearchParams) => {
+  const allowed = new Set(
+    CARD_TRANSFER_STATUS_OPTIONS.map(option => option.value)
+  );
+  return [
+    ...new Set(
+      searchParams
+        .getAll('status')
+        .flatMap(value => value.split(','))
+        .map(value => value.trim())
+        .filter(
+          (
+            value
+          ): value is (typeof CARD_TRANSFER_STATUS_OPTIONS)[number]['value'] =>
+            allowed.has(
+              value as (typeof CARD_TRANSFER_STATUS_OPTIONS)[number]['value']
+            )
+        )
+    ),
+  ];
+};
+
 export const CardTransferListView = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [status, setStatus] = useState('ALL');
   const search = searchParams.get('search') ?? '';
   const debouncedSearch = useDebounce(search, 400);
+  const selectedStatuses = useMemo(
+    () => readStatusValues(searchParams),
+    [searchParams]
+  );
+  const statusOptions = useMemo<AsyncSelectOption[]>(
+    () =>
+      CARD_TRANSFER_STATUS_OPTIONS.map(option => ({
+        value: option.value,
+        label: option.label,
+      })),
+    []
+  );
+  const selectedStatusOptions = useMemo(
+    () =>
+      statusOptions.filter(option =>
+        selectedStatuses.some(status => status === String(option.value))
+      ),
+    [selectedStatuses, statusOptions]
+  );
 
   const filters = useMemo(
     () => ({
-      status: status === 'ALL' ? undefined : status,
+      status: selectedStatuses.length ? selectedStatuses : undefined,
       search: debouncedSearch.trim() || undefined,
     }),
-    [debouncedSearch, status]
+    [debouncedSearch, selectedStatuses]
   );
 
   const {
@@ -45,32 +87,43 @@ export const CardTransferListView = () => {
     filters,
   });
 
-  const resetOffset = useCallback(() => {
-    setSearchParams(prev => {
-      const next = new URLSearchParams(prev);
-      next.set('offset', String(PAGINATION_DEFAULTS.OFFSET));
-      if (!next.has('limit')) {
-        next.set('limit', String(PAGINATION_DEFAULTS.LIMIT));
-      }
-      return next;
-    });
-  }, [setSearchParams]);
+  const resetOffsetParams = useCallback((next: URLSearchParams) => {
+    next.set('offset', String(PAGINATION_DEFAULTS.OFFSET));
+    if (!next.has('limit')) {
+      next.set('limit', String(PAGINATION_DEFAULTS.LIMIT));
+    }
+    return next;
+  }, []);
 
-  const handleSearch = (value: string) => {
-    setSearchParams(prev => {
-      const next = new URLSearchParams(prev);
-      if (value.trim()) {
-        next.set('search', value.trim());
-      } else {
-        next.delete('search');
-      }
-      next.set('offset', String(PAGINATION_DEFAULTS.OFFSET));
-      if (!next.has('limit')) {
-        next.set('limit', String(PAGINATION_DEFAULTS.LIMIT));
-      }
-      return next;
-    });
-  };
+  const handleSearch = useCallback(
+    (value: string) => {
+      setSearchParams(prev => {
+        const next = new URLSearchParams(prev);
+        if (value.trim()) {
+          next.set('search', value.trim());
+        } else {
+          next.delete('search');
+        }
+        return resetOffsetParams(next);
+      });
+    },
+    [resetOffsetParams, setSearchParams]
+  );
+
+  const handleStatusChange = useCallback(
+    (options: AsyncSelectOption[]) => {
+      setSearchParams(prev => {
+        const next = new URLSearchParams(prev);
+        next.delete('status');
+        options.forEach(option => {
+          const value = String(option.value ?? '').trim();
+          if (value) next.append('status', value);
+        });
+        return resetOffsetParams(next);
+      });
+    },
+    [resetOffsetParams, setSearchParams]
+  );
 
   const columns = useMemo<TableColumnDef<CardTransferRequest>[]>(
     () => [
@@ -125,31 +178,24 @@ export const CardTransferListView = () => {
         label: 'Search CARD transfers',
         placeholder: 'Search transaction or branch',
       }),
-      {
+      buildStaticAsyncSelectToolbarFilter({
         id: 'status',
-        type: 'custom' as const,
-        className: 'w-full shrink-0',
-        render: () => (
-          <div className="flex flex-wrap gap-2">
-            {CARD_TRANSFER_STATUS_OPTIONS.map(option => (
-              <Button
-                key={option.value}
-                type="button"
-                size="sm"
-                variant={status === option.value ? 'default' : 'outline'}
-                onClick={() => {
-                  setStatus(option.value);
-                  resetOffset();
-                }}
-              >
-                {option.label}
-              </Button>
-            ))}
-          </div>
-        ),
-      },
+        label: CARD_TRANSFER_COPY.status,
+        options: statusOptions,
+        value: selectedStatusOptions,
+        isMulti: true,
+        placeholder: CARD_TRANSFER_COPY.statusPlaceholder,
+        className: 'min-w-56 shrink-0',
+        onChange: handleStatusChange,
+      }),
     ],
-    [handleSearch, resetOffset, search, status]
+    [
+      handleSearch,
+      handleStatusChange,
+      search,
+      selectedStatusOptions,
+      statusOptions,
+    ]
   );
 
   if (error instanceof Error) {

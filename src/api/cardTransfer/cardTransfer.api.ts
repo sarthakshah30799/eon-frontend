@@ -29,7 +29,7 @@ const request = async <T>(
 };
 
 export interface ICardTransferListQuery extends IOffsetPaginationParams {
-  status?: string;
+  status?: string | string[];
   search?: string;
 }
 

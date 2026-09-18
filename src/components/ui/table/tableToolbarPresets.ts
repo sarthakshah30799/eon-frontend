@@ -48,21 +48,35 @@ export const buildBranchToolbarFilter = (config: {
   className: config.className ?? 'w-48 shrink-0',
 });
 
-export const buildStaticAsyncSelectToolbarFilter = (config: {
+type StaticAsyncSelectToolbarFilterConfig = {
   id: string;
   label: string;
   options: AsyncSelectOption[];
-  value: AsyncSelectOption | null;
-  onChange: (option: AsyncSelectOption | null) => void;
   placeholder?: string;
   className?: string;
   hidden?: boolean;
-}): TableToolbarFilter => ({
-  id: config.id,
-  type: 'asyncSelect',
-  label: config.label,
-  value: config.value,
-  loadOptions: async (inputValue: string) => {
+};
+
+type StaticSingleAsyncSelectToolbarFilterConfig =
+  StaticAsyncSelectToolbarFilterConfig & {
+    isMulti?: false;
+    value: AsyncSelectOption | null;
+    onChange: (option: AsyncSelectOption | null) => void;
+  };
+
+type StaticMultiAsyncSelectToolbarFilterConfig =
+  StaticAsyncSelectToolbarFilterConfig & {
+    isMulti: true;
+    value: AsyncSelectOption[];
+    onChange: (option: AsyncSelectOption[]) => void;
+  };
+
+export const buildStaticAsyncSelectToolbarFilter = (
+  config:
+    | StaticSingleAsyncSelectToolbarFilterConfig
+    | StaticMultiAsyncSelectToolbarFilterConfig
+): TableToolbarFilter => {
+  const loadOptions = async (inputValue: string) => {
     const normalizedInput = inputValue.trim().toLowerCase();
     const options = normalizedInput
       ? config.options.filter(
@@ -73,13 +87,41 @@ export const buildStaticAsyncSelectToolbarFilter = (config: {
       : config.options;
 
     return { options };
-  },
-  onChange: config.onChange,
-  placeholder: config.placeholder ?? 'All',
-  defaultOptions: true,
-  pagination: false,
-  isSearchable: true,
-  isClearable: true,
-  hidden: config.hidden,
-  className: config.className ?? 'w-40 shrink-0',
-});
+  };
+
+  if (config.isMulti) {
+    return {
+      id: config.id,
+      type: 'asyncSelect',
+      label: config.label,
+      value: config.value,
+      isMulti: true,
+      loadOptions,
+      onChange: config.onChange,
+      placeholder: config.placeholder ?? 'All',
+      defaultOptions: true,
+      pagination: false,
+      isSearchable: true,
+      isClearable: true,
+      hidden: config.hidden,
+      className: config.className ?? 'w-40 shrink-0',
+    };
+  }
+
+  return {
+    id: config.id,
+    type: 'asyncSelect',
+    label: config.label,
+    value: config.value,
+    isMulti: false,
+    loadOptions,
+    onChange: config.onChange,
+    placeholder: config.placeholder ?? 'All',
+    defaultOptions: true,
+    pagination: false,
+    isSearchable: true,
+    isClearable: true,
+    hidden: config.hidden,
+    className: config.className ?? 'w-40 shrink-0',
+  };
+};

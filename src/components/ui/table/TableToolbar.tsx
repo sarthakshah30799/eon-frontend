@@ -35,6 +35,33 @@ export const TableToolbar = ({ filters }: TableToolbarProps) => {
         }
 
         if (filter.type === 'asyncSelect') {
+          if (filter.isMulti) {
+            return (
+              <div
+                key={filter.id}
+                className={filter.className ?? 'w-48 shrink-0'}
+              >
+                <AsyncSelect
+                  label={filter.label}
+                  placeholder={filter.placeholder}
+                  value={filter.value}
+                  loadOptions={filter.loadOptions}
+                  defaultOptions={filter.defaultOptions ?? true}
+                  pagination={filter.pagination ?? true}
+                  isSearchable={filter.isSearchable ?? true}
+                  isClearable={filter.isClearable ?? true}
+                  isDisabled={filter.isDisabled}
+                  isMulti
+                  closeMenuOnSelect={false}
+                  className="!max-w-none"
+                  onChange={option => {
+                    filter.onChange(Array.isArray(option) ? [...option] : []);
+                  }}
+                />
+              </div>
+            );
+          }
+
           return (
             <div
               key={filter.id}

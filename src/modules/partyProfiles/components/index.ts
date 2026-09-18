@@ -6,4 +6,5 @@ export * from './PartyProfileReviewQueueItem';
 export * from './PartyProfileDocumentsActionButton';
 export * from './PartyProfileCommissionRulesFieldArray';
 export * from './SelectPartyProfiles';
+export * from './FormFieldPartyProfileSelect';
 export * from './AgentCommissionSection';

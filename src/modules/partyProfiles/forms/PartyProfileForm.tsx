@@ -32,7 +32,10 @@ import {
 } from '../types/partyProfileTypes';
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import type { IReviewPartyProfilePayload } from '../types';
-import { PartyProfileReviewActionPanel } from '../components';
+import {
+  FormFieldPartyProfileSelect,
+  PartyProfileReviewActionPanel,
+} from '../components';
 import { PartyProfileCommissionRulesFieldArray } from '../components/PartyProfileCommissionRulesFieldArray';
 import { normalizeCodeValue } from '@/utils';
 import {
@@ -459,13 +462,13 @@ const PartyProfileFormFields = ({
             type="number"
             disabled={isSubmitting}
           />
-          <FormFieldCategoryOption
+          <FormFieldPartyProfileSelect
             name="defaultAgent"
             label="Default Agent"
-            code={CategoryOptionCodeEnum.DefaultAgent}
+            types={PartyProfileTypeEnum.AGENT}
             placeholder="Select default agent"
             disabled={isSubmitting}
-            isCreatable={true}
+            helperText="Optional. Links to an agent party profile."
           />
           <FormFieldInput
             name="phoneNo"
@@ -570,13 +573,13 @@ const PartyProfileFormFields = ({
 
       <CardSection heading="TDS Configuration">
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-          <FormFieldCategoryOption
+          <FormFieldPartyProfileSelect
             name="marketingExecutive"
             label="Marketing Executive"
-            code={CategoryOptionCodeEnum.MarketingExecutive}
-            placeholder="Select Executive"
+            types={PartyProfileTypeEnum.MARKETING_EXECUTIVE}
+            placeholder="Select executive"
             disabled={isSubmitting}
-            isCreatable={true}
+            helperText="Optional. Links to a marketing executive party profile."
           />
           <FormFieldCategoryOption
             name="businessNature"

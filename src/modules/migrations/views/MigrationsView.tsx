@@ -49,7 +49,372 @@ const MIGRATION_TABLE_GROUPS: MigrationTableGroup[] = [
         note: 'Old company master.',
       },
       { id: 'mstcompany', name: 'mstcompany', note: 'Old branch master.' },
-      { id: 'mstcounter', name: 'mstcounter', note: 'Old counter master.' },
+      {
+        id: 'mstcounter',
+        name: 'mstcounter',
+        note: 'Old counter master. Counters are independent; branch links come from mstBranchCounterLink.',
+      },
+    ],
+  },
+  {
+    title: 'Geography',
+    description:
+      'Standalone country and Indian state masters (WIRED). CTRCOUNTRY is read if it exists and is combined with ctrcountry2. Selecting any geography table runs country/state/location-type before currency and branch. CTRCITY/CTRCITY2 are loaded on demand to resolve city ids → names on branch and party (no cities table).',
+    tables: [
+      {
+        id: 'ctrcountry2',
+        name: 'ctrcountry2',
+        note: 'CTR country names/codes. Also reads CTRCOUNTRY when that table exists and unions both into countries.',
+      },
+      {
+        id: 'tb_MstCountry',
+        name: 'tb_MstCountry',
+        note: 'ISO/LRS, risk, restricted, grey-list, and base-country overlay for countries.',
+      },
+      {
+        id: 'LRSCountry',
+        name: 'LRSCountry',
+        note: 'LRS ISO codes merged into the same countries rows by name.',
+      },
+      {
+        id: 'CTRSTATE',
+        name: 'CTRSTATE',
+        note: 'Combined with CTR_CUSTOMERSTATE and GSTSTATE into states. All rows attach to India.',
+      },
+      {
+        id: 'mstLocationType',
+        name: 'mstLocationType',
+        note: 'Branch location type lookup. Stored as category_options LOCATIONTYPE, not a separate table.',
+      },
+    ],
+  },
+  {
+    title: 'Currency',
+    description:
+      'Operational currency master from old master DB. MASTCURR and MCURRENCYLIST are catalogs only; rows are not inserted without an mCurrency record. Country resolves from nCountryID maps, then ISO hint (INR→IN).',
+    tables: [
+      {
+        id: 'mCurrency',
+        name: 'mCurrency',
+        note: 'Canonical source for currencies. vCalculationMethod M → MULTIPLICATION; bTradedCurrency → onlyStocking.',
+      },
+      {
+        id: 'MASTCURR',
+        name: 'MASTCURR',
+        note: 'Name/code catalog (CNNAMENEW/CNCODENEW). Logged when a code has no mCurrency row.',
+      },
+      {
+        id: 'MCURRENCYLIST',
+        name: 'MCURRENCYLIST',
+        note: 'Allowed-code list. Logged when a code has no mCurrency row; not inserted on its own.',
+      },
+    ],
+  },
+  {
+    title: 'Rates & Margins',
+    description:
+      'mstRates → currency_rates (MANUAL base; prefer blank IssCode then CN) + product_currency_rates min/max by vExchType. MarginMaster → product margins (lowest buy / highest sell, PAISA; no branch/issuer). Ticker tables → currency_rates TICKER. StockCurrencyRate / PreMarginMaster / MARGINMASTERTT are deferred and logged when selected.',
+    tables: [
+      {
+        id: 'mstRates',
+        name: 'mstRates',
+        note: 'Base rates + product min/max. rateFor/branch/IssCode logged unmapped.',
+      },
+      {
+        id: 'MarginMaster',
+        name: 'MarginMaster',
+        note: 'Collapsed by product+currency; branch/issuer deferred.',
+      },
+      {
+        id: 'tickerliverate',
+        name: 'tickerliverate',
+        note: 'TICKER provider; Symbol like GBPINRCOMP → GBP.',
+      },
+      {
+        id: 'tmpliverate',
+        name: 'tmpliverate',
+        note: 'TICKER provider from InrBid/InrAsk.',
+      },
+      {
+        id: 'StockCurrencyRate',
+        name: 'StockCurrencyRate',
+        note: 'DEFERRED — stock revaluation; logged skip pending client.',
+      },
+      {
+        id: 'PreMarginMaster',
+        name: 'PreMarginMaster',
+        note: 'DEFERRED — WH/NWH/Holiday margins; logged skip.',
+      },
+      {
+        id: 'MARGINMASTERTT',
+        name: 'MARGINMASTERTT',
+        note: 'DEFERRED — TT margins; logged skip.',
+      },
+    ],
+  },
+  {
+    title: 'Purposes',
+    description:
+      'mstPurpose → purposes. Collapsed by Description; 2-letter code from name initials (always length 2). sell/purchase from vTrnType S/B; corporate/individual from TrnSubType C/I. PurposeLimit and other purpose catalogs are deferred/ask-client when selected (logged only).',
+    tables: [
+      {
+        id: 'mstPurpose',
+        name: 'mstPurpose',
+        note: 'Operational purchase/sale purpose master → purposes.',
+      },
+      {
+        id: 'mstAppPurpose',
+        name: 'mstAppPurpose',
+        note: 'DEFERRED — UI view permissions; logged skip.',
+      },
+      {
+        id: 'SubPurpose',
+        name: 'SubPurpose',
+        note: 'DEFERRED — 1:1 mirror of mstPurpose; logged skip.',
+      },
+      {
+        id: 'PurposeLimit',
+        name: 'PurposeLimit',
+        note: 'ASK CLIENT — cash/visit caps ≠ TCS threshold/slabs; logged skip.',
+      },
+      {
+        id: 'ADIPurposeMaster',
+        name: 'ADIPurposeMaster',
+        note: 'DEFERRED — ADI text catalog; AD1 uses same purposes table.',
+      },
+      {
+        id: 'AD1Referral_Inc',
+        name: 'AD1Referral_Inc',
+        note: 'DEFERRED — transaction log, not master.',
+      },
+      {
+        id: 'IBPurposes',
+        name: 'IBPurposes',
+        note: 'DEFERRED — settlement/division buckets, not FX purpose.',
+      },
+      {
+        id: 'RBIPurpose',
+        name: 'RBIPurpose',
+        note: 'DEFERRED — RBICODE mapping; no column on purposes yet.',
+      },
+      {
+        id: 'MstLRSPurpose',
+        name: 'MstLRSPurpose',
+        note: 'DEFERRED — LRS-only list.',
+      },
+      {
+        id: 'TPPurpose',
+        name: 'TPPurpose',
+        note: 'DEFERRED — empty sample.',
+      },
+      {
+        id: 'TTPurpose',
+        name: 'TTPurpose',
+        note: 'DEFERRED — TT/TP/EM purposes until TT wave.',
+      },
+      {
+        id: 'TTSubPurpose',
+        name: 'TTSubPurpose',
+        note: 'DEFERRED — subcodes; no sub-purpose entity.',
+      },
+    ],
+  },
+  {
+    title: 'Tax / TCS / GST',
+    description:
+      'mstTax gst18% → advanced_settings GST_RATE (18). GSTInfo → party gstNo (IGST→CGST→SGST) after parties. TCSPERMASTER → purpose_slabs when old PurposeCode matches migrated mstPurpose. TCSApplyFor logged only. TCSPANTRANS/tb_TCSAPI txn-later. HFEE/TAXROFF/mstTaxd/exempt/RCM skipped (CQ-wave6).',
+    tables: [
+      {
+        id: 'mstTax',
+        name: 'mstTax',
+        note: 'gst18% → GST_RATE=18. HFEE/TAXROFF skipped & logged.',
+      },
+      {
+        id: 'GSTInfo',
+        name: 'GSTInfo',
+        note: '→ party_profiles.gstNo; needs party (mstCodes) in same/prior run.',
+      },
+      {
+        id: 'TCSPERMASTER',
+        name: 'TCSPERMASTER',
+        note: '→ purpose_slabs; auto-runs mstPurpose; unmatched PURPOSECODE logged.',
+      },
+      {
+        id: 'TCSApplyFor',
+        name: 'TCSApplyFor',
+        note: 'LOG ONLY — no master target.',
+      },
+      {
+        id: 'TCSPANTRANS',
+        name: 'TCSPANTRANS',
+        note: 'TXN-LATER — bill TCS history.',
+      },
+      {
+        id: 'tb_TCSAPI',
+        name: 'tb_TCSAPI',
+        note: 'TXN/ENV-LATER — do not copy API tokens.',
+      },
+      {
+        id: 'mstTaxd',
+        name: 'mstTaxd',
+        note: 'SKIP — GST amount slabs; CQ-wave6.',
+      },
+      {
+        id: 'mstTaxExampt',
+        name: 'mstTaxExampt',
+        note: 'SKIP — tax exemptions; CQ-wave6.',
+      },
+      {
+        id: 'GSTNoExempt',
+        name: 'GSTNoExempt',
+        note: 'SKIP — CQ-wave6.',
+      },
+      {
+        id: 'gstrcmslab',
+        name: 'gstrcmslab',
+        note: 'SKIP — no RCM entity; CQ-wave6.',
+      },
+    ],
+  },
+  {
+    title: 'Documents / Settings / Locks / Mail',
+    description:
+      'Wave 7: advsettings (all nBranchID, first DATACODE wins) → advanced_settings; mstPasswordPolicy → PASSWORD_POLICY (wins over PWD*); MailConfig dummy password; ScanDocMaster → document_profiles; monthlock+MLockBrnUserLink → DB2 monthly_lock_windows; tb_EODQuestion → DAY_END_POLICY. See docs/migration-wave7-decisions.md.',
+    tables: [
+      {
+        id: 'advsettings',
+        name: 'advsettings',
+        note: 'All nBranchID kept; first DATACODE wins; entity→UUID select else text.',
+      },
+      {
+        id: 'mstPasswordPolicy',
+        name: 'mstPasswordPolicy',
+        note: 'PASSWORD_* children; maxLength default 128; nExpDate logged.',
+      },
+      {
+        id: 'MailConfig',
+        name: 'MailConfig',
+        note: 'host/port/user/from; dummy encrypted password — reset in UI.',
+      },
+      {
+        id: 'ScanDocMaster',
+        name: 'ScanDocMaster',
+        note: '→ document_profiles; M/T; clash {code}-{nUniqCode}.',
+      },
+      {
+        id: 'monthlock',
+        name: 'monthlock',
+        note: 'With MLockBrnUserLink → DB2 locks; first/branch; soft-delete kept; OPEN* CQ.',
+      },
+      {
+        id: 'MLockBrnUserLink',
+        name: 'MLockBrnUserLink',
+        note: 'User links for monthlock (same task).',
+      },
+      {
+        id: 'tb_EODQuestion',
+        name: 'tb_EODQuestion',
+        note: '→ DAY_END_POLICY checklist children.',
+      },
+      {
+        id: 'DOCCHECK',
+        name: 'DOCCHECK',
+        note: 'SKIP/LOG — CQ-wave7 (not document_profiles).',
+      },
+      {
+        id: 'UpdateSettings',
+        name: 'UpdateSettings',
+        note: 'SKIP — not additional settings.',
+      },
+      {
+        id: 'tb_ConsoParameter',
+        name: 'tb_ConsoParameter',
+        note: 'SKIP.',
+      },
+      {
+        id: 'yrMaster',
+        name: 'yrMaster',
+        note: 'SKIP; yrDetails future.',
+      },
+      {
+        id: 'yrDetails',
+        name: 'yrDetails',
+        note: 'FUTURE — yearly DB names.',
+      },
+      {
+        id: 'ScannedDocs',
+        name: 'ScannedDocs',
+        note: 'TXN-LATER.',
+      },
+      {
+        id: 'PreScannedDocs',
+        name: 'PreScannedDocs',
+        note: 'TXN-LATER.',
+      },
+      {
+        id: 'DOCCOLLECTED',
+        name: 'DOCCOLLECTED',
+        note: 'TXN-LATER.',
+      },
+      {
+        id: 'PAYDATALOCK',
+        name: 'PAYDATALOCK',
+        note: 'TXN-LATER.',
+      },
+      {
+        id: 'tb_HolidayList',
+        name: 'tb_HolidayList',
+        note: 'SKIP — no holiday entity.',
+      },
+      {
+        id: 'mstShifts',
+        name: 'mstShifts',
+        note: 'SKIP — no shift entity.',
+      },
+    ],
+  },
+  {
+    title: 'Financial & Products',
+    description:
+      'FinancialProfile + FinancialSubProfile → financial_codes / financial_sub_profiles. AccountsProfile → account_profiles (nCurrencyID 0 → INR). mProductM → products (account FKs by code). mCurrencyProductLink → product_currency_rates allow-list. Run currency first; mock run recommended.',
+    tables: [
+      {
+        id: 'FinancialProfile',
+        name: 'FinancialProfile',
+        note: 'vFinType B/P/T → FINANCIALTYPE; FinancialSubProfile in same task.',
+      },
+      {
+        id: 'AccountsProfile',
+        name: 'AccountsProfile',
+        note: 'Requires financial codes + currency; lazy-loads mcurrency when needed.',
+      },
+      {
+        id: 'mProductM',
+        name: 'mProductM',
+        note: 'Account FKs resolved by accountCode; EEFC fields logged unmapped.',
+      },
+      {
+        id: 'mCurrencyProductLink',
+        name: 'mCurrencyProductLink',
+        note: 'Allow-list only; margins null; unique (productId, currencyId).',
+      },
+    ],
+  },
+  {
+    title: 'Parties',
+    description:
+      'mstCodes high-confidence types → party_profiles (status APPROVE). ME/TA first, then others. Run after company/branch. mProductIssuerLink auto-runs currency → financial → account → product when selected.',
+    tables: [
+      {
+        id: 'mstCodes',
+        name: 'mstCodes',
+        note: 'CC/TA/FF/ME/AD/FR/TC only. CQ-2 types skipped. Branch lazy/HO fallback. Category codes seeded.',
+      },
+      {
+        id: 'mProductIssuerLink',
+        name: 'mProductIssuerLink',
+        note: '→ product_card_issuers; auto-runs product chain. Needs TC parties (mstCodes) resolved.',
+      },
     ],
   },
   {
@@ -77,7 +442,7 @@ const MIGRATION_TABLE_GROUPS: MigrationTableGroup[] = [
       {
         id: 'mstBranchCounterLink',
         name: 'mstBranchCounterLink',
-        note: 'Branch to counter relation source.',
+        note: 'Branch to counter relation. Writes branch_counters (many-to-many).',
       },
       {
         id: 'mstBranchUserLink',

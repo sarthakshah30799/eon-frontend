@@ -6,6 +6,9 @@ import {
   Table,
   type TableColumnDef,
   buildSearchToolbarFilter,
+  TABLE_ACTIONS_CELL_CLASSNAME,
+  TABLE_ACTION_BUTTON_CLASSNAME,
+  TABLE_ACTION_ICON_CLASSNAME,
 } from '@/components/ui/table';
 import { useAuth } from '@/lib/AuthContext';
 import { useDebounce, useOffsetPaginatedList } from '@/hooks';
@@ -118,21 +121,23 @@ export const TransferListView = ({
         id: 'actions',
         header: 'Actions',
         cell: ({ row }) => (
-          <Button
-            type="button"
-            aria-label="View transfer"
-            variant="ghost"
-            size="icon"
-            className="rounded-sm bg-transparent text-black! hover:bg-surface-secondary hover:text-text-primary"
-            onClick={event => {
-              event.stopPropagation();
-              navigate(
-                `/transfer/${transferType.toLowerCase()}/edit/${row.original.id}`
-              );
-            }}
-          >
-            <PencilSquareIcon className="h-5 w-5" />
-          </Button>
+          <div className={TABLE_ACTIONS_CELL_CLASSNAME}>
+            <Button
+              type="button"
+              aria-label="View transfer"
+              variant="ghost"
+              size="icon"
+              className={TABLE_ACTION_BUTTON_CLASSNAME}
+              onClick={event => {
+                event.stopPropagation();
+                navigate(
+                  `/transfer/${transferType.toLowerCase()}/edit/${row.original.id}`
+                );
+              }}
+            >
+              <PencilSquareIcon className={TABLE_ACTION_ICON_CLASSNAME} />
+            </Button>
+          </div>
         ),
       },
     ],

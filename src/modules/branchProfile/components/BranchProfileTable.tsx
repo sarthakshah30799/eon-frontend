@@ -2,7 +2,13 @@ import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PencilSquareIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button1';
-import { Table, type TableColumnDef } from '@/components/ui/table';
+import {
+  Table,
+  type TableColumnDef,
+  TABLE_ACTIONS_CELL_CLASSNAME,
+  TABLE_ACTION_BUTTON_CLASSNAME,
+  TABLE_ACTION_ICON_CLASSNAME,
+} from '@/components/ui/table';
 import type { PaginationControlsProps } from '@/components/ui';
 import type { IBranchProfile } from '../types';
 
@@ -109,27 +115,23 @@ export const BranchProfileTable = ({
     {
       id: 'actions',
       header: 'Actions',
-      meta: {
-        headerClassName:
-          'sticky right-0 z-20 border-l border-border-primary bg-surface-secondary',
-        cellClassName:
-          'sticky right-0 z-10 border-l border-border-primary bg-surface-primary',
-      },
       cell: ({ row }) => {
         const branchId = row.original.id;
 
         return (
-          <div className="flex items-center gap-2">
+          <div className={TABLE_ACTIONS_CELL_CLASSNAME}>
             <Button
               type="button"
               aria-label="Edit company branch"
-              className="border-0! bg-transparent! text-black!"
+              variant="ghost"
+              size="icon"
+              className={TABLE_ACTION_BUTTON_CLASSNAME}
               onClick={event => {
                 event.stopPropagation();
                 navigate(`/admin/branch-profile/edit/${branchId}`);
               }}
             >
-              <PencilSquareIcon className="h-5 w-5" />
+              <PencilSquareIcon className={TABLE_ACTION_ICON_CLASSNAME} />
             </Button>
           </div>
         );

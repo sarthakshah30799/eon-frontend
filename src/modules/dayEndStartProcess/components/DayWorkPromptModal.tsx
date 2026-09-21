@@ -2,13 +2,30 @@ import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button, Modal } from '@/components/ui';
 import { useAuth } from '@/lib/AuthContext';
-import { DAY_WORK_PROMPT_DISMISSED_STORAGE_KEY } from '../constants';
+import { formatDateTime } from '@/utils';
+import {
+  BUSINESS_DATE_DISPLAY_FORMAT,
+  DAY_WORK_PROMPT_DISMISSED_STORAGE_KEY,
+} from '../constants';
 
-const PROMPT_WORKFLOW_STATES = new Set([
-  'READY_TO_START',
-  'PENDING_BOD',
-  'PENDING_EOD',
-]);
+const DAY_START_PROMPT_STATES = new Set(['READY_TO_START', 'PENDING_BOD']);
+
+const getLocalTodayDateOnly = (): string => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = `${now.getMonth() + 1}`.padStart(2, '0');
+  const day = `${now.getDate()}`.padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const formatBusinessDate = (value: string): string => {
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value.trim());
+  if (match) {
+    return `${match[3]}-${match[2]}-${match[1]}`;
+  }
+
+  return formatDateTime(value, BUSINESS_DATE_DISPLAY_FORMAT);
+};
 
 export const DayWorkPromptModal = () => {
   const navigate = useNavigate();
@@ -29,12 +46,22 @@ export const DayWorkPromptModal = () => {
     user?.isAdmin || user?.isHo || user?.isHoStaff
   );
 
+  const workflowState = policyContext?.workflowState ?? '';
+  const currentBusinessDate = policyContext?.currentBusinessDate || '';
+  const openBusinessDate =
+    policyContext?.openBusinessDate || currentBusinessDate;
+  const today = getLocalTodayDateOnly();
+  const isPreviousDayEodPending =
+    workflowState === 'PENDING_EOD' &&
+    Boolean(openBusinessDate) &&
+    openBusinessDate < today;
+  const isDayStartRequired = DAY_START_PROMPT_STATES.has(workflowState);
+
   const shouldPrompt = Boolean(
     !isLoading &&
     !canBypassPrompt &&
     !isDismissed &&
-    policyContext?.workflowState &&
-    PROMPT_WORKFLOW_STATES.has(policyContext.workflowState) &&
+    (isDayStartRequired || isPreviousDayEodPending) &&
     !location.pathname.includes('/day-end-start-process')
   );
 
@@ -42,16 +69,13 @@ export const DayWorkPromptModal = () => {
     return null;
   }
 
-  const workflowState = policyContext?.workflowState ?? '';
-  const currentBusinessDate = policyContext?.currentBusinessDate || 'today';
-  const openBusinessDate =
-    policyContext?.openBusinessDate || currentBusinessDate;
-  const isPendingEod = workflowState === 'PENDING_EOD';
+  const displayDate = formatBusinessDate(openBusinessDate || today);
+  const isPendingEod = isPreviousDayEodPending;
 
   const title = isPendingEod ? 'Pending Day End' : 'Day Start Required';
   const description = isPendingEod
-    ? `The previous business date ${openBusinessDate} is still open. You can start a new day or continue for now.`
-    : `Please start your working day for ${openBusinessDate} before creating or editing transactions.`;
+    ? `The previous business date ${displayDate} is still open. You can start a new day or continue for now.`
+    : `Please start your working day for ${displayDate} before creating or editing transactions.`;
 
   const handleDismiss = () => {
     if (typeof window !== 'undefined') {

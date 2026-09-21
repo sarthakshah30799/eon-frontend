@@ -2,7 +2,13 @@ import { useNavigate } from 'react-router-dom';
 import { PencilSquareIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button1';
 import { ToggleSwitch } from '@/components/ui/toggleSwitch';
-import { Table, type TableColumnDef } from '@/components/ui/table';
+import {
+  Table,
+  type TableColumnDef,
+  TABLE_ACTIONS_CELL_CLASSNAME,
+  TABLE_ACTION_BUTTON_CLASSNAME,
+  TABLE_ACTION_ICON_CLASSNAME,
+} from '@/components/ui/table';
 import type { PaginationControlsProps } from '@/components/ui';
 import type { IUserRole } from '../types';
 
@@ -78,26 +84,23 @@ export const UserRoleTable = ({
     {
       id: 'actions',
       header: 'Actions',
-      meta: {
-        headerClassName:
-          'sticky right-0 z-20 border-l border-border-primary bg-surface-secondary',
-      },
       cell: ({ row }) => {
         const roleId = row.original.id;
 
         return (
-          <div className="flex items-center gap-2">
+          <div className={TABLE_ACTIONS_CELL_CLASSNAME}>
             <Button
               type="button"
               aria-label="Edit role"
-              size="sm"
-              className="border-0! bg-transparent! text-black!"
+              variant="ghost"
+              size="icon"
+              className={TABLE_ACTION_BUTTON_CLASSNAME}
               onClick={event => {
                 event.stopPropagation();
                 navigate(`/admin/user-role/edit/${roleId}`);
               }}
             >
-              <PencilSquareIcon className="h-5 w-5" />
+              <PencilSquareIcon className={TABLE_ACTION_ICON_CLASSNAME} />
             </Button>
           </div>
         );

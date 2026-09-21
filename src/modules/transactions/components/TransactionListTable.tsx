@@ -1,5 +1,12 @@
 import { useMemo, type ReactNode } from 'react';
-import { Table, type TableColumnDef, type TableToolbarFilter } from '@/components/ui/table';
+import {
+  Table,
+  type TableColumnDef,
+  type TableToolbarFilter,
+  TABLE_ACTIONS_CELL_CLASSNAME,
+  TABLE_ACTION_BUTTON_CLASSNAME,
+  TABLE_ACTION_ICON_CLASSNAME,
+} from '@/components/ui/table';
 import { Button } from '@/components/ui/button1';
 import { EyeIcon, PencilSquareIcon } from '@heroicons/react/24/outline';
 import type { PaginationControlsProps } from '@/components/ui';
@@ -99,21 +106,15 @@ export const TransactionListTable = ({
       {
         id: 'actions',
         header: 'Actions',
-        meta: {
-          headerClassName:
-            'sticky right-0 z-20 border-l border-border-primary bg-surface-secondary',
-          cellClassName:
-            'sticky right-0 z-10 border-l border-border-primary bg-surface-primary',
-        },
         cell: ({ row }) => (
-          <div className="flex items-center gap-2">
+          <div className={TABLE_ACTIONS_CELL_CLASSNAME}>
             {onActionClick ? (
               <Button
                 type="button"
                 aria-label={actionLabel}
                 variant="ghost"
                 size="icon"
-                className="rounded-sm bg-transparent text-black! hover:bg-surface-secondary hover:text-text-primary"
+                className={TABLE_ACTION_BUTTON_CLASSNAME}
                 disabled={isActionDisabled?.(row.original)}
                 loading={isActionLoading?.(row.original)}
                 onClick={event => {
@@ -123,9 +124,9 @@ export const TransactionListTable = ({
               >
                 {actionIcon ??
                   (actionMode === 'view' ? (
-                    <EyeIcon className="h-5 w-5" />
+                    <EyeIcon className={TABLE_ACTION_ICON_CLASSNAME} />
                   ) : (
-                    <PencilSquareIcon className="h-5 w-5" />
+                    <PencilSquareIcon className={TABLE_ACTION_ICON_CLASSNAME} />
                   ))}
               </Button>
             ) : null}

@@ -13,6 +13,12 @@ import {
   Table,
   type TableColumnDef,
 } from '@/components/ui';
+import {
+  TABLE_ACTIONS_CELL_CLASSNAME,
+  TABLE_ACTION_BUTTON_CLASSNAME,
+  TABLE_ACTION_DELETE_BUTTON_CLASSNAME,
+  TABLE_ACTION_ICON_CLASSNAME,
+} from '@/components/ui/table';
 import { FormFieldSelect } from '@/components/forms';
 import type {
   ICreateUserProfile,
@@ -230,42 +236,36 @@ export const UserProfileAssignmentsSection = ({
     {
       id: 'actions',
       header: 'Actions',
-      meta: {
-        headerClassName:
-          'sticky right-0 z-20 border-l border-border-primary bg-surface-secondary',
-        cellClassName:
-          'sticky right-0 z-10 border-l border-border-primary bg-surface-primary',
-      },
       cell: ({ row }) => {
         const index = row.index;
 
         return (
-          <div className="flex items-center gap-2">
+          <div className={TABLE_ACTIONS_CELL_CLASSNAME}>
             <Button
               type="button"
               aria-label="Edit assignment"
               variant="ghost"
               size="icon"
-              className="rounded-sm bg-transparent text-text-secondary hover:bg-surface-secondary hover:text-text-primary"
+              className={TABLE_ACTION_BUTTON_CLASSNAME}
               onClick={event => {
                 event.stopPropagation();
                 handleEditAssignment(index);
               }}
             >
-              <PencilSquareIcon className="h-5 w-5" />
+              <PencilSquareIcon className={TABLE_ACTION_ICON_CLASSNAME} />
             </Button>
             <Button
               type="button"
               aria-label="Delete assignment"
               variant="ghost"
               size="icon"
-              className="rounded-sm bg-transparent text-text-secondary hover:bg-surface-secondary hover:text-error-600"
+              className={TABLE_ACTION_DELETE_BUTTON_CLASSNAME}
               onClick={event => {
                 event.stopPropagation();
                 handleDeleteAssignment(index);
               }}
             >
-              <TrashIcon className="h-5 w-5" />
+              <TrashIcon className={TABLE_ACTION_ICON_CLASSNAME} />
             </Button>
           </div>
         );

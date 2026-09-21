@@ -2,7 +2,14 @@ import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button1';
-import { Table, type TableColumnDef } from '@/components/ui/table';
+import {
+  Table,
+  type TableColumnDef,
+  TABLE_ACTIONS_CELL_CLASSNAME,
+  TABLE_ACTION_BUTTON_CLASSNAME,
+  TABLE_ACTION_DELETE_BUTTON_CLASSNAME,
+  TABLE_ACTION_ICON_CLASSNAME,
+} from '@/components/ui/table';
 import type { PaginationControlsProps } from '@/components/ui';
 import type { ICompanyProfile } from '../types';
 
@@ -70,31 +77,33 @@ export const CompanyProfileTable = ({
       id: 'actions',
       header: 'Actions',
       meta: {
-        headerClassName:
-          'sticky right-0 z-20 border-l border-border-primary bg-surface-secondary w-28',
-        cellClassName:
-          'sticky right-0 z-10 border-l border-border-primary bg-surface-primary w-28',
+        headerClassName: 'w-28',
+        cellClassName: 'w-28',
       },
       cell: ({ row }) => {
         const companyId = row.original.id;
 
         return (
-          <div className="flex items-center gap-2">
+          <div className={TABLE_ACTIONS_CELL_CLASSNAME}>
             <Button
               type="button"
               aria-label="Edit company profile"
-              className="border-0! bg-transparent! text-black! p-1!"
+              variant="ghost"
+              size="icon"
+              className={TABLE_ACTION_BUTTON_CLASSNAME}
               onClick={event => {
                 event.stopPropagation();
                 navigate(`/admin/company-profile/edit/${companyId}`);
               }}
             >
-              <PencilSquareIcon className="h-5 w-5" />
+              <PencilSquareIcon className={TABLE_ACTION_ICON_CLASSNAME} />
             </Button>
             <Button
               type="button"
               aria-label="Delete company profile"
-              className="border-0! bg-transparent! text-error-600 hover:text-error-700! p-1!"
+              variant="ghost"
+              size="icon"
+              className={TABLE_ACTION_DELETE_BUTTON_CLASSNAME}
               disabled={isDeleting}
               onClick={async event => {
                 event.stopPropagation();
@@ -107,7 +116,7 @@ export const CompanyProfileTable = ({
                 }
               }}
             >
-              <TrashIcon className="h-5 w-5" />
+              <TrashIcon className={TABLE_ACTION_ICON_CLASSNAME} />
             </Button>
           </div>
         );

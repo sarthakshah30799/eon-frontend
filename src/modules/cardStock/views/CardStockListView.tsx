@@ -1,6 +1,13 @@
 import { useNavigate } from 'react-router-dom';
+import { EyeIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button1';
-import { Table, type TableColumnDef } from '@/components/ui/table';
+import {
+  Table,
+  type TableColumnDef,
+  TABLE_ACTIONS_CELL_CLASSNAME,
+  TABLE_ACTION_BUTTON_CLASSNAME,
+  TABLE_ACTION_ICON_CLASSNAME,
+} from '@/components/ui/table';
 import { useOffsetPaginatedList } from '@/hooks';
 import { cardStockApi } from '@/api/cardStock';
 import { formatDateTime } from '@/utils';
@@ -48,14 +55,21 @@ export const CardStockListView = () => {
       id: 'actions',
       header: 'Actions',
       cell: ({ row }) => (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => navigate(`/card-stock/edit/${row.original.id}`)}
-        >
-          View
-        </Button>
+        <div className={TABLE_ACTIONS_CELL_CLASSNAME}>
+          <Button
+            type="button"
+            aria-label="View card stock receipt"
+            variant="ghost"
+            size="icon"
+            className={TABLE_ACTION_BUTTON_CLASSNAME}
+            onClick={event => {
+              event.stopPropagation();
+              navigate(`/card-stock/edit/${row.original.id}`);
+            }}
+          >
+            <EyeIcon className={TABLE_ACTION_ICON_CLASSNAME} />
+          </Button>
+        </div>
       ),
     },
   ];

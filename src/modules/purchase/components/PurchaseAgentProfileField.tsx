@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { SelectPartyProfiles } from '@/modules/partyProfiles/components';
+import type { IPartyProfileListQuery } from '@/modules/partyProfiles/types';
 import type { IPurchaseFormValues } from '../types/purchaseTypes';
 import {
   formatPurchaseEntityLabel,
@@ -9,12 +10,18 @@ import {
 import { EntityPickerField } from './EntityPickerField';
 
 export const PurchaseAgentProfileField = ({
+  branchId = '',
   disabled = false,
 }: {
+  branchId?: string;
   disabled?: boolean;
 }) => {
   const form = useFormContext<IPurchaseFormValues>();
   const [open, setOpen] = useState(false);
+
+  const resolvedBranchId = branchId.trim();
+  const isBranchMissing = !resolvedBranchId;
+  const isPickerDisabled = disabled || isBranchMissing;
 
   const agentProfileCode = form.watch('agentProfileCode');
   const agentProfileName = form.watch('agentProfileName');
@@ -22,7 +29,11 @@ export const PurchaseAgentProfileField = ({
   const profileQueryParams = {
     ...getPurchaseTransactionPartyProfileFilter(transactionType),
     activeOnly: true,
-  };
+    ...(resolvedBranchId ? { branchId: resolvedBranchId } : {}),
+  } satisfies Pick<
+    IPartyProfileListQuery,
+    'sale' | 'purchase' | 'activeOnly' | 'branchId'
+  >;
 
   return (
     <>
@@ -30,13 +41,18 @@ export const PurchaseAgentProfileField = ({
         label="Agent Profile"
         value={formatPurchaseEntityLabel(agentProfileCode, agentProfileName)}
         placeholder="Select agent profile"
-        onClick={() => setOpen(true)}
-        disabled={disabled}
+        onClick={() => {
+          if (isPickerDisabled) {
+            return;
+          }
+          setOpen(true);
+        }}
+        disabled={isPickerDisabled}
         helperText="Optional. Choose an agent profile if this transaction needs one."
       />
 
       <SelectPartyProfiles
-        open={open}
+        open={open && !isBranchMissing}
         types={['AGENT']}
         selectable
         multiple={false}

@@ -3,6 +3,7 @@ import {
   useEffect,
   useLayoutEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import type { Resolver } from 'react-hook-form';
@@ -257,6 +258,95 @@ const PurchaseFormBody = ({
   });
   const resolvedBranchId = watchedBranchId || branchId;
   const resolvedCounterId = watchedCounterId || '';
+  const hasBranch = Boolean(resolvedBranchId?.trim());
+  const showPartyBlock = hasBranch || Boolean(savedTransaction);
+  const previousBranchIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const nextBranchId = resolvedBranchId?.trim() || '';
+
+    if (previousBranchIdRef.current === null) {
+      previousBranchIdRef.current = nextBranchId;
+      return;
+    }
+
+    if (previousBranchIdRef.current === nextBranchId || isReadOnly) {
+      previousBranchIdRef.current = nextBranchId;
+      return;
+    }
+
+    previousBranchIdRef.current = nextBranchId;
+
+    const clearOptions = {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: false,
+    } as const;
+
+    form.setValue('partyProfileId', '', {
+      ...clearOptions,
+      shouldValidate: true,
+    });
+    form.setValue('partyProfileCode', '', clearOptions);
+    form.setValue('partyProfileName', '', clearOptions);
+    form.setValue('partyProfileEmail', '', clearOptions);
+    form.setValue('partyProfilePhoneNo', '', clearOptions);
+    form.setValue('partyProfileAddress1', '', clearOptions);
+    form.setValue('partyProfileAddress2', '', clearOptions);
+    form.setValue('partyProfileAddress3', '', clearOptions);
+    form.setValue('partyProfileCity', '', clearOptions);
+    form.setValue('partyProfilePinCode', '', clearOptions);
+    form.setValue('partyProfilePanNo', '', clearOptions);
+    form.setValue('partyProfileGstNo', '', clearOptions);
+    form.setValue('partyProfileGstStateName', '', clearOptions);
+    form.setValue('partyProfileStateName', '', clearOptions);
+    form.setValue('partyProfileContactName', '', clearOptions);
+    form.setValue('partyProfileApplyTax', false, clearOptions);
+    form.setValue('agentProfileId', '', {
+      ...clearOptions,
+      shouldValidate: true,
+    });
+    form.setValue('agentProfileCode', '', clearOptions);
+    form.setValue('agentProfileName', '', clearOptions);
+    form.setValue(
+      'transactionPartyProfileType',
+      isCombinedPartyProfilePage
+        ? TransactionPartyProfileTypeEnum.CORPORATE
+        : '',
+      {
+        ...clearOptions,
+        shouldValidate: true,
+      }
+    );
+    form.setValue('purposeId', '', {
+      ...clearOptions,
+      shouldValidate: true,
+    });
+    form.setValue('passengerInfoCaptured', false, clearOptions);
+    form.setValue('passengerId', '', clearOptions);
+    form.setValue(
+      'entityType',
+      getPurchasePageEntityType(purchasePageType) ?? '',
+      clearOptions
+    );
+    form.setValue('panNumber', '', clearOptions);
+    form.setValue('panHolderName', '', clearOptions);
+    form.setValue('panDob', '', clearOptions);
+    form.setValue('passportPassengerName', '', clearOptions);
+    form.setValue('passportNumber', '', clearOptions);
+    form.setValue('passportIssueAt', '', clearOptions);
+    form.setValue('passportIssueDate', '', clearOptions);
+    form.setValue('passportExpiryDate', '', clearOptions);
+    form.setValue('nationalityType', '', clearOptions);
+    form.setValue('paidByPanHolderName', '', clearOptions);
+  }, [
+    form,
+    isCombinedPartyProfilePage,
+    isReadOnly,
+    purchasePageType,
+    resolvedBranchId,
+  ]);
+
   const resolvedPassengerEntityType =
     isCombinedPartyProfilePage &&
     transactionPartyProfileType === TransactionPartyProfileTypeEnum.INDIVIDUAL
@@ -1283,6 +1373,7 @@ const PurchaseFormBody = ({
         <PurchaseWorkplaceFields readOnly={isReadOnly} />
       </CardSection>
 
+      {showPartyBlock ? (
       <CardSection heading={pageTitle}>
         {isCombinedPartyProfilePage ? (
           <div className="mb-4 grid gap-4 lg:grid-cols-3">
@@ -1381,6 +1472,7 @@ const PurchaseFormBody = ({
           <PurchasePartyProfileField
             partyProfileTypes={partyProfileTypes}
             purchasePageType={purchasePageType}
+            branchId={resolvedBranchId}
             disabled={isReadOnly}
             showPassengerAction={isCombinedPartyProfilePage}
             onAddPassengerInfo={() => {
@@ -1388,7 +1480,10 @@ const PurchaseFormBody = ({
             }}
           />
 
-          <PurchaseAgentProfileField disabled={isReadOnly} />
+          <PurchaseAgentProfileField
+            branchId={resolvedBranchId}
+            disabled={isReadOnly}
+          />
 
           <PurchaseReferenceNumberField
             value={displayReferenceNumber}
@@ -1397,6 +1492,7 @@ const PurchaseFormBody = ({
           />
         </div>
       </CardSection>
+      ) : null}
 
       <CardSection heading="Manual Book Reference">
         <PurchaseBookReferenceField

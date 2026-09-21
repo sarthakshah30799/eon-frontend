@@ -42,8 +42,10 @@ export interface VoucherItem {
   itemTypeValue?: string;
   itemTypeSnapshot?: VoucherSnapshot | null;
   subledgerPartyProfileId?: string | null;
+  subledgerBranchId?: string | null;
   subledgerCode?: string;
   subledgerPartyProfileSnapshot?: VoucherSnapshot | null;
+  subledgerBranchSnapshot?: VoucherSnapshot | null;
   accountId: string;
   accountCode?: string;
   accountName?: string;

@@ -237,7 +237,11 @@ export const buildVoucherPrintHtml = ({
           <td>${escapeHtml(settledBillNumber(item.settledTransactionSnapshot))}</td>
           <td>${escapeHtml(snapshotCode(item.accountSnapshot))}</td>
           <td>${escapeHtml(formatDate(voucher.transactionDate))}</td>
-          <td>${escapeHtml(snapshotCode(item.subledgerPartyProfileSnapshot))}</td>
+          <td>${escapeHtml(
+            snapshotCode(
+              item.subledgerPartyProfileSnapshot ?? item.subledgerBranchSnapshot
+            )
+          )}</td>
           <td>${escapeHtml(particulars)}</td>
           <td class="right">${escapeHtml(debit)}</td>
           <td class="right">${escapeHtml(credit)}</td>

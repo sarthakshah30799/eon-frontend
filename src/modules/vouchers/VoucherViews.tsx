@@ -163,7 +163,10 @@ const fromEntity = (
             ?.value ??
           item.itemTypeSnapshot?.code ??
           '',
-        subledgerCode: item.subledgerPartyProfileSnapshot?.code ?? '',
+        subledgerCode:
+          item.subledgerPartyProfileSnapshot?.code ??
+          item.subledgerBranchSnapshot?.code ??
+          '',
         accountCode: item.accountSnapshot?.code ?? '',
         accountName:
           item.accountSnapshot?.name ?? item.accountSnapshot?.label ?? '',

@@ -1,0 +1,131 @@
+import type { CreditRequestFundStatus } from './constants';
+import type { VoucherAccountMode } from '@/modules/vouchers/types';
+
+export type CreditRequestFundSnapshot = {
+  id?: string;
+  code?: string;
+  name?: string;
+  label?: string;
+  value?: string;
+  [key: string]: unknown;
+};
+
+export type CreditRequestFundItem = {
+  id?: string;
+  lineNo?: number;
+  itemTypeOptionId: string;
+  itemTypeSnapshot?: CreditRequestFundSnapshot | null;
+  subledgerPartyProfileId?: string | null;
+  subledgerPartyProfileSnapshot?: CreditRequestFundSnapshot | null;
+  subledgerBranchId?: string | null;
+  subledgerBranchSnapshot?: CreditRequestFundSnapshot | null;
+  accountId: string;
+  accountSnapshot?: CreditRequestFundSnapshot | null;
+  direction: 'DEBIT' | 'CREDIT';
+  amount: string;
+};
+
+export type CreditRequestFund = {
+  id: string;
+  number: string;
+  status: CreditRequestFundStatus;
+  transactionDate: string;
+  branchId: string;
+  branchSnapshot?: CreditRequestFundSnapshot | null;
+  counterId: string;
+  destinationBranchId: string;
+  destinationBranchSnapshot?: CreditRequestFundSnapshot | null;
+  accountTypeOptionId: string;
+  accountTypeSnapshot?: CreditRequestFundSnapshot | null;
+  accountMode: VoucherAccountMode;
+  headerAccountId: string;
+  headerAccountSnapshot?: CreditRequestFundSnapshot | null;
+  entityTypeOptionId: string;
+  entityTypeSnapshot?: CreditRequestFundSnapshot | null;
+  partyProfileId: string;
+  partyProfileSnapshot?: CreditRequestFundSnapshot | null;
+  paymentMethod?: string | null;
+  chequeNumber?: string | null;
+  chequeDate?: string | null;
+  chequeBranch?: string | null;
+  drawnOn?: string | null;
+  remarkOptionId?: string | null;
+  remarkSnapshot?: CreditRequestFundSnapshot | null;
+  narration: string;
+  paidByPanNumber?: string | null;
+  paidByPanName?: string | null;
+  paidByPanDob?: string | null;
+  panHolderRelationOptionId?: string | null;
+  panHolderRelationSnapshot?: CreditRequestFundSnapshot | null;
+  travelerPanNumber?: string | null;
+  travelerPanName?: string | null;
+  travelerPanDob?: string | null;
+  totalDebit: string;
+  totalCredit: string;
+  finalAmount: string;
+  rejectionRemarks?: string | null;
+  approvedTransactionDate?: string | null;
+  destinationReceiptVoucherId?: string | null;
+  destinationReceiptVoucherSnapshot?: CreditRequestFundSnapshot | null;
+  requestingReceiptVoucherId?: string | null;
+  requestingReceiptVoucherSnapshot?: CreditRequestFundSnapshot | null;
+  requestingPaymentVoucherId?: string | null;
+  requestingPaymentVoucherSnapshot?: CreditRequestFundSnapshot | null;
+  items: CreditRequestFundItem[];
+};
+
+export type CreditRequestFundFormItem = {
+  itemTypeOptionId: string;
+  itemTypeValue: string;
+  subledgerPartyProfileId: string;
+  subledgerBranchId: string;
+  subledgerCode: string;
+  accountId: string;
+  accountCode: string;
+  accountName: string;
+  direction: 'DEBIT' | 'CREDIT';
+  amount: string;
+};
+
+export type CreditRequestFundFormValues = {
+  transactionDate: string;
+  branchId: string;
+  counterId: string;
+  number: string;
+  destinationBranchId: string;
+  accountTypeOptionId: string;
+  accountMode: VoucherAccountMode | '';
+  headerAccountId: string;
+  headerAccountName: string;
+  entityTypeOptionId: string;
+  partyProfileId: string;
+  partyName: string;
+  paymentMethod: string;
+  chequeNumber: string;
+  chequeDate: string;
+  chequeBranch: string;
+  drawnOn: string;
+  remarkOptionId: string;
+  narration: string;
+  paidByPanNumber: string;
+  paidByPanName: string;
+  paidByPanDob: string;
+  panHolderRelationOptionId: string;
+  travelerPanNumber: string;
+  travelerPanName: string;
+  travelerPanDob: string;
+  idempotencyKey: string;
+  items: CreditRequestFundFormItem[];
+};
+
+export type CreditRequestFundListQuery = {
+  status?: CreditRequestFundStatus;
+  branchId?: string;
+  destinationBranchId?: string;
+  partyProfileId?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  search?: string;
+  limit?: number;
+  offset?: number;
+};

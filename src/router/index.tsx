@@ -50,6 +50,15 @@ const AdviceDebitCreditCreatePage = lazy(
 const AdviceDebitCreditEditPage = lazy(
   () => import('../pages/advice-debit-credit/edit')
 );
+const CreditRequestFundListPage = lazy(
+  () => import('../pages/credit-request-fund')
+);
+const CreditRequestFundCreatePage = lazy(
+  () => import('../pages/credit-request-fund/create')
+);
+const CreditRequestFundEditPage = lazy(
+  () => import('../pages/credit-request-fund/edit')
+);
 
 const UserCreatePage = lazy(
   () => import('../pages/users/create/UserCreatePage')
@@ -1512,6 +1521,30 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <AdviceDebitCreditEditPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/credit-request-fund',
+    element: (
+      <ProtectedLayout>
+        <CreditRequestFundListPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/credit-request-fund/create',
+    element: (
+      <ProtectedLayout>
+        <CreditRequestFundCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/credit-request-fund/edit/:id',
+    element: (
+      <ProtectedLayout>
+        <CreditRequestFundEditPage />
       </ProtectedLayout>
     ),
   },

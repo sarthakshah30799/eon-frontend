@@ -21,6 +21,11 @@ export const CARD_TRANSFER_COPY = {
     'Select product type, currency, and card issuer before choosing cards.',
   noMatchingCards:
     'No available cards match the selected product, currency, and issuer at this source branch.',
+  viewTransfer: 'View CARD transfer',
+  editTransfer: 'Edit CARD transfer',
+  deleteTransfer: 'Delete CARD transfer',
+  deleteConfirm: 'Are you sure you want to delete this CARD transfer request?',
+  deleted: 'CARD transfer request deleted.',
 } as const;
 
 export const CARD_TRANSFER_VALIDATION_TEXT = {

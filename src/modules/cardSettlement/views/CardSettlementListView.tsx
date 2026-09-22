@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { EyeIcon, PencilSquareIcon } from '@heroicons/react/24/outline';
 import {
   Button,
   Table,
@@ -9,6 +10,9 @@ import {
 import {
   buildSearchToolbarFilter,
   buildStaticAsyncSelectToolbarFilter,
+  TABLE_ACTIONS_CELL_CLASSNAME,
+  TABLE_ACTION_BUTTON_CLASSNAME,
+  TABLE_ACTION_ICON_CLASSNAME,
 } from '@/components/ui/table';
 import { useDebounce, useOffsetPaginatedList } from '@/hooks';
 import { PAGINATION_DEFAULTS } from '@/constants/paginationConstants';
@@ -191,19 +195,38 @@ export const CardSettlementListView = () => {
       {
         id: 'actions',
         header: CARD_SETTLEMENT_TEXT.actions,
-        cell: ({ row }) => (
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={() => navigate(`/card-settlement/edit/${row.original.id}`)}
-          >
-            {row.original.status ===
-            CardStockSettlementDocumentStatus.PENDING_HO_ACCEPTANCE
-              ? CARD_SETTLEMENT_TEXT.editReview
-              : CARD_SETTLEMENT_TEXT.view}
-          </Button>
-        ),
+        cell: ({ row }) => {
+          const canEdit =
+            row.original.status ===
+            CardStockSettlementDocumentStatus.PENDING_HO_ACCEPTANCE;
+
+          return (
+            <div className={TABLE_ACTIONS_CELL_CLASSNAME}>
+              <Button
+                type="button"
+                aria-label={
+                  canEdit
+                    ? CARD_SETTLEMENT_TEXT.editSettlement
+                    : CARD_SETTLEMENT_TEXT.viewSettlement
+                }
+                variant="ghost"
+                size="icon"
+                className={TABLE_ACTION_BUTTON_CLASSNAME}
+                onClick={event => {
+                  event.stopPropagation();
+                  navigate(`/card-settlement/edit/${row.original.id}`);
+                }}
+              >
+                {canEdit ? (
+                  <PencilSquareIcon className={TABLE_ACTION_ICON_CLASSNAME} />
+                ) : (
+                  <EyeIcon className={TABLE_ACTION_ICON_CLASSNAME} />
+                )}
+              </Button>
+            </div>
+          );
+        },
+        enableSorting: false,
       },
     ],
     [navigate]

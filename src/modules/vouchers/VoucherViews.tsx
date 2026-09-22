@@ -1,6 +1,12 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { EyeIcon } from '@heroicons/react/24/outline';
 import { Button, Table, type TableColumnDef } from '@/components/ui';
+import {
+  TABLE_ACTIONS_CELL_CLASSNAME,
+  TABLE_ACTION_BUTTON_CLASSNAME,
+  TABLE_ACTION_ICON_CLASSNAME,
+} from '@/components/ui/table';
 import { Loader } from '@/components/ui/loader';
 import { useAuth } from '@/lib/AuthContext';
 import { useOffsetPaginatedList } from '@/hooks';
@@ -266,16 +272,20 @@ export const VoucherListView = ({ type }: { type: VoucherType }) => {
         id: 'actions',
         header: VOUCHER_LIST_TEXT.actions,
         cell: ({ row }) => (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              navigate(`${VOUCHER_PATHS[type]}/edit/${row.original.id}`)
-            }
-          >
-            {VOUCHER_LIST_TEXT.view}
-          </Button>
+          <div className={TABLE_ACTIONS_CELL_CLASSNAME}>
+            <Button
+              type="button"
+              aria-label={VOUCHER_LIST_TEXT.view}
+              variant="ghost"
+              size="icon"
+              className={TABLE_ACTION_BUTTON_CLASSNAME}
+              onClick={() =>
+                navigate(`${VOUCHER_PATHS[type]}/edit/${row.original.id}`)
+              }
+            >
+              <EyeIcon className={TABLE_ACTION_ICON_CLASSNAME} />
+            </Button>
+          </div>
         ),
       },
     ],

@@ -325,7 +325,7 @@ const CardRows = ({
         ),
       },
       {
-        id: 'actions',
+        id: 'remove',
         header: '',
         cell: ({ row }) =>
           !readOnly && fields.length > 1 ? (

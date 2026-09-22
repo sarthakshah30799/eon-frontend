@@ -10,6 +10,9 @@ import {
   type TableColumnDef,
   buildBranchToolbarFilter,
   buildSearchToolbarFilter,
+  TABLE_ACTIONS_CELL_CLASSNAME,
+  TABLE_ACTION_BUTTON_CLASSNAME,
+  TABLE_ACTION_ICON_CLASSNAME,
 } from '@/components/ui/table';
 import { AccessDeniedState } from '@/components/ui/access-denied-state';
 import { useDebounce, useOffsetPaginatedList, usePermission } from '@/hooks';
@@ -109,26 +112,20 @@ export const AD1ListView = () => {
       {
         id: 'actions',
         header: 'Actions',
-        meta: {
-          headerClassName:
-            'sticky right-0 z-20 border-l border-border-primary bg-surface-secondary',
-          cellClassName:
-            'sticky right-0 z-10 border-l border-border-primary bg-surface-primary',
-        },
         cell: ({ row }) => (
-          <div className="flex items-center gap-2">
+          <div className={TABLE_ACTIONS_CELL_CLASSNAME}>
             <Button
               type="button"
               aria-label="Edit AD1 transaction"
               variant="ghost"
               size="icon"
-              className="rounded-sm bg-transparent text-black! hover:bg-surface-secondary hover:text-text-primary"
+              className={TABLE_ACTION_BUTTON_CLASSNAME}
               onClick={e => {
                 e.stopPropagation();
                 navigate(`/ad1/edit/${row.original.id}`);
               }}
             >
-              <PencilSquareIcon className="h-5 w-5" />
+              <PencilSquareIcon className={TABLE_ACTION_ICON_CLASSNAME} />
             </Button>
           </div>
         ),

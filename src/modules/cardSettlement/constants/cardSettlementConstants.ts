@@ -52,6 +52,8 @@ export const CARD_SETTLEMENT_TEXT = {
   kindIssuer: 'HO to Issuer',
   view: 'View',
   editReview: 'Edit / Review',
+  viewSettlement: 'View CARD settlement',
+  editSettlement: 'Edit CARD settlement',
   created: 'CARD settlement created.',
   accepted: 'CARD settlement accepted.',
   rejected: 'CARD settlement rejected.',

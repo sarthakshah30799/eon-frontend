@@ -2,7 +2,14 @@ import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button1';
-import { Table, type TableColumnDef } from '@/components/ui/table';
+import {
+  Table,
+  type TableColumnDef,
+  TABLE_ACTIONS_CELL_CLASSNAME,
+  TABLE_ACTION_BUTTON_CLASSNAME,
+  TABLE_ACTION_DELETE_BUTTON_CLASSNAME,
+  TABLE_ACTION_ICON_CLASSNAME,
+} from '@/components/ui/table';
 import type { PaginationControlsProps } from '@/components/ui';
 import { PURPOSE_GROUP_TEXTS } from '../constants/purposeGroupConstants';
 import { formatPurposeGroupProfileLabel } from '../utils/purposeGroupUtils';
@@ -73,33 +80,27 @@ export const PurposeGroupTable = ({
     {
       id: 'actions',
       header: 'Actions',
-      meta: {
-        headerClassName:
-          'sticky right-0 z-20 border-l border-border-primary bg-surface-secondary',
-        cellClassName:
-          'sticky right-0 z-10 border-l border-border-primary bg-surface-primary',
-      },
       cell: ({ row }) => (
-        <div className="flex items-center gap-2">
+        <div className={TABLE_ACTIONS_CELL_CLASSNAME}>
           <Button
             type="button"
             aria-label="Edit purpose group"
             variant="ghost"
             size="icon"
-            className="rounded-sm bg-transparent text-black! hover:bg-surface-secondary hover:text-text-primary"
+            className={TABLE_ACTION_BUTTON_CLASSNAME}
             onClick={event => {
               event.stopPropagation();
               navigate(`/admin/purpose-group/edit/${row.original.id}`);
             }}
           >
-            <PencilSquareIcon className="h-5 w-5" />
+            <PencilSquareIcon className={TABLE_ACTION_ICON_CLASSNAME} />
           </Button>
           <Button
             type="button"
             aria-label="Delete purpose group"
             variant="ghost"
             size="icon"
-            className="rounded-sm bg-transparent text-error-600 hover:bg-error-50 hover:text-error-700"
+            className={TABLE_ACTION_DELETE_BUTTON_CLASSNAME}
             disabled={isDeleting}
             onClick={async event => {
               event.stopPropagation();
@@ -112,7 +113,7 @@ export const PurposeGroupTable = ({
               }
             }}
           >
-            <TrashIcon className="h-5 w-5" />
+            <TrashIcon className={TABLE_ACTION_ICON_CLASSNAME} />
           </Button>
         </div>
       ),

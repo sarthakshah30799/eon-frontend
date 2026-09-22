@@ -21,6 +21,7 @@ import { PaginationControls } from '../pagination';
 import { TableToolbar } from './TableToolbar';
 import type { TableToolbarFilter } from './tableToolbar.types';
 import { buildSearchToolbarFilter } from './tableToolbarPresets';
+import { resolveTableColumnMeta } from './tableActionStyles';
 import {
   PAGINATION_DEFAULTS,
   PAGINATION_PAGE_SIZE_OPTIONS,
@@ -311,14 +312,26 @@ function Table<T extends object>({
   const renderSkeleton = () =>
     Array.from({ length: skeletonRows }).map((_, index) => (
       <tr key={`skeleton-${index}`} className="animate-pulse">
-        {columns.map((column, colIndex) => (
+        {columns.map((column, colIndex) => {
+          const columnId =
+            column.id ??
+            ('accessorKey' in column
+              ? String(column.accessorKey)
+              : undefined);
+          const columnMeta = resolveTableColumnMeta(
+            columnId,
+            column.meta as TableColumnMeta | undefined
+          );
+
+          return (
           <td
             key={`skeleton-cell-${colIndex}`}
-            className={`border-b border-border-secondary px-4 py-2 ${(column.meta as TableColumnMeta | undefined)?.cellClassName ?? ''}`}
+            className={`border-b border-border-secondary px-4 py-2 ${columnMeta.cellClassName ?? ''}`}
           >
             <div className="h-4 rounded bg-surface-secondary"></div>
           </td>
-        ))}
+          );
+        })}
       </tr>
     ));
 
@@ -337,13 +350,19 @@ function Table<T extends object>({
           className={tableVariants({ variant, size, className })}
           {...props}
         >
-          <thead className="sticky top-0 z-10 bg-surface-secondary">
+          <thead className="sticky top-0 z-30 bg-surface-secondary">
             {table.getHeaderGroups().map(headerGroup => (
               <tr key={headerGroup.id}>
-                {headerGroup.headers.map(header => (
+                {headerGroup.headers.map(header => {
+                  const columnMeta = resolveTableColumnMeta(
+                    header.column.id,
+                    header.column.columnDef.meta as TableColumnMeta | undefined
+                  );
+
+                  return (
                   <th
                     key={header.id}
-                    className={`border-b border-border-primary bg-surface-secondary px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-text-tertiary ${(header.column.columnDef.meta as TableColumnMeta | undefined)?.headerClassName ?? ''}`}
+                    className={`border-b border-border-primary bg-surface-secondary px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-text-tertiary ${columnMeta.headerClassName ?? ''}`}
                   >
                     {header.isPlaceholder ? null : (
                       <div
@@ -369,7 +388,8 @@ function Table<T extends object>({
                       </div>
                     )}
                   </th>
-                ))}
+                  );
+                })}
               </tr>
             ))}
           </thead>
@@ -389,17 +409,24 @@ function Table<T extends object>({
                       : undefined
                   }
                 >
-                  {row.getVisibleCells().map(cell => (
+                  {row.getVisibleCells().map(cell => {
+                    const columnMeta = resolveTableColumnMeta(
+                      cell.column.id,
+                      cell.column.columnDef.meta as TableColumnMeta | undefined
+                    );
+
+                    return (
                     <td
                       key={cell.id}
-                      className={`whitespace-nowrap px-4 py-2 text-sm text-text-primary ${(cell.column.columnDef.meta as TableColumnMeta | undefined)?.cellClassName ?? ''}`}
+                      className={`whitespace-nowrap px-4 py-2 text-sm text-text-primary ${columnMeta.cellClassName ?? ''}`}
                     >
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
                       )}
                     </td>
-                  ))}
+                    );
+                  })}
                 </tr>
               ))
             ) : (

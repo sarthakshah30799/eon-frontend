@@ -1,5 +1,11 @@
 import { useCallback, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import {
+  EyeIcon,
+  PencilSquareIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline';
+import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/button1';
 import type { AsyncSelectOption } from '@/components/ui';
 import {
@@ -7,12 +13,18 @@ import {
   type TableColumnDef,
   buildSearchToolbarFilter,
   buildStaticAsyncSelectToolbarFilter,
+  TABLE_ACTIONS_CELL_CLASSNAME,
+  TABLE_ACTION_BUTTON_CLASSNAME,
+  TABLE_ACTION_DELETE_BUTTON_CLASSNAME,
+  TABLE_ACTION_ICON_CLASSNAME,
 } from '@/components/ui/table';
 import { useDebounce, useOffsetPaginatedList } from '@/hooks';
 import { PAGINATION_DEFAULTS } from '@/constants/paginationConstants';
+import { useAuth } from '@/lib/AuthContext';
 import { cardTransferApi } from '@/api/cardTransfer';
 import { formatDateTime } from '@/utils';
 import { CARD_TRANSFER_STATUS_OPTIONS, CARD_TRANSFER_COPY } from '../constants';
+import { useDeleteCardTransfer } from '../hooks';
 import type { CardTransferRequest } from '../types';
 
 const readStatusValues = (searchParams: URLSearchParams) => {
@@ -39,9 +51,12 @@ const readStatusValues = (searchParams: URLSearchParams) => {
 
 export const CardTransferListView = () => {
   const navigate = useNavigate();
+  const { user, activeBranchId } = useAuth();
+  const deleteMutation = useDeleteCardTransfer();
   const [searchParams, setSearchParams] = useSearchParams();
   const search = searchParams.get('search') ?? '';
   const debouncedSearch = useDebounce(search, 400);
+  const hasHoAccess = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
   const selectedStatuses = useMemo(
     () => readStatusValues(searchParams),
     [searchParams]
@@ -155,19 +170,67 @@ export const CardTransferListView = () => {
       {
         id: 'actions',
         header: 'Actions',
-        cell: ({ row }) => (
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={() => navigate(`/card-transfer/edit/${row.original.id}`)}
-          >
-            {row.original.status === 'HELD' ? 'Edit / Review' : 'View'}
-          </Button>
-        ),
+        cell: ({ row }) => {
+          const isHeld = row.original.status === 'HELD';
+          const canManageHeldRequest =
+            isHeld &&
+            (hasHoAccess || activeBranchId === row.original.sourceBranchId);
+
+          return (
+            <div className={TABLE_ACTIONS_CELL_CLASSNAME}>
+              <Button
+                type="button"
+                aria-label={
+                  canManageHeldRequest
+                    ? CARD_TRANSFER_COPY.editTransfer
+                    : CARD_TRANSFER_COPY.viewTransfer
+                }
+                variant="ghost"
+                size="icon"
+                className={TABLE_ACTION_BUTTON_CLASSNAME}
+                onClick={event => {
+                  event.stopPropagation();
+                  navigate(`/card-transfer/edit/${row.original.id}`);
+                }}
+              >
+                {canManageHeldRequest ? (
+                  <PencilSquareIcon className={TABLE_ACTION_ICON_CLASSNAME} />
+                ) : (
+                  <EyeIcon className={TABLE_ACTION_ICON_CLASSNAME} />
+                )}
+              </Button>
+              {canManageHeldRequest ? (
+                <Button
+                  type="button"
+                  aria-label={CARD_TRANSFER_COPY.deleteTransfer}
+                  variant="ghost"
+                  size="icon"
+                  className={TABLE_ACTION_DELETE_BUTTON_CLASSNAME}
+                  disabled={deleteMutation.isPending}
+                  onClick={async event => {
+                    event.stopPropagation();
+                    if (!window.confirm(CARD_TRANSFER_COPY.deleteConfirm)) {
+                      return;
+                    }
+                    await deleteMutation.mutateAsync(row.original.id);
+                    toast.success(CARD_TRANSFER_COPY.deleted);
+                  }}
+                >
+                  <TrashIcon className={TABLE_ACTION_ICON_CLASSNAME} />
+                </Button>
+              ) : null}
+            </div>
+          );
+        },
+        enableSorting: false,
       },
     ],
-    [navigate]
+    [
+      activeBranchId,
+      deleteMutation,
+      hasHoAccess,
+      navigate,
+    ]
   );
 
   const toolbarFilters = useMemo(

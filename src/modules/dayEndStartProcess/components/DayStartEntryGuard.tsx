@@ -3,12 +3,23 @@ import { useNavigate } from 'react-router-dom';
 import { Button, Modal } from '@/components/ui';
 import { Loader } from '@/components/ui/loader';
 import { useAuth } from '@/lib/AuthContext';
+import { formatDateTime } from '@/utils';
+import { BUSINESS_DATE_DISPLAY_FORMAT } from '../constants';
 
 interface DayStartEntryGuardProps {
   children: ReactNode;
 }
 
 const BLOCKED_WORKFLOW_STATES = new Set(['READY_TO_START', 'PENDING_BOD']);
+
+const formatBusinessDate = (value: string): string => {
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value.trim());
+  if (match) {
+    return `${match[3]}-${match[2]}-${match[1]}`;
+  }
+
+  return formatDateTime(value, BUSINESS_DATE_DISPLAY_FORMAT);
+};
 
 export const DayStartEntryGuard = ({ children }: DayStartEntryGuardProps) => {
   const navigate = useNavigate();
@@ -38,9 +49,12 @@ export const DayStartEntryGuard = ({ children }: DayStartEntryGuardProps) => {
     return <>{children}</>;
   }
 
-  const currentBusinessDate = policyContext?.currentBusinessDate || 'today';
+  const currentBusinessDate = policyContext?.currentBusinessDate || '';
   const openBusinessDate =
     policyContext?.openBusinessDate || currentBusinessDate;
+  const displayDate = openBusinessDate
+    ? formatBusinessDate(openBusinessDate)
+    : 'today';
 
   return (
     <Modal
@@ -51,7 +65,7 @@ export const DayStartEntryGuard = ({ children }: DayStartEntryGuardProps) => {
         }
       }}
       title="Day Start Required"
-      description={`Please start your working day for ${openBusinessDate} before creating or editing transactions.`}
+      description={`Please start your working day for ${displayDate} before creating or editing transactions.`}
     >
       <div className="space-y-4">
         <div className="rounded-lg border border-warning-200 bg-warning-50 px-4 py-3 text-sm text-warning-800">

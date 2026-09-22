@@ -2,6 +2,11 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PencilSquareIcon } from '@heroicons/react/24/outline';
 import { Button, Table, type TableColumnDef } from '@/components/ui';
+import {
+  TABLE_ACTIONS_CELL_CLASSNAME,
+  TABLE_ACTION_BUTTON_CLASSNAME,
+  TABLE_ACTION_ICON_CLASSNAME,
+} from '@/components/ui/table';
 import { Accordion } from '@/components/ui/accordion';
 import { Input } from '@/components/ui/input';
 import {
@@ -210,12 +215,13 @@ export const MiscellaneousProfileTable = ({
                       </span>
                     </Accordion.Trigger>
 
-                    <div className="flex justify-end">
+                    <div className={TABLE_ACTIONS_CELL_CLASSNAME}>
                       <Button
                         type="button"
                         aria-label={`Edit ${group.label}`}
-                        className="border-0! bg-transparent! text-black!"
-                        size="sm"
+                        variant="ghost"
+                        size="icon"
+                        className={TABLE_ACTION_BUTTON_CLASSNAME}
                         onClick={() =>
                           navigate(
                             `/admin/miscellaneous-profile/edit/${encodeURIComponent(
@@ -224,7 +230,7 @@ export const MiscellaneousProfileTable = ({
                           )
                         }
                       >
-                        <PencilSquareIcon className="h-5 w-5" />
+                        <PencilSquareIcon className={TABLE_ACTION_ICON_CLASSNAME} />
                       </Button>
                     </div>
                   </div>

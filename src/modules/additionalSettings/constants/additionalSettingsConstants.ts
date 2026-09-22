@@ -82,6 +82,7 @@ export const AdditionalSettingsCodeEnum = {
   JournalVoucherNumberSeries: 'JOURNAL_VOUCHER',
   DepositWithdrawalVoucherNumberSeries: 'DEPOSIT_WITHDRAWAL_VOUCHER',
   AdviceVoucherNumberSeries: 'ADVICE_VOUCHER',
+  CreditRequestFundNumberSeries: 'CREDIT_REQUEST_FUND',
   FakeCurrencyRateEditable: 'FAKE_CURRENCY_RATE_EDITABLE',
   TransferRateEditable: 'TRANSFER_RATE_EDITABLE',
   FakeCurrency: 'FAKE_CURRENCY_SETTINGS',

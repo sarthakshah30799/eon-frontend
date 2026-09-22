@@ -46,6 +46,15 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
     path: '/advice-debit-credit/edit/:id',
     meta: { title: 'Advice of Debit/Credit Details' },
   },
+  { path: '/credit-request-fund', meta: { title: 'Credit Request Fund' } },
+  {
+    path: '/credit-request-fund/create',
+    meta: { title: 'Create Credit Request Fund' },
+  },
+  {
+    path: '/credit-request-fund/edit/:id',
+    meta: { title: 'Credit Request Fund Details' },
+  },
   { path: '/fake-currencies', meta: { title: 'Fake Currencies' } },
   { path: '/fake-currencies/create', meta: { title: 'Create Fake Currency' } },
   {

@@ -82,11 +82,20 @@ const toLocalDateString = (date = new Date()) => {
   return `${year}-${month}-${day}`;
 };
 
-const modeFromLabel = (label: string): VoucherAccountMode => {
-  const value = label.toUpperCase().replace(/[ /-]+/g, '_');
-  if (value.includes('BANK') || value.includes('CHEQUE')) return 'BANK_CHEQUE';
-  if (value.includes('PETTY')) return 'PETTY_CASH';
-  if (value.includes('CREDIT')) return 'CREDIT_CARD';
+const modeFromAccountTypeValue = (value: string): VoucherAccountMode => {
+  const normalized = String(value ?? '')
+    .toUpperCase()
+    .replace(/[ /-]+/g, '_');
+  if (
+    normalized === 'BANK_CHEQUE' ||
+    normalized.includes('BANK') ||
+    normalized.includes('CHEQUE')
+  )
+    return 'BANK_CHEQUE';
+  if (normalized === 'PETTY_CASH' || normalized.includes('PETTY'))
+    return 'PETTY_CASH';
+  if (normalized === 'CREDIT_CARD' || normalized.includes('CREDIT'))
+    return 'CREDIT_CARD';
   return 'CASH';
 };
 
@@ -300,10 +309,13 @@ const voucherSchema = (type: VoucherType) => {
               .object({
                 itemTypeOptionId: yup.string().required('Type is required'),
                 itemTypeValue: yup.string().optional(),
-                subledgerPartyProfileId:
-                  type === 'JOURNAL'
-                    ? yup.string().nullable()
-                    : yup.string().required('Sub ledger is required'),
+                subledgerPartyProfileId: yup.string().when('itemTypeValue', {
+                  is: (value: string | undefined) =>
+                    type === 'JOURNAL' || isVoucherBillItemTypeValue(value),
+                  then: schema => schema.optional().nullable(),
+                  otherwise: schema =>
+                    schema.required('Sub ledger is required'),
+                }),
                 accountId: yup.string().when('itemTypeValue', {
                   is: (value: string | undefined) =>
                     isVoucherBillItemTypeValue(value),
@@ -539,16 +551,18 @@ const VoucherFields = ({
   }, []);
   const { data: accountResponse, isLoading: accountsLoading } =
     useListAccountProfiles({
-    active: true,
-    limit: 100,
-    ...(type === 'RECEIPT'
-      ? { receipt: true }
-      : type === 'PAYMENT'
-        ? { payment: true }
-        : type === 'DEPOSIT_WITHDRAWAL'
-          ? {}
-          : { journalVoucher: true }),
-  });
+      active: true,
+      limit: 100,
+      ...(type === 'RECEIPT'
+        ? { receipt: true }
+        : type === 'PAYMENT'
+          ? { payment: true }
+          : type === 'DEPOSIT_WITHDRAWAL'
+            ? {}
+            : type === 'ADVICE'
+              ? {}
+              : { journalVoucher: true }),
+    });
   const { data: headerAccountResponse } = useListAccountProfiles({
     active: true,
     limit: 100,
@@ -747,21 +761,27 @@ const VoucherFields = ({
           item.itemTypeOptionId,
           itemTypeCategoryOptions
         );
-      if (!isVoucherBillItemTypeValue(itemTypeValue)) {
+      if (isVoucherBillItemTypeValue(itemTypeValue)) {
+        form.setValue(`items.${index}.settledTransactionId`, '', {
+          shouldValidate: true,
+        });
+        form.setValue(`items.${index}.settledTransactionNumber`, '', {
+          shouldValidate: false,
+        });
+        form.setValue(`items.${index}.amount`, '', { shouldValidate: true });
+        form.setValue(
+          `items.${index}.subledgerPartyProfileId`,
+          nextPartyId,
+          { shouldValidate: true }
+        );
         return;
       }
-      form.setValue(`items.${index}.settledTransactionId`, '', {
+      form.setValue(`items.${index}.subledgerPartyProfileId`, '', {
         shouldValidate: true,
       });
-      form.setValue(`items.${index}.settledTransactionNumber`, '', {
+      form.setValue(`items.${index}.subledgerCode`, '', {
         shouldValidate: false,
       });
-      form.setValue(`items.${index}.amount`, '', { shouldValidate: true });
-      form.setValue(
-        `items.${index}.subledgerPartyProfileId`,
-        nextPartyId,
-        { shouldValidate: true }
-      );
     });
     resetPanVerification();
   }, [form, itemTypeCategoryOptions, readOnly, resetPanVerification, selectedParty]);
@@ -770,7 +790,9 @@ const VoucherFields = ({
       option => String(option.value) === String(accountTypeOptionId)
     );
     if (!selected) return;
-    const nextMode = modeFromLabel(selected.label);
+    const nextMode = modeFromAccountTypeValue(
+      String(selected.value ?? selected.label ?? '')
+    );
     if (nextMode === mode) return;
     form.setValue('accountMode', nextMode);
     form.setValue('headerAccountId', '');
@@ -1770,6 +1792,16 @@ const VoucherFields = ({
                           defaultOptions={accountOptions}
                           placeholder="Account Code"
                           aria-label="Account Code"
+                          onValueChange={() => {
+                            form.setValue(
+                              `items.${index}.subledgerPartyProfileId`,
+                              '',
+                              { shouldValidate: true }
+                            );
+                            form.setValue(`items.${index}.subledgerCode`, '', {
+                              shouldValidate: false,
+                            });
+                          }}
                         />
                       )}
                     </div>

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFormContext, useWatch, useFormState } from 'react-hook-form';
 import type { Resolver } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { CardSection, Button } from '@/components/ui';
+import { CardSection, Button, type AsyncSelectOption } from '@/components/ui';
 import {
   Form,
   FormFieldCategoryOption,
@@ -17,7 +17,6 @@ import { partyProfileSchema } from '../schema';
 import type { ICreatePartyProfile } from '../types';
 
 import { partyProfileApi } from '@/api/partyProfile';
-import { useAuth } from '@/lib/AuthContext';
 import { useLoadBranchOptions } from '@/modules/branchProfile/hooks';
 import { useGetStateProfile } from '@/modules/stateProfile';
 import {
@@ -69,6 +68,7 @@ interface PartyProfileFormProps {
   showSubmit?: boolean;
   allowBranchSelection?: boolean;
   allowCreditPolicyUpgrade?: boolean;
+  branchDefaultOptions?: AsyncSelectOption[];
 }
 
 const FORM_ID = 'party-profile-form';
@@ -86,6 +86,7 @@ const PartyProfileFormFields = ({
   onSubmitDisabledChange,
   onDirtyFieldsSnapshotChange,
   allowCreditPolicyUpgrade = false,
+  branchDefaultOptions,
 }: {
   isSubmitting?: boolean;
   disabled?: boolean;
@@ -101,15 +102,13 @@ const PartyProfileFormFields = ({
     dirtyFields: Partial<Record<keyof PartyProfileFormValues, boolean | object>>
   ) => void;
   allowCreditPolicyUpgrade?: boolean;
+  branchDefaultOptions?: AsyncSelectOption[];
 }) => {
   const form = useFormContext<PartyProfileFormValues>();
   const { dirtyFields } = useFormState({ control: form.control });
-  const { user } = useAuth();
   const isSubmitting = isSubmittingProp || disabled;
   const reviewActionsDisabled = isSubmittingProp;
-  const canEditBranch =
-    allowBranchSelection &&
-    Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
+  const canEditBranch = allowBranchSelection && !currentId;
   const effectiveProfileType = profileType;
   const panNo = useWatch({ name: 'panNo' });
   const gstStateId = useWatch({ name: 'gstStateId' });
@@ -663,13 +662,16 @@ const PartyProfileFormFields = ({
             disabled={isSubmitting}
           />
           <FormFieldSelect
-            name="branchId"
+            name="branchIds"
             label="Current Branch"
             placeholder="Select current branch"
             loadOptions={branchLoadOptions}
-            defaultOptions={true}
-            pagination
-            disabled={isSubmitting || !canEditBranch || Boolean(currentId)}
+            defaultOptions={
+              branchDefaultOptions?.length ? branchDefaultOptions : true
+            }
+            pagination={!branchDefaultOptions?.length}
+            isMulti
+            disabled={isSubmitting || !canEditBranch}
           />
         </div>
       </CardSection>
@@ -742,6 +744,7 @@ export const PartyProfileForm = ({
   showSubmit = true,
   allowBranchSelection = false,
   allowCreditPolicyUpgrade = false,
+  branchDefaultOptions,
 }: PartyProfileFormProps) => {
   const [isCreditUpgradeMode, setIsCreditUpgradeMode] = useState(false);
   const [isSubmitDisabled, setIsSubmitDisabled] = useState(
@@ -827,6 +830,7 @@ export const PartyProfileForm = ({
         onSubmitDisabledChange={setIsSubmitDisabled}
         onDirtyFieldsSnapshotChange={handleDirtyFieldsSnapshotChange}
         allowCreditPolicyUpgrade={allowCreditPolicyUpgrade}
+        branchDefaultOptions={branchDefaultOptions}
       />
     </Form>
   );

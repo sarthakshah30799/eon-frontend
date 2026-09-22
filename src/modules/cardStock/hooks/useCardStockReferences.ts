@@ -8,15 +8,18 @@ import {
   MULTI_CURRENCY_CARD_PRODUCT_CODE,
 } from '@/modules/purchase/utils/purchaseUtils';
 
-export const useCardStockReferences = () => {
+export const useCardStockReferences = (branchId?: string) => {
+  const normalizedBranchId = branchId?.trim() || undefined;
   const issuers = useQuery({
-    queryKey: ['card-stock', 'issuers'],
+    queryKey: ['card-stock', 'issuers', normalizedBranchId ?? 'none'],
     queryFn: () =>
       partyProfileApi.getAllPartyProfiles({
         activeOnly: true,
         status: 'APPROVE',
         type: PartyProfileTypeEnum.CARD_ISSUER_PROFILE,
+        branchId: normalizedBranchId,
       }),
+    enabled: Boolean(normalizedBranchId),
   });
   const products = useQuery({
     queryKey: ['card-stock', 'products'],
@@ -56,10 +59,9 @@ export const useCardStockReferences = () => {
     issuers: issuers.data ?? [],
     products: products.data ?? [],
     currencies,
-    issuersLoading: issuers.isLoading,
+    issuersLoading: Boolean(normalizedBranchId) && issuers.isLoading,
     productsLoading: products.isLoading,
     currenciesLoading,
-    isLoading:
-      issuers.isLoading || products.isLoading || currenciesLoading,
+    isLoading: products.isLoading || currenciesLoading,
   };
 };

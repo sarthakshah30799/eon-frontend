@@ -63,7 +63,7 @@ const createEmptyPartyProfileValues = (): Omit<ICreatePartyProfile, 'type'> => {
     igstNo: '',
     gstStateId: '',
     stateId: '',
-    branchId: '',
+    branchIds: [],
     location: '',
     webSite: '',
     accountHolderName: '',

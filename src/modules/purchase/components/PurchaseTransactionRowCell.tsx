@@ -985,6 +985,7 @@ export const PurchaseTransactionRowCell = ({
         open={issuerPickerOpen}
         types={PartyProfileTypeEnum.CARD_ISSUER_PROFILE}
         allowedProfileIds={selectedProduct?.cardIssuerProfileIds}
+        queryParams={branchId ? { branchId } : undefined}
         selectable
         multiple={false}
         title="Select CARD issuer"

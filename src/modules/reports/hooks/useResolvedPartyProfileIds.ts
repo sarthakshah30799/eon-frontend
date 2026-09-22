@@ -22,6 +22,10 @@ export const useResolvedPartyProfileIds = (
       {
         search: filters.appliedFilters?.partyProfileSearch?.trim() || undefined,
         activeOnly: true,
+        branchIds:
+          filters.appliedFilters?.branchIds?.length
+            ? filters.appliedFilters.branchIds
+            : undefined,
       },
       filters.appliedFilters?.partyTypeCodes?.length
         ? (filters.appliedFilters.partyTypeCodes as PartyProfileType[])

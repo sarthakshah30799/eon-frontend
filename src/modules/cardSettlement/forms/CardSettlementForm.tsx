@@ -14,6 +14,7 @@ import {
 } from '@/components/forms';
 import { CardStockSettlementDocumentKind } from '@/api/cardSettlement';
 import { branchProfileApi } from '@/api/branchProfile';
+import { useAuth } from '@/lib/AuthContext';
 import { useCardStockReferences } from '@/modules/cardStock/hooks';
 import type { TransactionDatePolicy } from '@/modules/transactionPolicies/utils/transactionDatePolicy';
 import { CARD_SETTLEMENT_TEXT } from '../constants/cardSettlementConstants';
@@ -112,7 +113,11 @@ export const CardSettlementForm = ({
   const items = useWatch({ control: form.control, name: 'items' }) ?? [];
   const isIssuerKind =
     isHo || kind === CardStockSettlementDocumentKind.HO_ISSUER;
-  const references = useCardStockReferences();
+  const { activeBranchId } = useAuth();
+  const issuerBranchId = isIssuerKind
+    ? hoBranchId || undefined
+    : activeBranchId || undefined;
+  const references = useCardStockReferences(issuerBranchId);
   const branchesQuery = useQuery({
     queryKey: ['branch-profiles-all', { activeOnly: true }],
     queryFn: () => branchProfileApi.getAllBranchProfiles({ activeOnly: true }),

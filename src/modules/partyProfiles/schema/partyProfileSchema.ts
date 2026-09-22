@@ -146,7 +146,11 @@ export const partyProfileSchema = yup.object({
   gstStateId: yup.string().trim().optional().nullable(),
   stateId: yup.string().trim().optional().nullable(),
 
-  branchId: yup.string().trim().optional().nullable(),
+  branchIds: yup
+    .array()
+    .of(yup.string().trim().required())
+    .min(1, 'At least one current branch is required')
+    .required('At least one current branch is required'),
   location: yup.string().trim().optional().nullable(),
   webSite: yup.string().trim().optional().nullable(),
   accountHolderName: yup.string().trim().optional().nullable(),

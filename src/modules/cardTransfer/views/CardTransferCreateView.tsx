@@ -44,10 +44,10 @@ export const CardTransferCreateView = () => {
   const navigate = useNavigate();
   const { user, policyContext, activeBranchId } = useAuth();
   const isAdminOrHo = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
-  const references = useCardStockReferences();
   const [sourceBranchId, setSourceBranchId] = useState(
     () => (!isAdminOrHo && activeBranchId ? activeBranchId : '')
   );
+  const references = useCardStockReferences(sourceBranchId);
   const sourceBranchPolicy = useQuery({
     queryKey: ['card-transfer', 'transaction-date-policy', sourceBranchId],
     queryFn: () => transactionPoliciesApi.getPolicyContext(sourceBranchId),

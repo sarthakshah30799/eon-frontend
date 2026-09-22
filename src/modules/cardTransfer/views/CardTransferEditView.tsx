@@ -35,7 +35,7 @@ export const CardTransferEditView = () => {
   const { id = '' } = useParams();
   const { user, activeBranchId, policyContext } = useAuth();
   const { data: request, isLoading, error } = useGetCardTransfer(id);
-  const references = useCardStockReferences();
+  const references = useCardStockReferences(request?.sourceBranchId);
   const [confirmationAction, setConfirmationAction] =
     useState<ConfirmationAction>(null);
   const [remarks, setRemarks] = useState('');

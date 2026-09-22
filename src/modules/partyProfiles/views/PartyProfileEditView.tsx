@@ -137,7 +137,9 @@ export const PartyProfileEditView = () => {
       igstNo: client?.igstNo || '',
       gstStateId: client?.gstStateId || '',
       stateId: client?.stateId || '',
-      branchId: client?.branchId || '',
+      branchIds: client?.branchIds?.length
+        ? client.branchIds
+        : (client?.branches ?? []).map(branch => branch.id).filter(Boolean),
       location: client?.location?.id || '',
       webSite: client?.webSite || '',
       accountHolderName: client?.accountHolderName || '',
@@ -157,6 +159,15 @@ export const PartyProfileEditView = () => {
     [client]
   );
 
+  const branchDefaultOptions = useMemo(
+    () =>
+      (client?.branches ?? []).map(branch => ({
+        value: branch.id,
+        label: `${branch.code} - ${branch.name}`,
+      })),
+    [client?.branches]
+  );
+
   const handleSubmit = async (
     values: Omit<ICreatePartyProfile, 'type'>,
     meta?: PartyProfileFormSubmitMeta
@@ -173,6 +184,8 @@ export const PartyProfileEditView = () => {
       panDob: values.panDob || undefined,
       email: values.email || undefined,
     };
+    const updatePayload = { ...sanitized };
+    delete updatePayload.branchIds;
 
     const creditPolicyPayload = meta?.creditPolicyPayload ?? {};
     const hasCreditUpdates =
@@ -189,7 +202,7 @@ export const PartyProfileEditView = () => {
     if (hasNonCreditChanges) {
       await updatePartyProfile({
         id,
-        data: omitPartyProfileCreditPolicyValues(sanitized),
+        data: omitPartyProfileCreditPolicyValues(updatePayload),
       });
     }
 
@@ -286,6 +299,7 @@ export const PartyProfileEditView = () => {
           allowCreditPolicyUpgrade={canEditPartyProfile}
           submitLabel="Save Changes"
           currentId={id}
+          branchDefaultOptions={branchDefaultOptions}
         />
       </section>
     </div>

@@ -544,6 +544,7 @@ const VoucherFields = ({
   ).defaultOptions;
   const previousElectronicRef = useRef(false);
   const lastPartyIdRef = useRef(form.getValues('partyProfileId') || '');
+  const lastBranchIdRef = useRef(form.getValues('branchId') || '');
   const adultDobMaxDate = useMemo(() => {
     const date = new Date();
     date.setFullYear(date.getFullYear() - 18);
@@ -585,8 +586,10 @@ const VoucherFields = ({
       activeOnly: true,
       status: 'APPROVE',
       entityTypeId: entityTypeOptionId || undefined,
+      branchId: branchId || undefined,
     },
-    allPartyTypes
+    allPartyTypes,
+    Boolean(branchId)
   );
   const parties = useMemo(() => partyResponse?.data ?? [], [partyResponse]);
   const selectedParty = parties.find(party => party.id === partyProfileId);
@@ -598,9 +601,10 @@ const VoucherFields = ({
       entityTypeId:
         type === 'JOURNAL' ? undefined : entityTypeOptionId || undefined,
       groupId: type === 'JOURNAL' ? undefined : selectedParty?.group?.id,
+      branchId: branchId || undefined,
     },
     allPartyTypes,
-    type === 'JOURNAL' || Boolean(selectedParty)
+    (type === 'JOURNAL' || Boolean(selectedParty)) && Boolean(branchId)
   );
 
   const accounts = useMemo(
@@ -718,6 +722,24 @@ const VoucherFields = ({
   useEffect(() => {
     onBranchChange?.(branchId ?? '');
   }, [branchId, onBranchChange]);
+  useEffect(() => {
+    if (readOnly) return;
+    const previousBranchId = lastBranchIdRef.current;
+    lastBranchIdRef.current = branchId ?? '';
+    if (!previousBranchId || previousBranchId === (branchId ?? '')) return;
+    form.setValue('partyProfileId', '', {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+    form.setValue('partyName', '', { shouldDirty: true, shouldValidate: false });
+    const currentItems = form.getValues('items') ?? [];
+    currentItems.forEach((_item, index) => {
+      form.setValue(`items.${index}.subledgerPartyProfileId`, '', {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    });
+  }, [branchId, form, readOnly]);
   useEffect(() => {
     if (!readOnly && policyTransactionDate)
       form.setValue('transactionDate', policyTransactionDate, {

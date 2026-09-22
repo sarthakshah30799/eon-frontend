@@ -111,8 +111,8 @@ export interface IPartyProfile {
   stateId?: string;
   stateName?: string;
 
-  branchId?: string;
-  branch?: IBranchProfile | null;
+  branchIds?: string[];
+  branches?: IBranchProfile[];
   location?: ICategoryOption | null;
   webSite?: string;
   accountHolderName?: string;
@@ -144,6 +144,7 @@ export type ICreatePartyProfile = Omit<
   | 'gstStateName'
   | 'stateName'
   | 'branch'
+  | 'branches'
   | 'group'
   | 'entityType'
   | 'marketingExecutive'

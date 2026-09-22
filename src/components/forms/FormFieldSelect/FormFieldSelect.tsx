@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useController } from 'react-hook-form';
 import { useFormContext } from 'react-hook-form';
 import {
@@ -88,6 +88,41 @@ const optionsAreEqual = (
   );
 };
 
+const findMatchingOption = (
+  options: AsyncSelectOption[],
+  selectedValue: unknown
+) =>
+  options.find(option =>
+    getComparableOptionValues(option).includes(
+      getComparableFieldValue(selectedValue)
+    )
+  );
+
+const toDisplayOptions = (
+  options: AsyncSelectOption[],
+  displayValue?: string
+) =>
+  displayValue === 'code'
+    ? options.map(opt => ({
+        ...opt,
+        label: opt.label.split('-')[0]?.trim() ?? opt.label,
+      }))
+    : options;
+
+const toDisplayOption = (
+  option: AsyncSelectOption | null,
+  displayValue?: string
+) => {
+  if (!option || displayValue !== 'code') {
+    return option;
+  }
+
+  return {
+    ...option,
+    label: option.label.split('-')[0]?.trim() ?? option.label,
+  };
+};
+
 export const FormFieldSelect = ({
   name,
   label,
@@ -122,29 +157,37 @@ export const FormFieldSelect = ({
   const [selectedOption, setSelectedOption] = useState<
     AsyncSelectOption | readonly AsyncSelectOption[] | null
   >(null);
+  const selectedOptionRef = useRef(selectedOption);
+
+  useEffect(() => {
+    selectedOptionRef.current = selectedOption;
+  }, [selectedOption]);
 
   useEffect(() => {
     let isActive = true;
 
-    const hasResolvedSingleOption = (value: unknown) =>
-      Boolean(
-        selectedOption &&
-        !isOptionArray(selectedOption) &&
-        getComparableOptionValues(selectedOption).includes(
-          getComparableFieldValue(value)
-        )
+    const hasResolvedSingleOption = (value: unknown) => {
+      const current = selectedOptionRef.current;
+      return Boolean(
+        current &&
+          !isOptionArray(current) &&
+          getComparableOptionValues(current).includes(
+            getComparableFieldValue(value)
+          )
       );
+    };
 
     const hasResolvedMultiOptions = (selectedValues: unknown[]) => {
+      const current = selectedOptionRef.current;
       if (
-        !isOptionArray(selectedOption) ||
-        selectedOption.length !== selectedValues.length
+        !isOptionArray(current) ||
+        current.length !== selectedValues.length
       ) {
         return false;
       }
 
       return selectedValues.every(selectedValue =>
-        selectedOption.some(option =>
+        current.some(option =>
           getComparableOptionValues(option).includes(
             getComparableFieldValue(selectedValue)
           )
@@ -169,30 +212,37 @@ export const FormFieldSelect = ({
           return;
         }
 
+        const staticDefaults = Array.isArray(defaultOptions)
+          ? defaultOptions
+          : [];
+        const fromDefaults = selectedValues
+          .map(selectedValue =>
+            findMatchingOption(staticDefaults, selectedValue)
+          )
+          .filter((option): option is AsyncSelectOption => Boolean(option));
+
+        if (fromDefaults.length === selectedValues.length) {
+          if (isActive) {
+            const displayOptions = toDisplayOptions(fromDefaults, displayValue);
+            setSelectedOption(current =>
+              optionsAreEqual(current, displayOptions)
+                ? current
+                : displayOptions
+            );
+          }
+          return;
+        }
+
         try {
           const response = await loadOptions('');
           const loadedOptions = flattenOptions(response);
-          const options = Array.isArray(defaultOptions)
-            ? [...defaultOptions, ...loadedOptions]
-            : loadedOptions;
+          const options = [...staticDefaults, ...loadedOptions];
           const nextOptions = selectedValues
-            .map(selectedValue =>
-              options.find(option =>
-                getComparableOptionValues(option).includes(
-                  getComparableFieldValue(selectedValue)
-                )
-              )
-            )
+            .map(selectedValue => findMatchingOption(options, selectedValue))
             .filter((option): option is AsyncSelectOption => Boolean(option));
 
           if (isActive) {
-            const displayOptions =
-              displayValue === 'code'
-                ? nextOptions.map(opt => ({
-                    ...opt,
-                    label: opt.label.split('-')[0]?.trim() ?? opt.label,
-                  }))
-                : nextOptions;
+            const displayOptions = toDisplayOptions(nextOptions, displayValue);
             setSelectedOption(current =>
               optionsAreEqual(current, displayOptions)
                 ? current
@@ -225,28 +275,26 @@ export const FormFieldSelect = ({
         return;
       }
 
+      const staticDefaults = Array.isArray(defaultOptions) ? defaultOptions : [];
+      const fromDefault = findMatchingOption(staticDefaults, field.value);
+      if (fromDefault) {
+        if (isActive) {
+          const displayOption = toDisplayOption(fromDefault, displayValue);
+          setSelectedOption(current =>
+            optionsAreEqual(current, displayOption) ? current : displayOption
+          );
+        }
+        return;
+      }
+
       try {
         const response = await loadOptions('');
         const loadedOptions = flattenOptions(response);
-        const options = Array.isArray(defaultOptions)
-          ? [...defaultOptions, ...loadedOptions]
-          : loadedOptions;
-        const nextOption =
-          options.find(option =>
-            getComparableOptionValues(option).includes(
-              getComparableFieldValue(field.value)
-            )
-          ) ?? null;
+        const options = [...staticDefaults, ...loadedOptions];
+        const nextOption = findMatchingOption(options, field.value) ?? null;
 
         if (isActive) {
-          const displayOption =
-            nextOption && displayValue === 'code'
-              ? {
-                  ...nextOption,
-                  label:
-                    nextOption.label.split('-')[0]?.trim() ?? nextOption.label,
-                }
-              : nextOption;
+          const displayOption = toDisplayOption(nextOption, displayValue);
           setSelectedOption(current =>
             optionsAreEqual(current, displayOption) ? current : displayOption
           );
@@ -263,7 +311,9 @@ export const FormFieldSelect = ({
     return () => {
       isActive = false;
     };
-  }, [defaultOptions, field.value, isMulti, loadOptions, selectedOption]);
+    // selectedOption is intentionally omitted: including it re-triggers resolve
+    // after every successful setState and can loop with paginated multi-select.
+  }, [defaultOptions, displayValue, field.value, isMulti, loadOptions]);
 
   const handleCreateOption = async (inputValue: string) => {
     if (!onCreateOption) {
@@ -311,7 +361,7 @@ export const FormFieldSelect = ({
     : [];
 
   const handleRemoveMultiOption = (optionValue: string | number) => {
-    if (!isMulti) {
+    if (!isMulti || disabled) {
       return;
     }
 
@@ -355,13 +405,10 @@ export const FormFieldSelect = ({
         ) => {
           if (isMulti) {
             const nextOptions = Array.isArray(option) ? option : [];
-            const displayNextOptions =
-              displayValue === 'code'
-                ? nextOptions.map(opt => ({
-                    ...opt,
-                    label: opt.label.split('-')[0]?.trim() ?? opt.label,
-                  }))
-                : nextOptions;
+            const displayNextOptions = toDisplayOptions(
+              nextOptions,
+              displayValue
+            );
             setSelectedOption(displayNextOptions);
             const nextValues = nextOptions.map(
               selectedOptionItem => selectedOptionItem.value
@@ -379,14 +426,7 @@ export const FormFieldSelect = ({
           }
 
           const nextOption = option as AsyncSelectOption;
-          const displayNextOption =
-            displayValue === 'code'
-              ? {
-                  ...nextOption,
-                  label:
-                    nextOption.label.split('-')[0]?.trim() ?? nextOption.label,
-                }
-              : nextOption;
+          const displayNextOption = toDisplayOption(nextOption, displayValue);
           setSelectedOption(displayNextOption);
           const nextValue = (nextOption as AsyncSelectOption).value;
           field.onChange(nextValue);
@@ -405,14 +445,16 @@ export const FormFieldSelect = ({
                 className="inline-flex max-w-full items-center gap-2 rounded-full border border-primary-200 bg-primary-50 px-3 py-1 text-sm font-medium text-primary-700 shadow-sm"
               >
                 <span className="max-w-[220px] truncate">{option.label}</span>
-                <Button
-                  type="button"
-                  aria-label={`Remove ${option.label}`}
-                  className="border-0! h-4! bg-transparent! text-black!"
-                  onClick={() => handleRemoveMultiOption(option.value)}
-                >
-                  <XMarkIcon className="h-4 w-4" />
-                </Button>
+                {!disabled ? (
+                  <Button
+                    type="button"
+                    aria-label={`Remove ${option.label}`}
+                    className="border-0! h-4! bg-transparent! text-black!"
+                    onClick={() => handleRemoveMultiOption(option.value)}
+                  >
+                    <XMarkIcon className="h-4 w-4" />
+                  </Button>
+                ) : null}
               </div>
             ))}
           </div>

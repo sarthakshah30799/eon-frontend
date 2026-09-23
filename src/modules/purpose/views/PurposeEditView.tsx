@@ -9,6 +9,7 @@ import {
 } from '../utils/purposeUtils';
 import { PurposeEditorView } from './PurposeEditorView';
 import type { ICreatePurpose } from '../types/purposeTypes';
+import { SurfacePanel } from '@/components/ui';
 
 export const PurposeEditView = () => {
   const { id } = useParams<{ id: string }>();
@@ -55,14 +56,14 @@ export const PurposeEditView = () => {
   }
 
   return (
-    <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+    <SurfacePanel>
       <PurposeEditorView
         submitLabel={PURPOSE_TEXTS.SAVE_CHANGES}
         defaultValues={defaultValues}
         onSubmitPurpose={handleSubmit}
         isSubmitting={isPending}
       />
-    </section>
+    </SurfacePanel>
   );
 };
 

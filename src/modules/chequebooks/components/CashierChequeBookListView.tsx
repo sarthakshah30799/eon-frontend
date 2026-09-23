@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Table, type TableColumnDef } from '@/components/ui';
+import { SurfacePanel, Table, type TableColumnDef } from '@/components/ui';
 import { Modal } from '@/components/ui/modal/Modal';
 import { chequebookApi, type IChequeBookPageTracking } from '@/api';
 import { useAuth } from '@/lib/AuthContext';
@@ -265,7 +265,7 @@ export const CashierChequeBookListView = () => {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+      <SurfacePanel>
         <div className="overflow-x-auto border border-slate-200 rounded-md">
           <Table
             columns={columns}
@@ -292,7 +292,7 @@ export const CashierChequeBookListView = () => {
         <p className="mt-2 text-xs text-slate-400">
           Click a row to return pages to the Branch Manager.
         </p>
-      </section>
+      </SurfacePanel>
 
       {/* Return Modal */}
       {returnState && (

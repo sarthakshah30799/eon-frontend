@@ -4,12 +4,7 @@ import { chequebookApi, type IChequeBook } from '@/api';
 import { Modal } from '@/components/ui/modal/Modal';
 import toast from 'react-hot-toast';
 import { Loader } from '@/components/ui/loader';
-import {
-  AsyncSelect,
-  Button,
-  type AsyncSelectOption,
-  type AsyncSelectResponse,
-} from '@/components/ui';
+import { AsyncSelect, Button, SurfacePanel, type AsyncSelectOption, type AsyncSelectResponse } from '@/components/ui';
 import {
   buildBranchToolbarFilter,
   buildStaticAsyncSelectToolbarFilter,
@@ -292,7 +287,7 @@ export const ChequeBookListView = () => {
         </Button>
       </div>
 
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+      <SurfacePanel>
         <ChequeBookTable
           books={books}
           loading={isLoading}
@@ -320,7 +315,7 @@ export const ChequeBookListView = () => {
             openReview(book.id);
           }}
         />
-      </section>
+      </SurfacePanel>
 
       {/* Review / Details Modal */}
       {reviewBook && (

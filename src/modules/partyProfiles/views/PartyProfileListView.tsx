@@ -1,9 +1,6 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import {
-  Button,
-  type AsyncSelectOption,
-} from '@/components/ui';
+import { Button, SurfacePanel, type AsyncSelectOption } from '@/components/ui';
 import {
   buildBranchToolbarFilter,
   buildSearchToolbarFilter,
@@ -210,7 +207,7 @@ export const PartyProfileListView = () => {
         )}
       </div>
 
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+      <SurfacePanel>
         <PartyProfileTable
           clients={clients}
           loading={isLoading}
@@ -224,7 +221,7 @@ export const PartyProfileListView = () => {
           selectedType={selectedType}
           toolbarFilters={toolbarFilters}
         />
-      </section>
+      </SurfacePanel>
     </div>
   );
 };

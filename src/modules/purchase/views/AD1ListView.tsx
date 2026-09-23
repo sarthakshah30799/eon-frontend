@@ -1,10 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { PencilSquareIcon } from '@heroicons/react/24/outline';
-import {
-  Button,
-  type AsyncSelectOption,
-} from '@/components/ui';
+import { Button, SurfacePanel, type AsyncSelectOption } from '@/components/ui';
 import {
   Table,
   type TableColumnDef,
@@ -213,7 +210,7 @@ export const AD1ListView = () => {
         </Button>
       </div>
 
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+      <SurfacePanel>
         <Table
           columns={columns}
           data={tableRows}
@@ -235,7 +232,7 @@ export const AD1ListView = () => {
           onRowClick={row => navigate(`/ad1/edit/${row.id}`)}
           emptyMessage="No AD1 transactions found."
         />
-      </section>
+      </SurfacePanel>
     </div>
   );
 };

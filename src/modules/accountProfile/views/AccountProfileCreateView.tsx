@@ -3,6 +3,7 @@ import { useCreateAccountProfile } from '../hooks';
 import { AccountProfileForm } from '../forms/AccountProfileForm';
 import { createEmptyAccountProfileFormValues } from '../utils/accountProfileUtils';
 import type { ICreateAccountProfile } from '../types/accountProfileTypes';
+import { SurfacePanel } from '@/components/ui';
 
 export const AccountProfileCreateView = () => {
   const navigate = useNavigate();
@@ -22,13 +23,13 @@ export const AccountProfileCreateView = () => {
   };
 
   return (
-    <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+    <SurfacePanel>
       <AccountProfileForm
         defaultValues={createEmptyAccountProfileFormValues()}
         onSubmit={handleSubmit}
         isSubmitting={isPending}
       />
-    </section>
+    </SurfacePanel>
   );
 };
 export default AccountProfileCreateView;

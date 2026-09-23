@@ -1,12 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import {
-  AsyncSelect,
-  Button,
-  PageGrid,
-  type AsyncSelectOption,
-  type AsyncSelectResponse,
-} from '@/components/ui';
+import { AsyncSelect, Button, PageGrid, SurfacePanel, type AsyncSelectOption, type AsyncSelectResponse } from '@/components/ui';
 import {
   buildBranchToolbarFilter,
   buildSearchToolbarFilter,
@@ -474,7 +468,7 @@ export const ManualBillBookListView = () => {
         </div>
       ) : null}
 
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+      <SurfacePanel>
         <ManualBillBookTable
           books={books}
           loading={isLoading}
@@ -510,7 +504,7 @@ export const ManualBillBookListView = () => {
             }
           }}
         />
-      </section>
+      </SurfacePanel>
 
       {/* Review / Details Modal */}
       {reviewBook && (

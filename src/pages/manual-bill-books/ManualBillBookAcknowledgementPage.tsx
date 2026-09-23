@@ -1,12 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import { manualBillBookApi, type IManualBook } from '@/api';
-import {
-  Button,
-  AsyncSelect,
-  DatePicker,
-  type AsyncSelectOption,
-} from '@/components/ui';
+import { AsyncSelect, Button, DatePicker, SurfacePanel, type AsyncSelectOption } from '@/components/ui';
 import { formatDateInput, parseDateInput } from '@/utils';
 import type { MultiValue, SingleValue } from 'react-select';
 import toast from 'react-hot-toast';
@@ -218,7 +213,7 @@ export const ManualBillBookAcknowledgementPage = () => {
       </div>
 
       {view === 'list' ? (
-        <div className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+        <SurfacePanel>
           <h3 className="mb-4 text-sm font-semibold text-text-primary">
             Dispatches
           </h3>
@@ -247,7 +242,7 @@ export const ManualBillBookAcknowledgementPage = () => {
               Go to Manual Bill Status Search
             </Button>
           </div>
-        </div>
+        </SurfacePanel>
       ) : (
         /* Detailed / Process checklist View */
         <div className="space-y-6">
@@ -393,7 +388,7 @@ export const ManualBillBookAcknowledgementPage = () => {
           </div>
 
           {/* Results Checklist table */}
-          <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+          <SurfacePanel>
             <div className="px-5 py-4 border-b border-slate-200 bg-slate-50">
               <h3 className="font-semibold text-slate-800 text-sm">
                 Dispatches Checklist
@@ -414,7 +409,7 @@ export const ManualBillBookAcknowledgementPage = () => {
                 </Button>
               </div>
             )}
-          </section>
+          </SurfacePanel>
         </div>
       )}
     </div>

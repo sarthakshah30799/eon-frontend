@@ -6,6 +6,7 @@ import { PAGINATION_DEFAULTS } from '@/constants/paginationConstants';
 import { companyProfileApi } from '@/api/companyProfile';
 import { useDeleteCompanyProfile } from '../hooks';
 import { CompanyProfileTable } from '../components';
+import { SurfacePanel } from '@/components/ui';
 
 export const CompanyProfileListView = () => {
   const navigate = useNavigate();
@@ -77,7 +78,7 @@ export const CompanyProfileListView = () => {
         </Button>
       </div>
 
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+      <SurfacePanel>
         <CompanyProfileTable
           companies={companies}
           onDelete={handleDelete}
@@ -94,7 +95,7 @@ export const CompanyProfileListView = () => {
           onPageChange={handlePageChange}
           onPageSizeChange={handlePageSizeChange}
         />
-      </section>
+      </SurfacePanel>
     </div>
   );
 };

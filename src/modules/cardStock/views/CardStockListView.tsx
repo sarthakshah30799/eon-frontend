@@ -12,6 +12,7 @@ import { useOffsetPaginatedList } from '@/hooks';
 import { cardStockApi } from '@/api/cardStock';
 import { formatDateTime } from '@/utils';
 import type { CardStockReceipt } from '../types';
+import { SurfacePanel } from '@/components/ui';
 
 export const CardStockListView = () => {
   const navigate = useNavigate();
@@ -99,7 +100,7 @@ export const CardStockListView = () => {
           New Receipt Stock
         </Button>
       </div>
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+      <SurfacePanel>
         <Table
           columns={columns}
           data={data}
@@ -117,7 +118,7 @@ export const CardStockListView = () => {
           onPageSizeChange={handlePageSizeChange}
           emptyMessage="No card stock receipts found."
         />
-      </section>
+      </SurfacePanel>
     </div>
   );
 };

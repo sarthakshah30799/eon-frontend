@@ -5,6 +5,7 @@ import { useDebounce, useOffsetPaginatedList, usePermission } from '@/hooks';
 import { PAGINATION_DEFAULTS } from '@/constants/paginationConstants';
 import { accountProfileApi } from '@/api/accountProfile/accountProfile.api';
 import { AccountProfileTable } from '../components';
+import { SurfacePanel } from '@/components/ui';
 
 export const AccountProfileListView = () => {
   const navigate = useNavigate();
@@ -75,7 +76,7 @@ export const AccountProfileListView = () => {
         )}
       </div>
 
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+      <SurfacePanel>
         <AccountProfileTable
           accounts={accounts}
           loading={isLoading}
@@ -90,7 +91,7 @@ export const AccountProfileListView = () => {
           onPageChange={handlePageChange}
           onPageSizeChange={handlePageSizeChange}
         />
-      </section>
+      </SurfacePanel>
     </div>
   );
 };

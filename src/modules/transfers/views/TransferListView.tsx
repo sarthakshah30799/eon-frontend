@@ -18,6 +18,7 @@ import { getTransferStatusLabel, TRANSFER_STATUS_OPTIONS } from '../utils';
 import type { ICurrencyTransfer } from '../types';
 import type { TransferType } from '../types';
 
+import { SurfacePanel } from '@/components/ui';
 const titleMap: Record<TransferType, string> = {
   COUNTER: 'Counter Transfers',
   BRANCH: 'Branch Transfers',
@@ -221,7 +222,7 @@ export const TransferListView = ({
         </div>
       </div>
 
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+      <SurfacePanel>
         <Table
           columns={columns}
           data={data}
@@ -240,7 +241,7 @@ export const TransferListView = ({
           toolbarFilters={toolbarFilters}
           emptyMessage="No transfers found."
         />
-      </section>
+      </SurfacePanel>
     </div>
   );
 };

@@ -7,6 +7,7 @@ import { branchProfileApi } from '@/api/branchProfile';
 import { useDeleteBranchProfile } from '../hooks';
 import { BRANCH_PROFILE_TEXTS } from '../constants';
 import { BranchProfileTable } from '../components';
+import { SurfacePanel } from '@/components/ui';
 
 export const BranchProfileListView = () => {
   const navigate = useNavigate();
@@ -79,7 +80,7 @@ export const BranchProfileListView = () => {
         </Button>
       </div>
 
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+      <SurfacePanel>
         <BranchProfileTable
           branches={branches}
           onDelete={handleDelete}
@@ -96,7 +97,7 @@ export const BranchProfileListView = () => {
           onPageChange={handlePageChange}
           onPageSizeChange={handlePageSizeChange}
         />
-      </section>
+      </SurfacePanel>
     </div>
   );
 };

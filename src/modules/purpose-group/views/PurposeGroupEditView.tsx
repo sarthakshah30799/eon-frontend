@@ -9,6 +9,7 @@ import {
 } from '../utils/purposeGroupUtils';
 import { PurposeGroupEditorView } from './PurposeGroupEditorView';
 import type { ICreatePurposeGroup } from '../types/purposeGroupTypes';
+import { SurfacePanel } from '@/components/ui';
 
 export const PurposeGroupEditView = () => {
   const { id } = useParams<{ id: string }>();
@@ -55,14 +56,14 @@ export const PurposeGroupEditView = () => {
   }
 
   return (
-    <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+    <SurfacePanel>
       <PurposeGroupEditorView
         submitLabel={PURPOSE_GROUP_TEXTS.SAVE_CHANGES}
         defaultValues={defaultValues}
         onSubmitPurposeGroup={handleSubmit}
         isSubmitting={isPending}
       />
-    </section>
+    </SurfacePanel>
   );
 };
 

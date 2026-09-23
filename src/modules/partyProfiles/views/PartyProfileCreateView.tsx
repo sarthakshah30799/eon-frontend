@@ -14,6 +14,7 @@ import { AccessDeniedState } from '@/components/ui/access-denied-state';
 import { usePermission } from '@/hooks';
 import type { PartyProfileType } from '../types/partyProfileTypes';
 
+import { SurfacePanel } from '@/components/ui';
 const createEmptyPartyProfileValues = (): Omit<ICreatePartyProfile, 'type'> => {
   return {
     dateOfIntro: new Date().toISOString().split('T')[0],
@@ -173,7 +174,7 @@ export const PartyProfileCreateView = () => {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+      <SurfacePanel>
         <PartyProfileForm
           defaultValues={defaultValues}
           onSubmit={handleSubmit}
@@ -184,7 +185,7 @@ export const PartyProfileCreateView = () => {
           currentId={undefined}
           allowBranchSelection
         />
-      </section>
+      </SurfacePanel>
     </div>
   );
 };

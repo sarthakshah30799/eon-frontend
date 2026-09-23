@@ -27,6 +27,7 @@ import { CARD_TRANSFER_STATUS_OPTIONS, CARD_TRANSFER_COPY } from '../constants';
 import { useDeleteCardTransfer } from '../hooks';
 import type { CardTransferRequest } from '../types';
 
+import { SurfacePanel } from '@/components/ui';
 const readStatusValues = (searchParams: URLSearchParams) => {
   const allowed = new Set(
     CARD_TRANSFER_STATUS_OPTIONS.map(option => option.value)
@@ -284,7 +285,7 @@ export const CardTransferListView = () => {
           New CARD Transfer Sell
         </Button>
       </div>
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+      <SurfacePanel>
         <Table
           columns={columns}
           data={data}
@@ -303,7 +304,7 @@ export const CardTransferListView = () => {
           toolbarFilters={toolbarFilters}
           emptyMessage="No CARD transfer requests found."
         />
-      </section>
+      </SurfacePanel>
     </div>
   );
 };

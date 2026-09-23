@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Button, type AsyncSelectOption } from '@/components/ui';
+import { Button, SurfacePanel, type AsyncSelectOption } from '@/components/ui';
 import {
   buildBranchToolbarFilter,
   buildSearchToolbarFilter,
@@ -154,7 +154,7 @@ export const FakeCurrencyListView = () => {
           Failed to load fake-currency transactions.
         </p>
       ) : null}
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+      <SurfacePanel>
         <TransactionListTable
           rows={rows}
           loading={isLoading}
@@ -173,7 +173,7 @@ export const FakeCurrencyListView = () => {
           actionMode="view"
           emptyMessage="No fake-currency transactions found."
         />
-      </section>
+      </SurfacePanel>
     </div>
   );
 };

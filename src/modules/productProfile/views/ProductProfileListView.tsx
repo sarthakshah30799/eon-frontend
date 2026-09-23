@@ -7,6 +7,7 @@ import { productProfileApi } from '@/api/productProfile';
 import { PRODUCT_PROFILE_TEXTS } from '../constants';
 import { ProductProfileTable } from '../components';
 import { useUpdateProductProfileStatus } from '../hooks';
+import { SurfacePanel } from '@/components/ui';
 
 export const ProductProfileListView = () => {
   const navigate = useNavigate();
@@ -82,7 +83,7 @@ export const ProductProfileListView = () => {
         )}
       </div>
 
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+      <SurfacePanel>
         <ProductProfileTable
           products={products}
           onToggleStatus={handleToggleStatus}
@@ -99,7 +100,7 @@ export const ProductProfileListView = () => {
           onPageChange={handlePageChange}
           onPageSizeChange={handlePageSizeChange}
         />
-      </section>
+      </SurfacePanel>
     </div>
   );
 };

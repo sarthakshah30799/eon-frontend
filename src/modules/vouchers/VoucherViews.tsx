@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { EyeIcon } from '@heroicons/react/24/outline';
-import { Button, Table, type TableColumnDef } from '@/components/ui';
+import { Button, SurfacePanel, Table, type TableColumnDef } from '@/components/ui';
 import {
   TABLE_ACTIONS_CELL_CLASSNAME,
   TABLE_ACTION_BUTTON_CLASSNAME,
@@ -310,7 +310,7 @@ export const VoucherListView = ({ type }: { type: VoucherType }) => {
           {VOUCHER_LIST_TEXT.add(label)}
         </Button>
       </div>
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+      <SurfacePanel>
         <Table
           columns={columns}
           data={rows}
@@ -332,7 +332,7 @@ export const VoucherListView = ({ type }: { type: VoucherType }) => {
               : VOUCHER_LIST_TEXT.empty(label)
           }
         />
-      </section>
+      </SurfacePanel>
     </div>
   );
 };

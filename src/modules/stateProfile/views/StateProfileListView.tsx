@@ -6,6 +6,7 @@ import { PAGINATION_DEFAULTS } from '@/constants/paginationConstants';
 import { stateProfileApi } from '@/api/stateProfile';
 import { STATE_PROFILE_TEXTS } from '../constants';
 import { StateProfileTable } from '../components';
+import { SurfacePanel } from '@/components/ui';
 
 export const StateProfileListView = () => {
   const navigate = useNavigate();
@@ -75,7 +76,7 @@ export const StateProfileListView = () => {
         )}
       </div>
 
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+      <SurfacePanel>
         <StateProfileTable
           states={states}
           loading={isLoading}
@@ -90,7 +91,7 @@ export const StateProfileListView = () => {
           searchValue={search}
           searchPlaceholder="Search country, state name, state code, GST code, or CTR code"
         />
-      </section>
+      </SurfacePanel>
     </div>
   );
 };

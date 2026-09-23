@@ -1,12 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { EyeIcon, PencilSquareIcon } from '@heroicons/react/24/outline';
-import {
-  Button,
-  Table,
-  type AsyncSelectOption,
-  type TableColumnDef,
-} from '@/components/ui';
+import { Button, SurfacePanel, Table, type AsyncSelectOption, type TableColumnDef } from '@/components/ui';
 import {
   buildSearchToolbarFilter,
   buildStaticAsyncSelectToolbarFilter,
@@ -278,7 +273,7 @@ export const CardSettlementListView = () => {
           {CARD_SETTLEMENT_TEXT.newSettlement}
         </Button>
       </div>
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+      <SurfacePanel>
         <Table
           columns={columns}
           data={rows}
@@ -300,7 +295,7 @@ export const CardSettlementListView = () => {
               : CARD_SETTLEMENT_TEXT.empty
           }
         />
-      </section>
+      </SurfacePanel>
     </div>
   );
 };

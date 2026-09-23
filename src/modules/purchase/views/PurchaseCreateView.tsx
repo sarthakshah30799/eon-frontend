@@ -114,6 +114,16 @@ export const PurchaseCreateView = ({
       ),
     [additionalSettings]
   );
+  const defaultHandlingFeesAmount = useMemo(
+    () =>
+      getAdditionalSettingTextValue(
+        additionalSettings,
+        AdditionalSettingsCodeEnum.AdditionalCharges,
+        AdditionalSettingsCodeEnum.HandlingFees,
+        ''
+      ),
+    [additionalSettings]
+  );
 
   const defaultValues = useMemo(
     () =>
@@ -236,6 +246,7 @@ export const PurchaseCreateView = ({
         partyProfileTypes={partyProfileTypes}
         requiresApproval={requiresApproval}
         handlingFeeControlAccountId={handlingFeeControlAccountId}
+        defaultHandlingFeesAmount={defaultHandlingFeesAmount}
         branchId={canSelectWorkplace ? '' : (activeBranchId ?? '')}
         branchCode={canSelectWorkplace ? '' : (branchProfile?.code ?? '')}
         sacCode={sacCode}

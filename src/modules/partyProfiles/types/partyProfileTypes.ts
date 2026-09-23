@@ -17,6 +17,7 @@ export const PartyProfileTypeEnum = {
   MARKETING_EXECUTIVE: 'MARKETING_EXECUTIVE',
   CARD_ISSUER_PROFILE: 'CARD_ISSUER_PROFILE',
   MISC_PROFILE: 'MISC_PROFILE',
+  EMPLOYEE_PROFILE: 'EMPLOYEE_PROFILE',
 } as const;
 
 export const PartyProfileCommissionTypeEnum = {
@@ -126,6 +127,23 @@ export interface IPartyProfile {
   cardNumberLength?: number | null;
   allowCardNumberMasking?: boolean;
   divisionFactor?: number;
+  dateOfJoining?: string;
+  dateOfExit?: string;
+  basicSalary?: number;
+  netSalary?: number;
+  dareness?: number;
+  houseRent?: number;
+  conveyance?: number;
+  specialAllowance?: number;
+  otherAllowance?: number;
+  allowanceTotal?: number;
+  pf?: number;
+  ppf?: number;
+  pTax?: number;
+  esic?: number;
+  incomeTax?: number;
+  otherDeduction?: number;
+  deductionTotal?: number;
   type: PartyProfileType;
   status?: PartyProfileStatus;
   statusUpdatedById?: string | null;
@@ -183,6 +201,10 @@ export type IUpgradePartyProfileCreditPolicy = Partial<
     | 'chqTrxnLimit'
   >
 >;
+
+export type IUpdatePartyProfileBranches = {
+  branchIds: string[];
+};
 
 export interface IReviewPartyProfilePayload {
   status: Exclude<PartyProfileStatus, typeof PartyProfileStatusEnum.PENDING>;

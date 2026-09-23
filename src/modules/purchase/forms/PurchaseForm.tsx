@@ -117,6 +117,7 @@ interface PurchaseFormProps {
   partyProfileTypes: PartyProfileType[];
   requiresApproval: boolean;
   handlingFeeControlAccountId?: string;
+  defaultHandlingFeesAmount?: string;
   branchId?: string;
   branchCode?: string;
   sacCode?: string | null;
@@ -140,6 +141,7 @@ interface PurchaseFormBodyProps {
   partyProfileTypes: PartyProfileType[];
   requiresApproval: boolean;
   handlingFeeControlAccountId?: string;
+  defaultHandlingFeesAmount?: string;
   branchId: string;
   branchCode: string;
   sacCode: string;
@@ -175,6 +177,7 @@ const PurchaseFormBody = ({
   partyProfileTypes,
   requiresApproval,
   handlingFeeControlAccountId,
+  defaultHandlingFeesAmount,
   branchId,
   sacCode,
   savedTransaction,
@@ -673,10 +676,14 @@ const PurchaseFormBody = ({
     purchaseRulePreviewSignature,
     isPurchaseTransaction,
   ]);
-  const purchaseRulePreviewRequest: IPurchaseRulePreviewRequest | null =
-    purchaseRulePreviewPayload?.transaction
-      ? { transaction: purchaseRulePreviewPayload.transaction }
-      : null;
+  const purchaseRulePreviewRequest =
+    useMemo<IPurchaseRulePreviewRequest | null>(() => {
+      if (!purchaseRulePreviewPayload?.transaction) {
+        return null;
+      }
+
+      return { transaction: purchaseRulePreviewPayload.transaction };
+    }, [purchaseRulePreviewPayload]);
   const canPreviewTax = Boolean(
     resolvedBranchId &&
     partyProfileId &&
@@ -687,6 +694,8 @@ const PurchaseFormBody = ({
     hasCompleteAdditionalChargePreviewRows &&
     !savedTransaction?.id
   );
+  // Passenger AML modal writes directly into the live form. Pause preview while it
+  // is open so typing/editing does not spam purchase-rule-preview.
   const canPreviewPurchaseRule = Boolean(
     purchaseRulePreviewRequest &&
     isPurchaseTransaction &&
@@ -698,7 +707,8 @@ const PurchaseFormBody = ({
     hasCompleteItemPreviewRows &&
     hasCompleteAdditionalChargePreviewRows &&
     (!isCombinedPartyProfilePage || hasCompletePaymentPreviewRows) &&
-    !savedTransaction?.id
+    !savedTransaction?.id &&
+    !isPassengerAmlModalOpen
   );
   const {
     data: purchaseRulePreview,
@@ -708,34 +718,50 @@ const PurchaseFormBody = ({
       purchaseRulePreviewRequest,
       canPreviewPurchaseRule
     );
+  const [lastPurchaseRulePreview, setLastPurchaseRulePreview] =
+    useState<IPurchaseRulePreviewResponse | null>(null);
+
+  if (purchaseRulePreview) {
+    if (lastPurchaseRulePreview !== purchaseRulePreview) {
+      setLastPurchaseRulePreview(purchaseRulePreview);
+    }
+  } else if (!isPurchaseTransaction || !passengerInfoCaptured) {
+    if (lastPurchaseRulePreview !== null) {
+      setLastPurchaseRulePreview(null);
+    }
+  }
+
   const resolvedPurchaseRulePreview =
-    useMemo<IPurchaseRulePreviewResponse | null>(
-      () => purchaseRulePreview ?? null,
-      [purchaseRulePreview]
-    );
+    purchaseRulePreview ??
+    (isPassengerAmlModalOpen ? lastPurchaseRulePreview : null);
 
   const lockedHandlingFeeRow = useMemo(() => {
-    const defaultHandlingCharges = Number(
-      selectedPartyProfile?.defaultHandlingCharges ?? 0
-    );
+    if (!selectedPartyProfile || !handlingFeeControlAccountId) {
+      return null;
+    }
+
+    const resolvedHandlingFeeAmount = selectedPartyProfile.isIndividual
+      ? Number(defaultHandlingFeesAmount ?? 0)
+      : Number(selectedPartyProfile.defaultHandlingCharges ?? 0);
 
     if (
-      !selectedPartyProfile ||
-      selectedPartyProfile.isIndividual ||
-      !handlingFeeControlAccountId ||
-      !Number.isFinite(defaultHandlingCharges) ||
-      defaultHandlingCharges <= 0
+      !Number.isFinite(resolvedHandlingFeeAmount) ||
+      resolvedHandlingFeeAmount <= 0
     ) {
       return null;
     }
 
     return {
-      key: `${selectedPartyProfile.id}:${handlingFeeControlAccountId}:${defaultHandlingCharges.toFixed(2)}`,
+      key: `${selectedPartyProfile.id}:${handlingFeeControlAccountId}:${resolvedHandlingFeeAmount.toFixed(2)}`,
       accountId: handlingFeeControlAccountId,
       accountName: '',
-      amount: formatPurchaseDecimal(defaultHandlingCharges),
+      amount: formatPurchaseDecimal(resolvedHandlingFeeAmount),
     };
-  }, [handlingFeeControlAccountId, selectedPartyProfile]);
+  }, [
+    defaultHandlingFeesAmount,
+    handlingFeeControlAccountId,
+    selectedPartyProfile,
+  ]);
 
   useEffect(() => {
     if (!isPurchaseTransaction) {
@@ -751,23 +777,25 @@ const PurchaseFormBody = ({
       return;
     }
 
-    onPurchaseRuleBlockChange(
-      Boolean(
-        resolvedPurchaseRulePreview && !resolvedPurchaseRulePreview.allowed
-      )
-    );
+    // Keep the last known rule/CDF state while preview is paused (passenger modal)
+    // or still settling. Do not treat a missing preview as requiresCdf=false.
+    if (!resolvedPurchaseRulePreview) {
+      return;
+    }
+
+    onPurchaseRuleBlockChange(!resolvedPurchaseRulePreview.allowed);
     onPurchaseRuleMetaChange({
-      allowed: Boolean(resolvedPurchaseRulePreview?.allowed ?? true),
-      requiresCdf: Boolean(resolvedPurchaseRulePreview?.requiresCdf),
-      blockingReason: resolvedPurchaseRulePreview?.blockingReason ?? null,
+      allowed: Boolean(resolvedPurchaseRulePreview.allowed),
+      requiresCdf: Boolean(resolvedPurchaseRulePreview.requiresCdf),
+      blockingReason: resolvedPurchaseRulePreview.blockingReason ?? null,
       blockingReasons:
-        resolvedPurchaseRulePreview?.blockingReasons ??
-        (resolvedPurchaseRulePreview?.blockingReason
+        resolvedPurchaseRulePreview.blockingReasons ??
+        (resolvedPurchaseRulePreview.blockingReason
           ? [resolvedPurchaseRulePreview.blockingReason]
           : []),
-      cdfThresholdAmount: resolvedPurchaseRulePreview?.cdfThresholdAmount ?? '',
+      cdfThresholdAmount: resolvedPurchaseRulePreview.cdfThresholdAmount ?? '',
       referenceCurrencyCode:
-        resolvedPurchaseRulePreview?.referenceCurrencyCode ?? '',
+        resolvedPurchaseRulePreview.referenceCurrencyCode ?? '',
     });
   }, [
     isPurchaseTransaction,
@@ -1525,7 +1553,9 @@ const PurchaseFormBody = ({
         description="Add optional charges for this transaction. The account list is filtered by ledger type and purchase/sale mode."
       />
 
-      {isPurchaseTransaction && canPreviewPurchaseRule && isPurchaseRulePreviewLoading ? (
+      {isPurchaseTransaction &&
+      canPreviewPurchaseRule &&
+      isPurchaseRulePreviewLoading ? (
         <CardSection heading={PURCHASE_RULE_TEXT.heading}>
           <Loader variant="inline" />
         </CardSection>
@@ -1967,6 +1997,8 @@ export const PurchaseForm = ({
   pricingData,
   partyProfileTypes,
   requiresApproval,
+  handlingFeeControlAccountId,
+  defaultHandlingFeesAmount,
   branchId = '',
   branchCode = '',
   sacCode = '',
@@ -1997,14 +2029,25 @@ export const PurchaseForm = ({
     referenceCurrencyCode: '',
   });
   const [isCdfModalOpen, setIsCdfModalOpen] = useState(false);
-  const [pendingSubmitPayload, setPendingSubmitPayload] =
-    useState<IPurchaseFormValues | null>(null);
   const [cdfDeclarationValues, setCdfDeclarationValues] =
     useState<IPurchaseCdfDeclarationValues | null>(null);
   const transactionDatePolicy = useMemo(
     () => getTransactionDatePolicy(policyContext),
     [policyContext]
   );
+
+  const requiresCdfDeclaration = Boolean(purchaseRuleMeta.requiresCdf);
+  const hasCdfDeclaration = Boolean(cdfDeclarationValues);
+  const [previousRequiresCdfDeclaration, setPreviousRequiresCdfDeclaration] =
+    useState(requiresCdfDeclaration);
+
+  if (requiresCdfDeclaration !== previousRequiresCdfDeclaration) {
+    setPreviousRequiresCdfDeclaration(requiresCdfDeclaration);
+    if (!requiresCdfDeclaration) {
+      setCdfDeclarationValues(null);
+      setIsCdfModalOpen(false);
+    }
+  }
 
   const handleSelectDraftDocument = async (
     documentProfileId: string,
@@ -2037,9 +2080,7 @@ export const PurchaseForm = ({
   );
 
   const handleFormSubmit = async (values: IPurchaseFormValues) => {
-    if (purchaseRuleMeta.requiresCdf && !cdfDeclarationValues) {
-      setPendingSubmitPayload(values);
-      setIsCdfModalOpen(true);
+    if (requiresCdfDeclaration && !cdfDeclarationValues) {
       return;
     }
 
@@ -2053,33 +2094,15 @@ export const PurchaseForm = ({
     await onSubmit(mergedValues, draftDocumentAttachments);
   };
 
-  const handleConfirmCdfDeclaration = async (
+  const handleConfirmCdfDeclaration = (
     values: IPurchaseCdfDeclarationValues
   ) => {
     setCdfDeclarationValues(values);
     setIsCdfModalOpen(false);
-
-    if (!pendingSubmitPayload) {
-      return;
-    }
-
-    const mergedValues = {
-      ...pendingSubmitPayload,
-      ...values,
-    };
-
-    setPendingSubmitPayload(null);
-    await onSubmit(mergedValues, draftDocumentAttachments);
   };
 
   const handleCdfModalOpenChange = (open: boolean) => {
     setIsCdfModalOpen(open);
-
-    if (open) {
-      return;
-    }
-
-    setPendingSubmitPayload(null);
   };
 
   const submitMessage = useMemo(() => {
@@ -2102,7 +2125,7 @@ export const PurchaseForm = ({
                 PURCHASE_RULE_TEXT.failedFallback,
             ];
       messages.push(...blockingMessages);
-    } else if (purchaseRuleMeta.requiresCdf) {
+    } else if (requiresCdfDeclaration && !hasCdfDeclaration) {
       messages.push(
         PURCHASE_RULE_TEXT.cdfRequired(
           purchaseRuleMeta.cdfThresholdAmount,
@@ -2117,6 +2140,7 @@ export const PurchaseForm = ({
 
     return messages.join(' ');
   }, [
+    hasCdfDeclaration,
     isCreditBlocked,
     isPurchaseRuleBlocked,
     isTransactionPreviewLoading,
@@ -2124,9 +2148,23 @@ export const PurchaseForm = ({
     purchaseRuleMeta.blockingReasons,
     purchaseRuleMeta.cdfThresholdAmount,
     purchaseRuleMeta.referenceCurrencyCode,
-    purchaseRuleMeta.requiresCdf,
+    requiresCdfDeclaration,
     transactionDatePolicy.canPunchTransactions,
   ]);
+
+  const cdfFooterAction =
+    !readOnly && requiresCdfDeclaration ? (
+      <Button
+        type="button"
+        variant="outline"
+        onClick={() => setIsCdfModalOpen(true)}
+        className="rounded-xl! px-4 py-2"
+      >
+        {hasCdfDeclaration
+          ? PURCHASE_RULE_TEXT.cdfDeclarationEditButton
+          : PURCHASE_RULE_TEXT.cdfDeclarationButton}
+      </Button>
+    ) : null;
 
   return (
     <Form<IPurchaseFormValues>
@@ -2149,11 +2187,13 @@ export const PurchaseForm = ({
         onBackClick: onCancel,
         onCancel,
         showSubmit: !readOnly,
+        preSubmitActions: cdfFooterAction,
         isSubmitDisabled:
           isPurchaseRuleBlocked ||
           isCreditBlocked ||
           isTransactionPreviewLoading ||
-          !transactionDatePolicy.canPunchTransactions,
+          !transactionDatePolicy.canPunchTransactions ||
+          (requiresCdfDeclaration && !hasCdfDeclaration),
         submitMessage: submitMessage || undefined,
       }}
     >
@@ -2162,6 +2202,8 @@ export const PurchaseForm = ({
         pricingData={pricingData}
         partyProfileTypes={partyProfileTypes}
         requiresApproval={requiresApproval}
+        handlingFeeControlAccountId={handlingFeeControlAccountId}
+        defaultHandlingFeesAmount={defaultHandlingFeesAmount}
         branchId={branchId}
         branchCode={branchCode}
         sacCode={sacCode ?? ''}
@@ -2185,9 +2227,7 @@ export const PurchaseForm = ({
         open={isCdfModalOpen}
         onOpenChange={handleCdfModalOpenChange}
         initialValues={cdfDeclarationValues ?? undefined}
-        onConfirm={values => {
-          void handleConfirmCdfDeclaration(values);
-        }}
+        onConfirm={handleConfirmCdfDeclaration}
       />
     </Form>
   );

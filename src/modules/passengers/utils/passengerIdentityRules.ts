@@ -264,6 +264,96 @@ export const isPassengerArrivalDateRequired = (
   values: PassengerIdentityValues
 ) => isForeignNationality(values);
 
+const toPassengerCalendarDate = (value?: string | null) => {
+  const normalized = String(value ?? '').trim();
+  if (!normalized) {
+    return null;
+  }
+
+  const isoMatch = normalized.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (isoMatch) {
+    return isoMatch[1];
+  }
+
+  const displayMatch = normalized.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (displayMatch) {
+    return `${displayMatch[3]}-${displayMatch[2]}-${displayMatch[1]}`;
+  }
+
+  return null;
+};
+
+export const getPassengerArrivalDateOrderError = (
+  arrivalDate?: string | null,
+  transactionDate?: string | null
+) => {
+  const arrival = toPassengerCalendarDate(arrivalDate);
+  const transaction = toPassengerCalendarDate(transactionDate);
+
+  // Purchase and sale: arrival must be on or before the transaction date.
+  if (!arrival || !transaction || arrival <= transaction) {
+    return null;
+  }
+
+  return PASSENGER_IDENTITY_TEXT.arrivalDateAfterTransactionDate;
+};
+
+export const getPassengerDepartureDateOrderError = (
+  departureDate?: string | null,
+  transactionDate?: string | null,
+  transactionType?: string | null
+) => {
+  // Sale only: departure must be on or after the transaction date.
+  if (transactionType !== TransactionTypeEnum.SALE) {
+    return null;
+  }
+
+  const departure = toPassengerCalendarDate(departureDate);
+  const transaction = toPassengerCalendarDate(transactionDate);
+
+  if (!departure || !transaction || departure >= transaction) {
+    return null;
+  }
+
+  return PASSENGER_IDENTITY_TEXT.departureDateBeforeTransactionDate;
+};
+
+export const applyPassengerTransactionDateOrderErrors = (
+  values: {
+    arrivalDate?: string | null;
+    travelDepartureDate?: string | null;
+    transactionDate?: string | null;
+    transactionType?: string | null;
+  },
+  setError: (field: string, error: { type: string; message: string }) => void
+) => {
+  let isValid = true;
+
+  const arrivalError = getPassengerArrivalDateOrderError(
+    values.arrivalDate,
+    values.transactionDate
+  );
+  if (arrivalError) {
+    setError('arrivalDate', { type: 'manual', message: arrivalError });
+    isValid = false;
+  }
+
+  const departureError = getPassengerDepartureDateOrderError(
+    values.travelDepartureDate,
+    values.transactionDate,
+    values.transactionType
+  );
+  if (departureError) {
+    setError('travelDepartureDate', {
+      type: 'manual',
+      message: departureError,
+    });
+    isValid = false;
+  }
+
+  return isValid;
+};
+
 export const isPassengerOtherDocumentsRequired = (
   values: PassengerIdentityValues
 ) => {

@@ -78,6 +78,23 @@ const createEmptyPartyProfileValues = (): Omit<ICreatePartyProfile, 'type'> => {
     cardNumberLength: 16,
     allowCardNumberMasking: false,
     divisionFactor: undefined,
+    dateOfJoining: '',
+    dateOfExit: '',
+    basicSalary: 0,
+    netSalary: 0,
+    dareness: 0,
+    houseRent: 0,
+    conveyance: 0,
+    specialAllowance: 0,
+    otherAllowance: 0,
+    allowanceTotal: 0,
+    pf: 0,
+    ppf: 0,
+    pTax: 0,
+    esic: 0,
+    incomeTax: 0,
+    otherDeduction: 0,
+    deductionTotal: 0,
     commissionRules: [],
   };
 };
@@ -160,6 +177,8 @@ export const PartyProfileCreateView = () => {
       establishmentDate: values.establishmentDate || undefined,
       panDob: values.panDob || undefined,
       email: values.email || undefined,
+      dateOfJoining: values.dateOfJoining || undefined,
+      dateOfExit: values.dateOfExit || undefined,
     };
     const created = await submitPartyProfile(sanitized);
     navigate(buildPartyProfileDocumentsPath(selectedApiType, created.id));

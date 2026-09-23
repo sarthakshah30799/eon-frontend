@@ -12,6 +12,10 @@ export const PASSENGER_IDENTITY_TEXT = {
   passportIssueDateRequired: 'Passport issue date is required',
   passportExpiryDateRequired: 'Passport expiry date is required',
   arrivalDateRequired: 'Arrival date is required',
+  arrivalDateAfterTransactionDate:
+    'Arrival date must be on or before the transaction date',
+  departureDateBeforeTransactionDate:
+    'Departure date must be on or after the transaction date',
   arrivalDateHelper:
     'Required for NRI and foreign passengers. This is the date they entered India, not a passport detail.',
   passportOptionalHelper:
@@ -19,4 +23,6 @@ export const PASSENGER_IDENTITY_TEXT = {
   passportNumberInvalid: 'Passport number must be 8 alphanumeric characters',
   travelTicketNoInvalid: 'Ticket number must be 13 numeric characters',
   aadhaarNumberInvalid: 'Aadhaar number must be 12 numeric characters',
+  panPassportConflict:
+    'PAN and passport belong to different passenger records',
 } as const;

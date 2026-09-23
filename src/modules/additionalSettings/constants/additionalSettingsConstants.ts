@@ -15,6 +15,8 @@ export const AdditionalSettingsCodeEnum = {
   SessionIdleTimeoutSeconds: 'IDLE_TIMEOUT_SECONDS',
   TransactionApprovalPolicy: 'TRANSACTION_APPROVAL_POLICY',
   TaxConfiguration: 'TAX_CONFIGURATION',
+  AdditionalCharges: 'ADDITIONAL_CHARGES',
+  HandlingFees: 'HANDLING_FEES',
   PurchaseFfmcAds: 'PURCHASE_FFMC_ADS',
   PurchaseAd1: 'PURCHASE_AD1',
   TransactionSacCode: 'TRANSACTION_SAC_CODE',

@@ -22,6 +22,11 @@ interface FormFieldSelectProps extends Omit<
   className?: string;
   isMulti?: boolean;
   displayValue?: string;
+  /**
+   * Options used only to resolve the current field value label(s).
+   * Does not replace menu `defaultOptions` / `loadOptions` browsing.
+   */
+  valueOptions?: AsyncSelectOption[];
   onValueChange?: (value: string | string[] | null) => void;
   onCreateOption?: (
     inputValue: string
@@ -40,6 +45,30 @@ const flattenOptions = (
   }
 
   return response.options;
+};
+
+const toMenuDefaultOptions = (
+  value: FormFieldSelectProps['defaultOptions']
+): boolean | AsyncSelectOption[] => {
+  if (value === undefined) {
+    return true;
+  }
+
+  if (typeof value === 'boolean') {
+    return value;
+  }
+
+  if (!Array.isArray(value)) {
+    return true;
+  }
+
+  return value.flatMap(option => {
+    if (option && typeof option === 'object' && 'options' in option) {
+      return [...option.options];
+    }
+
+    return [option as AsyncSelectOption];
+  });
 };
 
 const normalizeComparableValue = (value: unknown) =>
@@ -141,6 +170,7 @@ export const FormFieldSelect = ({
   isCreatable = false,
   isSearchable = true,
   defaultOptions,
+  valueOptions,
   displayValue,
   ...props
 }: FormFieldSelectProps) => {
@@ -156,12 +186,35 @@ export const FormFieldSelect = ({
 
   const [selectedOption, setSelectedOption] = useState<
     AsyncSelectOption | readonly AsyncSelectOption[] | null
-  >(null);
+  >(isMulti ? [] : null);
   const selectedOptionRef = useRef(selectedOption);
+  const [menuDefaultOptions, setMenuDefaultOptions] = useState<
+    boolean | AsyncSelectOption[]
+  >(() => toMenuDefaultOptions(defaultOptions));
+  const [previousDefaultOptions, setPreviousDefaultOptions] =
+    useState(defaultOptions);
+
+  if (defaultOptions !== previousDefaultOptions) {
+    setPreviousDefaultOptions(defaultOptions);
+    setMenuDefaultOptions(toMenuDefaultOptions(defaultOptions));
+  }
 
   useEffect(() => {
     selectedOptionRef.current = selectedOption;
   }, [selectedOption]);
+
+  const refreshMenuDefaultOptions = async () => {
+    if (defaultOptions !== true && defaultOptions !== undefined) {
+      return;
+    }
+
+    try {
+      const response = await loadOptions('');
+      setMenuDefaultOptions(flattenOptions(response));
+    } catch {
+      setMenuDefaultOptions(true);
+    }
+  };
 
   useEffect(() => {
     let isActive = true;
@@ -212,9 +265,10 @@ export const FormFieldSelect = ({
           return;
         }
 
-        const staticDefaults = Array.isArray(defaultOptions)
-          ? defaultOptions
-          : [];
+        const staticDefaults = [
+          ...(Array.isArray(valueOptions) ? valueOptions : []),
+          ...(Array.isArray(defaultOptions) ? defaultOptions : []),
+        ];
         const fromDefaults = selectedValues
           .map(selectedValue =>
             findMatchingOption(staticDefaults, selectedValue)
@@ -275,7 +329,10 @@ export const FormFieldSelect = ({
         return;
       }
 
-      const staticDefaults = Array.isArray(defaultOptions) ? defaultOptions : [];
+      const staticDefaults = [
+        ...(Array.isArray(valueOptions) ? valueOptions : []),
+        ...(Array.isArray(defaultOptions) ? defaultOptions : []),
+      ];
       const fromDefault = findMatchingOption(staticDefaults, field.value);
       if (fromDefault) {
         if (isActive) {
@@ -313,7 +370,7 @@ export const FormFieldSelect = ({
     };
     // selectedOption is intentionally omitted: including it re-triggers resolve
     // after every successful setState and can loop with paginated multi-select.
-  }, [defaultOptions, displayValue, field.value, isMulti, loadOptions]);
+  }, [defaultOptions, displayValue, field.value, isMulti, loadOptions, valueOptions]);
 
   const handleCreateOption = async (inputValue: string) => {
     if (!onCreateOption) {
@@ -359,6 +416,7 @@ export const FormFieldSelect = ({
   const selectedMultiOptions = Array.isArray(selectedOption)
     ? selectedOption
     : [];
+  const selectValue = isMulti ? selectedMultiOptions : selectedOption;
 
   const handleRemoveMultiOption = (optionValue: string | number) => {
     if (!isMulti || disabled) {
@@ -388,12 +446,17 @@ export const FormFieldSelect = ({
         variant={variant}
         isCreatable={isCreatable}
         isSearchable={isSearchable}
-        defaultOptions={defaultOptions}
+        defaultOptions={menuDefaultOptions}
         {...props}
-        value={selectedOption}
+        value={selectValue}
         isMulti={isMulti}
+        hideSelectedOptions={isMulti ? true : props.hideSelectedOptions}
         closeMenuOnSelect={!isMulti}
         controlShouldRenderValue={!isMulti}
+        onMenuOpen={() => {
+          void refreshMenuDefaultOptions();
+          props.onMenuOpen?.();
+        }}
         onInputChange={(inputValue, meta) => {
           const nextInputValue = inputValue.toUpperCase();
           return props.onInputChange

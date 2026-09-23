@@ -18,6 +18,10 @@ export const PURPOSE_TEXTS = {
   SLABS_SUBTITLE:
     'Add one or more slab rows when the purpose uses bracket-based TCS.',
   ADD_SLAB: 'Add Slab',
+  SUBPURPOSES_TITLE: 'Subpurposes',
+  SUBPURPOSES_SUBTITLE:
+    'Add subpurpose codes used by Deal Cover Rate and remittance flows.',
+  ADD_SUBPURPOSE: 'Add Subpurpose',
 } as const;
 
 export const PURPOSE_RATE_TYPE_OPTIONS = [

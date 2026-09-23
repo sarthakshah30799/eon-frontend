@@ -32,6 +32,14 @@ export interface IPurposeSlab {
   updatedAt: string;
 }
 
+export interface IPurposeSubpurpose {
+  id: string;
+  purposeId: string;
+  code: string;
+  name: string;
+  isActive: boolean;
+}
+
 export interface IPurpose {
   id: string;
   code: string;
@@ -44,6 +52,7 @@ export interface IPurpose {
   sell: boolean;
   purchase: boolean;
   slabs: IPurposeSlab[];
+  subpurposes: IPurposeSubpurpose[];
   createdAt: string;
   updatedAt: string;
   createdBy?: string;
@@ -57,7 +66,13 @@ export type ICreatePurposeSlab = Omit<
 
 export type ICreatePurpose = Omit<
   IPurpose,
-  'id' | 'slabs' | 'createdAt' | 'updatedAt' | 'createdBy' | 'updatedBy'
+  | 'id'
+  | 'slabs'
+  | 'subpurposes'
+  | 'createdAt'
+  | 'updatedAt'
+  | 'createdBy'
+  | 'updatedBy'
 > & {
   slabs: Array<{
     id?: string;
@@ -66,6 +81,12 @@ export type ICreatePurpose = Omit<
     toAmount: number | null;
     rate: number;
     rateType: PurposeRateType;
+  }>;
+  subpurposes: Array<{
+    id?: string;
+    code: string;
+    name: string;
+    isActive: boolean;
   }>;
 };
 

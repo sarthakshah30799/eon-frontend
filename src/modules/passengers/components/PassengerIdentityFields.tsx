@@ -20,6 +20,7 @@ interface PassengerIdentityFieldsProps {
   showPan?: boolean;
   showPassport?: boolean;
   showCountryInPassport?: boolean;
+  identityLocked?: boolean;
   onPanFieldBlur?: () => void;
   onPassportNumberBlur?: () => void;
   onPassportFieldBlur?: () => void;
@@ -34,6 +35,7 @@ export const PassengerIdentityFields = ({
   showPan = true,
   showPassport = false,
   showCountryInPassport = false,
+  identityLocked = false,
   onPanFieldBlur,
   onPassportNumberBlur,
   onPassportFieldBlur,
@@ -103,18 +105,21 @@ export const PassengerIdentityFields = ({
             label="PAN Number"
             placeholder="Enter PAN number"
             valueTransform="uppercase"
+            disabled={identityLocked}
             onBlur={onPanFieldBlur}
           />
           <FormFieldInput
             name="panHolderName"
             label="PAN Holder Name"
             placeholder="Enter PAN holder name"
+            disabled={identityLocked}
             onBlur={onPanFieldBlur}
           />
           <FormFieldDatePicker
             name="panDob"
             label="PAN Holder DOB"
             placeholder="Select DOB"
+            disabled={identityLocked}
             onBlur={onPanFieldBlur}
           />
         </div>
@@ -126,6 +131,7 @@ export const PassengerIdentityFields = ({
             name="passportPassengerName"
             label="Passport Passenger Name"
             placeholder="Enter passport passenger name"
+            disabled={identityLocked}
             onBlur={onPassportFieldBlur}
           />
           <FormFieldInput
@@ -134,18 +140,21 @@ export const PassengerIdentityFields = ({
             placeholder="Enter passport number"
             valueTransform="uppercase"
             maxLength={8}
+            disabled={identityLocked}
             onBlur={onPassportNumberBlur}
           />
           <FormFieldDatePicker
             name="passportIssueDate"
             label="Passport Issue Date"
             placeholder="Select issue date"
+            disabled={identityLocked}
             onBlur={onPassportFieldBlur}
           />
           <FormFieldDatePicker
             name="passportExpiryDate"
             label="Passport Expiry Date"
             placeholder="Select expiry date"
+            disabled={identityLocked}
             onBlur={onPassportFieldBlur}
           />
           {showCountryInPassport ? (
@@ -156,12 +165,14 @@ export const PassengerIdentityFields = ({
               hideBlockedCountry
               hideRestrictedCountry
               hideBaseCountry
+              disabled={identityLocked}
             />
           ) : null}
           <FormFieldInput
             name="passportIssueAt"
             label="Issue At"
             placeholder="Enter issue place"
+            disabled={identityLocked}
             onBlur={onPassportFieldBlur}
           />
         </div>

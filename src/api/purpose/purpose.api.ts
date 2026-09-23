@@ -21,13 +21,22 @@ interface BackendPurposeSlab {
   updatedAt: string;
 }
 
+interface BackendPurposeSubpurpose {
+  id: string;
+  purposeId: string;
+  code: string;
+  name: string;
+  isActive?: boolean;
+}
+
 interface BackendPurpose extends Omit<
   IPurpose,
-  'threshold' | 'rate' | 'slabs'
+  'threshold' | 'rate' | 'slabs' | 'subpurposes'
 > {
   threshold: string;
   rate: string;
   slabs: BackendPurposeSlab[];
+  subpurposes?: BackendPurposeSubpurpose[];
 }
 
 const mapSlab = (slab: BackendPurposeSlab) => ({
@@ -43,6 +52,13 @@ const mapBackendToFrontend = (purpose: BackendPurpose): IPurpose => ({
   threshold: Number(purpose.threshold),
   rate: Number(purpose.rate),
   slabs: (purpose.slabs ?? []).map(mapSlab),
+  subpurposes: (purpose.subpurposes ?? []).map(subpurpose => ({
+    id: subpurpose.id,
+    purposeId: subpurpose.purposeId,
+    code: subpurpose.code,
+    name: subpurpose.name,
+    isActive: subpurpose.isActive ?? true,
+  })),
 });
 
 const preparePayload = (values: ICreatePurpose): ICreatePurpose => ({
@@ -64,6 +80,13 @@ const preparePayload = (values: ICreatePurpose): ICreatePurpose => ({
         : Number(slab.toAmount),
     rate: Number(slab.rate || 0),
     rateType: slab.rateType,
+  })),
+  subpurposes: (values.subpurposes ?? []).map(subpurpose => ({
+    code: String(subpurpose.code ?? '')
+      .trim()
+      .toUpperCase(),
+    name: String(subpurpose.name ?? '').trim(),
+    isActive: Boolean(subpurpose.isActive),
   })),
 });
 

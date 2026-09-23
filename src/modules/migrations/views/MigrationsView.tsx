@@ -413,7 +413,7 @@ const MIGRATION_TABLE_GROUPS: MigrationTableGroup[] = [
       {
         id: 'mProductIssuerLink',
         name: 'mProductIssuerLink',
-        note: '→ product_card_issuers; auto-runs product chain. Needs TC parties (mstCodes) resolved.',
+        note: '→ product_issuers; auto-runs product chain. Needs TC parties (mstCodes) resolved.',
       },
     ],
   },

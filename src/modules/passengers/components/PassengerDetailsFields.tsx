@@ -87,6 +87,10 @@ export const PassengerDetailsFields = ({
     control: form.control,
     name: 'transactionType',
   });
+  const transactions = useWatch({
+    control: form.control,
+    name: 'transactions',
+  });
   const { data: selectedCountryProfile } = useGetCountryProfile(
     countryId || ''
   );
@@ -97,8 +101,11 @@ export const PassengerDetailsFields = ({
   const isIndianNationality =
     nationalityType === PassengerNationalityTypeEnum.INDIAN;
   const isSaleTransaction = transactionType === TransactionTypeEnum.SALE;
+  const hasTtDealAttached = (transactions ?? []).some(row =>
+    Boolean(row?.dealCoverId)
+  );
   const showTravelDetails =
-    isSaleTransaction &&
+    (isSaleTransaction || hasTtDealAttached) &&
     (entityType === PassengerEntityTypeEnum.CORPORATE ||
       entityType === PassengerEntityTypeEnum.INDIVIDUAL);
   const isCorporateEntity = entityType === PassengerEntityTypeEnum.CORPORATE;
@@ -413,6 +420,7 @@ export const PassengerDetailsFields = ({
           {isIndianNationality ? (
             <PassengerIdentityFields
               entityType={entityType}
+              identityLocked={hasTtDealAttached}
               onPanFieldBlur={onPanFieldBlur}
               onPassportNumberBlur={onPassportNumberBlur}
               showPassport={false}
@@ -608,6 +616,7 @@ export const PassengerDetailsFields = ({
             showPan={false}
             showPassport
             showCountryInPassport={!isIndianNationality}
+            identityLocked={hasTtDealAttached}
             onPassportNumberBlur={onPassportNumberBlur}
             onPassportFieldBlur={onPassportFieldBlur}
           />

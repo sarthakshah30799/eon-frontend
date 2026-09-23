@@ -119,6 +119,30 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
   },
   { path: '/card-settlement/edit/:id', meta: { title: 'CARD Settlement' } },
   { path: '/card-settlement/:id', meta: { title: 'CARD Settlement' } },
+  { path: '/deal-cover-rate', meta: { title: 'Deal Cover Rate' } },
+  {
+    path: '/deal-cover-rate/create',
+    meta: { title: 'Create Deal Cover Rate' },
+  },
+  {
+    path: '/deal-cover-rate/edit/:id',
+    meta: { title: 'Edit Deal Cover Rate' },
+  },
+  {
+    path: '/deal-cover-rate/view/:id',
+    meta: { title: 'Deal Cover Rate' },
+  },
+  {
+    path: '/deal-cover-acknowledgement',
+    meta: { title: 'Deal Cover Acknowledgement' },
+  },
+  { path: '/tt-settlement', meta: { title: 'TT Settlement' } },
+  {
+    path: '/tt-settlement/create',
+    meta: { title: 'Create TT Settlement' },
+  },
+  { path: '/tt-settlement/edit/:id', meta: { title: 'TT Settlement' } },
+  { path: '/tt-settlement/:id', meta: { title: 'TT Settlement' } },
   { path: '/users/list', meta: { title: 'Users' } },
   { path: '/users/create', meta: { title: 'Create User' } },
   { path: '/users/edit/:id', meta: { title: 'Edit User' } },

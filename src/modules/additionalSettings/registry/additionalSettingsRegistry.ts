@@ -385,6 +385,20 @@ const TRANSACTION_NUMBERING_SUBCATEGORY_CONFIG: Partial<
     required: true,
     placeholder: 'Enter starting sequence number',
   },
+  [TransactionTypeProfileEnum.DEAL_COVER]: {
+    code: AdditionalSettingsCodeEnum.DealCoverNumberSeries,
+    label: 'DEAL COVER',
+    valueType: 'number',
+    required: true,
+    placeholder: 'Enter starting sequence number',
+  },
+  [TransactionTypeProfileEnum.TT_SETTLE]: {
+    code: AdditionalSettingsCodeEnum.TtSettleNumberSeries,
+    label: 'TT SETTLEMENT',
+    valueType: 'number',
+    required: true,
+    placeholder: 'Enter starting sequence number',
+  },
   [TransactionTypeProfileEnum.PURCHASE_CORPORATE_INDIVIDUAL]: {
     code: AdditionalSettingsCodeEnum.PurchaseCorporateNumberSeries,
     label: 'PURCHASE CORPORATE / INDIVIDUAL',
@@ -539,6 +553,17 @@ const CARD_TECHNICAL_NUMBERING_SUBCATEGORIES: readonly AdditionalSettingSubcateg
       valueType: 'number',
       required: true,
       placeholder: 'Enter starting sequence number',
+    },
+  ];
+
+const TT_SETTING_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] =
+  [
+    {
+      code: AdditionalSettingsCodeEnum.TtMaturityDayLimits,
+      label: 'TT MATURITY DAY LIMITS',
+      valueType: 'text',
+      required: true,
+      placeholder: 'JSON map of maturity option value to day limit',
     },
   ];
 
@@ -762,6 +787,13 @@ export const ADDITIONAL_SETTING_DEFINITIONS: readonly AdditionalSettingCategoryD
       rendererKey: 'default',
       titleLocked: true,
       subcategories: CARD_SETTING_SUBCATEGORIES,
+    },
+    {
+      code: AdditionalSettingsCodeEnum.TtSettings,
+      label: 'TT SETTINGS',
+      rendererKey: 'default',
+      titleLocked: true,
+      subcategories: TT_SETTING_SUBCATEGORIES,
     },
     {
       code: AdditionalSettingsCodeEnum.TransactionCreditPolicy,

@@ -22,6 +22,7 @@ import {
   getPurchaseTransactionPricingSideLabel,
   isCardProductCode,
   isMultiCurrencyCardProduct,
+  isTtProductCode,
   getTradableActiveCurrencyIds,
   PURCHASE_TRANSACTION_TEXT,
   resolveAgentCommissionRule,
@@ -41,6 +42,8 @@ import {
 } from '@/modules/partyProfiles/types';
 import { SelectCardStockCards } from '@/modules/cardStock/components/SelectCardStockCards';
 import type { CardStockSelectableCard } from '@/api/cardStock';
+import { DealCoverSelectModal } from './DealCoverSelectModal';
+import type { IDealCoverRate } from '@/api/dealCoverRate';
 
 interface PurchaseTransactionRowCellProps {
   rowIndex: number;
@@ -120,6 +123,7 @@ export const PurchaseTransactionRowCell = ({
   const form = useFormContext<IPurchaseFormValues>();
   const [issuerPickerOpen, setIssuerPickerOpen] = useState(false);
   const [cardPickerOpen, setCardPickerOpen] = useState(false);
+  const [ttDealPickerOpen, setTtDealPickerOpen] = useState(false);
   const fieldPath = useMemo(
     () => (fieldName: string) =>
       `${fieldPrefix}.${rowIndex}.${fieldName}` as FieldPath<IPurchaseFormValues>,
@@ -174,6 +178,18 @@ export const PurchaseTransactionRowCell = ({
     control: form.control,
     name: fieldPath('isReload'),
   });
+  const dealCoverId = useWatch({
+    control: form.control,
+    name: fieldPath('dealCoverId'),
+  });
+  const dealCoverSnapshot = useWatch({
+    control: form.control,
+    name: fieldPath('dealCoverSnapshot'),
+  }) as ITransactionReferenceSnapshot | null;
+  const allTransactions = useWatch({
+    control: form.control,
+    name: 'transactions',
+  });
   const pricingRuleSnapshot = useWatch({
     control: form.control,
     name: fieldPath('pricingRuleSnapshot'),
@@ -187,11 +203,13 @@ export const PurchaseTransactionRowCell = ({
     [pricingData.products, productId]
   );
   const isCardProduct = isCardProductCode(selectedProduct?.productCode);
+  const isTtProduct = isTtProductCode(selectedProduct?.productCode);
   const isMultiCurrencyCard = isMultiCurrencyCardProduct(
     selectedProduct?.productCode
   );
   const isSaleCardProduct =
     isCardProduct && transactionType === TransactionTypeEnum.SALE;
+  const isTtDealLocked = Boolean(dealCoverId);
 
   const selectedProductCurrencyRule = useMemo(
     () =>
@@ -714,6 +732,13 @@ export const PurchaseTransactionRowCell = ({
       shouldDirty: true,
       shouldValidate: false,
     });
+    form.setValue(fieldPath('dealCoverId'), '', {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+    form.setValue(fieldPath('dealCoverSnapshot'), null, {
+      shouldDirty: true,
+    });
     form.setValue(fieldPath('rate'), '', {
       shouldDirty: true,
       shouldValidate: true,
@@ -750,6 +775,7 @@ export const PurchaseTransactionRowCell = ({
     });
     setCardPickerOpen(false);
     setIssuerPickerOpen(false);
+    setTtDealPickerOpen(false);
   }, [fieldPath, form]);
 
   return (
@@ -793,7 +819,7 @@ export const PurchaseTransactionRowCell = ({
             label="Product"
             loadOptions={productLoadOptions}
             placeholder="Select product"
-            disabled={disabled}
+            disabled={disabled || isTtDealLocked}
             size="sm"
             isSearchable
             className="w-full"
@@ -811,13 +837,13 @@ export const PurchaseTransactionRowCell = ({
             value={currencyCode ? `${currencyCode}` : ''}
             placeholder="Select currency"
             onClick={() => {
-              if (!productId) {
+              if (!productId || isTtDealLocked) {
                 return;
               }
 
               onOpenCurrencyPicker(rowIndex, allowedCurrencyIds);
             }}
-            disabled={disabled || !productId}
+            disabled={disabled || !productId || isTtDealLocked}
             helperText={
               !productId
                 ? PURCHASE_TRANSACTION_TEXT.selectProductFirst
@@ -826,19 +852,21 @@ export const PurchaseTransactionRowCell = ({
             buttonPosition="bottom"
           />
         </div>
-        {isCardProduct ? (
+        {isCardProduct || isTtProduct ? (
           <div className="min-w-0 basis-[46%] sm:basis-[31%] md:basis-[18%] lg:basis-0 lg:flex-1">
             <EntityPickerField
               label="Issuer"
               value={String(issuerSnapshot?.name ?? issuerSnapshot?.code ?? '')}
               placeholder="Select issuer"
-              disabled={disabled || !productId}
+              disabled={disabled || !productId || isTtDealLocked}
               helperText={
                 !productId
                   ? PURCHASE_TRANSACTION_TEXT.selectProductFirst
                   : undefined
               }
-              onClick={() => setIssuerPickerOpen(true)}
+              onClick={() => {
+                if (!isTtDealLocked) setIssuerPickerOpen(true);
+              }}
               buttonPosition="bottom"
             />
           </div>
@@ -847,7 +875,7 @@ export const PurchaseTransactionRowCell = ({
           <FormFieldInput
             name={fieldPath('quantity')}
             label={
-              isSaleCardProduct
+              isSaleCardProduct || isTtProduct
                 ? PURCHASE_TRANSACTION_TEXT.feAmountLabel
                 : isCardProduct
                   ? PURCHASE_TRANSACTION_TEXT.denominationLabel
@@ -858,10 +886,27 @@ export const PurchaseTransactionRowCell = ({
             step={`0.${'0'.repeat(PURCHASE_RATE_DECIMALS - 1)}1`}
             maxDecimalPlaces={PURCHASE_RATE_DECIMALS}
             valueTransform="none"
-            disabled={disabled}
+            disabled={disabled || isTtDealLocked}
             classes={{ container: 'w-full' }}
           />
         </div>
+        {isTtProduct ? (
+          <div className="min-w-0 basis-full sm:basis-[48%] md:basis-[22%] lg:basis-0 lg:flex-1 lg:min-w-0 lg:max-w-[120px] xl:max-w-[145px] min-[1464px]:max-w-[170px]">
+            <EntityPickerField
+              label="TT Deal"
+              value={String(
+                dealCoverSnapshot?.label ??
+                  dealCoverSnapshot?.code ??
+                  dealCoverSnapshot?.name ??
+                  ''
+              )}
+              placeholder="Select deal"
+              disabled={disabled || !productId}
+              onClick={() => setTtDealPickerOpen(true)}
+              buttonPosition="bottom"
+            />
+          </div>
+        ) : null}
         {isCardProduct ? (
           <div className="min-w-0 basis-full sm:basis-[48%] md:basis-[22%] lg:basis-0 lg:flex-1 lg:min-w-0 lg:max-w-[120px] xl:max-w-[145px] min-[1464px]:max-w-[170px]">
             <EntityPickerField
@@ -981,14 +1026,25 @@ export const PurchaseTransactionRowCell = ({
           </span>
         </div>
       ) : null}
+      {isTtProduct ? (
+        <div className="mt-2 px-1">
+          <span className="text-xs text-text-tertiary">
+            {PURCHASE_TRANSACTION_TEXT.ttDealHint}
+          </span>
+        </div>
+      ) : null}
       <SelectPartyProfiles
         open={issuerPickerOpen}
         types={PartyProfileTypeEnum.CARD_ISSUER_PROFILE}
-        allowedProfileIds={selectedProduct?.cardIssuerProfileIds}
+        allowedProfileIds={selectedProduct?.issuerProfileIds}
         selectable
         multiple={false}
-        title="Select CARD issuer"
-        description="Select an approved active CARD issuer linked to this CARD product."
+        title={isTtProduct ? 'Select TT issuer' : 'Select CARD issuer'}
+        description={
+          isTtProduct
+            ? 'Select an approved active issuer linked to this TT product.'
+            : 'Select an approved active CARD issuer linked to this CARD product.'
+        }
         onClose={() => setIssuerPickerOpen(false)}
         onContinue={(profiles: IPartyProfile[]) => {
           const profile = profiles[0];
@@ -1046,6 +1102,113 @@ export const PurchaseTransactionRowCell = ({
             });
           }
           setCardPickerOpen(false);
+        }}
+      />
+      <DealCoverSelectModal
+        open={ttDealPickerOpen}
+        branchId={String(branchId || '')}
+        productId={String(productId || '')}
+        excludeDealIds={(allTransactions ?? [])
+          .map((row, index) =>
+            index === rowIndex ? '' : String(row.dealCoverId || '')
+          )
+          .filter(Boolean)}
+        onClose={() => setTtDealPickerOpen(false)}
+        onContinue={(deal: IDealCoverRate) => {
+          const dealProduct =
+            (pricingData.products ?? []).find(
+              product => product.id === deal.productId
+            ) ?? null;
+          const dealCurrency =
+            (pricingData.currencies ?? []).find(
+              currency => currency.id === deal.currencyId
+            ) ?? null;
+
+          form.setValue(fieldPath('dealCoverId'), deal.id, {
+            shouldDirty: true,
+            shouldValidate: true,
+          });
+          form.setValue(
+            fieldPath('dealCoverSnapshot'),
+            {
+              id: deal.id,
+              code: deal.dealNo ?? deal.id,
+              name: deal.dealNo ?? deal.id,
+              label: deal.dealNo ?? deal.id,
+              feAmount: deal.feAmount,
+            },
+            { shouldDirty: true }
+          );
+          form.setValue(fieldPath('productId'), deal.productId, {
+            shouldDirty: true,
+            shouldValidate: true,
+          });
+          form.setValue(
+            fieldPath('productCode'),
+            dealProduct?.productCode ||
+              deal.productSnapshot?.productCode ||
+              deal.productSnapshot?.code ||
+              'TT',
+            { shouldDirty: true }
+          );
+          form.setValue(
+            fieldPath('productDescription'),
+            dealProduct?.productDescription ||
+              deal.productSnapshot?.productDescription ||
+              deal.productSnapshot?.name ||
+              '',
+            { shouldDirty: true }
+          );
+          form.setValue(fieldPath('currencyId'), deal.currencyId, {
+            shouldDirty: true,
+            shouldValidate: true,
+          });
+          form.setValue(
+            fieldPath('currencyCode'),
+            dealCurrency?.currencyCode ||
+              deal.currencySnapshot?.currencyCode ||
+              deal.currencySnapshot?.code ||
+              '',
+            { shouldDirty: true }
+          );
+          form.setValue(
+            fieldPath('currencyName'),
+            dealCurrency?.currencyName ||
+              deal.currencySnapshot?.currencyName ||
+              deal.currencySnapshot?.name ||
+              '',
+            { shouldDirty: true }
+          );
+          form.setValue(
+            fieldPath('issuerPartyProfileId'),
+            deal.issuerPartyProfileId,
+            { shouldDirty: true, shouldValidate: true }
+          );
+          form.setValue(
+            fieldPath('issuerPartyProfileSnapshot'),
+            deal.issuerPartyProfileSnapshot
+              ? {
+                  id: deal.issuerPartyProfileId,
+                  code: deal.issuerPartyProfileSnapshot.code,
+                  name: deal.issuerPartyProfileSnapshot.name,
+                }
+              : {
+                  id: deal.issuerPartyProfileId,
+                  code: '',
+                  name: '',
+                },
+            { shouldDirty: true }
+          );
+          form.setValue(fieldPath('quantity'), deal.feAmount, {
+            shouldDirty: true,
+            shouldValidate: true,
+          });
+          if (dealCurrency?.ratePer) {
+            form.setValue(fieldPath('per'), String(dealCurrency.ratePer), {
+              shouldDirty: true,
+            });
+          }
+          setTtDealPickerOpen(false);
         }}
       />
     </TransactionItemRowShell>

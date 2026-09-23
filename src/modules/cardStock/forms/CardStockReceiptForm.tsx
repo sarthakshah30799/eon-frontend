@@ -149,7 +149,7 @@ const CardStockHeaderIssuerSync = ({
       const product = products.find(
         productRecord => productRecord.id === item.productId
       );
-      const allowedIssuerIds = product?.cardIssuerProfileIds ?? [];
+      const allowedIssuerIds = product?.issuerProfileIds ?? [];
       if (!allowedIssuerIds.includes(headerIssuerId)) return;
       if (item.issuerPartyProfileId === headerIssuerId) return;
       form.setValue(
@@ -393,7 +393,7 @@ const ReceiptItems = ({
           const issuerOptions = (
             product
               ? issuers.filter(issuer =>
-                  product.cardIssuerProfileIds?.includes(issuer.id)
+                  product.issuerProfileIds?.includes(issuer.id)
                 )
               : issuers
           ).map(issuer => ({
@@ -433,7 +433,7 @@ const ReceiptItems = ({
                       );
                       if (
                         headerIssuerId &&
-                        nextProduct?.cardIssuerProfileIds?.includes(headerIssuerId)
+                        nextProduct?.issuerProfileIds?.includes(headerIssuerId)
                       ) {
                         form.setValue(
                           `items.${itemIndex}.issuerPartyProfileId` as never,

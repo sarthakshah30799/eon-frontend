@@ -87,7 +87,7 @@ export const filterTransferIssuerOptions = (
 ) =>
   product
     ? issuers.filter(issuer =>
-        product.cardIssuerProfileIds?.includes(issuer.id)
+        product.issuerProfileIds?.includes(issuer.id)
       )
     : issuers;
 

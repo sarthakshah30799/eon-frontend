@@ -1,4 +1,6 @@
+import { useWatch, useFormContext } from 'react-hook-form';
 import { Loader } from '@/components/ui/loader';
+import type { IPurchaseFormValues } from '@/modules/purchase/types/purchaseTypes';
 import type { PassengerEntityType } from '../types/passengerTypes';
 import { PassengerIdentityFields } from './PassengerIdentityFields';
 
@@ -29,6 +31,14 @@ export const PassengerVerificationFields = ({
   onPassportFieldBlur,
   onNationalityChange,
 }: PassengerVerificationFieldsProps) => {
+  const form = useFormContext<IPurchaseFormValues>();
+  const transactions = useWatch({
+    control: form.control,
+    name: 'transactions',
+  });
+  const identityLocked = (transactions ?? []).some(row =>
+    Boolean(row?.dealCoverId)
+  );
   const isIndianPrompt = !isCorporate;
 
   return (
@@ -61,6 +71,7 @@ export const PassengerVerificationFields = ({
         showNationality={isIndianPrompt}
         showPanRelation={showPanRelation}
         showPassport={false}
+        identityLocked={identityLocked}
         onPanFieldBlur={onPanFieldBlur}
         onPassportNumberBlur={onPassportNumberBlur}
         onPassportFieldBlur={onPassportFieldBlur}

@@ -70,6 +70,11 @@ export const isCardProductCode = (productCode?: string | null) =>
     ).toUpperCase() as (typeof CARD_PRODUCT_CODES)[number]
   );
 
+export const TT_PRODUCT_CODE = 'TT';
+
+export const isTtProductCode = (productCode?: string | null) =>
+  String(productCode ?? '').toUpperCase() === TT_PRODUCT_CODE;
+
 export const isMultiCurrencyCardProduct = (productCode?: string | null) =>
   String(productCode ?? '').toUpperCase() === MULTI_CURRENCY_CARD_PRODUCT_CODE;
 
@@ -80,12 +85,66 @@ export const PURCHASE_TRANSACTION_TEXT = {
   quantityRequired: 'Quantity is required',
   feAmountRequired: 'FE Amount is required',
   feAmountPositive: 'FE Amount must be greater than 0',
+  feAmountMustMatchDeal: 'FE Amount must equal the selected deal FE amount',
   selectProductFirst: 'Select product first',
   cardSaleHint:
     'Select an issuer and eligible card before entering the FE amount.',
   cardPurchaseHint:
     'Select an issuer and eligible card before entering the denomination.',
+  ttDealHint: 'Select an approved deal cover. FE, product, currency, and issuer are locked from the deal.',
+  ttRemittanceRequired: 'TT remittance details are required before save',
+  ttTravelCountryRequired:
+    'Travel country is required when the transaction includes TT items',
 } as const;
+
+export const createEmptyTtRemittanceValues = (): import('../types/purchaseTypes').IPurchaseTtRemittanceFormValues => ({
+  remitterName: '',
+  remitterAddress: '',
+  remitterCity: '',
+  remitterCountryId: '',
+  remitterEntityType: '',
+  beneficiaryName: '',
+  beneficiaryAddress: '',
+  beneficiaryCountryId: '',
+  bankName: '',
+  bankAddress: '',
+  accountNumber: '',
+  iban: '',
+  swiftCode: '',
+  bsbCode: '',
+  sortCode: '',
+  routingNumber: '',
+  transitNumber: '',
+  educationDetails: '',
+  fbBearerOptionId: '',
+  intermediaryBankName: '',
+  intermediaryBankAddress: '',
+  intermediaryBankCodes: '',
+  relationship: '',
+  sponsorshipName: '',
+  sponsorshipPan: '',
+  dateOfIncorporation: '',
+  miceAmount: '',
+  miceReference: '',
+});
+
+export const isTtRemittanceComplete = (
+  remittance?: import('../types/purchaseTypes').IPurchaseTtRemittanceFormValues | null
+) => {
+  if (!remittance) return false;
+  const hasAccount = Boolean(
+    String(remittance.accountNumber ?? '').trim() ||
+      String(remittance.iban ?? '').trim()
+  );
+  return Boolean(
+    String(remittance.remitterName ?? '').trim() &&
+      String(remittance.beneficiaryName ?? '').trim() &&
+      String(remittance.bankName ?? '').trim() &&
+      hasAccount &&
+      String(remittance.swiftCode ?? '').trim() &&
+      String(remittance.fbBearerOptionId ?? '').trim()
+  );
+};
 
 export const filterTradableActiveCurrencies = (
   currencies: ICurrencyProfile[] = []
@@ -143,6 +202,8 @@ export const createEmptyPurchaseTransactionRow =
     issuerPartyProfileSnapshot: null,
     cardSnapshot: null,
     isReload: false,
+    dealCoverId: '',
+    dealCoverSnapshot: null,
   });
 
 export const toFormBranchSnapshot = (
@@ -283,6 +344,7 @@ export const createEmptyPurchaseFormValues = (
   deliveryBoyUserName: '',
   number: '',
   transactions: [createEmptyPurchaseTransactionRow()],
+  ttRemittance: createEmptyTtRemittanceValues(),
   additionalCharges: [],
   paymentDetails: [],
 });
@@ -472,7 +534,11 @@ export const mapPurchaseFormValuesToSubmitPayload = (
           }
         : null,
       passengerTravel:
-        values.transactionType === TransactionTypeEnum.SALE &&
+        (values.transactionType === TransactionTypeEnum.SALE ||
+          values.transactions.some(
+            row =>
+              Boolean(row.dealCoverId) || isTtProductCode(row.productCode)
+          )) &&
         values.passengerInfoCaptured
           ? {
               airlineTtId: values.travelAirlineId || null,
@@ -511,6 +577,8 @@ export const mapPurchaseFormValuesToSubmitPayload = (
         issuerPartyProfileSnapshot: row.issuerPartyProfileSnapshot ?? null,
         cardSnapshot: row.cardSnapshot ?? null,
         isReload: Boolean(row.isReload),
+        dealCoverId: row.dealCoverId || null,
+        dealCoverSnapshot: row.dealCoverSnapshot ?? null,
       })),
       documents: attachments.map(attachment => ({
         documentProfileId: attachment.documentProfileId,
@@ -526,6 +594,45 @@ export const mapPurchaseFormValuesToSubmitPayload = (
         remarks: null,
       })),
       payments: mapPaymentDetailsToSubmitPayload(values.paymentDetails),
+      ttRemittance: values.transactions.some(row =>
+        Boolean(row.dealCoverId) || isTtProductCode(row.productCode)
+      )
+        ? {
+            remitterName: values.ttRemittance.remitterName || '',
+            remitterAddress: values.ttRemittance.remitterAddress || null,
+            remitterCity: values.ttRemittance.remitterCity || null,
+            remitterCountryId: values.ttRemittance.remitterCountryId || null,
+            remitterEntityType: values.ttRemittance.remitterEntityType || null,
+            beneficiaryName: values.ttRemittance.beneficiaryName || '',
+            beneficiaryAddress: values.ttRemittance.beneficiaryAddress || null,
+            beneficiaryCountryId:
+              values.ttRemittance.beneficiaryCountryId || null,
+            bankName: values.ttRemittance.bankName || '',
+            bankAddress: values.ttRemittance.bankAddress || null,
+            accountNumber: values.ttRemittance.accountNumber || null,
+            iban: values.ttRemittance.iban || null,
+            swiftCode: values.ttRemittance.swiftCode || null,
+            bsbCode: values.ttRemittance.bsbCode || null,
+            sortCode: values.ttRemittance.sortCode || null,
+            routingNumber: values.ttRemittance.routingNumber || null,
+            transitNumber: values.ttRemittance.transitNumber || null,
+            educationDetails: values.ttRemittance.educationDetails || null,
+            fbBearerOptionId: values.ttRemittance.fbBearerOptionId || null,
+            intermediaryBankName:
+              values.ttRemittance.intermediaryBankName || null,
+            intermediaryBankAddress:
+              values.ttRemittance.intermediaryBankAddress || null,
+            intermediaryBankCodes:
+              values.ttRemittance.intermediaryBankCodes || null,
+            relationship: values.ttRemittance.relationship || null,
+            sponsorshipName: values.ttRemittance.sponsorshipName || null,
+            sponsorshipPan: values.ttRemittance.sponsorshipPan || null,
+            dateOfIncorporation:
+              values.ttRemittance.dateOfIncorporation || null,
+            miceAmount: values.ttRemittance.miceAmount || null,
+            miceReference: values.ttRemittance.miceReference || null,
+          }
+        : null,
     },
     attachments,
   };
@@ -782,7 +889,46 @@ export const mapPurchaseTransactionToFormValues = (
       issuerPartyProfileSnapshot: item.issuerPartyProfileSnapshot ?? null,
       cardSnapshot: item.cardSnapshot ?? null,
       isReload: Boolean(item.isReload),
+      dealCoverId: item.dealCoverId ?? '',
+      dealCoverSnapshot: item.dealCoverSnapshot ?? null,
     })),
+    ttRemittance: transaction.ttRemittance
+      ? {
+          remitterName: transaction.ttRemittance.remitterName ?? '',
+          remitterAddress: transaction.ttRemittance.remitterAddress ?? '',
+          remitterCity: transaction.ttRemittance.remitterCity ?? '',
+          remitterCountryId: transaction.ttRemittance.remitterCountryId ?? '',
+          remitterEntityType: transaction.ttRemittance.remitterEntityType ?? '',
+          beneficiaryName: transaction.ttRemittance.beneficiaryName ?? '',
+          beneficiaryAddress: transaction.ttRemittance.beneficiaryAddress ?? '',
+          beneficiaryCountryId:
+            transaction.ttRemittance.beneficiaryCountryId ?? '',
+          bankName: transaction.ttRemittance.bankName ?? '',
+          bankAddress: transaction.ttRemittance.bankAddress ?? '',
+          accountNumber: transaction.ttRemittance.accountNumber ?? '',
+          iban: transaction.ttRemittance.iban ?? '',
+          swiftCode: transaction.ttRemittance.swiftCode ?? '',
+          bsbCode: transaction.ttRemittance.bsbCode ?? '',
+          sortCode: transaction.ttRemittance.sortCode ?? '',
+          routingNumber: transaction.ttRemittance.routingNumber ?? '',
+          transitNumber: transaction.ttRemittance.transitNumber ?? '',
+          educationDetails: transaction.ttRemittance.educationDetails ?? '',
+          fbBearerOptionId: transaction.ttRemittance.fbBearerOptionId ?? '',
+          intermediaryBankName:
+            transaction.ttRemittance.intermediaryBankName ?? '',
+          intermediaryBankAddress:
+            transaction.ttRemittance.intermediaryBankAddress ?? '',
+          intermediaryBankCodes:
+            transaction.ttRemittance.intermediaryBankCodes ?? '',
+          relationship: transaction.ttRemittance.relationship ?? '',
+          sponsorshipName: transaction.ttRemittance.sponsorshipName ?? '',
+          sponsorshipPan: transaction.ttRemittance.sponsorshipPan ?? '',
+          dateOfIncorporation:
+            transaction.ttRemittance.dateOfIncorporation ?? '',
+          miceAmount: transaction.ttRemittance.miceAmount ?? '',
+          miceReference: transaction.ttRemittance.miceReference ?? '',
+        }
+      : createEmptyTtRemittanceValues(),
     additionalCharges: (transaction.additionalCharges ?? []).map(charge => ({
       accountId: charge.accountId,
       accountName:

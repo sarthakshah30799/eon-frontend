@@ -23,6 +23,8 @@ export const TransactionTypeProfileEnum = {
   FAKE_CURRENCY: 'FAKE_CURRENCY',
   CARD_STOCK_RECEIPT: 'CARD_STOCK_RECEIPT',
   CARD_TRANSFER_SELL: 'CARD_TRANSFER_SELL',
+  DEAL_COVER: 'DEAL_COVER',
+  TT_SETTLE: 'TT_SETTLE',
   PURCHASE_FFMC: 'PURCHASE_FFMC',
   PURCHASE_CORPORATE_INDIVIDUAL: 'PURCHASE_CORPORATE_INDIVIDUAL',
   SALE_CORPORATE_INDIVIDUAL: 'SALE_CORPORATE_INDIVIDUAL',
@@ -61,6 +63,8 @@ export const TRANSACTION_TYPE_PROFILE_ORDER = [
   TransactionTypeProfileEnum.FAKE_CURRENCY,
   TransactionTypeProfileEnum.CARD_STOCK_RECEIPT,
   TransactionTypeProfileEnum.CARD_TRANSFER_SELL,
+  TransactionTypeProfileEnum.DEAL_COVER,
+  TransactionTypeProfileEnum.TT_SETTLE,
   TransactionTypeProfileEnum.PURCHASE_FFMC,
   TransactionTypeProfileEnum.PURCHASE_CORPORATE_INDIVIDUAL,
   TransactionTypeProfileEnum.SALE_CORPORATE_INDIVIDUAL,
@@ -303,6 +307,43 @@ export interface ITransactionEntity {
   payments?: ITransactionPaymentEntity[];
   passengerOtherDocuments?: ITransactionPassengerOtherDocumentEntity[];
   logs?: ITransactionLogEntity[];
+  ttRemittance?: ITransactionTtRemittanceEntity | null;
+}
+
+export interface ITransactionTtRemittanceEntity {
+  id: string;
+  transactionId: string;
+  remitterName: string;
+  remitterAddress: string | null;
+  remitterCity: string | null;
+  remitterCountryId: string | null;
+  remitterCountrySnapshot?: ITransactionReferenceSnapshot | null;
+  remitterEntityType: string | null;
+  beneficiaryName: string;
+  beneficiaryAddress: string | null;
+  beneficiaryCountryId: string | null;
+  beneficiaryCountrySnapshot?: ITransactionReferenceSnapshot | null;
+  bankName: string;
+  bankAddress: string | null;
+  accountNumber: string | null;
+  iban: string | null;
+  swiftCode: string | null;
+  bsbCode: string | null;
+  sortCode: string | null;
+  routingNumber: string | null;
+  transitNumber: string | null;
+  educationDetails: string | null;
+  fbBearerOptionId: string | null;
+  fbBearerOptionSnapshot?: ITransactionReferenceSnapshot | null;
+  intermediaryBankName: string | null;
+  intermediaryBankAddress: string | null;
+  intermediaryBankCodes: string | null;
+  relationship: string | null;
+  sponsorshipName: string | null;
+  sponsorshipPan: string | null;
+  dateOfIncorporation: string | null;
+  miceAmount: string | null;
+  miceReference: string | null;
 }
 
 export interface ITransactionTcsBreakdownEntity {
@@ -381,6 +422,9 @@ export interface ITransactionItemEntity {
   issuerPartyProfileSnapshot: ITransactionReferenceSnapshot | null;
   cardSnapshot: ITransactionReferenceSnapshot | null;
   isReload: boolean;
+  dealCoverId: string | null;
+  dealCoverSnapshot: ITransactionReferenceSnapshot | null;
+  ttRemittanceDetailId: string | null;
   remarks: string | null;
   createdAt: string;
   updatedAt: string;
@@ -504,6 +548,8 @@ export interface ICreateTransactionItemPayload {
   issuerPartyProfileSnapshot?: ITransactionReferenceSnapshot | null;
   cardSnapshot?: ITransactionReferenceSnapshot | null;
   isReload?: boolean;
+  dealCoverId?: string | null;
+  dealCoverSnapshot?: ITransactionReferenceSnapshot | null;
 }
 
 export interface ICreateTransactionDocumentPayload {
@@ -798,6 +844,41 @@ export interface ICreateTransactionPayload {
   documents: ICreateTransactionDocumentPayload[];
   additionalCharges: ICreateTransactionAdditionalChargePayload[];
   payments: ICreateTransactionPaymentPayload[];
+  ttRemittance?: ICreateTransactionTtRemittancePayload | null;
+}
+
+export interface ICreateTransactionTtRemittancePayload {
+  remitterName: string;
+  remitterAddress?: string | null;
+  remitterCity?: string | null;
+  remitterCountryId?: string | null;
+  remitterCountrySnapshot?: ITransactionReferenceSnapshot | null;
+  remitterEntityType?: string | null;
+  beneficiaryName: string;
+  beneficiaryAddress?: string | null;
+  beneficiaryCountryId?: string | null;
+  beneficiaryCountrySnapshot?: ITransactionReferenceSnapshot | null;
+  bankName: string;
+  bankAddress?: string | null;
+  accountNumber?: string | null;
+  iban?: string | null;
+  swiftCode?: string | null;
+  bsbCode?: string | null;
+  sortCode?: string | null;
+  routingNumber?: string | null;
+  transitNumber?: string | null;
+  educationDetails?: string | null;
+  fbBearerOptionId?: string | null;
+  fbBearerOptionSnapshot?: ITransactionReferenceSnapshot | null;
+  intermediaryBankName?: string | null;
+  intermediaryBankAddress?: string | null;
+  intermediaryBankCodes?: string | null;
+  relationship?: string | null;
+  sponsorshipName?: string | null;
+  sponsorshipPan?: string | null;
+  dateOfIncorporation?: string | null;
+  miceAmount?: string | null;
+  miceReference?: string | null;
 }
 
 export interface ICreateTransactionDraftPayload {

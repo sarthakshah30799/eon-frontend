@@ -416,6 +416,33 @@ const CardSettlementEditPage = lazy(
 const CardSettlementDetailPage = lazy(
   () => import('../pages/card-settlement/[id]/CardSettlementDetailPage')
 );
+const DealCoverRateListPage = lazy(
+  () => import('../pages/deal-cover-rate/DealCoverRateListPage')
+);
+const DealCoverRateCreatePage = lazy(
+  () => import('../pages/deal-cover-rate/create/DealCoverRateCreatePage')
+);
+const DealCoverRateEditPage = lazy(
+  () => import('../pages/deal-cover-rate/edit/[id]/DealCoverRateEditPage')
+);
+const DealCoverRateViewPage = lazy(
+  () => import('../pages/deal-cover-rate/view/[id]/DealCoverRateViewPage')
+);
+const DealCoverAckPage = lazy(
+  () => import('../pages/deal-cover-acknowledgement/DealCoverAckPage')
+);
+const TtSettlementListPage = lazy(
+  () => import('../pages/tt-settlement/TtSettlementListPage')
+);
+const TtSettlementCreatePage = lazy(
+  () => import('../pages/tt-settlement/create/TtSettlementCreatePage')
+);
+const TtSettlementEditPage = lazy(
+  () => import('../pages/tt-settlement/edit/[id]/TtSettlementEditPage')
+);
+const TtSettlementDetailPage = lazy(
+  () => import('../pages/tt-settlement/[id]/TtSettlementDetailPage')
+);
 
 const router = createBrowserRouter([
   {
@@ -1080,6 +1107,78 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <CardStockEditPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/deal-cover-rate',
+    element: (
+      <ProtectedLayout>
+        <DealCoverRateListPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/deal-cover-rate/create',
+    element: (
+      <ProtectedLayout>
+        <DealCoverRateCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/deal-cover-rate/edit/:id',
+    element: (
+      <ProtectedLayout>
+        <DealCoverRateEditPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/deal-cover-rate/view/:id',
+    element: (
+      <ProtectedLayout>
+        <DealCoverRateViewPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/deal-cover-acknowledgement',
+    element: (
+      <ProtectedLayout>
+        <DealCoverAckPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/tt-settlement',
+    element: (
+      <ProtectedLayout>
+        <TtSettlementListPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/tt-settlement/create',
+    element: (
+      <ProtectedLayout>
+        <TtSettlementCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/tt-settlement/edit/:id',
+    element: (
+      <ProtectedLayout>
+        <TtSettlementEditPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/tt-settlement/:id',
+    element: (
+      <ProtectedLayout>
+        <TtSettlementDetailPage />
       </ProtectedLayout>
     ),
   },

@@ -58,6 +58,8 @@ export default function FakeCurrencyEditPage() {
       issuerPartyProfileSnapshot: null,
       cardSnapshot: null,
       isReload: false,
+      dealCoverId: '',
+      dealCoverSnapshot: null,
     }));
     return values;
   }, [transaction]);

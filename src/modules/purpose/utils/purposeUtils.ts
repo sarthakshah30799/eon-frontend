@@ -25,6 +25,7 @@ export const createEmptyPurposeFormValues = (): ICreatePurpose => ({
   sell: false,
   purchase: true,
   slabs: [],
+  subpurposes: [],
 });
 
 export const mapPurposeToFormValues = (purpose: IPurpose): ICreatePurpose => ({
@@ -44,6 +45,12 @@ export const mapPurposeToFormValues = (purpose: IPurpose): ICreatePurpose => ({
     toAmount: slab.toAmount,
     rate: slab.rate,
     rateType: slab.rateType,
+  })),
+  subpurposes: (purpose.subpurposes ?? []).map(subpurpose => ({
+    id: subpurpose.id,
+    code: subpurpose.code,
+    name: subpurpose.name,
+    isActive: subpurpose.isActive ?? true,
   })),
 });
 
@@ -69,6 +76,14 @@ export const sanitizePurposeFormValues = (
         : Number(slab.toAmount),
     rate: Number(slab.rate || 0),
     rateType: slab.rateType,
+  })),
+  subpurposes: (values.subpurposes ?? []).map(subpurpose => ({
+    ...subpurpose,
+    code: String(subpurpose.code ?? '')
+      .trim()
+      .toUpperCase(),
+    name: String(subpurpose.name ?? '').trim(),
+    isActive: Boolean(subpurpose.isActive),
   })),
 });
 

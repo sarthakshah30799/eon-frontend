@@ -38,6 +38,39 @@ export interface IPurchaseTransactionFormRow {
   issuerPartyProfileSnapshot: ITransactionReferenceSnapshot | null;
   cardSnapshot: ITransactionReferenceSnapshot | null;
   isReload: boolean;
+  dealCoverId: string;
+  dealCoverSnapshot: ITransactionReferenceSnapshot | null;
+}
+
+export interface IPurchaseTtRemittanceFormValues {
+  remitterName: string;
+  remitterAddress: string;
+  remitterCity: string;
+  remitterCountryId: string;
+  remitterEntityType: string;
+  beneficiaryName: string;
+  beneficiaryAddress: string;
+  beneficiaryCountryId: string;
+  bankName: string;
+  bankAddress: string;
+  accountNumber: string;
+  iban: string;
+  swiftCode: string;
+  bsbCode: string;
+  sortCode: string;
+  routingNumber: string;
+  transitNumber: string;
+  educationDetails: string;
+  fbBearerOptionId: string;
+  intermediaryBankName: string;
+  intermediaryBankAddress: string;
+  intermediaryBankCodes: string;
+  relationship: string;
+  sponsorshipName: string;
+  sponsorshipPan: string;
+  dateOfIncorporation: string;
+  miceAmount: string;
+  miceReference: string;
 }
 
 export interface IPurchaseFormValues {
@@ -143,6 +176,7 @@ export interface IPurchaseFormValues {
   deliveryBoyUserName: string;
   number: string | null;
   transactions: IPurchaseTransactionFormRow[];
+  ttRemittance: IPurchaseTtRemittanceFormValues;
   additionalCharges: ITransactionAdditionalChargeFormRow[];
   paymentDetails: ITransactionPaymentDetailFormRow[];
 }
@@ -187,7 +221,7 @@ export interface IPurchaseProductOption {
   productDescription: string;
   availableInBulkBuying: boolean;
   availableInBulkSelling: boolean;
-  cardIssuerProfileIds?: string[];
+  issuerProfileIds?: string[];
   availableInOtherTransaction: boolean;
 }
 
@@ -240,6 +274,9 @@ export interface IPurchaseSubmitPayload {
     documents: ICreateTransactionDocumentPayload[];
     additionalCharges: ICreateTransactionAdditionalChargePayload[];
     payments: ICreateTransactionPaymentPayload[];
+    ttRemittance?:
+      | import('@/modules/transactions').ICreateTransactionTtRemittancePayload
+      | null;
   };
   attachments: IPurchaseDocumentAttachment[];
 }

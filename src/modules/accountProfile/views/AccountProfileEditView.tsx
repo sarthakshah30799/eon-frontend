@@ -3,6 +3,7 @@ import { usePermission } from '@/hooks';
 import { useGetAccountProfile, useUpdateAccountProfile } from '../hooks';
 import { AccountProfileForm } from '../forms/AccountProfileForm';
 import type { ICreateAccountProfile } from '../types/accountProfileTypes';
+import { SurfacePanel } from '@/components/ui';
 
 export const AccountProfileEditView = () => {
   const { id } = useParams<{ id: string }>();
@@ -70,7 +71,7 @@ export const AccountProfileEditView = () => {
   };
 
   return (
-    <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+    <SurfacePanel>
       <AccountProfileForm
         defaultValues={defaultValues}
         onSubmit={handleSubmit}
@@ -79,7 +80,7 @@ export const AccountProfileEditView = () => {
         currentId={id}
         submitLabel="Save Changes"
       />
-    </section>
+    </SurfacePanel>
   );
 };
 export default AccountProfileEditView;

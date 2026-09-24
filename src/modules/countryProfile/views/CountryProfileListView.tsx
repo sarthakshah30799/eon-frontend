@@ -6,6 +6,7 @@ import { PAGINATION_DEFAULTS } from '@/constants/paginationConstants';
 import { countryProfileApi } from '@/api/countryProfile';
 import { COUNTRY_PROFILE_TEXTS } from '../constants';
 import { CountryProfileTable } from '../components';
+import { SurfacePanel } from '@/components/ui';
 
 export const CountryProfileListView = () => {
   const navigate = useNavigate();
@@ -75,7 +76,7 @@ export const CountryProfileListView = () => {
         )}
       </div>
 
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+      <SurfacePanel>
         <CountryProfileTable
           countries={countries}
           loading={isLoading}
@@ -90,7 +91,7 @@ export const CountryProfileListView = () => {
           searchValue={search}
           searchPlaceholder="Search country code, name, group, or risk category"
         />
-      </section>
+      </SurfacePanel>
     </div>
   );
 };

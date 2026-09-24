@@ -343,7 +343,7 @@ function Table<T extends object>({
     >
       <TableToolbar filters={resolvedToolbarFilters} />
 
-      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
+      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col gap-1.5">
       {/* Table */}
       <div className="min-h-0 flex-1 overflow-auto rounded-sm border border-border-primary">
         <table

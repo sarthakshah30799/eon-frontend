@@ -6,6 +6,7 @@ import { PAGINATION_DEFAULTS } from '@/constants/paginationConstants';
 import { financialCodesApi } from '@/api/financialCodes/financialCodes.api';
 import { FINANCIAL_CODE_TEXTS } from '../constants/financialCodeConstants';
 import { FinancialCodeTable } from '../components/FinancialCodeTable';
+import { SurfacePanel } from '@/components/ui';
 
 export const FinancialCodeListView = () => {
   const navigate = useNavigate();
@@ -73,7 +74,7 @@ export const FinancialCodeListView = () => {
           </Button>
         </div>
       )}
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+      <SurfacePanel>
         <FinancialCodeTable
           financialCodes={financialCodes}
           loading={isLoading}
@@ -88,7 +89,7 @@ export const FinancialCodeListView = () => {
           searchValue={search}
           searchPlaceholder="Search financial type, code, name, or default sign"
         />
-      </section>
+      </SurfacePanel>
     </div>
   );
 };

@@ -7,6 +7,7 @@ import { tdsProfileApi } from '@/api/tdsProfile';
 import { TDS_PROFILE_TEXTS } from '../constants';
 import { TdsProfileTable } from '../components';
 import { useDeleteTdsProfile } from '../hooks';
+import { SurfacePanel } from '@/components/ui';
 
 export const TdsProfileListView = () => {
   const navigate = useNavigate();
@@ -80,7 +81,7 @@ export const TdsProfileListView = () => {
         )}
       </div>
 
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+      <SurfacePanel>
         <TdsProfileTable
           tdsProfiles={tdsProfiles}
           onDelete={handleDelete}
@@ -97,7 +98,7 @@ export const TdsProfileListView = () => {
           onPageChange={handlePageChange}
           onPageSizeChange={handlePageSizeChange}
         />
-      </section>
+      </SurfacePanel>
     </div>
   );
 };

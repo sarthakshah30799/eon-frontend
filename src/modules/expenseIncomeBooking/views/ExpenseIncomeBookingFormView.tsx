@@ -9,6 +9,7 @@ import {
 } from '../hooks';
 import type { ICreateExpenseIncomeBookingMaster } from '../types/expenseIncomeBookingTypes';
 
+import { SurfacePanel } from '@/components/ui';
 interface ExpenseIncomeBookingFormViewProps {
   type: 'EXPENSE' | 'INCOME';
   mode: 'create' | 'edit';
@@ -113,7 +114,7 @@ export const ExpenseIncomeBookingFormView = ({
 
   return (
     <div className="space-y-6">
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+      <SurfacePanel>
         <ExpenseIncomeBookingForm
           type={type}
           defaultValues={defaultValues}
@@ -123,7 +124,7 @@ export const ExpenseIncomeBookingFormView = ({
           readOnly={mode === 'edit' && !canModify}
           currentId={mode === 'edit' ? id : undefined}
         />
-      </section>
+      </SurfacePanel>
     </div>
   );
 };

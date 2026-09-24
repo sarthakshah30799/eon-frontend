@@ -23,6 +23,8 @@ import { NotFoundState } from '@/components/ui/not-found-state';
 import { AccessDeniedState } from '@/components/ui/access-denied-state';
 import type { PartyProfileType } from '../types/partyProfileTypes';
 import { PartyProfileTypeEnum } from '../types/partyProfileTypes';
+import { SurfacePanel } from '@/components/ui';
+
 const formatDateForInput = (dateString?: string | Date) => {
   if (!dateString) return '';
   const date = new Date(dateString);
@@ -298,7 +300,7 @@ export const PartyProfileEditView = () => {
           label="Upload Documents"
         />
       </div>
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+      <SurfacePanel>
         <PartyProfileForm
           defaultValues={defaultValues}
           onSubmit={!canEditPartyProfile ? async () => undefined : handleSubmit}
@@ -319,7 +321,7 @@ export const PartyProfileEditView = () => {
           currentId={id}
           branchDefaultOptions={branchDefaultOptions}
         />
-      </section>
+      </SurfacePanel>
     </div>
   );
 };

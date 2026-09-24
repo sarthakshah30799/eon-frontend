@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Button, Table, type TableColumnDef } from '@/components/ui';
+import { Button, SurfacePanel, Table, type TableColumnDef } from '@/components/ui';
 import { Modal } from '@/components/ui/modal/Modal';
 import {
   manualBillBookApi,
@@ -275,7 +275,7 @@ export const CashierBillBookListView = ({
 
   return (
     <div className="space-y-6">
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+      <SurfacePanel>
         <div className="overflow-x-auto border border-slate-200 rounded-md">
           <Table
             columns={columns}
@@ -300,7 +300,7 @@ export const CashierBillBookListView = ({
           />
         </div>
         <p className="mt-2 text-xs text-slate-400">{rowHint}</p>
-      </section>
+      </SurfacePanel>
 
       {returnState && (
         <Modal

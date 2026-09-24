@@ -7,6 +7,7 @@ import { purposeGroupApi } from '@/api/purpose-group';
 import { PURPOSE_GROUP_TEXTS } from '../constants/purposeGroupConstants';
 import { PurposeGroupTable } from '../components/PurposeGroupTable';
 import { useDeletePurposeGroup } from '../hooks';
+import { SurfacePanel } from '@/components/ui';
 
 export const PurposeGroupListView = () => {
   const navigate = useNavigate();
@@ -80,7 +81,7 @@ export const PurposeGroupListView = () => {
         )}
       </div>
 
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+      <SurfacePanel>
         <PurposeGroupTable
           purposeGroups={purposeGroups}
           onDelete={handleDelete}
@@ -97,7 +98,7 @@ export const PurposeGroupListView = () => {
           onPageChange={handlePageChange}
           onPageSizeChange={handlePageSizeChange}
         />
-      </section>
+      </SurfacePanel>
     </div>
   );
 };

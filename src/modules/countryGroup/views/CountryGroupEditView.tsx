@@ -9,6 +9,7 @@ import {
 } from '../utils';
 import { CountryGroupEditorView } from './CountryGroupEditorView';
 import type { ICountryGroupFormValues, ICreateCountryGroup } from '../types';
+import { SurfacePanel } from '@/components/ui';
 
 export const CountryGroupEditView = () => {
   const { id } = useParams<{ id: string }>();
@@ -52,7 +53,7 @@ export const CountryGroupEditView = () => {
   }
 
   return (
-    <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+    <SurfacePanel>
       <CountryGroupEditorView
         submitLabel={COUNTRY_GROUP_TEXTS.SAVE_CHANGES}
         defaultValues={defaultValues ?? createEmptyCountryGroupFormValues()}
@@ -61,7 +62,7 @@ export const CountryGroupEditView = () => {
         onCancel={() => navigate('/admin/country-group')}
         currentId={id}
       />
-    </section>
+    </SurfacePanel>
   );
 };
 

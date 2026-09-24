@@ -7,6 +7,7 @@ import { countryGroupApi } from '@/api/countryGroup';
 import { COUNTRY_GROUP_TEXTS } from '../constants';
 import { CountryGroupTable } from '../components';
 import { useDeleteCountryGroup } from '../hooks';
+import { SurfacePanel } from '@/components/ui';
 
 export const CountryGroupListView = () => {
   const navigate = useNavigate();
@@ -82,7 +83,7 @@ export const CountryGroupListView = () => {
         )}
       </div>
 
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+      <SurfacePanel>
         <CountryGroupTable
           groups={groups}
           canModify={canModify}
@@ -101,7 +102,7 @@ export const CountryGroupListView = () => {
           onPageChange={handlePageChange}
           onPageSizeChange={handlePageSizeChange}
         />
-      </section>
+      </SurfacePanel>
     </div>
   );
 };

@@ -2,15 +2,7 @@ import { useCallback, useMemo, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
-import {
-  Button,
-  CardSection,
-  DatePicker,
-  Modal,
-  Table,
-  type AsyncSelectOption,
-  type TableColumnDef,
-} from '@/components/ui';
+import { Button, CardSection, DatePicker, Modal, SurfacePanel, Table, type AsyncSelectOption, type TableColumnDef } from '@/components/ui';
 import {
   buildBranchToolbarFilter,
   buildSearchToolbarFilter,
@@ -551,7 +543,7 @@ export const CreditRequestFundListView = () => {
           {CREDIT_REQUEST_FUND_LABELS.add}
         </Button>
       </div>
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+      <SurfacePanel>
         <Table
           columns={columns}
           data={rows}
@@ -574,7 +566,7 @@ export const CreditRequestFundListView = () => {
               : CREDIT_REQUEST_FUND_LABELS.empty
           }
         />
-      </section>
+      </SurfacePanel>
     </div>
   );
 };

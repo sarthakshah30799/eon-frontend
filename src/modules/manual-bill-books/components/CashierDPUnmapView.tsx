@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Table, type TableColumnDef } from '@/components/ui';
+import { SurfacePanel, Table, type TableColumnDef } from '@/components/ui';
 import { Modal } from '@/components/ui/modal/Modal';
 import { manualBillBookApi, type IDPAllocatedPageRow } from '@/api';
 import { useAuth } from '@/lib/AuthContext';
@@ -259,7 +259,7 @@ export const CashierDPUnmapView = () => {
   if (!formState && !confirmState) {
     return (
       <div className="space-y-6">
-        <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+        <SurfacePanel>
           <div className="overflow-x-auto border border-slate-200 rounded-md">
             <Table
               columns={columns}
@@ -278,7 +278,7 @@ export const CashierDPUnmapView = () => {
           <p className="mt-2 text-xs text-slate-400">
             Click a row to retrieve pages from that delivery person.
           </p>
-        </section>
+        </SurfacePanel>
       </div>
     );
   }

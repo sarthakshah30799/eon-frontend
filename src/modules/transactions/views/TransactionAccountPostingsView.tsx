@@ -1,6 +1,6 @@
 import { ArrowPathIcon } from '@heroicons/react/24/outline';
 import { useMemo } from 'react';
-import { Button, type AsyncSelectOption } from '@/components/ui';
+import { Button, SurfacePanel, type AsyncSelectOption } from '@/components/ui';
 import {
   buildSearchToolbarFilter,
   type TableToolbarFilter,
@@ -143,7 +143,7 @@ export const TransactionAccountPostingsView = () => {
         </p>
       </div>
 
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+      <SurfacePanel>
         <TransactionListTable
           rows={rows}
           loading={isLoading}
@@ -168,7 +168,7 @@ export const TransactionAccountPostingsView = () => {
           }
           emptyMessage="No transactions found."
         />
-      </section>
+      </SurfacePanel>
     </div>
   );
 };

@@ -31,8 +31,12 @@ import {
   mapPassengerSnapshotToPurchaseFormValues,
   PASSENGER_PASSPORT_LOOKUP_EXCLUDED_FIELDS,
 } from '../utils/passengerAmlUtils';
+import { PASSENGER_IDENTITY_TEXT } from '../constants/passengerConstants';
 import {
   applyPassengerDetailsFormatErrors,
+  applyPassengerTransactionDateOrderErrors,
+  getPassengerArrivalDateOrderError,
+  getPassengerDepartureDateOrderError,
   getPassengerPassportNumberFormatError,
   getPassengerOtherDocumentNumberFormatError,
   getTravelTicketNumberFormatError,
@@ -72,7 +76,42 @@ const getPassportSnapshot = (values: IPurchaseFormValues) => ({
   passportIssueAt: values.passportIssueAt,
   passportIssueDate: values.passportIssueDate,
   passportExpiryDate: values.passportExpiryDate,
+  arrivalDate: values.arrivalDate,
 });
+
+const getFirstFormErrorMessage = (errors: unknown): string | null => {
+  if (!errors || typeof errors !== 'object') {
+    return null;
+  }
+
+  if (Array.isArray(errors)) {
+    for (const item of errors) {
+      const nestedMessage = getFirstFormErrorMessage(item);
+      if (nestedMessage) {
+        return nestedMessage;
+      }
+    }
+    return null;
+  }
+
+  const record = errors as Record<string, unknown>;
+  if (typeof record.message === 'string' && record.message.trim()) {
+    return record.message.trim();
+  }
+
+  for (const [key, value] of Object.entries(record)) {
+    if (key === 'message' || key === 'type' || key === 'ref' || key === 'types') {
+      continue;
+    }
+
+    const nestedMessage = getFirstFormErrorMessage(value);
+    if (nestedMessage) {
+      return nestedMessage;
+    }
+  }
+
+  return null;
+};
 
 const getVerificationSnapshot = (
   values: IPurchaseFormValues,
@@ -193,6 +232,9 @@ export const PassengerAmlVerificationModal = ({
   const [verificationMessage, setVerificationMessage] = useState<string | null>(
     null
   );
+  const [detailsValidationMessage, setDetailsValidationMessage] = useState<
+    string | null
+  >(null);
   const [verifiedPanSnapshot, setVerifiedPanSnapshot] = useState<Record<
     string,
     unknown
@@ -243,11 +285,8 @@ export const PassengerAmlVerificationModal = ({
       'passportIssueAt',
       'passportIssueDate',
       'passportExpiryDate',
+      'arrivalDate',
     ] as const,
-  });
-  const watchedTransactionDate = useWatch({
-    control: form.control,
-    name: 'transactionDate',
   });
   const watchedCountryId = useWatch({
     control: form.control,
@@ -412,11 +451,15 @@ export const PassengerAmlVerificationModal = ({
         }
       }
 
+      const transactionDate = String(
+        form.getValues('transactionDate') ?? ''
+      ).trim();
+
       if (mode === 'passport') {
         if (
           !isPassportExpiryValidForTransactionDate(
             currentValues.passportExpiryDate,
-            watchedTransactionDate
+            transactionDate
           )
         ) {
           setVerificationStatus('invalid');
@@ -424,6 +467,28 @@ export const PassengerAmlVerificationModal = ({
             'Passport expiry date must be more than 3 months after the transaction date'
           );
           return false;
+        }
+
+        const arrivalDate = String(form.getValues('arrivalDate') ?? '');
+        const arrivalError = getPassengerArrivalDateOrderError(
+          arrivalDate,
+          transactionDate
+        );
+        if (arrivalError) {
+          form.setError('arrivalDate', {
+            type: 'manual',
+            message: arrivalError,
+          });
+          setVerificationStatus('invalid');
+          setVerificationMessage(arrivalError);
+          return false;
+        }
+
+        if (
+          form.getFieldState('arrivalDate').error?.message ===
+          PASSENGER_IDENTITY_TEXT.arrivalDateAfterTransactionDate
+        ) {
+          form.clearErrors('arrivalDate');
         }
       }
 
@@ -447,8 +512,8 @@ export const PassengerAmlVerificationModal = ({
                 passportIssueAt: currentValues.passportIssueAt,
                 passportIssueDate: currentValues.passportIssueDate,
                 passportExpiryDate: currentValues.passportExpiryDate,
-                arrivalDate: currentValues.arrivalDate,
-                transactionDate: watchedTransactionDate || undefined,
+                arrivalDate: String(form.getValues('arrivalDate') ?? ''),
+                transactionDate: transactionDate || undefined,
                 isIndianNationality: false,
               } satisfies IPassengerPassportVerificationRequest);
 
@@ -457,17 +522,36 @@ export const PassengerAmlVerificationModal = ({
         }
 
         if (!verificationResult.verified) {
+          const message = verificationResult.message || 'Verification failed.';
+          if (
+            message === PASSENGER_IDENTITY_TEXT.arrivalDateAfterTransactionDate
+          ) {
+            form.setError('arrivalDate', {
+              type: 'manual',
+              message,
+            });
+          }
           setVerificationStatus('invalid');
-          setVerificationMessage(
-            verificationResult.message || 'Verification failed.'
-          );
+          setVerificationMessage(message);
           return false;
+        }
+
+        if (
+          form.getFieldState('arrivalDate').error?.message ===
+          PASSENGER_IDENTITY_TEXT.arrivalDateAfterTransactionDate
+        ) {
+          form.clearErrors('arrivalDate');
         }
 
         if (mode === 'pan') {
           setVerifiedPanSnapshot(getPanSnapshot(currentValues));
         } else {
-          setVerifiedPassportSnapshot(getPassportSnapshot(currentValues));
+          setVerifiedPassportSnapshot(
+            getPassportSnapshot({
+              ...currentValues,
+              arrivalDate: String(form.getValues('arrivalDate') ?? ''),
+            })
+          );
         }
         setVerificationStatus('valid');
         setVerificationMessage(
@@ -530,7 +614,6 @@ export const PassengerAmlVerificationModal = ({
       onVerified,
       verifyPan,
       verifyPassport,
-      watchedTransactionDate,
     ]
   );
 
@@ -644,6 +727,7 @@ export const PassengerAmlVerificationModal = ({
     passportIssueAt: watchedPassportValues[2] ?? '',
     passportIssueDate: watchedPassportValues[3] ?? '',
     passportExpiryDate: watchedPassportValues[4] ?? '',
+    arrivalDate: watchedPassportValues[5] ?? '',
   };
   const panVerificationChanged =
     verificationStatus === 'valid' &&
@@ -688,6 +772,121 @@ export const PassengerAmlVerificationModal = ({
       : lookupIdentityError
         ? lookupIdentityError.message || PASSENGER_IDENTITY_LOOKUP_ERROR
         : null;
+  const visibleDetailsMessage =
+    detailsBlockingMessage || detailsValidationMessage;
+
+  const handleArrivalDateChange = useCallback(
+    (nextArrivalDate: string) => {
+      setDetailsValidationMessage(null);
+      const transactionDate = String(form.getValues('transactionDate') ?? '');
+      const arrivalError = getPassengerArrivalDateOrderError(
+        nextArrivalDate,
+        transactionDate
+      );
+
+      if (arrivalError) {
+        verificationRunIdRef.current += 1;
+        form.setError('arrivalDate', {
+          type: 'manual',
+          message: arrivalError,
+        });
+        setVerificationStatus('invalid');
+        setVerificationMessage(arrivalError);
+        return;
+      }
+
+      if (
+        form.getFieldState('arrivalDate').error?.message ===
+        PASSENGER_IDENTITY_TEXT.arrivalDateAfterTransactionDate
+      ) {
+        form.clearErrors('arrivalDate');
+      }
+
+      if (
+        verificationMessage ===
+        PASSENGER_IDENTITY_TEXT.arrivalDateAfterTransactionDate
+      ) {
+        setVerificationMessage(null);
+        if (verificationStatus === 'invalid') {
+          const currentValues = form.getValues() as IPurchaseFormValues;
+          const panStillValid =
+            verificationMode === 'pan' &&
+            isSameSnapshot(verifiedPanSnapshot, getPanSnapshot(currentValues));
+          const passportStillValid =
+            verificationMode === 'passport' &&
+            isSameSnapshot(
+              verifiedPassportSnapshot,
+              getPassportSnapshot({
+                ...currentValues,
+                arrivalDate: nextArrivalDate,
+              })
+            );
+          setVerificationStatus(
+            panStillValid || passportStillValid ? 'valid' : 'idle'
+          );
+        }
+      }
+
+      const currentValues = {
+        ...(form.getValues() as IPurchaseFormValues),
+        arrivalDate: nextArrivalDate,
+      };
+
+      if (!hasCompletePassportValues(currentValues)) {
+        return;
+      }
+
+      if (
+        verificationStatus === 'valid' &&
+        isSameSnapshot(
+          verifiedPassportSnapshot,
+          getPassportSnapshot(currentValues)
+        )
+      ) {
+        return;
+      }
+
+      void verifyIdentity('passport', false, false, false);
+    },
+    [
+      form,
+      verificationMessage,
+      verificationMode,
+      verificationStatus,
+      verifiedPanSnapshot,
+      verifiedPassportSnapshot,
+      verifyIdentity,
+    ]
+  );
+
+  const handleDepartureDateChange = useCallback(
+    (nextDepartureDate: string) => {
+      setDetailsValidationMessage(null);
+      const currentValues = form.getValues() as IPurchaseFormValues;
+      const departureError = getPassengerDepartureDateOrderError(
+        nextDepartureDate,
+        currentValues.transactionDate,
+        currentValues.transactionType
+      );
+
+      if (departureError) {
+        form.setError('travelDepartureDate', {
+          type: 'manual',
+          message: departureError,
+        });
+        setDetailsValidationMessage(departureError);
+        return;
+      }
+
+      if (
+        form.getFieldState('travelDepartureDate').error?.message ===
+        PASSENGER_IDENTITY_TEXT.departureDateBeforeTransactionDate
+      ) {
+        form.clearErrors('travelDepartureDate');
+      }
+    },
+    [form]
+  );
 
   const handleNationalityChange = useCallback(
     (value: string | null) => {
@@ -792,6 +991,8 @@ export const PassengerAmlVerificationModal = ({
       return;
     }
 
+    setDetailsValidationMessage(null);
+
     const currentValues = form.getValues() as IPurchaseFormValues;
     const formatsValid = applyPassengerDetailsFormatErrors(
       currentValues,
@@ -801,6 +1002,10 @@ export const PassengerAmlVerificationModal = ({
     );
 
     if (!formatsValid) {
+      setDetailsValidationMessage(
+        getFirstFormErrorMessage(form.formState.errors) ||
+          'Please review the highlighted passenger details.'
+      );
       if (
         getPassengerPassportNumberFormatError(currentValues.passportNumber)
       ) {
@@ -831,12 +1036,46 @@ export const PassengerAmlVerificationModal = ({
       return;
     }
 
+    const transactionDatesValid = applyPassengerTransactionDateOrderErrors(
+      currentValues,
+      (field, error) => {
+        form.setError(field as never, error as never);
+      }
+    );
+
+    if (!transactionDatesValid) {
+      const arrivalError = getPassengerArrivalDateOrderError(
+        currentValues.arrivalDate,
+        currentValues.transactionDate
+      );
+      const departureError = getPassengerDepartureDateOrderError(
+        currentValues.travelDepartureDate,
+        currentValues.transactionDate,
+        currentValues.transactionType
+      );
+      setDetailsValidationMessage(
+        arrivalError ||
+          departureError ||
+          'Please review the highlighted passenger details.'
+      );
+      if (arrivalError) {
+        form.setFocus('arrivalDate');
+      } else if (departureError) {
+        form.setFocus('travelDepartureDate');
+      }
+      return;
+    }
+
     const detailsValidationFields = getDetailsFieldNames();
     const isValid = await form.trigger(detailsValidationFields as never, {
       shouldFocus: true,
     });
 
     if (!isValid) {
+      setDetailsValidationMessage(
+        getFirstFormErrorMessage(form.formState.errors) ||
+          'Please review the highlighted passenger details.'
+      );
       console.warn(
         '[PassengerAmlVerificationModal] details validation failed',
         {
@@ -900,7 +1139,12 @@ export const PassengerAmlVerificationModal = ({
         shouldValidate: false,
       });
       handleModalOpenChange(false);
-    } catch {
+    } catch (error) {
+      const message =
+        error instanceof Error && error.message.trim()
+          ? error.message.trim()
+          : PASSENGER_IDENTITY_LOOKUP_ERROR;
+      setDetailsValidationMessage(message);
       return;
     }
   };
@@ -1007,6 +1251,11 @@ export const PassengerAmlVerificationModal = ({
             isDetailsSubmitting ? 'pointer-events-none space-y-4' : 'space-y-4'
           }
         >
+          {visibleDetailsMessage ? (
+            <div className="rounded-sm border border-error-200 bg-error-50 px-4 py-3 text-xs text-error-700">
+              <span className="font-medium">{visibleDetailsMessage}</span>
+            </div>
+          ) : null}
           <PassengerAmlDetailsStepForm
             entityType={
               (watchedEntityType || entityType) as PassengerEntityType
@@ -1021,16 +1270,13 @@ export const PassengerAmlVerificationModal = ({
             onPassportFieldBlur={() => {
               void verifyIdentityOnBlur('passport');
             }}
+            onArrivalDateChange={handleArrivalDateChange}
+            onDepartureDateChange={handleDepartureDateChange}
             onNationalityChange={handleNationalityChange}
             onDocumentChange={() => {
               form.clearErrors('otherDocuments' as never);
             }}
           />
-          {detailsBlockingMessage ? (
-            <div className="rounded-sm border border-error-200 bg-error-50 px-4 py-3 text-xs text-error-700">
-              <span className="font-medium">{detailsBlockingMessage}</span>
-            </div>
-          ) : null}
         </div>
       )}
     </Modal>

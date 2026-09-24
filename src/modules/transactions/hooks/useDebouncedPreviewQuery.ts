@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useDebounce } from '@/hooks';
 
@@ -17,16 +18,37 @@ export const useDebouncedPreviewQuery = <TRequest, TData>(
   enabled: boolean,
   queryFn: (request: TRequest, signal?: AbortSignal) => Promise<TData>
 ): DebouncedPreviewQueryResult<TData> => {
-  const debouncedRequest = useDebounce(
-    request,
+  // Debounce by serialized content, not object identity. Callers often pass a
+  // fresh `{ ... }` each render; reference equality would reset the timer forever
+  // and leave the loader spinning with no network request.
+  const requestKey = request == null ? null : JSON.stringify(request);
+  const debouncedRequestKey = useDebounce(
+    requestKey,
     TRANSACTION_PREVIEW_DEBOUNCE_MS
   );
-  const isDebouncing = enabled && request !== debouncedRequest;
-  const queryEnabled = enabled && debouncedRequest != null && !isDebouncing;
+  const requestRef = useRef(request);
+
+  useEffect(() => {
+    requestRef.current = request;
+  }, [request]);
+
+  const isDebouncing = enabled && requestKey !== debouncedRequestKey;
+  const queryEnabled =
+    enabled && debouncedRequestKey != null && !isDebouncing;
 
   const query = useQuery<TData, Error>({
-    queryKey: [queryKeyPrefix, debouncedRequest],
-    queryFn: ({ signal }) => queryFn(debouncedRequest as TRequest, signal),
+    queryKey: [queryKeyPrefix, debouncedRequestKey],
+    queryFn: ({ signal }) => {
+      const currentRequest = requestRef.current;
+      if (
+        currentRequest != null &&
+        JSON.stringify(currentRequest) === debouncedRequestKey
+      ) {
+        return queryFn(currentRequest, signal);
+      }
+
+      return queryFn(JSON.parse(debouncedRequestKey as string) as TRequest, signal);
+    },
     enabled: queryEnabled,
     placeholderData: previousData => previousData,
   });

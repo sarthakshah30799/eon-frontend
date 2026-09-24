@@ -12,7 +12,8 @@ export const SpecialReportFiltersSection = ({
 }: SpecialReportFiltersSectionProps) => {
   const currentTemplateLabel =
     filters.templateOptions.find(option => option.id === filters.template)
-      ?.label ?? 'Account Posting';
+      ?.label ??
+    (filters.isLoadingTemplates ? 'Loading…' : 'Select report type');
 
   return (
     <section className="space-y-3 rounded-xl border border-border-primary bg-white p-3 shadow-sm">
@@ -37,7 +38,13 @@ export const SpecialReportFiltersSection = ({
             <div className="text-[10px] font-semibold uppercase tracking-wider text-text-tertiary">
               Special Report Type
             </div>
-            <span className="text-[10px] text-text-tertiary">1 option</span>
+            <span className="text-[10px] text-text-tertiary">
+              {filters.isLoadingTemplates
+                ? 'Loading…'
+                : `${filters.templateOptions.length} option${
+                    filters.templateOptions.length === 1 ? '' : 's'
+                  }`}
+            </span>
           </div>
 
           <div className="rounded-md border border-slate-100 bg-slate-50 px-2 py-1.5">
@@ -46,22 +53,35 @@ export const SpecialReportFiltersSection = ({
                 {currentTemplateLabel}
               </Dropdown.Trigger>
               <Dropdown.Menu className="min-w-full">
-                {filters.templateOptions.map(option => (
+                {filters.templateOptions.length === 0 ? (
                   <Dropdown.Item
-                    key={option.id}
-                    onClick={() => {
-                      filters.setTemplate(option.id);
-                    }}
                     className="justify-between text-[11px]"
+                    disabled
                   >
-                    <span>{option.label}</span>
-                    {filters.template === option.id ? (
-                      <span className="text-[10px] font-semibold uppercase tracking-wider text-primary-600">
-                        Selected
-                      </span>
-                    ) : null}
+                    <span>
+                      {filters.isLoadingTemplates
+                        ? 'Loading report types…'
+                        : 'No report types available'}
+                    </span>
                   </Dropdown.Item>
-                ))}
+                ) : (
+                  filters.templateOptions.map(option => (
+                    <Dropdown.Item
+                      key={option.id}
+                      onClick={() => {
+                        filters.setTemplate(option.id);
+                      }}
+                      className="justify-between text-[11px]"
+                    >
+                      <span>{option.label}</span>
+                      {filters.template === option.id ? (
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-primary-600">
+                          Selected
+                        </span>
+                      ) : null}
+                    </Dropdown.Item>
+                  ))
+                )}
               </Dropdown.Menu>
             </Dropdown>
           </div>

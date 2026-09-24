@@ -21,6 +21,8 @@ import {
   isPassengerPanHolderRelationRequired,
   isPassengerPanRequired,
   isPassengerPassportRequired,
+  getPassengerArrivalDateOrderError,
+  getPassengerDepartureDateOrderError,
   isPassengerArrivalDateRequired,
 } from './passengerIdentityRules';
 import { PASSENGER_IDENTITY_TEXT } from '../constants/passengerConstants';
@@ -655,6 +657,43 @@ export const createPassengerDetailsSchema = () =>
             return true;
           }
           return Boolean(String(value ?? '').trim());
+        }
+      )
+      .test(
+        'arrival-date-order',
+        PASSENGER_IDENTITY_TEXT.arrivalDateAfterTransactionDate,
+        function (value) {
+          const arrivalError = getPassengerArrivalDateOrderError(
+            value,
+            this.parent.transactionDate as string | undefined
+          );
+
+          if (!arrivalError) {
+            return true;
+          }
+
+          return this.createError({ message: arrivalError });
+        }
+      ),
+    travelDepartureDate: yup
+      .string()
+      .trim()
+      .default('')
+      .test(
+        'departure-date-order',
+        PASSENGER_IDENTITY_TEXT.departureDateBeforeTransactionDate,
+        function (value) {
+          const departureError = getPassengerDepartureDateOrderError(
+            value,
+            this.parent.transactionDate as string | undefined,
+            this.parent.transactionType as string | undefined
+          );
+
+          if (!departureError) {
+            return true;
+          }
+
+          return this.createError({ message: departureError });
         }
       ),
     otherDocuments: yup.array().of(passengerOtherDocumentSchema).default([]),

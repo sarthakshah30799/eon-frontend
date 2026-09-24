@@ -21,7 +21,10 @@ import { useLoadBranchOptions } from '@/modules/branchProfile/hooks';
 import { useGetStateProfile } from '@/modules/stateProfile';
 import {
   CARD_ISSUER_FORM_TEXT,
+  EMPLOYEE_PROFILE_FORM_TEXT,
+  PARTY_PROFILE_BRANCH_UPDATE_TEXT,
   PARTY_PROFILE_CREDIT_POLICY_TEXT,
+  PARTY_PROFILE_TAX_SETTINGS_TEXT,
   toPartyProfileDisplayLabel,
   toPartyProfileApiType,
 } from '../constants';
@@ -37,18 +40,30 @@ import {
 } from '../components';
 import { PartyProfileCommissionRulesFieldArray } from '../components/PartyProfileCommissionRulesFieldArray';
 import { normalizeCodeValue } from '@/utils';
-import {
-  hasDirtyNonCreditPolicyFields,
-  pickDirtyPartyProfileCreditPolicyValues,
-} from '../utils/partyProfileCreditPolicyUtils';
+import { pickDirtyPartyProfileCreditPolicyValues } from '../utils/partyProfileCreditPolicyUtils';
 import type { IUpgradePartyProfileCreditPolicy } from '../types';
 
 type PartyProfileFormValues = Omit<ICreatePartyProfile, 'type'>;
 
+const normalizeBranchIds = (ids?: string[] | null) =>
+  [...new Set((ids ?? []).map(id => String(id || '').trim()).filter(Boolean))].sort();
+
+const haveBranchIdsChanged = (
+  current?: string[] | null,
+  baseline?: string[] | null
+) => {
+  const next = normalizeBranchIds(current);
+  const prev = normalizeBranchIds(baseline);
+  return (
+    next.length !== prev.length || next.some((id, index) => id !== prev[index])
+  );
+};
+
 export type PartyProfileFormSubmitMeta = {
   creditUpgradeMode: boolean;
   creditPolicyPayload: IUpgradePartyProfileCreditPolicy;
-  hasNonCreditChanges: boolean;
+  branchUpdateMode: boolean;
+  branchIds?: string[];
 };
 
 interface PartyProfileFormProps {
@@ -68,6 +83,7 @@ interface PartyProfileFormProps {
   showSubmit?: boolean;
   allowBranchSelection?: boolean;
   allowCreditPolicyUpgrade?: boolean;
+  allowBranchUpdate?: boolean;
   branchDefaultOptions?: AsyncSelectOption[];
 }
 
@@ -83,9 +99,12 @@ const PartyProfileFormFields = ({
   allowBranchSelection = false,
   isCreditUpgradeMode = false,
   onCreditUpgradeModeChange,
+  isBranchUpdateMode = false,
+  onBranchUpdateModeChange,
   onSubmitDisabledChange,
   onDirtyFieldsSnapshotChange,
   allowCreditPolicyUpgrade = false,
+  allowBranchUpdate = false,
   branchDefaultOptions,
 }: {
   isSubmitting?: boolean;
@@ -97,23 +116,36 @@ const PartyProfileFormFields = ({
   allowBranchSelection?: boolean;
   isCreditUpgradeMode?: boolean;
   onCreditUpgradeModeChange?: (enabled: boolean) => void;
+  isBranchUpdateMode?: boolean;
+  onBranchUpdateModeChange?: (enabled: boolean) => void;
   onSubmitDisabledChange?: (disabled: boolean) => void;
   onDirtyFieldsSnapshotChange?: (
     dirtyFields: Partial<Record<keyof PartyProfileFormValues, boolean | object>>
   ) => void;
   allowCreditPolicyUpgrade?: boolean;
+  allowBranchUpdate?: boolean;
   branchDefaultOptions?: AsyncSelectOption[];
 }) => {
   const form = useFormContext<PartyProfileFormValues>();
   const { dirtyFields } = useFormState({ control: form.control });
-  const isSubmitting = isSubmittingProp || disabled;
   const reviewActionsDisabled = isSubmittingProp;
-  const canEditBranch = allowBranchSelection && !currentId;
   const effectiveProfileType = profileType;
   const panNo = useWatch({ name: 'panNo' });
   const gstStateId = useWatch({ name: 'gstStateId' });
   const gstNo = useWatch({ name: 'gstNo' });
   const isTdsDeducted = useWatch({ name: 'isTdsDeducted' });
+  const basicSalary = useWatch({ name: 'basicSalary' });
+  const dareness = useWatch({ name: 'dareness' });
+  const houseRent = useWatch({ name: 'houseRent' });
+  const conveyance = useWatch({ name: 'conveyance' });
+  const specialAllowance = useWatch({ name: 'specialAllowance' });
+  const otherAllowance = useWatch({ name: 'otherAllowance' });
+  const pf = useWatch({ name: 'pf' });
+  const ppf = useWatch({ name: 'ppf' });
+  const pTax = useWatch({ name: 'pTax' });
+  const esic = useWatch({ name: 'esic' });
+  const incomeTax = useWatch({ name: 'incomeTax' });
+  const otherDeduction = useWatch({ name: 'otherDeduction' });
   const { data: selectedGstState } = useGetStateProfile(
     String(gstStateId || '')
   );
@@ -125,31 +157,54 @@ const PartyProfileFormFields = ({
   }, []);
 
   const profileTypeLabel = toPartyProfileDisplayLabel(effectiveProfileType);
+  const profileApiType = toPartyProfileApiType(effectiveProfileType);
   const showTdsFields =
-    toPartyProfileApiType(effectiveProfileType) === 'AGENT' ||
-    toPartyProfileApiType(effectiveProfileType) === 'MISC_PROFILE';
+    profileApiType === 'AGENT' ||
+    profileApiType === 'MISC_PROFILE' ||
+    profileApiType === 'EMPLOYEE_PROFILE';
   const showCorporateClientTaxFields =
-    toPartyProfileApiType(effectiveProfileType) === 'CORPORATE_CLIENT';
-  const showRfFields = toPartyProfileApiType(effectiveProfileType) === 'RF';
-  const showCommissionRules =
-    toPartyProfileApiType(effectiveProfileType) === 'AGENT';
+    profileApiType === 'CORPORATE_CLIENT';
+  const showRfFields = profileApiType === 'RF';
+  const showCommissionRules = profileApiType === 'AGENT';
+  const shouldHideCreditPolicySection =
+    profileApiType === 'MISC_PROFILE' ||
+    profileApiType === 'EMPLOYEE_PROFILE';
   const shouldHideCreditLimitFields = [
     'MISC_PROFILE',
+    'EMPLOYEE_PROFILE',
     'AGENT',
     'CARD_ISSUER_PROFILE',
     'FRANCHISE',
-  ].includes(toPartyProfileApiType(effectiveProfileType));
+  ].includes(profileApiType);
   const showCardIssuerNumberRules =
-    toPartyProfileApiType(effectiveProfileType) === 'CARD_ISSUER_PROFILE';
+    profileApiType === 'CARD_ISSUER_PROFILE';
+  const showEmployeePayrollSections =
+    profileApiType === 'EMPLOYEE_PROFILE';
   const showTdsGroup = Boolean(isTdsDeducted);
   const isEditMode = Boolean(currentId);
   const isCreditPolicyLocked =
     isEditMode && allowCreditPolicyUpgrade && !isCreditUpgradeMode;
+  const isBranchUpdateLocked =
+    isEditMode && allowBranchUpdate && !isBranchUpdateMode;
+  // Credit fields unlock only after Upgrade Limit; ignore the form-wide
+  // disabled flag so upgrade still works when the rest of the profile is locked.
   const areCreditPolicyFieldsDisabled =
     isSubmittingProp ||
-    (isEditMode && (!allowCreditPolicyUpgrade || !isCreditUpgradeMode));
+    (isEditMode
+      ? !allowCreditPolicyUpgrade || !isCreditUpgradeMode
+      : disabled);
+  const areBranchFieldsDisabled =
+    isSubmittingProp ||
+    (isEditMode
+      ? !allowBranchUpdate || !isBranchUpdateMode
+      : disabled || !allowBranchSelection);
+  // Party profiles are not editable after create — keep every non-credit /
+  // non-branch field locked on edit (including during upgrade modes).
+  const isSubmitting = isSubmittingProp || disabled || isEditMode;
   const canShowUpgradeLimitButton =
     isEditMode && allowCreditPolicyUpgrade && !isCreditUpgradeMode;
+  const canShowUpdateBranchesButton =
+    isEditMode && allowBranchUpdate && !isBranchUpdateMode;
 
   useEffect(() => {
     onDirtyFieldsSnapshotChange?.(dirtyFields);
@@ -160,18 +215,20 @@ const PartyProfileFormFields = ({
       return;
     }
 
-    const hasNonCreditDirty = hasDirtyNonCreditPolicyFields(dirtyFields);
+    const canUseSpecialEdit =
+      allowCreditPolicyUpgrade || allowBranchUpdate;
     onSubmitDisabledChange(
       Boolean(
         isEditMode &&
-          allowCreditPolicyUpgrade &&
+          canUseSpecialEdit &&
           !isCreditUpgradeMode &&
-          !hasNonCreditDirty
+          !isBranchUpdateMode
       )
     );
   }, [
+    allowBranchUpdate,
     allowCreditPolicyUpgrade,
-    dirtyFields,
+    isBranchUpdateMode,
     isCreditUpgradeMode,
     isEditMode,
     onSubmitDisabledChange,
@@ -186,6 +243,61 @@ const PartyProfileFormFields = ({
       });
     }
   }, [form, showTdsGroup]);
+
+  useEffect(() => {
+    if (!showEmployeePayrollSections) {
+      return;
+    }
+
+    const toAmount = (value: unknown) => {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : 0;
+    };
+
+    const nextAllowanceTotal =
+      toAmount(dareness) +
+      toAmount(houseRent) +
+      toAmount(conveyance) +
+      toAmount(specialAllowance) +
+      toAmount(otherAllowance);
+    const nextDeductionTotal =
+      toAmount(pf) +
+      toAmount(ppf) +
+      toAmount(pTax) +
+      toAmount(esic) +
+      toAmount(incomeTax) +
+      toAmount(otherDeduction);
+    const nextNetSalary =
+      toAmount(basicSalary) + nextAllowanceTotal - nextDeductionTotal;
+
+    form.setValue('allowanceTotal', nextAllowanceTotal, {
+      shouldDirty: false,
+      shouldValidate: false,
+    });
+    form.setValue('deductionTotal', nextDeductionTotal, {
+      shouldDirty: false,
+      shouldValidate: false,
+    });
+    form.setValue('netSalary', nextNetSalary, {
+      shouldDirty: false,
+      shouldValidate: false,
+    });
+  }, [
+    basicSalary,
+    conveyance,
+    dareness,
+    esic,
+    form,
+    houseRent,
+    incomeTax,
+    otherAllowance,
+    otherDeduction,
+    pf,
+    ppf,
+    pTax,
+    showEmployeePayrollSections,
+    specialAllowance,
+  ]);
 
   useEffect(() => {
     const normalizedPan = String(panNo || '')
@@ -337,63 +449,199 @@ const PartyProfileFormFields = ({
         </CardSection>
       )}
 
-      <CardSection
-        heading={PARTY_PROFILE_CREDIT_POLICY_TEXT.sectionHeading}
-        headerActions={
-          canShowUpgradeLimitButton ? (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => onCreditUpgradeModeChange?.(true)}
-            >
-              {PARTY_PROFILE_CREDIT_POLICY_TEXT.upgradeLimit}
-            </Button>
-          ) : null
-        }
-      >
-        {isCreditPolicyLocked ? (
-          <p className="mb-3 text-sm text-text-secondary">
-            {PARTY_PROFILE_CREDIT_POLICY_TEXT.upgradeLimitHint}
-          </p>
-        ) : null}
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-          {!shouldHideCreditLimitFields && (
+      {showEmployeePayrollSections && (
+        <>
+          <CardSection heading={EMPLOYEE_PROFILE_FORM_TEXT.detailsHeading}>
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+              <FormFieldDatePicker
+                name="dateOfJoining"
+                label={EMPLOYEE_PROFILE_FORM_TEXT.dateOfJoining}
+                disabled={isSubmitting}
+              />
+              <FormFieldDatePicker
+                name="dateOfExit"
+                label={EMPLOYEE_PROFILE_FORM_TEXT.dateOfExit}
+                disabled={isSubmitting}
+              />
+              <FormFieldInput
+                name="basicSalary"
+                label={EMPLOYEE_PROFILE_FORM_TEXT.basicSalary}
+                type="number"
+                step="0.01"
+                disabled={isSubmitting}
+              />
+              <FormFieldInput
+                name="netSalary"
+                label={EMPLOYEE_PROFILE_FORM_TEXT.netSalary}
+                type="number"
+                step="0.01"
+                disabled={true}
+              />
+            </div>
+          </CardSection>
+
+          <CardSection heading={EMPLOYEE_PROFILE_FORM_TEXT.allowanceHeading}>
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+              <FormFieldInput
+                name="dareness"
+                label={EMPLOYEE_PROFILE_FORM_TEXT.dareness}
+                type="number"
+                step="0.01"
+                disabled={isSubmitting}
+              />
+              <FormFieldInput
+                name="houseRent"
+                label={EMPLOYEE_PROFILE_FORM_TEXT.houseRent}
+                type="number"
+                step="0.01"
+                disabled={isSubmitting}
+              />
+              <FormFieldInput
+                name="conveyance"
+                label={EMPLOYEE_PROFILE_FORM_TEXT.conveyance}
+                type="number"
+                step="0.01"
+                disabled={isSubmitting}
+              />
+              <FormFieldInput
+                name="specialAllowance"
+                label={EMPLOYEE_PROFILE_FORM_TEXT.special}
+                type="number"
+                step="0.01"
+                disabled={isSubmitting}
+              />
+              <FormFieldInput
+                name="otherAllowance"
+                label={EMPLOYEE_PROFILE_FORM_TEXT.other}
+                type="number"
+                step="0.01"
+                disabled={isSubmitting}
+              />
+              <FormFieldInput
+                name="allowanceTotal"
+                label={EMPLOYEE_PROFILE_FORM_TEXT.allowanceTotal}
+                type="number"
+                step="0.01"
+                disabled={true}
+              />
+            </div>
+          </CardSection>
+
+          <CardSection heading={EMPLOYEE_PROFILE_FORM_TEXT.deductionHeading}>
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+              <FormFieldInput
+                name="pf"
+                label={EMPLOYEE_PROFILE_FORM_TEXT.pf}
+                type="number"
+                step="0.01"
+                disabled={isSubmitting}
+              />
+              <FormFieldInput
+                name="ppf"
+                label={EMPLOYEE_PROFILE_FORM_TEXT.ppf}
+                type="number"
+                step="0.01"
+                disabled={isSubmitting}
+              />
+              <FormFieldInput
+                name="pTax"
+                label={EMPLOYEE_PROFILE_FORM_TEXT.pTax}
+                type="number"
+                step="0.01"
+                disabled={isSubmitting}
+              />
+              <FormFieldInput
+                name="esic"
+                label={EMPLOYEE_PROFILE_FORM_TEXT.esic}
+                type="number"
+                step="0.01"
+                disabled={isSubmitting}
+              />
+              <FormFieldInput
+                name="incomeTax"
+                label={EMPLOYEE_PROFILE_FORM_TEXT.incomeTax}
+                type="number"
+                step="0.01"
+                disabled={isSubmitting}
+              />
+              <FormFieldInput
+                name="otherDeduction"
+                label={EMPLOYEE_PROFILE_FORM_TEXT.other}
+                type="number"
+                step="0.01"
+                disabled={isSubmitting}
+              />
+              <FormFieldInput
+                name="deductionTotal"
+                label={EMPLOYEE_PROFILE_FORM_TEXT.deductionTotal}
+                type="number"
+                step="0.01"
+                disabled={true}
+              />
+            </div>
+          </CardSection>
+        </>
+      )}
+
+      {!shouldHideCreditPolicySection && (
+        <CardSection
+          heading={PARTY_PROFILE_CREDIT_POLICY_TEXT.sectionHeading}
+          headerActions={
+            canShowUpgradeLimitButton ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => onCreditUpgradeModeChange?.(true)}
+              >
+                {PARTY_PROFILE_CREDIT_POLICY_TEXT.upgradeLimit}
+              </Button>
+            ) : null
+          }
+        >
+          {isCreditPolicyLocked ? (
+            <p className="mb-3 text-sm text-text-secondary">
+              {PARTY_PROFILE_CREDIT_POLICY_TEXT.upgradeLimitHint}
+            </p>
+          ) : null}
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+            {!shouldHideCreditLimitFields && (
+              <FormFieldInput
+                name="temporaryCreditLimit"
+                label="Temporary Credit Limit"
+                type="number"
+                disabled={areCreditPolicyFieldsDisabled}
+              />
+            )}
             <FormFieldInput
-              name="temporaryCreditLimit"
-              label="Temporary Credit Limit"
+              name="temporaryCreditDays"
+              label="Temporary Credit Days"
               type="number"
               disabled={areCreditPolicyFieldsDisabled}
             />
-          )}
-          <FormFieldInput
-            name="temporaryCreditDays"
-            label="Temporary Credit Days"
-            type="number"
-            disabled={areCreditPolicyFieldsDisabled}
-          />
-          {!shouldHideCreditLimitFields && (
+            {!shouldHideCreditLimitFields && (
+              <FormFieldInput
+                name="permanentCreditLimit"
+                label="Permanent Credit Limit"
+                type="number"
+                disabled={areCreditPolicyFieldsDisabled}
+              />
+            )}
             <FormFieldInput
-              name="permanentCreditLimit"
-              label="Permanent Credit Limit"
+              name="permanentCreditDays"
+              label="Permanent Credit Days"
               type="number"
               disabled={areCreditPolicyFieldsDisabled}
             />
-          )}
-          <FormFieldInput
-            name="permanentCreditDays"
-            label="Permanent Credit Days"
-            type="number"
-            disabled={areCreditPolicyFieldsDisabled}
-          />
-          <FormFieldInput
-            name="chqTrxnLimit"
-            label="Cheque Transaction Limit"
-            type="number"
-            disabled={areCreditPolicyFieldsDisabled}
-          />
-        </div>
-      </CardSection>
+            <FormFieldInput
+              name="chqTrxnLimit"
+              label="Cheque Transaction Limit"
+              type="number"
+              disabled={areCreditPolicyFieldsDisabled}
+            />
+          </div>
+        </CardSection>
+      )}
 
       <CardSection heading="Address, KYC & Contact">
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
@@ -642,12 +890,36 @@ const PartyProfileFormFields = ({
                 label="IGST Only"
                 disabled={isSubmitting}
               />
+              <FormFieldCheckbox
+                name="gstExempt"
+                label={PARTY_PROFILE_TAX_SETTINGS_TEXT.gstExempt}
+                disabled={isSubmitting}
+              />
             </>
           )}
         </div>
       </CardSection>
 
-      <CardSection heading="GST Details">
+      <CardSection
+        heading={PARTY_PROFILE_BRANCH_UPDATE_TEXT.sectionHeading}
+        headerActions={
+          canShowUpdateBranchesButton ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => onBranchUpdateModeChange?.(true)}
+            >
+              {PARTY_PROFILE_BRANCH_UPDATE_TEXT.updateBranches}
+            </Button>
+          ) : null
+        }
+      >
+        {isBranchUpdateLocked ? (
+          <p className="mb-3 text-sm text-text-secondary">
+            {PARTY_PROFILE_BRANCH_UPDATE_TEXT.updateBranchesHint}
+          </p>
+        ) : null}
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           <FormFieldInput
             name="gstNo"
@@ -666,12 +938,11 @@ const PartyProfileFormFields = ({
             label="Current Branch"
             placeholder="Select current branch"
             loadOptions={branchLoadOptions}
-            defaultOptions={
-              branchDefaultOptions?.length ? branchDefaultOptions : true
-            }
-            pagination={!branchDefaultOptions?.length}
+            defaultOptions={true}
+            valueOptions={branchDefaultOptions}
+            pagination
             isMulti
-            disabled={isSubmitting || !canEditBranch}
+            disabled={areBranchFieldsDisabled}
           />
         </div>
       </CardSection>
@@ -744,19 +1015,23 @@ export const PartyProfileForm = ({
   showSubmit = true,
   allowBranchSelection = false,
   allowCreditPolicyUpgrade = false,
+  allowBranchUpdate = false,
   branchDefaultOptions,
 }: PartyProfileFormProps) => {
   const [isCreditUpgradeMode, setIsCreditUpgradeMode] = useState(false);
+  const [isBranchUpdateMode, setIsBranchUpdateMode] = useState(false);
   const [isSubmitDisabled, setIsSubmitDisabled] = useState(
-    Boolean(currentId && allowCreditPolicyUpgrade)
+    Boolean(currentId && (allowCreditPolicyUpgrade || allowBranchUpdate))
   );
   const creditPolicyBaselineRef = useRef(defaultValues);
+  const branchBaselineRef = useRef(defaultValues.branchIds);
   const dirtyFieldsSnapshotRef = useRef<
     Partial<Record<keyof PartyProfileFormValues, boolean | object>>
   >({});
 
   useEffect(() => {
     creditPolicyBaselineRef.current = defaultValues;
+    branchBaselineRef.current = defaultValues.branchIds;
   }, [defaultValues]);
 
   const handleDirtyFieldsSnapshotChange = useCallback(
@@ -769,15 +1044,25 @@ export const PartyProfileForm = ({
   );
   const submitMessage =
     currentId &&
-    allowCreditPolicyUpgrade &&
+    (allowCreditPolicyUpgrade || allowBranchUpdate) &&
     isSubmitDisabled &&
-    !isCreditUpgradeMode
+    !isCreditUpgradeMode &&
+    !isBranchUpdateMode
       ? PARTY_PROFILE_CREDIT_POLICY_TEXT.saveBlockedUntilUpgrade
       : undefined;
 
   const handleCreditUpgradeModeChange = useCallback((enabled: boolean) => {
     setIsCreditUpgradeMode(enabled);
     if (enabled) {
+      setIsBranchUpdateMode(false);
+      setIsSubmitDisabled(false);
+    }
+  }, []);
+
+  const handleBranchUpdateModeChange = useCallback((enabled: boolean) => {
+    setIsBranchUpdateMode(enabled);
+    if (enabled) {
+      setIsCreditUpgradeMode(false);
       setIsSubmitDisabled(false);
     }
   }, []);
@@ -787,6 +1072,7 @@ export const PartyProfileForm = ({
       id={FORM_ID}
       onSubmit={values => {
         const dirtyFields = dirtyFieldsSnapshotRef.current;
+        const nextBranchIds = normalizeBranchIds(values.branchIds);
         onSubmit(values, {
           creditUpgradeMode: isCreditUpgradeMode,
           creditPolicyPayload: isCreditUpgradeMode
@@ -796,7 +1082,12 @@ export const PartyProfileForm = ({
                 creditPolicyBaselineRef.current
               )
             : {},
-          hasNonCreditChanges: hasDirtyNonCreditPolicyFields(dirtyFields),
+          branchUpdateMode: isBranchUpdateMode,
+          branchIds:
+            isBranchUpdateMode &&
+            haveBranchIdsChanged(nextBranchIds, branchBaselineRef.current)
+              ? nextBranchIds
+              : undefined,
         });
       }}
       resolver={
@@ -827,9 +1118,12 @@ export const PartyProfileForm = ({
         allowBranchSelection={allowBranchSelection}
         isCreditUpgradeMode={isCreditUpgradeMode}
         onCreditUpgradeModeChange={handleCreditUpgradeModeChange}
+        isBranchUpdateMode={isBranchUpdateMode}
+        onBranchUpdateModeChange={handleBranchUpdateModeChange}
         onSubmitDisabledChange={setIsSubmitDisabled}
         onDirtyFieldsSnapshotChange={handleDirtyFieldsSnapshotChange}
         allowCreditPolicyUpgrade={allowCreditPolicyUpgrade}
+        allowBranchUpdate={allowBranchUpdate}
         branchDefaultOptions={branchDefaultOptions}
       />
     </Form>

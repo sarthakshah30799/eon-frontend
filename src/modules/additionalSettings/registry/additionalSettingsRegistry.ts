@@ -133,6 +133,17 @@ const TAX_CONFIGURATION_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefi
     },
   ];
 
+const ADDITIONAL_CHARGES_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] =
+  [
+    {
+      code: AdditionalSettingsCodeEnum.HandlingFees,
+      label: 'HANDLING FEES',
+      valueType: 'decimal',
+      required: false,
+      placeholder: 'Enter handling fees amount',
+    },
+  ];
+
 const TRANSACTION_SAC_CODE_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] =
   [
     {
@@ -713,6 +724,13 @@ export const ADDITIONAL_SETTING_DEFINITIONS: readonly AdditionalSettingCategoryD
       rendererKey: 'default',
       titleLocked: true,
       subcategories: TAX_CONFIGURATION_SUBCATEGORIES,
+    },
+    {
+      code: AdditionalSettingsCodeEnum.AdditionalCharges,
+      label: 'ADDITIONAL CHARGES',
+      rendererKey: 'default',
+      titleLocked: true,
+      subcategories: ADDITIONAL_CHARGES_SUBCATEGORIES,
     },
     {
       code: AdditionalSettingsCodeEnum.TransactionAccounting,

@@ -15,6 +15,7 @@ import type {
   IPartyProfileListQuery,
   IReviewPartyProfilePayload,
   IUpdatePartyProfile,
+  IUpdatePartyProfileBranches,
   IUpgradePartyProfileCreditPolicy,
   PartyProfileType,
 } from '../types/partyProfileTypes';
@@ -158,11 +159,7 @@ export const useUpgradePartyProfileCreditPolicy = (
       void queryClient.invalidateQueries({
         queryKey: ['party-profile', profileType, variables.id],
       });
-      toast.success(
-        data?.status === PartyProfileStatusEnum.PENDING
-          ? `${typeLabel} credit policy submitted for review!`
-          : `${typeLabel} credit policy updated successfully!`
-      );
+      toast.success(`${typeLabel} credit policy updated successfully!`);
     },
     onError: (error: unknown) => {
       toast.error(
@@ -177,6 +174,44 @@ export const useUpgradePartyProfileCreditPolicy = (
   return {
     ...mutation,
     upgradePartyProfileCreditPolicy: mutation.mutateAsync,
+  };
+};
+
+export const useUpdatePartyProfileBranches = (
+  profileType?: PartyProfileType
+) => {
+  const queryClient = useQueryClient();
+  const typeLabel = toPartyProfileDisplayLabel(profileType);
+
+  const mutation = useMutation({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: IUpdatePartyProfileBranches;
+    }) => partyProfileApi.updatePartyProfileBranches(id, data),
+    onSuccess: (data, variables) => {
+      syncPartyProfileCache(queryClient, data);
+      void queryClient.invalidateQueries({ queryKey: ['party-profiles'] });
+      void queryClient.invalidateQueries({
+        queryKey: ['party-profile', profileType, variables.id],
+      });
+      toast.success(`${typeLabel} branches updated successfully!`);
+    },
+    onError: (error: unknown) => {
+      toast.error(
+        getErrorMessage(
+          error,
+          `Failed to update ${typeLabel.toLowerCase()} branches`
+        )
+      );
+    },
+  });
+
+  return {
+    ...mutation,
+    updatePartyProfileBranches: mutation.mutateAsync,
   };
 };
 

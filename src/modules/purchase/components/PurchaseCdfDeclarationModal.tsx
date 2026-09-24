@@ -53,7 +53,7 @@ export const PurchaseCdfDeclarationModal = ({
       open={open}
       onOpenChange={onOpenChange}
       title="CDF Declaration"
-      description="Complete the declaration details required for this purchase before you submit."
+      description="Complete the declaration details required for this purchase. Save will stay disabled until you confirm."
       size="lg"
     >
       <div className="space-y-4">

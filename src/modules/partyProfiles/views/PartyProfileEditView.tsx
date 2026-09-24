@@ -2,11 +2,12 @@ import { useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { usePermission } from '@/hooks';
+import type { AsyncSelectOption } from '@/components/ui';
 import {
   useGetPartyProfile,
   usePartyProfileTypes,
   useReviewPartyProfile,
-  useUpdatePartyProfile,
+  useUpdatePartyProfileBranches,
   useUpgradePartyProfileCreditPolicy,
 } from '../hooks';
 import { PartyProfileForm } from '../forms/PartyProfileForm';
@@ -17,13 +18,13 @@ import {
   toPartyProfileRouteType,
   PARTY_PROFILE_STATUS_TEXT,
 } from '../constants';
-import { omitPartyProfileCreditPolicyValues } from '../utils/partyProfileCreditPolicyUtils';
 import { PartyProfileDocumentsActionButton } from '../components';
 import { NotFoundState } from '@/components/ui/not-found-state';
 import { AccessDeniedState } from '@/components/ui/access-denied-state';
 import type { PartyProfileType } from '../types/partyProfileTypes';
-
+import { PartyProfileTypeEnum } from '../types/partyProfileTypes';
 import { SurfacePanel } from '@/components/ui';
+
 const formatDateForInput = (dateString?: string | Date) => {
   if (!dateString) return '';
   const date = new Date(dateString);
@@ -74,10 +75,10 @@ export const PartyProfileEditView = () => {
     selectedApiType,
     Boolean(selectedApiType) && !isInvalidTypeRoute
   );
-  const { updatePartyProfile, isPending } =
-    useUpdatePartyProfile(selectedApiType);
   const { upgradePartyProfileCreditPolicy, isPending: isUpgradingCreditPolicy } =
     useUpgradePartyProfileCreditPolicy(selectedApiType);
+  const { updatePartyProfileBranches, isPending: isUpdatingBranches } =
+    useUpdatePartyProfileBranches(selectedApiType);
   const { reviewPartyProfile, isPending: isReviewing } =
     useReviewPartyProfile();
 
@@ -88,6 +89,22 @@ export const PartyProfileEditView = () => {
       });
     }
   }, [id, navigate, routeOptions, routeType]);
+
+  const assignedBranchIds = useMemo(() => {
+    if (client?.branchIds?.length) {
+      return client.branchIds.filter(Boolean);
+    }
+    return (client?.branches ?? []).map(branch => branch.id).filter(Boolean);
+  }, [client]);
+
+  const branchDefaultOptions = useMemo<AsyncSelectOption[]>(
+    () =>
+      (client?.branches ?? []).map(branch => ({
+        value: branch.id,
+        label: `${branch.code} - ${branch.name}`,
+      })),
+    [client?.branches]
+  );
 
   const defaultValues: Omit<ICreatePartyProfile, 'type'> = useMemo(
     () => ({
@@ -133,14 +150,13 @@ export const PartyProfileEditView = () => {
       purchase: client?.purchase ?? false,
       applyTax: client?.applyTax ?? false,
       igstOnly: client?.igstOnly ?? false,
+      gstExempt: client?.gstExempt ?? false,
       gstNo: client?.gstNo || '',
       sgstNo: client?.sgstNo || '',
       igstNo: client?.igstNo || '',
       gstStateId: client?.gstStateId || '',
       stateId: client?.stateId || '',
-      branchIds: client?.branchIds?.length
-        ? client.branchIds
-        : (client?.branches ?? []).map(branch => branch.id).filter(Boolean),
+      branchIds: assignedBranchIds,
       location: client?.location?.id || '',
       webSite: client?.webSite || '',
       accountHolderName: client?.accountHolderName || '',
@@ -155,61 +171,56 @@ export const PartyProfileEditView = () => {
       cardNumberLength: client?.cardNumberLength ?? 16,
       allowCardNumberMasking: client?.allowCardNumberMasking ?? false,
       divisionFactor: client?.divisionFactor,
+      dateOfJoining: formatDateForInput(client?.dateOfJoining),
+      dateOfExit: formatDateForInput(client?.dateOfExit),
+      basicSalary: client?.basicSalary ?? 0,
+      netSalary: client?.netSalary ?? 0,
+      dareness: client?.dareness ?? 0,
+      houseRent: client?.houseRent ?? 0,
+      conveyance: client?.conveyance ?? 0,
+      specialAllowance: client?.specialAllowance ?? 0,
+      otherAllowance: client?.otherAllowance ?? 0,
+      allowanceTotal: client?.allowanceTotal ?? 0,
+      pf: client?.pf ?? 0,
+      ppf: client?.ppf ?? 0,
+      pTax: client?.pTax ?? 0,
+      esic: client?.esic ?? 0,
+      incomeTax: client?.incomeTax ?? 0,
+      otherDeduction: client?.otherDeduction ?? 0,
+      deductionTotal: client?.deductionTotal ?? 0,
       commissionRules: client?.commissionRules ?? [],
     }),
-    [client]
-  );
-
-  const branchDefaultOptions = useMemo(
-    () =>
-      (client?.branches ?? []).map(branch => ({
-        value: branch.id,
-        label: `${branch.code} - ${branch.name}`,
-      })),
-    [client?.branches]
+    [assignedBranchIds, client]
   );
 
   const handleSubmit = async (
-    values: Omit<ICreatePartyProfile, 'type'>,
+    _values: Omit<ICreatePartyProfile, 'type'>,
     meta?: PartyProfileFormSubmitMeta
   ) => {
     if (!id) return;
-    const sanitized: ICreatePartyProfile = {
-      ...values,
-      type: selectedApiType,
-      rejectReason: undefined,
-      gstStateId: values.gstStateId || undefined,
-      stateId: values.stateId || undefined,
-      blockDateFrom: values.blockDateFrom || undefined,
-      establishmentDate: values.establishmentDate || undefined,
-      panDob: values.panDob || undefined,
-      email: values.email || undefined,
-    };
-    const updatePayload = { ...sanitized };
-    delete updatePayload.branchIds;
 
     const creditPolicyPayload = meta?.creditPolicyPayload ?? {};
     const hasCreditUpdates =
       meta?.creditUpgradeMode && Object.keys(creditPolicyPayload).length > 0;
-    const hasNonCreditChanges = Boolean(meta?.hasNonCreditChanges);
+    const hasBranchUpdates =
+      Boolean(meta?.branchUpdateMode) &&
+      Array.isArray(meta?.branchIds) &&
+      meta.branchIds.length > 0;
 
     if (hasCreditUpdates) {
       await upgradePartyProfileCreditPolicy({
         id,
         data: creditPolicyPayload,
       });
-    }
-
-    if (hasNonCreditChanges) {
-      await updatePartyProfile({
+    } else if (hasBranchUpdates) {
+      await updatePartyProfileBranches({
         id,
-        data: omitPartyProfileCreditPolicyValues(updatePayload),
+        data: { branchIds: meta!.branchIds! },
       });
-    }
-
-    if (!hasCreditUpdates && !hasNonCreditChanges) {
+    } else {
       return;
     }
+
     navigate({
       pathname: `/party-profiles/${selectedType}`,
     });
@@ -276,6 +287,9 @@ export const PartyProfileEditView = () => {
 
   const canEditPartyProfile =
     canModify && (isAdminUser || client.createdBy.id === user?.id);
+  const hideCreditPolicySection =
+    selectedApiType === PartyProfileTypeEnum.MISC_PROFILE ||
+    selectedApiType === PartyProfileTypeEnum.EMPLOYEE_PROFILE;
 
   return (
     <div className="space-y-4">
@@ -293,11 +307,16 @@ export const PartyProfileEditView = () => {
           profileType={selectedApiType}
           onCancel={handleCancel}
           onReviewSubmit={handleReviewSubmit}
-          isSubmitting={isPending || isReviewing || isUpgradingCreditPolicy}
-          disabled={!canEditPartyProfile}
+          isSubmitting={
+            isReviewing || isUpgradingCreditPolicy || isUpdatingBranches
+          }
+          disabled={true}
           reviewMode={showReviewControls}
           showSubmit={canEditPartyProfile}
-          allowCreditPolicyUpgrade={canEditPartyProfile}
+          allowCreditPolicyUpgrade={
+            canEditPartyProfile && !hideCreditPolicySection
+          }
+          allowBranchUpdate={canEditPartyProfile}
           submitLabel="Save Changes"
           currentId={id}
           branchDefaultOptions={branchDefaultOptions}

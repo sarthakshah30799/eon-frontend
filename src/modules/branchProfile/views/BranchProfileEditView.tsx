@@ -1,6 +1,10 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { BRANCH_PROFILE_TEXTS } from '../constants';
-import { useGetBranchProfile, useUpdateBranchProfile } from '../hooks';
+import {
+  useGetBranchProfile,
+  useUpdateBranchProfile,
+  useSaveBranchCounterPermissions,
+} from '../hooks';
 import { mapRecordToFormValues } from '../utils';
 import type { ICreateBranchProfile } from '../types';
 import { BranchProfileEditorView } from './BranchProfileEditorView';
@@ -11,6 +15,8 @@ export const BranchProfileEditView = () => {
   const { id = '' } = useParams<{ id: string }>();
   const { data: branchProfile, isLoading } = useGetBranchProfile(id);
   const { submitBranchProfile, isPending } = useUpdateBranchProfile(id);
+  const { counterRightsApiRef, saveCounterPermissionsForSelected } =
+    useSaveBranchCounterPermissions();
 
   if (isLoading) {
     return <Loader />;
@@ -26,6 +32,8 @@ export const BranchProfileEditView = () => {
 
   const handleSubmit = async (values: ICreateBranchProfile) => {
     await submitBranchProfile(values);
+    await saveCounterPermissionsForSelected();
+    navigate('/admin/branch-profile');
   };
 
   return (
@@ -41,6 +49,7 @@ export const BranchProfileEditView = () => {
         isSubmitting={isPending}
         branchAttachedToOptions={[]}
         currentId={id}
+        counterRightsApiRef={counterRightsApiRef}
       />
     </div>
   );

@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
-import { branchProfileApi } from '@/api';
+import { branchProfileApi, reportsApi } from '@/api';
 import { buildReportOptionLabel, toggleId, uniqueOptions } from '../utils';
 import {
   SpecialReportTemplateEnum,
@@ -20,13 +20,6 @@ import {
   setSearchParamList,
   setSearchParamValue,
 } from '../utils/reportSearchParams';
-
-const TEMPLATE_OPTIONS: IReportTemplateOption[] = [
-  {
-    id: SpecialReportTemplateEnum.ACCOUNT_POSTING,
-    label: 'Account Posting',
-  },
-];
 
 export const useSpecialReportFilters = () => {
   const { user } = useAuth();
@@ -95,6 +88,29 @@ export const useSpecialReportFilters = () => {
       }),
   });
 
+  const { data: templateOptions = [], isLoading: isLoadingTemplates } =
+    useQuery({
+      queryKey: ['reports-special-report-types'],
+      queryFn: async () => reportsApi.getSpecialReportTypes(),
+    });
+
+  const resolvedTemplate = useMemo(() => {
+    if (templateOptions.length === 0) {
+      return template;
+    }
+
+    const hasCurrent = templateOptions.some(option => option.id === template);
+    if (hasCurrent) {
+      return template;
+    }
+
+    return (
+      templateOptions.find(
+        option => option.id === SpecialReportTemplateEnum.ACCOUNT_POSTING
+      )?.id ?? templateOptions[0].id
+    );
+  }, [template, templateOptions]);
+
   const accessibleBranchProfiles = useMemo(
     () =>
       isRestrictedUser
@@ -130,7 +146,7 @@ export const useSpecialReportFilters = () => {
     branchOptions.length > 0 &&
     selectedBranchIds.length === branchOptions.length;
 
-  const canView = selectedBranchIds.length > 0;
+  const canView = selectedBranchIds.length > 0 && Boolean(resolvedTemplate);
 
   const handleView = () => {
     if (!canView) {
@@ -144,14 +160,14 @@ export const useSpecialReportFilters = () => {
 
     const nextAppliedFilters = {
       branchIds: selectedBranchIds,
-      template,
+      template: resolvedTemplate,
       transactionNumbers,
       sortBy,
     };
 
     const nextSearchParams = buildSearchParams(undefined, next => {
       setSearchParamList(next, 'branchIds', selectedBranchIds);
-      setSearchParamValue(next, 'template', template);
+      setSearchParamValue(next, 'template', resolvedTemplate);
       setSearchParamValue(next, 'sortBy', sortBy);
       setSearchParamList(next, 'transactionNumbers', transactionNumbers);
     });
@@ -161,8 +177,15 @@ export const useSpecialReportFilters = () => {
   };
 
   const resetFilters = () => {
+    const defaultTemplate =
+      templateOptions.find(
+        option => option.id === SpecialReportTemplateEnum.ACCOUNT_POSTING
+      )?.id ??
+      templateOptions[0]?.id ??
+      SpecialReportTemplateEnum.ACCOUNT_POSTING;
+
     setBranchIds([]);
-    setTemplate(SpecialReportTemplateEnum.ACCOUNT_POSTING);
+    setTemplate(defaultTemplate);
     setSortBy(ReportSortByEnum.DATE_ASC);
     setTransactionNumbersText('');
     setAppliedFilters(null);
@@ -183,13 +206,14 @@ export const useSpecialReportFilters = () => {
     branchAllSelected,
     toggleBranch,
     toggleAllBranches,
-    template,
+    template: resolvedTemplate,
     setTemplate,
     sortBy,
     setSortBy,
     transactionNumbersText,
     setTransactionNumbersText,
-    templateOptions: TEMPLATE_OPTIONS,
+    templateOptions: templateOptions as IReportTemplateOption[],
+    isLoadingTemplates,
     appliedFilters,
     handleView,
     resetFilters,

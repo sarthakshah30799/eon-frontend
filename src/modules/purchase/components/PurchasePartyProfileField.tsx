@@ -4,6 +4,7 @@ import { Button } from '@/components/ui';
 import { SelectPartyProfiles } from '@/modules/partyProfiles/components';
 import { resolvePassengerDisplayName } from '@/modules/passengers/utils/passengerDisplayName';
 import { HighRiskPartyProfileWarningModal } from './HighRiskPartyProfileWarningModal';
+import { GstExemptPartyProfileModal } from './GstExemptPartyProfileModal';
 import type { PartyProfileType } from '@/modules/partyProfiles/types';
 import type {
   IPartyProfileListQuery,
@@ -13,6 +14,7 @@ import type { IPurchaseFormValues } from '../types/purchaseTypes';
 import type { PurchasePageType } from '@/pages/purchase/[slug]/purchasePage.enum';
 import { isCorporateIndividualPurchasePage } from '@/pages/purchase/[slug]/purchasePage.enum';
 import { PassengerEntityTypeEnum } from '@/modules/passengers/types/passengerTypes';
+import { TransactionPartyProfileTypeEnum } from '@/modules/transactions/types/transactionTypes';
 import {
   formatPurchaseEntityLabel,
   getPurchaseTransactionPartyProfileFilter,
@@ -39,6 +41,7 @@ export const PurchasePartyProfileField = ({
   const form = useFormContext<IPurchaseFormValues>();
   const [open, setOpen] = useState(false);
   const [warningModalOpen, setWarningModalOpen] = useState(false);
+  const [gstExemptModalOpen, setGstExemptModalOpen] = useState(false);
   const [selectedProfileForWarning, setSelectedProfileForWarning] =
     useState<IPartyProfile | null>(null);
 
@@ -252,6 +255,14 @@ export const PurchasePartyProfileField = ({
       shouldValidate: false,
     });
     setOpen(false);
+
+    if (
+      transactionPartyProfileType ===
+        TransactionPartyProfileTypeEnum.CORPORATE &&
+      selectedProfile.gstExempt
+    ) {
+      setGstExemptModalOpen(true);
+    }
   };
 
   const handleWarningProceed = () => {
@@ -363,6 +374,11 @@ export const PurchasePartyProfileField = ({
         onConfirm={handleWarningProceed}
         onCancel={handleWarningCancel}
         onClose={handleWarningCancel}
+      />
+
+      <GstExemptPartyProfileModal
+        isOpen={gstExemptModalOpen}
+        onClose={() => setGstExemptModalOpen(false)}
       />
     </>
   );

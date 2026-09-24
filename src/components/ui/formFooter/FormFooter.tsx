@@ -13,6 +13,8 @@ interface FormFooterProps {
   isSubmitDisabled?: boolean;
   showSubmit?: boolean;
   actions?: ReactNode;
+  /** Rendered after Cancel and before Save. */
+  preSubmitActions?: ReactNode;
   submitMessage?: string;
 }
 
@@ -26,6 +28,7 @@ export const FormFooter = ({
   isSubmitDisabled = false,
   showSubmit = true,
   actions,
+  preSubmitActions,
   submitMessage,
 }: FormFooterProps) => {
   if (typeof document === 'undefined') {
@@ -64,6 +67,7 @@ export const FormFooter = ({
             Cancel
           </Button>
         )}
+        {preSubmitActions}
         {showSubmit ? (
           <Button
             type="submit"

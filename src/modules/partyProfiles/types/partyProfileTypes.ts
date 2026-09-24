@@ -104,6 +104,7 @@ export interface IPartyProfile {
   commissionRules?: IPartyProfileCommissionRule[];
   applyTax: boolean;
   igstOnly: boolean;
+  gstExempt: boolean;
   gstNo?: string;
   sgstNo?: string;
   igstNo?: string;

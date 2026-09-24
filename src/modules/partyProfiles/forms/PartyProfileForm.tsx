@@ -24,6 +24,7 @@ import {
   EMPLOYEE_PROFILE_FORM_TEXT,
   PARTY_PROFILE_BRANCH_UPDATE_TEXT,
   PARTY_PROFILE_CREDIT_POLICY_TEXT,
+  PARTY_PROFILE_TAX_SETTINGS_TEXT,
   toPartyProfileDisplayLabel,
   toPartyProfileApiType,
 } from '../constants';
@@ -887,6 +888,11 @@ const PartyProfileFormFields = ({
               <FormFieldCheckbox
                 name="igstOnly"
                 label="IGST Only"
+                disabled={isSubmitting}
+              />
+              <FormFieldCheckbox
+                name="gstExempt"
+                label={PARTY_PROFILE_TAX_SETTINGS_TEXT.gstExempt}
                 disabled={isSubmitting}
               />
             </>

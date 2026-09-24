@@ -30,6 +30,10 @@ export const PARTY_PROFILE_BRANCH_UPDATE_TEXT = {
     'Branches are locked after create. Click Update Branches to change assigned branches and save.',
 } as const;
 
+export const PARTY_PROFILE_TAX_SETTINGS_TEXT = {
+  gstExempt: 'GST Exempt',
+} as const;
+
 export const EMPLOYEE_PROFILE_FORM_TEXT = {
   detailsHeading: 'Employee Details',
   allowanceHeading: 'Allowance',

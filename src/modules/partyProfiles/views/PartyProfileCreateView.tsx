@@ -58,6 +58,7 @@ const createEmptyPartyProfileValues = (): Omit<ICreatePartyProfile, 'type'> => {
     purchase: false,
     applyTax: false,
     igstOnly: false,
+    gstExempt: false,
     gstNo: '',
     sgstNo: '',
     igstNo: '',

@@ -148,6 +148,7 @@ export const PartyProfileEditView = () => {
       purchase: client?.purchase ?? false,
       applyTax: client?.applyTax ?? false,
       igstOnly: client?.igstOnly ?? false,
+      gstExempt: client?.gstExempt ?? false,
       gstNo: client?.gstNo || '',
       sgstNo: client?.sgstNo || '',
       igstNo: client?.igstNo || '',

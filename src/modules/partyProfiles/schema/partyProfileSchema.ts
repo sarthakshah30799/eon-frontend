@@ -140,6 +140,7 @@ export const partyProfileSchema = yup.object({
   purchase: yup.boolean().default(false),
   applyTax: yup.boolean().default(false),
   igstOnly: yup.boolean().default(false),
+  gstExempt: yup.boolean().default(false),
   gstNo: yup.string().trim().optional().nullable(),
   sgstNo: yup.string().trim().optional().nullable(),
   igstNo: yup.string().trim().optional().nullable(),

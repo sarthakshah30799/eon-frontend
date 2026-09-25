@@ -6,6 +6,7 @@ import type {
   UserRightsTreeNode,
   UserRightsRow,
 } from '../types';
+import { USER_ROLE_TEXTS } from '../constants';
 
 interface UserRoleRightsSectionProps {
   rightsTreeNodes: UserRightsTreeNode[];
@@ -28,6 +29,8 @@ interface UserRoleRightsSectionProps {
   ) => void;
   isLoading?: boolean;
   error?: Error | null;
+  title?: string;
+  subtitle?: string;
 }
 
 export const UserRoleRightsSection = ({
@@ -44,6 +47,8 @@ export const UserRoleRightsSection = ({
   onTogglePermission,
   isLoading = false,
   error = null,
+  title = USER_ROLE_TEXTS.RIGHTS_TITLE,
+  subtitle = USER_ROLE_TEXTS.RIGHTS_SUBTITLE,
 }: UserRoleRightsSectionProps) => {
   if (error) {
     return (
@@ -57,11 +62,9 @@ export const UserRoleRightsSection = ({
     <section className="rounded-sm border border-border-primary bg-surface-secondary p-4 space-y-4">
       <div>
         <h2 className="text-sm font-semibold uppercase tracking-[0.24em] text-text-tertiary">
-          User Rights
+          {title}
         </h2>
-        <p className="mt-1 text-sm text-text-secondary">
-          Control access to available options and manage permissions by action.
-        </p>
+        <p className="mt-1 text-sm text-text-secondary">{subtitle}</p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
@@ -77,6 +80,7 @@ export const UserRoleRightsSection = ({
             />
           )}
         </div>
+
 
         <div className="overflow-hidden rounded-sm border border-border-primary bg-surface-primary p-4">
           <div className="mb-4">

@@ -1,14 +1,27 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Button, Table, type TableColumnDef } from '@/components/ui';
-import { useOffsetPaginatedList } from '@/hooks';
+import { EyeIcon, PencilSquareIcon } from '@heroicons/react/24/outline';
+import {
+  Button,
+  SurfacePanel,
+  Table,
+  type AsyncSelectOption,
+  type TableColumnDef,
+} from '@/components/ui';
+import {
+  buildSearchToolbarFilter,
+  buildStaticAsyncSelectToolbarFilter,
+  TABLE_ACTIONS_CELL_CLASSNAME,
+  TABLE_ACTION_BUTTON_CLASSNAME,
+  TABLE_ACTION_ICON_CLASSNAME,
+} from '@/components/ui/table';
+import { useDebounce, useOffsetPaginatedList } from '@/hooks';
 import { PAGINATION_DEFAULTS } from '@/constants/paginationConstants';
 import { formatDateTime } from '@/utils';
 import {
   ProductSettlementDocumentStatus,
   productSettlementApi,
   type ProductSettlementDocument,
-  type ProductSettlementDocumentFilters,
 } from '@/api/productSettlement';
 import {
   PRODUCT_SETTLEMENT_STATUS_OPTIONS,
@@ -25,23 +38,93 @@ const label = (
   snapshot?.code ??
   fallback;
 
+const readStatusValues = (searchParams: URLSearchParams) => {
+  const allowed = new Set(
+    PRODUCT_SETTLEMENT_STATUS_OPTIONS.map(option => option.value)
+  );
+  return [
+    ...new Set(
+      searchParams
+        .getAll('status')
+        .flatMap(value => value.split(','))
+        .map(value => value.trim())
+        .filter((value): value is ProductSettlementDocumentStatus =>
+          allowed.has(value as ProductSettlementDocumentStatus)
+        )
+    ),
+  ];
+};
+
 export const ProductSettlementListView = () => {
   const navigate = useNavigate();
-  const [, setSearchParams] = useSearchParams();
-  const [filters, setFilters] = useState<
-    Omit<ProductSettlementDocumentFilters, 'limit' | 'offset'>
-  >({});
+  const [searchParams, setSearchParams] = useSearchParams();
+  const search = searchParams.get('search') ?? '';
+  const debouncedSearch = useDebounce(search, 400);
+  const selectedStatuses = useMemo(
+    () => readStatusValues(searchParams),
+    [searchParams]
+  );
+  const statusOptions = useMemo<AsyncSelectOption[]>(
+    () =>
+      PRODUCT_SETTLEMENT_STATUS_OPTIONS.map(option => ({
+        value: option.value,
+        label: option.label,
+      })),
+    []
+  );
+  const selectedStatusOptions = useMemo(
+    () =>
+      statusOptions.filter(option =>
+        selectedStatuses.some(status => status === String(option.value))
+      ),
+    [selectedStatuses, statusOptions]
+  );
 
-  const resetOffset = useCallback(() => {
-    setSearchParams(prev => {
-      const next = new URLSearchParams(prev);
-      next.set('offset', String(PAGINATION_DEFAULTS.OFFSET));
-      if (!next.has('limit')) {
-        next.set('limit', String(PAGINATION_DEFAULTS.LIMIT));
-      }
-      return next;
-    });
-  }, [setSearchParams]);
+  const filters = useMemo(
+    () => ({
+      status: selectedStatuses.length ? selectedStatuses : undefined,
+      search: debouncedSearch.trim() || undefined,
+    }),
+    [debouncedSearch, selectedStatuses]
+  );
+
+  const resetOffsetParams = useCallback((next: URLSearchParams) => {
+    next.set('offset', String(PAGINATION_DEFAULTS.OFFSET));
+    if (!next.has('limit')) {
+      next.set('limit', String(PAGINATION_DEFAULTS.LIMIT));
+    }
+    return next;
+  }, []);
+
+  const handleSearch = useCallback(
+    (value: string) => {
+      setSearchParams(prev => {
+        const next = new URLSearchParams(prev);
+        if (value.trim()) {
+          next.set('search', value.trim());
+        } else {
+          next.delete('search');
+        }
+        return resetOffsetParams(next);
+      });
+    },
+    [resetOffsetParams, setSearchParams]
+  );
+
+  const handleStatusChange = useCallback(
+    (options: AsyncSelectOption[]) => {
+      setSearchParams(prev => {
+        const next = new URLSearchParams(prev);
+        next.delete('status');
+        options.forEach(option => {
+          const value = String(option.value ?? '').trim();
+          if (value) next.append('status', value);
+        });
+        return resetOffsetParams(next);
+      });
+    },
+    [resetOffsetParams, setSearchParams]
+  );
 
   const {
     rows,
@@ -113,21 +196,38 @@ export const ProductSettlementListView = () => {
       {
         id: 'actions',
         header: PRODUCT_SETTLEMENT_TEXT.actions,
-        cell: ({ row }) => (
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={() =>
-              navigate(`/product-settlement/edit/${row.original.id}`)
-            }
-          >
-            {row.original.status ===
-            ProductSettlementDocumentStatus.PENDING_HO_ACCEPTANCE
-              ? PRODUCT_SETTLEMENT_TEXT.editReview
-              : PRODUCT_SETTLEMENT_TEXT.view}
-          </Button>
-        ),
+        cell: ({ row }) => {
+          const canEdit =
+            row.original.status ===
+            ProductSettlementDocumentStatus.PENDING_HO_ACCEPTANCE;
+
+          return (
+            <div className={TABLE_ACTIONS_CELL_CLASSNAME}>
+              <Button
+                type="button"
+                aria-label={
+                  canEdit
+                    ? PRODUCT_SETTLEMENT_TEXT.editSettlement
+                    : PRODUCT_SETTLEMENT_TEXT.viewSettlement
+                }
+                variant="ghost"
+                size="icon"
+                className={TABLE_ACTION_BUTTON_CLASSNAME}
+                onClick={event => {
+                  event.stopPropagation();
+                  navigate(`/product-settlement/edit/${row.original.id}`);
+                }}
+              >
+                {canEdit ? (
+                  <PencilSquareIcon className={TABLE_ACTION_ICON_CLASSNAME} />
+                ) : (
+                  <EyeIcon className={TABLE_ACTION_ICON_CLASSNAME} />
+                )}
+              </Button>
+            </div>
+          );
+        },
+        enableSorting: false,
       },
     ],
     [navigate]
@@ -135,41 +235,30 @@ export const ProductSettlementListView = () => {
 
   const toolbarFilters = useMemo(
     () => [
-      {
+      buildSearchToolbarFilter({
+        value: search,
+        onChange: handleSearch,
+        label: PRODUCT_SETTLEMENT_TEXT.search,
+        placeholder: PRODUCT_SETTLEMENT_TEXT.searchPlaceholder,
+      }),
+      buildStaticAsyncSelectToolbarFilter({
         id: 'status',
-        type: 'custom' as const,
-        className: 'w-full shrink-0',
-        render: () => (
-          <div className="flex flex-wrap gap-2">
-            {PRODUCT_SETTLEMENT_STATUS_OPTIONS.map(option => (
-              <Button
-                key={option.value}
-                type="button"
-                size="sm"
-                variant={
-                  (filters.status ?? 'ALL') === option.value
-                    ? 'default'
-                    : 'outline'
-                }
-                onClick={() => {
-                  setFilters(current => ({
-                    ...current,
-                    status:
-                      option.value === 'ALL'
-                        ? undefined
-                        : (option.value as ProductSettlementDocumentStatus),
-                  }));
-                  resetOffset();
-                }}
-              >
-                {option.label}
-              </Button>
-            ))}
-          </div>
-        ),
-      },
+        label: PRODUCT_SETTLEMENT_TEXT.status,
+        options: statusOptions,
+        value: selectedStatusOptions,
+        isMulti: true,
+        placeholder: PRODUCT_SETTLEMENT_TEXT.statusPlaceholder,
+        className: 'min-w-56 shrink-0',
+        onChange: handleStatusChange,
+      }),
     ],
-    [filters.status, resetOffset]
+    [
+      handleSearch,
+      handleStatusChange,
+      search,
+      selectedStatusOptions,
+      statusOptions,
+    ]
   );
 
   return (
@@ -190,7 +279,7 @@ export const ProductSettlementListView = () => {
           {PRODUCT_SETTLEMENT_TEXT.newSettlement}
         </Button>
       </div>
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+      <SurfacePanel>
         <Table
           columns={columns}
           data={rows}
@@ -212,7 +301,7 @@ export const ProductSettlementListView = () => {
               : PRODUCT_SETTLEMENT_TEXT.empty
           }
         />
-      </section>
+      </SurfacePanel>
     </div>
   );
 };

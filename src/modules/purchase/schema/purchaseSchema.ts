@@ -36,6 +36,8 @@ import {
   isPassengerTravelTicketFieldVisible,
 } from '@/modules/passengers/utils/passengerIdentityRules';
 import { PASSENGER_IDENTITY_TEXT } from '@/modules/passengers/constants/passengerConstants';
+// Arrival/departure vs transaction-date order is enforced on the passenger
+// details form only, not on main purchase/sale Save.
 import {
   isCardProductCode,
   isTtProductCode,

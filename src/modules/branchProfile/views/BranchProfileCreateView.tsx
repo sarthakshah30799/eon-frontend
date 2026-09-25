@@ -1,16 +1,22 @@
 import { BRANCH_PROFILE_TEXTS } from '../constants';
 import { createEmptyBranchProfileFormValues } from '../utils';
 import type { ICreateBranchProfile } from '../types';
-import { useCreateBranchProfile } from '../hooks';
+import {
+  useCreateBranchProfile,
+  useSaveBranchCounterPermissions,
+} from '../hooks';
 import { BranchProfileEditorView } from './BranchProfileEditorView';
 import { useNavigate } from 'react-router-dom';
 
 export const BranchProfileCreateView = () => {
   const navigate = useNavigate();
   const { submitBranchProfile, isPending } = useCreateBranchProfile();
+  const { counterRightsApiRef, saveCounterPermissionsForSelected } =
+    useSaveBranchCounterPermissions();
 
   const handleSubmit = async (values: ICreateBranchProfile) => {
     await submitBranchProfile(values);
+    await saveCounterPermissionsForSelected();
     navigate('/admin/branch-profile');
   };
 
@@ -27,6 +33,7 @@ export const BranchProfileCreateView = () => {
       onCancel={() => navigate('/admin/branch-profile')}
       isSubmitting={isPending}
       branchAttachedToOptions={[]}
+      counterRightsApiRef={counterRightsApiRef}
     />
   );
 };

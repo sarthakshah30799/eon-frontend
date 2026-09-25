@@ -7,6 +7,7 @@ import { purposeApi } from '@/api/purpose';
 import { PURPOSE_TEXTS } from '../constants/purposeConstants';
 import { PurposeTable } from '../components/PurposeTable';
 import { useDeletePurpose } from '../hooks';
+import { SurfacePanel } from '@/components/ui';
 
 export const PurposeListView = () => {
   const navigate = useNavigate();
@@ -80,7 +81,7 @@ export const PurposeListView = () => {
         )}
       </div>
 
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+      <SurfacePanel>
         <PurposeTable
           purposes={purposes}
           onDelete={handleDelete}
@@ -97,7 +98,7 @@ export const PurposeListView = () => {
           onPageChange={handlePageChange}
           onPageSizeChange={handlePageSizeChange}
         />
-      </section>
+      </SurfacePanel>
     </div>
   );
 };

@@ -140,13 +140,18 @@ export const partyProfileSchema = yup.object({
   purchase: yup.boolean().default(false),
   applyTax: yup.boolean().default(false),
   igstOnly: yup.boolean().default(false),
+  gstExempt: yup.boolean().default(false),
   gstNo: yup.string().trim().optional().nullable(),
   sgstNo: yup.string().trim().optional().nullable(),
   igstNo: yup.string().trim().optional().nullable(),
   gstStateId: yup.string().trim().optional().nullable(),
   stateId: yup.string().trim().optional().nullable(),
 
-  branchId: yup.string().trim().optional().nullable(),
+  branchIds: yup
+    .array()
+    .of(yup.string().trim().required())
+    .min(1, 'At least one current branch is required')
+    .required('At least one current branch is required'),
   location: yup.string().trim().optional().nullable(),
   webSite: yup.string().trim().optional().nullable(),
   accountHolderName: yup.string().trim().optional().nullable(),
@@ -172,6 +177,38 @@ export const partyProfileSchema = yup.object({
     .typeError('Division Factor must be a number')
     .optional()
     .nullable(),
+  dateOfJoining: yup.string().trim().optional().nullable(),
+  dateOfExit: yup.string().trim().optional().nullable(),
+  basicSalary: yup.number().typeError('Basic Salary must be a number').default(0),
+  netSalary: yup.number().typeError('Net Salary must be a number').default(0),
+  dareness: yup.number().typeError('Dareness must be a number').default(0),
+  houseRent: yup.number().typeError('House Rent must be a number').default(0),
+  conveyance: yup.number().typeError('Conveyance must be a number').default(0),
+  specialAllowance: yup
+    .number()
+    .typeError('Special allowance must be a number')
+    .default(0),
+  otherAllowance: yup
+    .number()
+    .typeError('Other allowance must be a number')
+    .default(0),
+  allowanceTotal: yup
+    .number()
+    .typeError('Allowance Total must be a number')
+    .default(0),
+  pf: yup.number().typeError('P.F. must be a number').default(0),
+  ppf: yup.number().typeError('P.P.F. must be a number').default(0),
+  pTax: yup.number().typeError('P. Tax must be a number').default(0),
+  esic: yup.number().typeError('E.S.I.C must be a number').default(0),
+  incomeTax: yup.number().typeError('Income Tax must be a number').default(0),
+  otherDeduction: yup
+    .number()
+    .typeError('Other deduction must be a number')
+    .default(0),
+  deductionTotal: yup
+    .number()
+    .typeError('Deduction Total must be a number')
+    .default(0),
   commissionRules: yup
     .array()
     .of(

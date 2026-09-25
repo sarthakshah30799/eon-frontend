@@ -17,6 +17,7 @@ import type {
   IProductProfitReportResponse,
   ISpecialReportRequest,
   ISpecialReportResponse,
+  ISpecialReportTypeOption,
   ISalePurchaseReportRequest,
   ISalePurchaseReportResponse,
   IFlm1DailyCnSummaryRequest,
@@ -87,6 +88,18 @@ export const reportsApi = {
     }
 
     return res.data;
+  },
+
+  getSpecialReportTypes: async (): Promise<ISpecialReportTypeOption[]> => {
+    const res = await apiClient.get<ISpecialReportTypeOption[]>(
+      '/reports/special-report/types'
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    return res.data ?? [];
   },
 
   getSpecialReport: async (

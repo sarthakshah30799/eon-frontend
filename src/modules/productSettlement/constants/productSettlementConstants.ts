@@ -56,6 +56,8 @@ export const PRODUCT_SETTLEMENT_TEXT = {
   kindIssuer: 'HO to Issuer',
   view: 'View',
   editReview: 'Edit / Review',
+  viewSettlement: 'View product settlement',
+  editSettlement: 'Edit product settlement',
   created: 'Product settlement created.',
   accepted: 'Product settlement accepted.',
   rejected: 'Product settlement rejected.',
@@ -65,13 +67,15 @@ export const PRODUCT_SETTLEMENT_TEXT = {
   notFound: 'Product settlement not found.',
   itemsCount: 'Items',
   status: 'Status',
+  statusPlaceholder: 'All Statuses',
+  search: 'Search',
+  searchPlaceholder: 'Search transaction, issuer, currency, or branch',
   actions: 'Actions',
   typeCard: 'CARD',
   typeTt: 'TT',
 } as const;
 
 export const PRODUCT_SETTLEMENT_STATUS_OPTIONS = [
-  { value: 'ALL', label: 'All' },
   { value: 'PENDING_HO_ACCEPTANCE', label: 'Pending HO Acceptance' },
   { value: 'ACCEPTED', label: 'Accepted' },
   { value: 'ISSUER_SETTLED', label: 'Issuer Settled' },

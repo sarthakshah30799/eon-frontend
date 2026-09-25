@@ -7,6 +7,7 @@ import {
   type TableColumnDef,
   type AsyncSelectOption,
 } from '@/components/ui';
+import { TABLE_ACTIONS_CELL_CLASSNAME } from '@/components/ui/table';
 import { SelectUserProfiles } from '@/modules/userProfile/components';
 import { useLoadBranchOptions } from '@/modules/branchProfile/hooks';
 import type { IUserProfile } from '@/modules/userProfile/types';
@@ -79,17 +80,19 @@ export const BranchUserAccessRulesManager = ({
       id: 'actions',
       header: 'Actions',
       cell: ({ row }) => (
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="border-0! bg-transparent! text-red-700!"
-          onClick={() => {
-            void onRevokeRule(row.original.id);
-          }}
-        >
-          Revoke
-        </Button>
+        <div className={TABLE_ACTIONS_CELL_CLASSNAME}>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-5 px-2 py-0 text-error-600 hover:bg-error-50 hover:text-error-700"
+            onClick={() => {
+              void onRevokeRule(row.original.id);
+            }}
+          >
+            Revoke
+          </Button>
+        </div>
       ),
     });
 

@@ -115,4 +115,26 @@ export const counterProfileApi = {
     if (res.error) throw new Error(res.error);
     return true;
   },
+
+  getCounterPermissions: async (
+    id: string
+  ): Promise<Record<string, Record<string, boolean>>> => {
+    const res = await apiClient.get<Record<string, Record<string, boolean>>>(
+      `/counters/${id}/permissions`
+    );
+    if (res.error) throw new Error(res.error);
+    return res.data || {};
+  },
+
+  saveCounterPermissions: async (
+    id: string,
+    permissions: Record<string, Record<string, boolean>>
+  ): Promise<boolean> => {
+    const res = await apiClient.post<{ message: string }>(
+      `/counters/${id}/permissions`,
+      permissions
+    );
+    if (res.error) throw new Error(res.error);
+    return true;
+  },
 };

@@ -7,6 +7,7 @@ import { userProfileApi } from '@/api/userProfile';
 import { useDeleteUserProfile } from '../hooks';
 import { USER_PROFILE_TEXTS } from '../constants';
 import { UserProfileTable } from '../components';
+import { SurfacePanel } from '@/components/ui';
 
 export const UserProfileListView = () => {
   const navigate = useNavigate();
@@ -80,7 +81,7 @@ export const UserProfileListView = () => {
         </div>
       )}
 
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+      <SurfacePanel>
         <UserProfileTable
           profiles={profiles}
           onDelete={handleDelete}
@@ -97,7 +98,7 @@ export const UserProfileListView = () => {
           onPageChange={handlePageChange}
           onPageSizeChange={handlePageSizeChange}
         />
-      </section>
+      </SurfacePanel>
     </div>
   );
 };

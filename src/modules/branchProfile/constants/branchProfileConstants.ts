@@ -19,6 +19,15 @@ export const BRANCH_PROFILE_TEXTS = {
   CREATE_ERROR: 'Failed to create company branch',
   UPDATE_ERROR: 'Failed to update company branch',
   DELETE_ERROR: 'Failed to delete company branch',
+  COUNTER_RIGHTS_TITLE: 'Counter Access Rights',
+  COUNTER_RIGHTS_SUBTITLE:
+    'Set screen permissions for each connected counter. Access requires both counter and user-role rights.',
+  COUNTER_RIGHTS_SELECTOR_LABEL: 'Rights for Counter',
+  COUNTER_RIGHTS_SELECTOR_PLACEHOLDER: 'Select a connected counter',
+  COUNTER_RIGHTS_SELECTOR_HINT:
+    'Each counter has its own rights matrix. Changes apply wherever this counter is used.',
+  COUNTER_RIGHTS_SAVE_ERROR: 'Failed to save counter access rights',
+  COUNTER_RIGHTS_SAVE_SUCCESS: 'Counter access rights saved successfully!',
 } as const;
 
 export const LOCATION_TYPE_OPTIONS: IBranchProfileOption[] = [

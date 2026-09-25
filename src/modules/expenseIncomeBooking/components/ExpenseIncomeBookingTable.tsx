@@ -1,7 +1,13 @@
 import { useNavigate } from 'react-router-dom';
 import { PencilSquareIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button1';
-import { Table, type TableColumnDef } from '@/components/ui/table';
+import {
+  Table,
+  type TableColumnDef,
+  TABLE_ACTIONS_CELL_CLASSNAME,
+  TABLE_ACTION_BUTTON_CLASSNAME,
+  TABLE_ACTION_ICON_CLASSNAME,
+} from '@/components/ui/table';
 import type { PaginationControlsProps } from '@/components/ui';
 import { formatDateTime } from '@/utils';
 import { usePermission } from '@/hooks';
@@ -78,34 +84,28 @@ export const ExpenseIncomeBookingTable = ({
     {
       id: 'actions',
       header: 'Actions',
-      meta: {
-        headerClassName:
-          'sticky right-0 z-20 border-l border-border-primary bg-surface-secondary',
-        cellClassName:
-          'sticky right-0 z-10 border-l border-border-primary bg-surface-primary',
-      },
       cell: ({ row }) => {
         const id = row.original.id;
 
         if (!canModify && !canView) return null;
 
         return (
-          <div className="flex items-center gap-2">
+          <div className={TABLE_ACTIONS_CELL_CLASSNAME}>
             <Button
               type="button"
               aria-label={canModify ? 'Edit master' : 'View master'}
               variant="ghost"
               size="icon"
-              className="rounded-sm bg-transparent text-black! hover:bg-surface-secondary hover:text-text-primary"
+              className={TABLE_ACTION_BUTTON_CLASSNAME}
               onClick={event => {
                 event.stopPropagation();
                 navigate(`${basePath}/edit/${id}`);
               }}
             >
               {canModify ? (
-                <PencilSquareIcon className="h-5 w-5" />
+                <PencilSquareIcon className={TABLE_ACTION_ICON_CLASSNAME} />
               ) : (
-                <EyeIcon className="h-5 w-5" />
+                <EyeIcon className={TABLE_ACTION_ICON_CLASSNAME} />
               )}
             </Button>
           </div>

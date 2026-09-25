@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useFieldArray, useFormContext, useWatch, type FieldPath } from 'react-hook-form';
 import {
@@ -36,6 +37,12 @@ import type {
   ICardStockFormValues,
 } from '../types';
 import {
+  CARD_STOCK_FIXED_DENOMINATION,
+  CARD_STOCK_SUBMIT_TEXT,
+} from '../constants/cardStockConstants';
+
+import {
+  cardStockDenominationAmount,
   emptyCard,
   emptyItem,
   toReceiptPayload,
@@ -190,9 +197,9 @@ const CardRows = ({
     selectedIssuer?.cardNumberLength
   );
   const allowMasking = Boolean(selectedIssuer?.allowCardNumberMasking);
-  const cardCalculationKey = (cards ?? [])
+  const cardCalculationKey = `${(cards ?? []).length}|${(cards ?? [])
     .map(card => card.denomination ?? '')
-    .join('|');
+    .join('|')}`;
 
   useEffect(() => {
     const nextCards =
@@ -200,7 +207,22 @@ const CardRows = ({
         | ICardStockFormCard[]
         | undefined) ?? [];
     nextCards.forEach((card, cardIndex) => {
-      const amount = Number(card.denomination || 0).toFixed(2);
+      if (!readOnly) {
+        const denominationPath = `items.${itemIndex}.cards.${cardIndex}.denomination`;
+        if (
+          (form.getValues(denominationPath as never) as unknown as string) !==
+          CARD_STOCK_FIXED_DENOMINATION
+        ) {
+          form.setValue(
+            denominationPath as never,
+            CARD_STOCK_FIXED_DENOMINATION as never,
+            { shouldValidate: true }
+          );
+        }
+      }
+      const amount = cardStockDenominationAmount(
+        readOnly ? card.denomination : CARD_STOCK_FIXED_DENOMINATION
+      );
       const amountPath = `items.${itemIndex}.cards.${cardIndex}.amount`;
       if ((form.getValues(amountPath as never) as unknown as string) !== amount)
         form.setValue(amountPath as never, amount as never, {
@@ -208,14 +230,21 @@ const CardRows = ({
         });
     });
     const total = nextCards
-      .reduce((sum, card) => sum + Number(card.denomination || 0), 0)
+      .reduce(
+        (sum, card) =>
+          sum +
+          Number(
+            (readOnly ? card.denomination : CARD_STOCK_FIXED_DENOMINATION) || 0
+          ),
+        0
+      )
       .toFixed(2);
     const totalPath = `items.${itemIndex}.feAmount`;
     if ((form.getValues(totalPath as never) as unknown as string) !== total)
       form.setValue(totalPath as never, total as never, {
         shouldValidate: true,
       });
-  }, [cardCalculationKey, itemIndex, form]);
+  }, [cardCalculationKey, itemIndex, form, readOnly]);
 
   const columns = useMemo<TableColumnDef<{ id: string }>[]>(
     () => [
@@ -266,7 +295,7 @@ const CardRows = ({
             name={`items.${itemIndex}.cards.${row.index}.denomination`}
             label=""
             type="number"
-            disabled={readOnly}
+            disabled
           />
         ),
       },
@@ -296,7 +325,7 @@ const CardRows = ({
         ),
       },
       {
-        id: 'actions',
+        id: 'remove',
         header: '',
         cell: ({ row }) =>
           !readOnly && fields.length > 1 ? (
@@ -531,9 +560,11 @@ const ReceiptItems = ({
 const CardIssuerProfileField = ({
   readOnly,
   issuers,
+  branchId,
 }: {
   readOnly: boolean;
   issuers: IPartyProfile[];
+  branchId?: string;
 }) => {
   const form = useFormContext<ICardStockFormValues>();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -553,7 +584,7 @@ const CardIssuerProfileField = ({
           type="button"
           variant="outline"
           className="w-full justify-start truncate"
-          disabled={readOnly}
+          disabled={readOnly || !branchId}
           onClick={() => setIsModalOpen(true)}
         >
           {selectedIssuer
@@ -564,6 +595,7 @@ const CardIssuerProfileField = ({
       <SelectPartyProfiles
         open={isModalOpen}
         types={PartyProfileTypeEnum.CARD_ISSUER_PROFILE}
+        queryParams={branchId ? { branchId } : undefined}
         selectable
         title="Select Card Issuer Profile"
         description="Select an active and approved card issuer profile."
@@ -585,6 +617,7 @@ const CardIssuerProfileField = ({
 const ReceiptHeader = ({
   readOnly,
   issuers,
+  branchId,
   canSelectBranch,
   loadBranchOptions,
   transactionDatePolicy,
@@ -592,6 +625,7 @@ const ReceiptHeader = ({
 }: {
   readOnly: boolean;
   issuers: IPartyProfile[];
+  branchId?: string;
   canSelectBranch: boolean;
   loadBranchOptions: (
     inputValue: string,
@@ -600,6 +634,21 @@ const ReceiptHeader = ({
   transactionDatePolicy: ReturnType<typeof getTransactionDatePolicy>;
   onBranchChange: (value: string | string[] | null) => void;
 }) => {
+  const form = useFormContext<ICardStockFormValues>();
+  const watchedBranchId = useWatch({ control: form.control, name: 'branchId' });
+  const lastBranchIdRef = useRef(watchedBranchId || '');
+
+  useEffect(() => {
+    if (readOnly) return;
+    const previous = lastBranchIdRef.current;
+    lastBranchIdRef.current = watchedBranchId || '';
+    if (!previous || previous === (watchedBranchId || '')) return;
+    form.setValue('issuerPartyProfileId', '', {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+  }, [form, readOnly, watchedBranchId]);
+
   return (
     <CardSection heading="Receipt Stock" className="space-y-4">
       <div className="grid gap-3 md:grid-cols-4">
@@ -626,7 +675,11 @@ const ReceiptHeader = ({
           disabled
           placeholder="Generated by account numbering"
         />
-        <CardIssuerProfileField readOnly={readOnly} issuers={issuers} />
+        <CardIssuerProfileField
+          readOnly={readOnly}
+          issuers={issuers}
+          branchId={branchId || watchedBranchId}
+        />
       </div>
       <p className="text-xs text-text-secondary">
         CARD products CC (single currency) and CM (multi-currency). CM stocks
@@ -643,7 +696,7 @@ export const CardStockReceiptForm = ({
   footerActions,
   onSubmit,
 }: CardStockFormProps) => {
-  const references = useCardStockReferences();
+  const navigate = useNavigate();
   const { user, policyContext, activeBranchId } = useAuth();
   const canSelectBranch = Boolean(
     user?.isAdmin || user?.isHo || user?.isHoStaff
@@ -651,6 +704,7 @@ export const CardStockReceiptForm = ({
   const [selectedBranchId, setSelectedBranchId] = useState(
     initialValues.branchId
   );
+  const references = useCardStockReferences(selectedBranchId);
   const loadBranchOptionsBase = useLoadBranchOptions({ activeOnly: true });
   const { data: selectedBranch } = useGetBranchProfile(selectedBranchId);
   const loadBranchOptions = useCallback(
@@ -709,6 +763,30 @@ export const CardStockReceiptForm = ({
   );
   const formSubmit = async (values: ICardStockFormValues) =>
     onSubmit(toReceiptPayload(values));
+  const isSubmitDisabled =
+    !readOnly &&
+    (!selectedBranchId ||
+      selectedBranchPolicy.isPending ||
+      !transactionDatePolicy.canPunchTransactions);
+  const submitMessage = useMemo(() => {
+    if (readOnly) return '';
+    if (!selectedBranchId) return CARD_STOCK_SUBMIT_TEXT.blockedNoBranch;
+    if (selectedBranchPolicy.isPending)
+      return CARD_STOCK_SUBMIT_TEXT.blockedLoadingPolicy;
+    if (!transactionDatePolicy.canPunchTransactions) {
+      return (
+        transactionDatePolicy.helperText ||
+        CARD_STOCK_SUBMIT_TEXT.blockedCannotPunch
+      );
+    }
+    return '';
+  }, [
+    readOnly,
+    selectedBranchId,
+    selectedBranchPolicy.isPending,
+    transactionDatePolicy.canPunchTransactions,
+    transactionDatePolicy.helperText,
+  ]);
   useEffect(() => {
     if (!import.meta.env.DEV || readOnly) return;
     console.info('[CARD STOCK] transaction date policy', transactionDatePolicy);
@@ -733,12 +811,16 @@ export const CardStockReceiptForm = ({
       footer={{
         submitLabel: 'Submit Receipt Stock',
         showSubmit: !readOnly,
-        isSubmitDisabled:
-          !readOnly &&
-          (!transactionDatePolicy.canPunchTransactions ||
-            selectedBranchPolicy.isFetching ||
-            !selectedBranchId),
-        onCancel: () => window.history.back(),
+        isSubmitDisabled,
+        submitMessage: submitMessage || undefined,
+        ...(readOnly
+          ? {
+              backLabel: CARD_STOCK_SUBMIT_TEXT.back,
+              onBackClick: () => navigate('/card-stock'),
+            }
+          : {
+              onCancel: () => navigate('/card-stock'),
+            }),
         actions: footerActions,
       }}
     >
@@ -751,6 +833,7 @@ export const CardStockReceiptForm = ({
       <ReceiptHeader
         readOnly={readOnly}
         issuers={references.issuers}
+        branchId={selectedBranchId}
         canSelectBranch={canSelectBranch}
         loadBranchOptions={loadBranchOptions}
         transactionDatePolicy={transactionDatePolicy}

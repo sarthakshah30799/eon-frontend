@@ -7,6 +7,7 @@ import { documentProfileApi } from '@/api/documentProfile';
 import { DOCUMENT_PROFILE_TEXTS } from '../constants/documentProfileConstants';
 import { DocumentProfileTable } from '../components';
 import { useDeleteDocumentProfile } from '../hooks';
+import { SurfacePanel } from '@/components/ui';
 
 export const DocumentProfileListView = () => {
   const navigate = useNavigate();
@@ -81,7 +82,7 @@ export const DocumentProfileListView = () => {
         )}
       </div>
 
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+      <SurfacePanel>
         <DocumentProfileTable
           documentProfiles={documentProfiles}
           onDelete={handleDelete}
@@ -98,7 +99,7 @@ export const DocumentProfileListView = () => {
           onPageChange={handlePageChange}
           onPageSizeChange={handlePageSizeChange}
         />
-      </section>
+      </SurfacePanel>
     </div>
   );
 };

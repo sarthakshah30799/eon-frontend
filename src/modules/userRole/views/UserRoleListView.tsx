@@ -10,6 +10,7 @@ import {
 } from '../hooks';
 import { USER_ROLE_TEXTS } from '../constants';
 import { UserRoleTable } from '../components';
+import { SurfacePanel } from '@/components/ui';
 
 export const UserRoleListView = () => {
   const navigate = useNavigate();
@@ -90,7 +91,7 @@ export const UserRoleListView = () => {
         </Button>
       </div>
 
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+      <SurfacePanel>
         <UserRoleTable
           roles={roles}
           onToggleStatus={handleToggleStatus}
@@ -109,7 +110,7 @@ export const UserRoleListView = () => {
           onPageChange={handlePageChange}
           onPageSizeChange={handlePageSizeChange}
         />
-      </section>
+      </SurfacePanel>
     </div>
   );
 };

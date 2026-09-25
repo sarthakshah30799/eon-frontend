@@ -3,3 +3,5 @@ export * from './useGetBranchProfile';
 export * from './useCreateBranchProfile';
 export * from './useUpdateBranchProfile';
 export * from './useDeleteBranchProfile';
+export * from './useBranchCounterRightsMatrix';
+export * from './useSaveBranchCounterPermissions';

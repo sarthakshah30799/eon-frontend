@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import type { MutableRefObject } from 'react';
 import type { Resolver } from 'react-hook-form';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -15,11 +16,13 @@ import {
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import { branchProfileSchema } from '../schema';
 import type { ICreateBranchProfile, IBranchProfileOption } from '../types';
+import type { BranchCounterRightsApi } from '../types/branchCounterRightsTypes';
 import { useGetStateProfile } from '@/modules/stateProfile/hooks';
 import { useListCompanyProfiles } from '@/modules/companyProfile/hooks';
-import { useValidateBranchCode } from '../hooks';
+import { useValidateBranchCode, useBranchCounterRightsMatrix } from '../hooks';
 import { useLoadCounterOptions } from '@/modules/counterProfile/hooks';
 import { normalizeCodeValue } from '@/utils';
+import { BranchCounterRightsSection } from '../components/BranchCounterRightsSection';
 
 interface BranchProfileFormProps {
   defaultValues: ICreateBranchProfile;
@@ -33,6 +36,7 @@ interface BranchProfileFormProps {
   branchAttachedToOptions?: IBranchProfileOption[];
   tone?: 'default' | 'review';
   currentId?: string;
+  counterRightsApiRef?: MutableRefObject<BranchCounterRightsApi | null>;
 }
 
 const BRANCH_FORM_ID = 'branch-profile-form';
@@ -40,9 +44,11 @@ const BRANCH_FORM_ID = 'branch-profile-form';
 const BranchProfileFormFields = ({
   isSubmitting = false,
   currentId,
+  counterRightsApiRef,
 }: {
   isSubmitting?: boolean;
   currentId?: string;
+  counterRightsApiRef?: MutableRefObject<BranchCounterRightsApi | null>;
 }) => {
   const form = useFormContext<ICreateBranchProfile>();
   const countryId = useWatch({
@@ -53,6 +59,11 @@ const BranchProfileFormFields = ({
     control: form.control,
     name: 'stateId',
   });
+  const connectCounterIds =
+    useWatch({
+      control: form.control,
+      name: 'connectCounterIds',
+    }) ?? [];
 
   const previousCountryIdRef = useRef<string>(countryId);
   const previousStateIdRef = useRef<string>(stateId);
@@ -64,6 +75,31 @@ const BranchProfileFormFields = ({
 
   const validateBranchCode = useValidateBranchCode(currentId);
   const loadCounterOptions = useLoadCounterOptions();
+  const counterRights = useBranchCounterRightsMatrix(connectCounterIds);
+
+  useEffect(() => {
+    if (!counterRightsApiRef) {
+      return;
+    }
+
+    counterRightsApiRef.current = {
+      buildGridsForSelectedCounters:
+        counterRights.buildGridsForSelectedCounters,
+      isLoading: counterRights.isLoading,
+    };
+  }, [
+    counterRights.buildGridsForSelectedCounters,
+    counterRights.isLoading,
+    counterRightsApiRef,
+  ]);
+
+  useEffect(() => {
+    return () => {
+      if (counterRightsApiRef) {
+        counterRightsApiRef.current = null;
+      }
+    };
+  }, [counterRightsApiRef]);
 
   useEffect(() => {
     if (previousCountryIdRef.current !== countryId) {
@@ -74,11 +110,9 @@ const BranchProfileFormFields = ({
 
   useEffect(() => {
     if (stateId && selectedState && stateId !== previousStateIdRef.current) {
-      // 1. Populate gstState with state name
       const stateNameUpper = selectedState.name.toUpperCase();
       form.setValue('gstState', stateNameUpper);
 
-      // 2. Populate gstNo following GSTIN structure: StateCode + CompanyPAN
       const stateGstCode = selectedState.gstStateCode || '';
       const defaultGstNo = `${stateGstCode}${companyPan.toUpperCase()}`;
       form.setValue('gstNo', defaultGstNo);
@@ -88,6 +122,7 @@ const BranchProfileFormFields = ({
       previousStateIdRef.current = '';
     }
   }, [stateId, selectedState, companyPan, form]);
+
   return (
     <div className="space-y-3 pb-24">
       <CardSection heading="Basic Details">
@@ -267,6 +302,27 @@ const BranchProfileFormFields = ({
           />
         </div>
       </CardSection>
+
+      {connectCounterIds.length > 0 ? (
+        <BranchCounterRightsSection
+          counterOptions={counterRights.counterOptions}
+          activeCounterId={counterRights.activeCounterId}
+          onSelectCounter={counterRights.selectCounter}
+          rightsTreeNodes={counterRights.selectableTreeNodes}
+          selectedNodeId={counterRights.selectedNodeId}
+          selectedNodePathIds={counterRights.selectedNodePathIds}
+          selectedNodeLabel={counterRights.selectedNode?.label}
+          visibleRows={counterRights.visibleRows}
+          rowStateById={counterRights.rowStateById}
+          onSelectNode={counterRights.selectNode}
+          onToggleAllRowsSelected={counterRights.toggleAllRowsSelected}
+          onToggleRowSelected={counterRights.toggleRowSelected}
+          onToggleColumnPermission={counterRights.toggleColumnPermission}
+          onTogglePermission={counterRights.togglePermission}
+          isLoading={counterRights.isLoading}
+          error={counterRights.error}
+        />
+      ) : null}
     </div>
   );
 };
@@ -278,6 +334,7 @@ export const BranchProfileForm = ({
   onCancel,
   isSubmitting = false,
   currentId,
+  counterRightsApiRef,
 }: BranchProfileFormProps) => {
   return (
     <Form
@@ -300,6 +357,7 @@ export const BranchProfileForm = ({
       <BranchProfileFormFields
         isSubmitting={isSubmitting}
         currentId={currentId}
+        counterRightsApiRef={counterRightsApiRef}
       />
     </Form>
   );

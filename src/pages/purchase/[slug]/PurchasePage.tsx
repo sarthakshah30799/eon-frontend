@@ -5,7 +5,7 @@ import {
   useParams,
   useSearchParams,
 } from 'react-router-dom';
-import { Button, type AsyncSelectOption } from '@/components/ui';
+import { Button, SurfacePanel, type AsyncSelectOption } from '@/components/ui';
 import {
   buildBranchToolbarFilter,
   buildSearchToolbarFilter,
@@ -223,7 +223,7 @@ const PurchasePageView = ({ purchasePageType }: PurchasePageViewProps) => {
         ) : null}
       </div>
 
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+      <SurfacePanel>
         <TransactionListTable
           rows={rows}
           loading={isLoading}
@@ -250,7 +250,7 @@ const PurchasePageView = ({ purchasePageType }: PurchasePageViewProps) => {
           actionMode={canCreate ? 'edit' : 'view'}
           emptyMessage="No transactions found."
         />
-      </section>
+      </SurfacePanel>
     </div>
   );
 };

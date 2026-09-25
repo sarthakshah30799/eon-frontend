@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button1';
-import { PaginationControls } from '@/components/ui';
+import { PaginationControls, SurfacePanel } from '@/components/ui';
 import { useDebounce, useOffsetPaginatedList } from '@/hooks';
 import { PAGINATION_DEFAULTS } from '@/constants/paginationConstants';
 import { categoryOptionsApi } from '@/api/categoryOptions';
@@ -73,7 +73,7 @@ export const MiscellaneousProfileListView = () => {
         </Button>
       </div>
 
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+      <SurfacePanel>
         <MiscellaneousProfileTable
           groups={groups}
           loading={isLoading || isFetching}
@@ -94,7 +94,7 @@ export const MiscellaneousProfileListView = () => {
             />
           </div>
         ) : null}
-      </section>
+      </SurfacePanel>
     </div>
   );
 };

@@ -233,8 +233,8 @@ export const SpecialReportTemplateEnum = {
   ACCOUNT_POSTING: 'ACCOUNT_POSTING',
 } as const;
 
-export type SpecialReportTemplate =
-  (typeof SpecialReportTemplateEnum)[keyof typeof SpecialReportTemplateEnum];
+/** Report type code from BE `special_reports.type`. */
+export type SpecialReportTemplate = string;
 
 export interface ISpecialReportRequest {
   branchIds?: string[];
@@ -249,6 +249,11 @@ export interface ISpecialReportResponse {
   columns: ISalePurchaseReportColumn[];
   rows: ISpecialReportRow[];
   template?: SpecialReportTemplate;
+}
+
+export interface ISpecialReportTypeOption {
+  id: string;
+  label: string;
 }
 
 export interface ICurrencyBalanceReportColumn {
@@ -611,6 +616,6 @@ export type IFlm6SalesToFfmcResponse = IFlm3PurchaseFromPublicResponse;
 export type IFlm6SalesToFfmcRequest = IFlm4PurchaseFromFfmcRequest;
 
 export interface IReportTemplateOption {
-  id: SpecialReportTemplate;
+  id: string;
   label: string;
 }

@@ -1,10 +1,18 @@
 import { useNavigate } from 'react-router-dom';
+import { EyeIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button1';
-import { Table, type TableColumnDef } from '@/components/ui/table';
+import {
+  Table,
+  type TableColumnDef,
+  TABLE_ACTIONS_CELL_CLASSNAME,
+  TABLE_ACTION_BUTTON_CLASSNAME,
+  TABLE_ACTION_ICON_CLASSNAME,
+} from '@/components/ui/table';
 import { useOffsetPaginatedList } from '@/hooks';
 import { cardStockApi } from '@/api/cardStock';
 import { formatDateTime } from '@/utils';
 import type { CardStockReceipt } from '../types';
+import { SurfacePanel } from '@/components/ui';
 
 export const CardStockListView = () => {
   const navigate = useNavigate();
@@ -48,14 +56,21 @@ export const CardStockListView = () => {
       id: 'actions',
       header: 'Actions',
       cell: ({ row }) => (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => navigate(`/card-stock/edit/${row.original.id}`)}
-        >
-          View
-        </Button>
+        <div className={TABLE_ACTIONS_CELL_CLASSNAME}>
+          <Button
+            type="button"
+            aria-label="View card stock receipt"
+            variant="ghost"
+            size="icon"
+            className={TABLE_ACTION_BUTTON_CLASSNAME}
+            onClick={event => {
+              event.stopPropagation();
+              navigate(`/card-stock/edit/${row.original.id}`);
+            }}
+          >
+            <EyeIcon className={TABLE_ACTION_ICON_CLASSNAME} />
+          </Button>
+        </div>
       ),
     },
   ];
@@ -85,7 +100,7 @@ export const CardStockListView = () => {
           New Receipt Stock
         </Button>
       </div>
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+      <SurfacePanel>
         <Table
           columns={columns}
           data={data}
@@ -103,7 +118,7 @@ export const CardStockListView = () => {
           onPageSizeChange={handlePageSizeChange}
           emptyMessage="No card stock receipts found."
         />
-      </section>
+      </SurfacePanel>
     </div>
   );
 };

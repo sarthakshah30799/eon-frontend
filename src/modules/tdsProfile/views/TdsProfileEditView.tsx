@@ -9,6 +9,7 @@ import {
 } from '../utils';
 import { TdsProfileEditorView } from './TdsProfileEditorView';
 import type { ICreateTdsProfile } from '../types';
+import { SurfacePanel } from '@/components/ui';
 
 export const TdsProfileEditView = () => {
   const { id } = useParams<{ id: string }>();
@@ -56,7 +57,7 @@ export const TdsProfileEditView = () => {
   }
 
   return (
-    <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+    <SurfacePanel>
       <TdsProfileEditorView
         submitLabel={TDS_PROFILE_TEXTS.SAVE_CHANGES}
         defaultValues={defaultValues}
@@ -64,7 +65,7 @@ export const TdsProfileEditView = () => {
         isSubmitting={isPending}
         currentId={id}
       />
-    </section>
+    </SurfacePanel>
   );
 };
 

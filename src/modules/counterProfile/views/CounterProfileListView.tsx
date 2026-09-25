@@ -10,6 +10,7 @@ import {
 } from '../hooks';
 import { COUNTER_PROFILE_TEXTS } from '../constants';
 import { CounterProfileTable } from '../components';
+import { SurfacePanel } from '@/components/ui';
 
 export const CounterProfileListView = () => {
   const navigate = useNavigate();
@@ -93,7 +94,7 @@ export const CounterProfileListView = () => {
         </Button>
       </div>
 
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+      <SurfacePanel>
         <CounterProfileTable
           counters={counters}
           onToggleStatus={handleToggleStatus}
@@ -112,7 +113,7 @@ export const CounterProfileListView = () => {
           onPageChange={handlePageChange}
           onPageSizeChange={handlePageSizeChange}
         />
-      </section>
+      </SurfacePanel>
     </div>
   );
 };

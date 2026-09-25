@@ -1,6 +1,12 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Button, Table, type TableColumnDef } from '@/components/ui';
+import { EyeIcon } from '@heroicons/react/24/outline';
+import { Button, SurfacePanel, Table, type TableColumnDef } from '@/components/ui';
+import {
+  TABLE_ACTIONS_CELL_CLASSNAME,
+  TABLE_ACTION_BUTTON_CLASSNAME,
+  TABLE_ACTION_ICON_CLASSNAME,
+} from '@/components/ui/table';
 import { Loader } from '@/components/ui/loader';
 import { useAuth } from '@/lib/AuthContext';
 import { useOffsetPaginatedList } from '@/hooks';
@@ -266,16 +272,20 @@ export const VoucherListView = ({ type }: { type: VoucherType }) => {
         id: 'actions',
         header: VOUCHER_LIST_TEXT.actions,
         cell: ({ row }) => (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              navigate(`${VOUCHER_PATHS[type]}/edit/${row.original.id}`)
-            }
-          >
-            {VOUCHER_LIST_TEXT.view}
-          </Button>
+          <div className={TABLE_ACTIONS_CELL_CLASSNAME}>
+            <Button
+              type="button"
+              aria-label={VOUCHER_LIST_TEXT.view}
+              variant="ghost"
+              size="icon"
+              className={TABLE_ACTION_BUTTON_CLASSNAME}
+              onClick={() =>
+                navigate(`${VOUCHER_PATHS[type]}/edit/${row.original.id}`)
+              }
+            >
+              <EyeIcon className={TABLE_ACTION_ICON_CLASSNAME} />
+            </Button>
+          </div>
         ),
       },
     ],
@@ -300,7 +310,7 @@ export const VoucherListView = ({ type }: { type: VoucherType }) => {
           {VOUCHER_LIST_TEXT.add(label)}
         </Button>
       </div>
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+      <SurfacePanel>
         <Table
           columns={columns}
           data={rows}
@@ -322,7 +332,7 @@ export const VoucherListView = ({ type }: { type: VoucherType }) => {
               : VOUCHER_LIST_TEXT.empty(label)
           }
         />
-      </section>
+      </SurfacePanel>
     </div>
   );
 };

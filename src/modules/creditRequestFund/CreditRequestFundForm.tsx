@@ -532,6 +532,7 @@ const CreditRequestFundFields = ({
   ).defaultOptions;
   const previousElectronicRef = useRef(false);
   const lastPartyIdRef = useRef(form.getValues('partyProfileId') || '');
+  const lastBranchIdRef = useRef(form.getValues('branchId') || '');
   const adultDobMaxDate = useMemo(() => {
     const date = new Date();
     date.setFullYear(date.getFullYear() - 18);
@@ -558,8 +559,10 @@ const CreditRequestFundFields = ({
         activeOnly: true,
         status: 'APPROVE',
         entityTypeId: entityTypeOptionId || undefined,
+        branchId: branchId || undefined,
       },
-      allPartyTypes
+      allPartyTypes,
+      Boolean(branchId)
     );
   const parties = useMemo(() => partyResponse?.data ?? [], [partyResponse]);
   const selectedParty = parties.find(party => party.id === partyProfileId);
@@ -572,9 +575,10 @@ const CreditRequestFundFields = ({
         status: 'APPROVE',
         entityTypeId: entityTypeOptionId || undefined,
         groupId: selectedParty?.group?.id,
+        branchId: branchId || undefined,
       },
       allPartyTypes,
-      Boolean(selectedParty)
+      Boolean(selectedParty) && Boolean(branchId)
     );
 
   const accounts = useMemo(
@@ -698,6 +702,18 @@ const CreditRequestFundFields = ({
   useEffect(() => {
     onBranchChange?.(branchId ?? '');
   }, [branchId, onBranchChange]);
+
+  useEffect(() => {
+    if (readOnly) return;
+    const previousBranchId = lastBranchIdRef.current;
+    lastBranchIdRef.current = branchId ?? '';
+    if (!previousBranchId || previousBranchId === (branchId ?? '')) return;
+    form.setValue('partyProfileId', '', {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+    form.setValue('partyName', '', { shouldDirty: true, shouldValidate: false });
+  }, [branchId, form, readOnly]);
 
   useEffect(() => {
     if (!readOnly && policyTransactionDate) {

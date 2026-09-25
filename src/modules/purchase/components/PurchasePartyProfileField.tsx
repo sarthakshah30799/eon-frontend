@@ -4,6 +4,7 @@ import { Button } from '@/components/ui';
 import { SelectPartyProfiles } from '@/modules/partyProfiles/components';
 import { resolvePassengerDisplayName } from '@/modules/passengers/utils/passengerDisplayName';
 import { HighRiskPartyProfileWarningModal } from './HighRiskPartyProfileWarningModal';
+import { GstExemptPartyProfileModal } from './GstExemptPartyProfileModal';
 import type { PartyProfileType } from '@/modules/partyProfiles/types';
 import type {
   IPartyProfileListQuery,
@@ -13,6 +14,7 @@ import type { IPurchaseFormValues } from '../types/purchaseTypes';
 import type { PurchasePageType } from '@/pages/purchase/[slug]/purchasePage.enum';
 import { isCorporateIndividualPurchasePage } from '@/pages/purchase/[slug]/purchasePage.enum';
 import { PassengerEntityTypeEnum } from '@/modules/passengers/types/passengerTypes';
+import { TransactionPartyProfileTypeEnum } from '@/modules/transactions/types/transactionTypes';
 import {
   formatPurchaseEntityLabel,
   getPurchaseTransactionPartyProfileFilter,
@@ -22,6 +24,7 @@ import { EntityPickerField } from './EntityPickerField';
 interface PurchasePartyProfileFieldProps {
   partyProfileTypes: PartyProfileType[];
   purchasePageType?: PurchasePageType | null;
+  branchId?: string;
   disabled?: boolean;
   showPassengerAction?: boolean;
   onAddPassengerInfo?: () => void;
@@ -30,6 +33,7 @@ interface PurchasePartyProfileFieldProps {
 export const PurchasePartyProfileField = ({
   partyProfileTypes,
   purchasePageType = null,
+  branchId = '',
   disabled = false,
   showPassengerAction = false,
   onAddPassengerInfo,
@@ -37,8 +41,13 @@ export const PurchasePartyProfileField = ({
   const form = useFormContext<IPurchaseFormValues>();
   const [open, setOpen] = useState(false);
   const [warningModalOpen, setWarningModalOpen] = useState(false);
+  const [gstExemptModalOpen, setGstExemptModalOpen] = useState(false);
   const [selectedProfileForWarning, setSelectedProfileForWarning] =
     useState<IPartyProfile | null>(null);
+
+  const resolvedBranchId = branchId.trim();
+  const isBranchMissing = !resolvedBranchId;
+  const isPickerDisabled = disabled || isBranchMissing;
 
   const partyProfileCode = form.watch('partyProfileCode');
   const partyProfileName = form.watch('partyProfileName');
@@ -109,9 +118,10 @@ export const PurchasePartyProfileField = ({
       transactionPartyProfileType
     ),
     activeOnly: true,
+    ...(resolvedBranchId ? { branchId: resolvedBranchId } : {}),
   } satisfies Pick<
     IPartyProfileListQuery,
-    'sale' | 'purchase' | 'activeOnly' | 'isIndividual'
+    'sale' | 'purchase' | 'activeOnly' | 'isIndividual' | 'branchId'
   >;
 
   const isCombinedPartyProfilePage =
@@ -245,6 +255,14 @@ export const PurchasePartyProfileField = ({
       shouldValidate: false,
     });
     setOpen(false);
+
+    if (
+      transactionPartyProfileType ===
+        TransactionPartyProfileTypeEnum.CORPORATE &&
+      selectedProfile.gstExempt
+    ) {
+      setGstExemptModalOpen(true);
+    }
   };
 
   const handleWarningProceed = () => {
@@ -267,8 +285,13 @@ export const PurchasePartyProfileField = ({
           label="Party Profile"
           value={partyProfileDisplayValue}
           placeholder="Select party profile"
-          onClick={() => setOpen(true)}
-          disabled={disabled}
+          onClick={() => {
+            if (isPickerDisabled) {
+              return;
+            }
+            setOpen(true);
+          }}
+          disabled={isPickerDisabled}
           helperText="Choose a party profile for this transaction."
         />
 
@@ -278,7 +301,7 @@ export const PurchasePartyProfileField = ({
             variant={passengerInfoCaptured ? 'secondary' : 'default'}
             className="w-full shadow-sm transition-transform duration-200 hover:-translate-y-0.5"
             disabled={
-              disabled ||
+              isPickerDisabled ||
               !partyProfileId ||
               !entityType ||
               (isCombinedPartyProfilePage && !transactionPartyProfileType)
@@ -319,7 +342,7 @@ export const PurchasePartyProfileField = ({
       </div>
 
       <SelectPartyProfiles
-        open={open}
+        open={open && !isBranchMissing}
         types={partyProfileTypes}
         selectable
         multiple={false}
@@ -351,6 +374,11 @@ export const PurchasePartyProfileField = ({
         onConfirm={handleWarningProceed}
         onCancel={handleWarningCancel}
         onClose={handleWarningCancel}
+      />
+
+      <GstExemptPartyProfileModal
+        isOpen={gstExemptModalOpen}
+        onClose={() => setGstExemptModalOpen(false)}
       />
     </>
   );

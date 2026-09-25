@@ -9,7 +9,11 @@ import {
 } from '@/components/ui';
 import type { CardStockUploadPreviewRow } from '@/api/cardStock';
 import type { IPartyProfile } from '@/modules/partyProfiles/types';
-import { CARD_STOCK_UPLOAD_TEXT } from '../constants/cardStockConstants';
+import {
+  CARD_STOCK_FIXED_DENOMINATION,
+  CARD_STOCK_UPLOAD_TEXT,
+} from '../constants/cardStockConstants';
+import { cardStockDenominationAmount } from '../utils/cardStockUtils';
 import {
   useDownloadCardStockTemplate,
   usePreviewCardStockUpload,
@@ -59,8 +63,8 @@ export const CardStockUploadSection = ({
         series: row.series,
         kitNumber: row.kitNumber,
         cardNumber: row.cardNumber,
-        denomination: row.denomination,
-        amount: row.amount,
+        denomination: CARD_STOCK_FIXED_DENOMINATION,
+        amount: cardStockDenominationAmount(),
         expirationDate: row.expirationDate,
       }));
     if (validRows.length === 0) return;

@@ -25,6 +25,7 @@ interface FormProps<TFieldValues extends FieldValues = FieldValues> {
     onCancel?: () => void | Promise<void>;
     accentColor?: string;
     actions?: React.ReactNode;
+    preSubmitActions?: React.ReactNode;
     showSubmit?: boolean;
     isSubmitDisabled?: boolean;
     submitMessage?: string;
@@ -71,6 +72,7 @@ export const Form = <TFieldValues extends FieldValues = FieldValues>({
           submitMessage={footer.submitMessage}
           showSubmit={footer.showSubmit}
           actions={footer.actions}
+          preSubmitActions={footer.preSubmitActions}
         />
       ) : null}
     </RHFFormProvider>

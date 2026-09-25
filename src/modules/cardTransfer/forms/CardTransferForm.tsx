@@ -514,7 +514,6 @@ export const CardTransferForm = ({
   const { user, activeBranchId } = useAuth();
   const isAdminOrHo = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
   const canEditSourceBranch = isAdminOrHo && !readOnly;
-  const references = useCardStockReferences();
   const { data: branches = [], isLoading: branchesLoading } = useQuery({
     queryKey: ['branch-profiles-all', { activeOnly: true }],
     queryFn: () => branchProfileApi.getAllBranchProfiles({ activeOnly: true }),
@@ -524,6 +523,7 @@ export const CardTransferForm = ({
     control: form.control,
     name: 'sourceBranchId',
   });
+  const references = useCardStockReferences(sourceBranchId);
   const {
     data: sourceCards = [],
     isLoading: sourceCardsLoading,

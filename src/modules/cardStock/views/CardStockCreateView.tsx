@@ -35,8 +35,8 @@ export const CardStockCreateView = () => {
     <CardStockReceiptForm
       initialValues={initialValues}
       onSubmit={async values => {
-        const created = await createReceipt(values);
-        navigate(`/card-stock/edit/${created.id}`);
+        await createReceipt(values);
+        navigate('/card-stock');
       }}
     />
   );

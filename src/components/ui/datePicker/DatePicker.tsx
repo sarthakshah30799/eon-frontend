@@ -152,6 +152,8 @@ export const DatePicker = ({
           />
         }
         showYearDropdown
+        portalId="react-datepicker-portal"
+        popperClassName="react-datepicker-popper"
       />
       {error && <p className="mt-1 text-sm text-error-600">{error}</p>}
     </div>

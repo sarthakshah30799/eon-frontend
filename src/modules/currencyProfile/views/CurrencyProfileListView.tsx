@@ -6,6 +6,7 @@ import { PAGINATION_DEFAULTS } from '@/constants/paginationConstants';
 import { currencyProfileApi } from '@/api/currencyProfile';
 import { CURRENCY_PROFILE_TEXTS } from '../constants';
 import { CurrencyProfileTable } from '../components';
+import { SurfacePanel } from '@/components/ui';
 
 export const CurrencyProfileListView = () => {
   const navigate = useNavigate();
@@ -74,7 +75,7 @@ export const CurrencyProfileListView = () => {
         </Button>
       </div>
 
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+      <SurfacePanel>
         <CurrencyProfileTable
           currencies={currencies}
           loading={isLoading}
@@ -89,7 +90,7 @@ export const CurrencyProfileListView = () => {
           onPageChange={handlePageChange}
           onPageSizeChange={handlePageSizeChange}
         />
-      </section>
+      </SurfacePanel>
     </div>
   );
 };

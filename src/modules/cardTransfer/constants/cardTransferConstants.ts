@@ -1,5 +1,4 @@
 export const CARD_TRANSFER_STATUS_OPTIONS = [
-  { value: 'ALL', label: 'All' },
   { value: 'HELD', label: 'Held' },
   { value: 'ACCEPTED', label: 'Accepted' },
   { value: 'REJECTED', label: 'Rejected' },
@@ -11,6 +10,8 @@ export const CARD_TRANSFER_COPY = {
   listDescription: 'Review CARD transfer requests between branches.',
   createTitle: 'Create CARD Transfer',
   editTitle: 'CARD Transfer Request',
+  status: 'Status',
+  statusPlaceholder: 'All Statuses',
   sourceDescription:
     'Cards are reserved from the selected source branch when submitted.',
   loadingTransactionDate: 'Loading transaction date for selected branch...',
@@ -20,6 +21,11 @@ export const CARD_TRANSFER_COPY = {
     'Select product type, currency, and card issuer before choosing cards.',
   noMatchingCards:
     'No available cards match the selected product, currency, and issuer at this source branch.',
+  viewTransfer: 'View CARD transfer',
+  editTransfer: 'Edit CARD transfer',
+  deleteTransfer: 'Delete CARD transfer',
+  deleteConfirm: 'Are you sure you want to delete this CARD transfer request?',
+  deleted: 'CARD transfer request deleted.',
 } as const;
 
 export const CARD_TRANSFER_VALIDATION_TEXT = {

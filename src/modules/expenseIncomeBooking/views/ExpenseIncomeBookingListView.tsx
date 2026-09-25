@@ -6,6 +6,7 @@ import { PAGINATION_DEFAULTS } from '@/constants/paginationConstants';
 import { expenseIncomeBookingApi } from '@/api/expenseIncomeBooking/expenseIncomeBooking.api';
 import { ExpenseIncomeBookingTable } from '../components/ExpenseIncomeBookingTable';
 
+import { SurfacePanel } from '@/components/ui';
 interface ExpenseIncomeBookingListViewProps {
   type: 'EXPENSE' | 'INCOME';
 }
@@ -81,7 +82,7 @@ export const ExpenseIncomeBookingListView = ({
         )}
       </div>
 
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+      <SurfacePanel>
         <ExpenseIncomeBookingTable
           masters={masters}
           type={type}
@@ -97,7 +98,7 @@ export const ExpenseIncomeBookingListView = ({
           onPageChange={handlePageChange}
           onPageSizeChange={handlePageSizeChange}
         />
-      </section>
+      </SurfacePanel>
     </div>
   );
 };

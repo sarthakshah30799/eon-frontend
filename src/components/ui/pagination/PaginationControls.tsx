@@ -64,19 +64,19 @@ export const PaginationControls = ({
   const pageItems = buildPageItems(safePage, total === 0 ? 0 : safeTotalPages);
 
   return (
-    <div className="flex min-w-0 w-full flex-wrap items-center justify-between gap-x-2 gap-y-2 border-t border-border-primary bg-surface-primary py-2">
-      <div className="min-w-0 shrink text-sm text-text-secondary">
+    <div className="flex min-w-0 w-full flex-wrap items-center justify-between gap-x-2 gap-y-1 border-t border-border-primary bg-surface-primary px-2 py-1">
+      <div className="min-w-0 shrink text-xs leading-5 text-text-secondary">
         {total > 0
           ? `Showing ${startItem}-${endItem} of ${total} ${itemLabel}`
           : `No ${itemLabel} found`}
       </div>
 
-      <div className="flex min-w-0 flex-wrap items-center justify-end gap-1.5">
+      <div className="flex min-w-0 flex-wrap items-center justify-end gap-1">
         <Button
           type="button"
           variant="outline"
           size="sm"
-          className="px-2.5"
+          className="h-7 rounded-md px-2 py-0 text-xs"
           disabled={page <= 1 || totalPages === 0}
           onClick={() => onPageChange(Math.max(1, page - 1))}
         >
@@ -87,7 +87,7 @@ export const PaginationControls = ({
           item === 'ellipsis' ? (
             <span
               key={`ellipsis-${index}`}
-              className="px-0.5 text-sm text-text-secondary"
+              className="px-0.5 text-xs leading-5 text-text-secondary"
             >
               …
             </span>
@@ -97,7 +97,7 @@ export const PaginationControls = ({
               type="button"
               variant={item === safePage ? 'default' : 'outline'}
               size="sm"
-              className="min-w-8 px-2"
+              className="h-7 min-w-7 rounded-md px-1.5 py-0 text-xs"
               aria-current={item === safePage ? 'page' : undefined}
               aria-label={`Page ${item}`}
               onClick={() => onPageChange(item)}
@@ -111,19 +111,19 @@ export const PaginationControls = ({
           type="button"
           variant="outline"
           size="sm"
-          className="px-2.5"
+          className="h-7 rounded-md px-2 py-0 text-xs"
           disabled={page >= totalPages || totalPages === 0}
           onClick={() => onPageChange(page + 1)}
         >
           Next
         </Button>
 
-        <label className="flex shrink-0 items-center gap-1.5 text-sm text-text-secondary">
+        <label className="flex h-7 shrink-0 items-center gap-1 text-xs leading-5 text-text-secondary">
           <span>Show</span>
           <select
             value={pageSize}
             onChange={event => onPageSizeChange(Number(event.target.value))}
-            className="rounded-sm border border-border-primary bg-surface-primary px-2 py-1 text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="h-7 rounded-sm border border-border-primary bg-surface-primary px-1.5 py-0 text-xs text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             {pageSizeOptions.map(option => (
               <option key={option} value={option}>

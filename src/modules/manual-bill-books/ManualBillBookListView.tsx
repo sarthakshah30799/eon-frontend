@@ -1,12 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import {
-  AsyncSelect,
-  Button,
-  PageGrid,
-  type AsyncSelectOption,
-  type AsyncSelectResponse,
-} from '@/components/ui';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { AsyncSelect, Button, PageGrid, SurfacePanel, type AsyncSelectOption, type AsyncSelectResponse } from '@/components/ui';
 import {
   buildBranchToolbarFilter,
   buildSearchToolbarFilter,
@@ -59,9 +53,14 @@ const getStatusBadgeClass = (status: string) => {
 
 export const ManualBillBookListView = () => {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const reviewId = searchParams.get('reviewId');
+  const basePath = pathname.startsWith('/admin/')
+    ? '/admin/manual-bill-books'
+    : '/manual-bill-books';
+  const { canAdd } = usePermission(basePath);
   const canSeeBranchFilter = Boolean(
     user?.isAdmin || user?.isHo || user?.isHoStaff
   );
@@ -458,16 +457,18 @@ export const ManualBillBookListView = () => {
 
   return (
     <div className="space-y-3">
-      <div className="flex justify-end">
-        <Button
-          type="button"
-          onClick={() => navigate('/manual-bill-books/create')}
-        >
-          Create
-        </Button>
-      </div>
+      {canAdd ? (
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            onClick={() => navigate(`${basePath}/create`)}
+          >
+            Create
+          </Button>
+        </div>
+      ) : null}
 
-      <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
+      <SurfacePanel>
         <ManualBillBookTable
           books={books}
           loading={isLoading}
@@ -485,7 +486,7 @@ export const ManualBillBookListView = () => {
               book.status === ManualBillBookStatusEnum.REJECT &&
               (user?.isHo || user?.isHoStaff || user?.isAdmin)
             ) {
-              navigate(`/manual-bill-books/create?reassignId=${book.id}`);
+              navigate(`${basePath}/create?reassignId=${book.id}`);
               return;
             }
             if (book.status === ManualBillBookStatusEnum.APPROVE && !isUserHo) {
@@ -503,7 +504,7 @@ export const ManualBillBookListView = () => {
             }
           }}
         />
-      </section>
+      </SurfacePanel>
 
       {/* Review / Details Modal */}
       {reviewBook && (

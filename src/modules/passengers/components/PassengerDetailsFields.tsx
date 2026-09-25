@@ -11,6 +11,7 @@ import {
 import { useCategoryOptions } from '@/hooks';
 import { useGetCountryProfile } from '@/modules/countryProfile/hooks';
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
+import { parseDateInput } from '@/utils';
 import type { IPurchaseFormValues } from '@/modules/purchase/types/purchaseTypes';
 import { TransactionTypeEnum } from '@/modules/transactions';
 import {
@@ -28,6 +29,8 @@ interface PassengerDetailsFieldsProps {
   onPanFieldBlur?: () => void;
   onPassportNumberBlur?: () => void;
   onPassportFieldBlur?: () => void;
+  onArrivalDateChange?: (value: string) => void;
+  onDepartureDateChange?: (value: string) => void;
   onNationalityChange?: (value: string | null) => void;
   onDocumentChange?: () => void;
 }
@@ -38,6 +41,8 @@ export const PassengerDetailsFields = ({
   onPanFieldBlur,
   onPassportNumberBlur,
   onPassportFieldBlur,
+  onArrivalDateChange,
+  onDepartureDateChange,
   onNationalityChange,
   onDocumentChange,
 }: PassengerDetailsFieldsProps) => {
@@ -91,6 +96,10 @@ export const PassengerDetailsFields = ({
     control: form.control,
     name: 'transactions',
   });
+  const transactionDate = useWatch({
+    control: form.control,
+    name: 'transactionDate',
+  });
   const { data: selectedCountryProfile } = useGetCountryProfile(
     countryId || ''
   );
@@ -100,9 +109,23 @@ export const PassengerDetailsFields = ({
   );
   const isIndianNationality =
     nationalityType === PassengerNationalityTypeEnum.INDIAN;
+  const isForeignerOrNonResident =
+    residentStatus === PassengerResidentStatusEnum.FOREIGNER ||
+    residentStatus === PassengerResidentStatusEnum.NON_RESIDENT ||
+    nationalityType === PassengerNationalityTypeEnum.FOREIGNER ||
+    nationalityType === PassengerNationalityTypeEnum.NRI;
+  const showStateField = !isForeignerOrNonResident;
   const isSaleTransaction = transactionType === TransactionTypeEnum.SALE;
   const hasTtDealAttached = (transactions ?? []).some(row =>
     Boolean(row?.dealCoverId)
+  );
+  const arrivalMaxDate = useMemo(
+    () => parseDateInput(String(transactionDate ?? '')) ?? undefined,
+    [transactionDate]
+  );
+  const departureMinDate = useMemo(
+    () => parseDateInput(String(transactionDate ?? '')) ?? undefined,
+    [transactionDate]
   );
   const showTravelDetails =
     (isSaleTransaction || hasTtDealAttached) &&
@@ -232,6 +255,22 @@ export const PassengerDetailsFields = ({
       }
     }
   }, [form, isIndiaCountry, nationalityType, residentStatus]);
+
+  useEffect(() => {
+    if (showStateField) {
+      return;
+    }
+
+    if (!form.getValues('stateId')) {
+      return;
+    }
+
+    form.setValue('stateId', '', {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: false,
+    });
+  }, [form, showStateField]);
 
   const clearCountrySelection = useCallback(() => {
     form.setValue('countryId', '', {
@@ -408,14 +447,16 @@ export const PassengerDetailsFields = ({
             </p>
           ) : null}
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <FormFieldStateDropdown
-              name="stateId"
-              label="State"
-              placeholder="Select state"
-              countryId={countryId || undefined}
-            />
-          </div>
+          {showStateField ? (
+            <div className="grid gap-4 md:grid-cols-2">
+              <FormFieldStateDropdown
+                name="stateId"
+                label="State"
+                placeholder="Select state"
+                countryId={countryId || undefined}
+              />
+            </div>
+          ) : null}
 
           {isIndianNationality ? (
             <PassengerIdentityFields
@@ -636,6 +677,8 @@ export const PassengerDetailsFields = ({
               name="arrivalDate"
               label="Arrival Date"
               placeholder="Select arrival date"
+              maxDate={arrivalMaxDate}
+              onValueChange={onArrivalDateChange}
             />
           </div>
         </section>
@@ -693,6 +736,8 @@ export const PassengerDetailsFields = ({
                 name="travelDepartureDate"
                 label="Departure Date"
                 placeholder="Select departure date"
+                minDate={departureMinDate}
+                onValueChange={onDepartureDateChange}
               />
               <FormFieldInput
                 name="travelPnr"

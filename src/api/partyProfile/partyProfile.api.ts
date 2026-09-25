@@ -7,6 +7,7 @@ import type {
   ICreatePartyProfile,
   IReviewPartyProfilePayload,
   IUpdatePartyProfile,
+  IUpdatePartyProfileBranches,
   IUpgradePartyProfileCreditPolicy,
 } from '@/modules/partyProfiles/types/partyProfileTypes';
 import { fetchAllMatching, normalizePaginatedResponse } from '@/utils/paginatedList';
@@ -117,6 +118,21 @@ export const partyProfileApi = {
     if (res.error) throw new Error(res.error);
     if (!res.data) {
       throw new Error('Failed to upgrade party profile credit policy');
+    }
+    return res.data;
+  },
+
+  updatePartyProfileBranches: async (
+    id: string,
+    values: IUpdatePartyProfileBranches
+  ): Promise<IPartyProfile> => {
+    const res = await apiClient.patch<IPartyProfile>(
+      `/party-profiles/${id}/branches`,
+      values
+    );
+    if (res.error) throw new Error(res.error);
+    if (!res.data) {
+      throw new Error('Failed to update party profile branches');
     }
     return res.data;
   },

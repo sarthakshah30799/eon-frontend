@@ -111,7 +111,8 @@ export interface ProductUnsettledItem {
 }
 
 export interface ProductSettlementDocumentFilters extends IOffsetPaginationParams {
-  status?: ProductSettlementDocumentStatus;
+  status?: ProductSettlementDocumentStatus | ProductSettlementDocumentStatus[];
+  search?: string;
   kind?: ProductSettlementDocumentKind;
   issuerPartyProfileId?: string;
   currencyId?: string;

@@ -174,6 +174,10 @@ export const DealCoverAckView = () => {
           formatDateTime(row.original.transactionDate, 'DD/MM/YYYY'),
       },
       {
+        accessorKey: 'transactionNumber',
+        header: DEAL_COVER_ACK_TEXT.transactionNumber,
+      },
+      {
         id: 'branch',
         header: DEAL_COVER_ACK_TEXT.branch,
         cell: ({ row }) =>

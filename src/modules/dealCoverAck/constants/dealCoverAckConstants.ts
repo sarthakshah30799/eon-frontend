@@ -13,6 +13,7 @@ export const DEAL_COVER_ACK_TEXT = {
   selectAll: 'Select All',
   clearSelection: 'Clear',
   dealNo: 'Deal No',
+  transactionNumber: 'Transaction No',
   bookingRate: 'Booking Rate',
   dealRate: 'Deal Rate',
   feAmount: 'FE Amount',

@@ -6,10 +6,10 @@ import {
   type ICardBlankStockReportResponse,
 } from '../types';
 import { downloadBlob } from '../utils';
-import { useCardSettlementReportFilters } from './useCardSettlementReportFilters';
+import { useProductSettlementReportFilters } from './useProductSettlementReportFilters';
 
 export const useCardBlankStockReport = () => {
-  const filters = useCardSettlementReportFilters();
+  const filters = useProductSettlementReportFilters();
   const [exportFormat, setExportFormat] = useState<
     typeof ReportExportFormatEnum.CSV | typeof ReportExportFormatEnum.XLSX
   >(ReportExportFormatEnum.XLSX);

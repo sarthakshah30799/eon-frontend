@@ -5,23 +5,32 @@ import { useOffsetPaginatedList } from '@/hooks';
 import { PAGINATION_DEFAULTS } from '@/constants/paginationConstants';
 import { formatDateTime } from '@/utils';
 import {
-  DealCoverStatus,
-  dealCoverRateApi,
-  type DealCoverRateListFilters,
-  type IDealCoverRate,
-} from '@/api/dealCoverRate';
+  ProductSettlementDocumentStatus,
+  productSettlementApi,
+  type ProductSettlementDocument,
+  type ProductSettlementDocumentFilters,
+} from '@/api/productSettlement';
 import {
-  DEAL_COVER_RATE_TEXT,
-  DEAL_COVER_STATUS_OPTIONS,
-} from '../constants';
-import { snapshotLabel } from '../utils';
+  PRODUCT_SETTLEMENT_STATUS_OPTIONS,
+  PRODUCT_SETTLEMENT_TEXT,
+} from '../constants/productSettlementConstants';
 
-export const DealCoverRateListView = () => {
+const label = (
+  snapshot: ProductSettlementDocument['currencySnapshot'],
+  fallback: string
+) =>
+  snapshot?.label ??
+  snapshot?.currencyCode ??
+  snapshot?.name ??
+  snapshot?.code ??
+  fallback;
+
+export const ProductSettlementListView = () => {
   const navigate = useNavigate();
   const [, setSearchParams] = useSearchParams();
   const [filters, setFilters] = useState<
-    Omit<DealCoverRateListFilters, 'limit' | 'offset'>
-  >({ status: DealCoverStatus.PENDING });
+    Omit<ProductSettlementDocumentFilters, 'limit' | 'offset'>
+  >({});
 
   const resetOffset = useCallback(() => {
     setSearchParams(prev => {
@@ -46,82 +55,79 @@ export const DealCoverRateListView = () => {
     handlePageChange,
     handlePageSizeChange,
   } = useOffsetPaginatedList({
-    queryKey: ['tt-deal', 'covers'],
-    queryFn: params => dealCoverRateApi.list(params),
+    queryKey: ['product-settlements'],
+    queryFn: params => productSettlementApi.list(params),
     filters,
   });
 
-  const columns = useMemo<TableColumnDef<IDealCoverRate>[]>(
+  const columns = useMemo<TableColumnDef<ProductSettlementDocument>[]>(
     () => [
       {
+        accessorKey: 'transactionNumber',
+        header: PRODUCT_SETTLEMENT_TEXT.transactionNumber,
+      },
+      {
+        accessorKey: 'kind',
+        header: PRODUCT_SETTLEMENT_TEXT.type,
+        cell: ({ row }) =>
+          row.original.kind === 'HO_ISSUER'
+            ? PRODUCT_SETTLEMENT_TEXT.kindIssuer
+            : PRODUCT_SETTLEMENT_TEXT.kindBranch,
+      },
+      {
         accessorKey: 'transactionDate',
-        header: DEAL_COVER_RATE_TEXT.transactionDate,
+        header: PRODUCT_SETTLEMENT_TEXT.transactionDate,
         cell: ({ row }) =>
           formatDateTime(row.original.transactionDate, 'DD/MM/YYYY'),
       },
       {
-        accessorKey: 'transactionNumber',
-        header: DEAL_COVER_RATE_TEXT.transactionNumber,
-      },
-      {
-        accessorKey: 'dealNo',
-        header: DEAL_COVER_RATE_TEXT.dealNo,
-        cell: ({ row }) => row.original.dealNo || '—',
-      },
-      {
-        id: 'branch',
-        header: DEAL_COVER_RATE_TEXT.branch,
-        cell: ({ row }) =>
-          snapshotLabel(row.original.branchSnapshot, row.original.branchId),
-      },
-      {
-        id: 'currency',
-        header: DEAL_COVER_RATE_TEXT.currency,
-        cell: ({ row }) =>
-          snapshotLabel(row.original.currencySnapshot, row.original.currencyId),
-      },
-      {
         id: 'issuer',
-        header: DEAL_COVER_RATE_TEXT.issuer,
+        header: PRODUCT_SETTLEMENT_TEXT.issuer,
         cell: ({ row }) =>
-          snapshotLabel(
+          label(
             row.original.issuerPartyProfileSnapshot,
             row.original.issuerPartyProfileId
           ),
       },
-      { accessorKey: 'feAmount', header: DEAL_COVER_RATE_TEXT.feAmount },
-      { accessorKey: 'dealRate', header: DEAL_COVER_RATE_TEXT.dealRate },
-      { accessorKey: 'inrAmount', header: DEAL_COVER_RATE_TEXT.inrAmount },
+      {
+        id: 'currency',
+        header: PRODUCT_SETTLEMENT_TEXT.currency,
+        cell: ({ row }) =>
+          label(row.original.currencySnapshot, row.original.currencyId),
+      },
+      {
+        id: 'branch',
+        header: PRODUCT_SETTLEMENT_TEXT.sellingBranch,
+        cell: ({ row }) =>
+          label(row.original.branchSnapshot, row.original.branchId),
+      },
+      { accessorKey: 'itemCount', header: PRODUCT_SETTLEMENT_TEXT.itemsCount },
       {
         accessorKey: 'status',
-        header: DEAL_COVER_RATE_TEXT.status,
+        header: PRODUCT_SETTLEMENT_TEXT.status,
         cell: ({ row }) =>
-          DEAL_COVER_STATUS_OPTIONS.find(
+          PRODUCT_SETTLEMENT_STATUS_OPTIONS.find(
             option => option.value === row.original.status
           )?.label ?? row.original.status,
       },
       {
         id: 'actions',
-        header: DEAL_COVER_RATE_TEXT.actions,
-        cell: ({ row }) => {
-          const isPending = row.original.status === DealCoverStatus.PENDING;
-          return (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() =>
-                navigate(
-                  isPending
-                    ? `/deal-cover-rate/edit/${row.original.id}`
-                    : `/deal-cover-rate/view/${row.original.id}`
-                )
-              }
-            >
-              {isPending ? DEAL_COVER_RATE_TEXT.edit : DEAL_COVER_RATE_TEXT.view}
-            </Button>
-          );
-        },
+        header: PRODUCT_SETTLEMENT_TEXT.actions,
+        cell: ({ row }) => (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() =>
+              navigate(`/product-settlement/edit/${row.original.id}`)
+            }
+          >
+            {row.original.status ===
+            ProductSettlementDocumentStatus.PENDING_HO_ACCEPTANCE
+              ? PRODUCT_SETTLEMENT_TEXT.editReview
+              : PRODUCT_SETTLEMENT_TEXT.view}
+          </Button>
+        ),
       },
     ],
     [navigate]
@@ -135,7 +141,7 @@ export const DealCoverRateListView = () => {
         className: 'w-full shrink-0',
         render: () => (
           <div className="flex flex-wrap gap-2">
-            {DEAL_COVER_STATUS_OPTIONS.map(option => (
+            {PRODUCT_SETTLEMENT_STATUS_OPTIONS.map(option => (
               <Button
                 key={option.value}
                 type="button"
@@ -151,7 +157,7 @@ export const DealCoverRateListView = () => {
                     status:
                       option.value === 'ALL'
                         ? undefined
-                        : (option.value as typeof DealCoverStatus.PENDING),
+                        : (option.value as ProductSettlementDocumentStatus),
                   }));
                   resetOffset();
                 }}
@@ -171,17 +177,17 @@ export const DealCoverRateListView = () => {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-text-primary">
-            {DEAL_COVER_RATE_TEXT.title}
+            {PRODUCT_SETTLEMENT_TEXT.title}
           </h1>
           <p className="text-sm text-text-secondary">
-            {DEAL_COVER_RATE_TEXT.description}
+            {PRODUCT_SETTLEMENT_TEXT.description}
           </p>
         </div>
         <Button
           type="button"
-          onClick={() => navigate('/deal-cover-rate/create')}
+          onClick={() => navigate('/product-settlement/create')}
         >
-          {DEAL_COVER_RATE_TEXT.newDeal}
+          {PRODUCT_SETTLEMENT_TEXT.newSettlement}
         </Button>
       </div>
       <section className="rounded-sm border border-border-primary bg-surface-primary p-3 shadow-sm">
@@ -203,7 +209,7 @@ export const DealCoverRateListView = () => {
           emptyMessage={
             error instanceof Error
               ? error.message
-              : DEAL_COVER_RATE_TEXT.empty
+              : PRODUCT_SETTLEMENT_TEXT.empty
           }
         />
       </section>
@@ -211,4 +217,4 @@ export const DealCoverRateListView = () => {
   );
 };
 
-export default DealCoverRateListView;
+export default ProductSettlementListView;

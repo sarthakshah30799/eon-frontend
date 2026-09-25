@@ -58,6 +58,7 @@ export interface DealCoverRatePayload {
 export interface IDealCoverRate extends DealCoverRatePayload {
   id: string;
   status: DealCoverStatus;
+  transactionNumber: string;
   dealNo?: string | null;
   bookingRate?: string | null;
   rejectionReason?: string | null;

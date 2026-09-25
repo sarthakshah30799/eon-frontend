@@ -62,6 +62,7 @@ export const DEAL_COVER_RATE_TEXT = {
   passengerPassport: 'Passport',
   status: 'Status',
   dealNo: 'Deal No',
+  transactionNumber: 'Transaction No',
   bookingRate: 'Booking Rate',
   actions: 'Actions',
   rejectionReason: 'Rejection Reason',

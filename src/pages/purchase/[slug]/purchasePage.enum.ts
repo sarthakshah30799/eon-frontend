@@ -24,6 +24,7 @@ export type PurchasePageType = Exclude<
   | typeof TransactionTypeProfileEnum.CARD_TRANSFER_SELL
   | typeof TransactionTypeProfileEnum.DEAL_COVER
   | typeof TransactionTypeProfileEnum.TT_SETTLE
+  | typeof TransactionTypeProfileEnum.CM_SETTLE
 >;
 
 const PURCHASE_PAGE_TYPE_BY_SLUG: Record<string, PurchasePageType> = {

@@ -8,6 +8,7 @@ import type {
   PassengerEntityType,
   PassengerNationalityType,
   IPassengerAmlVerifiedPayload,
+  IPassengerLookupSnapshot,
   IPassengerPanVerificationRequest,
   IPassengerPassportVerificationRequest,
 } from '../types/passengerTypes';
@@ -331,7 +332,7 @@ export const PassengerAmlVerificationModal = ({
   }, []);
   const applyPassengerLookupSnapshot = useCallback(
     (
-      snapshot: Record<string, unknown>,
+      snapshot: IPassengerLookupSnapshot,
       options?: { excludePanIdentityFields?: boolean }
     ) => {
       const mappedValues = mapPassengerSnapshotToPurchaseFormValues(snapshot);
@@ -387,34 +388,143 @@ export const PassengerAmlVerificationModal = ({
       selectedPartyProfile
     );
     const currentValues = form.getValues();
+    const preferCurrent = <T,>(current: T, fallback: T): T => {
+      if (typeof current === 'string') {
+        return (String(current).trim() ? current : fallback) as T;
+      }
+      if (typeof current === 'boolean') {
+        return current as T;
+      }
+      if (Array.isArray(current) && current.length > 0) {
+        return current;
+      }
+      return fallback;
+    };
 
     form.reset({
       ...currentValues,
       ...amlDefaults,
       ...detailsDefaults,
       entityType,
-      passengerId: '',
-      passengerInfoCaptured: false,
+      // Keep TT-deal / already-typed passenger identity — do not wipe on open.
+      passengerId: preferCurrent(currentValues.passengerId, ''),
+      passengerInfoCaptured: currentValues.passengerInfoCaptured,
       purposeId: currentValues.purposeId || '',
-      arrivalDate: '',
+      panNumber: preferCurrent(currentValues.panNumber, amlDefaults.panNumber),
+      panHolderName: preferCurrent(
+        currentValues.panHolderName,
+        amlDefaults.panHolderName
+      ),
+      panDob: preferCurrent(currentValues.panDob, amlDefaults.panDob),
+      passportPassengerName: preferCurrent(
+        currentValues.passportPassengerName,
+        amlDefaults.passportPassengerName
+      ),
+      passportNumber: preferCurrent(
+        currentValues.passportNumber,
+        amlDefaults.passportNumber
+      ),
+      passportIssueAt: preferCurrent(
+        currentValues.passportIssueAt,
+        detailsDefaults.passportIssueAt
+      ),
+      passportIssueDate: preferCurrent(
+        currentValues.passportIssueDate,
+        detailsDefaults.passportIssueDate
+      ),
+      passportExpiryDate: preferCurrent(
+        currentValues.passportExpiryDate,
+        detailsDefaults.passportExpiryDate
+      ),
+      nationalityType: preferCurrent(
+        currentValues.nationalityType,
+        detailsDefaults.nationalityType
+      ),
+      residentStatus: preferCurrent(
+        currentValues.residentStatus,
+        detailsDefaults.residentStatus
+      ),
+      countryId: preferCurrent(currentValues.countryId, detailsDefaults.countryId),
+      stateId: preferCurrent(currentValues.stateId, detailsDefaults.stateId),
+      locationId: preferCurrent(
+        currentValues.locationId,
+        detailsDefaults.locationId
+      ),
+      city: preferCurrent(currentValues.city, detailsDefaults.city),
+      address1: preferCurrent(currentValues.address1, detailsDefaults.address1),
+      address2: preferCurrent(currentValues.address2, detailsDefaults.address2),
+      email: preferCurrent(currentValues.email, detailsDefaults.email),
+      contactNo: preferCurrent(
+        currentValues.contactNo,
+        detailsDefaults.contactNo
+      ),
+      panHolderRelationType: preferCurrent(
+        currentValues.panHolderRelationType,
+        detailsDefaults.panHolderRelationType
+      ),
+      paidByPanNumber: preferCurrent(
+        currentValues.paidByPanNumber,
+        detailsDefaults.paidByPanNumber
+      ),
+      paidByPanHolderName: preferCurrent(
+        currentValues.paidByPanHolderName,
+        detailsDefaults.paidByPanHolderName
+      ),
+      paidByPanDob: preferCurrent(
+        currentValues.paidByPanDob,
+        detailsDefaults.paidByPanDob
+      ),
+      gstNumber: preferCurrent(
+        currentValues.gstNumber,
+        detailsDefaults.gstNumber
+      ),
+      gstStateId: preferCurrent(
+        currentValues.gstStateId,
+        detailsDefaults.gstStateId
+      ),
+      isPep: preferCurrent(currentValues.isPep, detailsDefaults.isPep),
+      arrivalDate: preferCurrent(
+        currentValues.arrivalDate,
+        detailsDefaults.arrivalDate
+      ),
+      travelCountryId: preferCurrent(currentValues.travelCountryId, ''),
+      travelAirlineId: preferCurrent(currentValues.travelAirlineId, ''),
+      travelTicketNo: preferCurrent(currentValues.travelTicketNo, ''),
+      travelRoute: preferCurrent(currentValues.travelRoute, ''),
+      travelDepartureDate: preferCurrent(currentValues.travelDepartureDate, ''),
+      travelNoOfDays: preferCurrent(currentValues.travelNoOfDays, ''),
+      travelNoOfPax: preferCurrent(currentValues.travelNoOfPax, ''),
+      travelPnr: preferCurrent(currentValues.travelPnr, ''),
     });
 
     if (entityType === PassengerEntityTypeEnum.CORPORATE) {
-      form.setValue('panNumber', amlDefaults.panNumber, {
-        shouldDirty: false,
-        shouldTouch: false,
-        shouldValidate: false,
-      });
-      form.setValue('panHolderName', amlDefaults.panHolderName, {
-        shouldDirty: false,
-        shouldTouch: false,
-        shouldValidate: false,
-      });
-      form.setValue('panDob', amlDefaults.panDob, {
-        shouldDirty: false,
-        shouldTouch: false,
-        shouldValidate: false,
-      });
+      form.setValue(
+        'panNumber',
+        preferCurrent(currentValues.panNumber, amlDefaults.panNumber),
+        {
+          shouldDirty: false,
+          shouldTouch: false,
+          shouldValidate: false,
+        }
+      );
+      form.setValue(
+        'panHolderName',
+        preferCurrent(currentValues.panHolderName, amlDefaults.panHolderName),
+        {
+          shouldDirty: false,
+          shouldTouch: false,
+          shouldValidate: false,
+        }
+      );
+      form.setValue(
+        'panDob',
+        preferCurrent(currentValues.panDob, amlDefaults.panDob),
+        {
+          shouldDirty: false,
+          shouldTouch: false,
+          shouldValidate: false,
+        }
+      );
     }
 
     syncIndiaCountry();
@@ -659,6 +769,7 @@ export const PassengerAmlVerificationModal = ({
   useEffect(() => {
     if (!open) {
       hasAutoVerifiedRef.current = false;
+      hasInitializedRef.current = false;
       return;
     }
 

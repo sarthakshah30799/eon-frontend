@@ -84,6 +84,8 @@ export interface ProductSettlementDocument {
   cancellationReason?: string | null;
   postingTransactionId?: string | null;
   itemCount?: number;
+  /** Distinct product codes on linked settlement items (list endpoints). */
+  productCodes?: string | null;
   items?: ProductSettlementDocumentItem[];
 }
 
@@ -118,6 +120,7 @@ export interface ProductSettlementDocumentFilters extends IOffsetPaginationParam
   currencyId?: string;
   branchId?: string;
   hoBranchId?: string;
+  productCode?: string;
   dateFrom?: string;
   dateTo?: string;
 }

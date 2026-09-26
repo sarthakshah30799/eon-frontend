@@ -23,6 +23,7 @@ import {
   productSettlementApi,
   type ProductSettlementDocument,
 } from '@/api/productSettlement';
+import { useLoadProductOptions } from '@/modules/productProfile/hooks';
 import {
   PRODUCT_SETTLEMENT_STATUS_OPTIONS,
   PRODUCT_SETTLEMENT_TEXT,
@@ -59,7 +60,14 @@ export const ProductSettlementListView = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const search = searchParams.get('search') ?? '';
+  const productCodeFilter = searchParams.get('productCode') ?? '';
   const debouncedSearch = useDebounce(search, 400);
+  const loadProductOptions = useLoadProductOptions();
+  const selectedProductOption = useMemo<AsyncSelectOption | null>(() => {
+    const code = productCodeFilter.trim();
+    if (!code) return null;
+    return { value: code, label: code };
+  }, [productCodeFilter]);
   const selectedStatuses = useMemo(
     () => readStatusValues(searchParams),
     [searchParams]
@@ -84,8 +92,9 @@ export const ProductSettlementListView = () => {
     () => ({
       status: selectedStatuses.length ? selectedStatuses : undefined,
       search: debouncedSearch.trim() || undefined,
+      productCode: productCodeFilter.trim() || undefined,
     }),
-    [debouncedSearch, selectedStatuses]
+    [debouncedSearch, productCodeFilter, selectedStatuses]
   );
 
   const resetOffsetParams = useCallback((next: URLSearchParams) => {
@@ -126,6 +135,22 @@ export const ProductSettlementListView = () => {
     [resetOffsetParams, setSearchParams]
   );
 
+  const handleProductCodeChange = useCallback(
+    (option: AsyncSelectOption | null) => {
+      setSearchParams(prev => {
+        const next = new URLSearchParams(prev);
+        const code = option?.value ? String(option.value).trim() : '';
+        if (code) {
+          next.set('productCode', code);
+        } else {
+          next.delete('productCode');
+        }
+        return resetOffsetParams(next);
+      });
+    },
+    [resetOffsetParams, setSearchParams]
+  );
+
   const {
     rows,
     isLoading,
@@ -148,6 +173,12 @@ export const ProductSettlementListView = () => {
       {
         accessorKey: 'transactionNumber',
         header: PRODUCT_SETTLEMENT_TEXT.transactionNumber,
+      },
+      {
+        id: 'productCodes',
+        header: PRODUCT_SETTLEMENT_TEXT.productCode,
+        cell: ({ row }) =>
+          String(row.original.productCodes ?? '').trim() || '-',
       },
       {
         accessorKey: 'kind',
@@ -241,6 +272,20 @@ export const ProductSettlementListView = () => {
         label: PRODUCT_SETTLEMENT_TEXT.search,
         placeholder: PRODUCT_SETTLEMENT_TEXT.searchPlaceholder,
       }),
+      {
+        id: 'productCode',
+        type: 'asyncSelect' as const,
+        label: PRODUCT_SETTLEMENT_TEXT.productCode,
+        value: selectedProductOption,
+        loadOptions: loadProductOptions,
+        onChange: handleProductCodeChange,
+        placeholder: PRODUCT_SETTLEMENT_TEXT.productCodeFilterPlaceholder,
+        defaultOptions: true,
+        pagination: true,
+        isSearchable: true,
+        isClearable: true,
+        className: 'w-52 shrink-0',
+      },
       buildStaticAsyncSelectToolbarFilter({
         id: 'status',
         label: PRODUCT_SETTLEMENT_TEXT.status,
@@ -253,9 +298,12 @@ export const ProductSettlementListView = () => {
       }),
     ],
     [
+      handleProductCodeChange,
       handleSearch,
       handleStatusChange,
+      loadProductOptions,
       search,
+      selectedProductOption,
       selectedStatusOptions,
       statusOptions,
     ]

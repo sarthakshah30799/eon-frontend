@@ -48,8 +48,6 @@ export interface DealCoverRatePayload {
   currencyId: string;
   issuerPartyProfileId: string;
   feAmount: string;
-  dealRate: string;
-  inrAmount: string;
   fbChargeAmount?: string;
   narration?: string | null;
   maturityOptionId: string;
@@ -59,6 +57,8 @@ export interface IDealCoverRate extends DealCoverRatePayload {
   id: string;
   status: DealCoverStatus;
   transactionNumber: string;
+  dealRate: string;
+  inrAmount: string;
   dealNo?: string | null;
   bookingRate?: string | null;
   rejectionReason?: string | null;
@@ -82,7 +82,7 @@ export interface IDealCoverRate extends DealCoverRatePayload {
 }
 
 export interface DealCoverRateListFilters extends IOffsetPaginationParams {
-  status?: DealCoverStatus;
+  status?: DealCoverStatus | DealCoverStatus[];
   branchId?: string;
   bankAccountProfileId?: string;
   productId?: string;
@@ -91,15 +91,6 @@ export interface DealCoverRateListFilters extends IOffsetPaginationParams {
   dateFrom?: string;
   dateTo?: string;
   search?: string;
-}
-
-export interface DealCoverAckCurrencyGroup {
-  currencyId: string;
-  currencySnapshot?: DealCoverSnapshot | null;
-  totalFeAmount: string;
-  weightedAvgDealRate: string;
-  totalInrAmount: string;
-  items: IDealCoverRate[];
 }
 
 export interface ApproveDealCoverPayload {

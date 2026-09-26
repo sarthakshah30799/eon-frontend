@@ -173,6 +173,8 @@ export const useTransactionAccountPostings = (enabled = true) => {
         number: transaction.number ?? '-',
         branch: formatReferenceLabel(transaction.branchSnapshot),
         partyProfile: formatReferenceLabel(transaction.partyProfileSnapshot),
+        productCodes:
+          (transaction.productCodes ?? []).filter(Boolean).join(', ') || '-',
         transactionType: transaction.transactionType,
         tradeMode: transaction.tradeMode,
         status: transaction.status,

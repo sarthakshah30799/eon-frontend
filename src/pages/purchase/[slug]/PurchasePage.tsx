@@ -18,6 +18,7 @@ import { PAGINATION_DEFAULTS } from '@/constants/paginationConstants';
 import { transactionsApi } from '@/api/transactions';
 import { AD1ListView } from '@/modules/purchase';
 import { useLoadBranchOptions } from '@/modules/branchProfile/hooks';
+import { useLoadProductOptions } from '@/modules/productProfile/hooks';
 import {
   TransactionListTable,
   type TransactionListRow,
@@ -42,6 +43,7 @@ const PurchasePageView = ({ purchasePageType }: PurchasePageViewProps) => {
   const { slug: routeSlug } = useParams<{ slug?: string }>();
   const { user } = useAuth();
   const search = searchParams.get('search') ?? '';
+  const productCodeFilter = searchParams.get('productCode') ?? '';
   const debouncedSearch = useDebounce(search, 400);
   const [branchFilter, setBranchFilter] = useState('');
   const canSeeBranchFilter = Boolean(
@@ -49,8 +51,14 @@ const PurchasePageView = ({ purchasePageType }: PurchasePageViewProps) => {
   );
 
   const loadBranchOptions = useLoadBranchOptions({ activeOnly: true });
+  const loadProductOptions = useLoadProductOptions();
   const [selectedBranchOption, setSelectedBranchOption] =
     useState<AsyncSelectOption | null>(null);
+  const selectedProductOption = useMemo<AsyncSelectOption | null>(() => {
+    const code = productCodeFilter.trim();
+    if (!code) return null;
+    return { value: code, label: code };
+  }, [productCodeFilter]);
 
   const selectedSlug = useMemo(
     () => getPurchasePageSlugFromType(purchasePageType) ?? routeSlug ?? '',
@@ -68,8 +76,9 @@ const PurchasePageView = ({ purchasePageType }: PurchasePageViewProps) => {
       slug: purchasePageType ?? undefined,
       search: debouncedSearch.trim() || undefined,
       branchId: branchFilter || undefined,
+      productCode: productCodeFilter.trim() || undefined,
     }),
-    [branchFilter, debouncedSearch, purchasePageType]
+    [branchFilter, debouncedSearch, productCodeFilter, purchasePageType]
   );
 
   const {
@@ -127,6 +136,8 @@ const PurchasePageView = ({ purchasePageType }: PurchasePageViewProps) => {
         number: transaction.number ?? '-',
         branch: formatReferenceLabel(transaction.branchSnapshot),
         partyProfile: formatReferenceLabel(transaction.partyProfileSnapshot),
+        productCodes:
+          (transaction.productCodes ?? []).filter(Boolean).join(', ') || '-',
         transactionType: transaction.transactionType,
         tradeMode: transaction.tradeMode,
         status: transaction.status,
@@ -142,6 +153,35 @@ const PurchasePageView = ({ purchasePageType }: PurchasePageViewProps) => {
         onChange: handleSearch,
         placeholder: 'Search transaction number',
       }),
+      {
+        id: 'productCode',
+        type: 'asyncSelect' as const,
+        label: 'Product Code',
+        value: selectedProductOption,
+        loadOptions: loadProductOptions,
+        onChange: (option: AsyncSelectOption | null) => {
+          setSearchParams(prev => {
+            const next = new URLSearchParams(prev);
+            const code = option?.value ? String(option.value).trim() : '';
+            if (code) {
+              next.set('productCode', code);
+            } else {
+              next.delete('productCode');
+            }
+            next.set('offset', String(PAGINATION_DEFAULTS.OFFSET));
+            if (!next.has('limit')) {
+              next.set('limit', String(PAGINATION_DEFAULTS.LIMIT));
+            }
+            return next;
+          });
+        },
+        placeholder: 'All Products',
+        defaultOptions: true,
+        pagination: true,
+        isSearchable: true,
+        isClearable: true,
+        className: 'w-52 shrink-0',
+      },
       buildBranchToolbarFilter({
         visible: canSeeBranchFilter,
         value: selectedBranchOption,
@@ -157,9 +197,12 @@ const PurchasePageView = ({ purchasePageType }: PurchasePageViewProps) => {
       canSeeBranchFilter,
       handleSearch,
       loadBranchOptions,
+      loadProductOptions,
       resetOffset,
       search,
       selectedBranchOption,
+      selectedProductOption,
+      setSearchParams,
     ]
   );
 

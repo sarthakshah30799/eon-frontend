@@ -93,7 +93,6 @@ export const AdditionalSettingsCodeEnum = {
   DealCoverNumberSeries: 'DEAL_COVER',
   TtSettleNumberSeries: 'TT_SETTLE',
   TtSettings: 'TT_SETTINGS',
-  TtMaturityDayLimits: 'TT_MATURITY_DAY_LIMITS',
   TtAutoSettleWithHo: 'AUTO_SETTLE_TT_WITH_HO',
   ReceiptVoucherNumberSeries: 'RECEIPT_VOUCHER',
   PaymentVoucherNumberSeries: 'PAYMENT_VOUCHER',

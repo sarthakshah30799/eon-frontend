@@ -15,6 +15,7 @@ import type { IPurchaseTtRemittanceFormValues } from '../types/purchaseTypes';
 import {
   createEmptyTtRemittanceValues,
   isTtRemittanceComplete,
+  normalizeTtRemittanceFormValues,
 } from '../utils/purchaseUtils';
 
 const remittanceSchema = yup.object({
@@ -28,7 +29,10 @@ const remittanceSchema = yup.object({
   beneficiaryCountryId: yup.string().default(''),
   bankName: yup.string().trim().required('Bank name is required'),
   bankAddress: yup.string().default(''),
-  accountNumber: yup.string().default(''),
+  accountNumber: yup
+    .string()
+    .trim()
+    .required('Bank account no / IBAN is required'),
   iban: yup.string().default(''),
   swiftCode: yup.string().trim().required('SWIFT code is required'),
   bsbCode: yup.string().default(''),
@@ -49,15 +53,7 @@ const remittanceSchema = yup.object({
   dateOfIncorporation: yup.string().default(''),
   miceAmount: yup.string().default(''),
   miceReference: yup.string().default(''),
-}).test(
-  'account-or-iban',
-  'Account number or IBAN is required',
-  value =>
-    Boolean(
-      String(value?.accountNumber ?? '').trim() ||
-        String(value?.iban ?? '').trim()
-    )
-);
+});
 
 interface TtRemittanceModalProps {
   open: boolean;
@@ -76,19 +72,26 @@ export const TtRemittanceModal = ({
 }: TtRemittanceModalProps) => {
   const form = useForm<IPurchaseTtRemittanceFormValues>({
     resolver: yupResolver(remittanceSchema) as never,
-    defaultValues: initialValues ?? createEmptyTtRemittanceValues(),
+    defaultValues: normalizeTtRemittanceFormValues(
+      initialValues ?? createEmptyTtRemittanceValues()
+    ),
     mode: 'onSubmit',
   });
 
   useEffect(() => {
     if (open) {
-      form.reset(initialValues ?? createEmptyTtRemittanceValues());
+      form.reset(
+        normalizeTtRemittanceFormValues(
+          initialValues ?? createEmptyTtRemittanceValues()
+        )
+      );
     }
   }, [form, initialValues, open]);
 
   const handleSubmit = form.handleSubmit(values => {
-    if (!isTtRemittanceComplete(values)) return;
-    onConfirm(values);
+    const normalized = normalizeTtRemittanceFormValues(values);
+    if (!isTtRemittanceComplete(normalized)) return;
+    onConfirm(normalized);
     onOpenChange(false);
   });
 
@@ -110,9 +113,11 @@ export const TtRemittanceModal = ({
                 label="Remitter Name"
                 disabled={readOnly}
               />
-              <FormFieldInput
+              <FormFieldCategoryOption
                 name="remitterEntityType"
                 label="Entity Type"
+                code={CategoryOptionCodeEnum.EntityType}
+                isCreatable={false}
                 disabled={readOnly}
               />
               <FormFieldInput
@@ -161,7 +166,9 @@ export const TtRemittanceModal = ({
           </section>
 
           <section className="space-y-3">
-            <h3 className="text-sm font-semibold text-text-primary">Bank</h3>
+            <h3 className="text-sm font-semibold text-text-primary">
+              Beneficiary Bank
+            </h3>
             <div className="grid gap-4 md:grid-cols-2">
               <FormFieldInput
                 name="bankName"
@@ -170,29 +177,17 @@ export const TtRemittanceModal = ({
               />
               <FormFieldInput
                 name="swiftCode"
-                label="SWIFT"
+                label="SWIFT Code"
                 disabled={readOnly}
               />
               <FormFieldInput
                 name="accountNumber"
-                label="Account Number"
-                disabled={readOnly}
-              />
-              <FormFieldInput name="iban" label="IBAN" disabled={readOnly} />
-              <FormFieldInput name="bsbCode" label="BSB" disabled={readOnly} />
-              <FormFieldInput
-                name="sortCode"
-                label="Sort Code"
+                label="Bank Account No / IBAN"
                 disabled={readOnly}
               />
               <FormFieldInput
-                name="routingNumber"
-                label="Routing Number"
-                disabled={readOnly}
-              />
-              <FormFieldInput
-                name="transitNumber"
-                label="Transit Number"
+                name="bsbCode"
+                label="BSB / Sort / Routing / Transit Code"
                 disabled={readOnly}
               />
               <FormFieldCategoryOption
@@ -218,23 +213,25 @@ export const TtRemittanceModal = ({
             <div className="grid gap-4 md:grid-cols-2">
               <FormFieldInput
                 name="intermediaryBankName"
-                label="Intermediary Bank"
+                label="Intermediary Bank Name"
                 disabled={readOnly}
               />
               <FormFieldInput
                 name="intermediaryBankCodes"
-                label="Intermediary Codes"
+                label="SWIFT / Sort / BSB / ABA / Transit / Fed Wire Code"
                 disabled={readOnly}
               />
-              <FormFieldInput
+              <FormFieldCategoryOption
                 name="relationship"
                 label="Relationship"
+                code={CategoryOptionCodeEnum.Relationship}
+                isCreatable={false}
                 disabled={readOnly}
               />
               <div className="md:col-span-2">
                 <FormFieldTextarea
                   name="intermediaryBankAddress"
-                  label="Intermediary Address"
+                  label="Intermediary Bank Address"
                   disabled={readOnly}
                 />
               </div>

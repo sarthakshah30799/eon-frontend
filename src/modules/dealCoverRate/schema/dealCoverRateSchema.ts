@@ -9,6 +9,7 @@ export const dealCoverRateSchema = yup.object({
   partyProfileId: yup.string().required('Party profile is required'),
   marketingExecutiveId: yup.string().optional(),
   passengerName: yup.string().trim().required('Passenger name is required'),
+  passengerId: yup.string().optional(),
   passengerPan: yup.string().optional(),
   passengerPanHolder: yup.string().optional(),
   passengerPanDob: yup.string().optional(),

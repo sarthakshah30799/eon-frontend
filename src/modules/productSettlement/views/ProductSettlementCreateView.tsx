@@ -1,7 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { useFormContext } from 'react-hook-form';
+import {
+  useFormContext,
+  type FieldErrors,
+  type FieldValues,
+} from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Form } from '@/components/forms';
 import { Loader } from '@/components/ui/loader';
@@ -17,6 +21,44 @@ import { PRODUCT_SETTLEMENT_TEXT } from '../constants/productSettlementConstants
 import { useCreateProductSettlement } from '../hooks';
 import type { ProductSettlementFormValues } from '../types/productSettlementTypes';
 import { emptySettlementForm } from '../utils/productSettlementUtils';
+
+const collectErrorMessages = (
+  errors: FieldErrors<FieldValues>,
+  path = ''
+): string[] => {
+  const messages: string[] = [];
+  for (const [key, value] of Object.entries(errors)) {
+    if (!value) continue;
+    const nextPath = path ? `${path}.${key}` : key;
+    if (typeof value === 'object' && value !== null && 'message' in value) {
+      const message = String(
+        (value as { message?: unknown }).message ?? ''
+      ).trim();
+      if (message) messages.push(`${nextPath}: ${message}`);
+    }
+    if (typeof value === 'object' && value !== null) {
+      messages.push(
+        ...collectErrorMessages(value as FieldErrors<FieldValues>, nextPath)
+      );
+    }
+  }
+  return messages;
+};
+
+const SettlementFormDebug = () => {
+  const { formState, getValues } = useFormContext<ProductSettlementFormValues>();
+
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    console.info('[PRODUCT SETTLEMENT] form state', {
+      isValid: formState.isValid,
+      values: getValues(),
+      errors: formState.errors,
+    });
+  }, [formState.errors, formState.isValid, getValues]);
+
+  return null;
+};
 
 const SettlementDateSync = ({
   transactionDate,
@@ -115,6 +157,47 @@ export const ProductSettlementCreateView = () => {
     kind,
     transactionDatePolicy.defaultTransactionDate,
   ]);
+  const missingHoBranch = isHo && !selectedHoBranchId;
+  const isPolicyLoading = Boolean(policyBranchId) && policyQuery.isLoading;
+  const cannotPunch = transactionDatePolicy.canPunchTransactions === false;
+  const isSubmitDisabled =
+    createMutation.isPending ||
+    isPolicyLoading ||
+    missingHoBranch ||
+    cannotPunch;
+  const submitMessage = missingHoBranch
+    ? PRODUCT_SETTLEMENT_TEXT.blockedNoHoBranch
+    : isPolicyLoading
+      ? PRODUCT_SETTLEMENT_TEXT.blockedLoadingPolicy
+      : cannotPunch
+        ? transactionDatePolicy.helperText ||
+          PRODUCT_SETTLEMENT_TEXT.blockedCannotPunch
+        : undefined;
+
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    console.info('[PRODUCT SETTLEMENT] submit gate', {
+      isSubmitDisabled,
+      missingHoBranch,
+      isPolicyLoading,
+      cannotPunch,
+      policyBranchId,
+      canPunchTransactions: transactionDatePolicy.canPunchTransactions,
+      helperText: transactionDatePolicy.helperText,
+      workflowState: policyQuery.data?.workflowState,
+      submitMessage,
+    });
+  }, [
+    cannotPunch,
+    isPolicyLoading,
+    isSubmitDisabled,
+    missingHoBranch,
+    policyBranchId,
+    policyQuery.data?.workflowState,
+    submitMessage,
+    transactionDatePolicy.canPunchTransactions,
+    transactionDatePolicy.helperText,
+  ]);
 
   if (authLoading || !user || (isHo && branchesQuery.isLoading)) {
     return <Loader />;
@@ -141,15 +224,27 @@ export const ProductSettlementCreateView = () => {
         toast.success(PRODUCT_SETTLEMENT_TEXT.created);
         navigate('/product-settlement');
       }}
+      onError={errors => {
+        const messages = collectErrorMessages(errors);
+        if (import.meta.env.DEV) {
+          console.error(
+            '[PRODUCT SETTLEMENT] submit blocked by validation errors',
+            errors,
+            messages
+          );
+        }
+        toast.error(
+          messages[0] ?? PRODUCT_SETTLEMENT_TEXT.validationFailed
+        );
+      }}
       footer={{
         submitLabel: PRODUCT_SETTLEMENT_TEXT.submit,
         onCancel: () => navigate('/product-settlement'),
-        isSubmitDisabled:
-          createMutation.isPending ||
-          policyQuery.isFetching ||
-          transactionDatePolicy.canPunchTransactions === false,
+        isSubmitDisabled,
+        submitMessage,
       }}
     >
+      <SettlementFormDebug />
       <SettlementKindSync kind={kind} hoBranchId={defaultHoBranchId} />
       <SettlementDateSync
         transactionDate={transactionDatePolicy.defaultTransactionDate}
@@ -166,7 +261,7 @@ export const ProductSettlementCreateView = () => {
         <ProductSettlementForm
           isHo={isHo}
           transactionDatePolicy={transactionDatePolicy}
-          isTransactionDateLoading={policyQuery.isFetching}
+          isTransactionDateLoading={isPolicyLoading}
           onHoBranchChange={setHoBranchId}
         />
       </div>

@@ -1,7 +1,20 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import type { RowSelectionState } from '@tanstack/react-table';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Button, Label, Modal, Table, type TableColumnDef } from '@/components/ui';
+import {
+  Button,
+  Checkbox,
+  Label,
+  Modal,
+  Table,
+  type AsyncSelectOption,
+  type TableColumnDef,
+} from '@/components/ui';
+import {
+  buildStaticAsyncSelectToolbarFilter,
+  TableToolbar,
+} from '@/components/ui/table';
 import { Loader } from '@/components/ui/loader';
 import { useOffsetPaginatedList } from '@/hooks';
 import { PAGINATION_DEFAULTS } from '@/constants/paginationConstants';
@@ -9,7 +22,6 @@ import { formatDateTime } from '@/utils';
 import {
   DealCoverStatus,
   dealCoverRateApi,
-  type DealCoverRateListFilters,
   type IDealCoverRate,
 } from '@/api/dealCoverRate';
 import {
@@ -20,7 +32,11 @@ import {
   groupDealsByCurrency,
   snapshotLabel,
 } from '@/modules/dealCoverRate/utils';
-import { DEAL_COVER_STATUS_OPTIONS } from '@/modules/dealCoverRate/constants';
+import {
+  DEAL_COVER_STATUS_FILTER_OPTIONS,
+  readDealCoverStatusFromSearchParams,
+  resolveDealCoverStatusDropdownValue,
+} from '@/modules/dealCoverRate/constants';
 import { DEAL_COVER_ACK_TEXT } from '../constants';
 
 type AckRowDraft = {
@@ -30,30 +46,95 @@ type AckRowDraft = {
 
 type ConfirmationAction = 'APPROVE' | 'REJECT' | null;
 
+type AckDraftField = keyof AckRowDraft;
+
+const emptyDraft = (): AckRowDraft => ({
+  dealNo: '',
+  bookingRate: '',
+});
+
+/** Local-state input so table column remounts / parent re-renders do not steal focus. */
+const AckDraftInput = ({
+  dealId,
+  field,
+  initialValue,
+  placeholder,
+  disabled,
+  onCommit,
+}: {
+  dealId: string;
+  field: AckDraftField;
+  initialValue: string;
+  placeholder: string;
+  disabled: boolean;
+  onCommit: (dealId: string, field: AckDraftField, value: string) => void;
+}) => {
+  const [value, setValue] = useState(initialValue);
+
+  return (
+    <input
+      className="min-w-36 w-full rounded-sm border border-border-primary bg-surface-primary px-2 py-1.5 text-sm"
+      placeholder={placeholder}
+      value={value}
+      disabled={disabled}
+      onChange={event => {
+        const next = event.target.value;
+        setValue(next);
+        onCommit(dealId, field, next);
+      }}
+      onKeyDown={event => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+        }
+      }}
+    />
+  );
+};
+
 export const DealCoverAckView = () => {
   const navigate = useNavigate();
-  const [, setSearchParams] = useSearchParams();
-  const [filters, setFilters] = useState<
-    Omit<DealCoverRateListFilters, 'limit' | 'offset'>
-  >({ status: DealCoverStatus.PENDING });
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [drafts, setDrafts] = useState<Record<string, AckRowDraft>>({});
+  const [searchParams, setSearchParams] = useSearchParams();
+  const status = useMemo(
+    () => readDealCoverStatusFromSearchParams(searchParams),
+    [searchParams]
+  );
+  const filters = useMemo(
+    () => ({
+      status: status || undefined,
+    }),
+    [status]
+  );
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  const draftsRef = useRef<Record<string, AckRowDraft>>({});
   const [confirmationAction, setConfirmationAction] =
     useState<ConfirmationAction>(null);
   const [reason, setReason] = useState('');
   const approveMutation = useApproveDealCoverRate();
   const rejectMutation = useRejectDealCoverRate();
 
-  const resetOffset = useCallback(() => {
-    setSearchParams(prev => {
-      const next = new URLSearchParams(prev);
-      next.set('offset', String(PAGINATION_DEFAULTS.OFFSET));
-      if (!next.has('limit')) {
-        next.set('limit', String(PAGINATION_DEFAULTS.LIMIT));
-      }
-      return next;
-    });
-  }, [setSearchParams]);
+  const resetOffsetParams = useCallback((next: URLSearchParams) => {
+    next.set('offset', String(PAGINATION_DEFAULTS.OFFSET));
+    if (!next.has('limit')) {
+      next.set('limit', String(PAGINATION_DEFAULTS.LIMIT));
+    }
+    return next;
+  }, []);
+
+  const handleStatusChange = useCallback(
+    (option: AsyncSelectOption | null) => {
+      setSearchParams(prev => {
+        const next = new URLSearchParams(prev);
+        const value = String(option?.value ?? 'ALL').trim();
+        if (!value || value === 'ALL') {
+          next.delete('status');
+        } else {
+          next.set('status', value);
+        }
+        return resetOffsetParams(next);
+      });
+    },
+    [resetOffsetParams, setSearchParams]
+  );
 
   const {
     rows,
@@ -73,48 +154,40 @@ export const DealCoverAckView = () => {
   });
 
   const groups = useMemo(() => groupDealsByCurrency(rows), [rows]);
-  const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
+  const selectedIds = useMemo(
+    () => Object.keys(rowSelection).filter(id => rowSelection[id]),
+    [rowSelection]
+  );
   const isActionPending =
     approveMutation.isPending || rejectMutation.isPending;
 
-  const toggleId = (id: string) => {
-    setSelectedIds(current =>
-      current.includes(id)
-        ? current.filter(item => item !== id)
-        : [...current, id]
-    );
-  };
-
-  const updateDraft = (
-    id: string,
-    field: keyof AckRowDraft,
-    value: string
-  ) => {
-    setDrafts(current => ({
-      ...current,
-      [id]: {
-        dealNo: current[id]?.dealNo ?? '',
-        bookingRate: current[id]?.bookingRate ?? '',
+  const commitDraft = useCallback(
+    (id: string, field: AckDraftField, value: string) => {
+      const current = draftsRef.current[id] ?? emptyDraft();
+      draftsRef.current[id] = {
+        ...current,
         [field]: value,
-      },
-    }));
-  };
+      };
+    },
+    []
+  );
 
   const runApprove = async () => {
     if (selectedIds.length === 0) {
       toast.error(DEAL_COVER_ACK_TEXT.noneSelected);
       return;
     }
-    const incomplete = selectedIds.some(id => {
-      const draft = drafts[id];
-      return !draft?.dealNo?.trim() || !draft?.bookingRate?.trim();
-    });
-    if (incomplete) {
-      toast.error(DEAL_COVER_ACK_TEXT.incompleteRows);
-      return;
+    for (const id of selectedIds) {
+      const draft = draftsRef.current[id] ?? emptyDraft();
+      const dealNo = draft.dealNo.trim();
+      const bookingRate = draft.bookingRate.trim();
+      if (!dealNo || !bookingRate) {
+        toast.error(DEAL_COVER_ACK_TEXT.incompleteRows);
+        return;
+      }
     }
     for (const id of selectedIds) {
-      const draft = drafts[id];
+      const draft = draftsRef.current[id] ?? emptyDraft();
       await approveMutation.mutateAsync({
         id,
         payload: {
@@ -124,7 +197,7 @@ export const DealCoverAckView = () => {
       });
     }
     toast.success(DEAL_COVER_ACK_TEXT.approved);
-    setSelectedIds([]);
+    setRowSelection({});
     setConfirmationAction(null);
   };
 
@@ -144,28 +217,56 @@ export const DealCoverAckView = () => {
       });
     }
     toast.success(DEAL_COVER_ACK_TEXT.rejected);
-    setSelectedIds([]);
+    setRowSelection({});
     setReason('');
     setConfirmationAction(null);
   };
+
+  const toolbarFilters = useMemo(
+    () => [
+      buildStaticAsyncSelectToolbarFilter({
+        id: 'status',
+        label: DEAL_COVER_ACK_TEXT.status,
+        options: DEAL_COVER_STATUS_FILTER_OPTIONS,
+        value: resolveDealCoverStatusDropdownValue(status),
+        placeholder: 'All',
+        className: 'min-w-40 shrink-0',
+        onChange: handleStatusChange,
+      }),
+    ],
+    [handleStatusChange, status]
+  );
 
   const rowColumns = useMemo<TableColumnDef<IDealCoverRate>[]>(
     () => [
       {
         id: 'select',
-        header: '',
-        cell: ({ row }) => (
-          <Button
-            type="button"
-            size="sm"
-            variant={selectedSet.has(row.original.id) ? 'default' : 'outline'}
-            onClick={() => toggleId(row.original.id)}
-          >
-            {selectedSet.has(row.original.id)
-              ? DEAL_COVER_ACK_TEXT.selected
-              : DEAL_COVER_ACK_TEXT.select}
-          </Button>
+        header: ({ table }) => (
+          <div className="flex justify-center">
+            <Checkbox
+              checked={table.getIsAllRowsSelected()}
+              onChange={checked => table.toggleAllRowsSelected(checked)}
+              aria-label={DEAL_COVER_ACK_TEXT.selectAll}
+              className="shrink-0"
+            />
+          </div>
         ),
+        cell: ({ row }) => (
+          <div className="flex justify-center">
+            <Checkbox
+              checked={row.getIsSelected()}
+              onChange={checked => row.toggleSelected(checked)}
+              aria-label={`${DEAL_COVER_ACK_TEXT.select} ${row.original.transactionNumber}`}
+              className="shrink-0"
+              disabled={row.original.status !== DealCoverStatus.PENDING}
+            />
+          </div>
+        ),
+        enableSorting: false,
+        meta: {
+          headerClassName: 'w-14',
+          cellClassName: 'w-14',
+        },
       },
       {
         accessorKey: 'transactionDate',
@@ -208,34 +309,44 @@ export const DealCoverAckView = () => {
       {
         id: 'dealNo',
         header: DEAL_COVER_ACK_TEXT.dealNo,
+        meta: {
+          headerClassName: 'min-w-40',
+          cellClassName: 'min-w-40',
+        },
         cell: ({ row }) => (
-          <input
-            className="w-full rounded-sm border border-border-primary bg-surface-primary px-2 py-1 text-sm"
-            value={drafts[row.original.id]?.dealNo ?? ''}
-            onChange={event =>
-              updateDraft(row.original.id, 'dealNo', event.target.value)
-            }
+          <AckDraftInput
+            dealId={row.original.id}
+            field="dealNo"
+            initialValue={draftsRef.current[row.original.id]?.dealNo ?? ''}
+            placeholder="Deal no"
             disabled={row.original.status !== DealCoverStatus.PENDING}
+            onCommit={commitDraft}
           />
         ),
       },
       {
         id: 'bookingRate',
         header: DEAL_COVER_ACK_TEXT.bookingRate,
+        meta: {
+          headerClassName: 'min-w-40',
+          cellClassName: 'min-w-40',
+        },
         cell: ({ row }) => (
-          <input
-            className="w-full rounded-sm border border-border-primary bg-surface-primary px-2 py-1 text-sm"
-            value={drafts[row.original.id]?.bookingRate ?? ''}
-            onChange={event =>
-              updateDraft(row.original.id, 'bookingRate', event.target.value)
+          <AckDraftInput
+            dealId={row.original.id}
+            field="bookingRate"
+            initialValue={
+              draftsRef.current[row.original.id]?.bookingRate ?? ''
             }
+            placeholder="Booking rate"
             disabled={row.original.status !== DealCoverStatus.PENDING}
+            onCommit={commitDraft}
           />
         ),
       },
       {
-        id: 'view',
-        header: '',
+        id: 'actions',
+        header: DEAL_COVER_ACK_TEXT.view,
         cell: ({ row }) => (
           <Button
             type="button"
@@ -250,7 +361,7 @@ export const DealCoverAckView = () => {
         ),
       },
     ],
-    [drafts, navigate, selectedSet]
+    [commitDraft, navigate]
   );
 
   if (isLoading) return <Loader />;
@@ -288,30 +399,7 @@ export const DealCoverAckView = () => {
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        {DEAL_COVER_STATUS_OPTIONS.map(option => (
-          <Button
-            key={option.value}
-            type="button"
-            size="sm"
-            variant={
-              (filters.status ?? 'ALL') === option.value ? 'default' : 'outline'
-            }
-            onClick={() => {
-              setFilters(current => ({
-                ...current,
-                status:
-                  option.value === 'ALL'
-                    ? undefined
-                    : (option.value as typeof DealCoverStatus.PENDING),
-              }));
-              resetOffset();
-            }}
-          >
-            {option.label}
-          </Button>
-        ))}
-      </div>
+      <TableToolbar filters={toolbarFilters} />
 
       {groups.length === 0 ? (
         <section className="rounded-sm border border-border-primary bg-surface-primary p-6 text-sm text-text-secondary">
@@ -346,6 +434,10 @@ export const DealCoverAckView = () => {
               isFetching={isFetching}
               enableFiltering={false}
               enablePagination={false}
+              enableRowSelection
+              rowSelection={rowSelection}
+              onRowSelectionChange={setRowSelection}
+              getRowId={deal => deal.id}
               emptyMessage={DEAL_COVER_ACK_TEXT.empty}
             />
           </section>

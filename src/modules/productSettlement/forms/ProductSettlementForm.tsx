@@ -114,8 +114,7 @@ export const ProductSettlementForm = ({
     name: 'hoBranchSnapshot',
   });
   const items = useWatch({ control: form.control, name: 'items' }) ?? [];
-  const isIssuerKind =
-    isHo || kind === ProductSettlementDocumentKind.HO_ISSUER;
+  const isIssuerKind = kind === ProductSettlementDocumentKind.HO_ISSUER;
   const { activeBranchId } = useAuth();
   const issuerBranchId = isIssuerKind
     ? hoBranchId || undefined
@@ -194,7 +193,7 @@ export const ProductSettlementForm = ({
               {PRODUCT_SETTLEMENT_TEXT.type}
             </div>
             <div className="rounded-sm border border-border-primary bg-surface-secondary px-3 py-2 text-sm text-text-primary">
-              {isHo
+              {isIssuerKind
                 ? PRODUCT_SETTLEMENT_TEXT.kindIssuer
                 : PRODUCT_SETTLEMENT_TEXT.kindBranch}
             </div>

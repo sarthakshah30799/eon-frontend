@@ -1,3 +1,11 @@
+/** Sticky select/checkbox column — pinned to the left while scrolling. */
+export const TABLE_SELECT_COLUMN_META = {
+  headerClassName:
+    'sticky top-0 left-0 z-40 w-14 border-r border-border-primary bg-surface-secondary',
+  cellClassName:
+    'sticky left-0 z-10 w-14 border-r border-border-primary bg-surface-primary',
+} as const;
+
 /** Sticky Actions column — keeps header above row icons while scrolling. */
 export const TABLE_ACTIONS_COLUMN_META = {
   headerClassName:
@@ -17,33 +25,45 @@ export const TABLE_ACTION_DELETE_BUTTON_CLASSNAME =
 
 export const TABLE_ACTION_ICON_CLASSNAME = 'h-4 w-4';
 
-const STICKY_ACTION_CLASS_RE =
-  /(?:^|\s)(?:sticky|top-\S+|right-\S+|z-\S+|border-l|border-border-primary|bg-surface-(?:secondary|primary))(?=\s|$)/g;
+const STICKY_COLUMN_CLASS_RE =
+  /(?:^|\s)(?:sticky|top-\S+|left-\S+|right-\S+|z-\S+|border-l|border-r|border-border-primary|bg-surface-(?:secondary|primary)|w-14)(?=\s|$)/g;
 
-/** Merge shared sticky Actions styles with any extra meta classes (e.g. width). */
-export function resolveTableColumnMeta(
-  columnId: string | undefined,
+const SELECT_COLUMN_IDS = new Set(['select']);
+const ACTIONS_COLUMN_IDS = new Set(['actions', 'action', 'view']);
+
+const mergeStickyMeta = (
+  sticky: { headerClassName: string; cellClassName: string },
   meta?: { headerClassName?: string; cellClassName?: string }
-): { headerClassName?: string; cellClassName?: string } {
-  if (columnId !== 'actions') {
-    return meta ?? {};
-  }
-
+) => {
   const extraHeader = (meta?.headerClassName ?? '')
-    .replace(STICKY_ACTION_CLASS_RE, ' ')
+    .replace(STICKY_COLUMN_CLASS_RE, ' ')
     .replace(/\s+/g, ' ')
     .trim();
   const extraCell = (meta?.cellClassName ?? '')
-    .replace(STICKY_ACTION_CLASS_RE, ' ')
+    .replace(STICKY_COLUMN_CLASS_RE, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 
   return {
-    headerClassName: [TABLE_ACTIONS_COLUMN_META.headerClassName, extraHeader]
+    headerClassName: [sticky.headerClassName, extraHeader]
       .filter(Boolean)
       .join(' '),
-    cellClassName: [TABLE_ACTIONS_COLUMN_META.cellClassName, extraCell]
-      .filter(Boolean)
-      .join(' '),
+    cellClassName: [sticky.cellClassName, extraCell].filter(Boolean).join(' '),
   };
+};
+
+/** Merge shared sticky select/actions styles with any extra meta classes. */
+export function resolveTableColumnMeta(
+  columnId: string | undefined,
+  meta?: { headerClassName?: string; cellClassName?: string }
+): { headerClassName?: string; cellClassName?: string } {
+  if (columnId && SELECT_COLUMN_IDS.has(columnId)) {
+    return mergeStickyMeta(TABLE_SELECT_COLUMN_META, meta);
+  }
+
+  if (columnId && ACTIONS_COLUMN_IDS.has(columnId)) {
+    return mergeStickyMeta(TABLE_ACTIONS_COLUMN_META, meta);
+  }
+
+  return meta ?? {};
 }

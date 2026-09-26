@@ -1,38 +1,67 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Button, Table, type TableColumnDef } from '@/components/ui';
+import {
+  Button,
+  Table,
+  type AsyncSelectOption,
+  type TableColumnDef,
+} from '@/components/ui';
+import { buildStaticAsyncSelectToolbarFilter } from '@/components/ui/table';
 import { useOffsetPaginatedList } from '@/hooks';
 import { PAGINATION_DEFAULTS } from '@/constants/paginationConstants';
 import { formatDateTime } from '@/utils';
 import {
   DealCoverStatus,
   dealCoverRateApi,
-  type DealCoverRateListFilters,
   type IDealCoverRate,
 } from '@/api/dealCoverRate';
 import {
   DEAL_COVER_RATE_TEXT,
+  DEAL_COVER_STATUS_FILTER_OPTIONS,
   DEAL_COVER_STATUS_OPTIONS,
+  readDealCoverStatusFromSearchParams,
+  resolveDealCoverStatusDropdownValue,
 } from '../constants';
 import { snapshotLabel } from '../utils';
 
 export const DealCoverRateListView = () => {
   const navigate = useNavigate();
-  const [, setSearchParams] = useSearchParams();
-  const [filters, setFilters] = useState<
-    Omit<DealCoverRateListFilters, 'limit' | 'offset'>
-  >({ status: DealCoverStatus.PENDING });
+  const [searchParams, setSearchParams] = useSearchParams();
+  const status = useMemo(
+    () => readDealCoverStatusFromSearchParams(searchParams),
+    [searchParams]
+  );
 
-  const resetOffset = useCallback(() => {
-    setSearchParams(prev => {
-      const next = new URLSearchParams(prev);
-      next.set('offset', String(PAGINATION_DEFAULTS.OFFSET));
-      if (!next.has('limit')) {
-        next.set('limit', String(PAGINATION_DEFAULTS.LIMIT));
-      }
-      return next;
-    });
-  }, [setSearchParams]);
+  const filters = useMemo(
+    () => ({
+      status: status || undefined,
+    }),
+    [status]
+  );
+
+  const resetOffsetParams = useCallback((next: URLSearchParams) => {
+    next.set('offset', String(PAGINATION_DEFAULTS.OFFSET));
+    if (!next.has('limit')) {
+      next.set('limit', String(PAGINATION_DEFAULTS.LIMIT));
+    }
+    return next;
+  }, []);
+
+  const handleStatusChange = useCallback(
+    (option: AsyncSelectOption | null) => {
+      setSearchParams(prev => {
+        const next = new URLSearchParams(prev);
+        const value = String(option?.value ?? 'ALL').trim();
+        if (!value || value === 'ALL') {
+          next.delete('status');
+        } else {
+          next.set('status', value);
+        }
+        return resetOffsetParams(next);
+      });
+    },
+    [resetOffsetParams, setSearchParams]
+  );
 
   const {
     rows,
@@ -129,41 +158,17 @@ export const DealCoverRateListView = () => {
 
   const toolbarFilters = useMemo(
     () => [
-      {
+      buildStaticAsyncSelectToolbarFilter({
         id: 'status',
-        type: 'custom' as const,
-        className: 'w-full shrink-0',
-        render: () => (
-          <div className="flex flex-wrap gap-2">
-            {DEAL_COVER_STATUS_OPTIONS.map(option => (
-              <Button
-                key={option.value}
-                type="button"
-                size="sm"
-                variant={
-                  (filters.status ?? 'ALL') === option.value
-                    ? 'default'
-                    : 'outline'
-                }
-                onClick={() => {
-                  setFilters(current => ({
-                    ...current,
-                    status:
-                      option.value === 'ALL'
-                        ? undefined
-                        : (option.value as typeof DealCoverStatus.PENDING),
-                  }));
-                  resetOffset();
-                }}
-              >
-                {option.label}
-              </Button>
-            ))}
-          </div>
-        ),
-      },
+        label: DEAL_COVER_RATE_TEXT.status,
+        options: DEAL_COVER_STATUS_FILTER_OPTIONS,
+        value: resolveDealCoverStatusDropdownValue(status),
+        placeholder: 'All',
+        className: 'min-w-40 shrink-0',
+        onChange: handleStatusChange,
+      }),
     ],
-    [filters.status, resetOffset]
+    [handleStatusChange, status]
   );
 
   return (

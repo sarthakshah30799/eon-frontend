@@ -66,6 +66,7 @@ export const PRODUCT_SETTLEMENT_TEXT = {
   cancelReasonRequired: 'Cancellation reason is required.',
   notFound: 'Product settlement not found.',
   itemsCount: 'Items',
+  productCodeFilterPlaceholder: 'All Products',
   status: 'Status',
   statusPlaceholder: 'All Statuses',
   search: 'Search',
@@ -73,6 +74,12 @@ export const PRODUCT_SETTLEMENT_TEXT = {
   actions: 'Actions',
   typeCard: 'CARD',
   typeTt: 'TT',
+  blockedNoHoBranch: 'Select an HO branch before submitting settlement.',
+  blockedLoadingPolicy:
+    'Loading transaction date rules for the selected branch.',
+  blockedCannotPunch:
+    'Settlement cannot be submitted. Complete Day Start for the HO branch, or check that the transaction date is within the active monthwise-lock window and that Day End is not already completed.',
+  validationFailed: 'Fix the highlighted fields before submitting.',
 } as const;
 
 export const PRODUCT_SETTLEMENT_STATUS_OPTIONS = [

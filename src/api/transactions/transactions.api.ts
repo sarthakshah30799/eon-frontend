@@ -35,6 +35,7 @@ export interface ITransactionListQuery extends IOffsetPaginationParams {
   status?: TransactionStatus;
   partyProfileId?: string;
   transactionType?: TransactionType;
+  productCode?: string;
 }
 
 export interface ITransactionPaymentMethodOption {

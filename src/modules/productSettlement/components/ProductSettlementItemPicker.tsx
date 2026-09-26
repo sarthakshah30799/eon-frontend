@@ -1,5 +1,12 @@
 import { useMemo, useState } from 'react';
-import { Button, Modal, Table, type TableColumnDef } from '@/components/ui';
+import type { RowSelectionState } from '@tanstack/react-table';
+import {
+  Button,
+  Checkbox,
+  Modal,
+  Table,
+  type TableColumnDef,
+} from '@/components/ui';
 import {
   ProductSettlementType,
   type ProductUnsettledItem,
@@ -26,6 +33,9 @@ const snapshotLabel = (
   fallback: string
 ) => snapshot?.label ?? snapshot?.name ?? snapshot?.code ?? fallback;
 
+const idsToRowSelection = (ids: string[]): RowSelectionState =>
+  Object.fromEntries(ids.map(id => [id, true]));
+
 export const ProductSettlementItemPicker = ({
   open,
   items,
@@ -35,95 +45,112 @@ export const ProductSettlementItemPicker = ({
   onClose,
   onApply,
 }: Props) => {
-  const [selection, setSelection] = useState<string[]>(selectedIds);
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>(() =>
+    idsToRowSelection(selectedIds)
+  );
   const [wasOpen, setWasOpen] = useState(open);
   if (open !== wasOpen) {
     setWasOpen(open);
     if (open) {
-      setSelection(selectedIds);
+      setRowSelection(idsToRowSelection(selectedIds));
     }
   }
-  const selectedSet = useMemo(() => new Set(selection), [selection]);
-  const columns: TableColumnDef<ProductUnsettledItem>[] = [
-    {
-      id: 'select',
-      header: '',
-      cell: ({ row }) => (
-        <Button
-          type="button"
-          size="sm"
-          variant={selectedSet.has(row.original.id) ? 'default' : 'outline'}
-          onClick={() =>
-            setSelection(current =>
-              current.includes(row.original.id)
-                ? current.filter(id => id !== row.original.id)
-                : [...current, row.original.id]
-            )
-          }
-        >
-          {selectedSet.has(row.original.id)
-            ? PRODUCT_SETTLEMENT_TEXT.selected
-            : PRODUCT_SETTLEMENT_TEXT.select}
-        </Button>
-      ),
-    },
-    {
-      id: 'productCode',
-      header: PRODUCT_SETTLEMENT_TEXT.productCode,
-      cell: ({ row }) => resolveProductCode(row.original) || '-',
-    },
-    {
-      id: 'type',
-      header: PRODUCT_SETTLEMENT_TEXT.settlementType,
-      cell: ({ row }) => resolveSettlementType(row.original),
-    },
-    {
-      id: 'cardNumber',
-      header: PRODUCT_SETTLEMENT_TEXT.cardNumber,
-      cell: ({ row }) => displayCardNumber(row.original),
-    },
-    {
-      accessorKey: 'series',
-      header: PRODUCT_SETTLEMENT_TEXT.series,
-      cell: ({ row }) =>
-        resolveSettlementType(row.original) === ProductSettlementType.TT
-          ? row.original.series || '-'
-          : row.original.series || '-',
-    },
-    {
-      id: 'kitNumber',
-      header: PRODUCT_SETTLEMENT_TEXT.kitNumber,
-      cell: ({ row }) =>
-        resolveSettlementType(row.original) === ProductSettlementType.CARD
-          ? row.original.kitNumber || '-'
-          : '-',
-    },
-    ...(showBranch
-      ? [
-          {
-            id: 'branch',
-            header: PRODUCT_SETTLEMENT_TEXT.sellingBranch,
-            cell: ({ row }: { row: { original: ProductUnsettledItem } }) =>
-              snapshotLabel(row.original.branchSnapshot, row.original.branchId),
-          } satisfies TableColumnDef<ProductUnsettledItem>,
-        ]
-      : []),
-    {
-      id: 'saleKind',
-      header: PRODUCT_SETTLEMENT_TEXT.saleKind,
-      cell: ({ row }) => row.original.saleKind || '-',
-    },
-    {
-      accessorKey: 'denomination',
-      header: PRODUCT_SETTLEMENT_TEXT.denomination,
-    },
-    {
-      id: 'bookingRate',
-      header: PRODUCT_SETTLEMENT_TEXT.bookingRate,
-      cell: ({ row }) => row.original.bookingRate || '-',
-    },
-    { accessorKey: 'saleBuyRate', header: PRODUCT_SETTLEMENT_TEXT.rate },
-  ];
+  const selectedCount = Object.keys(rowSelection).filter(
+    id => rowSelection[id]
+  ).length;
+  const columns: TableColumnDef<ProductUnsettledItem>[] = useMemo(
+    () => [
+      {
+        id: 'select',
+        header: ({ table }) => (
+          <div className="flex justify-center">
+            <Checkbox
+              checked={table.getIsAllRowsSelected()}
+              onChange={checked => table.toggleAllRowsSelected(checked)}
+              aria-label={PRODUCT_SETTLEMENT_TEXT.selectItems}
+              className="shrink-0"
+            />
+          </div>
+        ),
+        cell: ({ row }) => (
+          <div className="flex justify-center">
+            <Checkbox
+              checked={row.getIsSelected()}
+              onChange={checked => row.toggleSelected(checked)}
+              aria-label={`${PRODUCT_SETTLEMENT_TEXT.select} ${row.original.id}`}
+              className="shrink-0"
+            />
+          </div>
+        ),
+        enableSorting: false,
+        meta: {
+          headerClassName: 'w-14',
+          cellClassName: 'w-14',
+        },
+      },
+      {
+        id: 'productCode',
+        header: PRODUCT_SETTLEMENT_TEXT.productCode,
+        cell: ({ row }) => resolveProductCode(row.original) || '-',
+      },
+      {
+        id: 'type',
+        header: PRODUCT_SETTLEMENT_TEXT.settlementType,
+        cell: ({ row }) => resolveSettlementType(row.original),
+      },
+      {
+        id: 'cardNumber',
+        header: PRODUCT_SETTLEMENT_TEXT.cardNumber,
+        cell: ({ row }) => displayCardNumber(row.original),
+      },
+      {
+        accessorKey: 'series',
+        header: PRODUCT_SETTLEMENT_TEXT.series,
+        cell: ({ row }) =>
+          resolveSettlementType(row.original) === ProductSettlementType.TT
+            ? row.original.series || '-'
+            : row.original.series || '-',
+      },
+      {
+        id: 'kitNumber',
+        header: PRODUCT_SETTLEMENT_TEXT.kitNumber,
+        cell: ({ row }) =>
+          resolveSettlementType(row.original) === ProductSettlementType.CARD
+            ? row.original.kitNumber || '-'
+            : '-',
+      },
+      ...(showBranch
+        ? [
+            {
+              id: 'branch',
+              header: PRODUCT_SETTLEMENT_TEXT.sellingBranch,
+              cell: ({ row }: { row: { original: ProductUnsettledItem } }) =>
+                snapshotLabel(
+                  row.original.branchSnapshot,
+                  row.original.branchId
+                ),
+            } satisfies TableColumnDef<ProductUnsettledItem>,
+          ]
+        : []),
+      {
+        id: 'saleKind',
+        header: PRODUCT_SETTLEMENT_TEXT.saleKind,
+        cell: ({ row }) => row.original.saleKind || '-',
+      },
+      {
+        accessorKey: 'denomination',
+        header: PRODUCT_SETTLEMENT_TEXT.denomination,
+      },
+      {
+        id: 'bookingRate',
+        header: PRODUCT_SETTLEMENT_TEXT.bookingRate,
+        cell: ({ row }) => row.original.bookingRate || '-',
+      },
+      { accessorKey: 'saleBuyRate', header: PRODUCT_SETTLEMENT_TEXT.rate },
+    ],
+    [showBranch]
+  );
+
   return (
     <Modal
       open={open}
@@ -140,11 +167,13 @@ export const ProductSettlementItemPicker = ({
           <Button
             type="button"
             onClick={() => {
-              onApply(items.filter(item => selectedSet.has(item.id)));
+              onApply(
+                items.filter(item => Boolean(rowSelection[item.id]))
+              );
               onClose();
             }}
           >
-            {`${PRODUCT_SETTLEMENT_TEXT.apply} (${selection.length})`}
+            {`${PRODUCT_SETTLEMENT_TEXT.apply} (${selectedCount})`}
           </Button>
         </div>
       }
@@ -156,6 +185,10 @@ export const ProductSettlementItemPicker = ({
         enableSorting={false}
         enableFiltering={false}
         enablePagination={false}
+        enableRowSelection
+        rowSelection={rowSelection}
+        onRowSelectionChange={setRowSelection}
+        getRowId={item => item.id}
         emptyMessage={PRODUCT_SETTLEMENT_TEXT.emptyUnsettled}
       />
     </Modal>

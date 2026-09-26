@@ -104,8 +104,6 @@ export const toDealCoverPayload = (
   currencyId: values.currencyId,
   issuerPartyProfileId: values.issuerPartyProfileId,
   feAmount: values.feAmount,
-  dealRate: values.dealRate,
-  inrAmount: values.inrAmount,
   fbChargeAmount: values.fbChargeAmount || '0',
   narration: values.narration || null,
   maturityOptionId: values.maturityOptionId,

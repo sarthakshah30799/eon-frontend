@@ -72,7 +72,6 @@ import {
   mapPurchaseFormValuesToSubmitPayload,
   PURCHASE_TRANSACTION_TEXT,
 } from '../utils/purchaseUtils';
-import { dealCoverRateApi } from '@/api/dealCoverRate';
 import { PURCHASE_PREVIEW_TEXT, PURCHASE_RULE_TEXT, PURCHASE_CREDIT_TEXT } from '../constants/purchaseConstants';
 import { getTransactionDatePolicy } from '@/modules/transactionPolicies/utils/transactionDatePolicy';
 import {
@@ -413,62 +412,6 @@ const PurchaseFormBody = ({
     Boolean(partyProfileId)
   );
   const { data: branchProfile } = useGetBranchProfile(resolvedBranchId);
-  const firstDealCoverId = useMemo(() => {
-    const row = (transactions ?? []).find(item =>
-      Boolean(item?.dealCoverId)
-    );
-    return String(row?.dealCoverId || '');
-  }, [transactions]);
-
-  useEffect(() => {
-    if (!firstDealCoverId) return;
-    let cancelled = false;
-    void dealCoverRateApi
-      .get(firstDealCoverId)
-      .then(deal => {
-        if (cancelled) return;
-        if (deal.passengerPan) {
-          form.setValue('panNumber', deal.passengerPan, {
-            shouldDirty: true,
-            shouldValidate: true,
-          });
-        }
-        if (deal.passengerPanHolder) {
-          form.setValue('panHolderName', deal.passengerPanHolder, {
-            shouldDirty: true,
-            shouldValidate: true,
-          });
-        }
-        if (deal.passengerPanDob) {
-          form.setValue('panDob', deal.passengerPanDob, {
-            shouldDirty: true,
-            shouldValidate: true,
-          });
-        }
-        if (deal.passengerPassport) {
-          form.setValue('passportNumber', deal.passengerPassport, {
-            shouldDirty: true,
-            shouldValidate: true,
-          });
-        }
-        if (deal.passengerName) {
-          form.setValue('passportPassengerName', deal.passengerName, {
-            shouldDirty: true,
-            shouldValidate: true,
-          });
-        }
-        if (deal.passengerId) {
-          form.setValue('passengerId', deal.passengerId, {
-            shouldDirty: true,
-            shouldValidate: true,
-          });
-        }
-      })
-      .catch(() => undefined);
-    return () => {
-      cancelled = true;
-    };
-  }, [firstDealCoverId, form]);
 
   const { data: nextTransactionNumber } = useQuery({
     queryKey: [

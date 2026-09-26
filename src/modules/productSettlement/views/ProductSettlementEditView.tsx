@@ -59,12 +59,14 @@ export const ProductSettlementEditView = () => {
     };
   }, [document]);
 
-  const canCancel =
+  const isPendingHoAcceptance =
     document?.kind === ProductSettlementDocumentKind.BRANCH_HO &&
     document.status ===
       ProductSettlementDocumentStatus.PENDING_HO_ACCEPTANCE &&
     !document.postingTransactionId;
-  const canAccept = Boolean(isHo && canCancel);
+  // Branch may cancel before HO acts; HO uses Accept / Reject only.
+  const canCancel = Boolean(!isHo && isPendingHoAcceptance);
+  const canAccept = Boolean(isHo && isPendingHoAcceptance);
   const isPending =
     acceptMutation.isPending ||
     rejectMutation.isPending ||

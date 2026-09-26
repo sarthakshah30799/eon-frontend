@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ChangeEvent } from 'react';
+import { useEffect, useRef, type ChangeEvent, type FocusEvent } from 'react';
 import { useController } from 'react-hook-form';
 import { useFormContext } from 'react-hook-form';
 import { Input, type InputProps } from '../../ui';
@@ -48,17 +48,17 @@ export const FormFieldInput = ({
   const debouncedValue = useDebounce(field.value, validationDelay);
   const validationRunIdRef = useRef(0);
 
-  const shouldUppercaseValue = type !== 'email' && type !== 'password';
   const validationErrorType = 'async-duplicate-check';
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>): void => {
-    const nextValue =
-      valueTransform === 'uppercase' && shouldUppercaseValue
-        ? event.target.value.toUpperCase()
-        : event.target.value;
-
-    field.onChange(nextValue);
+    // Input already applies valueTransform; only sync RHF with the final value.
+    field.onChange(event.target.value);
     rest.onChange?.(event);
+  };
+
+  const handleBlur = (event: FocusEvent<HTMLInputElement>): void => {
+    field.onBlur();
+    rest.onBlur?.(event);
   };
 
   useEffect(() => {
@@ -131,6 +131,7 @@ export const FormFieldInput = ({
       {...rest}
       type={type}
       onChange={handleChange}
+      onBlur={handleBlur}
       error={error?.message}
       valueTransform={valueTransform}
       value={valueProp !== undefined ? valueProp : field.value}

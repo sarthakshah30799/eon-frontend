@@ -652,24 +652,10 @@ const CARD_TECHNICAL_NUMBERING_SUBCATEGORIES: readonly AdditionalSettingSubcateg
       required: true,
       placeholder: 'Enter starting sequence number',
     },
-    {
-      code: AdditionalSettingsCodeEnum.CmSettleNumberSeries,
-      label: 'CM SETTLEMENT',
-      valueType: 'number',
-      required: true,
-      placeholder: 'Enter starting sequence number',
-    },
   ];
 
 const TT_SETTING_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] =
   [
-    {
-      code: AdditionalSettingsCodeEnum.TtMaturityDayLimits,
-      label: 'TT MATURITY DAY LIMITS',
-      valueType: 'text',
-      required: true,
-      placeholder: 'JSON map of maturity option value to day limit',
-    },
     {
       code: AdditionalSettingsCodeEnum.TtAutoSettleWithHo,
       label: 'AUTO SETTLE TT WITH HO',

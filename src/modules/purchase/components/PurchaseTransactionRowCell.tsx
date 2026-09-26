@@ -27,6 +27,7 @@ import {
   PURCHASE_TRANSACTION_TEXT,
   resolveAgentCommissionRule,
   resolvePurchaseTransactionPreview,
+  applyTtDealCoverPassengerAndParty,
 } from '../utils/purchaseUtils';
 import { EntityPickerField } from './EntityPickerField';
 import type { AsyncSelectResponse } from '@/components/ui';
@@ -145,6 +146,10 @@ export const PurchaseTransactionRowCell = ({
     control: form.control,
     name: 'transactionType',
   });
+  const purchasePageType = useWatch({
+    control: form.control,
+    name: 'purchasePageType',
+  });
   const quantity = useWatch({
     control: form.control,
     name: fieldPath('quantity'),
@@ -210,6 +215,9 @@ export const PurchaseTransactionRowCell = ({
   const isSaleCardProduct =
     isCardProduct && transactionType === TransactionTypeEnum.SALE;
   const isTtDealLocked = Boolean(dealCoverId);
+  /** TT punches against a deal cover, not branch currency stock (same exclusion as CARD). */
+  const skipsCurrencyStockCheck =
+    isSaleCardProduct || isTtProduct || isTtDealLocked;
 
   const selectedProductCurrencyRule = useMemo(
     () =>
@@ -275,7 +283,11 @@ export const PurchaseTransactionRowCell = ({
     productId: String(productId || ''),
     excludeTransactionId,
     enabled: Boolean(
-      branchId && counterId && currencyId && productId && !isSaleCardProduct
+      branchId &&
+        counterId &&
+        currencyId &&
+        productId &&
+        !skipsCurrencyStockCheck
     ),
     queryKeyPrefix: 'transaction-quantity-availability',
   });
@@ -572,7 +584,7 @@ export const PurchaseTransactionRowCell = ({
     if (
       !hasCurrencyProductSelection ||
       transactionType !== TransactionTypeEnum.SALE ||
-      isSaleCardProduct
+      skipsCurrencyStockCheck
     ) {
       if (quantityFieldState.error?.type === availabilityErrorType) {
         form.clearErrors(fieldName);
@@ -612,7 +624,7 @@ export const PurchaseTransactionRowCell = ({
     form,
     hasCurrencyProductSelection,
     fieldPath,
-    isSaleCardProduct,
+    skipsCurrencyStockCheck,
     quantity,
     quantityAvailability?.availableQuantity,
     rowIndex,
@@ -782,7 +794,7 @@ export const PurchaseTransactionRowCell = ({
     <TransactionItemRowShell
       title={`Transaction Item ${rowIndex + 1}`}
       availabilityText={
-        hasCurrencyProductSelection && !isSaleCardProduct ? (
+        hasCurrencyProductSelection && !skipsCurrencyStockCheck ? (
           quantityAvailabilityQuery.isLoading ? (
             'Checking available quantity...'
           ) : (
@@ -1124,11 +1136,13 @@ export const PurchaseTransactionRowCell = ({
             (pricingData.currencies ?? []).find(
               currency => currency.id === deal.currencyId
             ) ?? null;
-
-          form.setValue(fieldPath('dealCoverId'), deal.id, {
+          const quietOptions = {
             shouldDirty: true,
-            shouldValidate: true,
-          });
+            shouldTouch: false,
+            shouldValidate: false,
+          } as const;
+
+          form.setValue(fieldPath('dealCoverId'), deal.id, quietOptions);
           form.setValue(
             fieldPath('dealCoverSnapshot'),
             {
@@ -1138,19 +1152,16 @@ export const PurchaseTransactionRowCell = ({
               label: deal.dealNo ?? deal.id,
               feAmount: deal.feAmount,
             },
-            { shouldDirty: true }
+            quietOptions
           );
-          form.setValue(fieldPath('productId'), deal.productId, {
-            shouldDirty: true,
-            shouldValidate: true,
-          });
+          form.setValue(fieldPath('productId'), deal.productId, quietOptions);
           form.setValue(
             fieldPath('productCode'),
             dealProduct?.productCode ||
               deal.productSnapshot?.productCode ||
               deal.productSnapshot?.code ||
               'TT',
-            { shouldDirty: true }
+            quietOptions
           );
           form.setValue(
             fieldPath('productDescription'),
@@ -1158,19 +1169,16 @@ export const PurchaseTransactionRowCell = ({
               deal.productSnapshot?.productDescription ||
               deal.productSnapshot?.name ||
               '',
-            { shouldDirty: true }
+            quietOptions
           );
-          form.setValue(fieldPath('currencyId'), deal.currencyId, {
-            shouldDirty: true,
-            shouldValidate: true,
-          });
+          form.setValue(fieldPath('currencyId'), deal.currencyId, quietOptions);
           form.setValue(
             fieldPath('currencyCode'),
             dealCurrency?.currencyCode ||
               deal.currencySnapshot?.currencyCode ||
               deal.currencySnapshot?.code ||
               '',
-            { shouldDirty: true }
+            quietOptions
           );
           form.setValue(
             fieldPath('currencyName'),
@@ -1178,12 +1186,12 @@ export const PurchaseTransactionRowCell = ({
               deal.currencySnapshot?.currencyName ||
               deal.currencySnapshot?.name ||
               '',
-            { shouldDirty: true }
+            quietOptions
           );
           form.setValue(
             fieldPath('issuerPartyProfileId'),
             deal.issuerPartyProfileId,
-            { shouldDirty: true, shouldValidate: true }
+            quietOptions
           );
           form.setValue(
             fieldPath('issuerPartyProfileSnapshot'),
@@ -1198,18 +1206,46 @@ export const PurchaseTransactionRowCell = ({
                   code: '',
                   name: '',
                 },
-            { shouldDirty: true }
+            quietOptions
           );
-          form.setValue(fieldPath('quantity'), deal.feAmount, {
-            shouldDirty: true,
-            shouldValidate: true,
-          });
+          form.setValue(fieldPath('quantity'), deal.feAmount, quietOptions);
           if (dealCurrency?.ratePer) {
-            form.setValue(fieldPath('per'), String(dealCurrency.ratePer), {
-              shouldDirty: true,
-            });
+            form.setValue(
+              fieldPath('per'),
+              String(dealCurrency.ratePer),
+              quietOptions
+            );
           }
+
           setTtDealPickerOpen(false);
+
+          void applyTtDealCoverPassengerAndParty(
+            form as never,
+            deal,
+            purchasePageType ?? null
+          ).finally(() => {
+            form.clearErrors([
+              'panNumber',
+              'panHolderName',
+              'panDob',
+              'passportNumber',
+              'passportPassengerName',
+              'passportIssueAt',
+              'passportIssueDate',
+              'passportExpiryDate',
+              'countryId',
+              'panHolderRelationType',
+              'travelCountryId',
+              'partyProfileId',
+              'purposeId',
+              'transactionPartyProfileType',
+              fieldPath('dealCoverId'),
+              fieldPath('quantity'),
+              fieldPath('productId'),
+              fieldPath('currencyId'),
+              fieldPath('issuerPartyProfileId'),
+            ]);
+          });
         }}
       />
     </TransactionItemRowShell>

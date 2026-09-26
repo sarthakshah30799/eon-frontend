@@ -22,6 +22,7 @@ import type { IAccountProfileListQuery } from '@/modules/accountProfile/types/ac
 import { AccountProfileLedgerLabelEnum } from '@/modules/accountProfile/utils/accountProfileLedgerLabels';
 import { purposeApi } from '@/api/purpose';
 import { FormFieldPartyProfileSelect } from '@/modules/partyProfiles/components';
+import { usePartyProfileTypes } from '@/modules/partyProfiles/hooks';
 import {
   PartyProfileTypeEnum,
   type PartyProfileType,
@@ -36,12 +37,10 @@ import { getTransactionDatePolicy } from '@/modules/transactionPolicies/utils/tr
 import { resolvePurchaseTransactionPreview } from '@/modules/purchase/utils/purchaseUtils';
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import { PAGINATION_DEFAULTS } from '@/constants/paginationConstants';
-import {
-  DEAL_COVER_PARTY_TYPE_OPTIONS,
-  DEAL_COVER_RATE_TEXT,
-} from '../constants';
+import { DEAL_COVER_RATE_TEXT } from '../constants';
 import { dealCoverRateSchema } from '../schema';
 import { useDealCoverReferences } from '../hooks';
+import { DealCoverPassengerSection } from '../components';
 import type { DealCoverRateFormProps, DealCoverRateFormValues } from '../types';
 import { calculateInrAmount, isTtProductCode } from '../utils';
 
@@ -190,13 +189,15 @@ export const DealCoverRateForm = ({
     [references.currencies]
   );
 
+  const { data: partyProfileTypes = [], isLoading: partyTypesLoading } =
+    usePartyProfileTypes();
   const partyTypeOptions = useMemo(
     () =>
-      DEAL_COVER_PARTY_TYPE_OPTIONS.map(option => ({
+      partyProfileTypes.map(option => ({
         value: option.value,
         label: option.label,
       })),
-    []
+    [partyProfileTypes]
   );
 
   const loadBanks = useCallback(
@@ -258,6 +259,7 @@ export const DealCoverRateForm = ({
         productOptions={productOptions}
         currencyOptions={currencyOptions}
         partyTypeOptions={partyTypeOptions}
+        partyTypesLoading={partyTypesLoading}
         productsLoading={references.productsLoading}
         currenciesLoading={references.currenciesLoading}
         issuersLoading={references.issuersLoading}
@@ -278,6 +280,7 @@ const DealCoverRateFormFields = ({
   productOptions,
   currencyOptions,
   partyTypeOptions,
+  partyTypesLoading,
   productsLoading,
   currenciesLoading,
   issuersLoading,
@@ -296,6 +299,7 @@ const DealCoverRateFormFields = ({
   productOptions: AsyncSelectOption[];
   currencyOptions: AsyncSelectOption[];
   partyTypeOptions: AsyncSelectOption[];
+  partyTypesLoading: boolean;
   productsLoading: boolean;
   currenciesLoading: boolean;
   issuersLoading: boolean;
@@ -442,10 +446,17 @@ const DealCoverRateFormFields = ({
             placeholder={DEAL_COVER_RATE_TEXT.selectPartyType}
             loadOptions={staticLoader(partyTypeOptions)}
             defaultOptions={partyTypeOptions}
+            isLoading={partyTypesLoading}
             disabled={readOnly}
-            onValueChange={() =>
-              form.setValue('partyProfileId', '', { shouldValidate: true })
-            }
+            onValueChange={() => {
+              form.setValue('partyProfileId', '', { shouldValidate: true });
+              form.setValue('passengerId', '');
+              form.setValue('passengerName', '');
+              form.setValue('passengerPan', '');
+              form.setValue('passengerPanHolder', '');
+              form.setValue('passengerPanDob', '');
+              form.setValue('passengerPassport', '');
+            }}
           />
           <FormFieldPartyProfileSelect
             name="partyProfileId"
@@ -545,38 +556,7 @@ const DealCoverRateFormFields = ({
         heading={DEAL_COVER_RATE_TEXT.passengerHeading}
         className="space-y-4"
       >
-        <div className="grid gap-4 xl:grid-cols-4">
-          <FormFieldInput
-            name="passengerName"
-            label={DEAL_COVER_RATE_TEXT.passengerName}
-            valueTransform="none"
-            disabled={readOnly}
-          />
-          <FormFieldInput
-            name="passengerPan"
-            label={DEAL_COVER_RATE_TEXT.passengerPan}
-            valueTransform="none"
-            disabled={readOnly}
-          />
-          <FormFieldInput
-            name="passengerPanHolder"
-            label={DEAL_COVER_RATE_TEXT.passengerPanHolder}
-            valueTransform="none"
-            disabled={readOnly}
-          />
-          <FormFieldDatePicker
-            name="passengerPanDob"
-            label={DEAL_COVER_RATE_TEXT.passengerPanDob}
-            dateFormat="dd/MM/yyyy"
-            disabled={readOnly}
-          />
-          <FormFieldInput
-            name="passengerPassport"
-            label={DEAL_COVER_RATE_TEXT.passengerPassport}
-            valueTransform="none"
-            disabled={readOnly}
-          />
-        </div>
+        <DealCoverPassengerSection readOnly={readOnly} />
       </CardSection>
     </div>
   );

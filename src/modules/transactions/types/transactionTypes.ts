@@ -303,6 +303,8 @@ export interface ITransactionEntity {
   tcsDeclarationAccepted: boolean | null;
   isProprietorship: boolean | null;
   items?: ITransactionItemEntity[];
+  /** Distinct product codes on items (list endpoints only). */
+  productCodes?: string[];
   documents?: ITransactionDocumentEntity[];
   additionalCharges?: ITransactionAdditionalChargeEntity[];
   tcsBreakdowns?: ITransactionTcsBreakdownEntity[];

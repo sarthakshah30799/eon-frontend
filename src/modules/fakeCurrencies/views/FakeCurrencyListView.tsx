@@ -123,6 +123,8 @@ export const FakeCurrencyListView = () => {
         branch: formatReferenceLabel(transaction.branchSnapshot),
         partyProfile:
           formatReferenceLabel(transaction.reasonSnapshot) || 'Fake Currency',
+        productCodes:
+          (transaction.productCodes ?? []).filter(Boolean).join(', ') || '-',
         transactionType: transaction.transactionType,
         tradeMode: transaction.tradeMode,
         status: transaction.status,

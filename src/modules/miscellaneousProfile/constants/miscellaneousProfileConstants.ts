@@ -140,6 +140,14 @@ export const CATEGORY_OPTION_CODE_OPTIONS: CategoryOptionCodeOption[] = [
     value: CategoryOptionCodeEnum.Airline,
     label: 'AIRLINE',
   },
+  {
+    value: CategoryOptionCodeEnum.TtMaturity,
+    label: 'TT MATURITY',
+  },
+  {
+    value: CategoryOptionCodeEnum.FbChargeBearer,
+    label: 'FB CHARGE BEARER',
+  },
 ];
 
 export const STATIC_CATEGORY_OPTION_CODES = [
@@ -175,6 +183,8 @@ export const CATEGORY_OPTION_CODE_LABELS = {
   [CategoryOptionCodeEnum.ServicedBy]: 'SERVICED BY',
   [CategoryOptionCodeEnum.Product]: 'PRODUCT',
   [CategoryOptionCodeEnum.Marketing]: 'MARKETING',
+  [CategoryOptionCodeEnum.TtMaturity]: 'TT MATURITY',
+  [CategoryOptionCodeEnum.FbChargeBearer]: 'FB CHARGE BEARER',
 } as const;
 
 export const loadCategoryOptionCodeOptions =

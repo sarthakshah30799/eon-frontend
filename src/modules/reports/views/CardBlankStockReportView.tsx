@@ -4,7 +4,7 @@ import { AccessDeniedState } from '@/components/ui/access-denied-state';
 import { PAGE_STATUS_TEXTS } from '@/constants';
 import { useAuth } from '@/lib/AuthContext';
 import {
-  CardSettlementReportFiltersSection,
+  ProductSettlementReportFiltersSection,
   SalePurchaseReportTable,
 } from '../components';
 import { CARD_BLANK_STOCK_REPORT_TEXT } from '../constants/cardBlankStockReportConstants';
@@ -75,7 +75,7 @@ export const CardBlankStockReportView = () => {
         </p>
       </div>
 
-      <CardSettlementReportFiltersSection filters={report.filters} />
+      <ProductSettlementReportFiltersSection filters={report.filters} />
 
       {report.filters.appliedFilters && (
         <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-[11px] text-text-secondary">

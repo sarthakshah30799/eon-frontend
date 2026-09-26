@@ -20,6 +20,7 @@ interface PassengerIdentityFieldsProps {
   showPan?: boolean;
   showPassport?: boolean;
   showCountryInPassport?: boolean;
+  identityLocked?: boolean;
   onPanFieldBlur?: () => void;
   onPassportNumberBlur?: () => void;
   onPassportFieldBlur?: () => void;
@@ -34,6 +35,7 @@ export const PassengerIdentityFields = ({
   showPan = true,
   showPassport = false,
   showCountryInPassport = false,
+  identityLocked = false,
   onPanFieldBlur,
   onPassportNumberBlur,
   onPassportFieldBlur,
@@ -45,11 +47,29 @@ export const PassengerIdentityFields = ({
     control: form.control,
     name: 'nationalityType',
   });
+  const panNumber = useWatch({ control: form.control, name: 'panNumber' });
+  const panHolderName = useWatch({
+    control: form.control,
+    name: 'panHolderName',
+  });
+  const panDob = useWatch({ control: form.control, name: 'panDob' });
+  const passportPassengerName = useWatch({
+    control: form.control,
+    name: 'passportPassengerName',
+  });
+  const passportNumber = useWatch({
+    control: form.control,
+    name: 'passportNumber',
+  });
   const isCorporate = entityType === PassengerEntityTypeEnum.CORPORATE;
   const isIndianNationality =
     nationalityType === PassengerNationalityTypeEnum.INDIAN;
   const isPanVisible = showPan && (isCorporate || isIndianNationality);
   const showCountry = showNationality && !isIndianNationality;
+  // Deal-cover autofill: lock only prefilled identity values. Issue place/dates,
+  // country, relation, and empty identity fields stay editable on create.
+  const lockIfFilled = (value: unknown) =>
+    identityLocked && Boolean(String(value ?? '').trim());
 
   return (
     <div className="space-y-4">
@@ -103,18 +123,21 @@ export const PassengerIdentityFields = ({
             label="PAN Number"
             placeholder="Enter PAN number"
             valueTransform="uppercase"
+            disabled={lockIfFilled(panNumber)}
             onBlur={onPanFieldBlur}
           />
           <FormFieldInput
             name="panHolderName"
             label="PAN Holder Name"
             placeholder="Enter PAN holder name"
+            disabled={lockIfFilled(panHolderName)}
             onBlur={onPanFieldBlur}
           />
           <FormFieldDatePicker
             name="panDob"
             label="PAN Holder DOB"
             placeholder="Select DOB"
+            disabled={lockIfFilled(panDob)}
             onBlur={onPanFieldBlur}
           />
         </div>
@@ -126,6 +149,7 @@ export const PassengerIdentityFields = ({
             name="passportPassengerName"
             label="Passport Passenger Name"
             placeholder="Enter passport passenger name"
+            disabled={lockIfFilled(passportPassengerName)}
             onBlur={onPassportFieldBlur}
           />
           <FormFieldInput
@@ -134,6 +158,7 @@ export const PassengerIdentityFields = ({
             placeholder="Enter passport number"
             valueTransform="uppercase"
             maxLength={8}
+            disabled={lockIfFilled(passportNumber)}
             onBlur={onPassportNumberBlur}
           />
           <FormFieldDatePicker

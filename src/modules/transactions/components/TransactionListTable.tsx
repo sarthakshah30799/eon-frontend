@@ -17,6 +17,7 @@ export interface TransactionListRow {
   number: string;
   branch: string;
   partyProfile: string;
+  productCodes: string;
   transactionType: string;
   tradeMode: string;
   status: string;
@@ -91,6 +92,7 @@ export const TransactionListTable = ({
       },
       { accessorKey: 'branch', header: 'Branch' },
       { accessorKey: 'partyProfile', header: 'Party Profile' },
+      { accessorKey: 'productCodes', header: 'Product Type' },
       { accessorKey: 'transactionType', header: 'Type' },
       { accessorKey: 'tradeMode', header: 'Trade Mode' },
       {

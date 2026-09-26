@@ -55,6 +55,7 @@ import {
   type IPurchaseCdfDeclarationValues,
 } from '../components/PurchaseCdfDeclarationModal';
 import { PurchaseTransactionTable } from '../components/PurchaseTransactionTable';
+import { TtRemittanceModal } from '../components/TtRemittanceModal';
 import {
   buildPurchasePrintHtml,
   getPurchasePrintCopyLabel,
@@ -66,7 +67,10 @@ import {
 } from '@/modules/transactions/utils/printSnapshotUtils';
 import {
   formatPurchaseDecimal,
+  isTtProductCode,
+  isTtRemittanceComplete,
   mapPurchaseFormValuesToSubmitPayload,
+  PURCHASE_TRANSACTION_TEXT,
 } from '../utils/purchaseUtils';
 import { PURCHASE_PREVIEW_TEXT, PURCHASE_RULE_TEXT, PURCHASE_CREDIT_TEXT } from '../constants/purchaseConstants';
 import { getTransactionDatePolicy } from '@/modules/transactionPolicies/utils/transactionDatePolicy';
@@ -204,6 +208,7 @@ const PurchaseFormBody = ({
     allowedCurrencyIds: string[];
   } | null>(null);
   const [isPassengerAmlModalOpen, setIsPassengerAmlModalOpen] = useState(false);
+  const [isTtRemittanceModalOpen, setIsTtRemittanceModalOpen] = useState(false);
   const [hasPrintedOnce, setHasPrintedOnce] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
   const isReadOnly = isSubmitting || readOnly;
@@ -243,6 +248,14 @@ const PurchaseFormBody = ({
     control: form.control,
     name: 'passengerId',
   });
+  const transactions = useWatch({
+    control: form.control,
+    name: 'transactions',
+  });
+  const ttRemittance = useWatch({
+    control: form.control,
+    name: 'ttRemittance',
+  });
   const transactionDate = useWatch({
     control: form.control,
     name: 'transactionDate',
@@ -261,6 +274,10 @@ const PurchaseFormBody = ({
   });
   const resolvedBranchId = watchedBranchId || branchId;
   const resolvedCounterId = watchedCounterId || '';
+  const hasTtItems = (transactions ?? []).some(
+    row => Boolean(row?.dealCoverId) || isTtProductCode(row?.productCode)
+  );
+  const ttRemittanceComplete = isTtRemittanceComplete(ttRemittance);
   const hasBranch = Boolean(resolvedBranchId?.trim());
   const showPartyBlock = hasBranch || Boolean(savedTransaction);
   const previousBranchIdRef = useRef<string | null>(null);
@@ -395,6 +412,7 @@ const PurchaseFormBody = ({
     Boolean(partyProfileId)
   );
   const { data: branchProfile } = useGetBranchProfile(resolvedBranchId);
+
   const { data: nextTransactionNumber } = useQuery({
     queryKey: [
       'purchase-next-transaction-number',
@@ -425,10 +443,6 @@ const PurchaseFormBody = ({
       ),
     [existingDocuments]
   );
-  const transactions = useWatch({
-    control: form.control,
-    name: 'transactions',
-  });
   const additionalCharges = useWatch({
     control: form.control,
     name: 'additionalCharges',
@@ -1541,6 +1555,32 @@ const PurchaseFormBody = ({
         agentCommissionRules={agentCommissionRules}
       />
 
+      {hasTtItems ? (
+        <CardSection heading="TT Remittance" className="space-y-3">
+          <p className="text-sm text-text-secondary">
+            One remittance is required for this transaction and is shared by all
+            TT lines.
+          </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsTtRemittanceModalOpen(true)}
+              disabled={isReadOnly}
+            >
+              {ttRemittanceComplete
+                ? 'Edit TT Remittance'
+                : 'Add TT Remittance'}
+            </Button>
+            <span className="text-xs text-text-tertiary">
+              {ttRemittanceComplete
+                ? 'Remittance details captured'
+                : PURCHASE_TRANSACTION_TEXT.ttRemittanceRequired}
+            </span>
+          </div>
+        </CardSection>
+      ) : null}
+
       <TransactionAdditionalChargesFieldArray
         name="additionalCharges"
         applyTax={Boolean(partyProfileApplyTax)}
@@ -1986,6 +2026,19 @@ const PurchaseFormBody = ({
         allowedCurrencyIds={currencyPickerState?.allowedCurrencyIds}
         onContinue={handleCurrencySelect}
         onClose={() => setCurrencyPickerState(null)}
+      />
+
+      <TtRemittanceModal
+        open={isTtRemittanceModalOpen}
+        initialValues={ttRemittance}
+        readOnly={isReadOnly}
+        onOpenChange={setIsTtRemittanceModalOpen}
+        onConfirm={values => {
+          form.setValue('ttRemittance', values, {
+            shouldDirty: true,
+            shouldValidate: true,
+          });
+        }}
       />
     </>
   );

@@ -41,24 +41,26 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
       isDecimalNumberInput && props.step === undefined ? 'any' : props.step;
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-      const nextValue =
-        valueTransform === 'uppercase' && shouldUppercaseValue
-          ? event.target.value.toUpperCase()
-          : event.target.value;
+      if (valueTransform === 'uppercase' && shouldUppercaseValue) {
+        const input = event.target;
+        const selectionStart = input.selectionStart;
+        const selectionEnd = input.selectionEnd;
+        const nextValue = input.value.toUpperCase();
 
-      const transformedEvent = {
-        ...event,
-        target: {
-          ...event.target,
-          value: nextValue,
-        },
-        currentTarget: {
-          ...event.currentTarget,
-          value: nextValue,
-        },
-      } as React.ChangeEvent<HTMLInputElement>;
+        // Mutate the real input so React keeps the caret; do not replace
+        // event.target with a plain object (that jumps the cursor to the end).
+        if (input.value !== nextValue) {
+          input.value = nextValue;
+          if (
+            typeof selectionStart === 'number' &&
+            typeof selectionEnd === 'number'
+          ) {
+            input.setSelectionRange(selectionStart, selectionEnd);
+          }
+        }
+      }
 
-      onChange?.(transformedEvent);
+      onChange?.(event);
     };
 
     const handleInput = (event: React.FormEvent<HTMLInputElement>) => {

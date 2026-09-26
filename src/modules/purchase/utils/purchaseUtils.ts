@@ -30,6 +30,7 @@ import {
 import type { IPartyProfileCommissionRule } from '@/modules/partyProfiles/types';
 import type { PurposeRateType } from '@/modules/purpose/types/purposeTypes';
 import {
+  PassengerEntityTypeEnum,
   PassengerNationalityTypeEnum,
   PassengerResidentStatusEnum,
 } from '@/modules/passengers/types/passengerTypes';
@@ -37,6 +38,9 @@ import type {
   PassengerNationalityType,
   PassengerResidentStatus,
 } from '@/modules/passengers/types/passengerTypes';
+import { mapPassengerSnapshotToPurchaseFormValues } from '@/modules/passengers/utils/passengerAmlUtils';
+import { partyProfileApi, passengersApi } from '@/api';
+import type { IDealCoverRate } from '@/api/dealCoverRate';
 import type { ITransactionPaymentDetailFormRow } from '@/components/forms/TransactionPaymentDetailsFieldArray/transactionPaymentDetailsTypes';
 import type {
   IPurchaseDocumentAttachment,
@@ -70,6 +74,11 @@ export const isCardProductCode = (productCode?: string | null) =>
     ).toUpperCase() as (typeof CARD_PRODUCT_CODES)[number]
   );
 
+export const TT_PRODUCT_CODE = 'TT';
+
+export const isTtProductCode = (productCode?: string | null) =>
+  String(productCode ?? '').toUpperCase() === TT_PRODUCT_CODE;
+
 export const isMultiCurrencyCardProduct = (productCode?: string | null) =>
   String(productCode ?? '').toUpperCase() === MULTI_CURRENCY_CARD_PRODUCT_CODE;
 
@@ -80,12 +89,382 @@ export const PURCHASE_TRANSACTION_TEXT = {
   quantityRequired: 'Quantity is required',
   feAmountRequired: 'FE Amount is required',
   feAmountPositive: 'FE Amount must be greater than 0',
+  feAmountMustMatchDeal: 'FE Amount must equal the selected deal FE amount',
   selectProductFirst: 'Select product first',
   cardSaleHint:
     'Select an issuer and eligible card before entering the FE amount.',
   cardPurchaseHint:
     'Select an issuer and eligible card before entering the denomination.',
+  ttDealHint: 'Select an approved deal cover. FE, product, currency, and issuer are locked from the deal.',
+  ttRemittanceRequired: 'TT remittance details are required before save',
+  ttTravelCountryRequired:
+    'Travel country is required when the transaction includes TT items',
 } as const;
+
+export const createEmptyTtRemittanceValues = (): import('../types/purchaseTypes').IPurchaseTtRemittanceFormValues => ({
+  remitterName: '',
+  remitterAddress: '',
+  remitterCity: '',
+  remitterCountryId: '',
+  remitterEntityType: '',
+  beneficiaryName: '',
+  beneficiaryAddress: '',
+  beneficiaryCountryId: '',
+  bankName: '',
+  bankAddress: '',
+  accountNumber: '',
+  iban: '',
+  swiftCode: '',
+  bsbCode: '',
+  sortCode: '',
+  routingNumber: '',
+  transitNumber: '',
+  educationDetails: '',
+  fbBearerOptionId: '',
+  intermediaryBankName: '',
+  intermediaryBankAddress: '',
+  intermediaryBankCodes: '',
+  relationship: '',
+  sponsorshipName: '',
+  sponsorshipPan: '',
+  dateOfIncorporation: '',
+  miceAmount: '',
+  miceReference: '',
+});
+
+/** Collapse country-dependent bank code / account fields into single UI values. */
+export const normalizeTtRemittanceFormValues = (
+  remittance: import('../types/purchaseTypes').IPurchaseTtRemittanceFormValues
+): import('../types/purchaseTypes').IPurchaseTtRemittanceFormValues => {
+  const accountNumber =
+    String(remittance.accountNumber ?? '').trim() ||
+    String(remittance.iban ?? '').trim();
+  const bankLocalCodes = [
+    remittance.bsbCode,
+    remittance.sortCode,
+    remittance.routingNumber,
+    remittance.transitNumber,
+  ]
+    .map(value => String(value ?? '').trim())
+    .filter(Boolean);
+  const uniqueLocalCodes = [...new Set(bankLocalCodes)];
+
+  return {
+    ...remittance,
+    accountNumber,
+    iban: '',
+    bsbCode: uniqueLocalCodes.join(' / '),
+    sortCode: '',
+    routingNumber: '',
+    transitNumber: '',
+  };
+};
+
+export const isTtRemittanceComplete = (
+  remittance?: import('../types/purchaseTypes').IPurchaseTtRemittanceFormValues | null
+) => {
+  if (!remittance) return false;
+  const normalized = normalizeTtRemittanceFormValues(remittance);
+  return Boolean(
+    String(normalized.remitterName ?? '').trim() &&
+      String(normalized.beneficiaryName ?? '').trim() &&
+      String(normalized.bankName ?? '').trim() &&
+      String(normalized.accountNumber ?? '').trim() &&
+      String(normalized.swiftCode ?? '').trim() &&
+      String(normalized.fbBearerOptionId ?? '').trim()
+  );
+};
+
+type QuietSetValueOptions = {
+  shouldDirty?: boolean;
+  shouldTouch?: boolean;
+  shouldValidate?: boolean;
+};
+
+const setPurchaseValue = (
+  form: {
+    setValue: (name: string, value: unknown, options?: QuietSetValueOptions) => void;
+  },
+  name: keyof IPurchaseFormValues,
+  value: unknown,
+  options: QuietSetValueOptions
+) => {
+  form.setValue(name, value, options);
+};
+
+/** Apply deal party + purpose + passenger identity onto the purchase/sale form. */
+export const applyTtDealCoverPassengerAndParty = async (
+  form: {
+    setValue: (name: string, value: unknown, options?: QuietSetValueOptions) => void;
+    getValues: () => IPurchaseFormValues;
+  },
+  deal: IDealCoverRate,
+  purchasePageType: PurchasePageType | null
+) => {
+  const quietOptions: QuietSetValueOptions = {
+    shouldDirty: true,
+    shouldTouch: false,
+    shouldValidate: false,
+  };
+
+  if (deal.purposeId) {
+    setPurchaseValue(form, 'purposeId', deal.purposeId, quietOptions);
+  }
+
+  if (deal.passengerPan) {
+    setPurchaseValue(form, 'panNumber', deal.passengerPan, quietOptions);
+  }
+  if (deal.passengerPanHolder) {
+    setPurchaseValue(
+      form,
+      'panHolderName',
+      deal.passengerPanHolder,
+      quietOptions
+    );
+  }
+  if (deal.passengerPanDob) {
+    setPurchaseValue(
+      form,
+      'panDob',
+      String(deal.passengerPanDob).slice(0, 10),
+      quietOptions
+    );
+  }
+  if (deal.passengerPassport) {
+    setPurchaseValue(
+      form,
+      'passportNumber',
+      deal.passengerPassport,
+      quietOptions
+    );
+  }
+  if (deal.passengerName) {
+    setPurchaseValue(
+      form,
+      'passportPassengerName',
+      deal.passengerName,
+      quietOptions
+    );
+  }
+  if (deal.passengerId) {
+    setPurchaseValue(form, 'passengerId', deal.passengerId, quietOptions);
+  }
+
+  if (deal.partyProfileId) {
+    setPurchaseValue(form, 'partyProfileId', deal.partyProfileId, quietOptions);
+    setPurchaseValue(
+      form,
+      'partyProfileCode',
+      deal.partyProfileSnapshot?.code ?? '',
+      quietOptions
+    );
+    setPurchaseValue(
+      form,
+      'partyProfileName',
+      deal.partyProfileSnapshot?.name ??
+        deal.partyProfileSnapshot?.label ??
+        '',
+      quietOptions
+    );
+
+    try {
+      const party = await partyProfileApi.getPartyProfileById(
+        deal.partyProfileId
+      );
+      if (party) {
+        setPurchaseValue(form, 'partyProfileCode', party.code || '', quietOptions);
+        setPurchaseValue(form, 'partyProfileName', party.name || '', quietOptions);
+        setPurchaseValue(
+          form,
+          'partyProfileEmail',
+          party.email || '',
+          quietOptions
+        );
+        setPurchaseValue(
+          form,
+          'partyProfilePhoneNo',
+          party.phoneNo || '',
+          quietOptions
+        );
+        setPurchaseValue(
+          form,
+          'partyProfileAddress1',
+          party.address1 || '',
+          quietOptions
+        );
+        setPurchaseValue(
+          form,
+          'partyProfileAddress2',
+          party.address2 || '',
+          quietOptions
+        );
+        setPurchaseValue(
+          form,
+          'partyProfileAddress3',
+          party.address3 || '',
+          quietOptions
+        );
+        setPurchaseValue(
+          form,
+          'partyProfileCity',
+          party.city || '',
+          quietOptions
+        );
+        setPurchaseValue(
+          form,
+          'partyProfilePinCode',
+          party.pinCode || '',
+          quietOptions
+        );
+        setPurchaseValue(
+          form,
+          'partyProfilePanNo',
+          party.panNo || '',
+          quietOptions
+        );
+        setPurchaseValue(
+          form,
+          'partyProfileGstNo',
+          party.gstNo || '',
+          quietOptions
+        );
+        setPurchaseValue(
+          form,
+          'partyProfileGstStateName',
+          party.gstStateName || '',
+          quietOptions
+        );
+        setPurchaseValue(
+          form,
+          'partyProfileStateName',
+          party.stateName || '',
+          quietOptions
+        );
+        setPurchaseValue(
+          form,
+          'partyProfileContactName',
+          party.contactName || '',
+          quietOptions
+        );
+        setPurchaseValue(
+          form,
+          'partyProfileApplyTax',
+          Boolean(party.applyTax),
+          quietOptions
+        );
+
+        if (isCorporateIndividualPurchasePage(purchasePageType)) {
+          const nextType = party.isIndividual
+            ? TransactionPartyProfileTypeEnum.INDIVIDUAL
+            : TransactionPartyProfileTypeEnum.CORPORATE;
+          setPurchaseValue(
+            form,
+            'transactionPartyProfileType',
+            nextType,
+            quietOptions
+          );
+          setPurchaseValue(
+            form,
+            'entityType',
+            party.isIndividual
+              ? PassengerEntityTypeEnum.INDIVIDUAL
+              : PassengerEntityTypeEnum.CORPORATE,
+            quietOptions
+          );
+        } else {
+          const pageEntity = getPurchasePageEntityType(purchasePageType);
+          if (pageEntity) {
+            setPurchaseValue(form, 'entityType', pageEntity, quietOptions);
+          }
+        }
+
+        // Corporate non-individual: fill PAN from party when deal has none.
+        if (!party.isIndividual) {
+          const current = form.getValues();
+          if (!String(current.panNumber ?? '').trim() && party.panNo) {
+            setPurchaseValue(form, 'panNumber', party.panNo, quietOptions);
+          }
+          if (
+            !String(current.panHolderName ?? '').trim() &&
+            (party.panName || party.name)
+          ) {
+            setPurchaseValue(
+              form,
+              'panHolderName',
+              party.panName || party.name,
+              quietOptions
+            );
+          }
+          if (!String(current.panDob ?? '').trim() && party.panDob) {
+            setPurchaseValue(
+              form,
+              'panDob',
+              String(party.panDob).slice(0, 10),
+              quietOptions
+            );
+          }
+        }
+      }
+    } catch {
+      // Snapshot fields above are enough if party fetch fails.
+    }
+  }
+
+  const pan = String(deal.passengerPan ?? '').trim();
+  const passport = String(deal.passengerPassport ?? '').trim();
+  if (pan || passport) {
+    try {
+      const lookup = await passengersApi.lookupIdentity({
+        ...(pan ? { panNumber: pan } : {}),
+        ...(passport ? { passportNumber: passport } : {}),
+      });
+      if (lookup.found && lookup.passenger) {
+        const mapped = mapPassengerSnapshotToPurchaseFormValues(
+          lookup.passenger
+        );
+        const identityKeys = new Set([
+          'panNumber',
+          'panHolderName',
+          'panDob',
+          'passportNumber',
+          'passportPassengerName',
+        ]);
+        for (const [fieldName, fieldValue] of Object.entries(mapped)) {
+          if (fieldValue === undefined || fieldValue === '') continue;
+          const current = form.getValues()[
+            fieldName as keyof IPurchaseFormValues
+          ];
+          if (
+            typeof current === 'string' &&
+            String(current).trim() &&
+            identityKeys.has(fieldName)
+          ) {
+            continue;
+          }
+          setPurchaseValue(
+            form,
+            fieldName as keyof IPurchaseFormValues,
+            fieldValue,
+            quietOptions
+          );
+        }
+        if (lookup.passenger.id) {
+          setPurchaseValue(
+            form,
+            'passengerId',
+            String(lookup.passenger.id),
+            quietOptions
+          );
+        }
+      }
+    } catch {
+      // Keep deal-sourced identity if lookup fails.
+    }
+  }
+
+  // Do not mark captured — user may still complete travel / issue fields.
+  setPurchaseValue(form, 'passengerInfoCaptured', false, quietOptions);
+};
 
 export const filterTradableActiveCurrencies = (
   currencies: ICurrencyProfile[] = []
@@ -143,6 +522,8 @@ export const createEmptyPurchaseTransactionRow =
     issuerPartyProfileSnapshot: null,
     cardSnapshot: null,
     isReload: false,
+    dealCoverId: '',
+    dealCoverSnapshot: null,
   });
 
 export const toFormBranchSnapshot = (
@@ -283,6 +664,7 @@ export const createEmptyPurchaseFormValues = (
   deliveryBoyUserName: '',
   number: '',
   transactions: [createEmptyPurchaseTransactionRow()],
+  ttRemittance: createEmptyTtRemittanceValues(),
   additionalCharges: [],
   paymentDetails: [],
 });
@@ -472,7 +854,11 @@ export const mapPurchaseFormValuesToSubmitPayload = (
           }
         : null,
       passengerTravel:
-        values.transactionType === TransactionTypeEnum.SALE &&
+        (values.transactionType === TransactionTypeEnum.SALE ||
+          values.transactions.some(
+            row =>
+              Boolean(row.dealCoverId) || isTtProductCode(row.productCode)
+          )) &&
         values.passengerInfoCaptured
           ? {
               airlineTtId: values.travelAirlineId || null,
@@ -511,6 +897,8 @@ export const mapPurchaseFormValuesToSubmitPayload = (
         issuerPartyProfileSnapshot: row.issuerPartyProfileSnapshot ?? null,
         cardSnapshot: row.cardSnapshot ?? null,
         isReload: Boolean(row.isReload),
+        dealCoverId: row.dealCoverId || null,
+        dealCoverSnapshot: row.dealCoverSnapshot ?? null,
       })),
       documents: attachments.map(attachment => ({
         documentProfileId: attachment.documentProfileId,
@@ -526,6 +914,46 @@ export const mapPurchaseFormValuesToSubmitPayload = (
         remarks: null,
       })),
       payments: mapPaymentDetailsToSubmitPayload(values.paymentDetails),
+      ttRemittance: values.transactions.some(row =>
+        Boolean(row.dealCoverId) || isTtProductCode(row.productCode)
+      )
+        ? (() => {
+            const remittance = normalizeTtRemittanceFormValues(
+              values.ttRemittance
+            );
+            return {
+              remitterName: remittance.remitterName || '',
+              remitterAddress: remittance.remitterAddress || null,
+              remitterCity: remittance.remitterCity || null,
+              remitterCountryId: remittance.remitterCountryId || null,
+              remitterEntityType: remittance.remitterEntityType || null,
+              beneficiaryName: remittance.beneficiaryName || '',
+              beneficiaryAddress: remittance.beneficiaryAddress || null,
+              beneficiaryCountryId: remittance.beneficiaryCountryId || null,
+              bankName: remittance.bankName || '',
+              bankAddress: remittance.bankAddress || null,
+              accountNumber: remittance.accountNumber || null,
+              iban: null,
+              swiftCode: remittance.swiftCode || null,
+              bsbCode: remittance.bsbCode || null,
+              sortCode: null,
+              routingNumber: null,
+              transitNumber: null,
+              educationDetails: remittance.educationDetails || null,
+              fbBearerOptionId: remittance.fbBearerOptionId || null,
+              intermediaryBankName: remittance.intermediaryBankName || null,
+              intermediaryBankAddress:
+                remittance.intermediaryBankAddress || null,
+              intermediaryBankCodes: remittance.intermediaryBankCodes || null,
+              relationship: remittance.relationship || null,
+              sponsorshipName: remittance.sponsorshipName || null,
+              sponsorshipPan: remittance.sponsorshipPan || null,
+              dateOfIncorporation: remittance.dateOfIncorporation || null,
+              miceAmount: remittance.miceAmount || null,
+              miceReference: remittance.miceReference || null,
+            };
+          })()
+        : null,
     },
     attachments,
   };
@@ -782,7 +1210,46 @@ export const mapPurchaseTransactionToFormValues = (
       issuerPartyProfileSnapshot: item.issuerPartyProfileSnapshot ?? null,
       cardSnapshot: item.cardSnapshot ?? null,
       isReload: Boolean(item.isReload),
+      dealCoverId: item.dealCoverId ?? '',
+      dealCoverSnapshot: item.dealCoverSnapshot ?? null,
     })),
+    ttRemittance: transaction.ttRemittance
+      ? normalizeTtRemittanceFormValues({
+          remitterName: transaction.ttRemittance.remitterName ?? '',
+          remitterAddress: transaction.ttRemittance.remitterAddress ?? '',
+          remitterCity: transaction.ttRemittance.remitterCity ?? '',
+          remitterCountryId: transaction.ttRemittance.remitterCountryId ?? '',
+          remitterEntityType: transaction.ttRemittance.remitterEntityType ?? '',
+          beneficiaryName: transaction.ttRemittance.beneficiaryName ?? '',
+          beneficiaryAddress: transaction.ttRemittance.beneficiaryAddress ?? '',
+          beneficiaryCountryId:
+            transaction.ttRemittance.beneficiaryCountryId ?? '',
+          bankName: transaction.ttRemittance.bankName ?? '',
+          bankAddress: transaction.ttRemittance.bankAddress ?? '',
+          accountNumber: transaction.ttRemittance.accountNumber ?? '',
+          iban: transaction.ttRemittance.iban ?? '',
+          swiftCode: transaction.ttRemittance.swiftCode ?? '',
+          bsbCode: transaction.ttRemittance.bsbCode ?? '',
+          sortCode: transaction.ttRemittance.sortCode ?? '',
+          routingNumber: transaction.ttRemittance.routingNumber ?? '',
+          transitNumber: transaction.ttRemittance.transitNumber ?? '',
+          educationDetails: transaction.ttRemittance.educationDetails ?? '',
+          fbBearerOptionId: transaction.ttRemittance.fbBearerOptionId ?? '',
+          intermediaryBankName:
+            transaction.ttRemittance.intermediaryBankName ?? '',
+          intermediaryBankAddress:
+            transaction.ttRemittance.intermediaryBankAddress ?? '',
+          intermediaryBankCodes:
+            transaction.ttRemittance.intermediaryBankCodes ?? '',
+          relationship: transaction.ttRemittance.relationship ?? '',
+          sponsorshipName: transaction.ttRemittance.sponsorshipName ?? '',
+          sponsorshipPan: transaction.ttRemittance.sponsorshipPan ?? '',
+          dateOfIncorporation:
+            transaction.ttRemittance.dateOfIncorporation ?? '',
+          miceAmount: transaction.ttRemittance.miceAmount ?? '',
+          miceReference: transaction.ttRemittance.miceReference ?? '',
+        })
+      : createEmptyTtRemittanceValues(),
     additionalCharges: (transaction.additionalCharges ?? []).map(charge => ({
       accountId: charge.accountId,
       accountName:

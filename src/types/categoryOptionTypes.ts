@@ -33,6 +33,8 @@ export const CategoryOptionCodeEnum = {
   VoucherAccountType: 'VOUCHER_ACCOUNT_TYPE',
   VoucherItemType: 'VOUCHER_ITEM_TYPE',
   VoucherRemark: 'VOUCHER_REMARK',
+  TtMaturity: 'TTMATURITY',
+  FbChargeBearer: 'FBCHARGEBEARER',
 } as const;
 
 export type CategoryOptionCode =

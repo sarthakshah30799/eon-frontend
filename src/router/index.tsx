@@ -404,17 +404,33 @@ const CardTransferCreatePage = lazy(
 const CardTransferEditPage = lazy(
   () => import('../pages/card-transfer/edit/[id]/CardTransferEditPage')
 );
-const CardSettlementListPage = lazy(
-  () => import('../pages/card-settlement/CardSettlementListPage')
+const ProductSettlementListPage = lazy(
+  () => import('../pages/product-settlement/ProductSettlementListPage')
 );
-const CardSettlementCreatePage = lazy(
-  () => import('../pages/card-settlement/create/CardSettlementCreatePage')
+const ProductSettlementCreatePage = lazy(
+  () => import('../pages/product-settlement/create/ProductSettlementCreatePage')
 );
-const CardSettlementEditPage = lazy(
-  () => import('../pages/card-settlement/edit/[id]/CardSettlementEditPage')
+const ProductSettlementEditPage = lazy(
+  () =>
+    import('../pages/product-settlement/edit/[id]/ProductSettlementEditPage')
 );
-const CardSettlementDetailPage = lazy(
-  () => import('../pages/card-settlement/[id]/CardSettlementDetailPage')
+const ProductSettlementDetailPage = lazy(
+  () => import('../pages/product-settlement/[id]/ProductSettlementDetailPage')
+);
+const DealCoverRateListPage = lazy(
+  () => import('../pages/deal-cover-rate/DealCoverRateListPage')
+);
+const DealCoverRateCreatePage = lazy(
+  () => import('../pages/deal-cover-rate/create/DealCoverRateCreatePage')
+);
+const DealCoverRateEditPage = lazy(
+  () => import('../pages/deal-cover-rate/edit/[id]/DealCoverRateEditPage')
+);
+const DealCoverRateViewPage = lazy(
+  () => import('../pages/deal-cover-rate/view/[id]/DealCoverRateViewPage')
+);
+const DealCoverAckPage = lazy(
+  () => import('../pages/deal-cover-acknowledgement/DealCoverAckPage')
 );
 
 const router = createBrowserRouter([
@@ -1036,36 +1052,52 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/card-settlement',
+    path: '/product-settlement',
     element: (
       <ProtectedLayout>
-        <CardSettlementListPage />
+        <ProductSettlementListPage />
       </ProtectedLayout>
     ),
+  },
+  {
+    path: '/product-settlement/create',
+    element: (
+      <ProtectedLayout>
+        <ProductSettlementCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/product-settlement/edit/:id',
+    element: (
+      <ProtectedLayout>
+        <ProductSettlementEditPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/product-settlement/:id',
+    element: (
+      <ProtectedLayout>
+        <ProductSettlementDetailPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/card-settlement',
+    element: <Navigate to="/product-settlement" replace />,
   },
   {
     path: '/card-settlement/create',
-    element: (
-      <ProtectedLayout>
-        <CardSettlementCreatePage />
-      </ProtectedLayout>
-    ),
+    element: <Navigate to="/product-settlement/create" replace />,
   },
   {
     path: '/card-settlement/edit/:id',
-    element: (
-      <ProtectedLayout>
-        <CardSettlementEditPage />
-      </ProtectedLayout>
-    ),
+    element: <Navigate to="/product-settlement" replace />,
   },
   {
     path: '/card-settlement/:id',
-    element: (
-      <ProtectedLayout>
-        <CardSettlementDetailPage />
-      </ProtectedLayout>
-    ),
+    element: <Navigate to="/product-settlement" replace />,
   },
   {
     path: '/card-stock/create',
@@ -1082,6 +1114,62 @@ const router = createBrowserRouter([
         <CardStockEditPage />
       </ProtectedLayout>
     ),
+  },
+  {
+    path: '/deal-cover-rate',
+    element: (
+      <ProtectedLayout>
+        <DealCoverRateListPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/deal-cover-rate/create',
+    element: (
+      <ProtectedLayout>
+        <DealCoverRateCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/deal-cover-rate/edit/:id',
+    element: (
+      <ProtectedLayout>
+        <DealCoverRateEditPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/deal-cover-rate/view/:id',
+    element: (
+      <ProtectedLayout>
+        <DealCoverRateViewPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/deal-cover-acknowledgement',
+    element: (
+      <ProtectedLayout>
+        <DealCoverAckPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/tt-settlement',
+    element: <Navigate to="/product-settlement" replace />,
+  },
+  {
+    path: '/tt-settlement/create',
+    element: <Navigate to="/product-settlement/create" replace />,
+  },
+  {
+    path: '/tt-settlement/edit/:id',
+    element: <Navigate to="/product-settlement" replace />,
+  },
+  {
+    path: '/tt-settlement/:id',
+    element: <Navigate to="/product-settlement" replace />,
   },
   {
     path: '/card-transfer',

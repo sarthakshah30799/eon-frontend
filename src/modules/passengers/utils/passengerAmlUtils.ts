@@ -10,6 +10,8 @@ import {
   type PassengerOtherIdProofType,
   type PassengerResidentStatus,
   type IPassengerAmlVerificationValues,
+  type IPassengerLookupReferenceSnapshot,
+  type IPassengerLookupSnapshot,
   type IPassengerPassengerDetailsValues,
 } from '../types/passengerTypes';
 import type { IPurchaseFormValues } from '@/modules/purchase/types/purchaseTypes';
@@ -152,14 +154,20 @@ export const createPassengerDetailsDefaultValues = (
   };
 };
 
-const resolveSnapshotId = (value: unknown): string => {
-  if (!value || typeof value !== 'object') {
+const resolveSnapshotId = (
+  value: IPassengerLookupReferenceSnapshot | string | null | undefined
+): string => {
+  if (typeof value === 'string') {
+    return value.trim();
+  }
+  if (!value?.id) {
     return '';
   }
-
-  const snapshot = value as { id?: unknown };
-  return typeof snapshot.id === 'string' ? snapshot.id : '';
+  return String(value.id).trim();
 };
+
+const asText = (value: string | null | undefined) =>
+  typeof value === 'string' ? value : '';
 
 export const PASSENGER_PASSPORT_LOOKUP_EXCLUDED_FIELDS = [
   'panNumber',
@@ -172,112 +180,38 @@ export const PASSENGER_PASSPORT_LOOKUP_EXCLUDED_FIELDS = [
 ] as const;
 
 export const mapPassengerSnapshotToPurchaseFormValues = (
-  snapshot: Record<string, unknown>
+  snapshot: IPassengerLookupSnapshot
 ): Partial<IPurchaseFormValues> => ({
-  entityType:
-    typeof snapshot.entityType === 'string' ? snapshot.entityType : '',
+  entityType: asText(snapshot.entityType),
   passengerInfoCaptured: false,
-  panNumber: typeof snapshot.panNumber === 'string' ? snapshot.panNumber : '',
-  panHolderName:
-    typeof snapshot.panHolderName === 'string' ? snapshot.panHolderName : '',
-  panDob: typeof snapshot.panDob === 'string' ? snapshot.panDob : '',
-  passportNumber:
-    typeof snapshot.passportNumber === 'string' ? snapshot.passportNumber : '',
-  passportPassengerName:
-    typeof snapshot.passportPassengerName === 'string'
-      ? snapshot.passportPassengerName
-      : '',
-  passportIssueAt:
-    typeof snapshot.passportIssueAt === 'string'
-      ? snapshot.passportIssueAt
-      : '',
-  passportIssueDate:
-    typeof snapshot.passportIssueDate === 'string'
-      ? snapshot.passportIssueDate
-      : '',
-  passportExpiryDate:
-    typeof snapshot.passportExpiryDate === 'string'
-      ? snapshot.passportExpiryDate
-      : '',
-  nationalityType:
-    typeof snapshot.nationalityType === 'string'
-      ? snapshot.nationalityType
-      : '',
+  panNumber: asText(snapshot.panNumber),
+  panHolderName: asText(snapshot.panHolderName),
+  panDob: asText(snapshot.panDob),
+  passportNumber: asText(snapshot.passportNumber),
+  passportPassengerName: asText(snapshot.passportPassengerName),
+  passportIssueAt: asText(snapshot.passportIssueAt),
+  passportIssueDate: asText(snapshot.passportIssueDate),
+  passportExpiryDate: asText(snapshot.passportExpiryDate),
+  nationalityType: asText(snapshot.nationalityType),
   residentStatus: resolveSnapshotId(snapshot.residentStatus),
-  countryId:
-    typeof snapshot.countryId === 'string'
-      ? snapshot.countryId
-      : resolveSnapshotId(snapshot.country),
-  stateId:
-    typeof snapshot.stateId === 'string'
-      ? snapshot.stateId
-      : resolveSnapshotId(snapshot.state),
+  countryId: asText(snapshot.countryId) || resolveSnapshotId(snapshot.country),
+  stateId: asText(snapshot.stateId) || resolveSnapshotId(snapshot.state),
   locationId:
-    typeof snapshot.locationId === 'string'
-      ? snapshot.locationId
-      : resolveSnapshotId(snapshot.location),
-  city: typeof snapshot.city === 'string' ? snapshot.city : '',
-  address1: typeof snapshot.address1 === 'string' ? snapshot.address1 : '',
-  address2: typeof snapshot.address2 === 'string' ? snapshot.address2 : '',
-  email: typeof snapshot.email === 'string' ? snapshot.email : '',
-  contactNo: typeof snapshot.contactNo === 'string' ? snapshot.contactNo : '',
-  panHolderRelationType:
-    typeof snapshot.panHolderRelationType === 'string'
-      ? snapshot.panHolderRelationType
-      : '',
-  paidByPanNumber:
-    typeof snapshot.paidByPanNumber === 'string'
-      ? snapshot.paidByPanNumber
-      : '',
-  paidByPanHolderName:
-    typeof snapshot.paidByPanHolderName === 'string'
-      ? snapshot.paidByPanHolderName
-      : '',
-  paidByPanDob:
-    typeof snapshot.paidByPanDob === 'string' ? snapshot.paidByPanDob : '',
-  gstNumber: typeof snapshot.gstNumber === 'string' ? snapshot.gstNumber : '',
+    asText(snapshot.locationId) || resolveSnapshotId(snapshot.location),
+  city: asText(snapshot.city),
+  address1: asText(snapshot.address1),
+  address2: asText(snapshot.address2),
+  email: asText(snapshot.email),
+  contactNo: asText(snapshot.contactNo),
+  panHolderRelationType: asText(snapshot.panHolderRelationType),
+  paidByPanNumber: asText(snapshot.paidByPanNumber),
+  paidByPanHolderName: asText(snapshot.paidByPanHolderName),
+  paidByPanDob: asText(snapshot.paidByPanDob),
+  gstNumber: asText(snapshot.gstNumber),
   gstStateId:
-    typeof snapshot.gstStateId === 'string'
-      ? snapshot.gstStateId
-      : resolveSnapshotId(snapshot.gstState),
+    asText(snapshot.gstStateId) || resolveSnapshotId(snapshot.gstState),
   isPep: Boolean(snapshot.isPep),
-  arrivalDate:
-    typeof snapshot.arrivalDate === 'string' ? snapshot.arrivalDate : '',
-  otherDocuments: Array.isArray(snapshot.otherDocuments)
-    ? snapshot.otherDocuments.map(document => ({
-        documentType:
-          typeof (document as { documentType?: unknown }).documentType ===
-          'string'
-            ? String((document as { documentType?: unknown }).documentType)
-            : '',
-        documentNumber:
-          typeof (document as { documentNumber?: unknown }).documentNumber ===
-          'string'
-            ? String((document as { documentNumber?: unknown }).documentNumber)
-            : '',
-        validTill:
-          typeof (document as { validTill?: unknown }).validTill === 'string'
-            ? String((document as { validTill?: unknown }).validTill)
-            : '',
-        issueAt:
-          typeof (document as { issueAt?: unknown }).issueAt === 'string'
-            ? String((document as { issueAt?: unknown }).issueAt)
-            : '',
-        issueDate:
-          typeof (document as { issueDate?: unknown }).issueDate === 'string'
-            ? String((document as { issueDate?: unknown }).issueDate)
-            : '',
-        expiryDate:
-          typeof (document as { expiryDate?: unknown }).expiryDate === 'string'
-            ? String((document as { expiryDate?: unknown }).expiryDate)
-            : '',
-        documentFile:
-          typeof (document as { documentFile?: unknown }).documentFile ===
-          'string'
-            ? String((document as { documentFile?: unknown }).documentFile)
-            : '',
-      }))
-    : undefined,
+  arrivalDate: asText(snapshot.arrivalDate),
 });
 
 const isPanValidationRequired = (values: {

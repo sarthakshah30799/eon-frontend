@@ -108,10 +108,54 @@ export interface IPassengerAmlVerificationResponse {
   message: string;
 }
 
+export interface IPassengerLookupReferenceSnapshot {
+  id: string;
+  code?: string | null;
+  name?: string | null;
+  label?: string | null;
+}
+
+/** Identity lookup payload returned by `/passengers/lookup-identity`. */
+export interface IPassengerLookupSnapshot {
+  id: string;
+  entityType?: string | null;
+  nationalityType?: string | null;
+  countryId?: string | null;
+  stateId?: string | null;
+  locationId?: string | null;
+  residentStatusId?: string | null;
+  gstStateId?: string | null;
+  passportNumber?: string | null;
+  passportPassengerName?: string | null;
+  passportIssueAt?: string | null;
+  passportIssueDate?: string | null;
+  passportExpiryDate?: string | null;
+  arrivalDate?: string | null;
+  panNumber?: string | null;
+  panHolderName?: string | null;
+  panDob?: string | null;
+  panHolderRelationType?: string | null;
+  paidByPanNumber?: string | null;
+  paidByPanHolderName?: string | null;
+  paidByPanDob?: string | null;
+  gstNumber?: string | null;
+  email?: string | null;
+  contactNo?: string | null;
+  city?: string | null;
+  address1?: string | null;
+  address2?: string | null;
+  isPep?: boolean | null;
+  country?: IPassengerLookupReferenceSnapshot | null;
+  state?: IPassengerLookupReferenceSnapshot | null;
+  gstState?: IPassengerLookupReferenceSnapshot | null;
+  residentStatus?: IPassengerLookupReferenceSnapshot | null;
+  location?: IPassengerLookupReferenceSnapshot | null;
+}
+
 export interface IPassengerPassportLookupResponse {
   found: boolean;
   message: string;
-  passenger: Record<string, unknown> | null;
+  passenger: IPassengerLookupSnapshot | null;
 }
 
 export interface IPassengerAmlVerifiedPayload {

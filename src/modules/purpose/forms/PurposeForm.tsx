@@ -162,6 +162,110 @@ const PurposeSlabsSection = ({ isSubmitting }: { isSubmitting: boolean }) => {
   );
 };
 
+const PurposeSubpurposesSection = ({
+  isSubmitting,
+}: {
+  isSubmitting: boolean;
+}) => {
+  const form = useFormContext<ICreatePurpose>();
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: 'subpurposes',
+  });
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between border-b border-border-primary pb-3">
+        <div>
+          <p className="text-sm font-semibold text-text-primary">
+            {PURPOSE_TEXTS.SUBPURPOSES_TITLE}
+          </p>
+          <p className="text-xs text-text-tertiary">
+            {PURPOSE_TEXTS.SUBPURPOSES_SUBTITLE}
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={isSubmitting}
+          onClick={() =>
+            append({
+              code: '',
+              name: '',
+              isActive: true,
+            })
+          }
+        >
+          <PlusIcon className="mr-2 h-4 w-4" />
+          {PURPOSE_TEXTS.ADD_SUBPURPOSE}
+        </Button>
+      </div>
+
+      <div className="space-y-4">
+        {fields.length === 0 ? (
+          <div className="rounded-sm border border-dashed border-border-primary bg-surface-secondary px-4 py-6 text-sm text-text-secondary">
+            No subpurpose rows yet. Add codes used by Deal Cover Rate.
+          </div>
+        ) : null}
+
+        {fields.map((field, index) => (
+          <div
+            key={field.id}
+            className="relative rounded-sm border border-border-primary bg-surface-secondary p-4"
+          >
+            <Button
+              type="button"
+              aria-label={`Remove subpurpose ${index + 1}`}
+              variant="ghost"
+              size="icon"
+              className="absolute right-3 top-3 rounded-full border border-border-primary bg-surface-primary text-text-tertiary transition hover:border-error-500 hover:bg-error-50 hover:text-error-600 disabled:opacity-50"
+              disabled={isSubmitting}
+              onClick={() => remove(index)}
+            >
+              <svg
+                aria-hidden="true"
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </Button>
+
+            <div className="grid gap-4 md:grid-cols-3">
+              <FormFieldInput
+                name={`subpurposes.${index}.code`}
+                label="Code"
+                placeholder="EDU"
+                valueTransform="uppercase"
+                disabled={isSubmitting}
+              />
+              <FormFieldInput
+                name={`subpurposes.${index}.name`}
+                label="Name"
+                placeholder="Education"
+                disabled={isSubmitting}
+              />
+              <FormFieldCheckbox
+                name={`subpurposes.${index}.isActive`}
+                label="Active"
+                disabled={isSubmitting}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 interface PurposeFormProps {
   defaultValues: ICreatePurpose;
   onSubmit: (values: ICreatePurpose) => void | Promise<void>;
@@ -281,6 +385,10 @@ export const PurposeForm = ({
 
       <CardSection heading={PURPOSE_TEXTS.SLABS_TITLE}>
         <PurposeSlabsSection isSubmitting={isSubmitting} />
+      </CardSection>
+
+      <CardSection heading={PURPOSE_TEXTS.SUBPURPOSES_TITLE}>
+        <PurposeSubpurposesSection isSubmitting={isSubmitting} />
       </CardSection>
     </Form>
   );

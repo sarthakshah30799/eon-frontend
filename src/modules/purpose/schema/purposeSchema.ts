@@ -67,6 +67,17 @@ export const purposeSchema = yup
     sell: yup.boolean().default(false),
     purchase: yup.boolean().default(true),
     slabs: yup.array().of(purposeSlabSchema).default([]),
+    subpurposes: yup
+      .array()
+      .of(
+        yup.object({
+          id: yup.string().optional(),
+          code: yup.string().trim().required('Subpurpose code is required'),
+          name: yup.string().trim().required('Subpurpose name is required'),
+          isActive: yup.boolean().default(true),
+        })
+      )
+      .default([]),
   })
   .test(
     'purpose-scope',

@@ -40,6 +40,8 @@ import { PASSENGER_IDENTITY_TEXT } from '@/modules/passengers/constants/passenge
 // details form only, not on main purchase/sale Save.
 import {
   isCardProductCode,
+  isTtProductCode,
+  isTtRemittanceComplete,
   PURCHASE_TRANSACTION_TEXT,
   shouldValidatePaymentDetailRow,
 } from '../utils/purchaseUtils';
@@ -97,11 +99,13 @@ const createPurchaseTransactionSchema = (transactionType: TransactionType) =>
         const isCardSale =
           transactionType === TransactionTypeEnum.SALE &&
           isCardProductCode(this.parent.productCode);
+        const isTtRow = isTtProductCode(this.parent.productCode);
         if (!String(value ?? '').trim()) {
           return this.createError({
-            message: isCardSale
-              ? PURCHASE_TRANSACTION_TEXT.feAmountRequired
-              : PURCHASE_TRANSACTION_TEXT.quantityRequired,
+            message:
+              isCardSale || isTtRow
+                ? PURCHASE_TRANSACTION_TEXT.feAmountRequired
+                : PURCHASE_TRANSACTION_TEXT.quantityRequired,
           });
         }
 
@@ -110,6 +114,22 @@ const createPurchaseTransactionSchema = (transactionType: TransactionType) =>
           if (!Number.isFinite(amount) || amount <= 0) {
             return this.createError({
               message: PURCHASE_TRANSACTION_TEXT.feAmountPositive,
+            });
+          }
+        }
+
+        if (isTtRow && this.parent.dealCoverId) {
+          const dealFe = Number(
+            (this.parent.dealCoverSnapshot as { feAmount?: string } | null)
+              ?.feAmount
+          );
+          const punchedFe = Number(value);
+          if (
+            Number.isFinite(dealFe) &&
+            (!Number.isFinite(punchedFe) || punchedFe !== dealFe)
+          ) {
+            return this.createError({
+              message: PURCHASE_TRANSACTION_TEXT.feAmountMustMatchDeal,
             });
           }
         }
@@ -130,6 +150,20 @@ const createPurchaseTransactionSchema = (transactionType: TransactionType) =>
     issuerPartyProfileSnapshot: yup.mixed().nullable().default(null),
     cardSnapshot: yup.mixed().nullable().default(null),
     isReload: yup.boolean().default(false),
+    dealCoverId: yup
+      .string()
+      .default('')
+      .test(
+        'tt-deal-required',
+        'Deal cover is required for TT products',
+        function (value) {
+          if (!isTtProductCode(this.parent.productCode)) {
+            return true;
+          }
+          return Boolean(String(value ?? '').trim());
+        }
+      ),
+    dealCoverSnapshot: yup.mixed().nullable().default(null),
   });
 
 const additionalChargeSchema = yup.object({
@@ -720,6 +754,20 @@ export const createPurchaseFormSchema = (transactionType: TransactionType) =>
             ) || Boolean(value)
           );
         }
+      )
+      .test(
+        'tt-travel-country',
+        PURCHASE_TRANSACTION_TEXT.ttTravelCountryRequired,
+        function (value) {
+          const rows = Array.isArray(this.parent.transactions)
+            ? this.parent.transactions
+            : [];
+          const hasTt = rows.some(
+            (row: { productCode?: string; dealCoverId?: string }) =>
+              Boolean(row?.dealCoverId) || isTtProductCode(row?.productCode)
+          );
+          return !hasTt || Boolean(String(value ?? '').trim());
+        }
       ),
     travelNoOfDays: yup.string().trim().default(''),
     travelNoOfPax: yup.string().trim().default(''),
@@ -793,6 +841,64 @@ export const createPurchaseFormSchema = (transactionType: TransactionType) =>
             )
             .map((row: { cardId?: string }) => String(row.cardId));
           return new Set(ccCardIds).size === ccCardIds.length;
+        }
+      )
+      .test(
+        'unique-tt-deal',
+        'The same TT deal cannot be selected more than once',
+        rows => {
+          const dealIds = (rows ?? [])
+            .map((row: { dealCoverId?: string }) =>
+              String(row?.dealCoverId ?? '').trim()
+            )
+            .filter(Boolean);
+          return new Set(dealIds).size === dealIds.length;
+        }
+      ),
+    ttRemittance: yup
+      .object({
+        remitterName: yup.string().default(''),
+        remitterAddress: yup.string().default(''),
+        remitterCity: yup.string().default(''),
+        remitterCountryId: yup.string().default(''),
+        remitterEntityType: yup.string().default(''),
+        beneficiaryName: yup.string().default(''),
+        beneficiaryAddress: yup.string().default(''),
+        beneficiaryCountryId: yup.string().default(''),
+        bankName: yup.string().default(''),
+        bankAddress: yup.string().default(''),
+        accountNumber: yup.string().default(''),
+        iban: yup.string().default(''),
+        swiftCode: yup.string().default(''),
+        bsbCode: yup.string().default(''),
+        sortCode: yup.string().default(''),
+        routingNumber: yup.string().default(''),
+        transitNumber: yup.string().default(''),
+        educationDetails: yup.string().default(''),
+        fbBearerOptionId: yup.string().default(''),
+        intermediaryBankName: yup.string().default(''),
+        intermediaryBankAddress: yup.string().default(''),
+        intermediaryBankCodes: yup.string().default(''),
+        relationship: yup.string().default(''),
+        sponsorshipName: yup.string().default(''),
+        sponsorshipPan: yup.string().default(''),
+        dateOfIncorporation: yup.string().default(''),
+        miceAmount: yup.string().default(''),
+        miceReference: yup.string().default(''),
+      })
+      .default(undefined)
+      .test(
+        'tt-remittance-required',
+        PURCHASE_TRANSACTION_TEXT.ttRemittanceRequired,
+        function (value) {
+          const rows = Array.isArray(this.parent.transactions)
+            ? this.parent.transactions
+            : [];
+          const hasTt = rows.some(
+            (row: { productCode?: string; dealCoverId?: string }) =>
+              Boolean(row?.dealCoverId) || isTtProductCode(row?.productCode)
+          );
+          return !hasTt || isTtRemittanceComplete(value);
         }
       ),
     additionalCharges: yup

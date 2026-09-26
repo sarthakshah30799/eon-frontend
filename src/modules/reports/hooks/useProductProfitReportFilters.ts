@@ -7,10 +7,12 @@ import {
   buildSearchParams,
   readSearchParamList,
   setSearchParamList,
+  setSearchParamValue,
 } from '../utils/reportSearchParams';
-import type {
-  IProductProfitReportFiltersState,
-  IReportSelectOption,
+import {
+  ReportDatePresetEnum,
+  type IProductProfitReportFiltersState,
+  type IReportSelectOption,
 } from '../types';
 import { useSalePurchaseReportFilters } from './useSalePurchaseReportFilters';
 
@@ -21,9 +23,7 @@ export const useProductProfitReportFilters = () => {
     undefined,
     true
   );
-  const currencyProfiles = currencyProfilesPage?.data ?? [];
   const { data: productProfilesPage } = useListProductProfiles(true);
-  const productProfiles = productProfilesPage?.data ?? [];
   const searchParamsKey = searchParams.toString();
   const parsedSearchParams = useMemo(
     () => new URLSearchParams(searchParamsKey),
@@ -64,26 +64,26 @@ export const useProductProfitReportFilters = () => {
 
   const currencyOptions = useMemo<IReportSelectOption[]>(
     () =>
-      currencyProfiles.map(currency => ({
+      (currencyProfilesPage?.data ?? []).map(currency => ({
         id: currency.id,
         label: buildReportOptionLabel(
           currency.currencyCode,
           currency.currencyName
         ),
       })),
-    [currencyProfiles]
+    [currencyProfilesPage?.data]
   );
 
   const productOptions = useMemo<IReportSelectOption[]>(
     () =>
-      productProfiles.map(product => ({
+      (productProfilesPage?.data ?? []).map(product => ({
         id: product.id,
         label: buildReportOptionLabel(
           product.productCode,
           product.productDescription
         ),
       })),
-    [productProfiles]
+    [productProfilesPage?.data]
   );
 
   const selectedCurrencyIds = useMemo(
@@ -111,29 +111,29 @@ export const useProductProfitReportFilters = () => {
 
   const handleView = () => {
     const nextAppliedFilters: IProductProfitReportFiltersState = {
-      dateRange: baseFilters.appliedFilters?.dateRange ?? baseFilters.dateRange,
-      stateIds: baseFilters.appliedFilters?.stateIds ?? baseFilters.stateIds,
-      branchIds: baseFilters.appliedFilters?.branchIds ?? baseFilters.branchIds,
-      counterIds:
-        baseFilters.appliedFilters?.counterIds ?? baseFilters.counterIds,
-      partyTypeCodes:
-        baseFilters.appliedFilters?.partyTypeCodes ??
-        baseFilters.partyTypeCodes,
-      partyProfileSearch:
-        baseFilters.appliedFilters?.partyProfileSearch ??
-        baseFilters.partyProfileSearch,
-      partyProfileSelection:
-        baseFilters.appliedFilters?.partyProfileSelection ??
-        baseFilters.partyProfileSelection,
-      transactionTypes:
-        baseFilters.appliedFilters?.transactionTypes ??
-        baseFilters.transactionTypes,
-      sortBy: baseFilters.appliedFilters?.sortBy ?? baseFilters.sortBy,
+      dateRange: baseFilters.dateRange,
+      stateIds: baseFilters.stateIds,
+      branchIds: baseFilters.branchIds,
+      counterIds: baseFilters.counterIds,
+      partyTypeCodes: baseFilters.partyTypeCodes,
+      partyProfileSearch: baseFilters.partyProfileSearch,
+      partyProfileSelection: baseFilters.partyProfileSelection,
+      transactionTypes: baseFilters.transactionTypes,
+      sortBy: baseFilters.sortBy,
       currencyIds: selectedCurrencyIds,
       productIds: selectedProductIds,
     };
 
     const nextSearchParams = buildSearchParams(undefined, next => {
+      setSearchParamValue(next, 'datePreset', baseFilters.dateRange.preset);
+      if (baseFilters.dateRange.preset === ReportDatePresetEnum.CUSTOM) {
+        setSearchParamValue(
+          next,
+          'startDate',
+          baseFilters.dateRange.startDate
+        );
+        setSearchParamValue(next, 'endDate', baseFilters.dateRange.endDate);
+      }
       setSearchParamList(next, 'stateIds', baseFilters.stateIds);
       setSearchParamList(next, 'branchIds', baseFilters.branchIds);
       setSearchParamList(next, 'counterIds', baseFilters.counterIds);
@@ -143,6 +143,7 @@ export const useProductProfitReportFilters = () => {
         'transactionTypes',
         baseFilters.transactionTypes
       );
+      setSearchParamValue(next, 'sortBy', baseFilters.sortBy);
       setSearchParamList(next, 'currencyIds', selectedCurrencyIds);
       setSearchParamList(next, 'productIds', selectedProductIds);
     });

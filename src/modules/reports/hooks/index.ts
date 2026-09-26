@@ -13,7 +13,7 @@ export * from './useCashReportFilters';
 export * from './useCashReport';
 export * from './useGenerateLedgerFilters';
 export * from './useGenerateLedger';
-export * from './useCardSettlementReportFilters';
+export * from './useProductSettlementReportFilters';
 export * from './useCardUnsettledReport';
 export * from './useCardSettledReport';
 export * from './useCardBlankStockReport';

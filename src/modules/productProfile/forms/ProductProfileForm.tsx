@@ -68,7 +68,7 @@ interface ProductProfileFormProps {
 
 const CardIssuerField = ({ isSubmitting }: { isSubmitting: boolean }) => {
   const { watch, setValue } = useFormContext<ICreateProductProfile>();
-  const issuerIds = watch('cardIssuerProfileIds') ?? [];
+  const issuerIds = watch('issuerProfileIds') ?? [];
   const [selectedProfiles, setSelectedProfiles] = useState<IPartyProfile[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -150,7 +150,7 @@ const CardIssuerField = ({ isSubmitting }: { isSubmitting: boolean }) => {
         onContinue={profiles => {
           setSelectedProfiles(profiles);
           setValue(
-            'cardIssuerProfileIds',
+            'issuerProfileIds',
             profiles.map(profile => profile.id),
             {
               shouldDirty: true,
@@ -522,24 +522,24 @@ export const ProductProfileForm = ({
 
   const handleFormSubmit = useCallback(
     (values: ICreateProductProfile) => {
-      const currentIds = values.cardIssuerProfileIds ?? [];
-      const initialIds = defaultValues.cardIssuerProfileIds ?? [];
+      const currentIds = values.issuerProfileIds ?? [];
+      const initialIds = defaultValues.issuerProfileIds ?? [];
       const initialIdSet = new Set(initialIds);
       const currentIdSet = new Set(currentIds);
 
       if (!currentId) {
-        return onSubmit({ ...values, cardIssuerProfileIds: currentIds });
+        return onSubmit({ ...values, issuerProfileIds: currentIds });
       }
 
       return onSubmit({
         ...values,
-        cardIssuerProfileIds: currentIds.filter(id => !initialIdSet.has(id)),
+        issuerProfileIds: currentIds.filter(id => !initialIdSet.has(id)),
         removedCardIssuerProfileIds: initialIds.filter(
           id => !currentIdSet.has(id)
         ),
       });
     },
-    [currentId, defaultValues.cardIssuerProfileIds, onSubmit]
+    [currentId, defaultValues.issuerProfileIds, onSubmit]
   );
 
   return (

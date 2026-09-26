@@ -13,7 +13,7 @@ export { default as CashReportFiltersSection } from './CashReportFiltersSection'
 export { default as CashReportTable } from './CashReportTable';
 export { default as GenerateLedgerFiltersSection } from './GenerateLedgerFiltersSection';
 export { default as GenerateLedgerTable } from './GenerateLedgerTable';
-export { default as CardSettlementReportFiltersSection } from './CardSettlementReportFiltersSection';
+export { default as ProductSettlementReportFiltersSection } from './ProductSettlementReportFiltersSection';
 export { default as Flm1DailyCnSummaryFiltersSection } from './Flm1DailyCnSummaryFiltersSection';
 export { default as Flm1DailyCnSummaryTable } from './Flm1DailyCnSummaryTable';
 export { default as FlmRegisterReportTable } from './FlmRegisterReportTable';

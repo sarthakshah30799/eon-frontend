@@ -1517,6 +1517,7 @@ const PurchaseFormBody = ({
             branchId={resolvedBranchId}
             disabled={isReadOnly}
             showPassengerAction={isCombinedPartyProfilePage}
+            viewPassengerInfo={readOnly}
             onAddPassengerInfo={() => {
               setIsPassengerAmlModalOpen(true);
             }}
@@ -1996,6 +1997,7 @@ const PurchaseFormBody = ({
           key={`${selectedPartyProfile?.id ?? 'none'}-${resolvedPassengerEntityType ?? 'none'}-${transactionPartyProfileType || 'none'}`}
           open={isPassengerAmlModalOpen}
           onOpenChange={setIsPassengerAmlModalOpen}
+          readOnly={readOnly}
           entityType={
             resolvedPassengerEntityType ||
             getPurchasePageEntityType(purchasePageType) ||

@@ -26,6 +26,7 @@ import { PassengerOtherDocumentsSection } from './PassengerOtherDocumentsSection
 interface PassengerDetailsFieldsProps {
   entityType: string;
   showPanRelation?: boolean;
+  readOnly?: boolean;
   onPanFieldBlur?: () => void;
   onPassportNumberBlur?: () => void;
   onPassportFieldBlur?: () => void;
@@ -38,6 +39,7 @@ interface PassengerDetailsFieldsProps {
 export const PassengerDetailsFields = ({
   entityType,
   showPanRelation: _showPanRelation = false,
+  readOnly = false,
   onPanFieldBlur,
   onPassportNumberBlur,
   onPassportFieldBlur,
@@ -174,7 +176,7 @@ export const PassengerDetailsFields = ({
   }, [panHolderRelationType, selfRelationOption]);
 
   useEffect(() => {
-    if (!showPanSection || !isCorporateEntity) {
+    if (readOnly || !showPanSection || !isCorporateEntity) {
       return;
     }
 
@@ -215,10 +217,15 @@ export const PassengerDetailsFields = ({
     isCorporateEntity,
     panHolderRelationType,
     panRelationOptions,
+    readOnly,
     showPanSection,
   ]);
 
   useEffect(() => {
+    if (readOnly) {
+      return;
+    }
+
     if (isIndiaCountry) {
       if (residentStatus !== PassengerResidentStatusEnum.RESIDENT) {
         form.setValue('residentStatus', PassengerResidentStatusEnum.RESIDENT, {
@@ -254,10 +261,10 @@ export const PassengerDetailsFields = ({
         });
       }
     }
-  }, [form, isIndiaCountry, nationalityType, residentStatus]);
+  }, [form, isIndiaCountry, nationalityType, readOnly, residentStatus]);
 
   useEffect(() => {
-    if (showStateField) {
+    if (readOnly || showStateField) {
       return;
     }
 
@@ -270,7 +277,7 @@ export const PassengerDetailsFields = ({
       shouldTouch: true,
       shouldValidate: false,
     });
-  }, [form, showStateField]);
+  }, [form, readOnly, showStateField]);
 
   const clearCountrySelection = useCallback(() => {
     form.setValue('countryId', '', {
@@ -286,7 +293,7 @@ export const PassengerDetailsFields = ({
   }, [form]);
 
   useEffect(() => {
-    if (!isSelfRelationSelected) {
+    if (readOnly || !isSelfRelationSelected) {
       return;
     }
 
@@ -336,6 +343,7 @@ export const PassengerDetailsFields = ({
     paidByPanNumber,
     paidByPanHolderName,
     paidByPanDob,
+    readOnly,
   ]);
 
   return (
@@ -776,6 +784,7 @@ export const PassengerDetailsFields = ({
               </p>
             </div> */}
             <PassengerOtherDocumentsSection
+              readOnly={readOnly}
               onDocumentChange={onDocumentChange}
               description={
                 showTravelDetails

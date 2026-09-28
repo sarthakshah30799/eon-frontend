@@ -25,4 +25,7 @@ export const PASSENGER_IDENTITY_TEXT = {
   aadhaarNumberInvalid: 'Aadhaar number must be 12 numeric characters',
   panPassportConflict:
     'PAN and passport belong to different passenger records',
+  viewOnlyDescription:
+    'Review the passenger information captured on this transaction. These details cannot be changed.',
+  viewOnlyClose: 'Close',
 } as const;

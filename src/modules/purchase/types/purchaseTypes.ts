@@ -219,10 +219,13 @@ export interface IPurchaseProductOption {
   id: string;
   productCode: string;
   productDescription: string;
+  availableInRetailBuying: boolean;
+  availableInRetailSelling: boolean;
   availableInBulkBuying: boolean;
   availableInBulkSelling: boolean;
   issuerProfileIds?: string[];
   availableInOtherTransaction: boolean;
+  availableInDealCover: boolean;
 }
 
 export interface IPurchasePricingData {

@@ -19,6 +19,7 @@ import { transactionsApi } from '@/api/transactions';
 import { AD1ListView } from '@/modules/purchase';
 import { useLoadBranchOptions } from '@/modules/branchProfile/hooks';
 import { useLoadProductOptions } from '@/modules/productProfile/hooks';
+import { getProductAvailabilityQuery } from '@/modules/productProfile/utils';
 import {
   TransactionListTable,
   type TransactionListRow,
@@ -29,6 +30,8 @@ import {
   getPurchasePageTitle,
   getPurchasePageTypeFromPath,
   getPurchasePageSlugFromType,
+  getPurchaseTradeMode,
+  getPurchaseTransactionType,
   type PurchasePageType,
 } from './purchasePage.enum';
 
@@ -51,7 +54,16 @@ const PurchasePageView = ({ purchasePageType }: PurchasePageViewProps) => {
   );
 
   const loadBranchOptions = useLoadBranchOptions({ activeOnly: true });
-  const loadProductOptions = useLoadProductOptions();
+  const productAvailabilityFilter = useMemo(
+    () =>
+      getProductAvailabilityQuery({
+        kind: 'sale_purchase',
+        transactionType: getPurchaseTransactionType(purchasePageType),
+        tradeMode: getPurchaseTradeMode(purchasePageType),
+      }),
+    [purchasePageType]
+  );
+  const loadProductOptions = useLoadProductOptions(productAvailabilityFilter);
   const [selectedBranchOption, setSelectedBranchOption] =
     useState<AsyncSelectOption | null>(null);
   const selectedProductOption = useMemo<AsyncSelectOption | null>(() => {

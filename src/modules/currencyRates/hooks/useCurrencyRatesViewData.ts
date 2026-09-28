@@ -17,9 +17,12 @@ interface CurrencyRatesViewData {
     id: string;
     productCode: string;
     productDescription: string;
+    availableInRetailBuying: boolean;
+    availableInRetailSelling: boolean;
     availableInBulkBuying: boolean;
     availableInBulkSelling: boolean;
     availableInOtherTransaction: boolean;
+    availableInDealCover: boolean;
     issuerProfileIds: string[];
   }>;
   currencies: ICurrencyProfile[];
@@ -50,9 +53,12 @@ const loadCurrencyRatesViewData = async (): Promise<CurrencyRatesViewData> => {
       id: product.id,
       productCode: product.productCode,
       productDescription: product.productDescription,
+      availableInRetailBuying: product.availableInRetailBuying,
+      availableInRetailSelling: product.availableInRetailSelling,
       availableInBulkBuying: product.availableInBulkBuying,
       availableInBulkSelling: product.availableInBulkSelling,
       availableInOtherTransaction: product.availableInOtherTransaction,
+      availableInDealCover: product.availableInDealCover,
       issuerProfileIds: product.issuerProfileIds ?? [],
     })),
     currencies,

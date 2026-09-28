@@ -28,6 +28,7 @@ import {
   type PurchasePageType,
 } from '@/pages/purchase/[slug]/purchasePage.enum';
 import type { IPartyProfileCommissionRule } from '@/modules/partyProfiles/types';
+import { getProductAvailabilityQuery } from '@/modules/productProfile/utils';
 import type { PurposeRateType } from '@/modules/purpose/types/purposeTypes';
 import {
   PassengerEntityTypeEnum,
@@ -1320,11 +1321,14 @@ export const formatPurchaseEntityLabel = (
 };
 
 export const getPurchaseTransactionProductFilter = (
-  transactionType: TransactionType
+  transactionType: TransactionType,
+  tradeMode: TradeMode = TradeModeEnum.BULK
 ) =>
-  transactionType === TransactionTypeEnum.SALE
-    ? ({ bulkSelling: true } as const)
-    : ({ bulkBuying: true } as const);
+  getProductAvailabilityQuery({
+    kind: 'sale_purchase',
+    transactionType,
+    tradeMode,
+  });
 
 export const getPurchaseTransactionAccountFilter = (
   transactionType: TransactionType

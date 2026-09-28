@@ -58,6 +58,9 @@ export const PurchaseRulePreviewSection = ({
             )}
           </div>
         ) : null}
+        <div className="mt-2 text-sm text-text-secondary">
+          {PURCHASE_RULE_TEXT.limitCompareHint}
+        </div>
         <div className="mt-2 grid gap-2 text-sm text-text-secondary sm:grid-cols-2">
           <div>
             <span className="font-medium text-text-primary">
@@ -70,7 +73,7 @@ export const PurchaseRulePreviewSection = ({
             <span className="font-medium text-text-primary">
               {PURCHASE_RULE_TEXT.cashTotal}
             </span>{' '}
-            {preview.cashTotalAmount}
+            {preview.cashTotalAmount} {preview.referenceCurrencyCode}
           </div>
           <div>
             <span className="font-medium text-text-primary">
@@ -95,6 +98,13 @@ export const PurchaseRulePreviewSection = ({
               {PURCHASE_RULE_TEXT.historyAmount}
             </span>{' '}
             {preview.cumulativeAmountInReferenceCurrency}{' '}
+            {preview.referenceCurrencyCode}
+          </div>
+          <div>
+            <span className="font-medium text-text-primary">
+              {PURCHASE_RULE_TEXT.historyCashAmount}
+            </span>{' '}
+            {preview.cumulativeCashAmountInReferenceCurrency}{' '}
             {preview.referenceCurrencyCode}
           </div>
         </div>

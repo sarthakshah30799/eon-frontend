@@ -711,6 +711,7 @@ export interface IPurchaseRulePreviewResponse {
   transactionAmount: string;
   transactionAmountInReferenceCurrency: string;
   cumulativeAmountInReferenceCurrency: string;
+  cumulativeCashAmountInReferenceCurrency: string;
   cashLimitAmount: string;
   cashTotalAmount: string;
   chequeTotalAmount: string;

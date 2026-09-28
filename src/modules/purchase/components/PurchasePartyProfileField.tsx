@@ -27,6 +27,7 @@ interface PurchasePartyProfileFieldProps {
   branchId?: string;
   disabled?: boolean;
   showPassengerAction?: boolean;
+  viewPassengerInfo?: boolean;
   onAddPassengerInfo?: () => void;
 }
 
@@ -36,6 +37,7 @@ export const PurchasePartyProfileField = ({
   branchId = '',
   disabled = false,
   showPassengerAction = false,
+  viewPassengerInfo = false,
   onAddPassengerInfo,
 }: PurchasePartyProfileFieldProps) => {
   const form = useFormContext<IPurchaseFormValues>();
@@ -126,6 +128,14 @@ export const PurchasePartyProfileField = ({
 
   const isCombinedPartyProfilePage =
     isCorporateIndividualPurchasePage(purchasePageType);
+  const canReviewCapturedPassenger =
+    viewPassengerInfo && Boolean(passengerInfoCaptured);
+  const isPassengerActionDisabled = canReviewCapturedPassenger
+    ? false
+    : isPickerDisabled ||
+      !partyProfileId ||
+      !entityType ||
+      (isCombinedPartyProfilePage && !transactionPartyProfileType);
 
   const partyProfileDisplayValue = useMemo(() => {
     if (disabled && passengerInfoCaptured) {
@@ -300,12 +310,7 @@ export const PurchasePartyProfileField = ({
             type="button"
             variant={passengerInfoCaptured ? 'secondary' : 'default'}
             className="w-full shadow-sm transition-transform duration-200 hover:-translate-y-0.5"
-            disabled={
-              isPickerDisabled ||
-              !partyProfileId ||
-              !entityType ||
-              (isCombinedPartyProfilePage && !transactionPartyProfileType)
-            }
+            disabled={isPassengerActionDisabled}
             onClick={() => {
               onAddPassengerInfo?.();
             }}

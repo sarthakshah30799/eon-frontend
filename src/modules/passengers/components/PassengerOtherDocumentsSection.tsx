@@ -20,11 +20,13 @@ import { PassengerOtherIdProofTypeEnum } from '../types/passengerTypes';
 interface PassengerOtherDocumentsSectionProps {
   onDocumentChange?: () => void;
   description?: string;
+  readOnly?: boolean;
 }
 
 export const PassengerOtherDocumentsSection = ({
   onDocumentChange,
   description = 'Add any supporting passenger documents you want to capture.',
+  readOnly = false,
 }: PassengerOtherDocumentsSectionProps) => {
   const form = useFormContext<IPurchaseFormValues>();
   const { errors } = useFormState({
@@ -51,25 +53,27 @@ export const PassengerOtherDocumentsSection = ({
           <p className="text-sm text-text-secondary">{description}</p>
         </div>
 
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            append({
-              documentType: '',
-              documentNumber: '',
-              validTill: '',
-              issueAt: '',
-              issueDate: '',
-              expiryDate: '',
-              documentFile: '',
-            });
-            onDocumentChange?.();
-          }}
-        >
-          Add Document
-        </Button>
+        {readOnly ? null : (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              append({
+                documentType: '',
+                documentNumber: '',
+                validTill: '',
+                issueAt: '',
+                issueDate: '',
+                expiryDate: '',
+                documentFile: '',
+              });
+              onDocumentChange?.();
+            }}
+          >
+            Add Document
+          </Button>
+        )}
       </div>
 
       <div className="space-y-4">
@@ -86,7 +90,7 @@ export const PassengerOtherDocumentsSection = ({
                 <div className="text-sm font-medium text-text-primary">
                   Document {index + 1}
                 </div>
-                {fields.length > 1 ? (
+                {!readOnly && fields.length > 1 ? (
                   <Button
                     type="button"
                     variant="ghost"
@@ -108,6 +112,7 @@ export const PassengerOtherDocumentsSection = ({
                   placeholder="Select document type"
                   loadOptions={loadOptions}
                   defaultOptions={documentTypes}
+                  disabled={readOnly}
                   onValueChange={value => {
                     if (Array.isArray(value)) {
                       return;
@@ -150,6 +155,7 @@ export const PassengerOtherDocumentsSection = ({
                   label="ID Number"
                   placeholder="Enter ID number"
                   valueTransform="none"
+                  disabled={readOnly}
                   maxLength={
                     documentType === PassengerOtherIdProofTypeEnum.AADHAAR
                       ? 12
@@ -164,6 +170,7 @@ export const PassengerOtherDocumentsSection = ({
                     name={`otherDocuments.${index}.validTill`}
                     label="Valid Till"
                     placeholder="Select expiry date"
+                    disabled={readOnly}
                     onBlur={onDocumentChange}
                   />
                 ) : null}
@@ -172,6 +179,7 @@ export const PassengerOtherDocumentsSection = ({
                     name={`otherDocuments.${index}.documentFile`}
                     label="Upload Document"
                     placeholder="Choose file"
+                    disabled={readOnly}
                   />
                 </div>
               </div>

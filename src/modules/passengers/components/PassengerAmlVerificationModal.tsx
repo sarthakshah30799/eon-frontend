@@ -50,6 +50,7 @@ interface PassengerAmlVerificationModalProps {
   entityType?: PassengerEntityType;
   selectedPartyProfile?: PassengerAmlPartyProfile | null;
   selectedPartyProfileLoading?: boolean;
+  readOnly?: boolean;
   onVerified: (value: IPassengerAmlVerifiedPayload) => void;
 }
 
@@ -222,6 +223,7 @@ export const PassengerAmlVerificationModal = ({
   entityType = PassengerEntityTypeEnum.CORPORATE,
   selectedPartyProfile,
   selectedPartyProfileLoading = false,
+  readOnly = false,
   onVerified,
 }: PassengerAmlVerificationModalProps) => {
   const form = useFormContext<IPurchaseFormValues>();
@@ -821,9 +823,8 @@ export const PassengerAmlVerificationModal = ({
     });
   }, [form, open, passengerInfoCaptured, verificationMode, verifyIdentity]);
 
-  const currentStep: PassengerModalStep = passengerInfoCaptured
-    ? 'details'
-    : internalStep;
+  const currentStep: PassengerModalStep =
+    readOnly || passengerInfoCaptured ? 'details' : internalStep;
   const reopenedCapturedSession =
     passengerInfoCaptured && currentStep === 'details';
 
@@ -1098,6 +1099,11 @@ export const PassengerAmlVerificationModal = ({
   };
 
   const handleDetailsDone = async () => {
+    if (readOnly) {
+      handleModalOpenChange(false);
+      return;
+    }
+
     if (isDetailsSubmitting) {
       return;
     }
@@ -1275,6 +1281,18 @@ export const PassengerAmlVerificationModal = ({
     </div>
   );
 
+  const viewOnlyFooter = (
+    <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+      <Button
+        type="button"
+        variant="outline"
+        onClick={() => handleModalOpenChange(false)}
+      >
+        {PASSENGER_IDENTITY_TEXT.viewOnlyClose}
+      </Button>
+    </div>
+  );
+
   const detailsFooter = (
     <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
       {!passengerInfoCaptured ? (
@@ -1306,19 +1324,27 @@ export const PassengerAmlVerificationModal = ({
       open={open}
       onOpenChange={handleModalOpenChange}
       title={
-        currentStep === 'verification'
-          ? 'AML Verification'
-          : 'Passenger Details'
+        readOnly
+          ? 'Passenger Details'
+          : currentStep === 'verification'
+            ? 'AML Verification'
+            : 'Passenger Details'
       }
       description={
-        currentStep === 'verification'
-          ? 'Verify identity details before moving to the passenger information step.'
-          : 'Capture the passenger details that will be stored on the transaction.'
+        readOnly
+          ? PASSENGER_IDENTITY_TEXT.viewOnlyDescription
+          : currentStep === 'verification'
+            ? 'Verify identity details before moving to the passenger information step.'
+            : 'Capture the passenger details that will be stored on the transaction.'
       }
       size="2xl"
       dismissible={!isDetailsSubmitting}
       footer={
-        currentStep === 'verification' ? verificationFooter : detailsFooter
+        readOnly
+          ? viewOnlyFooter
+          : currentStep === 'verification'
+            ? verificationFooter
+            : detailsFooter
       }
     >
       {currentStep === 'verification' ? (
@@ -1357,12 +1383,36 @@ export const PassengerAmlVerificationModal = ({
           />
         )
       ) : (
-        <div
+        <fieldset
+          disabled={readOnly}
           className={
-            isDetailsSubmitting ? 'pointer-events-none space-y-4' : 'space-y-4'
+            isDetailsSubmitting || readOnly
+              ? 'pointer-events-none m-0 min-w-0 space-y-4 border-0 p-0 [&_:disabled]:!cursor-default [&_:disabled]:!bg-surface-primary [&_:disabled]:!text-text-primary [&_:disabled]:!opacity-100'
+              : 'm-0 min-w-0 space-y-4 border-0 p-0'
           }
+          onMouseDownCapture={event => {
+            if (!readOnly) {
+              return;
+            }
+            event.preventDefault();
+            event.stopPropagation();
+          }}
+          onKeyDownCapture={event => {
+            if (!readOnly) {
+              return;
+            }
+            event.preventDefault();
+            event.stopPropagation();
+          }}
+          onChangeCapture={event => {
+            if (!readOnly) {
+              return;
+            }
+            event.preventDefault();
+            event.stopPropagation();
+          }}
         >
-          {visibleDetailsMessage ? (
+          {!readOnly && visibleDetailsMessage ? (
             <div className="rounded-sm border border-error-200 bg-error-50 px-4 py-3 text-xs text-error-700">
               <span className="font-medium">{visibleDetailsMessage}</span>
             </div>
@@ -1372,23 +1422,42 @@ export const PassengerAmlVerificationModal = ({
               (watchedEntityType || entityType) as PassengerEntityType
             }
             showPanRelation={verificationMode === 'pan'}
-            onPanFieldBlur={() => {
-              void verifyIdentityOnBlur('pan');
-            }}
-            onPassportNumberBlur={() => {
-              void handlePassportNumberBlur();
-            }}
-            onPassportFieldBlur={() => {
-              void verifyIdentityOnBlur('passport');
-            }}
-            onArrivalDateChange={handleArrivalDateChange}
-            onDepartureDateChange={handleDepartureDateChange}
-            onNationalityChange={handleNationalityChange}
-            onDocumentChange={() => {
-              form.clearErrors('otherDocuments' as never);
-            }}
+            readOnly={readOnly}
+            onPanFieldBlur={
+              readOnly
+                ? undefined
+                : () => {
+                    void verifyIdentityOnBlur('pan');
+                  }
+            }
+            onPassportNumberBlur={
+              readOnly
+                ? undefined
+                : () => {
+                    void handlePassportNumberBlur();
+                  }
+            }
+            onPassportFieldBlur={
+              readOnly
+                ? undefined
+                : () => {
+                    void verifyIdentityOnBlur('passport');
+                  }
+            }
+            onArrivalDateChange={readOnly ? undefined : handleArrivalDateChange}
+            onDepartureDateChange={
+              readOnly ? undefined : handleDepartureDateChange
+            }
+            onNationalityChange={readOnly ? undefined : handleNationalityChange}
+            onDocumentChange={
+              readOnly
+                ? undefined
+                : () => {
+                    form.clearErrors('otherDocuments' as never);
+                  }
+            }
           />
-        </div>
+        </fieldset>
       )}
     </Modal>
   );

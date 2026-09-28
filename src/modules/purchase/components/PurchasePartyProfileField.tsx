@@ -20,6 +20,7 @@ import {
   getPurchaseTransactionPartyProfileFilter,
 } from '../utils/purchaseUtils';
 import { EntityPickerField } from './EntityPickerField';
+import { HIGH_RISK_CATEGORY_OPTION_VALUE } from '../constants/purchasePartyProfileConstants';
 
 interface PurchasePartyProfileFieldProps {
   partyProfileTypes: PartyProfileType[];
@@ -361,7 +362,10 @@ export const PurchasePartyProfileField = ({
           }
 
           // Check if the selected profile has high risk category
-          if (selectedProfile.kycRiskCategory?.value === 'HIGH_RISK') {
+          if (
+            selectedProfile.kycRiskCategory?.value ===
+            HIGH_RISK_CATEGORY_OPTION_VALUE
+          ) {
             setSelectedProfileForWarning(selectedProfile);
             setWarningModalOpen(true);
             return;

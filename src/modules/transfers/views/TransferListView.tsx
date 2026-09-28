@@ -31,7 +31,7 @@ export const TransferListView = ({
 }) => {
   const navigate = useNavigate();
   const [, setSearchParams] = useSearchParams();
-  const { user } = useAuth();
+  const { user, activeBranchId, activeCounterId } = useAuth();
   const isAdminOrHo = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
   const [status, setStatus] = useState<string>('ALL');
   const [search, setSearch] = useState('');
@@ -61,7 +61,7 @@ export const TransferListView = ({
     handlePageChange,
     handlePageSizeChange,
   } = useOffsetPaginatedList({
-    queryKey: ['transfers', transferType],
+    queryKey: ['transfers', transferType, activeBranchId, activeCounterId],
     queryFn: params => transfersApi.listTransfers(params),
     filters,
   });

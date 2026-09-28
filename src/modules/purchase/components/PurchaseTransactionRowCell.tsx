@@ -5,12 +5,16 @@ import {
   FormFieldInput,
   FormFieldCheckbox,
 } from '@/components/forms';
-import { TransactionTypeEnum } from '@/modules/transactions';
+import {
+  TradeModeEnum,
+  TransactionTypeEnum,
+} from '@/modules/transactions';
 import type {
   IPurchaseFormValues,
   IPurchasePricingData,
 } from '../types/purchaseTypes';
 import type { ITransactionReferenceSnapshot } from '@/modules/transactions';
+import { productMatchesAvailability } from '@/modules/productProfile/utils';
 import {
   PURCHASE_RATE_DECIMALS,
   calculateRoundedTransactionAmount,
@@ -145,6 +149,10 @@ export const PurchaseTransactionRowCell = ({
   const transactionType = useWatch({
     control: form.control,
     name: 'transactionType',
+  });
+  const tradeMode = useWatch({
+    control: form.control,
+    name: 'tradeMode',
   });
   const purchasePageType = useWatch({
     control: form.control,
@@ -699,12 +707,15 @@ export const PurchaseTransactionRowCell = ({
       loadProductOptions(
         inputValue,
         (pricingData.products ?? []).filter(product =>
-          pricingSide === 'sale'
-            ? product.availableInBulkSelling !== false
-            : product.availableInBulkBuying !== false
+          productMatchesAvailability(product, {
+            kind: 'sale_purchase',
+            transactionType:
+              transactionType ?? TransactionTypeEnum.PURCHASE,
+            tradeMode: tradeMode ?? TradeModeEnum.BULK,
+          })
         )
       ),
-    [pricingData.products, pricingSide]
+    [pricingData.products, tradeMode, transactionType]
   );
   const allowedCurrencyIds = useMemo(
     () => getTradableActiveCurrencyIds(pricingData.currencies ?? []),

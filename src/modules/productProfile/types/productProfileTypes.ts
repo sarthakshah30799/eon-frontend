@@ -66,6 +66,7 @@ export interface IProductProfile {
   availableInBulkSelling: boolean;
   bulkSellingSeriesApplicable: boolean;
   availableInOtherTransaction: boolean;
+  availableInDealCover: boolean;
   allowProductCancellation: boolean;
   maintainBlankStockOfProduct: boolean;
   denominationApplicable: boolean;
@@ -90,9 +91,12 @@ export interface IUpdateProductProfilePayload extends Partial<ICreateProductProf
 }
 
 export interface IProductProfileListQuery extends IOffsetPaginationParams {
+  retailBuying?: boolean;
+  retailSelling?: boolean;
   bulkBuying?: boolean;
   bulkSelling?: boolean;
   otherTransaction?: boolean;
+  dealCover?: boolean;
   search?: string;
   activeOnly?: boolean;
 }

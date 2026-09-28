@@ -21,6 +21,7 @@ export const useDealCoverReferences = () => {
     queryFn: () =>
       productProfileApi.getAllProductProfiles({
         activeOnly: true,
+        dealCover: true,
       }),
   });
 

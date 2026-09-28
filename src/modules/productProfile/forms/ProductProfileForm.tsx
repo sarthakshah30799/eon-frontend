@@ -177,6 +177,7 @@ const RetailTransactionConfig = ({
   const availableInBulkBuying = watch('availableInBulkBuying');
   const availableInBulkSelling = watch('availableInBulkSelling');
   const availableInOtherTransaction = watch('availableInOtherTransaction');
+  const availableInDealCover = watch('availableInDealCover');
 
   const retailBuyingSeriesApplicable = watch('retailBuyingSeriesApplicable');
   const retailSellingSeriesApplicable = watch('retailSellingSeriesApplicable');
@@ -210,7 +211,7 @@ const RetailTransactionConfig = ({
   return (
     <div className="space-y-6">
       {/* Availability cards with nested series toggles */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {/* Retail Buying Card */}
         <div
           className={`rounded-md border p-4 flex flex-col justify-between h-36 transition-all duration-300 ${
@@ -425,6 +426,30 @@ const RetailTransactionConfig = ({
           ) : (
             <p className="text-[11px] text-text-tertiary italic leading-relaxed">
               Product will not appear in AD1 transaction product lists.
+            </p>
+          )}
+        </div>
+
+        {/* Deal Cover Card */}
+        <div
+          className={`rounded-md border p-4 flex flex-col justify-between h-36 transition-all duration-300 ${
+            availableInDealCover
+              ? 'border-primary-500 bg-surface-primary shadow-sm ring-1 ring-primary-500/20'
+              : 'border-border-primary bg-surface-secondary/50 opacity-80'
+          }`}
+        >
+          <FormFieldCheckbox
+            name="availableInDealCover"
+            label="Available in Deal Cover"
+            disabled={isSubmitting}
+          />
+          {availableInDealCover ? (
+            <p className="text-[11px] text-text-tertiary italic leading-relaxed">
+              Product is available for Deal Cover selection.
+            </p>
+          ) : (
+            <p className="text-[11px] text-text-tertiary italic leading-relaxed">
+              Product will not appear in Deal Cover product lists.
             </p>
           )}
         </div>

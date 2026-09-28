@@ -28,34 +28,32 @@ export const useListProductProfiles = (
   });
 };
 
-export const useLoadProductOptions = () => {
+export const useLoadProductOptions = (
+  availabilityFilter?: Omit<
+    IProductProfileListQuery,
+    'limit' | 'offset' | 'search'
+  >
+) => {
   const queryClient = useQueryClient();
   return useCallback(
     async (inputValue: string, page = 1): Promise<AsyncSelectResponse> => {
       const limit = PAGINATION_DEFAULTS.LIMIT;
+      const filter = {
+        ...availabilityFilter,
+        search: inputValue.trim() || undefined,
+        activeOnly: availabilityFilter?.activeOnly !== false,
+        limit,
+        offset: pageToOffset(page, limit),
+      };
       const response = await queryClient.fetchQuery({
-        queryKey: [
-          'product-profiles',
-          {
-            search: inputValue.trim() || undefined,
-            activeOnly: true,
-            limit,
-            offset: pageToOffset(page, limit),
-          },
-        ],
-        queryFn: () =>
-          productProfileApi.getProductProfiles({
-            search: inputValue.trim() || undefined,
-            activeOnly: true,
-            limit,
-            offset: pageToOffset(page, limit),
-          }),
+        queryKey: ['product-profiles', filter],
+        queryFn: () => productProfileApi.getProductProfiles(filter),
       });
       return toAsyncSelectPage(response, product => ({
         value: product.productCode,
         label: `${product.productCode}${product.productDescription ? ` - ${product.productDescription}` : ''}`,
       }));
     },
-    [queryClient]
+    [availabilityFilter, queryClient]
   );
 };

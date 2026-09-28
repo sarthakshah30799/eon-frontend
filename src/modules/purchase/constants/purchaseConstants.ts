@@ -51,11 +51,14 @@ export const PURCHASE_RULE_TEXT = {
   cdfDeclarationButton: 'CDF Declaration',
   cdfDeclarationEditButton: 'Edit CDF Declaration',
   convertedAmount: 'Converted amount:',
-  cashTotal: 'Cash total:',
+  cashTotal: 'Cash total (incl. history):',
   chequeTotal: 'Cheque total:',
   cashLimit: 'Cash limit:',
   cdfThreshold: 'CDF threshold:',
-  historyAmount: 'History amount:',
+  historyAmount: 'History amount (CDF):',
+  historyCashAmount: 'History cash:',
+  limitCompareHint:
+    'Limit check: converted amount + cash total (incl. history) must be less than cash limit.',
 } as const;
 
 export const PURCHASE_CREDIT_TEXT = {

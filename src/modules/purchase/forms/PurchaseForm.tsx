@@ -69,6 +69,7 @@ import {
   formatPurchaseDecimal,
   isTtProductCode,
   isTtRemittanceComplete,
+  mapPaymentDetailsToPurchaseRulePreviewPayload,
   mapPurchaseFormValuesToSubmitPayload,
   PURCHASE_TRANSACTION_TEXT,
 } from '../utils/purchaseUtils';
@@ -485,6 +486,7 @@ const PurchaseFormBody = ({
     control: form.control,
     name: [
       'passengerInfoCaptured',
+      'passengerId',
       'entityType',
       'nationalityType',
       'residentStatus',
@@ -519,6 +521,7 @@ const PurchaseFormBody = ({
   });
   const [
     purchaseRulePassengerInfoCaptured,
+    purchaseRulePassengerId,
     purchaseRuleEntityType,
     purchaseRuleNationalityType,
     purchaseRuleResidentStatus,
@@ -571,6 +574,7 @@ const PurchaseFormBody = ({
     () =>
       JSON.stringify({
         passengerInfoCapturedForRule,
+        passengerId: purchaseRulePassengerId ?? '',
         entityType: purchaseRuleEntityType ?? '',
         nationalityType: purchaseRuleNationalityType ?? '',
         residentStatus: purchaseRuleResidentStatus ?? '',
@@ -605,6 +609,7 @@ const PurchaseFormBody = ({
       }),
     [
       passengerInfoCapturedForRule,
+      purchaseRulePassengerId,
       purchaseRuleAddress1,
       purchaseRuleAddress2,
       purchaseRuleAdditionalCharges,
@@ -677,11 +682,22 @@ const PurchaseFormBody = ({
       return null;
     }
 
-    return mapPurchaseFormValuesToSubmitPayload(
+    const payload = mapPurchaseFormValuesToSubmitPayload(
       form.getValues(),
       [],
       requiresApproval
     );
+
+    // Submit mapping drops payment rows without accountId. Purchase-rule cash
+    // limit only needs method + amount, so overlay live payment rows here.
+    if (payload.transaction) {
+      payload.transaction.payments =
+        mapPaymentDetailsToPurchaseRulePreviewPayload(
+          form.getValues('paymentDetails') ?? []
+        );
+    }
+
+    return payload;
   }, [
     form,
     passengerInfoCapturedForRule,
@@ -720,7 +736,7 @@ const PurchaseFormBody = ({
     selectedPartyProfile &&
     hasCompleteItemPreviewRows &&
     hasCompleteAdditionalChargePreviewRows &&
-    (!isCombinedPartyProfilePage || hasCompletePaymentPreviewRows) &&
+    hasCompletePaymentPreviewRows &&
     !savedTransaction?.id &&
     !isPassengerAmlModalOpen
   );
@@ -734,6 +750,15 @@ const PurchaseFormBody = ({
     );
   const [lastPurchaseRulePreview, setLastPurchaseRulePreview] =
     useState<IPurchaseRulePreviewResponse | null>(null);
+  const [lastPurchaseRulePaymentSignature, setLastPurchaseRulePaymentSignature] =
+    useState(purchaseRulePaymentSignature);
+
+  if (lastPurchaseRulePaymentSignature !== purchaseRulePaymentSignature) {
+    setLastPurchaseRulePaymentSignature(purchaseRulePaymentSignature);
+    if (lastPurchaseRulePreview !== null) {
+      setLastPurchaseRulePreview(null);
+    }
+  }
 
   if (purchaseRulePreview) {
     if (lastPurchaseRulePreview !== purchaseRulePreview) {
@@ -1594,16 +1619,6 @@ const PurchaseFormBody = ({
         description="Add optional charges for this transaction. The account list is filtered by ledger type and purchase/sale mode."
       />
 
-      {isPurchaseTransaction &&
-      canPreviewPurchaseRule &&
-      isPurchaseRulePreviewLoading ? (
-        <CardSection heading={PURCHASE_RULE_TEXT.heading}>
-          <Loader variant="inline" />
-        </CardSection>
-      ) : isPurchaseTransaction && resolvedPurchaseRulePreview ? (
-        <PurchaseRulePreviewSection preview={resolvedPurchaseRulePreview} />
-      ) : null}
-
       {canPreviewTax && isTaxPreviewLoading ? (
         <CardSection heading={PURCHASE_PREVIEW_TEXT.gstSummaryHeading}>
           <Loader variant="inline" />
@@ -1917,6 +1932,16 @@ const PurchaseFormBody = ({
             : 'Store how this transaction will be settled. Payment details are optional for this transaction type.'
         }
       />
+
+      {isPurchaseTransaction &&
+      canPreviewPurchaseRule &&
+      isPurchaseRulePreviewLoading ? (
+        <CardSection heading={PURCHASE_RULE_TEXT.heading}>
+          <Loader variant="inline" />
+        </CardSection>
+      ) : isPurchaseTransaction && resolvedPurchaseRulePreview ? (
+        <PurchaseRulePreviewSection preview={resolvedPurchaseRulePreview} />
+      ) : null}
 
       {canPreviewCredit && isCreditPreviewLoading ? (
         <CardSection heading={PURCHASE_CREDIT_TEXT.heading}>

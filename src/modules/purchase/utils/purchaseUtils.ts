@@ -727,6 +727,34 @@ export const shouldValidatePaymentDetailRow = (
   );
 };
 
+/** Purchase-rule preview only needs method + amount to evaluate cash limits. */
+export const shouldIncludePaymentDetailInPurchaseRulePreview = (
+  row: Partial<ITransactionPaymentDetailFormRow> | null | undefined
+) => {
+  if (!row) {
+    return false;
+  }
+
+  const paymentMethod = String(row.paymentMethod || '').trim();
+  const amount = String(row.amount ?? '').trim();
+  return (
+    Boolean(paymentMethod) &&
+    amount !== '' &&
+    Number.isFinite(Number(amount))
+  );
+};
+
+export const mapPaymentDetailsToPurchaseRulePreviewPayload = (
+  paymentDetails: IPurchaseFormValues['paymentDetails']
+) =>
+  paymentDetails
+    .filter(shouldIncludePaymentDetailInPurchaseRulePreview)
+    .map(row => ({
+      accountId: String(row.accountId || ''),
+      paymentMethod: coerceTransactionPaymentMethod(row.paymentMethod),
+      amount: row.amount,
+    }));
+
 export const mapPaymentDetailsToSubmitPayload = (
   paymentDetails: IPurchaseFormValues['paymentDetails']
 ) =>
@@ -835,6 +863,7 @@ export const mapPurchaseFormValuesToSubmitPayload = (
             passportExpiryDate: values.passportExpiryDate || null,
             arrivalDate: values.arrivalDate || null,
             isPep: values.isPep,
+            id: values.passengerId || null,
             otherDocuments: values.otherDocuments
               .filter(
                 document =>

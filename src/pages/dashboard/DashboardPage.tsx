@@ -75,6 +75,12 @@ const DashboardPage = () => {
         </StatCard>
       </div>
 
+      <PendingApprovals
+        approvals={pendingApprovals}
+        loading={pendingLoading}
+        onItemClick={handleApprovalClick}
+      />
+
       <div className="grid grid-cols-3 gap-4">
         <div className="col-span-2 space-y-4">
           <VolumeChart
@@ -91,11 +97,6 @@ const DashboardPage = () => {
         </div>
 
         <div className="space-y-4">
-          <PendingApprovals
-            approvals={pendingApprovals}
-            loading={pendingLoading}
-            onItemClick={handleApprovalClick}
-          />
           <LiveRates rates={latestRates} />
         </div>
       </div>

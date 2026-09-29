@@ -777,6 +777,7 @@ export interface ICreateTransactionPassengerTravelPayload {
 }
 
 export interface ICreateTransactionPassengerPayload {
+  id?: string | null;
   entityType: string;
   nationalityType: string;
   residentStatus: string;

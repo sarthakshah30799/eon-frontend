@@ -50,15 +50,15 @@ export const PURCHASE_RULE_TEXT = {
     `CDF declaration is required. This purchase, including history, has reached the CDF threshold of ${threshold} ${currency}. Complete CDF Declaration to enable Save.`,
   cdfDeclarationButton: 'CDF Declaration',
   cdfDeclarationEditButton: 'Edit CDF Declaration',
-  convertedAmount: 'Converted amount (CN current + history):',
-  cashTotal: 'Cash total (incl. history):',
+  convertedAmount: 'Converted amount (current CN):',
+  cashTotal: 'Cash total (past cash CN + current cash):',
   chequeTotal: 'Cheque total:',
   cashLimit: 'Cash limit:',
   cdfThreshold: 'CDF threshold:',
   historyAmount: 'History amount (CDF):',
-  historyCashAmount: 'History cash:',
+  historyCashAmount: 'History cash payments:',
   limitCompareHint:
-    'Limit check (CN only): converted amount (current + history CN) + cash total (incl. history) must be less than cash limit. CDF uses its own all-product calculation.',
+    'Limit check applies only when payment method is CASH: current CN converted + (past approved CN lines from cash purchases in history window for same passenger + current cash), converted to USD, must be less than cash limit.',
 } as const;
 
 export const PURCHASE_CREDIT_TEXT = {

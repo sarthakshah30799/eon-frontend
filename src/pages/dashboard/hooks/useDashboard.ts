@@ -132,6 +132,9 @@ export const useDashboard = () => {
         case 'advice':
           navigate(`/advice-debit-credit/edit/${item.id}`);
           break;
+        case 'credit-request-fund':
+          navigate(`/credit-request-fund/edit/${item.id}`);
+          break;
         default:
           break;
       }

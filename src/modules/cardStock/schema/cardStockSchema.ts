@@ -31,7 +31,9 @@ export const createCardStockSchema = (
   yup.object({
     transactionNumber: yup.string().optional(),
     receiptDate: yup.string().required('Receipt date is required'),
-    issuerPartyProfileId: yup.string().required('Card issuer is required'),
+    issuerPartyProfileId: yup
+      .string()
+      .required(CARD_STOCK_VALIDATION_TEXT.cardIssuerRequired),
     branchId: yup.string().required('Branch is required'),
     totalFeAmount: yup.string().required(),
     items: yup

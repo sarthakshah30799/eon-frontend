@@ -10,6 +10,9 @@ export const CARD_STOCK_SUBMIT_TEXT = {
     'Loading transaction date rules for the selected branch.',
   blockedCannotPunch:
     'Receipt stock cannot be submitted. Complete Day Start, or check that the transaction date is within the active monthwise-lock window and that Day End is not already completed.',
+  validationFailed: 'Fix the highlighted fields before submitting.',
+  selectCardIssuer: 'Select card issuer profile',
+  cardIssuerLabel: 'Card Issuer Profile',
 } as const;
 
 export const CARD_STOCK_UPLOAD_TEXT = {
@@ -24,6 +27,7 @@ export const CARD_STOCK_UPLOAD_TEXT = {
 } as const;
 
 export const CARD_STOCK_VALIDATION_TEXT = {
+  cardIssuerRequired: 'Card issuer is required',
   series:
     'Series prefix must be 1 to 4 alphanumeric characters (for example, CC)',
   kitNumber: 'Kit number is required',

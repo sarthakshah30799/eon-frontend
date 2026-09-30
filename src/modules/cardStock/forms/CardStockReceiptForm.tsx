@@ -801,8 +801,17 @@ export const CardStockReceiptForm = ({
       ),
     [references.currencies, references.issuers, references.products]
   );
-  const formSubmit = async (values: ICardStockFormValues) =>
-    onSubmit(toReceiptPayload(values));
+  const formSubmit = async (values: ICardStockFormValues) => {
+    try {
+      await onSubmit(toReceiptPayload(values));
+    } catch (error) {
+      toast.error(
+        error instanceof Error && error.message
+          ? error.message
+          : CARD_STOCK_SUBMIT_TEXT.validationFailed
+      );
+    }
+  };
   const isSubmitDisabled =
     !readOnly &&
     (!selectedBranchId ||

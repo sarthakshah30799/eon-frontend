@@ -31,6 +31,8 @@ export const CARD_STOCK_VALIDATION_TEXT = {
   series:
     'Series prefix must be 1 to 4 alphanumeric characters (for example, CC)',
   kitNumber: 'Kit number is required',
+  duplicateKitNumber: (kitNumber: string) =>
+    `Duplicate kit/card number in receipt: ${kitNumber}`,
   denomination: 'Denomination is fixed at 1',
   expirationFormat: 'Expiration date must use dd/mm/yyyy format',
   expirationFuture: 'Expiration date must be in the future',

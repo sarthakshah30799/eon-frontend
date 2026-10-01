@@ -13,7 +13,7 @@ import { Loader } from '@/components/ui/loader';
 import { useAuth } from '@/lib/AuthContext';
 import { transactionPoliciesApi } from '@/api/transactionPolicies/transactionPolicies.api';
 import type { IPolicyChecklistItem } from '@/modules/auth/types';
-import { formatDateTime } from '@/utils';
+import { formatDateTime, getClientBusinessDate, getClientNow, getClientTimeZone } from '@/utils';
 import { useLoadBranchOptions } from '@/modules/branchProfile/hooks';
 
 type ChecklistAnswers = Record<string, string | boolean>;
@@ -91,6 +91,8 @@ const DayEndStartProcessForm = ({
       'day-end-start-process',
       'policy-context',
       effectiveSelectedBranchId,
+      getClientTimeZone(),
+      getClientBusinessDate(),
     ],
     queryFn: () =>
       transactionPoliciesApi.getPolicyContext(effectiveSelectedBranchId),
@@ -138,6 +140,8 @@ const DayEndStartProcessForm = ({
   const openBusinessDate =
     effectivePolicyContext?.openBusinessDate ?? currentBusinessDate;
   const activeMonthlyLock = effectivePolicyContext?.activeMonthlyLock ?? null;
+  const bodAt = effectivePolicyContext?.bodAt ?? null;
+  const eodAt = effectivePolicyContext?.eodAt ?? null;
   const isPendingBod = workflowState === 'PENDING_BOD';
   const isPendingEod = workflowState === 'PENDING_EOD';
   const isClosedToday = workflowState === 'CLOSED_TODAY';
@@ -221,7 +225,12 @@ const DayEndStartProcessForm = ({
 
     setIsSubmitting(true);
     try {
-      const payload = { branchId: effectiveSelectedBranchId, answers };
+      const payload = {
+        branchId: effectiveSelectedBranchId,
+        answers,
+        timeZone: getClientTimeZone(),
+        clientNow: getClientNow(),
+      };
       if (action === 'start') {
         await transactionPoliciesApi.startDay(payload);
         toast.success('Day started successfully');
@@ -371,6 +380,21 @@ const DayEndStartProcessForm = ({
                   : currentBusinessDate
                     ? formatDateTime(currentBusinessDate, 'DD/MM/YYYY')
                     : 'Not available'}
+            </div>
+          </div>
+          <div className="rounded-lg border border-border-primary bg-surface-secondary px-4 py-3 text-sm text-text-secondary">
+            <div className="font-semibold text-text-primary">Punch Times</div>
+            <div>
+              BOD:{' '}
+              {bodAt
+                ? formatDateTime(bodAt, 'DD/MM/YYYY HH:mm:ss')
+                : 'Not started'}
+            </div>
+            <div>
+              EOD:{' '}
+              {eodAt
+                ? formatDateTime(eodAt, 'DD/MM/YYYY HH:mm:ss')
+                : 'Not completed'}
             </div>
           </div>
           {activeMonthlyLock ? (

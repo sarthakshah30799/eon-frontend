@@ -101,7 +101,7 @@ export const PassengerVerificationFields = ({
                 (verificationStatus === 'valid'
                   ? 'AML details verified. You can continue.'
                   : verificationStatus === 'invalid'
-                    ? 'Verification failed. Edit the details and blur the field again to re-check.'
+                    ? 'Verification failed. Edit the details to re-check.'
                     : 'Choose nationality and country, then continue to capture passport details.')}
             </span>
           )}

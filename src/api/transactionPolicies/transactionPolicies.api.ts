@@ -6,12 +6,15 @@ import type {
   ICreateCountryAccessRulesPayload,
   IMonthlyLockWindow,
 } from '@/modules/transactionPolicies/types';
+import { getClientNow, getClientTimeZone } from '@/utils';
 
 export const transactionPoliciesApi = {
   getPolicyContext: async (branchId?: string): Promise<IPolicyContext> => {
     const params = new URLSearchParams();
     if (branchId) params.set('branchId', branchId);
-    const query = params.toString() ? `?${params.toString()}` : '';
+    params.set('timeZone', getClientTimeZone());
+    params.set('clientNow', getClientNow());
+    const query = `?${params.toString()}`;
     const res = await apiClient.get<IPolicyContext>(
       `/auth/policy-context${query}`
     );
@@ -80,10 +83,16 @@ export const transactionPoliciesApi = {
   completeDayEnd: async (payload: {
     branchId?: string;
     answers?: Record<string, unknown>;
+    timeZone?: string;
+    clientNow?: string;
   }): Promise<{ message: string }> => {
     const res = await apiClient.post<{ message: string }>(
       '/day-end-start-process/complete',
-      payload
+      {
+        ...payload,
+        timeZone: payload.timeZone ?? getClientTimeZone(),
+        clientNow: payload.clientNow ?? getClientNow(),
+      }
     );
     if (res.error) throw new Error(res.error);
     if (!res.data) {
@@ -95,10 +104,16 @@ export const transactionPoliciesApi = {
   startDay: async (payload: {
     branchId?: string;
     answers?: Record<string, unknown>;
+    timeZone?: string;
+    clientNow?: string;
   }): Promise<{ message: string }> => {
     const res = await apiClient.post<{ message: string }>(
       '/day-end-start-process/start',
-      payload
+      {
+        ...payload,
+        timeZone: payload.timeZone ?? getClientTimeZone(),
+        clientNow: payload.clientNow ?? getClientNow(),
+      }
     );
     if (res.error) throw new Error(res.error);
     if (!res.data) {

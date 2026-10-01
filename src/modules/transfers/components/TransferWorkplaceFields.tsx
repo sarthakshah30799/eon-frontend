@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { FormFieldSelect } from '@/components/forms';
@@ -30,6 +30,12 @@ export interface TransferWorkplaceReferenceOptions {
 const buildCounterLabel = (counter: { counterNo: string; name: string }) =>
   `${counter.counterNo} - ${counter.name}`;
 
+const quietResetOptions = {
+  shouldDirty: true,
+  shouldTouch: false,
+  shouldValidate: false,
+} as const;
+
 export const TransferWorkplaceFields = ({
   transferType,
   readOnly = false,
@@ -40,6 +46,9 @@ export const TransferWorkplaceFields = ({
   const isAdminOrHo = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
   const isBranchTransfer = transferType === 'BRANCH';
   const isCounterTransfer = transferType === 'COUNTER';
+  const previousSourceBranchIdRef = useRef<string>('');
+  const previousDestinationBranchIdRef = useRef<string>('');
+  const destinationAutoSelectSignatureRef = useRef<string>('');
 
   const sourceBranchId = useWatch({
     control: form.control,
@@ -53,31 +62,39 @@ export const TransferWorkplaceFields = ({
     control: form.control,
     name: 'destinationBranchId',
   });
+  const destinationCounterId = useWatch({
+    control: form.control,
+    name: 'destinationCounterId',
+  });
 
   const loadBranchOptions = useLoadBranchOptions({ activeOnly: true });
-  const { data: sourceCounters = [] } = useQuery({
-    queryKey: ['counter-profiles-all', { activeOnly: true, branchId: sourceBranchId }],
-    queryFn: () =>
-      counterProfileApi.getAllCounterProfiles({
-        activeOnly: true,
-        branchId: sourceBranchId || undefined,
-      }),
-    enabled: Boolean(sourceBranchId),
-  });
-  const { data: destinationCounters = [] } = useQuery({
+  const { data: sourceCounters = [], isLoading: isSourceCountersLoading } =
+    useQuery({
+      queryKey: [
+        'counter-profiles-all',
+        { activeOnly: true, branchId: sourceBranchId },
+      ],
+      queryFn: () =>
+        counterProfileApi.getAllCounterProfiles({
+          activeOnly: true,
+          branchId: sourceBranchId || undefined,
+        }),
+      enabled: Boolean(sourceBranchId),
+    });
+  const {
+    data: destinationCounters = [],
+    isLoading: isDestinationCountersLoading,
+  } = useQuery({
     queryKey: [
       'counter-profiles-all',
-      {
-        activeOnly: true,
-        branchId: destinationBranchId || sourceBranchId,
-      },
+      { activeOnly: true, branchId: destinationBranchId },
     ],
     queryFn: () =>
       counterProfileApi.getAllCounterProfiles({
         activeOnly: true,
-        branchId: destinationBranchId || sourceBranchId || undefined,
+        branchId: destinationBranchId || undefined,
       }),
-    enabled: Boolean(destinationBranchId || sourceBranchId),
+    enabled: Boolean(destinationBranchId),
   });
   const { data: activeCounterProfile } = useGetCounterProfile(
     activeCounterId || ''
@@ -138,6 +155,50 @@ export const TransferWorkplaceFields = ({
 
   useEffect(() => {
     if (readOnly) {
+      previousSourceBranchIdRef.current = sourceBranchId || '';
+      return;
+    }
+
+    if (
+      previousSourceBranchIdRef.current &&
+      previousSourceBranchIdRef.current !== sourceBranchId
+    ) {
+      form.setValue('sourceCounterId', '', quietResetOptions);
+      form.clearErrors('sourceCounterId');
+      destinationAutoSelectSignatureRef.current = '';
+
+      if (isBranchTransfer) {
+        form.setValue('destinationBranchId', '', quietResetOptions);
+        form.setValue('destinationCounterId', '', quietResetOptions);
+        form.clearErrors(['destinationBranchId', 'destinationCounterId']);
+      } else {
+        form.setValue('destinationCounterId', '', quietResetOptions);
+        form.clearErrors('destinationCounterId');
+      }
+    }
+
+    previousSourceBranchIdRef.current = sourceBranchId || '';
+  }, [form, isBranchTransfer, readOnly, sourceBranchId]);
+
+  useEffect(() => {
+    if (readOnly) {
+      previousDestinationBranchIdRef.current = destinationBranchId || '';
+      return;
+    }
+
+    if (
+      previousDestinationBranchIdRef.current &&
+      previousDestinationBranchIdRef.current !== destinationBranchId
+    ) {
+      form.setValue('destinationCounterId', '', quietResetOptions);
+      form.clearErrors('destinationCounterId');
+    }
+
+    previousDestinationBranchIdRef.current = destinationBranchId || '';
+  }, [destinationBranchId, form, readOnly]);
+
+  useEffect(() => {
+    if (readOnly) {
       return;
     }
 
@@ -146,40 +207,73 @@ export const TransferWorkplaceFields = ({
         counter => counter.id === sourceCounterId
       );
       if (!selectedSourceCounter) {
-        form.setValue('sourceCounterId', '', {
-          shouldDirty: false,
-          shouldTouch: false,
-          shouldValidate: false,
-        });
+        form.setValue('sourceCounterId', '', quietResetOptions);
+        form.clearErrors('sourceCounterId');
       }
     }
   }, [form, readOnly, sourceBranchId, sourceCounterId, sourceCounters]);
 
   useEffect(() => {
-    if (readOnly) {
+    if (readOnly || !isBranchTransfer) {
       return;
     }
 
-    if (isBranchTransfer && sourceCounterId) {
-      const sourceCounter = sourceCounters.find(
-        counter => counter.id === sourceCounterId
-      );
-      const destinationCounter = destinationCounters.find(
-        counter => counter.counterNo === sourceCounter?.counterNo
-      );
-
-      if (destinationCounter) {
-        form.setValue('destinationCounterId', destinationCounter.id, {
-          shouldDirty: false,
-          shouldTouch: false,
-          shouldValidate: false,
-        });
+    // Do not prefill destination counter until a destination branch is chosen.
+    if (!destinationBranchId || !sourceCounterId) {
+      if (!destinationBranchId) {
+        destinationAutoSelectSignatureRef.current = '';
       }
+      return;
     }
+
+    if (isDestinationCountersLoading || destinationCounters.length === 0) {
+      return;
+    }
+
+    const sourceCounter = sourceCounters.find(
+      counter => counter.id === sourceCounterId
+    );
+    if (!sourceCounter) {
+      return;
+    }
+
+    const signature = `${destinationBranchId}|${sourceCounterId}`;
+    if (destinationAutoSelectSignatureRef.current === signature) {
+      if (
+        destinationCounterId &&
+        !destinationCounters.some(counter => counter.id === destinationCounterId)
+      ) {
+        form.setValue('destinationCounterId', '', quietResetOptions);
+        form.clearErrors('destinationCounterId');
+      }
+      return;
+    }
+
+    destinationAutoSelectSignatureRef.current = signature;
+
+    const matchingCounter = destinationCounters.find(
+      counter => counter.counterNo === sourceCounter.counterNo
+    );
+
+    if (matchingCounter) {
+      form.setValue('destinationCounterId', matchingCounter.id, {
+        shouldDirty: false,
+        shouldTouch: false,
+        shouldValidate: false,
+      });
+      form.clearErrors('destinationCounterId');
+      return;
+    }
+
+    form.setValue('destinationCounterId', '', quietResetOptions);
+    form.clearErrors('destinationCounterId');
   }, [
+    destinationBranchId,
+    destinationCounterId,
     destinationCounters,
     form,
     isBranchTransfer,
+    isDestinationCountersLoading,
     readOnly,
     sourceCounterId,
     sourceCounters,
@@ -199,11 +293,8 @@ export const TransferWorkplaceFields = ({
         counter => counter.id === form.getValues('destinationCounterId')
       );
       if (!selectedDestinationCounter) {
-        form.setValue('destinationCounterId', '', {
-          shouldDirty: false,
-          shouldTouch: false,
-          shouldValidate: false,
-        });
+        form.setValue('destinationCounterId', '', quietResetOptions);
+        form.clearErrors('destinationCounterId');
       }
     }
   }, [
@@ -262,11 +353,7 @@ export const TransferWorkplaceFields = ({
         [readOnlyOptions?.destinationBranch],
         sourceBranchId || undefined
       ),
-    [
-      mergeBranchOptions,
-      readOnlyOptions?.destinationBranch,
-      sourceBranchId,
-    ]
+    [mergeBranchOptions, readOnlyOptions?.destinationBranch, sourceBranchId]
   );
 
   const sourceCounterOptions = useMemo(() => {
@@ -309,19 +396,23 @@ export const TransferWorkplaceFields = ({
 
   const matchingDestinationCounter = useMemo(
     () =>
-      isBranchTransfer && sourceCounter
+      isBranchTransfer && sourceCounter && destinationBranchId
         ? (destinationCounters.find(
             counter => counter.counterNo === sourceCounter.counterNo
           ) ?? null)
         : null,
-    [destinationCounters, isBranchTransfer, sourceCounter]
+    [
+      destinationBranchId,
+      destinationCounters,
+      isBranchTransfer,
+      sourceCounter,
+    ]
   );
 
   const destinationCounterOptions = useMemo(() => {
-    const availableCounters =
-      isBranchTransfer && matchingDestinationCounter
-        ? [matchingDestinationCounter]
-        : destinationCounters.filter(counter => counter.id !== sourceCounterId);
+    const availableCounters = isCounterTransfer
+      ? destinationCounters.filter(counter => counter.id !== sourceCounterId)
+      : destinationCounters;
 
     const options = availableCounters.map(counter => ({
       value: counter.id,
@@ -340,14 +431,20 @@ export const TransferWorkplaceFields = ({
     return options;
   }, [
     destinationCounters,
-    isBranchTransfer,
-    matchingDestinationCounter,
+    isCounterTransfer,
     readOnlyOptions,
     sourceCounterId,
   ]);
 
   const canEditWorkplace = isAdminOrHo && !readOnly;
   const canEditDestination = !readOnly;
+  const destinationCounterPlaceholder = isBranchTransfer
+    ? destinationBranchId
+      ? 'Select destination counter'
+      : 'Select destination branch first'
+    : sourceBranchId
+      ? 'Select destination counter'
+      : 'Select source branch first';
 
   return (
     <CardSection heading="Transfer Locations">
@@ -363,32 +460,14 @@ export const TransferWorkplaceFields = ({
             pagination
             disabled={!canEditWorkplace}
             onValueChange={value => {
-              form.setValue('sourceCounterId', '', {
-                shouldDirty: true,
-                shouldTouch: false,
-                shouldValidate: true,
-              });
-              form.setValue('destinationCounterId', '', {
-                shouldDirty: true,
-                shouldTouch: false,
-                shouldValidate: true,
-              });
-
               if (isCounterTransfer && typeof value === 'string') {
-                form.setValue('destinationBranchId', value, {
-                  shouldDirty: true,
-                  shouldTouch: false,
-                  shouldValidate: true,
-                });
-                return;
+                form.setValue('destinationBranchId', value, quietResetOptions);
+                form.clearErrors('destinationBranchId');
               }
 
               if (isBranchTransfer) {
-                form.setValue('destinationBranchId', '', {
-                  shouldDirty: true,
-                  shouldTouch: false,
-                  shouldValidate: true,
-                });
+                form.setValue('destinationBranchId', '', quietResetOptions);
+                form.clearErrors('destinationBranchId');
               }
             }}
           />
@@ -410,6 +489,7 @@ export const TransferWorkplaceFields = ({
               };
             }}
             defaultOptions={sourceCounterOptions}
+            isLoading={Boolean(sourceBranchId) && isSourceCountersLoading}
             disabled={!sourceBranchId || !canEditWorkplace}
           />
         </div>
@@ -427,20 +507,6 @@ export const TransferWorkplaceFields = ({
               defaultOptions={true}
               pagination
               disabled={!canEditDestination}
-              onValueChange={() => {
-                form.setValue('destinationCounterId', '', {
-                  shouldDirty: true,
-                  shouldTouch: false,
-                  shouldValidate: true,
-                });
-                if (sourceCounterId) {
-                  form.setValue('destinationCounterId', sourceCounterId, {
-                    shouldDirty: true,
-                    shouldTouch: false,
-                    shouldValidate: true,
-                  });
-                }
-              }}
             />
           ) : (
             <div className="rounded-md border border-dashed border-border-secondary bg-surface-secondary px-3 py-2 text-sm text-text-secondary">
@@ -450,16 +516,10 @@ export const TransferWorkplaceFields = ({
           )}
 
           <FormFieldSelect
-            key={`destination-counter-${(isBranchTransfer ? sourceBranchId : destinationBranchId) || 'empty'}`}
+            key={`destination-counter-${destinationBranchId || 'empty'}`}
             name="destinationCounterId"
             label="Destination Counter"
-            placeholder={
-              (isBranchTransfer ? sourceBranchId : destinationBranchId)
-                ? isBranchTransfer
-                  ? 'Source counter is auto-selected'
-                  : 'Select destination counter'
-                : 'Select source branch first'
-            }
+            placeholder={destinationCounterPlaceholder}
             loadOptions={async inputValue => {
               const search = inputValue.trim().toLowerCase();
               return {
@@ -469,15 +529,20 @@ export const TransferWorkplaceFields = ({
               };
             }}
             defaultOptions={destinationCounterOptions}
+            isLoading={
+              Boolean(destinationBranchId) && isDestinationCountersLoading
+            }
             disabled={
               readOnly ||
-              !sourceBranchId ||
-              (isBranchTransfer && Boolean(matchingDestinationCounter)) ||
-              (isCounterTransfer && !destinationBranchId)
+              (isBranchTransfer
+                ? !destinationBranchId
+                : !sourceBranchId || !destinationBranchId)
             }
           />
           {isBranchTransfer &&
+          destinationBranchId &&
           sourceCounterId &&
+          !isDestinationCountersLoading &&
           !matchingDestinationCounter ? (
             <p className="text-sm text-amber-700">
               The same counter is not available on the destination branch.

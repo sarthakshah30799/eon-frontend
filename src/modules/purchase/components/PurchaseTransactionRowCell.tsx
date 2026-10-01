@@ -366,13 +366,24 @@ export const PurchaseTransactionRowCell = ({
     ]
   );
   const hasCurrencyProductSelection = Boolean(currencyId && productId);
+  const holdCostRateValue = Number(
+    counterHoldCostQuery.data?.holdCostRate ?? 0
+  );
+  const hasHoldCostRate =
+    Number.isFinite(holdCostRateValue) && holdCostRateValue > 0;
   const rateHelperText = !hasCurrencyProductSelection
     ? ''
-    : preview?.effectiveSource === 'product-override'
-      ? 'Using product-currency override'
-      : preview?.effectiveSource === 'group-default'
-        ? `Using group default${effectiveGroupCode ? ` (${effectiveGroupCode})` : ''}`
-        : 'No matching rate found';
+    : useCounterHoldCostRate
+      ? counterHoldCostQuery.isLoading || counterHoldCostQuery.isFetching
+        ? 'Loading source counter hold cost...'
+        : hasHoldCostRate
+          ? 'Using source counter hold cost'
+          : 'No closing stock balance for this source branch/counter/currency'
+      : preview?.effectiveSource === 'product-override'
+        ? 'Using product-currency override'
+        : preview?.effectiveSource === 'group-default'
+          ? `Using group default${effectiveGroupCode ? ` (${effectiveGroupCode})` : ''}`
+          : 'No matching rate found';
   const selectedSideCurrencyRule =
     selectedProductCurrencyRule?.[pricingSide] ?? null;
   const sideMinRate = selectedSideCurrencyRule?.minRate ?? '';

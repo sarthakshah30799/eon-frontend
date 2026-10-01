@@ -1,8 +1,8 @@
-import { useCallback, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { yupResolver } from '@hookform/resolvers/yup';
 import type { Resolver } from 'react-hook-form';
-import { useFormContext } from 'react-hook-form';
+import { useFormContext, useWatch } from 'react-hook-form';
 import { Loader } from '@/components/ui/loader';
 import { CardSection } from '@/components/ui';
 import { Form, FormFieldDatePicker, FormFieldInput } from '@/components/forms';
@@ -14,7 +14,11 @@ import { useCurrencyRatesViewData } from '@/modules/currencyRates/hooks/useCurre
 import { useTransactionNextNumber } from '@/modules/transactions/hooks';
 import { SelectCurrencyProfiles } from '@/modules/currencyProfile/components';
 import type { ICurrencyProfile } from '@/modules/currencyProfile/types/currencyProfileTypes';
-import { useCreateBranchTransfer, useCreateCounterTransfer } from '../hooks';
+import {
+  useCreateBranchTransfer,
+  useCreateCounterTransfer,
+  useTransferItemsHoldCostStatus,
+} from '../hooks';
 import type { ITransferFormValues, TransferType } from '../types';
 import { transferRequestSchema } from '../schema/transferRequestSchema';
 import {
@@ -30,6 +34,13 @@ import { TransferItemsFieldArray } from '../components/TransferItemsFieldArray';
 import { useListAdditionalSettings } from '@/modules/additionalSettings/hooks';
 import { getAdditionalSettingBooleanValue } from '@/modules/additionalSettings/utils';
 import { AdditionalSettingsCodeEnum } from '@/modules/additionalSettings/constants';
+import { TRANSFER_FORM_TEXT } from '../constants/transferConstants';
+
+interface TransferHoldCostBlockState {
+  isLoading: boolean;
+  isBlocked: boolean;
+  message: string;
+}
 
 interface TransferFormBodyProps {
   transferType: TransferType;
@@ -49,6 +60,7 @@ interface TransferFormBodyProps {
   transactionDatePolicy: ReturnType<typeof getTransactionDatePolicy>;
   displayNumber?: string;
   readOnlyOptions?: TransferWorkplaceReferenceOptions;
+  onHoldCostBlockChange: (state: TransferHoldCostBlockState) => void;
 }
 
 const TransferFormBody = ({
@@ -63,9 +75,21 @@ const TransferFormBody = ({
   readOnlyOptions,
   useTransferRateEditable,
   transactionDatePolicy,
+  onHoldCostBlockChange,
 }: TransferFormBodyProps) => {
   const form = useFormContext<ITransferFormValues>();
-  const sourceBranchId = form.watch('sourceBranchId');
+  const sourceBranchId = useWatch({
+    control: form.control,
+    name: 'sourceBranchId',
+  });
+  const sourceCounterId = useWatch({
+    control: form.control,
+    name: 'sourceCounterId',
+  });
+  const items = useWatch({
+    control: form.control,
+    name: 'items',
+  });
   const seriesCode = getTransferNumberSeriesCode(transferType);
   const { data: nextTransferNumber, error: nextTransferNumberError } =
     useTransactionNextNumber({
@@ -73,6 +97,77 @@ const TransferFormBody = ({
       branchId: sourceBranchId,
       enabled: Boolean(sourceBranchId) && !readOnly,
     });
+
+  const itemCurrencyIds = useMemo(
+    () => (items ?? []).map(item => String(item?.currencyId ?? '')),
+    [items]
+  );
+  const holdCostStatus = useTransferItemsHoldCostStatus({
+    branchId: sourceBranchId || '',
+    counterId: sourceCounterId || '',
+    currencyIds: itemCurrencyIds,
+    enabled: !readOnly,
+  });
+
+  const holdCostMessage = useMemo(() => {
+    if (holdCostStatus.isLoading) {
+      return TRANSFER_FORM_TEXT.holdCostLoading;
+    }
+
+    if (!holdCostStatus.hasUnavailableHoldCost) {
+      return '';
+    }
+
+    const currencyLabels = holdCostStatus.unavailableCurrencyIds.map(
+      currencyId => {
+        const currency = (pricingData.currencies ?? []).find(
+          item => item.id === currencyId
+        );
+        const itemCode = (items ?? []).find(
+          item => item?.currencyId === currencyId
+        )?.currencyCode;
+        return (
+          currency?.currencyCode ||
+          itemCode ||
+          currency?.currencyName ||
+          currencyId
+        );
+      }
+    );
+
+    return currencyLabels.length > 0
+      ? TRANSFER_FORM_TEXT.noClosingStockBalanceForCurrencies(currencyLabels)
+      : TRANSFER_FORM_TEXT.noClosingStockBalance;
+  }, [
+    holdCostStatus.hasUnavailableHoldCost,
+    holdCostStatus.isLoading,
+    holdCostStatus.unavailableCurrencyIds,
+    items,
+    pricingData.currencies,
+  ]);
+
+  useEffect(() => {
+    onHoldCostBlockChange({
+      isLoading: holdCostStatus.isLoading,
+      isBlocked: holdCostStatus.hasUnavailableHoldCost,
+      message: holdCostMessage,
+    });
+  }, [
+    holdCostMessage,
+    holdCostStatus.hasUnavailableHoldCost,
+    holdCostStatus.isLoading,
+    onHoldCostBlockChange,
+  ]);
+
+  useEffect(() => {
+    return () => {
+      onHoldCostBlockChange({
+        isLoading: false,
+        isBlocked: false,
+        message: '',
+      });
+    };
+  }, [onHoldCostBlockChange]);
 
   const handleCurrencySelect = (currencies: ICurrencyProfile[]) => {
     const selectedCurrency = currencies[0];
@@ -130,7 +225,26 @@ const TransferFormBody = ({
 
         {!canSubmit && !readOnly ? (
           <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-            You do not have permission to create transfers for this page.
+            {TRANSFER_FORM_TEXT.noCreatePermission}
+          </div>
+        ) : null}
+        {!readOnly && !transactionDatePolicy.canPunchTransactions ? (
+          <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            {TRANSFER_FORM_TEXT.cannotPunchTransactions}
+            {transactionDatePolicy.helperText
+              ? ` ${transactionDatePolicy.helperText}`
+              : ''}
+          </div>
+        ) : null}
+        {!readOnly && holdCostMessage ? (
+          <div
+            className={`rounded-md border px-4 py-3 text-sm ${
+              holdCostStatus.hasUnavailableHoldCost
+                ? 'border-error-200 bg-error-50 text-error-700'
+                : 'border-amber-200 bg-amber-50 text-amber-800'
+            }`}
+          >
+            {holdCostMessage}
           </div>
         ) : null}
 
@@ -235,6 +349,19 @@ export const TransferFormView = ({
   }, []);
   const createCounterTransfer = useCreateCounterTransfer();
   const createBranchTransfer = useCreateBranchTransfer();
+  const [holdCostBlock, setHoldCostBlock] = useState<TransferHoldCostBlockState>(
+    {
+      isLoading: false,
+      isBlocked: false,
+      message: '',
+    }
+  );
+  const handleHoldCostBlockChange = useCallback(
+    (state: TransferHoldCostBlockState) => {
+      setHoldCostBlock(state);
+    },
+    []
+  );
 
   const canSubmit = Boolean(
     user &&
@@ -273,6 +400,32 @@ export const TransferFormView = ({
       transactionDatePolicy.defaultTransactionDate,
     ]
   );
+
+  const submitMessage = useMemo(() => {
+    const messages: string[] = [];
+
+    if (!canSubmit) {
+      messages.push(TRANSFER_FORM_TEXT.noCreatePermission);
+    }
+
+    if (!transactionDatePolicy.canPunchTransactions) {
+      messages.push(TRANSFER_FORM_TEXT.cannotPunchTransactions);
+      if (transactionDatePolicy.helperText) {
+        messages.push(transactionDatePolicy.helperText);
+      }
+    }
+
+    if (holdCostBlock.message) {
+      messages.push(holdCostBlock.message);
+    }
+
+    return messages.join(' ');
+  }, [
+    canSubmit,
+    holdCostBlock.message,
+    transactionDatePolicy.canPunchTransactions,
+    transactionDatePolicy.helperText,
+  ]);
 
   if (isLoading) {
     return (
@@ -315,8 +468,13 @@ export const TransferFormView = ({
           onCancel ??
           (() => navigate(`/transfer/${transferType.toLowerCase()}`)),
         isSubmitDisabled:
-          !canSubmit || readOnly || !transactionDatePolicy.canPunchTransactions,
+          !canSubmit ||
+          readOnly ||
+          !transactionDatePolicy.canPunchTransactions ||
+          holdCostBlock.isBlocked ||
+          holdCostBlock.isLoading,
         showSubmit: showSubmit && !readOnly,
+        submitMessage: submitMessage || undefined,
         actions: footerActions,
       }}
       onError={errors => {
@@ -338,6 +496,10 @@ export const TransferFormView = ({
         });
 
         if (readOnly) {
+          return;
+        }
+
+        if (holdCostBlock.isBlocked || holdCostBlock.isLoading) {
           return;
         }
 
@@ -369,6 +531,7 @@ export const TransferFormView = ({
         readOnlyOptions={readOnlyOptions}
         useTransferRateEditable={transferRateEditable}
         transactionDatePolicy={transactionDatePolicy}
+        onHoldCostBlockChange={handleHoldCostBlockChange}
       />
     </Form>
   );

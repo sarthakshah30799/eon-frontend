@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { Button, Modal } from '@/components/ui';
+import { useDebounce } from '@/hooks';
 import { useListCountryProfiles } from '@/modules/countryProfile/hooks';
 import type { IPurchaseFormValues } from '@/modules/purchase/types/purchaseTypes';
 import type {
@@ -43,6 +44,8 @@ import {
   getTravelTicketNumberFormatError,
   isPassengerTravelTicketFieldVisible,
 } from '../utils/passengerIdentityRules';
+
+const IDENTITY_AUTO_VERIFY_DEBOUNCE_MS = 400;
 
 interface PassengerAmlVerificationModalProps {
   open: boolean;
@@ -245,9 +248,9 @@ export const PassengerAmlVerificationModal = ({
   const [verifiedPassportSnapshot, setVerifiedPassportSnapshot] =
     useState<Record<string, unknown> | null>(null);
   const hasInitializedRef = useRef(false);
-  const hasAutoVerifiedRef = useRef(false);
   const verificationRunIdRef = useRef(0);
   const passportAutoFillInProgressRef = useRef(false);
+  const lastAutoVerifiedKeyRef = useRef<string | null>(null);
   const { verifyPan, verifyPassport, isVerifyingPan, isVerifyingPassport } =
     usePassengerAmlVerification();
   const {
@@ -329,6 +332,7 @@ export const PassengerAmlVerificationModal = ({
     setVerifiedPanSnapshot(null);
     setVerifiedPassportSnapshot(null);
     verificationRunIdRef.current += 1;
+    lastAutoVerifiedKeyRef.current = null;
     setVerificationStatus('idle');
     setVerificationMessage(null);
   }, []);
@@ -770,8 +774,8 @@ export const PassengerAmlVerificationModal = ({
 
   useEffect(() => {
     if (!open) {
-      hasAutoVerifiedRef.current = false;
       hasInitializedRef.current = false;
+      lastAutoVerifiedKeyRef.current = null;
       return;
     }
 
@@ -787,11 +791,10 @@ export const PassengerAmlVerificationModal = ({
       hasInitializedRef.current = true;
       initializeValues();
       clearVerificationState();
-      hasAutoVerifiedRef.current = false;
+      lastAutoVerifiedKeyRef.current = null;
     }
   }, [
     clearVerificationState,
-    form,
     entityType,
     initializeValues,
     isCorporate,
@@ -799,48 +802,56 @@ export const PassengerAmlVerificationModal = ({
     selectedPartyProfile?.id,
     selectedPartyProfileLoading,
     passengerInfoCaptured,
-    verifyIdentityOnBlur,
   ]);
-
-  useEffect(() => {
-    if (!open || passengerInfoCaptured || hasAutoVerifiedRef.current) {
-      return;
-    }
-
-    const currentValues = form.getValues() as IPurchaseFormValues;
-    const hasRequiredValues =
-      verificationMode === 'pan'
-        ? hasCompletePanValues(currentValues)
-        : hasCompletePassportValues(currentValues);
-
-    if (!hasRequiredValues) {
-      return;
-    }
-
-    hasAutoVerifiedRef.current = true;
-    queueMicrotask(() => {
-      void verifyIdentity(verificationMode, false, false, false);
-    });
-  }, [form, open, passengerInfoCaptured, verificationMode, verifyIdentity]);
 
   const currentStep: PassengerModalStep =
     readOnly || passengerInfoCaptured ? 'details' : internalStep;
   const reopenedCapturedSession =
     passengerInfoCaptured && currentStep === 'details';
 
-  const currentPanSnapshot = {
-    panNumber: watchedPanValues[0] ?? '',
-    panHolderName: watchedPanValues[1] ?? '',
-    panDob: watchedPanValues[2] ?? '',
-  };
-  const currentPassportSnapshot = {
-    passportPassengerName: watchedPassportValues[0] ?? '',
-    passportNumber: watchedPassportValues[1] ?? '',
-    passportIssueAt: watchedPassportValues[2] ?? '',
-    passportIssueDate: watchedPassportValues[3] ?? '',
-    passportExpiryDate: watchedPassportValues[4] ?? '',
-    arrivalDate: watchedPassportValues[5] ?? '',
-  };
+  const currentPanSnapshot = useMemo(
+    () => ({
+      panNumber: watchedPanValues[0] ?? '',
+      panHolderName: watchedPanValues[1] ?? '',
+      panDob: watchedPanValues[2] ?? '',
+    }),
+    [watchedPanValues]
+  );
+  const currentPassportSnapshot = useMemo(
+    () => ({
+      passportPassengerName: watchedPassportValues[0] ?? '',
+      passportNumber: watchedPassportValues[1] ?? '',
+      passportIssueAt: watchedPassportValues[2] ?? '',
+      passportIssueDate: watchedPassportValues[3] ?? '',
+      passportExpiryDate: watchedPassportValues[4] ?? '',
+      arrivalDate: watchedPassportValues[5] ?? '',
+    }),
+    [watchedPassportValues]
+  );
+  const identityAutoVerifyKey = useMemo(() => {
+    const snapshot =
+      verificationMode === 'pan'
+        ? currentPanSnapshot
+        : currentPassportSnapshot;
+    return `${verificationMode}:${JSON.stringify(snapshot)}`;
+  }, [currentPanSnapshot, currentPassportSnapshot, verificationMode]);
+  const debouncedIdentityAutoVerifyKey = useDebounce(
+    identityAutoVerifyKey,
+    IDENTITY_AUTO_VERIFY_DEBOUNCE_MS
+  );
+  const hasCompleteIdentityValues =
+    verificationMode === 'pan'
+      ? hasCompletePanValues({
+          ...currentPanSnapshot,
+        } as IPurchaseFormValues)
+      : hasCompletePassportValues({
+          ...currentPassportSnapshot,
+        } as IPurchaseFormValues);
+  const isIdentityAutoVerifyPending =
+    open &&
+    !readOnly &&
+    hasCompleteIdentityValues &&
+    identityAutoVerifyKey !== debouncedIdentityAutoVerifyKey;
   const panVerificationChanged =
     verificationStatus === 'valid' &&
     Boolean(verifiedPanSnapshot) &&
@@ -852,19 +863,24 @@ export const PassengerAmlVerificationModal = ({
   const verificationIsStale =
     panVerificationChanged || passportVerificationChanged;
   const displayedVerificationStatus: 'idle' | 'checking' | 'valid' | 'invalid' =
-    reopenedCapturedSession
+    reopenedCapturedSession && !verificationIsStale
       ? 'valid'
-      : verificationIsStale
-        ? 'invalid'
+      : verificationIsStale || isIdentityAutoVerifyPending
+        ? 'checking'
         : verificationStatus;
-  const displayedVerificationMessage = reopenedCapturedSession
-    ? 'Passenger details already captured. Review or edit as needed.'
-    : panVerificationChanged
-      ? 'PAN details changed. Please verify again before continuing.'
-      : passportVerificationChanged
-        ? 'Passport details changed. Please verify again before continuing.'
+  const displayedVerificationMessage =
+    reopenedCapturedSession && !verificationIsStale
+      ? 'Passenger details already captured. Review or edit as needed.'
+      : verificationIsStale || isIdentityAutoVerifyPending
+        ? panVerificationChanged
+          ? 'PAN details changed. Re-checking verification...'
+          : passportVerificationChanged
+            ? 'Passport details changed. Re-checking verification...'
+            : 'Re-checking passenger verification...'
         : verificationMessage;
-  const canProceedDetailsStep = displayedVerificationStatus === 'valid';
+  // Keep Done/Next available after a verified edit; Done also re-validates.
+  const canProceedDetailsStep =
+    reopenedCapturedSession || verificationStatus === 'valid';
   const canProceedVerificationStep =
     verificationMode === 'pan'
       ? canProceedDetailsStep
@@ -878,6 +894,80 @@ export const PassengerAmlVerificationModal = ({
     isVerifyingPassport ||
     isLookingUpIdentity ||
     isLookingUpPassport;
+
+  useEffect(() => {
+    if (!open || readOnly) {
+      return;
+    }
+
+    if (passportAutoFillInProgressRef.current) {
+      return;
+    }
+
+    if (verificationStatus === 'checking') {
+      return;
+    }
+
+    if (identityAutoVerifyKey !== debouncedIdentityAutoVerifyKey) {
+      return;
+    }
+
+    if (lastAutoVerifiedKeyRef.current === debouncedIdentityAutoVerifyKey) {
+      return;
+    }
+
+    const currentValues = form.getValues() as IPurchaseFormValues;
+    const hasRequiredValues =
+      verificationMode === 'pan'
+        ? hasCompletePanValues(currentValues)
+        : hasCompletePassportValues(currentValues);
+
+    if (!hasRequiredValues) {
+      lastAutoVerifiedKeyRef.current = debouncedIdentityAutoVerifyKey;
+      return;
+    }
+
+    const currentSnapshot = getVerificationSnapshot(
+      currentValues,
+      verificationMode
+    );
+    const verifiedSnapshot =
+      verificationMode === 'pan'
+        ? verifiedPanSnapshot
+        : verifiedPassportSnapshot;
+
+    if (
+      verificationStatus === 'valid' &&
+      isSameSnapshot(verifiedSnapshot, currentSnapshot)
+    ) {
+      lastAutoVerifiedKeyRef.current = debouncedIdentityAutoVerifyKey;
+      return;
+    }
+
+    const scheduledKey = debouncedIdentityAutoVerifyKey;
+    const timeoutId = window.setTimeout(() => {
+      if (lastAutoVerifiedKeyRef.current === scheduledKey) {
+        return;
+      }
+      lastAutoVerifiedKeyRef.current = scheduledKey;
+      void verifyIdentity(verificationMode, false, false, false);
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [
+    debouncedIdentityAutoVerifyKey,
+    form,
+    identityAutoVerifyKey,
+    open,
+    readOnly,
+    verificationMode,
+    verificationStatus,
+    verifiedPanSnapshot,
+    verifiedPassportSnapshot,
+    verifyIdentity,
+  ]);
   const detailsBlockingMessage =
     displayedVerificationStatus === 'invalid'
       ? displayedVerificationMessage

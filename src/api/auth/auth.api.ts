@@ -8,7 +8,6 @@ import type {
 } from '../../modules/auth/types';
 import { dispatchSessionExpired } from '@/lib/authSessionEvents';
 import { API_BASE_URL } from '@/config/api';
-import { getClientNow, getClientTimeZone } from '@/utils';
 
 const SESSION_PROTECTED_ENDPOINTS = new Set([
   '/auth/setup-password',
@@ -172,17 +171,10 @@ class AuthAPI {
   }
 
   async getPolicyContext(): Promise<IPolicyContext> {
-    const params = new URLSearchParams({
-      timeZone: getClientTimeZone(),
-      clientNow: getClientNow(),
+    return this.request<IPolicyContext>('/auth/policy-context', {
+      method: 'GET',
+      credentials: 'include',
     });
-    return this.request<IPolicyContext>(
-      `/auth/policy-context?${params.toString()}`,
-      {
-        method: 'GET',
-        credentials: 'include',
-      }
-    );
   }
 
   async setWorkplace(data: {

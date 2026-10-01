@@ -4,25 +4,6 @@ type ReferenceLike = {
   label?: string | null;
 };
 
-/** IANA time zone of the current browser/PC, used for BOD/EOD business dates. */
-export const getClientTimeZone = (): string => {
-  try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Kolkata';
-  } catch {
-    return 'Asia/Kolkata';
-  }
-};
-
-/** Current browser/PC clock as ISO-8601 (follows OS date/time changes). */
-export const getClientNow = (): string => new Date().toISOString();
-
-/** Calendar date (yyyy-MM-dd) from the browser/PC clock in its local zone. */
-export const getClientBusinessDate = (): string => {
-  const now = new Date();
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-};
-
 export const formatDateTime = (
   value?: string | Date | null,
   format = 'DD/MM/YYYY'

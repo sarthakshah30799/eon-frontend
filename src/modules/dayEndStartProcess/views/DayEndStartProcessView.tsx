@@ -13,7 +13,7 @@ import { Loader } from '@/components/ui/loader';
 import { useAuth } from '@/lib/AuthContext';
 import { transactionPoliciesApi } from '@/api/transactionPolicies/transactionPolicies.api';
 import type { IPolicyChecklistItem } from '@/modules/auth/types';
-import { formatDateTime, getClientBusinessDate, getClientNow, getClientTimeZone } from '@/utils';
+import { formatDateTime } from '@/utils';
 import { useLoadBranchOptions } from '@/modules/branchProfile/hooks';
 
 type ChecklistAnswers = Record<string, string | boolean>;
@@ -91,8 +91,6 @@ const DayEndStartProcessForm = ({
       'day-end-start-process',
       'policy-context',
       effectiveSelectedBranchId,
-      getClientTimeZone(),
-      getClientBusinessDate(),
     ],
     queryFn: () =>
       transactionPoliciesApi.getPolicyContext(effectiveSelectedBranchId),
@@ -225,12 +223,7 @@ const DayEndStartProcessForm = ({
 
     setIsSubmitting(true);
     try {
-      const payload = {
-        branchId: effectiveSelectedBranchId,
-        answers,
-        timeZone: getClientTimeZone(),
-        clientNow: getClientNow(),
-      };
+      const payload = { branchId: effectiveSelectedBranchId, answers };
       if (action === 'start') {
         await transactionPoliciesApi.startDay(payload);
         toast.success('Day started successfully');

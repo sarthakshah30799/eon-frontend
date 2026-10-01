@@ -63,6 +63,9 @@ export const PURCHASE_RATE_DECIMALS = 7;
 export const PURCHASE_MONEY_DECIMALS = 2;
 export const CARD_PRODUCT_CODE = 'CC';
 export const MULTI_CURRENCY_CARD_PRODUCT_CODE = 'CM';
+/** Legacy default surrender product code — prefer maintainBlankStockOfProduct. */
+export const EM_PRODUCT_CODE = 'EM';
+export const CN_PRODUCT_CODE = 'CN';
 export const CARD_PRODUCT_CODES = [
   CARD_PRODUCT_CODE,
   MULTI_CURRENCY_CARD_PRODUCT_CODE,
@@ -75,10 +78,51 @@ export const isCardProductCode = (productCode?: string | null) =>
     ).toUpperCase() as (typeof CARD_PRODUCT_CODES)[number]
   );
 
+/** @deprecated Prefer isSurrenderMenuProduct / maintainBlankStockOfProduct. */
+export const isEmProductCode = (productCode?: string | null) =>
+  String(productCode ?? '').toUpperCase() === EM_PRODUCT_CODE;
+
+export const isCnProductCode = (productCode?: string | null) =>
+  String(productCode ?? '').toUpperCase() === CN_PRODUCT_CODE;
+
 export const TT_PRODUCT_CODE = 'TT';
 
 export const isTtProductCode = (productCode?: string | null) =>
   String(productCode ?? '').toUpperCase() === TT_PRODUCT_CODE;
+
+/**
+ * Surrender products from Product Profile: non-blank-stock only.
+ * No product-code allow/deny list.
+ */
+export const isSurrenderMenuProduct = (product: {
+  productCode?: string | null;
+  maintainBlankStockOfProduct?: boolean | null;
+  availableInRetailBuying?: boolean | null;
+  availableInBulkBuying?: boolean | null;
+  availableInBulkSelling?: boolean | null;
+}) => product.maintainBlankStockOfProduct === false;
+
+/**
+ * Surrender punch / menu: non-stocking and available for buying
+ * (retail or bulk — both accepted for now).
+ */
+export const isSurrenderBuyingProduct = (product: {
+  productCode?: string | null;
+  maintainBlankStockOfProduct?: boolean | null;
+  availableInRetailBuying?: boolean | null;
+  availableInBulkBuying?: boolean | null;
+}) =>
+  isSurrenderMenuProduct(product) &&
+  (product.availableInRetailBuying === true ||
+    product.availableInBulkBuying === true);
+
+/** HO bulk issuer sale of reserved surrender units. */
+export const isSurrenderBulkSaleProduct = (product: {
+  productCode?: string | null;
+  maintainBlankStockOfProduct?: boolean | null;
+  availableInBulkSelling?: boolean | null;
+}) =>
+  isSurrenderMenuProduct(product) && product.availableInBulkSelling === true;
 
 export const isMultiCurrencyCardProduct = (productCode?: string | null) =>
   String(productCode ?? '').toUpperCase() === MULTI_CURRENCY_CARD_PRODUCT_CODE;
@@ -96,6 +140,10 @@ export const PURCHASE_TRANSACTION_TEXT = {
     'Select an issuer and eligible card before entering the FE amount.',
   cardPurchaseHint:
     'Select an issuer and eligible card before entering the denomination.',
+  emSurrenderHint:
+    'Select a sold CC/CM card. Enter FE amount and rate (must not exceed base sale price). Auto-surrender queues Branch→HO.',
+  emBulkSaleHint:
+    'Select reserved EM units at this branch for issuer bulk sale.',
   ttDealHint: 'Select an approved deal cover. FE, product, currency, and issuer are locked from the deal.',
   ttRemittanceRequired: 'TT remittance details are required before save',
   ttTravelCountryRequired:
@@ -509,6 +557,8 @@ export const createEmptyPurchaseTransactionRow =
     productId: '',
     productCode: '',
     productDescription: '',
+    maintainBlankStockOfProduct: true,
+    hasIssuerLinks: false,
     quantity: '',
     per: '',
     rate: '',
@@ -523,6 +573,7 @@ export const createEmptyPurchaseTransactionRow =
     issuerPartyProfileSnapshot: null,
     cardSnapshot: null,
     isReload: false,
+    autoSurrender: true,
     dealCoverId: '',
     dealCoverSnapshot: null,
   });
@@ -927,6 +978,7 @@ export const mapPurchaseFormValuesToSubmitPayload = (
         issuerPartyProfileSnapshot: row.issuerPartyProfileSnapshot ?? null,
         cardSnapshot: row.cardSnapshot ?? null,
         isReload: Boolean(row.isReload),
+        autoSurrender: row.autoSurrender !== false,
         dealCoverId: row.dealCoverId || null,
         dealCoverSnapshot: row.dealCoverSnapshot ?? null,
       })),
@@ -1226,6 +1278,19 @@ export const mapPurchaseTransactionToFormValues = (
       productCode:
         item.productSnapshot?.label ?? item.productSnapshot?.code ?? '',
       productDescription: item.productSnapshot?.name ?? '',
+      maintainBlankStockOfProduct: (() => {
+        const snap = item.productSnapshot as {
+          maintainBlankStockOfProduct?: boolean;
+          code?: string;
+          productCode?: string;
+        } | null;
+        if (typeof snap?.maintainBlankStockOfProduct === 'boolean') {
+          return snap.maintainBlankStockOfProduct;
+        }
+        const code = String(snap?.productCode ?? snap?.code ?? '').toUpperCase();
+        return code !== 'EM';
+      })(),
+      hasIssuerLinks: Boolean(item.cardId || item.issuerPartyProfileId),
       quantity: item.quantity ?? '',
       per: item.per ?? '',
       rate: item.rate ?? '',
@@ -1240,6 +1305,7 @@ export const mapPurchaseTransactionToFormValues = (
       issuerPartyProfileSnapshot: item.issuerPartyProfileSnapshot ?? null,
       cardSnapshot: item.cardSnapshot ?? null,
       isReload: Boolean(item.isReload),
+      autoSurrender: true,
       dealCoverId: item.dealCoverId ?? '',
       dealCoverSnapshot: item.dealCoverSnapshot ?? null,
     })),

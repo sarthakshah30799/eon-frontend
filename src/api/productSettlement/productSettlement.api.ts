@@ -121,6 +121,8 @@ export interface ProductSettlementDocumentFilters extends IOffsetPaginationParam
   branchId?: string;
   hoBranchId?: string;
   productCode?: string;
+  /** settlement = CARD/TT (excludes surrender). surrender = EM/surrender only. */
+  scope?: 'settlement' | 'surrender';
   dateFrom?: string;
   dateTo?: string;
 }

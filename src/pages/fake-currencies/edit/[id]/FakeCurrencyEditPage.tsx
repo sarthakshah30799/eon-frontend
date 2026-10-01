@@ -45,6 +45,8 @@ export default function FakeCurrencyEditPage() {
       productId: item.productId,
       productCode: String(item.productSnapshot?.code ?? ''),
       productDescription: String(item.productSnapshot?.name ?? ''),
+      maintainBlankStockOfProduct: true,
+      hasIssuerLinks: false,
       quantity: item.quantity,
       per: item.per ?? '1',
       rate: item.rate,
@@ -58,6 +60,7 @@ export default function FakeCurrencyEditPage() {
       issuerPartyProfileSnapshot: null,
       cardSnapshot: null,
       isReload: false,
+      autoSurrender: true,
       dealCoverId: '',
       dealCoverSnapshot: null,
     }));

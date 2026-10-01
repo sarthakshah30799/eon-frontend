@@ -24,6 +24,9 @@ export interface IPurchaseTransactionFormRow {
   productId: string;
   productCode: string;
   productDescription: string;
+  maintainBlankStockOfProduct: boolean;
+  /** True when Product Profile has at least one linked issuer. */
+  hasIssuerLinks: boolean;
   quantity: string;
   per: string;
   rate: string;
@@ -38,6 +41,7 @@ export interface IPurchaseTransactionFormRow {
   issuerPartyProfileSnapshot: ITransactionReferenceSnapshot | null;
   cardSnapshot: ITransactionReferenceSnapshot | null;
   isReload: boolean;
+  autoSurrender: boolean;
   dealCoverId: string;
   dealCoverSnapshot: ITransactionReferenceSnapshot | null;
 }
@@ -219,6 +223,7 @@ export interface IPurchaseProductOption {
   id: string;
   productCode: string;
   productDescription: string;
+  maintainBlankStockOfProduct: boolean;
   availableInRetailBuying: boolean;
   availableInRetailSelling: boolean;
   availableInBulkBuying: boolean;

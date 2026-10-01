@@ -47,8 +47,6 @@ import type { IPartyProfile } from '@/modules/partyProfiles/types';
 
 interface Props {
   readOnly?: boolean;
-  availableCards?: CardTransferCard[];
-  cardsLoading?: boolean;
   transactionDatePolicy?: TransactionDatePolicy;
   onSourceBranchChange?: (branchId: string) => void;
   isTransactionDateLoading?: boolean;
@@ -155,17 +153,17 @@ const withSnapshotOption = (
 const CardPicker = ({
   itemIndex,
   readOnly,
-  availableCards,
-  cardsLoading,
 }: {
   itemIndex: number;
   readOnly: boolean;
-  availableCards: CardTransferCard[];
-  cardsLoading: boolean;
 }) => {
   const form = useFormContext<CardTransferFormValues>();
   const { errors } = useFormState({ control: form.control });
   const [open, setOpen] = useState(false);
+  const sourceBranchId = useWatch({
+    control: form.control,
+    name: 'sourceBranchId',
+  });
   const item = useWatch({
     control: form.control,
     name: `items.${itemIndex}`,
@@ -173,7 +171,23 @@ const CardPicker = ({
   const allItems = useWatch({ control: form.control, name: 'items' }) ?? [];
   const selectedCards = (item?.cards ?? []) as CardTransferCard[];
   const selectedIds = new Set(selectedCards.map(card => card.id));
-  const contextComplete = isTransferItemContextComplete(item ?? emptyTransferItem());
+  const contextComplete = isTransferItemContextComplete(
+    item ?? emptyTransferItem()
+  );
+  const {
+    data: availableCards = [],
+    isLoading: cardsLoading,
+    isFetching: cardsFetching,
+  } = useListTransferCards(
+    {
+      sourceBranchId: sourceBranchId ?? '',
+      productId: item?.productId ?? '',
+      issuerPartyProfileId: item?.issuerPartyProfileId ?? '',
+      currencyId: item?.currencyId || undefined,
+    },
+    !readOnly && contextComplete && Boolean(sourceBranchId)
+  );
+  const cardsBusy = cardsLoading || cardsFetching;
   const excludedCardIds = allItems.flatMap((entry, index) =>
     index === itemIndex ? [] : entry.cards.map(card => card.id)
   );
@@ -275,12 +289,12 @@ const CardPicker = ({
           type="button"
           variant="outline"
           onClick={() => setOpen(value => !value)}
-          disabled={readOnly || !contextComplete || cardsLoading}
+          disabled={readOnly || !contextComplete || cardsBusy}
         >
           {open ? 'Hide Card Stock' : 'Select Cards'}
         </Button>
       </div>
-      {cardsLoading ? (
+      {cardsBusy ? (
         <p className="text-xs text-text-secondary" role="status">
           {CARD_TRANSFER_COPY.loadingCards}
         </p>
@@ -307,7 +321,7 @@ const CardPicker = ({
             enableFiltering={false}
             enablePagination={false}
             enableRowSelection={false}
-            loading={cardsLoading}
+            loading={cardsBusy}
             emptyMessage={
               contextComplete
                 ? CARD_TRANSFER_COPY.noMatchingCards
@@ -322,8 +336,6 @@ const CardPicker = ({
 
 const TransferItems = ({
   readOnly,
-  availableCards,
-  cardsLoading,
   currencies,
   products,
   issuers,
@@ -332,8 +344,6 @@ const TransferItems = ({
   issuersLoading,
 }: {
   readOnly: boolean;
-  availableCards: CardTransferCard[];
-  cardsLoading: boolean;
   currencies: ICurrencyProfile[];
   products: IProductProfile[];
   issuers: IPartyProfile[];
@@ -473,12 +483,7 @@ const TransferItems = ({
                 disabled
               />
             </div>
-            <CardPicker
-              itemIndex={index}
-              readOnly={readOnly}
-              availableCards={availableCards}
-              cardsLoading={cardsLoading}
-            />
+            <CardPicker itemIndex={index} readOnly={readOnly} />
           </div>
         );
       })}
@@ -503,8 +508,6 @@ const TransferItems = ({
 
 export const CardTransferForm = ({
   readOnly = false,
-  availableCards,
-  cardsLoading: cardsLoadingProp,
   transactionDatePolicy,
   onSourceBranchChange,
   isTransactionDateLoading = false,
@@ -524,17 +527,6 @@ export const CardTransferForm = ({
     name: 'sourceBranchId',
   });
   const references = useCardStockReferences(sourceBranchId);
-  const {
-    data: sourceCards = [],
-    isLoading: sourceCardsLoading,
-    isFetching: sourceCardsFetching,
-  } = useListTransferCards(
-    sourceBranchId ?? '',
-    !readOnly && availableCards === undefined
-  );
-  const cardOptions = availableCards ?? sourceCards;
-  const cardsLoading =
-    cardsLoadingProp ?? (sourceCardsLoading || sourceCardsFetching);
   const activeBranchOptions = optionsFrom(
     branches.filter(branch => branch.isActive !== false)
   );
@@ -682,8 +674,6 @@ export const CardTransferForm = ({
       </CardSection>
       <TransferItems
         readOnly={readOnly}
-        availableCards={cardOptions}
-        cardsLoading={cardsLoading}
         currencies={references.currencies}
         products={references.products}
         issuers={references.issuers}

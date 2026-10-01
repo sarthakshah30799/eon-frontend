@@ -122,6 +122,12 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
     meta: { title: 'Product Settlement' },
   },
   { path: '/product-settlement/:id', meta: { title: 'Product Settlement' } },
+  { path: '/product-surrender', meta: { title: 'Product Surrender' } },
+  {
+    path: '/product-surrender/edit/:id',
+    meta: { title: 'Product Surrender' },
+  },
+  { path: '/product-surrender/:id', meta: { title: 'Product Surrender' } },
   { path: '/card-settlement', meta: { title: 'Product Settlement' } },
   {
     path: '/card-settlement/create',

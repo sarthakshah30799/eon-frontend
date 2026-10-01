@@ -63,13 +63,27 @@ export const cardTransferApi = {
       apiClient.get<CardTransferRequest>(`${BASE_PATH}/${id}`),
       'Failed to load CARD transfer request'
     ),
-  listAvailableCards: (sourceBranchId: string) =>
-    request(
+  listAvailableCards: (params: {
+    sourceBranchId: string;
+    productId: string;
+    issuerPartyProfileId: string;
+    currencyId?: string;
+  }) => {
+    const query = new URLSearchParams({
+      sourceBranchId: params.sourceBranchId,
+      productId: params.productId,
+      issuerPartyProfileId: params.issuerPartyProfileId,
+    });
+    if (params.currencyId) {
+      query.set('currencyId', params.currencyId);
+    }
+    return request(
       apiClient.get<CardTransferCard[]>(
-        `${BASE_PATH}/available-cards?sourceBranchId=${encodeURIComponent(sourceBranchId)}`
+        `${BASE_PATH}/available-cards?${query.toString()}`
       ),
       'Failed to load available CARD stock'
-    ),
+    );
+  },
   create: (values: CardTransferFormValues) =>
     request(
       apiClient.post<CardTransferRequest>(BASE_PATH, toPayload(values)),

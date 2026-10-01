@@ -4,8 +4,16 @@ import { cardStockApi, type CardStockSelectableCard } from '@/api/cardStock';
 import { toDisplayDate } from '@/utils';
 import { useQuery } from '@tanstack/react-query';
 
+export type SelectCardStockCardsMode =
+  | 'available'
+  | 'reload'
+  | 'sold'
+  | 'em-units';
+
 interface SelectCardStockCardsProps {
   open: boolean;
+  mode?: SelectCardStockCardsMode;
+  /** @deprecated use mode="reload" */
   reload?: boolean;
   multiCurrency?: boolean;
   branchId: string;
@@ -19,6 +27,7 @@ interface SelectCardStockCardsProps {
 
 export const SelectCardStockCards = ({
   open,
+  mode,
   reload = false,
   multiCurrency = false,
   branchId,
@@ -29,40 +38,64 @@ export const SelectCardStockCards = ({
   onContinue,
   onClose,
 }: SelectCardStockCardsProps) => {
+  const resolvedMode: SelectCardStockCardsMode =
+    mode ?? (reload ? 'reload' : 'available');
+
   const query = useQuery({
     queryKey: [
       'card-stock',
-      reload ? 'reload-cards' : 'available-cards',
+      resolvedMode,
       branchId,
       passengerId,
       multiCurrency ? 'any-currency' : currencyId,
       productId,
       issuerPartyProfileId,
     ],
-    queryFn: () =>
-      reload
-        ? cardStockApi.listReloadCards({
-            branchId,
-            passengerId,
-            currencyId: multiCurrency ? '' : currencyId,
-            productId,
-            issuerPartyProfileId,
-          })
-        : cardStockApi.listAvailableCards({
-            branchId,
-            currencyId: multiCurrency ? '' : currencyId,
-            productId,
-            issuerPartyProfileId,
-          }),
+    queryFn: () => {
+      if (resolvedMode === 'sold') {
+        return cardStockApi.searchSoldCards({
+          currencyId: currencyId || undefined,
+          issuerPartyProfileId: issuerPartyProfileId || undefined,
+          limit: 100,
+        });
+      }
+      if (resolvedMode === 'em-units') {
+        return cardStockApi.listEmUnits({
+          branchId,
+          productId,
+          issuerPartyProfileId: issuerPartyProfileId || undefined,
+          currencyId: currencyId || undefined,
+        });
+      }
+      if (resolvedMode === 'reload') {
+        return cardStockApi.listReloadCards({
+          branchId,
+          passengerId,
+          currencyId: multiCurrency ? '' : currencyId,
+          productId,
+          issuerPartyProfileId,
+        });
+      }
+      return cardStockApi.listAvailableCards({
+        branchId,
+        currencyId: multiCurrency ? '' : currencyId,
+        productId,
+        issuerPartyProfileId,
+      });
+    },
     enabled:
       open &&
-      Boolean(
-        branchId &&
-        productId &&
-        issuerPartyProfileId &&
-        (multiCurrency || currencyId) &&
-        (!reload || passengerId)
-      ),
+      (resolvedMode === 'sold'
+        ? true
+        : resolvedMode === 'em-units'
+          ? Boolean(branchId && productId)
+          : Boolean(
+              branchId &&
+                productId &&
+                issuerPartyProfileId &&
+                (multiCurrency || currencyId) &&
+                (resolvedMode !== 'reload' || passengerId)
+            )),
   });
 
   const columns = useMemo<TableColumnDef<CardStockSelectableCard>[]>(
@@ -118,15 +151,29 @@ export const SelectCardStockCards = ({
     []
   );
 
+  const title =
+    resolvedMode === 'sold'
+      ? 'Select sold CARD'
+      : resolvedMode === 'em-units'
+        ? 'Select EM unit'
+        : resolvedMode === 'reload'
+          ? 'Select reload CARD'
+          : 'Select CARD';
+
   return (
-    <SelectEntity<CardStockSelectableCard>
+    <SelectEntity
       open={open}
-      title={reload ? 'Select CARD for reload' : 'Select CARD'}
-      description="Only eligible cards for the selected branch and issuer are shown."
-      columns={columns}
+      title={title}
+      description={
+        resolvedMode === 'sold'
+          ? 'Pick a company-wide sold CC/CM card for EM surrender.'
+          : resolvedMode === 'em-units'
+            ? 'Pick a reserved EM unit at this branch for issuer sale.'
+            : 'Select an eligible CARD for this line.'
+      }
       data={query.data ?? []}
+      columns={columns}
       loading={query.isLoading || query.isFetching}
-      selectable
       multiple={false}
       searchValue=""
       onSearch={() => undefined}

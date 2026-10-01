@@ -60,6 +60,7 @@ export const PRODUCT_SETTLEMENT_TEXT = {
   editSettlement: 'Edit product settlement',
   created: 'Product settlement created.',
   accepted: 'Product settlement accepted.',
+  actionFailed: 'Product settlement action failed.',
   rejected: 'Product settlement rejected.',
   cancelled: 'Product settlement cancelled.',
   rejectReasonRequired: 'Rejection reason is required.',
@@ -80,6 +81,19 @@ export const PRODUCT_SETTLEMENT_TEXT = {
   blockedCannotPunch:
     'Settlement cannot be submitted. Complete Day Start for the HO branch, or check that the transaction date is within the active monthwise-lock window and that Day End is not already completed.',
   validationFailed: 'Fix the highlighted fields before submitting.',
+} as const;
+
+export const PRODUCT_SURRENDER_TEXT = {
+  title: 'Product Surrender',
+  description:
+    'Branch→HO surrender queue for non-stock products (excluding CN). HO accepts or rejects; branch tracks status here.',
+  empty: 'No product surrender documents found.',
+  editTitle: 'Product Surrender',
+  newSettlement: 'New Surrender Settlement',
+  viewSettlement: 'View product surrender',
+  editSettlement: 'Review product surrender',
+  searchPlaceholder: 'Search transaction, issuer, currency, or branch',
+  productCodeFilterPlaceholder: 'All surrender products',
 } as const;
 
 export const PRODUCT_SETTLEMENT_STATUS_OPTIONS = [

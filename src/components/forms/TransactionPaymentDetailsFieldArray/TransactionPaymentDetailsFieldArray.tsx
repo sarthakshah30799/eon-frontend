@@ -1258,7 +1258,14 @@ export const TransactionPaymentDetailsFieldArray = ({
   }, [form, maxAmount, name, paymentRows, remove]);
 
   useEffect(() => {
-    if (disabled || !autoAppendDefaultRow || fields.length > 0) {
+    const total = Number(maxAmount || 0);
+    if (
+      disabled ||
+      !autoAppendDefaultRow ||
+      !Number.isFinite(total) ||
+      total <= 0 ||
+      fields.length > 0
+    ) {
       return;
     }
 

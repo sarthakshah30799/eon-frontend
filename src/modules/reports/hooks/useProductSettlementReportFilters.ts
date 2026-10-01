@@ -6,7 +6,7 @@ import { branchProfileApi, partyProfileApi } from '@/api';
 import { useListCurrencyProfiles } from '@/modules/currencyProfile/hooks';
 import { PartyProfileTypeEnum } from '@/modules/partyProfiles/types';
 import { useListProductProfiles } from '@/modules/productProfile/hooks';
-import { isCardProductCode, isTtProductCode } from '@/modules/purchase/utils/purchaseUtils';
+import { isCardProductCode, isSurrenderMenuProduct, isTtProductCode } from '@/modules/purchase/utils/purchaseUtils';
 import {
   buildReportDateRange,
   formatReportDateRangeLabel,
@@ -36,7 +36,10 @@ const toOption = (id: string, label: string): IReportSelectOption => ({
   label,
 });
 
-export const useProductSettlementReportFilters = () => {
+export const useProductSettlementReportFilters = (options?: {
+  productScope?: 'settlement' | 'blank-stock';
+}) => {
+  const productScope = options?.productScope ?? 'settlement';
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const isRestrictedUser = !user?.isAdmin && !user?.isHo && !user?.isHoStaff;
@@ -165,11 +168,16 @@ export const useProductSettlementReportFilters = () => {
     () =>
       uniqueOptions(
         productProfiles
-          .filter(
-            product =>
+          .filter(product => {
+            if (productScope === 'blank-stock') {
+              return product.maintainBlankStockOfProduct === true;
+            }
+            return (
               isCardProductCode(product.productCode) ||
-              isTtProductCode(product.productCode)
-          )
+              isTtProductCode(product.productCode) ||
+              isSurrenderMenuProduct(product)
+            );
+          })
           .map(product =>
             toOption(
               product.id,
@@ -180,7 +188,7 @@ export const useProductSettlementReportFilters = () => {
             )
           )
       ),
-    [productProfiles]
+    [productProfiles, productScope]
   );
 
   const currencyOptions = useMemo<IReportSelectOption[]>(

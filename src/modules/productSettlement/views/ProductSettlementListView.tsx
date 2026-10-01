@@ -6,6 +6,7 @@ import {
   SurfacePanel,
   Table,
   type AsyncSelectOption,
+  type AsyncSelectResponse,
   type TableColumnDef,
 } from '@/components/ui';
 import {
@@ -23,11 +24,17 @@ import {
   productSettlementApi,
   type ProductSettlementDocument,
 } from '@/api/productSettlement';
-import { useLoadProductOptions } from '@/modules/productProfile/hooks';
+import { productProfileApi } from '@/api/productProfile';
+import { pageToOffset, toAsyncSelectPage } from '@/utils/paginatedList';
+import { useQueryClient } from '@tanstack/react-query';
+import { isSurrenderBuyingProduct, isSurrenderMenuProduct } from '@/modules/purchase/utils/purchaseUtils';
 import {
   PRODUCT_SETTLEMENT_STATUS_OPTIONS,
   PRODUCT_SETTLEMENT_TEXT,
+  PRODUCT_SURRENDER_TEXT,
 } from '../constants/productSettlementConstants';
+
+export type ProductSettlementListMode = 'settlement' | 'surrender';
 
 const label = (
   snapshot: ProductSettlementDocument['currencySnapshot'],
@@ -56,13 +63,46 @@ const readStatusValues = (searchParams: URLSearchParams) => {
   ];
 };
 
-export const ProductSettlementListView = () => {
+interface ProductSettlementListViewProps {
+  mode?: ProductSettlementListMode;
+}
+
+export const ProductSettlementListView = ({
+  mode = 'settlement',
+}: ProductSettlementListViewProps) => {
+  const isSurrender = mode === 'surrender';
+  const basePath = isSurrender ? '/product-surrender' : '/product-settlement';
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const search = searchParams.get('search') ?? '';
   const productCodeFilter = searchParams.get('productCode') ?? '';
   const debouncedSearch = useDebounce(search, 400);
-  const loadProductOptions = useLoadProductOptions();
+  const queryClient = useQueryClient();
+  const loadScopedProductOptions = useCallback(
+    async (inputValue: string, page = 1): Promise<AsyncSelectResponse> => {
+      const limit = PAGINATION_DEFAULTS.LIMIT;
+      const filter = {
+        search: inputValue.trim() || undefined,
+        activeOnly: true,
+        limit,
+        offset: pageToOffset(page, limit),
+      };
+      const response = await queryClient.fetchQuery({
+        queryKey: ['product-profiles', 'settlement-scope', mode, filter],
+        queryFn: () => productProfileApi.getProductProfiles(filter),
+      });
+      const products = (response.data ?? []).filter(product =>
+        isSurrender
+          ? isSurrenderBuyingProduct(product)
+          : !isSurrenderMenuProduct(product)
+      );
+      return toAsyncSelectPage({ ...response, data: products }, product => ({
+        value: product.productCode,
+        label: `${product.productCode}${product.productDescription ? ` - ${product.productDescription}` : ''}`,
+      }));
+    },
+    [isSurrender, mode, queryClient]
+  );
   const selectedProductOption = useMemo<AsyncSelectOption | null>(() => {
     const code = productCodeFilter.trim();
     if (!code) return null;
@@ -93,8 +133,9 @@ export const ProductSettlementListView = () => {
       status: selectedStatuses.length ? selectedStatuses : undefined,
       search: debouncedSearch.trim() || undefined,
       productCode: productCodeFilter.trim() || undefined,
+      scope: mode,
     }),
-    [debouncedSearch, productCodeFilter, selectedStatuses]
+    [debouncedSearch, mode, productCodeFilter, selectedStatuses]
   );
 
   const resetOffsetParams = useCallback((next: URLSearchParams) => {
@@ -163,7 +204,7 @@ export const ProductSettlementListView = () => {
     handlePageChange,
     handlePageSizeChange,
   } = useOffsetPaginatedList({
-    queryKey: ['product-settlements'],
+    queryKey: ['product-settlements', mode],
     queryFn: params => productSettlementApi.list(params),
     filters,
   });
@@ -238,15 +279,19 @@ export const ProductSettlementListView = () => {
                 type="button"
                 aria-label={
                   canEdit
-                    ? PRODUCT_SETTLEMENT_TEXT.editSettlement
-                    : PRODUCT_SETTLEMENT_TEXT.viewSettlement
+                    ? isSurrender
+                      ? PRODUCT_SURRENDER_TEXT.editSettlement
+                      : PRODUCT_SETTLEMENT_TEXT.editSettlement
+                    : isSurrender
+                      ? PRODUCT_SURRENDER_TEXT.viewSettlement
+                      : PRODUCT_SETTLEMENT_TEXT.viewSettlement
                 }
                 variant="ghost"
                 size="icon"
                 className={TABLE_ACTION_BUTTON_CLASSNAME}
                 onClick={event => {
                   event.stopPropagation();
-                  navigate(`/product-settlement/edit/${row.original.id}`);
+                  navigate(`${basePath}/edit/${row.original.id}`);
                 }}
               >
                 {canEdit ? (
@@ -261,7 +306,7 @@ export const ProductSettlementListView = () => {
         enableSorting: false,
       },
     ],
-    [navigate]
+    [basePath, isSurrender, navigate]
   );
 
   const toolbarFilters = useMemo(
@@ -270,16 +315,20 @@ export const ProductSettlementListView = () => {
         value: search,
         onChange: handleSearch,
         label: PRODUCT_SETTLEMENT_TEXT.search,
-        placeholder: PRODUCT_SETTLEMENT_TEXT.searchPlaceholder,
+        placeholder: isSurrender
+          ? PRODUCT_SURRENDER_TEXT.searchPlaceholder
+          : PRODUCT_SETTLEMENT_TEXT.searchPlaceholder,
       }),
       {
         id: 'productCode',
         type: 'asyncSelect' as const,
         label: PRODUCT_SETTLEMENT_TEXT.productCode,
         value: selectedProductOption,
-        loadOptions: loadProductOptions,
+        loadOptions: loadScopedProductOptions,
         onChange: handleProductCodeChange,
-        placeholder: PRODUCT_SETTLEMENT_TEXT.productCodeFilterPlaceholder,
+        placeholder: isSurrender
+          ? PRODUCT_SURRENDER_TEXT.productCodeFilterPlaceholder
+          : PRODUCT_SETTLEMENT_TEXT.productCodeFilterPlaceholder,
         defaultOptions: true,
         pagination: true,
         isSearchable: true,
@@ -301,7 +350,8 @@ export const ProductSettlementListView = () => {
       handleProductCodeChange,
       handleSearch,
       handleStatusChange,
-      loadProductOptions,
+      isSurrender,
+      loadScopedProductOptions,
       search,
       selectedProductOption,
       selectedStatusOptions,
@@ -314,18 +364,24 @@ export const ProductSettlementListView = () => {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-text-primary">
-            {PRODUCT_SETTLEMENT_TEXT.title}
+            {isSurrender
+              ? PRODUCT_SURRENDER_TEXT.title
+              : PRODUCT_SETTLEMENT_TEXT.title}
           </h1>
           <p className="text-sm text-text-secondary">
-            {PRODUCT_SETTLEMENT_TEXT.description}
+            {isSurrender
+              ? PRODUCT_SURRENDER_TEXT.description
+              : PRODUCT_SETTLEMENT_TEXT.description}
           </p>
         </div>
-        <Button
-          type="button"
-          onClick={() => navigate('/product-settlement/create')}
-        >
-          {PRODUCT_SETTLEMENT_TEXT.newSettlement}
-        </Button>
+        {!isSurrender ? (
+          <Button
+            type="button"
+            onClick={() => navigate(`${basePath}/create`)}
+          >
+            {PRODUCT_SETTLEMENT_TEXT.newSettlement}
+          </Button>
+        ) : null}
       </div>
       <SurfacePanel>
         <Table
@@ -346,7 +402,9 @@ export const ProductSettlementListView = () => {
           emptyMessage={
             error instanceof Error
               ? error.message
-              : PRODUCT_SETTLEMENT_TEXT.empty
+              : isSurrender
+                ? PRODUCT_SURRENDER_TEXT.empty
+                : PRODUCT_SETTLEMENT_TEXT.empty
           }
         />
       </SurfacePanel>

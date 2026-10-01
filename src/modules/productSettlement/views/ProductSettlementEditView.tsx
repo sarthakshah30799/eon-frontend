@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Form, FormFieldTextarea } from '@/components/forms';
 import { Button, Modal } from '@/components/ui';
@@ -12,7 +12,10 @@ import {
 } from '@/api/productSettlement';
 import { ProductSettlementForm } from '../forms';
 import { productSettlementSchema } from '../schema/productSettlementSchema';
-import { PRODUCT_SETTLEMENT_TEXT } from '../constants/productSettlementConstants';
+import {
+  PRODUCT_SETTLEMENT_TEXT,
+  PRODUCT_SURRENDER_TEXT,
+} from '../constants/productSettlementConstants';
 import {
   useAcceptProductSettlement,
   useCancelProductSettlement,
@@ -26,6 +29,11 @@ type ConfirmationAction = 'REJECT' | 'CANCEL' | null;
 
 export const ProductSettlementEditView = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const listPath = location.pathname.startsWith('/product-surrender')
+    ? '/product-surrender'
+    : '/product-settlement';
+  const isSurrender = listPath === '/product-surrender';
   const { id = '' } = useParams();
   const { user } = useAuth();
   const isHo = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
@@ -73,9 +81,18 @@ export const ProductSettlementEditView = () => {
     cancelMutation.isPending;
 
   const run = async (action: Promise<unknown>, message: string) => {
-    await action;
-    toast.success(message);
-    navigate('/product-settlement');
+    try {
+      await action;
+      setConfirmationAction(null);
+      toast.success(message);
+      navigate(listPath);
+    } catch (error) {
+      toast.error(
+        error instanceof Error && error.message
+          ? error.message
+          : PRODUCT_SETTLEMENT_TEXT.actionFailed
+      );
+    }
   };
 
   if (query.isLoading) return <Loader />;
@@ -98,7 +115,7 @@ export const ProductSettlementEditView = () => {
       footer={{
         showSubmit: false,
         backLabel: PRODUCT_SETTLEMENT_TEXT.back,
-        onBackClick: () => navigate('/product-settlement'),
+        onBackClick: () => navigate(listPath),
         actions: (
           <div className="flex flex-wrap gap-2">
             {canAccept ? (
@@ -149,7 +166,9 @@ export const ProductSettlementEditView = () => {
       <div className="space-y-4">
         <div>
           <h1 className="text-2xl font-semibold text-text-primary">
-            {PRODUCT_SETTLEMENT_TEXT.editTitle}
+            {isSurrender
+              ? PRODUCT_SURRENDER_TEXT.editTitle
+              : PRODUCT_SETTLEMENT_TEXT.editTitle}
           </h1>
           <p className="text-sm text-text-secondary">
             {canAccept

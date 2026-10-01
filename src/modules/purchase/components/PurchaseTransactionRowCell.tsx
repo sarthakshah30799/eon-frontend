@@ -25,6 +25,8 @@ import {
   getPurchaseTransactionPricingSide,
   getPurchaseTransactionPricingSideLabel,
   isCardProductCode,
+  isSurrenderBuyingProduct,
+  isSurrenderBulkSaleProduct,
   isMultiCurrencyCardProduct,
   isTtProductCode,
   getTradableActiveCurrencyIds,
@@ -47,8 +49,10 @@ import {
 } from '@/modules/partyProfiles/types';
 import { SelectCardStockCards } from '@/modules/cardStock/components/SelectCardStockCards';
 import type { CardStockSelectableCard } from '@/api/cardStock';
+import { cardStockApi } from '@/api/cardStock';
 import { DealCoverSelectModal } from './DealCoverSelectModal';
 import type { IDealCoverRate } from '@/api/dealCoverRate';
+import { useQuery } from '@tanstack/react-query';
 
 interface PurchaseTransactionRowCellProps {
   rowIndex: number;
@@ -217,6 +221,25 @@ export const PurchaseTransactionRowCell = ({
   );
   const isCardProduct = isCardProductCode(selectedProduct?.productCode);
   const isTtProduct = isTtProductCode(selectedProduct?.productCode);
+  const hasLinkedIssuers =
+    (selectedProduct?.issuerProfileIds?.length ?? 0) > 0;
+  const isEmPurchase = isSurrenderBuyingProduct({
+    productCode: selectedProduct?.productCode,
+    maintainBlankStockOfProduct: selectedProduct?.maintainBlankStockOfProduct,
+    availableInRetailBuying: selectedProduct?.availableInRetailBuying,
+    availableInBulkBuying: selectedProduct?.availableInBulkBuying,
+  }) && transactionType === TransactionTypeEnum.PURCHASE;
+  const isEmBulkSale =
+    isSurrenderBulkSaleProduct({
+      productCode: selectedProduct?.productCode,
+      maintainBlankStockOfProduct: selectedProduct?.maintainBlankStockOfProduct,
+      availableInBulkSelling: selectedProduct?.availableInBulkSelling,
+    }) && transactionType === TransactionTypeEnum.SALE;
+  const showIssuerField =
+    hasLinkedIssuers &&
+    (isCardProduct || isTtProduct || isEmPurchase || isEmBulkSale);
+  const showCardField =
+    hasLinkedIssuers && (isCardProduct || isEmPurchase || isEmBulkSale);
   const isMultiCurrencyCard = isMultiCurrencyCardProduct(
     selectedProduct?.productCode
   );
@@ -225,7 +248,18 @@ export const PurchaseTransactionRowCell = ({
   const isTtDealLocked = Boolean(dealCoverId);
   /** TT punches against a deal cover, not branch currency stock (same exclusion as CARD). */
   const skipsCurrencyStockCheck =
-    isSaleCardProduct || isTtProduct || isTtDealLocked;
+    isSaleCardProduct ||
+    isTtProduct ||
+    isTtDealLocked ||
+    isEmPurchase ||
+    isEmBulkSale;
+
+  const baseSaleRateQuery = useQuery({
+    queryKey: ['card-stock', 'base-sale-rate', currencyId],
+    queryFn: () => cardStockApi.getBaseSaleRate(String(currencyId)),
+    enabled: isEmPurchase && Boolean(currencyId),
+  });
+  const baseSaleRate = Number(baseSaleRateQuery.data?.baseSaleRate ?? 0);
 
   const selectedProductCurrencyRule = useMemo(
     () =>
@@ -500,11 +534,21 @@ export const PurchaseTransactionRowCell = ({
   useEffect(() => {
     const nextProductCode = selectedProduct?.productCode ?? '';
     const nextProductDescription = selectedProduct?.productDescription ?? '';
+    const nextMaintainBlankStock =
+      selectedProduct?.maintainBlankStockOfProduct !== false;
+    const nextHasIssuerLinks =
+      (selectedProduct?.issuerProfileIds?.length ?? 0) > 0;
     const currentProductCode = normalizeValue(
       form.getValues(fieldPath('productCode'))
     );
     const currentProductDescription = normalizeValue(
       form.getValues(fieldPath('productDescription'))
+    );
+    const currentMaintainBlankStock = Boolean(
+      form.getValues(fieldPath('maintainBlankStockOfProduct'))
+    );
+    const currentHasIssuerLinks = Boolean(
+      form.getValues(fieldPath('hasIssuerLinks'))
     );
 
     if (currentProductCode !== nextProductCode) {
@@ -522,7 +566,56 @@ export const PurchaseTransactionRowCell = ({
         shouldValidate: false,
       });
     }
-  }, [fieldPath, form, rowIndex, selectedProduct]);
+
+    if (currentMaintainBlankStock !== nextMaintainBlankStock) {
+      form.setValue(
+        fieldPath('maintainBlankStockOfProduct'),
+        nextMaintainBlankStock,
+        {
+          shouldDirty: false,
+          shouldTouch: false,
+          shouldValidate: false,
+        }
+      );
+    }
+
+    if (currentHasIssuerLinks !== nextHasIssuerLinks) {
+      form.setValue(fieldPath('hasIssuerLinks'), nextHasIssuerLinks, {
+        shouldDirty: false,
+        shouldTouch: false,
+        shouldValidate: false,
+      });
+    }
+
+    if (!nextHasIssuerLinks) {
+      const currentIssuerId = normalizeValue(
+        form.getValues(fieldPath('issuerPartyProfileId'))
+      );
+      const currentCardId = normalizeValue(
+        form.getValues(fieldPath('cardId'))
+      );
+      if (currentIssuerId) {
+        form.setValue(fieldPath('issuerPartyProfileId'), '', {
+          shouldDirty: true,
+          shouldValidate: true,
+        });
+        form.setValue(fieldPath('issuerPartyProfileSnapshot'), null, {
+          shouldDirty: true,
+        });
+      }
+      if (currentCardId) {
+        form.setValue(fieldPath('cardId'), '', {
+          shouldDirty: true,
+          shouldValidate: true,
+        });
+        form.setValue(fieldPath('cardSnapshot'), null, { shouldDirty: true });
+        form.setValue(fieldPath('isReload'), false, {
+          shouldDirty: true,
+          shouldValidate: false,
+        });
+      }
+    }
+  }, [fieldPath, form, selectedProduct]);
 
   useEffect(() => {
     const fieldName = fieldPath('rate');
@@ -886,7 +979,7 @@ export const PurchaseTransactionRowCell = ({
             buttonPosition="bottom"
           />
         </div>
-        {isCardProduct || isTtProduct ? (
+        {showIssuerField ? (
           <div className="min-w-0 basis-[46%] sm:basis-[31%] md:basis-[18%] lg:basis-0 lg:flex-1">
             <EntityPickerField
               label="Issuer"
@@ -909,7 +1002,7 @@ export const PurchaseTransactionRowCell = ({
           <FormFieldInput
             name={fieldPath('quantity')}
             label={
-              isSaleCardProduct || isTtProduct
+              isSaleCardProduct || isTtProduct || isEmPurchase || isEmBulkSale
                 ? PURCHASE_TRANSACTION_TEXT.feAmountLabel
                 : isCardProduct
                   ? PURCHASE_TRANSACTION_TEXT.denominationLabel
@@ -941,15 +1034,25 @@ export const PurchaseTransactionRowCell = ({
             />
           </div>
         ) : null}
-        {isCardProduct ? (
+        {showCardField ? (
           <div className="min-w-0 basis-full sm:basis-[48%] md:basis-[22%] lg:basis-0 lg:flex-1 lg:min-w-0 lg:max-w-[120px] xl:max-w-[145px] min-[1464px]:max-w-[170px]">
             <EntityPickerField
-              label="CARD"
+              label={isEmPurchase ? 'Sold CARD' : isEmBulkSale ? 'EM unit' : 'CARD'}
               value={String(
                 cardSnapshot?.maskedCardNumber ?? cardSnapshot?.series ?? ''
               )}
-              placeholder="Select card"
-              disabled={disabled || !issuerPartyProfileId}
+              placeholder={
+                isEmPurchase
+                  ? 'Select sold card'
+                  : isEmBulkSale
+                    ? 'Select EM unit'
+                    : 'Select card'
+              }
+              disabled={
+                disabled ||
+                (!isEmPurchase && !issuerPartyProfileId) ||
+                (isEmBulkSale && !issuerPartyProfileId)
+              }
               onClick={() => setCardPickerOpen(true)}
               buttonPosition="bottom"
             />
@@ -994,6 +1097,23 @@ export const PurchaseTransactionRowCell = ({
               )}
             </div>
           )}
+          {isEmPurchase && currencyId ? (
+            <div className="mt-1 space-y-0.5 text-[11px] leading-tight text-text-tertiary">
+              <div>
+                Base sale price:{' '}
+                {baseSaleRateQuery.isLoading
+                  ? '…'
+                  : formatRangeValue(String(baseSaleRate))}
+              </div>
+              {Number.isFinite(Number(rateValue)) &&
+              baseSaleRate > 0 &&
+              Number(rateValue) > baseSaleRate ? (
+                <div className="text-error-600">
+                  Rate cannot exceed base sale price
+                </div>
+              ) : null}
+            </div>
+          ) : null}
         </div>
         <div className="min-w-0 basis-[46%] sm:basis-[22%] md:basis-[14%] lg:basis-auto lg:flex-none lg:w-[40px] lg:min-w-[40px] lg:max-w-[40px]">
           <FormFieldInput
@@ -1060,6 +1180,25 @@ export const PurchaseTransactionRowCell = ({
           </span>
         </div>
       ) : null}
+      {isEmPurchase ? (
+        <div className="mt-2 flex items-center gap-4 px-1">
+          <FormFieldCheckbox
+            name={fieldPath('autoSurrender')}
+            label="Auto surrender to HO"
+            disabled={disabled}
+          />
+          <span className="text-xs text-text-tertiary">
+            {PURCHASE_TRANSACTION_TEXT.emSurrenderHint}
+          </span>
+        </div>
+      ) : null}
+      {isEmBulkSale ? (
+        <div className="mt-2 px-1">
+          <span className="text-xs text-text-tertiary">
+            {PURCHASE_TRANSACTION_TEXT.emBulkSaleHint}
+          </span>
+        </div>
+      ) : null}
       {isTtProduct ? (
         <div className="mt-2 px-1">
           <span className="text-xs text-text-tertiary">
@@ -1104,9 +1243,17 @@ export const PurchaseTransactionRowCell = ({
       />
       <SelectCardStockCards
         open={cardPickerOpen}
-        reload={Boolean(isReload)}
+        mode={
+          isEmPurchase
+            ? 'sold'
+            : isEmBulkSale
+              ? 'em-units'
+              : isReload
+                ? 'reload'
+                : 'available'
+        }
         multiCurrency={isMultiCurrencyCard}
-        branchId={branchId}
+        branchId={String(branchId || '')}
         passengerId={passengerId}
         currencyId={String(currencyId || '')}
         productId={String(productId || '')}
@@ -1130,7 +1277,18 @@ export const PurchaseTransactionRowCell = ({
             },
             { shouldDirty: true }
           );
-          if (!isSaleCardProduct) {
+          if (isEmPurchase) {
+            // Keep EM line currency (surrender currency). Do not overwrite with the
+            // plastic receipt stocking currency (CMC for CM cards).
+            if (card.issuerPartyProfileId) {
+              form.setValue(
+                fieldPath('issuerPartyProfileId'),
+                card.issuerPartyProfileId,
+                { shouldDirty: true, shouldValidate: true }
+              );
+            }
+            // FE amount stays user-editable for EM surrender.
+          } else if (!isSaleCardProduct && !isEmBulkSale) {
             form.setValue(fieldPath('quantity'), card.denomination, {
               shouldDirty: true,
               shouldValidate: true,
@@ -1191,6 +1349,16 @@ export const PurchaseTransactionRowCell = ({
               deal.productSnapshot?.productDescription ||
               deal.productSnapshot?.name ||
               '',
+            quietOptions
+          );
+          form.setValue(
+            fieldPath('maintainBlankStockOfProduct'),
+            dealProduct?.maintainBlankStockOfProduct !== false,
+            quietOptions
+          );
+          form.setValue(
+            fieldPath('hasIssuerLinks'),
+            (dealProduct?.issuerProfileIds?.length ?? 0) > 0,
             quietOptions
           );
           form.setValue(fieldPath('currencyId'), deal.currencyId, quietOptions);

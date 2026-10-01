@@ -1915,7 +1915,7 @@ const PurchaseFormBody = ({
         name="paymentDetails"
         maxAmount={totalPayableAmount}
         syncPrimaryRowAmount={!savedTransaction}
-        autoAppendDefaultRow={isCombinedPartyProfilePage}
+        autoAppendDefaultRow
         accountQuery={paymentAccountQuery}
         transactionType={transactionType}
         branchId={resolvedBranchId}

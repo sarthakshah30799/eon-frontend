@@ -1,7 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { useFieldArray, useFormContext, useWatch, type FieldPath } from 'react-hook-form';
+import {
+  useController,
+  useFieldArray,
+  useFormContext,
+  useWatch,
+  type FieldPath,
+} from 'react-hook-form';
+import toast from 'react-hot-toast';
 import {
   Button,
   CardSection,
@@ -54,6 +61,23 @@ import {
 import { useCardStockReferences } from '../hooks';
 import { CardStockUploadSection } from '../components/CardStockUploadSection';
 import { yupResolver } from '@hookform/resolvers/yup';
+
+const collectFormErrorMessages = (
+  value: unknown,
+  messages: string[] = []
+): string[] => {
+  if (!value || typeof value !== 'object') return messages;
+  if ('message' in value) {
+    const message = String(
+      (value as { message?: unknown }).message ?? ''
+    ).trim();
+    if (message) messages.push(message);
+  }
+  Object.values(value as Record<string, unknown>).forEach(child => {
+    collectFormErrorMessages(child, messages);
+  });
+  return messages;
+};
 
 const CardStockFormDebug = () => {
   const { formState } = useFormContext<ICardStockFormValues>();
@@ -568,29 +592,40 @@ const CardIssuerProfileField = ({
 }) => {
   const form = useFormContext<ICardStockFormValues>();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const selectedIssuerId = useWatch({
+  const {
+    field,
+    fieldState: { error, isTouched },
+  } = useController({
     control: form.control,
     name: 'issuerPartyProfileId',
   });
-  const selectedIssuer = issuers.find(issuer => issuer.id === selectedIssuerId);
+  const selectedIssuer = issuers.find(issuer => issuer.id === field.value);
+  const showError = Boolean(
+    error?.message && (isTouched || form.formState.isSubmitted)
+  );
 
   return (
     <>
       <div className="min-w-0">
         <label className="mb-1 block text-sm font-medium text-text-primary">
-          Card Issuer Profile
+          {CARD_STOCK_SUBMIT_TEXT.cardIssuerLabel}
         </label>
         <Button
           type="button"
           variant="outline"
-          className="w-full justify-start truncate"
+          className={`w-full justify-start truncate ${
+            showError ? 'border-error-500' : ''
+          }`}
           disabled={readOnly || !branchId}
           onClick={() => setIsModalOpen(true)}
         >
           {selectedIssuer
             ? `${selectedIssuer.code} - ${selectedIssuer.name}`
-            : 'Select card issuer profile'}
+            : CARD_STOCK_SUBMIT_TEXT.selectCardIssuer}
         </Button>
+        {showError ? (
+          <p className="mt-1 text-sm text-error-600">{error?.message}</p>
+        ) : null}
       </div>
       <SelectPartyProfiles
         open={isModalOpen}
@@ -601,14 +636,17 @@ const CardIssuerProfileField = ({
         description="Select an active and approved card issuer profile."
         initialSelectedProfiles={selectedIssuer ? [selectedIssuer] : []}
         onContinue={profiles => {
-          form.setValue('issuerPartyProfileId', profiles[0]?.id ?? '', {
-            shouldDirty: true,
-            shouldTouch: true,
-            shouldValidate: true,
-          });
+          field.onChange(profiles[0]?.id ?? '');
+          void form.trigger('issuerPartyProfileId');
           setIsModalOpen(false);
         }}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          field.onBlur();
+          if (!form.getValues('issuerPartyProfileId')) {
+            void form.trigger('issuerPartyProfileId');
+          }
+        }}
       />
     </>
   );
@@ -645,8 +683,10 @@ const ReceiptHeader = ({
     if (!previous || previous === (watchedBranchId || '')) return;
     form.setValue('issuerPartyProfileId', '', {
       shouldDirty: true,
-      shouldValidate: true,
+      shouldTouch: false,
+      shouldValidate: false,
     });
+    form.clearErrors('issuerPartyProfileId');
   }, [form, readOnly, watchedBranchId]);
 
   return (
@@ -761,8 +801,17 @@ export const CardStockReceiptForm = ({
       ),
     [references.currencies, references.issuers, references.products]
   );
-  const formSubmit = async (values: ICardStockFormValues) =>
-    onSubmit(toReceiptPayload(values));
+  const formSubmit = async (values: ICardStockFormValues) => {
+    try {
+      await onSubmit(toReceiptPayload(values));
+    } catch (error) {
+      toast.error(
+        error instanceof Error && error.message
+          ? error.message
+          : CARD_STOCK_SUBMIT_TEXT.validationFailed
+      );
+    }
+  };
   const isSubmitDisabled =
     !readOnly &&
     (!selectedBranchId ||
@@ -802,11 +851,15 @@ export const CardStockReceiptForm = ({
       mode="onChange"
       onSubmit={formSubmit}
       onError={errors => {
-        if (import.meta.env.DEV)
+        const messages = collectFormErrorMessages(errors);
+        if (import.meta.env.DEV) {
           console.error(
             '[CARD STOCK] submit blocked by validation errors',
-            errors
+            errors,
+            messages
           );
+        }
+        toast.error(messages[0] ?? CARD_STOCK_SUBMIT_TEXT.validationFailed);
       }}
       footer={{
         submitLabel: 'Submit Receipt Stock',

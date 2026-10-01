@@ -23,6 +23,39 @@ const issuerRule = (issuers: IPartyProfile[], issuerId?: string) => {
   };
 };
 
+type CardStockSchemaCard = {
+  kitNumber?: string;
+  cardNumber?: string;
+};
+
+type CardStockSchemaItem = {
+  issuerPartyProfileId?: string;
+  cards?: CardStockSchemaCard[];
+};
+
+const findDuplicateKitCardPath = (items: CardStockSchemaItem[] = []) => {
+  const seen = new Set<string>();
+  for (let itemIndex = 0; itemIndex < items.length; itemIndex += 1) {
+    const item = items[itemIndex];
+    const cards = item?.cards ?? [];
+    for (let cardIndex = 0; cardIndex < cards.length; cardIndex += 1) {
+      const kitNumber = String(cards[cardIndex]?.kitNumber ?? '').trim();
+      const cardNumber = String(cards[cardIndex]?.cardNumber ?? '').trim();
+      if (!kitNumber || !cardNumber) continue;
+      const key =
+        `${item?.issuerPartyProfileId ?? ''}:${kitNumber}:${cardNumber}`.toUpperCase();
+      if (seen.has(key)) {
+        return {
+          path: `[${itemIndex}].cards[${cardIndex}].kitNumber`,
+          kitNumber,
+        };
+      }
+      seen.add(key);
+    }
+  }
+  return null;
+};
+
 export const createCardStockSchema = (
   issuers: IPartyProfile[] = [],
   currencies: ICurrencyProfile[] = [],
@@ -31,7 +64,9 @@ export const createCardStockSchema = (
   yup.object({
     transactionNumber: yup.string().optional(),
     receiptDate: yup.string().required('Receipt date is required'),
-    issuerPartyProfileId: yup.string().required('Card issuer is required'),
+    issuerPartyProfileId: yup
+      .string()
+      .required(CARD_STOCK_VALIDATION_TEXT.cardIssuerRequired),
     branchId: yup.string().required('Branch is required'),
     totalFeAmount: yup.string().required(),
     items: yup
@@ -136,7 +171,8 @@ export const createCardStockSchema = (
                   .test(
                     'fixed',
                     CARD_STOCK_VALIDATION_TEXT.denomination,
-                    value => Number(value) === Number(CARD_STOCK_FIXED_DENOMINATION)
+                    value =>
+                      Number(value) === Number(CARD_STOCK_FIXED_DENOMINATION)
                   )
                   .required('Denomination is required'),
                 amount: yup.string().required(),
@@ -158,7 +194,23 @@ export const createCardStockSchema = (
         })
       )
       .min(1, 'At least one item is required')
-      .required(),
+      .required()
+      .test(
+        'unique-kit-card',
+        CARD_STOCK_VALIDATION_TEXT.duplicateKitNumber(''),
+        function validateUniqueKitCard(items) {
+          const duplicate = findDuplicateKitCardPath(
+            (items ?? []) as CardStockSchemaItem[]
+          );
+          if (!duplicate) return true;
+          return this.createError({
+            path: duplicate.path,
+            message: CARD_STOCK_VALIDATION_TEXT.duplicateKitNumber(
+              duplicate.kitNumber
+            ),
+          });
+        }
+      ),
   });
 
 export const cardStockSchema = createCardStockSchema();

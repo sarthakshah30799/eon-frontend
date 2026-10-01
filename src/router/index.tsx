@@ -417,6 +417,16 @@ const ProductSettlementEditPage = lazy(
 const ProductSettlementDetailPage = lazy(
   () => import('../pages/product-settlement/[id]/ProductSettlementDetailPage')
 );
+const ProductSurrenderListPage = lazy(
+  () => import('../pages/product-surrender/ProductSurrenderListPage')
+);
+const ProductSurrenderEditPage = lazy(
+  () =>
+    import('../pages/product-surrender/edit/[id]/ProductSurrenderEditPage')
+);
+const ProductSurrenderDetailPage = lazy(
+  () => import('../pages/product-surrender/[id]/ProductSurrenderDetailPage')
+);
 const DealCoverRateListPage = lazy(
   () => import('../pages/deal-cover-rate/DealCoverRateListPage')
 );
@@ -1080,6 +1090,30 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <ProductSettlementDetailPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/product-surrender',
+    element: (
+      <ProtectedLayout>
+        <ProductSurrenderListPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/product-surrender/edit/:id',
+    element: (
+      <ProtectedLayout>
+        <ProductSurrenderEditPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/product-surrender/:id',
+    element: (
+      <ProtectedLayout>
+        <ProductSurrenderDetailPage />
       </ProtectedLayout>
     ),
   },

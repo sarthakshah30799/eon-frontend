@@ -211,18 +211,26 @@ export const ProductSettlementCreateView = () => {
       resolver={yupResolver(productSettlementSchema) as never}
       mode="onChange"
       onSubmit={async values => {
-        await createMutation.mutateAsync({
-          kind,
-          issuerPartyProfileId: values.issuerPartyProfileId,
-          currencyId: values.currencyId,
-          hoBranchId: isHo ? values.hoBranchId || undefined : undefined,
-          transactionDate: values.transactionDate,
-          reference: values.reference || undefined,
-          remarks: values.remarks || undefined,
-          items: values.items.map(item => ({ id: item.id, rate: item.rate })),
-        });
-        toast.success(PRODUCT_SETTLEMENT_TEXT.created);
-        navigate('/product-settlement');
+        try {
+          await createMutation.mutateAsync({
+            kind,
+            issuerPartyProfileId: values.issuerPartyProfileId,
+            currencyId: values.currencyId,
+            hoBranchId: isHo ? values.hoBranchId || undefined : undefined,
+            transactionDate: values.transactionDate,
+            reference: values.reference || undefined,
+            remarks: values.remarks || undefined,
+            items: values.items.map(item => ({ id: item.id, rate: item.rate })),
+          });
+          toast.success(PRODUCT_SETTLEMENT_TEXT.created);
+          navigate('/product-settlement');
+        } catch (error) {
+          toast.error(
+            error instanceof Error && error.message
+              ? error.message
+              : PRODUCT_SETTLEMENT_TEXT.actionFailed
+          );
+        }
       }}
       onError={errors => {
         const messages = collectErrorMessages(errors);

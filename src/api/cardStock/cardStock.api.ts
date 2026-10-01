@@ -241,4 +241,56 @@ export const cardStockApi = {
     if (response.error) throw new Error(response.error);
     return response.data ?? [];
   },
+
+  searchSoldCards: async (params: {
+    search?: string;
+    currencyId?: string;
+    issuerPartyProfileId?: string;
+    productId?: string;
+    limit?: number;
+  }): Promise<CardStockSelectableCard[]> => {
+    const query = new URLSearchParams();
+    if (params.search) query.set('search', params.search);
+    if (params.currencyId) query.set('currencyId', params.currencyId);
+    if (params.issuerPartyProfileId)
+      query.set('issuerPartyProfileId', params.issuerPartyProfileId);
+    if (params.productId) query.set('productId', params.productId);
+    if (params.limit) query.set('limit', String(params.limit));
+    const response = await apiClient.get<CardStockSelectableCard[]>(
+      `/card-stock/receipts/cards/sold?${query.toString()}`
+    );
+    if (response.error) throw new Error(response.error);
+    return response.data ?? [];
+  },
+
+  getBaseSaleRate: async (
+    currencyId: string
+  ): Promise<{ baseSaleRate: string }> => {
+    const query = new URLSearchParams();
+    query.set('currencyId', currencyId);
+    const response = await apiClient.get<{ baseSaleRate: string }>(
+      `/card-stock/receipts/cards/base-sale-rate?${query.toString()}`
+    );
+    if (response.error) throw new Error(response.error);
+    return response.data ?? { baseSaleRate: '0' };
+  },
+
+  listEmUnits: async (params: {
+    branchId: string;
+    productId: string;
+    issuerPartyProfileId?: string;
+    currencyId?: string;
+  }): Promise<CardStockSelectableCard[]> => {
+    const query = new URLSearchParams();
+    query.set('branchId', params.branchId);
+    query.set('productId', params.productId);
+    if (params.issuerPartyProfileId)
+      query.set('issuerPartyProfileId', params.issuerPartyProfileId);
+    if (params.currencyId) query.set('currencyId', params.currencyId);
+    const response = await apiClient.get<CardStockSelectableCard[]>(
+      `/card-stock/receipts/cards/em-units?${query.toString()}`
+    );
+    if (response.error) throw new Error(response.error);
+    return response.data ?? [];
+  },
 };

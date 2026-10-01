@@ -5,8 +5,19 @@ import type { CardTransferFormValues } from '../types';
 export const cardTransferQueryKeys = {
   all: ['card-transfer-requests'] as const,
   detail: (id: string) => ['card-transfer-request', id] as const,
-  cards: (sourceBranchId: string) =>
-    ['card-transfer-source-cards', sourceBranchId] as const,
+  cards: (
+    sourceBranchId: string,
+    productId: string,
+    issuerPartyProfileId: string,
+    currencyId?: string
+  ) =>
+    [
+      'card-transfer-source-cards',
+      sourceBranchId,
+      productId,
+      issuerPartyProfileId,
+      currencyId ?? '',
+    ] as const,
 };
 
 export const useListCardTransfers = (
@@ -22,13 +33,31 @@ export const useGetCardTransfer = (id: string) =>
     queryFn: () => cardTransferApi.get(id),
     enabled: Boolean(id),
   });
-export const useListTransferCards = (sourceBranchId: string, enabled = true) =>
+export const useListTransferCards = (
+  params: {
+    sourceBranchId: string;
+    productId: string;
+    issuerPartyProfileId: string;
+    currencyId?: string;
+  },
+  enabled = true
+) =>
   useQuery({
-    queryKey: cardTransferQueryKeys.cards(sourceBranchId),
-    queryFn: () => cardTransferApi.listAvailableCards(sourceBranchId),
-    enabled: enabled && Boolean(sourceBranchId),
+    queryKey: cardTransferQueryKeys.cards(
+      params.sourceBranchId,
+      params.productId,
+      params.issuerPartyProfileId,
+      params.currencyId
+    ),
+    queryFn: () => cardTransferApi.listAvailableCards(params),
+    enabled:
+      enabled &&
+      Boolean(
+        params.sourceBranchId &&
+          params.productId &&
+          params.issuerPartyProfileId
+      ),
   });
-
 const useCardTransferMutation = <T>(
   mutationFn: (value: T) => Promise<unknown>
 ) => {

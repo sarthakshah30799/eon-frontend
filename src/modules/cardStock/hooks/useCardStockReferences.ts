@@ -3,10 +3,7 @@ import { currencyProfileApi } from '@/api/currencyProfile';
 import { partyProfileApi } from '@/api/partyProfile';
 import { productProfileApi } from '@/api/productProfile';
 import { PartyProfileTypeEnum } from '@/modules/partyProfiles/types';
-import {
-  isCardProductCode,
-  MULTI_CURRENCY_CARD_PRODUCT_CODE,
-} from '@/modules/purchase/utils/purchaseUtils';
+import { MULTI_CURRENCY_CARD_PRODUCT_CODE } from '@/modules/purchase/utils/purchaseUtils';
 
 export const useCardStockReferences = (branchId?: string) => {
   const normalizedBranchId = branchId?.trim() || undefined;
@@ -22,11 +19,11 @@ export const useCardStockReferences = (branchId?: string) => {
     enabled: Boolean(normalizedBranchId),
   });
   const products = useQuery({
-    queryKey: ['card-stock', 'products'],
+    queryKey: ['card-stock', 'products', 'blank-stock'],
     queryFn: async () =>
       (
         await productProfileApi.getAllProductProfiles({ activeOnly: true })
-      ).filter(product => isCardProductCode(product.productCode)),
+      ).filter(product => product.maintainBlankStockOfProduct === true),
     staleTime: 0,
     refetchOnMount: 'always',
   });

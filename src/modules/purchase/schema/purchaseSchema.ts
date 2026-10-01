@@ -40,6 +40,8 @@ import { PASSENGER_IDENTITY_TEXT } from '@/modules/passengers/constants/passenge
 // details form only, not on main purchase/sale Save.
 import {
   isCardProductCode,
+  isSurrenderBuyingProduct,
+  isSurrenderBulkSaleProduct,
   isTtProductCode,
   isTtRemittanceComplete,
   PURCHASE_TRANSACTION_TEXT,
@@ -92,24 +94,35 @@ const createPurchaseTransactionSchema = (transactionType: TransactionType) =>
     productId: yup.string().trim().required('Product is required'),
     productCode: yup.string().trim().default(''),
     productDescription: yup.string().trim().default(''),
+    maintainBlankStockOfProduct: yup.boolean().default(true),
+    hasIssuerLinks: yup.boolean().default(false),
     quantity: quantityStringSchema.test(
       'card-sale-fe-amount',
       PURCHASE_TRANSACTION_TEXT.quantityRequired,
       function (value) {
+        const hasIssuerLinks = Boolean(this.parent.hasIssuerLinks);
         const isCardSale =
           transactionType === TransactionTypeEnum.SALE &&
           isCardProductCode(this.parent.productCode);
+        const isSurrenderRow =
+          hasIssuerLinks &&
+          isSurrenderBuyingProduct({
+            productCode: this.parent.productCode,
+            maintainBlankStockOfProduct: this.parent.maintainBlankStockOfProduct,
+            availableInRetailBuying: true,
+            availableInBulkBuying: true,
+          });
         const isTtRow = isTtProductCode(this.parent.productCode);
         if (!String(value ?? '').trim()) {
           return this.createError({
             message:
-              isCardSale || isTtRow
+              isCardSale || isTtRow || isSurrenderRow
                 ? PURCHASE_TRANSACTION_TEXT.feAmountRequired
                 : PURCHASE_TRANSACTION_TEXT.quantityRequired,
           });
         }
 
-        if (isCardSale) {
+        if (isCardSale || isSurrenderRow) {
           const amount = Number(value);
           if (!Number.isFinite(amount) || amount <= 0) {
             return this.createError({
@@ -145,11 +158,75 @@ const createPurchaseTransactionSchema = (transactionType: TransactionType) =>
     total: decimalStringSchema.default(''),
     roundOff: signedDecimalStringSchema.default(''),
     finalAmount: decimalStringSchema.default(''),
-    cardId: yup.string().default(''),
-    issuerPartyProfileId: yup.string().default(''),
+    cardId: yup
+      .string()
+      .default('')
+      .test(
+        'card-required',
+        'CARD selection is required',
+        function (value) {
+          if (!this.parent.hasIssuerLinks) {
+            return true;
+          }
+          const code = this.parent.productCode;
+          if (
+            isCardProductCode(code) ||
+            isSurrenderBuyingProduct({
+              productCode: code,
+              maintainBlankStockOfProduct:
+                this.parent.maintainBlankStockOfProduct,
+              availableInRetailBuying: true,
+              availableInBulkBuying: true,
+            }) ||
+            isSurrenderBulkSaleProduct({
+              productCode: code,
+              maintainBlankStockOfProduct:
+                this.parent.maintainBlankStockOfProduct,
+              availableInBulkSelling: true,
+            })
+          ) {
+            return Boolean(String(value ?? '').trim());
+          }
+          return true;
+        }
+      ),
+    issuerPartyProfileId: yup
+      .string()
+      .default('')
+      .test(
+        'issuer-required',
+        'Issuer is required',
+        function (value) {
+          if (!this.parent.hasIssuerLinks) {
+            return true;
+          }
+          const code = this.parent.productCode;
+          const needsIssuer =
+            isCardProductCode(code) ||
+            isTtProductCode(code) ||
+            isSurrenderBuyingProduct({
+              productCode: code,
+              maintainBlankStockOfProduct:
+                this.parent.maintainBlankStockOfProduct,
+              availableInRetailBuying: true,
+              availableInBulkBuying: true,
+            }) ||
+            isSurrenderBulkSaleProduct({
+              productCode: code,
+              maintainBlankStockOfProduct:
+                this.parent.maintainBlankStockOfProduct,
+              availableInBulkSelling: true,
+            });
+          if (!needsIssuer) {
+            return true;
+          }
+          return Boolean(String(value ?? '').trim());
+        }
+      ),
     issuerPartyProfileSnapshot: yup.mixed().nullable().default(null),
     cardSnapshot: yup.mixed().nullable().default(null),
     isReload: yup.boolean().default(false),
+    autoSurrender: yup.boolean().default(true),
     dealCoverId: yup
       .string()
       .default('')

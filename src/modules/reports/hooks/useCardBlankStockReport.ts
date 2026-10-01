@@ -9,7 +9,9 @@ import { downloadBlob } from '../utils';
 import { useProductSettlementReportFilters } from './useProductSettlementReportFilters';
 
 export const useCardBlankStockReport = () => {
-  const filters = useProductSettlementReportFilters();
+  const filters = useProductSettlementReportFilters({
+    productScope: 'blank-stock',
+  });
   const [exportFormat, setExportFormat] = useState<
     typeof ReportExportFormatEnum.CSV | typeof ReportExportFormatEnum.XLSX
   >(ReportExportFormatEnum.XLSX);

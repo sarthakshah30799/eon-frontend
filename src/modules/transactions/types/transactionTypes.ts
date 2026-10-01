@@ -552,6 +552,7 @@ export interface ICreateTransactionItemPayload {
   issuerPartyProfileSnapshot?: ITransactionReferenceSnapshot | null;
   cardSnapshot?: ITransactionReferenceSnapshot | null;
   isReload?: boolean;
+  autoSurrender?: boolean;
   dealCoverId?: string | null;
   dealCoverSnapshot?: ITransactionReferenceSnapshot | null;
 }

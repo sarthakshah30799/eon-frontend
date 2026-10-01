@@ -17,6 +17,7 @@ interface CurrencyRatesViewData {
     id: string;
     productCode: string;
     productDescription: string;
+    maintainBlankStockOfProduct: boolean;
     availableInRetailBuying: boolean;
     availableInRetailSelling: boolean;
     availableInBulkBuying: boolean;
@@ -53,6 +54,7 @@ const loadCurrencyRatesViewData = async (): Promise<CurrencyRatesViewData> => {
       id: product.id,
       productCode: product.productCode,
       productDescription: product.productDescription,
+      maintainBlankStockOfProduct: product.maintainBlankStockOfProduct === true,
       availableInRetailBuying: product.availableInRetailBuying,
       availableInRetailSelling: product.availableInRetailSelling,
       availableInBulkBuying: product.availableInBulkBuying,

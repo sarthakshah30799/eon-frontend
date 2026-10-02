@@ -7,6 +7,14 @@ export const TRANSFER_PRINT_TEXT = {
     'Unable to open print window. Please allow pop-ups and try again.',
 } as const;
 
+export const TRANSFER_LIST_TEXT = {
+  search: 'Search',
+  searchPlaceholder: 'Search transfer number',
+  status: 'Status',
+  statusPlaceholder: 'All Statuses',
+  emptyMessage: 'No transfers found.',
+} as const;
+
 export const TRANSFER_FORM_TEXT = {
   cannotPunchTransactions:
     'Transfers cannot be punched for this workplace date. Complete day start (BOD) for the active branch/counter, or check monthwise locking / backdate window.',

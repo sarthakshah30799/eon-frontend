@@ -110,6 +110,8 @@ export interface IPolicyContext {
   canCompleteDayEnd: boolean;
   openBusinessDate: string;
   workflowState: string;
+  bodAt?: string | null;
+  eodAt?: string | null;
   activeMonthlyLock?: IMonthlyLockWindow | null;
   activeBackdateWindow?: ITransactionBackdateWindow | null;
   transactionDataLock?: {

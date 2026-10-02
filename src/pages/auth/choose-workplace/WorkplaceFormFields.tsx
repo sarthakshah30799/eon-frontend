@@ -40,15 +40,23 @@ export const WorkplaceFormFields = ({
   }, [userAssignments]);
 
   const loadApiBranchOptions = useLoadBranchOptions({ activeOnly: true });
-  const { data: selectedBranchProfile } = useGetBranchProfile(branchId || '');
+  const {
+    data: selectedBranchProfile,
+    isLoading: isSelectedBranchLoading,
+    isFetching: isSelectedBranchFetching,
+  } = useGetBranchProfile(branchId || '');
 
-  const { data: counterProfiles = [], isLoading: isCountersLoading } =
-    useQuery({
-      queryKey: ['counter-profiles-all', { activeOnly: true }],
-      queryFn: () =>
-        counterProfileApi.getAllCounterProfiles({ activeOnly: true }),
-      enabled: canSelectAllBranches,
-    });
+  const {
+    data: counterProfiles = [],
+    isLoading: isCountersLoading,
+    isFetching: isCountersFetching,
+    dataUpdatedAt: countersUpdatedAt,
+  } = useQuery({
+    queryKey: ['counter-profiles-all', { activeOnly: true }],
+    queryFn: () =>
+      counterProfileApi.getAllCounterProfiles({ activeOnly: true }),
+    enabled: canSelectAllBranches,
+  });
 
   const visibleBranches = useMemo(
     () =>
@@ -174,7 +182,7 @@ export const WorkplaceFormFields = ({
         menuPosition="absolute"
       />
       <FormFieldSelect
-        key={`counter-${effectiveSelectedBranchId || 'empty'}`}
+        key={`counter-${effectiveSelectedBranchId || 'empty'}-${canSelectAllBranches ? countersUpdatedAt || 'loading' : 'assignments'}`}
         name="counterId"
         label="Counter"
         className="!max-w-none"
@@ -182,8 +190,14 @@ export const WorkplaceFormFields = ({
         placeholder={
           effectiveSelectedBranchId ? 'Select Counter' : 'Select Branch first'
         }
-        defaultOptions={true}
-        isLoading={canSelectAllBranches && isCountersLoading}
+        defaultOptions={visibleCounters}
+        isLoading={
+          canSelectAllBranches &&
+          (isCountersLoading ||
+            isCountersFetching ||
+            (Boolean(effectiveSelectedBranchId) &&
+              (isSelectedBranchLoading || isSelectedBranchFetching)))
+        }
         disabled={!effectiveSelectedBranchId}
         isSearchable
         menuPosition="absolute"

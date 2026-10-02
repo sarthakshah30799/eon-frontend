@@ -138,6 +138,8 @@ const DayEndStartProcessForm = ({
   const openBusinessDate =
     effectivePolicyContext?.openBusinessDate ?? currentBusinessDate;
   const activeMonthlyLock = effectivePolicyContext?.activeMonthlyLock ?? null;
+  const bodAt = effectivePolicyContext?.bodAt ?? null;
+  const eodAt = effectivePolicyContext?.eodAt ?? null;
   const isPendingBod = workflowState === 'PENDING_BOD';
   const isPendingEod = workflowState === 'PENDING_EOD';
   const isClosedToday = workflowState === 'CLOSED_TODAY';
@@ -371,6 +373,21 @@ const DayEndStartProcessForm = ({
                   : currentBusinessDate
                     ? formatDateTime(currentBusinessDate, 'DD/MM/YYYY')
                     : 'Not available'}
+            </div>
+          </div>
+          <div className="rounded-lg border border-border-primary bg-surface-secondary px-4 py-3 text-sm text-text-secondary">
+            <div className="font-semibold text-text-primary">Punch Times</div>
+            <div>
+              BOD:{' '}
+              {bodAt
+                ? formatDateTime(bodAt, 'DD/MM/YYYY HH:mm:ss')
+                : 'Not started'}
+            </div>
+            <div>
+              EOD:{' '}
+              {eodAt
+                ? formatDateTime(eodAt, 'DD/MM/YYYY HH:mm:ss')
+                : 'Not completed'}
             </div>
           </div>
           {activeMonthlyLock ? (

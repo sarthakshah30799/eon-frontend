@@ -114,6 +114,10 @@ export const TransactionPaymentMethodEnum = {
 export type TransactionPaymentMethod =
   (typeof TransactionPaymentMethodEnum)[keyof typeof TransactionPaymentMethodEnum];
 
+export type TransactionAllowedPaymentMethod =
+  | typeof TransactionPaymentMethodEnum.CASH
+  | typeof TransactionPaymentMethodEnum.CHEQUE;
+
 export const isElectronicPaymentMethod = (value?: unknown) => {
   const normalized = String(value ?? '')
     .trim()
@@ -720,7 +724,7 @@ export interface IPurchaseRulePreviewResponse {
   passengerId: string | null;
   isCorporate: boolean;
   nationalityType: string | null;
-  paymentMethodsAllowed: Array<'CASH' | 'CHEQUE'>;
+  paymentMethodsAllowed: Array<TransactionAllowedPaymentMethod>;
 }
 
 export interface ICreditPreviewRequest {

@@ -25,6 +25,7 @@ import {
   isChequeFamilyPaymentMethod,
   isNonChequeBankPaymentMethod,
   getTransactionPaymentMethodOptions,
+  type TransactionAllowedPaymentMethod,
   type TransactionType,
 } from '@/modules/transactions';
 import { useAuth } from '@/lib/AuthContext';
@@ -62,7 +63,7 @@ interface TransactionPaymentDetailsFieldArrayProps {
   branchId?: string;
   selectablePagesUserId?: string;
   allowCashPayment?: boolean;
-  allowedPaymentMethods?: Array<'CASH' | 'CHEQUE'>;
+  allowedPaymentMethods?: Array<TransactionAllowedPaymentMethod>;
   disabled?: boolean;
   autoAppendDefaultRow?: boolean;
 }

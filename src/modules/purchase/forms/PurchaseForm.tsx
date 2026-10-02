@@ -41,7 +41,10 @@ import type {
   IPurchasePricingData,
   IPurchaseTransactionDocument,
 } from '../types/purchaseTypes';
-import type { ITransactionEntity } from '@/modules/transactions';
+import type {
+  ITransactionEntity,
+  TransactionAllowedPaymentMethod,
+} from '@/modules/transactions';
 import { createPurchaseFormSchema } from '../schema/purchaseSchema';
 import { PurchaseAgentProfileField } from '../components/PurchaseAgentProfileField';
 import { PurchaseBookReferenceField } from '../components/PurchaseBookReferenceField';
@@ -78,6 +81,7 @@ import { getTransactionDatePolicy } from '@/modules/transactionPolicies/utils/tr
 import {
   TransactionLogActionEnum,
   TransactionPartyProfileTypeEnum,
+  TransactionPaymentMethodEnum,
   TransactionTypeEnum,
 } from '@/modules/transactions';
 import { PassengerAmlVerificationModal } from '@/modules/passengers/components';
@@ -466,7 +470,7 @@ const PurchaseFormBody = ({
   const sellPaymentMethodsAllowed =
     transactionType === TransactionTypeEnum.SALE &&
     nationalityType === PassengerNationalityTypeEnum.FOREIGNER
-      ? (['CASH'] as Array<'CASH' | 'CHEQUE'>)
+      ? ([TransactionPaymentMethodEnum.CASH] as Array<TransactionAllowedPaymentMethod>)
       : undefined;
   const purposeId = useWatch({
     control: form.control,

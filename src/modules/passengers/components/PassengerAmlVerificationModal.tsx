@@ -45,8 +45,6 @@ import {
   isPassengerTravelTicketFieldVisible,
 } from '../utils/passengerIdentityRules';
 
-const IDENTITY_AUTO_VERIFY_DEBOUNCE_MS = 400;
-
 interface PassengerAmlVerificationModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -835,10 +833,7 @@ export const PassengerAmlVerificationModal = ({
         : currentPassportSnapshot;
     return `${verificationMode}:${JSON.stringify(snapshot)}`;
   }, [currentPanSnapshot, currentPassportSnapshot, verificationMode]);
-  const debouncedIdentityAutoVerifyKey = useDebounce(
-    identityAutoVerifyKey,
-    IDENTITY_AUTO_VERIFY_DEBOUNCE_MS
-  );
+  const debouncedIdentityAutoVerifyKey = useDebounce(identityAutoVerifyKey);
   const hasCompleteIdentityValues =
     verificationMode === 'pan'
       ? hasCompletePanValues({

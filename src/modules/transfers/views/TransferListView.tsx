@@ -2,10 +2,12 @@ import { useCallback, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { PencilSquareIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button1';
+import type { AsyncSelectOption } from '@/components/ui';
 import {
   Table,
   type TableColumnDef,
   buildSearchToolbarFilter,
+  buildStaticAsyncSelectToolbarFilter,
   TABLE_ACTIONS_CELL_CLASSNAME,
   TABLE_ACTION_BUTTON_CLASSNAME,
   TABLE_ACTION_ICON_CLASSNAME,
@@ -14,15 +16,19 @@ import { useAuth } from '@/lib/AuthContext';
 import { useDebounce, useOffsetPaginatedList } from '@/hooks';
 import { PAGINATION_DEFAULTS } from '@/constants/paginationConstants';
 import { transfersApi } from '@/api/transfers/transfers.api';
+import { TRANSFER_LIST_TEXT } from '../constants/transferConstants';
 import { getTransferStatusLabel, TRANSFER_STATUS_OPTIONS } from '../utils';
-import type { ICurrencyTransfer } from '../types';
-import type { TransferType } from '../types';
+import type { ICurrencyTransfer, TransferStatus, TransferType } from '../types';
 
 import { SurfacePanel } from '@/components/ui';
 const titleMap: Record<TransferType, string> = {
   COUNTER: 'Counter Transfers',
   BRANCH: 'Branch Transfers',
 };
+
+const TRANSFER_STATUS_FILTER_OPTIONS = TRANSFER_STATUS_OPTIONS.filter(
+  option => option.value !== 'ALL'
+);
 
 export const TransferListView = ({
   transferType,
@@ -31,19 +37,29 @@ export const TransferListView = ({
 }) => {
   const navigate = useNavigate();
   const [, setSearchParams] = useSearchParams();
-  const { user, activeBranchId, activeCounterId } = useAuth();
-  const isAdminOrHo = Boolean(user?.isAdmin || user?.isHo || user?.isHoStaff);
-  const [status, setStatus] = useState<string>('ALL');
+  const { activeBranchId, activeCounterId } = useAuth();
+  const [status, setStatus] = useState<TransferStatus | ''>('');
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 400);
+
+  const statusOptions = useMemo<AsyncSelectOption[]>(
+    () =>
+      TRANSFER_STATUS_FILTER_OPTIONS.map(option => ({
+        value: option.value,
+        label: option.label,
+      })),
+    []
+  );
+
+  const selectedStatusOption = useMemo(
+    () => statusOptions.find(option => option.value === status) ?? null,
+    [status, statusOptions]
+  );
 
   const filters = useMemo(
     () => ({
       transferType,
-      status:
-        status === 'ALL'
-          ? undefined
-          : (status as 'HELD' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED'),
+      status: status || undefined,
       search: debouncedSearch.trim() || undefined,
     }),
     [debouncedSearch, status, transferType]
@@ -153,41 +169,25 @@ export const TransferListView = ({
           setSearch(value);
           resetOffset();
         },
-        placeholder: 'Search transfer number',
+        label: TRANSFER_LIST_TEXT.search,
+        placeholder: TRANSFER_LIST_TEXT.searchPlaceholder,
       }),
-      ...(isAdminOrHo
-        ? [
-            {
-              id: 'status',
-              type: 'custom' as const,
-              className: 'w-full shrink-0',
-              render: () => (
-                <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border-primary bg-surface-secondary p-1">
-                  {TRANSFER_STATUS_OPTIONS.map(option => (
-                    <Button
-                      key={option.value}
-                      type="button"
-                      size="sm"
-                      variant={
-                        status === option.value ? 'default' : 'outline'
-                      }
-                      onClick={() => {
-                        setStatus(option.value);
-                        resetOffset();
-                      }}
-                    >
-                      {option.value === 'ALL'
-                        ? 'All'
-                        : getTransferStatusLabel(option.value)}
-                    </Button>
-                  ))}
-                </div>
-              ),
-            },
-          ]
-        : []),
+      buildStaticAsyncSelectToolbarFilter({
+        id: 'status',
+        label: TRANSFER_LIST_TEXT.status,
+        options: statusOptions,
+        value: selectedStatusOption,
+        placeholder: TRANSFER_LIST_TEXT.statusPlaceholder,
+        className: 'w-48 shrink-0',
+        onChange: option => {
+          setStatus(
+            option?.value ? (String(option.value) as TransferStatus) : ''
+          );
+          resetOffset();
+        },
+      }),
     ],
-    [isAdminOrHo, resetOffset, search, status]
+    [resetOffset, search, selectedStatusOption, statusOptions]
   );
 
   if (error instanceof Error) {
@@ -239,7 +239,7 @@ export const TransferListView = ({
           onPageChange={handlePageChange}
           onPageSizeChange={handlePageSizeChange}
           toolbarFilters={toolbarFilters}
-          emptyMessage="No transfers found."
+          emptyMessage={TRANSFER_LIST_TEXT.emptyMessage}
         />
       </SurfacePanel>
     </div>

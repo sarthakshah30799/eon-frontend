@@ -83,6 +83,7 @@ import {
 import { PassengerAmlVerificationModal } from '@/modules/passengers/components';
 import {
   PassengerEntityTypeEnum,
+  PassengerNationalityTypeEnum,
   type PassengerEntityType,
 } from '@/modules/passengers/types/passengerTypes';
 import type {
@@ -458,6 +459,15 @@ const PurchaseFormBody = ({
     transactionType === TransactionTypeEnum.PURCHASE &&
     resolvedPassengerEntityType === PassengerEntityTypeEnum.CORPORATE
   );
+  const nationalityType = useWatch({
+    control: form.control,
+    name: 'nationalityType',
+  });
+  const sellPaymentMethodsAllowed =
+    transactionType === TransactionTypeEnum.SALE &&
+    nationalityType === PassengerNationalityTypeEnum.FOREIGNER
+      ? (['CASH'] as Array<'CASH' | 'CHEQUE'>)
+      : undefined;
   const purposeId = useWatch({
     control: form.control,
     name: 'purposeId',
@@ -1922,7 +1932,9 @@ const PurchaseFormBody = ({
         selectablePagesUserId={cashierUserId || undefined}
         allowCashPayment={allowCashPayment}
         allowedPaymentMethods={
-          resolvedPurchaseRulePreview?.paymentMethodsAllowed ?? undefined
+          isPurchaseTransaction
+            ? (resolvedPurchaseRulePreview?.paymentMethodsAllowed ?? undefined)
+            : sellPaymentMethodsAllowed
         }
         disabled={isReadOnly}
         title="Payment Details"

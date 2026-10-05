@@ -22,10 +22,9 @@ export const BRANCH_PROFILE_TEXTS = {
   COUNTER_RIGHTS_TITLE: 'Counter Access Rights',
   COUNTER_RIGHTS_SUBTITLE:
     'Set screen permissions for each connected counter. Access requires both counter and user-role rights.',
-  COUNTER_RIGHTS_SELECTOR_LABEL: 'Rights for Counter',
-  COUNTER_RIGHTS_SELECTOR_PLACEHOLDER: 'Select a connected counter',
-  COUNTER_RIGHTS_SELECTOR_HINT:
-    'Each counter has its own rights matrix. Changes apply wherever this counter is used.',
+  COUNTER_RIGHTS_SIDEBAR_TITLE: 'Counters',
+  COUNTER_RIGHTS_SIDEBAR_HINT:
+    'Select a connected counter to edit its rights. Changes apply wherever this counter is used.',
   COUNTER_RIGHTS_SAVE_ERROR: 'Failed to save counter access rights',
   COUNTER_RIGHTS_SAVE_SUCCESS: 'Counter access rights saved successfully!',
 } as const;

@@ -27,7 +27,7 @@ const isHighlightedNode = (
 
 const getTriggerClassName = (isHighlighted: boolean, level: number) =>
   [
-    'flex w-full items-center justify-between gap-2 rounded-md !border-0 !bg-transparent !px-0 !py-1.5 !shadow-none text-left text-sm transition',
+    'flex w-full items-center !justify-start gap-2 rounded-md !border-0 !bg-transparent !px-0 !py-1.5 !shadow-none text-left text-sm transition',
     level === 0 ? 'font-semibold' : 'font-medium',
     isHighlighted
       ? '!text-primary-700'
@@ -36,7 +36,7 @@ const getTriggerClassName = (isHighlighted: boolean, level: number) =>
 
 const getLeafItemClassName = (isSelected: boolean) =>
   [
-    'w-full rounded-md !border-0 !bg-transparent !px-0 !py-1.5 !shadow-none text-left text-sm transition',
+    'flex w-full items-center !justify-start rounded-md !border-0 !bg-transparent !px-0 !py-1.5 !shadow-none text-left text-sm transition',
     isSelected
       ? '!text-primary-700'
       : '!text-text-primary hover:!text-primary-700 hover:!bg-surface-secondary/70',

@@ -5,4 +5,5 @@ export const getTransferNumberSeriesCode = (
 ) =>
   transferType === 'BRANCH' ? 'BRANCH_TRANSFER_SELL' : 'COUNTER_TRANSFER_SELL';
 export * from './transferFormUtils';
+export * from './transferDatePolicy';
 export * from './transferPrintUtils';

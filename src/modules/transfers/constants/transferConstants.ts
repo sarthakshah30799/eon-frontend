@@ -27,4 +27,13 @@ export const TRANSFER_FORM_TEXT = {
       ? `Source branch/counter has no closing stock balance for ${currencyLabels[0]}, so hold cost rate is unavailable.`
       : `Source branch/counter has no closing stock balance for ${currencyLabels.join(', ')}, so hold cost rate is unavailable.`,
   holdCostLoading: 'Checking source counter hold cost...',
+  selectSourceBranchForDayStatus:
+    'Select a source branch to verify day start/end status.',
+  selectDestinationBranchForDayStatus:
+    'Select a destination branch to verify day start/end status.',
+  loadingBranchDayStatus: 'Checking day start/end for selected branches...',
+  sourceBranchDayBlocked:
+    'Source branch: day start (punch in) is required and day end (punch out) must not be completed for the business date.',
+  destinationBranchDayBlocked:
+    'Destination branch: day start (punch in) is required and day end (punch out) must not be completed for the business date.',
 } as const;

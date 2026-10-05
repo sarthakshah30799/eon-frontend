@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { yupResolver } from '@hookform/resolvers/yup';
+import { transactionPoliciesApi } from '@/api/transactionPolicies';
+import type { TransactionDatePolicy } from '@/modules/transactionPolicies/utils/transactionDatePolicy';
 import type { Resolver } from 'react-hook-form';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { Loader } from '@/components/ui/loader';
@@ -25,7 +28,10 @@ import {
   createEmptyTransferFormValues,
   mapTransferFormValuesToPayload,
 } from '../utils/transferFormUtils';
-import { getTransferNumberSeriesCode } from '../utils';
+import {
+  combineTransferTransactionDatePolicies,
+  getTransferNumberSeriesCode,
+} from '../utils';
 import {
   TransferWorkplaceFields,
   type TransferWorkplaceReferenceOptions,
@@ -42,10 +48,20 @@ interface TransferHoldCostBlockState {
   message: string;
 }
 
+interface TransferWorkplacePolicyBlockState {
+  isLoading: boolean;
+  isBlocked: boolean;
+  message: string;
+  combinedPolicy: TransactionDatePolicy;
+  awaitingSourceBranch: boolean;
+  awaitingDestinationBranch: boolean;
+}
+
 interface TransferFormBodyProps {
   transferType: TransferType;
   pricingData: NonNullable<ReturnType<typeof useCurrencyRatesViewData>['data']>;
   canSubmit: boolean;
+  canSelectWorkplace: boolean;
   currencyPickerState: {
     rowIndex: number;
     allowedCurrencyIds: string[];
@@ -57,16 +73,17 @@ interface TransferFormBodyProps {
   onCloseCurrencyPicker: () => void;
   readOnly: boolean;
   useTransferRateEditable: boolean;
-  transactionDatePolicy: ReturnType<typeof getTransactionDatePolicy>;
   displayNumber?: string;
   readOnlyOptions?: TransferWorkplaceReferenceOptions;
   onHoldCostBlockChange: (state: TransferHoldCostBlockState) => void;
+  onWorkplacePolicyChange: (state: TransferWorkplacePolicyBlockState) => void;
 }
 
 const TransferFormBody = ({
   transferType,
   pricingData,
   canSubmit,
+  canSelectWorkplace,
   currencyPickerState,
   onOpenCurrencyPicker,
   onCloseCurrencyPicker,
@@ -74,10 +91,11 @@ const TransferFormBody = ({
   displayNumber,
   readOnlyOptions,
   useTransferRateEditable,
-  transactionDatePolicy,
   onHoldCostBlockChange,
+  onWorkplacePolicyChange,
 }: TransferFormBodyProps) => {
   const form = useFormContext<ITransferFormValues>();
+  const { activeBranchId, policyContext } = useAuth();
   const sourceBranchId = useWatch({
     control: form.control,
     name: 'sourceBranchId',
@@ -86,10 +104,209 @@ const TransferFormBody = ({
     control: form.control,
     name: 'sourceCounterId',
   });
+  const destinationBranchId = useWatch({
+    control: form.control,
+    name: 'destinationBranchId',
+  });
   const items = useWatch({
     control: form.control,
     name: 'items',
   });
+  const isBranchTransfer = transferType === 'BRANCH';
+
+  const sourceBranchPolicyQuery = useQuery({
+    queryKey: ['transfers', 'branch-day-policy', 'source', sourceBranchId],
+    queryFn: () => transactionPoliciesApi.getPolicyContext(sourceBranchId),
+    enabled: Boolean(sourceBranchId) && !readOnly,
+  });
+
+  const requiresDestinationPolicy =
+    isBranchTransfer &&
+    Boolean(destinationBranchId) &&
+    destinationBranchId !== sourceBranchId;
+
+  const destinationBranchPolicyQuery = useQuery({
+    queryKey: [
+      'transfers',
+      'branch-day-policy',
+      'destination',
+      destinationBranchId,
+    ],
+    queryFn: () =>
+      transactionPoliciesApi.getPolicyContext(destinationBranchId),
+    enabled: requiresDestinationPolicy && !readOnly,
+  });
+
+  const resolveBranchPolicyContext = useCallback(
+    (
+      branchId: string,
+      queryData: typeof sourceBranchPolicyQuery.data | undefined
+    ) => queryData ?? (branchId === activeBranchId ? policyContext : null),
+    [activeBranchId, policyContext]
+  );
+
+  const sourcePolicy = useMemo(
+    () =>
+      getTransactionDatePolicy(
+        sourceBranchId
+          ? resolveBranchPolicyContext(
+              sourceBranchId,
+              sourceBranchPolicyQuery.data
+            )
+          : null
+      ),
+    [
+      resolveBranchPolicyContext,
+      sourceBranchId,
+      sourceBranchPolicyQuery.data,
+    ]
+  );
+
+  const destinationPolicy = useMemo(() => {
+    if (!requiresDestinationPolicy) {
+      return null;
+    }
+
+    return getTransactionDatePolicy(
+      resolveBranchPolicyContext(
+        destinationBranchId,
+        destinationBranchPolicyQuery.data
+      )
+    );
+  }, [
+    destinationBranchId,
+    destinationBranchPolicyQuery.data,
+    requiresDestinationPolicy,
+    resolveBranchPolicyContext,
+  ]);
+
+  const transactionDatePolicy = useMemo(() => {
+    if (destinationPolicy) {
+      return combineTransferTransactionDatePolicies([
+        sourcePolicy,
+        destinationPolicy,
+      ]);
+    }
+
+    return sourcePolicy;
+  }, [destinationPolicy, sourcePolicy]);
+
+  const awaitingSourceBranch = canSelectWorkplace && !sourceBranchId;
+  const awaitingDestinationBranch = isBranchTransfer && !destinationBranchId;
+  const sourcePolicyLoading =
+    Boolean(sourceBranchId) && sourceBranchPolicyQuery.isPending;
+  const destinationPolicyLoading =
+    requiresDestinationPolicy && destinationBranchPolicyQuery.isPending;
+  const policyIsLoading = sourcePolicyLoading || destinationPolicyLoading;
+
+  const workplacePolicyDisplayMessage = useMemo(() => {
+    if (
+      awaitingSourceBranch ||
+      awaitingDestinationBranch ||
+      policyIsLoading ||
+      !sourceBranchId
+    ) {
+      return '';
+    }
+
+    const messages: string[] = [];
+
+    if (!sourcePolicy.canPunchTransactions) {
+      messages.push(TRANSFER_FORM_TEXT.sourceBranchDayBlocked);
+      if (sourcePolicy.helperText) {
+        messages.push(sourcePolicy.helperText);
+      }
+    }
+
+    if (destinationPolicy && !destinationPolicy.canPunchTransactions) {
+      messages.push(TRANSFER_FORM_TEXT.destinationBranchDayBlocked);
+      if (destinationPolicy.helperText) {
+        messages.push(destinationPolicy.helperText);
+      }
+    }
+
+    return messages.join(' ');
+  }, [
+    awaitingDestinationBranch,
+    awaitingSourceBranch,
+    destinationPolicy,
+    policyIsLoading,
+    sourceBranchId,
+    sourcePolicy.canPunchTransactions,
+    sourcePolicy.helperText,
+  ]);
+
+  const workplacePolicyBlocked =
+    !awaitingSourceBranch &&
+    !awaitingDestinationBranch &&
+    !policyIsLoading &&
+    Boolean(sourceBranchId) &&
+    (!sourcePolicy.canPunchTransactions ||
+      (destinationPolicy !== null && !destinationPolicy.canPunchTransactions));
+
+  useEffect(() => {
+    onWorkplacePolicyChange({
+      isLoading: policyIsLoading,
+      isBlocked: workplacePolicyBlocked,
+      message: workplacePolicyDisplayMessage,
+      combinedPolicy: transactionDatePolicy,
+      awaitingSourceBranch,
+      awaitingDestinationBranch,
+    });
+  }, [
+    awaitingDestinationBranch,
+    awaitingSourceBranch,
+    onWorkplacePolicyChange,
+    policyIsLoading,
+    transactionDatePolicy,
+    workplacePolicyBlocked,
+    workplacePolicyDisplayMessage,
+  ]);
+
+  useEffect(() => {
+    return () => {
+      onWorkplacePolicyChange({
+        isLoading: false,
+        isBlocked: false,
+        message: '',
+        combinedPolicy: getTransactionDatePolicy(null),
+        awaitingSourceBranch: false,
+        awaitingDestinationBranch: false,
+      });
+    };
+  }, [onWorkplacePolicyChange]);
+
+  useEffect(() => {
+    if (
+      readOnly ||
+      awaitingSourceBranch ||
+      awaitingDestinationBranch ||
+      policyIsLoading ||
+      workplacePolicyBlocked
+    ) {
+      return;
+    }
+
+    const nextDate = transactionDatePolicy.defaultTransactionDate;
+    if (!nextDate) {
+      return;
+    }
+
+    form.setValue('transactionDate', nextDate, {
+      shouldDirty: false,
+      shouldTouch: false,
+      shouldValidate: true,
+    });
+  }, [
+    awaitingDestinationBranch,
+    awaitingSourceBranch,
+    form,
+    policyIsLoading,
+    readOnly,
+    transactionDatePolicy.defaultTransactionDate,
+    workplacePolicyBlocked,
+  ]);
+
   const seriesCode = getTransferNumberSeriesCode(transferType);
   const { data: nextTransferNumber, error: nextTransferNumberError } =
     useTransactionNextNumber({
@@ -228,22 +445,13 @@ const TransferFormBody = ({
             {TRANSFER_FORM_TEXT.noCreatePermission}
           </div>
         ) : null}
-        {!readOnly && !transactionDatePolicy.canPunchTransactions ? (
-          <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-            {TRANSFER_FORM_TEXT.cannotPunchTransactions}
-            {transactionDatePolicy.helperText
-              ? ` ${transactionDatePolicy.helperText}`
-              : ''}
+        {!readOnly && workplacePolicyDisplayMessage ? (
+          <div className="rounded-md border border-error-200 bg-error-50 px-4 py-3 text-sm text-error-700">
+            {workplacePolicyDisplayMessage}
           </div>
         ) : null}
-        {!readOnly && holdCostMessage ? (
-          <div
-            className={`rounded-md border px-4 py-3 text-sm ${
-              holdCostStatus.hasUnavailableHoldCost
-                ? 'border-error-200 bg-error-50 text-error-700'
-                : 'border-amber-200 bg-amber-50 text-amber-800'
-            }`}
-          >
+        {!readOnly && holdCostStatus.hasUnavailableHoldCost && holdCostMessage ? (
+          <div className="rounded-md border border-error-200 bg-error-50 px-4 py-3 text-sm text-error-700">
             {holdCostMessage}
           </div>
         ) : null}
@@ -265,7 +473,13 @@ const TransferFormBody = ({
               name="transactionDate"
               label="Transaction Date"
               placeholder="Select transaction date"
-              disabled={readOnly || !transactionDatePolicy.canPunchTransactions}
+              disabled={
+                readOnly ||
+                awaitingSourceBranch ||
+                awaitingDestinationBranch ||
+                policyIsLoading ||
+                workplacePolicyBlocked
+              }
               minDate={transactionDatePolicy.minDate}
               maxDate={transactionDatePolicy.maxDate}
             />
@@ -329,8 +543,7 @@ export const TransferFormView = ({
 }: TransferFormViewProps) => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const { user, activeBranchId, activeCounterId } = useAuth();
-  const { policyContext } = useAuth();
+  const { user, activeBranchId, activeCounterId, policyContext } = useAuth();
   const transferPermission = usePermission(pathname);
   const { data: pricingData, isLoading, error } = useCurrencyRatesViewData();
   const { data: additionalSettings = [] } = useListAdditionalSettings();
@@ -349,6 +562,9 @@ export const TransferFormView = ({
   }, []);
   const createCounterTransfer = useCreateCounterTransfer();
   const createBranchTransfer = useCreateBranchTransfer();
+  const canSelectWorkplace = Boolean(
+    user?.isAdmin || user?.isHo || user?.isHoStaff
+  );
   const [holdCostBlock, setHoldCostBlock] = useState<TransferHoldCostBlockState>(
     {
       isLoading: false,
@@ -359,6 +575,21 @@ export const TransferFormView = ({
   const handleHoldCostBlockChange = useCallback(
     (state: TransferHoldCostBlockState) => {
       setHoldCostBlock(state);
+    },
+    []
+  );
+  const [workplacePolicyBlock, setWorkplacePolicyBlock] =
+    useState<TransferWorkplacePolicyBlockState>(() => ({
+      isLoading: false,
+      isBlocked: false,
+      message: '',
+      combinedPolicy: getTransactionDatePolicy(policyContext),
+      awaitingSourceBranch: canSelectWorkplace && !readOnly,
+      awaitingDestinationBranch: transferType === 'BRANCH' && !readOnly,
+    }));
+  const handleWorkplacePolicyChange = useCallback(
+    (state: TransferWorkplacePolicyBlockState) => {
+      setWorkplacePolicyBlock(state);
     },
     []
   );
@@ -377,27 +608,46 @@ export const TransferFormView = ({
     AdditionalSettingsCodeEnum.TransferRateEditable,
     false
   );
-  const transactionDatePolicy = useMemo(
-    () => getTransactionDatePolicy(policyContext),
-    [policyContext]
-  );
+  const defaultTransactionDate = useMemo(() => {
+    const sessionDefault = getTransactionDatePolicy(
+      policyContext
+    ).defaultTransactionDate;
+    if (sessionDefault) {
+      return sessionDefault;
+    }
+
+    if (canSelectWorkplace) {
+      return new Date().toISOString().slice(0, 10);
+    }
+
+    return workplacePolicyBlock.combinedPolicy.defaultTransactionDate;
+  }, [
+    canSelectWorkplace,
+    policyContext,
+    workplacePolicyBlock.combinedPolicy.defaultTransactionDate,
+  ]);
 
   const defaultValues = useMemo(
     () =>
       createEmptyTransferFormValues({
         transferType,
-        transactionDate: transactionDatePolicy.defaultTransactionDate,
-        sourceBranchId: activeBranchId ?? '',
-        sourceCounterId: activeCounterId ?? '',
+        transactionDate: defaultTransactionDate,
+        sourceBranchId: canSelectWorkplace ? '' : (activeBranchId ?? ''),
+        sourceCounterId: canSelectWorkplace ? '' : (activeCounterId ?? ''),
         destinationBranchId:
-          transferType === 'COUNTER' ? (activeBranchId ?? '') : '',
+          transferType === 'COUNTER'
+            ? canSelectWorkplace
+              ? ''
+              : (activeBranchId ?? '')
+            : '',
         destinationCounterId: '',
       }),
     [
       activeBranchId,
       activeCounterId,
+      canSelectWorkplace,
       transferType,
-      transactionDatePolicy.defaultTransactionDate,
+      defaultTransactionDate,
     ]
   );
 
@@ -408,23 +658,21 @@ export const TransferFormView = ({
       messages.push(TRANSFER_FORM_TEXT.noCreatePermission);
     }
 
-    if (!transactionDatePolicy.canPunchTransactions) {
-      messages.push(TRANSFER_FORM_TEXT.cannotPunchTransactions);
-      if (transactionDatePolicy.helperText) {
-        messages.push(transactionDatePolicy.helperText);
-      }
+    if (workplacePolicyBlock.isBlocked && workplacePolicyBlock.message) {
+      messages.push(workplacePolicyBlock.message);
     }
 
-    if (holdCostBlock.message) {
+    if (holdCostBlock.isBlocked && holdCostBlock.message) {
       messages.push(holdCostBlock.message);
     }
 
     return messages.join(' ');
   }, [
     canSubmit,
+    holdCostBlock.isBlocked,
     holdCostBlock.message,
-    transactionDatePolicy.canPunchTransactions,
-    transactionDatePolicy.helperText,
+    workplacePolicyBlock.isBlocked,
+    workplacePolicyBlock.message,
   ]);
 
   if (isLoading) {
@@ -470,7 +718,10 @@ export const TransferFormView = ({
         isSubmitDisabled:
           !canSubmit ||
           readOnly ||
-          !transactionDatePolicy.canPunchTransactions ||
+          workplacePolicyBlock.awaitingSourceBranch ||
+          workplacePolicyBlock.awaitingDestinationBranch ||
+          workplacePolicyBlock.isLoading ||
+          workplacePolicyBlock.isBlocked ||
           holdCostBlock.isBlocked ||
           holdCostBlock.isLoading,
         showSubmit: showSubmit && !readOnly,
@@ -499,7 +750,14 @@ export const TransferFormView = ({
           return;
         }
 
-        if (holdCostBlock.isBlocked || holdCostBlock.isLoading) {
+        if (
+          workplacePolicyBlock.awaitingSourceBranch ||
+          workplacePolicyBlock.awaitingDestinationBranch ||
+          workplacePolicyBlock.isLoading ||
+          workplacePolicyBlock.isBlocked ||
+          holdCostBlock.isBlocked ||
+          holdCostBlock.isLoading
+        ) {
           return;
         }
 
@@ -523,6 +781,7 @@ export const TransferFormView = ({
         transferType={transferType}
         pricingData={pricingData}
         canSubmit={canSubmit}
+        canSelectWorkplace={canSelectWorkplace}
         currencyPickerState={currencyPickerState}
         onOpenCurrencyPicker={handleOpenCurrencyPicker}
         onCloseCurrencyPicker={handleCloseCurrencyPicker}
@@ -530,8 +789,8 @@ export const TransferFormView = ({
         displayNumber={initialValues?.number}
         readOnlyOptions={readOnlyOptions}
         useTransferRateEditable={transferRateEditable}
-        transactionDatePolicy={transactionDatePolicy}
         onHoldCostBlockChange={handleHoldCostBlockChange}
+        onWorkplacePolicyChange={handleWorkplacePolicyChange}
       />
     </Form>
   );

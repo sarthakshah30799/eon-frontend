@@ -7,6 +7,7 @@ const toCreateManualBookPayload = (
   values: IBulkDispatchFormValues
 ): ICreateManualBook => ({
   dispatchDate: values.dispatchDate,
+  branchId: values.branchId,
   transactionType: values.transactionType,
   bookNoFrom: Number(values.bookNoFrom),
   bookNoTo: Number(values.bookNoTo),

@@ -37,6 +37,7 @@ export interface IManualBook {
 
 export interface ICreateManualBook {
   dispatchDate: string;
+  branchId: string;
   transactionType: string;
   bookNoFrom: number;
   bookNoTo: number;

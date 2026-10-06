@@ -15,7 +15,6 @@ import {
   useLoadBankAccounts,
   useReassignChequeBookDispatch,
   useCreateChequeBook,
-  useLoadCounterProfilesForBranch,
 } from './hooks';
 import { useLoadBranchOptions } from '@/modules/branchProfile/hooks';
 import { useAuth } from '@/lib/AuthContext';
@@ -235,7 +234,7 @@ export const BulkDispatchForm = ({
   reassignId,
 }: BulkDispatchFormProps) => {
   const navigate = useNavigate();
-  const { user, activeBranchId, activeCounterId, setWorkplace } = useAuth();
+  const { user, activeBranchId } = useAuth();
   const canSelectBranch = Boolean(
     user?.isAdmin || user?.isHo || user?.isHoStaff
   );
@@ -246,18 +245,19 @@ export const BulkDispatchForm = ({
 
   const { mutateAsync: reassignDispatch } = useReassignChequeBookDispatch();
   const { mutateAsync: createChequeBook } = useCreateChequeBook();
-  const loadCounterProfiles = useLoadCounterProfilesForBranch();
 
   const handleSubmit = async (values: IBulkDispatchFormValues) => {
     try {
-      const { branchId, ...rest } = values;
-      void branchId;
       const formatted = {
-        ...rest,
-        bookNoFrom: Number(rest.bookNoFrom),
-        bookNoTo: Number(rest.bookNoTo),
-        vouchersPerBook: Number(rest.vouchersPerBook),
-        mvNoFrom: Number(rest.mvNoFrom),
+        dispatchDate: values.dispatchDate,
+        branchId: values.branchId,
+        bankAccountCode: values.bankAccountCode,
+        bookNoFrom: Number(values.bookNoFrom),
+        bookNoTo: Number(values.bookNoTo),
+        vouchersPerBook: Number(values.vouchersPerBook),
+        mvNoFrom: Number(values.mvNoFrom),
+        assignedTo: values.assignedTo,
+        remarks: values.remarks,
       };
       if (reassignId) {
         await reassignDispatch({
@@ -275,20 +275,6 @@ export const BulkDispatchForm = ({
         });
         toast.success('ChequeBook dispatch reassigned successfully.');
       } else {
-        if (canSelectBranch) {
-          const counters = await loadCounterProfiles(values.branchId);
-          const selectedCounterId =
-            counters.find(counter => counter.isActive !== false)?.id ||
-            activeCounterId ||
-            '';
-
-          if (!selectedCounterId) {
-            toast.error('Please select a branch with an active counter.');
-            return;
-          }
-
-          await setWorkplace(values.branchId, selectedCounterId);
-        }
         await createChequeBook(formatted);
         toast.success('ChequeBook record saved successfully.');
       }

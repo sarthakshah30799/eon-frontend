@@ -21,7 +21,6 @@ import {
   useGetNextManualBillBookNumber,
   useLoadManualBillBookBranchManagers,
   useReassignManualBillBookDispatch,
-  useLoadManualBillBookCounterProfiles,
   useValidateManualBillBookBookRange,
   useValidateManualBillBookPageRange,
 } from '../hooks';
@@ -320,13 +319,12 @@ export const BulkDispatchForm = ({
   reassignId,
 }: BulkDispatchFormProps) => {
   const navigate = useNavigate();
-  const { user, activeBranchId, activeCounterId, setWorkplace } = useAuth();
+  const { user, activeBranchId } = useAuth();
   const canSelectBranch = Boolean(
     user?.isAdmin || user?.isHo || user?.isHoStaff
   );
   const { submitManualBillBook } = useCreateManualBillBook();
   const { mutateAsync: reassignDispatch } = useReassignManualBillBookDispatch();
-  const loadCounterProfiles = useLoadManualBillBookCounterProfiles();
 
   const validateBookRange = useValidateManualBillBookBookRange();
   const validatePageRange = useValidateManualBillBookPageRange();
@@ -360,20 +358,6 @@ export const BulkDispatchForm = ({
       toast.success('Dispatch reassigned and reset to Pending.');
       onSuccess();
     } else {
-      if (canSelectBranch) {
-        const counters = await loadCounterProfiles(values.branchId);
-        const selectedCounterId =
-          counters.find(counter => counter.isActive !== false)?.id ||
-          activeCounterId ||
-          '';
-
-        if (!selectedCounterId) {
-          toast.error('Please select a branch with an active counter.');
-          return;
-        }
-
-        await setWorkplace(values.branchId, selectedCounterId);
-      }
       await submitManualBillBook(values);
       onSuccess();
     }

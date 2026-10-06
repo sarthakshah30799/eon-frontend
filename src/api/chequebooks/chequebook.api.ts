@@ -44,6 +44,7 @@ export interface IChequeBook {
 
 export interface ICreateChequeBook {
   dispatchDate: string;
+  branchId: string;
   bankAccountCode: string;
   bookNoFrom: number;
   bookNoTo: number;

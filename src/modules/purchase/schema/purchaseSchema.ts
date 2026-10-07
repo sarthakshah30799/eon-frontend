@@ -110,7 +110,8 @@ const createPurchaseTransactionSchema = (transactionType: TransactionType) =>
             productCode: this.parent.productCode,
             maintainBlankStockOfProduct: this.parent.maintainBlankStockOfProduct,
             availableInRetailBuying: true,
-            availableInBulkBuying: true,
+            availableInBulkSelling: true,
+            hasIssuerLinks: true,
           });
         const isTtRow = isTtProductCode(this.parent.productCode);
         if (!String(value ?? '').trim()) {
@@ -176,13 +177,16 @@ const createPurchaseTransactionSchema = (transactionType: TransactionType) =>
               maintainBlankStockOfProduct:
                 this.parent.maintainBlankStockOfProduct,
               availableInRetailBuying: true,
-              availableInBulkBuying: true,
+              availableInBulkSelling: true,
+              hasIssuerLinks: true,
             }) ||
             isSurrenderBulkSaleProduct({
               productCode: code,
               maintainBlankStockOfProduct:
                 this.parent.maintainBlankStockOfProduct,
+              availableInRetailBuying: true,
               availableInBulkSelling: true,
+              hasIssuerLinks: true,
             })
           ) {
             return Boolean(String(value ?? '').trim());
@@ -209,13 +213,16 @@ const createPurchaseTransactionSchema = (transactionType: TransactionType) =>
               maintainBlankStockOfProduct:
                 this.parent.maintainBlankStockOfProduct,
               availableInRetailBuying: true,
-              availableInBulkBuying: true,
+              availableInBulkSelling: true,
+              hasIssuerLinks: true,
             }) ||
             isSurrenderBulkSaleProduct({
               productCode: code,
               maintainBlankStockOfProduct:
                 this.parent.maintainBlankStockOfProduct,
+              availableInRetailBuying: true,
               availableInBulkSelling: true,
+              hasIssuerLinks: true,
             });
           if (!needsIssuer) {
             return true;

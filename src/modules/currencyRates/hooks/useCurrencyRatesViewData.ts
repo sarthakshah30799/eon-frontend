@@ -25,6 +25,7 @@ interface CurrencyRatesViewData {
     availableInOtherTransaction: boolean;
     availableInDealCover: boolean;
     issuerProfileIds: string[];
+    instrumentIssuingAuthorityRequired: boolean;
   }>;
   currencies: ICurrencyProfile[];
   rates: ICurrencyRate[];
@@ -62,6 +63,8 @@ const loadCurrencyRatesViewData = async (): Promise<CurrencyRatesViewData> => {
       availableInOtherTransaction: product.availableInOtherTransaction,
       availableInDealCover: product.availableInDealCover,
       issuerProfileIds: product.issuerProfileIds ?? [],
+      instrumentIssuingAuthorityRequired:
+        product.instrumentIssuingAuthorityRequired === true,
     })),
     currencies,
     rates,

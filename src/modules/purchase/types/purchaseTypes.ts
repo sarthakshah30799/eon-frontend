@@ -229,6 +229,7 @@ export interface IPurchaseProductOption {
   availableInBulkBuying: boolean;
   availableInBulkSelling: boolean;
   issuerProfileIds?: string[];
+  instrumentIssuingAuthorityRequired?: boolean;
   availableInOtherTransaction: boolean;
   availableInDealCover: boolean;
 }

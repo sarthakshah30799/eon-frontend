@@ -90,39 +90,43 @@ export const TT_PRODUCT_CODE = 'TT';
 export const isTtProductCode = (productCode?: string | null) =>
   String(productCode ?? '').toUpperCase() === TT_PRODUCT_CODE;
 
-/**
- * Surrender products from Product Profile: non-blank-stock only.
- * No product-code allow/deny list.
- */
-export const isSurrenderMenuProduct = (product: {
+export type SurrenderProductLike = {
   productCode?: string | null;
   maintainBlankStockOfProduct?: boolean | null;
   availableInRetailBuying?: boolean | null;
   availableInBulkBuying?: boolean | null;
   availableInBulkSelling?: boolean | null;
-}) => product.maintainBlankStockOfProduct === false;
+  issuerProfileIds?: string[] | null;
+  hasIssuerLinks?: boolean | null;
+};
+
+/** Linked issuers required for surrender punch (sold CARD / issuer sale). */
+export const hasSurrenderIssuerLinks = (product: SurrenderProductLike) => {
+  if (product.hasIssuerLinks === true) return true;
+  if ((product.issuerProfileIds?.length ?? 0) > 0) return true;
+  return false;
+};
+
+/** @deprecated Prefer hasSurrenderIssuerLinks. */
+export const hasSurrenderIssuerPath = hasSurrenderIssuerLinks;
 
 /**
- * Surrender punch / menu: non-stocking and available for buying
- * (retail or bulk — both accepted for now).
+ * Surrender product from Product Profile (data-driven, no product-code list):
+ * blank stock off + linked issuers + retail buying + bulk selling.
  */
-export const isSurrenderBuyingProduct = (product: {
-  productCode?: string | null;
-  maintainBlankStockOfProduct?: boolean | null;
-  availableInRetailBuying?: boolean | null;
-  availableInBulkBuying?: boolean | null;
-}) =>
-  isSurrenderMenuProduct(product) &&
-  (product.availableInRetailBuying === true ||
-    product.availableInBulkBuying === true);
+export const isSurrenderMenuProduct = (product: SurrenderProductLike) =>
+  product.maintainBlankStockOfProduct === false &&
+  hasSurrenderIssuerLinks(product) &&
+  product.availableInRetailBuying === true &&
+  product.availableInBulkSelling === true;
 
-/** HO bulk issuer sale of reserved surrender units. */
-export const isSurrenderBulkSaleProduct = (product: {
-  productCode?: string | null;
-  maintainBlankStockOfProduct?: boolean | null;
-  availableInBulkSelling?: boolean | null;
-}) =>
-  isSurrenderMenuProduct(product) && product.availableInBulkSelling === true;
+/** Retail surrender purchase uses the same profile definition. */
+export const isSurrenderBuyingProduct = (product: SurrenderProductLike) =>
+  isSurrenderMenuProduct(product);
+
+/** HO bulk issuer sale uses the same profile definition. */
+export const isSurrenderBulkSaleProduct = (product: SurrenderProductLike) =>
+  isSurrenderMenuProduct(product);
 
 export const isMultiCurrencyCardProduct = (productCode?: string | null) =>
   String(productCode ?? '').toUpperCase() === MULTI_CURRENCY_CARD_PRODUCT_CODE;

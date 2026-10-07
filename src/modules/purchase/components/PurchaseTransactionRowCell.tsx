@@ -227,13 +227,16 @@ export const PurchaseTransactionRowCell = ({
     productCode: selectedProduct?.productCode,
     maintainBlankStockOfProduct: selectedProduct?.maintainBlankStockOfProduct,
     availableInRetailBuying: selectedProduct?.availableInRetailBuying,
-    availableInBulkBuying: selectedProduct?.availableInBulkBuying,
+    availableInBulkSelling: selectedProduct?.availableInBulkSelling,
+    issuerProfileIds: selectedProduct?.issuerProfileIds,
   }) && transactionType === TransactionTypeEnum.PURCHASE;
   const isEmBulkSale =
     isSurrenderBulkSaleProduct({
       productCode: selectedProduct?.productCode,
       maintainBlankStockOfProduct: selectedProduct?.maintainBlankStockOfProduct,
+      availableInRetailBuying: selectedProduct?.availableInRetailBuying,
       availableInBulkSelling: selectedProduct?.availableInBulkSelling,
+      issuerProfileIds: selectedProduct?.issuerProfileIds,
     }) && transactionType === TransactionTypeEnum.SALE;
   const showIssuerField =
     hasLinkedIssuers &&

@@ -148,6 +148,32 @@ const createPurchaseTransactionSchema = (transactionType: TransactionType) =>
           }
         }
 
+        if (
+          transactionType === TransactionTypeEnum.SALE &&
+          isSurrenderBulkSaleProduct({
+            productCode: this.parent.productCode,
+            maintainBlankStockOfProduct:
+              this.parent.maintainBlankStockOfProduct,
+            availableInRetailBuying: true,
+            availableInBulkSelling: true,
+            hasIssuerLinks: true,
+          }) &&
+          this.parent.cardId
+        ) {
+          const unitAmount = Number(
+            (this.parent.cardSnapshot as { amount?: string } | null)?.amount
+          );
+          const punchedFe = Number(value);
+          if (
+            Number.isFinite(unitAmount) &&
+            (!Number.isFinite(punchedFe) || punchedFe !== unitAmount)
+          ) {
+            return this.createError({
+              message: PURCHASE_TRANSACTION_TEXT.feAmountMustMatchEmUnit,
+            });
+          }
+        }
+
         return true;
       }
     ),
@@ -384,8 +410,17 @@ const passengerOtherDocumentSchema = yup.object({
   documentFile: yup.string().trim().default(''),
 });
 
-export const createPurchaseFormSchema = (transactionType: TransactionType) =>
-  yup.object({
+export type CreatePurchaseFormSchemaOptions = {
+  allowNullManualBook?: boolean;
+};
+
+export const createPurchaseFormSchema = (
+  transactionType: TransactionType,
+  options: CreatePurchaseFormSchemaOptions = {}
+) => {
+  const allowNullManualBook = Boolean(options.allowNullManualBook);
+
+  return yup.object({
     purchasePageType: yup
       .mixed<PurchasePageType>()
       .oneOf(
@@ -869,15 +904,13 @@ export const createPurchaseFormSchema = (transactionType: TransactionType) =>
           : []
       ),
     manualBookReferenceType: manualBookReferenceTypeSchema,
-    manualBookId: yup
-      .string()
-      .trim()
-      .required('Manual book reference is required'),
+    manualBookId: allowNullManualBook
+      ? yup.string().trim().default('')
+      : yup.string().trim().required('Manual book reference is required'),
     manualBookNo: yup.string().trim().default(''),
-    manualBookPageId: yup
-      .string()
-      .trim()
-      .required('Manual book page is required'),
+    manualBookPageId: allowNullManualBook
+      ? yup.string().trim().default('')
+      : yup.string().trim().required('Manual book page is required'),
     manualBookPageSnapshot: yup.mixed().nullable().default(null),
     cashierUserId: yup.string().trim().default(''),
     cashierUserCode: yup.string().trim().default(''),
@@ -1065,6 +1098,7 @@ export const createPurchaseFormSchema = (transactionType: TransactionType) =>
         }
       ),
   });
+};
 
 export const purchaseFormSchema = createPurchaseFormSchema(
   TransactionTypeEnum.PURCHASE

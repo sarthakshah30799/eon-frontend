@@ -147,7 +147,9 @@ export const PURCHASE_TRANSACTION_TEXT = {
   emSurrenderHint:
     'Select a sold CC/CM card. Enter FE amount and rate (must not exceed base sale price). Auto-surrender queues Branch→HO.',
   emBulkSaleHint:
-    'Select reserved EM units at this branch for issuer bulk sale.',
+    'Select a reserved EM unit first. FE Amount is taken from the unit and cannot be edited.',
+  feAmountMustMatchEmUnit:
+    'FE Amount must equal the selected EM unit amount',
   ttDealHint: 'Select an approved deal cover. FE, product, currency, and issuer are locked from the deal.',
   ttRemittanceRequired: 'TT remittance details are required before save',
   ttTravelCountryRequired:

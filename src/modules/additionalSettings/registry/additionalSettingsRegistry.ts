@@ -657,6 +657,24 @@ const TRANSACTION_CREDIT_POLICY_SUBCATEGORIES: readonly AdditionalSettingSubcate
     },
   ];
 
+const TRANSACTION_SETTINGS_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] =
+  [
+    {
+      code: AdditionalSettingsCodeEnum.AllowNullManualBookInSell,
+      label: 'ALLOW NULL MANUAL BOOK IN SELL',
+      valueType: 'boolean',
+      required: true,
+      placeholder: 'YES or NO',
+    },
+    {
+      code: AdditionalSettingsCodeEnum.AllowNullManualBookInPurchase,
+      label: 'ALLOW NULL MANUAL BOOK IN PURCHASE',
+      valueType: 'boolean',
+      required: true,
+      placeholder: 'YES or NO',
+    },
+  ];
+
 const REPORTS_SUBCATEGORIES: readonly AdditionalSettingSubcategoryDefinition[] =
   [
     {
@@ -785,6 +803,13 @@ export const ADDITIONAL_SETTING_DEFINITIONS: readonly AdditionalSettingCategoryD
       rendererKey: 'default',
       titleLocked: true,
       subcategories: TRANSACTION_CREDIT_POLICY_SUBCATEGORIES,
+    },
+    {
+      code: AdditionalSettingsCodeEnum.TransactionSettings,
+      label: 'TRANSACTION SETTINGS',
+      rendererKey: 'default',
+      titleLocked: true,
+      subcategories: TRANSACTION_SETTINGS_SUBCATEGORIES,
     },
     {
       code: AdditionalSettingsCodeEnum.Reports,

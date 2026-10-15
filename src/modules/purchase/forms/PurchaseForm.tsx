@@ -126,6 +126,7 @@ interface PurchaseFormProps {
   pricingData: IPurchasePricingData;
   partyProfileTypes: PartyProfileType[];
   requiresApproval: boolean;
+  allowNullManualBook?: boolean;
   handlingFeeControlAccountId?: string;
   defaultHandlingFeesAmount?: string;
   branchId?: string;
@@ -2093,6 +2094,7 @@ export const PurchaseForm = ({
   pricingData,
   partyProfileTypes,
   requiresApproval,
+  allowNullManualBook = false,
   handlingFeeControlAccountId,
   defaultHandlingFeesAmount,
   branchId = '',
@@ -2271,7 +2273,9 @@ export const PurchaseForm = ({
       }}
       resolver={
         yupResolver(
-          createPurchaseFormSchema(defaultValues.transactionType)
+          createPurchaseFormSchema(defaultValues.transactionType, {
+            allowNullManualBook,
+          })
         ) as unknown as Resolver<IPurchaseFormValues>
       }
       defaultValues={defaultValues}

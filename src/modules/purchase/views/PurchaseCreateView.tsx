@@ -84,6 +84,22 @@ export const PurchaseCreateView = ({
       ),
     [additionalSettings]
   );
+  const transactionType = useMemo(
+    () => getPurchaseTransactionType(purchasePageType),
+    [purchasePageType]
+  );
+  const allowNullManualBook = useMemo(
+    () =>
+      getAdditionalSettingBooleanValue(
+        additionalSettings,
+        AdditionalSettingsCodeEnum.TransactionSettings,
+        transactionType === TransactionTypeEnum.SALE
+          ? AdditionalSettingsCodeEnum.AllowNullManualBookInSell
+          : AdditionalSettingsCodeEnum.AllowNullManualBookInPurchase,
+        false
+      ),
+    [additionalSettings, transactionType]
+  );
   const sacCode = useMemo(
     () =>
       getAdditionalSettingTextValue(
@@ -128,7 +144,7 @@ export const PurchaseCreateView = ({
   const defaultValues = useMemo(
     () =>
       createEmptyPurchaseFormValues(
-        getPurchaseTransactionType(purchasePageType),
+        transactionType,
         getPurchaseTradeMode(purchasePageType),
         purchasePageType,
         branchProfile && !canSelectWorkplace
@@ -150,6 +166,7 @@ export const PurchaseCreateView = ({
       canSelectWorkplace,
       purchasePageType,
       transactionDatePolicy.defaultTransactionDate,
+      transactionType,
     ]
   );
   const pricingData = useMemo(
@@ -245,6 +262,7 @@ export const PurchaseCreateView = ({
         pricingData={pricingData}
         partyProfileTypes={partyProfileTypes}
         requiresApproval={requiresApproval}
+        allowNullManualBook={allowNullManualBook}
         handlingFeeControlAccountId={handlingFeeControlAccountId}
         defaultHandlingFeesAmount={defaultHandlingFeesAmount}
         branchId={canSelectWorkplace ? '' : (activeBranchId ?? '')}

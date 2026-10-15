@@ -68,6 +68,9 @@ export const AccountProfileEditView = () => {
     active: account.active,
     cmsBank: account.cmsBank,
     directRemittance: account.directRemittance,
+    visibleDuringRefund: Boolean(account.visibleDuringRefund),
+    refundLimit: account.refundLimit || '',
+    branchIds: account.branches?.map((b) => b.branchId) || account.branchIds || [],
   };
 
   return (

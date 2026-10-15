@@ -35,6 +35,10 @@ export interface IAccountProfile {
   active: boolean;
   cmsBank: boolean;
   directRemittance: boolean;
+  visibleDuringRefund?: boolean;
+  refundLimit?: string | null;
+  branchIds?: string[];
+  branches?: Array<{ id: string; branchId: string; branch?: IBranchProfile | null }>;
   createdAt: string;
   updatedAt: string;
 }
@@ -80,6 +84,9 @@ export type ICreateAccountProfile = Omit<
   active?: boolean;
   cmsBank?: boolean;
   directRemittance?: boolean;
+  visibleDuringRefund?: boolean;
+  refundLimit?: string | null;
+  branchIds?: string[];
 };
 
 export interface IAccountProfileListQuery extends IOffsetPaginationParams {
@@ -95,6 +102,8 @@ export interface IAccountProfileListQuery extends IOffsetPaginationParams {
   receipt?: boolean;
   payment?: boolean;
   journalVoucher?: boolean;
+  visibleDuringRefund?: boolean;
+  branchId?: string;
 }
 
 export type IAccountProfileListResponse = IPaginatedResponse<IAccountProfile>;

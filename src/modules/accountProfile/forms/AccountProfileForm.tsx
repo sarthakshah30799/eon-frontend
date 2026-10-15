@@ -209,14 +209,15 @@ export const AccountProfileForm = ({
     useListCurrencyProfiles({
       activeOnly: true,
     });
-  const currencies = currenciesPage?.data ?? [];
   const currencyOptions = useMemo(
     () =>
-      currencies.filter(isAccountProfileCurrencyOption).map(currency => ({
-        value: currency.id,
-        label: `${currency.currencyCode} - ${currency.currencyName}`,
-      })),
-    [currencies]
+      (currenciesPage?.data ?? [])
+        .filter(isAccountProfileCurrencyOption)
+        .map(currency => ({
+          value: currency.id,
+          label: `${currency.currencyCode} - ${currency.currencyName}`,
+        })),
+    [currenciesPage?.data]
   );
 
   const onCancel = () => {
@@ -486,6 +487,38 @@ export const AccountProfileForm = ({
             label="Zero Balance at EOD"
             disabled={isDisabled}
           />
+        </div>
+      </CardSection>
+
+      <CardSection heading="Advance Refund Configuration">
+        <div className="space-y-4">
+          <div className="rounded-sm border border-border-primary bg-surface-primary p-3 hover:border-border-secondary transition-all w-fit">
+            <FormFieldCheckbox
+              name="visibleDuringRefund"
+              label="Visible During Refund"
+              disabled={isDisabled}
+            />
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <FormFieldInput
+              name="refundLimit"
+              label="Refund Limit (₹)"
+              placeholder="e.g. 50000.00 (leave blank for unlimited)"
+              disabled={isDisabled}
+            />
+            <FormFieldSelect
+              name="branchIds"
+              label="Assigned Branches (Leave empty for all branches / HO)"
+              placeholder="Select Branches"
+              disabled={isDisabled}
+              loadOptions={loadBranchOptions}
+              defaultOptions={true}
+              isMulti
+              pagination
+              isClearable
+            />
+          </div>
         </div>
       </CardSection>
 

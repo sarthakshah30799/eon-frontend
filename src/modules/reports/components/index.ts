@@ -28,3 +28,5 @@ export { default as Flm6SalesToFfmcFiltersSection } from './Flm6SalesToFfmcFilte
 export { default as Flm6SalesToFfmcTable } from './Flm6SalesToFfmcTable';
 export { default as Flm8CnStatementFiltersSection } from './Flm8CnStatementFiltersSection';
 export { default as Flm8CnStatementTable } from './Flm8CnStatementTable';
+export { default as LrsDailyReportFiltersSection } from './LrsDailyReportFiltersSection';
+export { default as LrsDailyReportTable } from './LrsDailyReportTable';

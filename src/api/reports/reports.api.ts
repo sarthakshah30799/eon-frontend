@@ -34,6 +34,9 @@ import type {
   IFlm8CnStatementResponse,
   IFlm8CnStatementLockDataRequest,
   IFlm8CnStatementLockDataResponse,
+  ILrsDailyReportRequest,
+  ILrsDailyReportResponse,
+  LrsDailyReportExportFormat,
   ReportExportFormat,
 } from '@/modules/reports/types';
 import { API_BASE_URL } from '@/config/api';
@@ -980,6 +983,64 @@ export const reportsApi = {
     });
 
     return `${API_BASE_URL}/reports/currency-balance/export${query}`;
+  },
+
+  getLrsDailyReport: async (
+    params: ILrsDailyReportRequest
+  ): Promise<ILrsDailyReportResponse> => {
+    const res = await apiClient.get<ILrsDailyReportResponse>(
+      `/reports/lrs-daily-report${buildQueryString(params)}`
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      return {
+        startDate: '',
+        endDate: '',
+        date: '',
+        reportFormat: 'cims',
+        bankName: '',
+        bankCode: '',
+        usdRate: '',
+        columns: [],
+        rows: [],
+        uploadLines: [],
+        totalAmountUsd: '0.00',
+        totalAmountInr: '0.00',
+        recordCount: 0,
+      };
+    }
+
+    return res.data;
+  },
+
+  downloadLrsDailyReport: async (
+    params: ILrsDailyReportRequest,
+    format: LrsDailyReportExportFormat
+  ): Promise<{ blob: Blob; filename?: string }> => {
+    const query = buildQueryString({
+      ...params,
+      format,
+    });
+    const res = await apiClient.getDownload(
+      `/reports/lrs-daily-report/export${query}`
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      throw new Error('Failed to download LRS daily report');
+    }
+
+    return {
+      blob: res.data.blob,
+      filename: res.data.filename || `lrs-daily-report.${format}`,
+    };
   },
 };
 

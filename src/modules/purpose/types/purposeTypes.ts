@@ -99,6 +99,7 @@ export interface IPurposeListQuery extends IOffsetPaginationParams {
   search?: string;
   transactionType?: TransactionType;
   partyProfileType?: PurposePartyProfileType;
+  hasRbiCode?: boolean;
 }
 
 export type IPurposeListResponse = IPaginatedResponse<IPurpose>;

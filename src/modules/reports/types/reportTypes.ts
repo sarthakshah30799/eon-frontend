@@ -47,6 +47,7 @@ export const ReportPageTypeEnum = {
   FLM6_SALES_TO_FFMC: 'flm6-sales-to-ffmc',
   FLM7_SURRENDER_STATEMENT: 'flm7-surrender-statement',
   FLM8_CN_STATEMENT: 'flm8-cn-statement',
+  LRS_DAILY_REPORT: 'lrs-daily-report',
 } as const;
 
 export type ReportPageType =
@@ -90,6 +91,7 @@ const REPORT_PAGE_TITLE_BY_TYPE: Record<ReportPageType, string> = {
   [ReportPageTypeEnum.FLM6_SALES_TO_FFMC]: 'FLM 6 - Sales to FFMC',
   [ReportPageTypeEnum.FLM7_SURRENDER_STATEMENT]: 'FLM 7 - Surrender Statement',
   [ReportPageTypeEnum.FLM8_CN_STATEMENT]: 'FLM 8 - CN Statement',
+  [ReportPageTypeEnum.LRS_DAILY_REPORT]: 'LRS Daily Report',
 };
 
 export const getReportPageTypeFromSlug = (
@@ -618,4 +620,70 @@ export type IFlm6SalesToFfmcRequest = IFlm4PurchaseFromFfmcRequest;
 export interface IReportTemplateOption {
   id: string;
   label: string;
+}
+
+export const LrsDailyReportFormatEnum = {
+  CIMS: 'cims',
+  CIMS_UPLOAD: 'cims_upload',
+} as const;
+
+export type LrsDailyReportFormat =
+  (typeof LrsDailyReportFormatEnum)[keyof typeof LrsDailyReportFormatEnum];
+
+export const LrsDailyReportExportFormatEnum = {
+  XLSX: 'xlsx',
+  TXT: 'txt',
+  PDF: 'pdf',
+} as const;
+
+export type LrsDailyReportExportFormat =
+  (typeof LrsDailyReportExportFormatEnum)[keyof typeof LrsDailyReportExportFormatEnum];
+
+export interface ILrsDailyReportColumn {
+  key: string;
+  label: string;
+}
+
+export interface ILrsDailyReportRow {
+  recordIdentifier: string;
+  panOfRemitter: string;
+  nameOfRemitter: string;
+  aadhaarNumber: string;
+  beneficiaryCountryCode: string;
+  dateOfRemittance: string;
+  purposeCode: string;
+  currencyCode: string;
+  amountUsd: string;
+  amountInr: string;
+  remarks: string;
+}
+
+export interface ILrsDailyReportResponse {
+  startDate: string;
+  endDate: string;
+  date: string;
+  reportFormat: LrsDailyReportFormat;
+  bankName: string;
+  bankCode: string;
+  usdRate: string;
+  columns: ILrsDailyReportColumn[];
+  rows: ILrsDailyReportRow[];
+  uploadLines: string[];
+  totalAmountUsd: string;
+  totalAmountInr: string;
+  recordCount: number;
+}
+
+export interface ILrsDailyReportRequest {
+  startDate?: string;
+  endDate?: string;
+  branchIds?: string[];
+  productId?: string;
+  issuerPartyProfileId?: string;
+  purposeId?: string;
+  usdRate?: number;
+  reportFormat?: LrsDailyReportFormat;
+  includeCorporateTransactions?: boolean;
+  bankName?: string;
+  bankCode?: string;
 }

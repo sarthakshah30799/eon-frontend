@@ -30,3 +30,5 @@ export * from './useFlm6SalesToFfmc';
 export * from './useFlm8CnStatementFilters';
 export * from './useFlm8CnStatement';
 export * from './useFlm8CnStatementLockData';
+export * from './useLrsDailyReportFilters';
+export * from './useLrsDailyReport';

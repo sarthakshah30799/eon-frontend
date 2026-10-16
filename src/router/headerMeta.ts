@@ -109,6 +109,10 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
     path: '/reports/flm8-cn-statement',
     meta: { title: 'FLM 8 - CN Statement' },
   },
+  {
+    path: '/reports/lrs-daily-report',
+    meta: { title: 'LRS Daily Report' },
+  },
   { path: '/card-stock', meta: { title: 'Receipt Stock' } },
   { path: '/card-stock/create', meta: { title: 'Create Receipt Stock' } },
   { path: '/card-stock/edit/:id', meta: { title: 'Receipt Stock Details' } },

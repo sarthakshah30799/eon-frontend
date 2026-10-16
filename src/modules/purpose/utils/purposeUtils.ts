@@ -16,6 +16,7 @@ const formatDateForInput = (value?: string | Date | null): string => {
 
 export const createEmptyPurposeFormValues = (): ICreatePurpose => ({
   code: '',
+  rbiCode: '',
   description: '',
   threshold: 0,
   rate: 0,
@@ -30,6 +31,7 @@ export const createEmptyPurposeFormValues = (): ICreatePurpose => ({
 
 export const mapPurposeToFormValues = (purpose: IPurpose): ICreatePurpose => ({
   code: purpose.code,
+  rbiCode: purpose.rbiCode ?? '',
   description: purpose.description,
   threshold: purpose.threshold,
   rate: purpose.rate,
@@ -59,6 +61,7 @@ export const sanitizePurposeFormValues = (
 ): ICreatePurpose => ({
   ...values,
   code: values.code.trim().toUpperCase(),
+  rbiCode: values.rbiCode.trim().toUpperCase(),
   description: values.description.trim(),
   threshold: Number(values.threshold || 0),
   rate: Number(values.rate || 0),

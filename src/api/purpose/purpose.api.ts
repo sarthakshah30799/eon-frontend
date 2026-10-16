@@ -49,6 +49,7 @@ const mapSlab = (slab: BackendPurposeSlab) => ({
 
 const mapBackendToFrontend = (purpose: BackendPurpose): IPurpose => ({
   ...purpose,
+  rbiCode: purpose.rbiCode ?? null,
   threshold: Number(purpose.threshold),
   rate: Number(purpose.rate),
   slabs: (purpose.slabs ?? []).map(mapSlab),
@@ -63,6 +64,7 @@ const mapBackendToFrontend = (purpose: BackendPurpose): IPurpose => ({
 
 const preparePayload = (values: ICreatePurpose): ICreatePurpose => ({
   code: values.code.trim().toUpperCase(),
+  rbiCode: values.rbiCode.trim().toUpperCase(),
   description: values.description.trim(),
   threshold: Number(values.threshold || 0),
   rate: Number(values.rate || 0),

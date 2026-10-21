@@ -30,3 +30,11 @@ export { default as Flm8CnStatementFiltersSection } from './Flm8CnStatementFilte
 export { default as Flm8CnStatementTable } from './Flm8CnStatementTable';
 export { default as LrsDailyReportFiltersSection } from './LrsDailyReportFiltersSection';
 export { default as LrsDailyReportTable } from './LrsDailyReportTable';
+export { Flm8Ad2FiltersSection } from './Flm8Ad2FiltersSection';
+export { Flm8Ad2Table } from './Flm8Ad2Table';
+export { TourPaxReportFiltersSection } from './TourPaxReportFiltersSection';
+export { TourPaxReportTable } from './TourPaxReportTable';
+export { OutstandingTransactionReportFiltersSection } from './OutstandingTransactionReportFiltersSection';
+export { OutstandingTransactionReportTable } from './OutstandingTransactionReportTable';
+export { AgeingReportFiltersSection } from './AgeingReportFiltersSection';
+export { AgeingReportTable } from './AgeingReportTable';

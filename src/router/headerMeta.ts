@@ -113,6 +113,22 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
     path: '/reports/lrs-daily-report',
     meta: { title: 'LRS Daily Report' },
   },
+  {
+    path: '/reports/flm8-ad2',
+    meta: { title: 'FLM 8 - AD 2' },
+  },
+  {
+    path: '/reports/tour-pax-report',
+    meta: { title: 'Tour Pax Report' },
+  },
+  {
+    path: '/reports/outstanding-transaction-report',
+    meta: { title: 'Outstanding Transaction Report' },
+  },
+  {
+    path: '/reports/ageing-report',
+    meta: { title: 'Ageing Report' },
+  },
   { path: '/card-stock', meta: { title: 'Receipt Stock' } },
   { path: '/card-stock/create', meta: { title: 'Create Receipt Stock' } },
   { path: '/card-stock/edit/:id', meta: { title: 'Receipt Stock Details' } },

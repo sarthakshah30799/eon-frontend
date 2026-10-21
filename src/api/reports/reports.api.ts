@@ -36,6 +36,14 @@ import type {
   IFlm8CnStatementLockDataResponse,
   ILrsDailyReportRequest,
   ILrsDailyReportResponse,
+  IFlm8Ad2Request,
+  IFlm8Ad2Response,
+  ITourPaxReportRequest,
+  ITourPaxReportResponse,
+  IOutstandingTransactionReportRequest,
+  IOutstandingTransactionReportResponse,
+  IAgeingReportRequest,
+  IAgeingReportResponse,
   LrsDailyReportExportFormat,
   ReportExportFormat,
 } from '@/modules/reports/types';
@@ -1040,6 +1048,212 @@ export const reportsApi = {
     return {
       blob: res.data.blob,
       filename: res.data.filename || `lrs-daily-report.${format}`,
+    };
+  },
+
+  getFlm8Ad2: async (params: IFlm8Ad2Request): Promise<IFlm8Ad2Response> => {
+    const res = await apiClient.get<IFlm8Ad2Response>(
+      `/reports/flm8-ad2${buildQueryString(params)}`
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      return {
+        reportFormat: params.reportFormat ?? 'currency',
+        startDate: params.startDate ?? '',
+        endDate: params.endDate ?? '',
+        apConnect: Boolean(params.apConnect),
+        message: '',
+        columns: [],
+        rows: [],
+      };
+    }
+
+    return res.data;
+  },
+
+  downloadFlm8Ad2: async (
+    params: IFlm8Ad2Request,
+    format: ReportExportFormat
+  ): Promise<{ blob: Blob; filename?: string }> => {
+    const query = buildQueryString({
+      ...params,
+      format,
+    });
+    const res = await apiClient.getDownload(
+      `/reports/flm8-ad2/export${query}`
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      throw new Error('Failed to download FLM 8 - AD 2');
+    }
+
+    return {
+      blob: res.data.blob,
+      filename: res.data.filename || `flm8-ad2.${format}`,
+    };
+  },
+
+  getTourPaxReport: async (
+    params: ITourPaxReportRequest
+  ): Promise<ITourPaxReportResponse> => {
+    const res = await apiClient.get<ITourPaxReportResponse>(
+      `/reports/tour-pax-report${buildQueryString(params)}`
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      return {
+        startDate: params.startDate ?? '',
+        endDate: params.endDate ?? '',
+        message: '',
+        columns: [],
+        rows: [],
+      };
+    }
+
+    return res.data;
+  },
+
+  downloadTourPaxReport: async (
+    params: ITourPaxReportRequest,
+    format: ReportExportFormat
+  ): Promise<{ blob: Blob; filename?: string }> => {
+    const query = buildQueryString({
+      ...params,
+      format,
+    });
+    const res = await apiClient.getDownload(
+      `/reports/tour-pax-report/export${query}`
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      throw new Error('Failed to download Tour Pax Report');
+    }
+
+    return {
+      blob: res.data.blob,
+      filename: res.data.filename || `tour-pax-report.${format}`,
+    };
+  },
+
+  getOutstandingTransactionReport: async (
+    params: IOutstandingTransactionReportRequest
+  ): Promise<IOutstandingTransactionReportResponse> => {
+    const res = await apiClient.get<IOutstandingTransactionReportResponse>(
+      `/reports/outstanding-transaction-report${buildQueryString(params)}`
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      return {
+        startDate: params.startDate ?? '',
+        endDate: params.endDate ?? '',
+        accountingDate: params.accountingDate ?? '',
+        grouping: params.grouping ?? 'code',
+        layout: params.layout ?? 'detail',
+        message: '',
+        columns: [],
+        rows: [],
+      };
+    }
+
+    return res.data;
+  },
+
+  downloadOutstandingTransactionReport: async (
+    params: IOutstandingTransactionReportRequest,
+    format: ReportExportFormat
+  ): Promise<{ blob: Blob; filename?: string }> => {
+    const query = buildQueryString({
+      ...params,
+      format,
+    });
+    const res = await apiClient.getDownload(
+      `/reports/outstanding-transaction-report/export${query}`
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      throw new Error('Failed to download Outstanding Transaction Report');
+    }
+
+    return {
+      blob: res.data.blob,
+      filename: res.data.filename || `outstanding-transaction-report.${format}`,
+    };
+  },
+
+  getAgeingReport: async (
+    params: IAgeingReportRequest
+  ): Promise<IAgeingReportResponse> => {
+    const res = await apiClient.get<IAgeingReportResponse>(
+      `/reports/ageing-report${buildQueryString(params)}`
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      return {
+        startDate: params.startDate ?? '',
+        endDate: params.endDate ?? '',
+        asOnDate: params.endDate ?? '',
+        layout: params.layout ?? 'detail',
+        scope: params.scope ?? 'branch',
+        message: '',
+        columns: [],
+        rows: [],
+      };
+    }
+
+    return res.data;
+  },
+
+  downloadAgeingReport: async (
+    params: IAgeingReportRequest,
+    format: ReportExportFormat
+  ): Promise<{ blob: Blob; filename?: string }> => {
+    const query = buildQueryString({
+      ...params,
+      format,
+    });
+    const res = await apiClient.getDownload(
+      `/reports/ageing-report/export${query}`
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      throw new Error('Failed to download Ageing Report');
+    }
+
+    return {
+      blob: res.data.blob,
+      filename: res.data.filename || `ageing-report.${format}`,
     };
   },
 };

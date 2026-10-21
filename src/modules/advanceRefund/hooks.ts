@@ -4,6 +4,7 @@ import { advanceRefundApi } from '@/api/advanceRefund/advanceRefund.api';
 import { ADVANCE_REFUND_QUERY_KEYS, ADVANCE_REFUND_TEXT } from './constants';
 import type {
   AdvanceRefundListQuery,
+  AvailableAdvancesParams,
   CreateAdvanceRefundPayload,
   HonourAdvanceRefundPayload,
 } from './types';
@@ -21,22 +22,27 @@ export const useAdvanceRefund = (id: string) =>
     enabled: Boolean(id),
   });
 
-export const useAvailableAdvances = (params: {
-  partyProfileId?: string;
-  branchId?: string;
-  asOnDate?: string;
-  search?: string;
-}) =>
+export const useAvailableAdvances = (
+  params: Partial<AvailableAdvancesParams> & { enabled?: boolean }
+) =>
   useQuery({
     queryKey: ADVANCE_REFUND_QUERY_KEYS.availableAdvances(params),
     queryFn: () =>
       advanceRefundApi.getAvailableAdvances({
-        partyProfileId: params.partyProfileId!,
+        panNumber: params.panNumber!,
         branchId: params.branchId!,
-        asOnDate: params.asOnDate!,
+        asOnDate: params.asOnDate,
+        partyProfileId: params.partyProfileId,
         search: params.search,
       }),
-    enabled: Boolean(params.partyProfileId && params.branchId && params.asOnDate),
+    enabled:
+      params.enabled ??
+      Boolean(
+        params.panNumber &&
+          params.panNumber.trim().length === 10 &&
+          params.branchId &&
+          params.asOnDate
+      ),
   });
 
 export const useCreateAdvanceRefund = () => {

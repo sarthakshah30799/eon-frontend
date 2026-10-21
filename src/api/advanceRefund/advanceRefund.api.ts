@@ -6,6 +6,7 @@ import type {
   AdvanceRefund,
   AdvanceRefundListQuery,
   AvailableAdvanceReceipt,
+  AvailableAdvancesParams,
   CreateAdvanceRefundPayload,
   HonourAdvanceRefundPayload,
 } from '@/modules/advanceRefund/types';
@@ -46,12 +47,7 @@ export const advanceRefundApi = {
     return response.data;
   },
 
-  getAvailableAdvances: async (params: {
-    partyProfileId: string;
-    branchId: string;
-    asOnDate: string;
-    search?: string;
-  }) => {
+  getAvailableAdvances: async (params: AvailableAdvancesParams) => {
     const response = await apiClient.get<AvailableAdvanceReceipt[]>(
       `${BASE}/available-advances${buildQueryString(params)}`
     );

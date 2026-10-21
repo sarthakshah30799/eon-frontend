@@ -43,11 +43,22 @@ export interface AvailableAdvanceReceipt {
   transactionDate: string;
   partyProfileId: string;
   partyProfileSnapshot?: AdvanceRefundSnapshot;
+  panNumber?: string | null;
+  panName?: string | null;
+  panDob?: string | null;
   originalAmount: string;
   consumedBillsAmount: string;
   consumedRefundsAmount: string;
   consumedAmount: string;
   availableAmount: string;
+}
+
+export interface AvailableAdvancesParams {
+  panNumber: string;
+  branchId: string;
+  asOnDate?: string;
+  partyProfileId?: string;
+  search?: string;
 }
 
 export interface AdvanceRefundItem {
@@ -121,6 +132,7 @@ export interface AdvanceRefundFormValues {
   counterId: string;
   transactionDate: string;
   asOnDate: string;
+  partyTypeOptionId?: string;
   partyProfileId: string;
   panNumber: string;
   panName: string;

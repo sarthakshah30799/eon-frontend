@@ -15,6 +15,11 @@ import ReportSalePurchaseView, {
   Flm6SalesToFfmcView,
   Flm7SurrenderStatementView,
   Flm8CnStatementView,
+  LrsDailyReportView,
+  Flm8Ad2View,
+  TourPaxReportView,
+  OutstandingTransactionReportView,
+  AgeingReportView,
   ProductProfitReportView,
   SpecialReportView,
 } from '@/modules/reports/views';
@@ -91,6 +96,18 @@ const ReportsPage = () => {
       return <Flm7SurrenderStatementView key={`${slug}${location.search}`} />;
     case ReportPageTypeEnum.FLM8_CN_STATEMENT:
       return <Flm8CnStatementView key={`${slug}${location.search}`} />;
+    case ReportPageTypeEnum.LRS_DAILY_REPORT:
+      return <LrsDailyReportView key={`${slug}${location.search}`} />;
+    case ReportPageTypeEnum.FLM8_AD2:
+      return <Flm8Ad2View key={`${slug}${location.search}`} />;
+    case ReportPageTypeEnum.TOUR_PAX_REPORT:
+      return <TourPaxReportView key={`${slug}${location.search}`} />;
+    case ReportPageTypeEnum.OUTSTANDING_TRANSACTION_REPORT:
+      return (
+        <OutstandingTransactionReportView key={`${slug}${location.search}`} />
+      );
+    case ReportPageTypeEnum.AGEING_REPORT:
+      return <AgeingReportView key={`${slug}${location.search}`} />;
     case ReportPageTypeEnum.SALE_PURCHASE:
     default:
       return <ReportSalePurchaseView key={`${slug}${location.search}`} />;

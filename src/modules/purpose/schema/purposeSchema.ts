@@ -47,6 +47,7 @@ export const purposeSchema = yup
       .trim()
       .length(2, 'Code must be exactly 2 characters')
       .required('Code is required'),
+    rbiCode: yup.string().trim().default(''),
     description: yup.string().trim().required('Description is required'),
     threshold: yup
       .number()

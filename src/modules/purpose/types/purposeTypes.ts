@@ -43,6 +43,7 @@ export interface IPurposeSubpurpose {
 export interface IPurpose {
   id: string;
   code: string;
+  rbiCode: string | null;
   description: string;
   threshold: number;
   rate: number;
@@ -67,6 +68,7 @@ export type ICreatePurposeSlab = Omit<
 export type ICreatePurpose = Omit<
   IPurpose,
   | 'id'
+  | 'rbiCode'
   | 'slabs'
   | 'subpurposes'
   | 'createdAt'
@@ -74,6 +76,7 @@ export type ICreatePurpose = Omit<
   | 'createdBy'
   | 'updatedBy'
 > & {
+  rbiCode: string;
   slabs: Array<{
     id?: string;
     sortOrder: number;
@@ -96,6 +99,7 @@ export interface IPurposeListQuery extends IOffsetPaginationParams {
   search?: string;
   transactionType?: TransactionType;
   partyProfileType?: PurposePartyProfileType;
+  hasRbiCode?: boolean;
 }
 
 export type IPurposeListResponse = IPaginatedResponse<IPurpose>;

@@ -11,6 +11,7 @@ import {
   TABLE_ACTION_ICON_CLASSNAME,
 } from '@/components/ui/table';
 import type { PaginationControlsProps } from '@/components/ui';
+import { PURPOSE_TEXTS } from '../constants/purposeConstants';
 import {
   formatPurposeRateLabel,
   formatPurposeScopeLabel,
@@ -32,6 +33,7 @@ interface PurposeTableProps extends PaginationControlsProps {
 interface PurposeTableRow {
   id: string;
   code: string;
+  rbiCode: string;
   description: string;
   threshold: string;
   rate: string;
@@ -64,6 +66,7 @@ export const PurposeTable = ({
       purposes.map(purpose => ({
         id: purpose.id,
         code: purpose.code,
+        rbiCode: purpose.rbiCode || '-',
         description: purpose.description,
         threshold: Number(purpose.threshold || 0).toFixed(2),
         rate: Number(purpose.rate || 0).toFixed(2),
@@ -83,6 +86,7 @@ export const PurposeTable = ({
 
   const columns: TableColumnDef<PurposeTableRow>[] = [
     { accessorKey: 'code', header: 'Code' },
+    { accessorKey: 'rbiCode', header: PURPOSE_TEXTS.RBI_CODE },
     { accessorKey: 'description', header: 'Description' },
     { accessorKey: 'partyScope', header: 'Profile Type' },
     { accessorKey: 'transactionScope', header: 'Transaction Type' },

@@ -81,14 +81,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const checkAuth = async () => {
     try {
-      const currentUser = await authApi.getCurrentUser();
-      const workplace = await authApi.getWorkplace().catch(() => ({
-        activeBranchId: null,
-        activeCounterId: null,
-      }));
-      const nextPolicyContext = await authApi
-        .getPolicyContext()
-        .catch(() => null);
+      const [currentUser, workplace, nextPolicyContext] = await Promise.all([
+        authApi.getCurrentUser(),
+        authApi.getWorkplace().catch(() => ({
+          activeBranchId: null,
+          activeCounterId: null,
+        })),
+        authApi.getPolicyContext().catch(() => null),
+      ]);
       const nextUser = {
         ...currentUser,
         isHo: currentUser.isHo || currentUser.isHoStaff,

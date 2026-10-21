@@ -16,3 +16,8 @@ export { default as Flm5SalesToPublicView } from './Flm5SalesToPublicView';
 export { default as Flm6SalesToFfmcView } from './Flm6SalesToFfmcView';
 export { default as Flm7SurrenderStatementView } from './Flm7SurrenderStatementView';
 export { default as Flm8CnStatementView } from './Flm8CnStatementView';
+export { default as LrsDailyReportView } from './LrsDailyReportView';
+export { default as Flm8Ad2View } from './Flm8Ad2View';
+export { default as TourPaxReportView } from './TourPaxReportView';
+export { default as OutstandingTransactionReportView } from './OutstandingTransactionReportView';
+export { default as AgeingReportView } from './AgeingReportView';

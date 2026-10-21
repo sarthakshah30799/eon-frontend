@@ -22,6 +22,7 @@ export const PURPOSE_TEXTS = {
   SUBPURPOSES_SUBTITLE:
     'Add subpurpose codes used by Deal Cover Rate and remittance flows.',
   ADD_SUBPURPOSE: 'Add Subpurpose',
+  RBI_CODE: 'RBI Code',
 } as const;
 
 export const PURPOSE_RATE_TYPE_OPTIONS = [

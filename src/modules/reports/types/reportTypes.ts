@@ -47,6 +47,11 @@ export const ReportPageTypeEnum = {
   FLM6_SALES_TO_FFMC: 'flm6-sales-to-ffmc',
   FLM7_SURRENDER_STATEMENT: 'flm7-surrender-statement',
   FLM8_CN_STATEMENT: 'flm8-cn-statement',
+  FLM8_AD2: 'flm8-ad2',
+  LRS_DAILY_REPORT: 'lrs-daily-report',
+  TOUR_PAX_REPORT: 'tour-pax-report',
+  OUTSTANDING_TRANSACTION_REPORT: 'outstanding-transaction-report',
+  AGEING_REPORT: 'ageing-report',
 } as const;
 
 export type ReportPageType =
@@ -90,6 +95,12 @@ const REPORT_PAGE_TITLE_BY_TYPE: Record<ReportPageType, string> = {
   [ReportPageTypeEnum.FLM6_SALES_TO_FFMC]: 'FLM 6 - Sales to FFMC',
   [ReportPageTypeEnum.FLM7_SURRENDER_STATEMENT]: 'FLM 7 - Surrender Statement',
   [ReportPageTypeEnum.FLM8_CN_STATEMENT]: 'FLM 8 - CN Statement',
+  [ReportPageTypeEnum.FLM8_AD2]: 'FLM 8 - AD 2',
+  [ReportPageTypeEnum.LRS_DAILY_REPORT]: 'LRS Daily Report',
+  [ReportPageTypeEnum.TOUR_PAX_REPORT]: 'Tour Pax Report',
+  [ReportPageTypeEnum.OUTSTANDING_TRANSACTION_REPORT]:
+    'Outstanding Transaction Report',
+  [ReportPageTypeEnum.AGEING_REPORT]: 'Ageing Report',
 };
 
 export const getReportPageTypeFromSlug = (
@@ -618,4 +629,210 @@ export type IFlm6SalesToFfmcRequest = IFlm4PurchaseFromFfmcRequest;
 export interface IReportTemplateOption {
   id: string;
   label: string;
+}
+
+export const LrsDailyReportFormatEnum = {
+  CIMS: 'cims',
+  CIMS_UPLOAD: 'cims_upload',
+} as const;
+
+export type LrsDailyReportFormat =
+  (typeof LrsDailyReportFormatEnum)[keyof typeof LrsDailyReportFormatEnum];
+
+export const LrsDailyReportExportFormatEnum = {
+  XLSX: 'xlsx',
+  TXT: 'txt',
+  PDF: 'pdf',
+} as const;
+
+export type LrsDailyReportExportFormat =
+  (typeof LrsDailyReportExportFormatEnum)[keyof typeof LrsDailyReportExportFormatEnum];
+
+export interface ILrsDailyReportColumn {
+  key: string;
+  label: string;
+}
+
+export interface ILrsDailyReportRow {
+  recordIdentifier: string;
+  panOfRemitter: string;
+  nameOfRemitter: string;
+  aadhaarNumber: string;
+  beneficiaryCountryCode: string;
+  dateOfRemittance: string;
+  purposeCode: string;
+  currencyCode: string;
+  amountUsd: string;
+  amountInr: string;
+  remarks: string;
+}
+
+export interface ILrsDailyReportResponse {
+  startDate: string;
+  endDate: string;
+  date: string;
+  reportFormat: LrsDailyReportFormat;
+  bankName: string;
+  bankCode: string;
+  usdRate: string;
+  columns: ILrsDailyReportColumn[];
+  rows: ILrsDailyReportRow[];
+  uploadLines: string[];
+  totalAmountUsd: string;
+  totalAmountInr: string;
+  recordCount: number;
+}
+
+export type Flm8Ad2ReportFormat = 'currency' | 'purpose' | 'party';
+
+export interface IFlm8Ad2Column {
+  key: string;
+  label: string;
+}
+
+export interface IFlm8Ad2Row {
+  rowType: 'ITEM' | 'TOTAL';
+  lineKey: string;
+  particulars: string;
+  [key: string]: string;
+}
+
+export interface IFlm8Ad2Response {
+  reportFormat: Flm8Ad2ReportFormat;
+  startDate: string;
+  endDate: string;
+  apConnect: boolean;
+  message: string;
+  columns: IFlm8Ad2Column[];
+  rows: IFlm8Ad2Row[];
+}
+
+export interface ITourPaxReportColumn {
+  key: string;
+  label: string;
+}
+
+export interface ITourPaxReportRow {
+  lineKey: string;
+  [key: string]: string;
+}
+
+export interface ITourPaxReportResponse {
+  startDate: string;
+  endDate: string;
+  message: string;
+  columns: ITourPaxReportColumn[];
+  rows: ITourPaxReportRow[];
+}
+
+export type OutstandingGrouping = 'code' | 'agent';
+export type OutstandingReportLayout = 'detail' | 'summary';
+export type OutstandingPartySelection = 'msme' | 'others' | 'all';
+export type OutstandingTransactionSide = 'purchase' | 'sale' | 'both';
+
+export interface IOutstandingTransactionReportColumn {
+  key: string;
+  label: string;
+}
+
+export interface IOutstandingTransactionReportRow {
+  lineKey: string;
+  rowType: 'BRANCH' | 'PARTY' | 'ITEM' | 'TOTAL';
+  [key: string]: string;
+}
+
+export interface IOutstandingTransactionReportResponse {
+  startDate: string;
+  endDate: string;
+  accountingDate: string;
+  grouping: OutstandingGrouping;
+  layout: OutstandingReportLayout;
+  message: string;
+  columns: IOutstandingTransactionReportColumn[];
+  rows: IOutstandingTransactionReportRow[];
+}
+
+export interface IOutstandingTransactionReportRequest {
+  startDate?: string;
+  endDate?: string;
+  accountingDate?: string;
+  partySelection?: OutstandingPartySelection;
+  entityTypeId?: string;
+  branchIds?: string[];
+  partyProfileIds?: string[];
+  transactionSide?: OutstandingTransactionSide;
+  includeInterest?: boolean;
+  includeInsurance?: boolean;
+  grouping?: OutstandingGrouping;
+  layout?: OutstandingReportLayout;
+}
+
+export type AgeingReportLayout = 'detail' | 'summary';
+export type AgeingEefcFilter = 'eefc' | 'non_eefc' | 'all';
+export type AgeingScope = 'branch' | 'consolidated';
+
+export interface IAgeingReportColumn {
+  key: string;
+  label: string;
+  rangeLabel: string;
+}
+
+export interface IAgeingReportRow {
+  lineKey: string;
+  rowType: 'BRANCH' | 'PARTY' | 'ITEM' | 'BRANCH_TOTAL' | 'GRAND_TOTAL';
+  [key: string]: string;
+}
+
+export interface IAgeingReportResponse {
+  startDate: string;
+  endDate: string;
+  asOnDate: string;
+  layout: AgeingReportLayout;
+  scope: AgeingScope;
+  message: string;
+  columns: IAgeingReportColumn[];
+  rows: IAgeingReportRow[];
+}
+
+export interface IAgeingReportRequest {
+  startDate?: string;
+  endDate?: string;
+  partySelection?: OutstandingPartySelection;
+  entityTypeId?: string;
+  branchIds?: string[];
+  partyProfileIds?: string[];
+  accountIds?: string[];
+  ageingBuckets?: string[];
+  transactionSide?: OutstandingTransactionSide;
+  layout?: AgeingReportLayout;
+  eefcFilter?: AgeingEefcFilter;
+  scope?: AgeingScope;
+}
+
+export interface ITourPaxReportRequest {
+  startDate?: string;
+  endDate?: string;
+  branchIds?: string[];
+}
+
+export interface IFlm8Ad2Request {
+  startDate?: string;
+  endDate?: string;
+  branchIds?: string[];
+  reportFormat?: Flm8Ad2ReportFormat;
+  apConnect?: boolean;
+}
+
+export interface ILrsDailyReportRequest {
+  startDate?: string;
+  endDate?: string;
+  branchIds?: string[];
+  productId?: string;
+  issuerPartyProfileId?: string;
+  purposeId?: string;
+  usdRate?: number;
+  reportFormat?: LrsDailyReportFormat;
+  includeCorporateTransactions?: boolean;
+  bankName?: string;
+  bankCode?: string;
 }

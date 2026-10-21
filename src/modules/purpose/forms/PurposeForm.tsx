@@ -316,6 +316,13 @@ export const PurposeForm = ({
             disabled={isSubmitting}
           />
           <FormFieldInput
+            name="rbiCode"
+            label={PURPOSE_TEXTS.RBI_CODE}
+            placeholder="S0306"
+            valueTransform="uppercase"
+            disabled={isSubmitting}
+          />
+          <FormFieldInput
             name="description"
             label="Description"
             placeholder="Private Visit"

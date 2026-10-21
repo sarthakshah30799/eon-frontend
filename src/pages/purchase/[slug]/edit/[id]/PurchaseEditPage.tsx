@@ -27,6 +27,7 @@ import {
   mapPurchaseTransactionToFormValues,
   createEmptyPurchaseFormValues,
 } from '@/modules/purchase/utils/purchaseUtils';
+import { TransactionTypeEnum } from '@/modules/transactions';
 
 const PurchaseEditPage = () => {
   const navigate = useNavigate();
@@ -76,6 +77,22 @@ const PurchaseEditPage = () => {
         false
       ),
     [additionalSettings]
+  );
+  const transactionType = useMemo(
+    () => getPurchaseTransactionType(purchasePageType),
+    [purchasePageType]
+  );
+  const allowNullManualBook = useMemo(
+    () =>
+      getAdditionalSettingBooleanValue(
+        additionalSettings,
+        AdditionalSettingsCodeEnum.TransactionSettings,
+        transactionType === TransactionTypeEnum.SALE
+          ? AdditionalSettingsCodeEnum.AllowNullManualBookInSell
+          : AdditionalSettingsCodeEnum.AllowNullManualBookInPurchase,
+        false
+      ),
+    [additionalSettings, transactionType]
   );
   const sacCode = useMemo(
     () =>
@@ -188,6 +205,7 @@ const PurchaseEditPage = () => {
         pricingData={pricingData}
         partyProfileTypes={partyProfileTypes}
         requiresApproval={requiresApproval}
+        allowNullManualBook={allowNullManualBook}
         branchId={transaction.branchId}
         branchCode={branchProfile?.code ?? ''}
         sacCode={sacCode}

@@ -141,6 +141,15 @@ export const SelectCardStockCards = ({
         accessorKey: 'denomination',
         header: 'Denomination',
       },
+      ...(resolvedMode === 'em-units'
+        ? [
+            {
+              id: 'amount',
+              accessorKey: 'amount',
+              header: 'FE Amount',
+            } satisfies TableColumnDef<CardStockSelectableCard>,
+          ]
+        : []),
       {
         id: 'expirationDate',
         accessorKey: 'expirationDate',
@@ -148,7 +157,7 @@ export const SelectCardStockCards = ({
         cell: ({ row }) => toDisplayDate(row.original.expirationDate) || '-',
       },
     ],
-    []
+    [resolvedMode]
   );
 
   const title =
@@ -168,7 +177,7 @@ export const SelectCardStockCards = ({
         resolvedMode === 'sold'
           ? 'Pick a company-wide sold CC/CM card for EM surrender.'
           : resolvedMode === 'em-units'
-            ? 'Pick a reserved EM unit at this branch for issuer sale.'
+            ? 'Pick a reserved EM unit. FE Amount on the line is filled from the unit amount.'
             : 'Select an eligible CARD for this line.'
       }
       data={query.data ?? []}

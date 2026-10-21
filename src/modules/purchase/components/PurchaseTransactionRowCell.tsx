@@ -858,6 +858,10 @@ export const PurchaseTransactionRowCell = ({
       shouldValidate: true,
     });
     form.setValue(fieldPath('cardSnapshot'), null, { shouldDirty: true });
+    form.setValue(fieldPath('quantity'), '', {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
     form.setValue(fieldPath('isReload'), false, {
       shouldDirty: true,
       shouldValidate: false,
@@ -1001,6 +1005,20 @@ export const PurchaseTransactionRowCell = ({
             />
           </div>
         ) : null}
+        {isEmBulkSale && showCardField ? (
+          <div className="min-w-0 basis-full sm:basis-[48%] md:basis-[22%] lg:basis-0 lg:flex-1 lg:min-w-0 lg:max-w-[120px] xl:max-w-[145px] min-[1464px]:max-w-[170px]">
+            <EntityPickerField
+              label="EM unit"
+              value={String(
+                cardSnapshot?.maskedCardNumber ?? cardSnapshot?.series ?? ''
+              )}
+              placeholder="Select EM unit"
+              disabled={disabled || !issuerPartyProfileId}
+              onClick={() => setCardPickerOpen(true)}
+              buttonPosition="bottom"
+            />
+          </div>
+        ) : null}
         <div className="relative min-w-0 basis-[46%] sm:basis-[31%] md:basis-[18%] lg:basis-auto lg:flex-none lg:w-[82px] lg:min-w-[82px] lg:max-w-[82px]">
           <FormFieldInput
             name={fieldPath('quantity')}
@@ -1016,7 +1034,8 @@ export const PurchaseTransactionRowCell = ({
             step={`0.${'0'.repeat(PURCHASE_RATE_DECIMALS - 1)}1`}
             maxDecimalPlaces={PURCHASE_RATE_DECIMALS}
             valueTransform="none"
-            disabled={disabled || isTtDealLocked}
+            disabled={disabled || isTtDealLocked || isEmBulkSale}
+            readOnly={isEmBulkSale}
             classes={{ container: 'w-full' }}
           />
         </div>
@@ -1037,24 +1056,18 @@ export const PurchaseTransactionRowCell = ({
             />
           </div>
         ) : null}
-        {showCardField ? (
+        {showCardField && !isEmBulkSale ? (
           <div className="min-w-0 basis-full sm:basis-[48%] md:basis-[22%] lg:basis-0 lg:flex-1 lg:min-w-0 lg:max-w-[120px] xl:max-w-[145px] min-[1464px]:max-w-[170px]">
             <EntityPickerField
-              label={isEmPurchase ? 'Sold CARD' : isEmBulkSale ? 'EM unit' : 'CARD'}
+              label={isEmPurchase ? 'Sold CARD' : 'CARD'}
               value={String(
                 cardSnapshot?.maskedCardNumber ?? cardSnapshot?.series ?? ''
               )}
               placeholder={
-                isEmPurchase
-                  ? 'Select sold card'
-                  : isEmBulkSale
-                    ? 'Select EM unit'
-                    : 'Select card'
+                isEmPurchase ? 'Select sold card' : 'Select card'
               }
               disabled={
-                disabled ||
-                (!isEmPurchase && !issuerPartyProfileId) ||
-                (isEmBulkSale && !issuerPartyProfileId)
+                disabled || (!isEmPurchase && !issuerPartyProfileId)
               }
               onClick={() => setCardPickerOpen(true)}
               buttonPosition="bottom"
@@ -1240,6 +1253,12 @@ export const PurchaseTransactionRowCell = ({
             shouldValidate: true,
           });
           form.setValue(fieldPath('cardSnapshot'), null, { shouldDirty: true });
+          if (isEmBulkSale) {
+            form.setValue(fieldPath('quantity'), '', {
+              shouldDirty: true,
+              shouldValidate: true,
+            });
+          }
           setCardPickerOpen(false);
           setIssuerPickerOpen(false);
         }}
@@ -1291,7 +1310,12 @@ export const PurchaseTransactionRowCell = ({
               );
             }
             // FE amount stays user-editable for EM surrender.
-          } else if (!isSaleCardProduct && !isEmBulkSale) {
+          } else if (isEmBulkSale) {
+            form.setValue(fieldPath('quantity'), String(card.amount ?? ''), {
+              shouldDirty: true,
+              shouldValidate: true,
+            });
+          } else if (!isSaleCardProduct) {
             form.setValue(fieldPath('quantity'), card.denomination, {
               shouldDirty: true,
               shouldValidate: true,

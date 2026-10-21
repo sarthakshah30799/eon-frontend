@@ -96,6 +96,9 @@ export const AdditionalSettingsCodeEnum = {
   TransactionCreditPolicy: 'TRANSACTION_CREDIT_POLICY',
   AllowOutstandingOnSale: 'ALLOW_OUTSTANDING_ON_SALE',
   AllowOutstandingOnPurchase: 'ALLOW_OUTSTANDING_ON_PURCHASE',
+  TransactionSettings: 'TRANSACTION_SETTINGS',
+  AllowNullManualBookInSell: 'ALLOW_NULL_MANUAL_BOOK_IN_SELL',
+  AllowNullManualBookInPurchase: 'ALLOW_NULL_MANUAL_BOOK_IN_PURCHASE',
   Reports: 'REPORTS',
   Flm1CurrencyColumnCount: 'FLM1_CURRENCY_COLUMN_COUNT',
 } as const;

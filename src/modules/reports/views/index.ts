@@ -21,3 +21,4 @@ export { default as Flm8Ad2View } from './Flm8Ad2View';
 export { default as TourPaxReportView } from './TourPaxReportView';
 export { default as OutstandingTransactionReportView } from './OutstandingTransactionReportView';
 export { default as AgeingReportView } from './AgeingReportView';
+export { default as TtReportView } from './TtReportView';

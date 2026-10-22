@@ -44,6 +44,8 @@ import type {
   IOutstandingTransactionReportResponse,
   IAgeingReportRequest,
   IAgeingReportResponse,
+  ITtReportRequest,
+  ITtReportResponse,
   LrsDailyReportExportFormat,
   ReportExportFormat,
 } from '@/modules/reports/types';
@@ -1254,6 +1256,56 @@ export const reportsApi = {
     return {
       blob: res.data.blob,
       filename: res.data.filename || `ageing-report.${format}`,
+    };
+  },
+
+  getTtReport: async (params: ITtReportRequest): Promise<ITtReportResponse> => {
+    const res = await apiClient.get<ITtReportResponse>(
+      `/reports/tt-report${buildQueryString(params)}`
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      return {
+        startDate: params.startDate ?? '',
+        endDate: params.endDate ?? '',
+        blockedBatchAt: null,
+        layout: params.layout ?? 'indus',
+        message: '',
+        columns: [],
+        rows: [],
+      };
+    }
+
+    return res.data;
+  },
+
+  downloadTtReport: async (
+    params: ITtReportRequest,
+    format: ReportExportFormat
+  ): Promise<{ blob: Blob; filename?: string }> => {
+    const query = buildQueryString({
+      ...params,
+      format,
+    });
+    const res = await apiClient.getDownload(
+      `/reports/tt-report/export${query}`
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      throw new Error('Failed to download TT Report');
+    }
+
+    return {
+      blob: res.data.blob,
+      filename: res.data.filename || `tt-report.${format}`,
     };
   },
 };

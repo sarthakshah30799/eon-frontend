@@ -52,6 +52,10 @@ export const ReportPageTypeEnum = {
   TOUR_PAX_REPORT: 'tour-pax-report',
   OUTSTANDING_TRANSACTION_REPORT: 'outstanding-transaction-report',
   AGEING_REPORT: 'ageing-report',
+  INDUS_TT_REPORT: 'indus-tt-report',
+  IDFC_TT_REPORT: 'idfc-tt-report',
+  ICICI_TT_REPORT: 'icici-tt-report',
+  YES_TT_REPORT: 'yes-tt-report',
 } as const;
 
 export type ReportPageType =
@@ -62,6 +66,7 @@ export const REPORT_PAGE_DEFAULT_TYPE = ReportPageTypeEnum.SALE_PURCHASE;
 const REPORT_PAGE_SLUG_ALIASES: Partial<Record<string, ReportPageType>> = {
   'special-report': ReportPageTypeEnum.SPECIAL,
   'currency-balance': ReportPageTypeEnum.CURRENCY_BALANCE,
+  'tt-report': ReportPageTypeEnum.INDUS_TT_REPORT,
 };
 
 export const getReportPageCanonicalSlug = (
@@ -101,6 +106,10 @@ const REPORT_PAGE_TITLE_BY_TYPE: Record<ReportPageType, string> = {
   [ReportPageTypeEnum.OUTSTANDING_TRANSACTION_REPORT]:
     'Outstanding Transaction Report',
   [ReportPageTypeEnum.AGEING_REPORT]: 'Ageing Report',
+  [ReportPageTypeEnum.INDUS_TT_REPORT]: 'INDUS TT Report',
+  [ReportPageTypeEnum.IDFC_TT_REPORT]: 'IDFC TT Report',
+  [ReportPageTypeEnum.ICICI_TT_REPORT]: 'ICICI TT Report',
+  [ReportPageTypeEnum.YES_TT_REPORT]: 'YES TT Report',
 };
 
 export const getReportPageTypeFromSlug = (
@@ -206,7 +215,25 @@ export interface ISalePurchaseReportResponse {
   columns: ISalePurchaseReportColumn[];
   rows: ISalePurchaseReportRow[];
   layout: ReportLayout;
+  message?: string;
 }
+
+export const SalePurchaseGroupByEnum = {
+  CODE: 'code',
+  DATE: 'date',
+  BRANCH: 'branch',
+} as const;
+
+export type SalePurchaseGroupBy =
+  (typeof SalePurchaseGroupByEnum)[keyof typeof SalePurchaseGroupByEnum];
+
+export const SalePurchaseDetailEnum = {
+  SHORT: 'short',
+  LONG: 'long',
+} as const;
+
+export type SalePurchaseDetail =
+  (typeof SalePurchaseDetailEnum)[keyof typeof SalePurchaseDetailEnum];
 
 export interface ISalePurchaseReportRequest {
   startDate?: string;
@@ -219,6 +246,8 @@ export interface ISalePurchaseReportRequest {
   transactionTypes?: ReportTransactionType[];
   layout?: ReportLayout;
   sortBy?: ReportSortBy;
+  groupBy?: SalePurchaseGroupBy;
+  detail?: SalePurchaseDetail;
 }
 
 export interface IProductProfitReportResponse {
@@ -835,4 +864,34 @@ export interface ILrsDailyReportRequest {
   includeCorporateTransactions?: boolean;
   bankName?: string;
   bankCode?: string;
+}
+
+export interface ITtReportRow {
+  transactionId: string;
+  [key: string]: string;
+}
+
+export type TtReportLayout = 'indus' | 'idfc' | 'icici' | 'yes';
+
+export interface ITtReportResponse {
+  startDate: string;
+  endDate: string;
+  blockedBatchAt: string | null;
+  layout: TtReportLayout;
+  message: string;
+  columns: Array<{ key: string; label: string }>;
+  rows: ITtReportRow[];
+}
+
+export interface ITtReportRequest {
+  startDate?: string;
+  endDate?: string;
+  branchIds?: string[];
+  productId?: string;
+  issuerPartyProfileIds?: string[];
+  layout?: TtReportLayout;
+  blockAfterGenerate?: boolean;
+  showBlocked?: boolean;
+  showBeforeHoAcceptance?: boolean;
+  blockedBatchAt?: string;
 }

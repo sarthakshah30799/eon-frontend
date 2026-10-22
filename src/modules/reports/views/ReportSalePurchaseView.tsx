@@ -5,13 +5,17 @@ import { PAGE_STATUS_TEXTS } from '@/constants';
 import { useAuth } from '@/lib/AuthContext';
 import {
   ReportCommonFiltersSection,
+  SalePurchaseGroupByFilter,
   SalePurchaseReportTable,
 } from '../components';
+import { SALE_PURCHASE_REPORT_TEXT } from '../constants/salePurchaseReportConstants';
 import { useSalePurchaseReport } from '../hooks';
 import {
   ReportExportFormatEnum,
   ReportSortByEnum,
   ReportTransactionTypeEnum,
+  SalePurchaseDetailEnum,
+  SalePurchaseGroupByEnum,
 } from '../types';
 import { summarizeReportSelection } from '../utils';
 
@@ -44,6 +48,16 @@ export const ReportSalePurchaseView = () => {
       report.filters.sortBy === ReportSortByEnum.DATE_DESC
         ? 'Date Desc'
         : 'Date Asc';
+    const groupByLabel =
+      report.filters.groupBy === SalePurchaseGroupByEnum.DATE
+        ? SALE_PURCHASE_REPORT_TEXT.datewise
+        : report.filters.groupBy === SalePurchaseGroupByEnum.BRANCH
+          ? SALE_PURCHASE_REPORT_TEXT.branchwise
+          : SALE_PURCHASE_REPORT_TEXT.codewise;
+    const detailLabel =
+      report.filters.detail === SalePurchaseDetailEnum.LONG
+        ? SALE_PURCHASE_REPORT_TEXT.long
+        : SALE_PURCHASE_REPORT_TEXT.short;
 
     return {
       states: stateLabels,
@@ -52,6 +66,8 @@ export const ReportSalePurchaseView = () => {
       types: typeLabels,
       transactionTypes: txnTypeLabels,
       sortLabel,
+      groupByLabel,
+      detailLabel,
     };
   }, [
     report.filters.branchIds,
@@ -64,6 +80,8 @@ export const ReportSalePurchaseView = () => {
     report.filters.stateOptions,
     report.filters.transactionTypes,
     report.filters.sortBy,
+    report.filters.groupBy,
+    report.filters.detail,
   ]);
 
   if (!canView) {
@@ -83,7 +101,17 @@ export const ReportSalePurchaseView = () => {
         </p>
       </div>
 
-      <ReportCommonFiltersSection filters={report.filters} />
+      <ReportCommonFiltersSection
+        filters={report.filters}
+        extraFilters={
+          <SalePurchaseGroupByFilter
+            groupBy={report.filters.groupBy}
+            onGroupByChange={report.filters.setGroupBy}
+            detail={report.filters.detail}
+            onDetailChange={report.filters.setDetail}
+          />
+        }
+      />
 
       {report.filters.appliedFilters && (
         <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-[11px] text-text-secondary">
@@ -107,7 +135,8 @@ export const ReportSalePurchaseView = () => {
           {currentSummary.transactionTypes.length
             ? currentSummary.transactionTypes.join(', ')
             : 'All'}{' '}
-          | Sort By {currentSummary.sortLabel} | Party Profiles{' '}
+          | Sort By {currentSummary.sortLabel}           | Group By {currentSummary.groupByLabel} | Report{' '}
+          {currentSummary.detailLabel} | Party Profiles{' '}
           {report.filters.partyProfileSelection.allSelected
             ? report.filters.partyProfileSelection.excludedIds.length > 0
               ? `All matching except ${report.filters.partyProfileSelection.excludedIds.length}`
@@ -200,6 +229,7 @@ export const ReportSalePurchaseView = () => {
             columns={report.reportColumns}
             rows={report.reportRows}
             loading={report.isLoadingReport || report.isFetchingReport}
+            emptyMessage={report.reportMessage || undefined}
           />
         </section>
       )}

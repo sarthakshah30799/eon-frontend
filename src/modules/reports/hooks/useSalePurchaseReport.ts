@@ -38,6 +38,8 @@ export const useSalePurchaseReport = () => {
       partyTypeCodes: filters.appliedFilters?.partyTypeCodes ?? [],
       transactionTypes: filters.appliedFilters?.transactionTypes ?? [],
       sortBy: filters.appliedFilters?.sortBy,
+      groupBy: filters.appliedFilters?.groupBy,
+      detail: filters.appliedFilters?.detail,
     }),
     [filters.appliedFilters, hasExplicitPartyProfileSelection]
   );
@@ -73,6 +75,7 @@ export const useSalePurchaseReport = () => {
 
   const reportColumns = reportQuery.data?.columns ?? [];
   const reportRows = reportQuery.data?.rows ?? [];
+  const reportMessage = reportQuery.data?.message ?? '';
 
   const downloadReport = useCallback(
     async (
@@ -121,6 +124,7 @@ export const useSalePurchaseReport = () => {
     setExportFormat,
     reportColumns,
     reportRows,
+    reportMessage,
     isLoadingReport: reportQuery.isLoading,
     isFetchingReport: reportQuery.isFetching,
     reportError: reportQuery.error,

@@ -54,23 +54,25 @@ export const SalePurchaseReportTable = ({
   return (
     <div className="overflow-x-auto rounded-md border border-slate-200 bg-white shadow-sm">
       <table className="min-w-max w-full border-collapse">
-        <thead className="sticky top-0 z-10 bg-slate-50">
-          <tr>
-            {columns.map(column => (
-              <th
-                key={column.key}
-                className="border-b border-slate-200 px-2 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-text-tertiary"
-              >
-                {column.label}
-              </th>
-            ))}
-          </tr>
-        </thead>
+        {columns.length > 0 && (
+          <thead className="sticky top-0 z-10 bg-slate-50">
+            <tr>
+              {columns.map(column => (
+                <th
+                  key={column.key}
+                  className="border-b border-slate-200 px-2 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-text-tertiary"
+                >
+                  {column.label}
+                </th>
+              ))}
+            </tr>
+          </thead>
+        )}
         <tbody>
           {loading ? (
             <tr>
               <td
-                colSpan={columns.length}
+                colSpan={Math.max(columns.length, 1)}
                 className="px-3 py-6 text-center text-sm text-text-secondary"
               >
                 Loading report...
@@ -79,7 +81,7 @@ export const SalePurchaseReportTable = ({
           ) : rows.length === 0 ? (
             <tr>
               <td
-                colSpan={columns.length}
+                colSpan={Math.max(columns.length, 1)}
                 className="px-3 py-6 text-center text-sm text-text-secondary"
               >
                 {emptyMessage}

@@ -129,6 +129,26 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
     path: '/reports/ageing-report',
     meta: { title: 'Ageing Report' },
   },
+  {
+    path: '/reports/tt-report',
+    meta: { title: 'TT Report' },
+  },
+  {
+    path: '/reports/indus-tt-report',
+    meta: { title: 'INDUS TT Report' },
+  },
+  {
+    path: '/reports/idfc-tt-report',
+    meta: { title: 'IDFC TT Report' },
+  },
+  {
+    path: '/reports/icici-tt-report',
+    meta: { title: 'ICICI TT Report' },
+  },
+  {
+    path: '/reports/yes-tt-report',
+    meta: { title: 'YES TT Report' },
+  },
   { path: '/card-stock', meta: { title: 'Receipt Stock' } },
   { path: '/card-stock/create', meta: { title: 'Create Receipt Stock' } },
   { path: '/card-stock/edit/:id', meta: { title: 'Receipt Stock Details' } },

@@ -4,6 +4,7 @@ export { default as ReportDatePresetFilter } from './ReportDatePresetFilter';
 export { default as ReportSortByFilter } from './ReportSortByFilter';
 export { default as ScrollablePartyProfileFilter } from './ScrollablePartyProfileFilter';
 export { default as SalePurchaseReportTable } from './SalePurchaseReportTable';
+export { default as SalePurchaseGroupByFilter } from './SalePurchaseGroupByFilter';
 export { default as SpecialReportFiltersSection } from './SpecialReportFiltersSection';
 export { default as CurrencyBalanceReportFiltersSection } from './CurrencyBalanceReportFiltersSection';
 export { default as CurrencyBalanceReportTable } from './CurrencyBalanceReportTable';
@@ -38,3 +39,5 @@ export { OutstandingTransactionReportFiltersSection } from './OutstandingTransac
 export { OutstandingTransactionReportTable } from './OutstandingTransactionReportTable';
 export { AgeingReportFiltersSection } from './AgeingReportFiltersSection';
 export { AgeingReportTable } from './AgeingReportTable';
+export { TtReportFiltersSection } from './TtReportFiltersSection';
+export { TtReportTable } from './TtReportTable';

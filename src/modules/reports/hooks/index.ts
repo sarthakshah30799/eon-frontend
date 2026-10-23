@@ -40,3 +40,5 @@ export * from './useOutstandingTransactionReportFilters';
 export * from './useOutstandingTransactionReport';
 export * from './useAgeingReportFilters';
 export * from './useAgeingReport';
+export * from './useTtReportFilters';
+export * from './useTtReport';

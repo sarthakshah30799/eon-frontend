@@ -26,16 +26,36 @@ import {
   ReportDatePresetEnum,
   ReportTransactionTypeEnum,
   ReportSortByEnum,
+  SalePurchaseDetailEnum,
+  SalePurchaseGroupByEnum,
   type IReportDateRange,
   type IReportFiltersState,
   type IReportPartyProfileSelection,
   type IReportSelectOption,
   type ReportTransactionType,
   type ReportSortBy,
+  type SalePurchaseDetail,
+  type SalePurchaseGroupBy,
 } from '../types';
 import type { PartyProfileType } from '@/modules/partyProfiles/types';
 
 const PAGE_SIZE = 30;
+
+const readGroupBy = (value: string): SalePurchaseGroupBy =>
+  value === SalePurchaseGroupByEnum.DATE ||
+  value === SalePurchaseGroupByEnum.BRANCH
+    ? value
+    : SalePurchaseGroupByEnum.CODE;
+
+const readDetail = (value: string): SalePurchaseDetail =>
+  value === SalePurchaseDetailEnum.LONG
+    ? SalePurchaseDetailEnum.LONG
+    : SalePurchaseDetailEnum.SHORT;
+
+type SalePurchaseAppliedFilters = IReportFiltersState & {
+  groupBy?: SalePurchaseGroupBy;
+  detail?: SalePurchaseDetail;
+};
 
 export const useSalePurchaseReportFilters = () => {
   const { user } = useAuth();
@@ -70,6 +90,10 @@ export const useSalePurchaseReportFilters = () => {
       sortBy:
         (readSearchParamValue(parsedSearchParams, 'sortBy') as ReportSortBy) ||
         ReportSortByEnum.DATE_ASC,
+      groupBy: readGroupBy(
+        readSearchParamValue(parsedSearchParams, 'groupBy')
+      ),
+      detail: readDetail(readSearchParamValue(parsedSearchParams, 'detail')),
       partyProfileSearch: readSearchParamValue(
         parsedSearchParams,
         'partyProfileSearch'
@@ -118,12 +142,18 @@ export const useSalePurchaseReportFilters = () => {
       : [ReportTransactionTypeEnum.PURCHASE, ReportTransactionTypeEnum.SALE]
   );
   const [sortBy, setSortBy] = useState<ReportSortBy>(hydratedRouteState.sortBy);
+  const [groupBy, setGroupBy] = useState<SalePurchaseGroupBy>(
+    hydratedRouteState.groupBy
+  );
+  const [detail, setDetail] = useState<SalePurchaseDetail>(
+    hydratedRouteState.detail
+  );
   const [partyProfileSelection, setPartyProfileSelection] =
     useState<IReportPartyProfileSelection>(
       hydratedRouteState.partyProfileSelection
     );
   const [appliedFilters, setAppliedFilters] =
-    useState<IReportFiltersState | null>(
+    useState<SalePurchaseAppliedFilters | null>(
       searchParamsKey
         ? {
             dateRange: hydratedRouteState.dateRange,
@@ -141,6 +171,8 @@ export const useSalePurchaseReportFilters = () => {
                     ReportTransactionTypeEnum.SALE,
                   ],
             sortBy: hydratedRouteState.sortBy,
+            groupBy: hydratedRouteState.groupBy,
+            detail: hydratedRouteState.detail,
           }
         : null
     );
@@ -577,6 +609,8 @@ export const useSalePurchaseReportFilters = () => {
       ReportTransactionTypeEnum.SALE,
     ]);
     setSortBy(ReportSortByEnum.DATE_ASC);
+    setGroupBy(SalePurchaseGroupByEnum.CODE);
+    setDetail(SalePurchaseDetailEnum.SHORT);
     setPartyProfileSelection({
       allSelected: false,
       selectedIds: [],
@@ -593,7 +627,7 @@ export const useSalePurchaseReportFilters = () => {
         ? transactionTypes
         : [ReportTransactionTypeEnum.PURCHASE, ReportTransactionTypeEnum.SALE];
 
-    const nextAppliedFilters: IReportFiltersState = {
+    const nextAppliedFilters: SalePurchaseAppliedFilters = {
       dateRange,
       stateIds: selectedStateIds,
       branchIds: reportBranchIds,
@@ -603,6 +637,8 @@ export const useSalePurchaseReportFilters = () => {
       partyProfileSelection,
       transactionTypes: nextTransactionTypes,
       sortBy,
+      groupBy,
+      detail,
     };
 
     const nextSearchParams = buildSearchParams(undefined, next => {
@@ -617,6 +653,8 @@ export const useSalePurchaseReportFilters = () => {
       setSearchParamList(next, 'partyTypeCodes', partyTypeCodes);
       setSearchParamList(next, 'transactionTypes', nextTransactionTypes);
       setSearchParamValue(next, 'sortBy', sortBy);
+      setSearchParamValue(next, 'groupBy', groupBy);
+      setSearchParamValue(next, 'detail', detail);
       setSearchParamValue(next, 'partyProfileSearch', partyProfileSearch);
       setSearchParamBoolean(
         next,
@@ -687,6 +725,10 @@ export const useSalePurchaseReportFilters = () => {
     toggleAllTransactionTypes,
     sortBy,
     setSortBy,
+    groupBy,
+    setGroupBy,
+    detail,
+    setDetail,
     partyProfileSearch,
     setPartyProfileSearch,
     partyProfiles,

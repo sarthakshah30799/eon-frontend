@@ -59,6 +59,7 @@ import {
 } from '../components/PurchaseCdfDeclarationModal';
 import { PurchaseTransactionTable } from '../components/PurchaseTransactionTable';
 import { TtRemittanceModal } from '../components/TtRemittanceModal';
+import { TourPassengerModal } from '../components/TourPassengerModal';
 import {
   buildPurchasePrintHtml,
   getPurchasePrintCopyLabel,
@@ -69,7 +70,10 @@ import {
   toPrintCompany,
 } from '@/modules/transactions/utils/printSnapshotUtils';
 import {
+  createEmptyPurchaseTransactionRow,
   formatPurchaseDecimal,
+  formatTourPassengerTotals,
+  getTourPassengerQuantityError,
   isTtProductCode,
   isTtRemittanceComplete,
   mapPaymentDetailsToPurchaseRulePreviewPayload,
@@ -77,6 +81,7 @@ import {
   PURCHASE_TRANSACTION_TEXT,
 } from '../utils/purchaseUtils';
 import { PURCHASE_PREVIEW_TEXT, PURCHASE_RULE_TEXT, PURCHASE_CREDIT_TEXT } from '../constants/purchaseConstants';
+import { TOUR_PASSENGER_TEXT } from '../constants/tourPassengerConstants';
 import { getTransactionDatePolicy } from '@/modules/transactionPolicies/utils/transactionDatePolicy';
 import {
   TransactionLogActionEnum,
@@ -216,6 +221,7 @@ const PurchaseFormBody = ({
   } | null>(null);
   const [isPassengerAmlModalOpen, setIsPassengerAmlModalOpen] = useState(false);
   const [isTtRemittanceModalOpen, setIsTtRemittanceModalOpen] = useState(false);
+  const [isTourPassengerModalOpen, setIsTourPassengerModalOpen] = useState(false);
   const [hasPrintedOnce, setHasPrintedOnce] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
   const isReadOnly = isSubmitting || readOnly;
@@ -458,6 +464,10 @@ const PurchaseFormBody = ({
     control: form.control,
     name: 'transactionType',
   });
+  const tourPassengers = useWatch({
+    control: form.control,
+    name: 'tourPassengers',
+  }) ?? [];
   const isPurchaseTransaction =
     transactionType === TransactionTypeEnum.PURCHASE;
   const allowCashPayment = !(
@@ -2058,6 +2068,11 @@ const PurchaseFormBody = ({
           onVerified={() => {
             toast.success('AML verified successfully');
           }}
+          showTourPassenger={transactionType === TransactionTypeEnum.SALE}
+          tourPassengerCount={tourPassengers.length}
+          tourPassengerSummary={formatTourPassengerTotals(tourPassengers)}
+          tourPassengerDialogOpen={isTourPassengerModalOpen}
+          onOpenTourPassengers={() => setIsTourPassengerModalOpen(true)}
         />
       ) : null}
 
@@ -2070,6 +2085,72 @@ const PurchaseFormBody = ({
         allowedCurrencyIds={currencyPickerState?.allowedCurrencyIds}
         onContinue={handleCurrencySelect}
         onClose={() => setCurrencyPickerState(null)}
+      />
+
+      <TourPassengerModal
+        open={isTourPassengerModalOpen}
+        rows={tourPassengers}
+        readOnly={isReadOnly}
+        onOpenChange={setIsTourPassengerModalOpen}
+        onSave={rows => {
+          form.setValue('tourPassengers', rows, {
+            shouldDirty: true,
+            shouldValidate: false,
+          });
+          const currentRows = form.getValues('transactions') ?? [];
+          const existingCodes = new Set(
+            currentRows
+              .map(row => row.currencyCode.trim().toUpperCase())
+              .filter(Boolean)
+          );
+          const missingCodes = [
+            ...new Set(
+              rows
+                .map(row => row.fcnCode.trim().toUpperCase())
+                .filter(code => code && !existingCodes.has(code))
+            ),
+          ];
+          const additions = missingCodes.flatMap(code => {
+            const currency = pricingData.currencies.find(
+              item => item.currencyCode.trim().toUpperCase() === code
+            );
+            if (!currency) {
+              return [];
+            }
+            return [
+              {
+                ...createEmptyPurchaseTransactionRow(),
+                currencyId: currency.id,
+                currencyCode: currency.currencyCode,
+                currencyName: currency.currencyName,
+              },
+            ];
+          });
+          const unknownCodes = missingCodes.filter(
+            code =>
+              !pricingData.currencies.some(
+                item => item.currencyCode.trim().toUpperCase() === code
+              )
+          );
+          if (unknownCodes.length) {
+            toast.error(
+              `${TOUR_PASSENGER_TEXT.currencyMissing}: ${unknownCodes.join(', ')}`
+            );
+          }
+          if (!additions.length) {
+            return;
+          }
+          const blankOnly =
+            currentRows.length === 1 &&
+            !currentRows[0]?.currencyId &&
+            !currentRows[0]?.productId &&
+            !String(currentRows[0]?.quantity ?? '').trim();
+          form.setValue(
+            'transactions',
+            blankOnly ? additions : [...currentRows, ...additions],
+            { shouldDirty: true, shouldValidate: false }
+          );
+        }}
       />
 
       <TtRemittanceModal
@@ -2188,6 +2269,11 @@ export const PurchaseForm = ({
           ...cdfDeclarationValues,
         }
       : values;
+    const tourPassengerError = getTourPassengerQuantityError(mergedValues);
+    if (tourPassengerError) {
+      toast.error(tourPassengerError);
+      return;
+    }
 
     await onSubmit(mergedValues, draftDocumentAttachments);
   };

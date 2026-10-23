@@ -862,6 +862,7 @@ export interface ILrsDailyReportRequest {
   usdRate?: number;
   reportFormat?: LrsDailyReportFormat;
   includeCorporateTransactions?: boolean;
+  showTourPaxBreakup?: boolean;
   bankName?: string;
   bankCode?: string;
 }

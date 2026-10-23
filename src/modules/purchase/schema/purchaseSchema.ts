@@ -926,6 +926,29 @@ export const createPurchaseFormSchema = (
     deliveryBoyUserCode: yup.string().trim().default(''),
     deliveryBoyUserName: yup.string().trim().default(''),
     number: yup.string().trim().default(''),
+    tourPassengers: yup
+      .array()
+      .of(
+        yup.object({
+          lineNo: yup.string().trim().default(''),
+          passportNumber: yup.string().trim().default(''),
+          passportName: yup.string().trim().default(''),
+          placeOfIssue: yup.string().trim().default(''),
+          dateOfIssue: yup.string().trim().default(''),
+          dateOfExpiry: yup.string().trim().default(''),
+          panHolderRelationship: yup.string().trim().default(''),
+          travellerPanNumber: yup.string().trim().default(''),
+          panName: yup.string().trim().default(''),
+          travellerDob: yup.string().trim().default(''),
+          fcnCode: yup.string().trim().default(''),
+          fcnAmount: yup.string().trim().default(''),
+          contactNo: yup.string().trim().default(''),
+          remark: yup.string().trim().default(''),
+          otherAdExchangeDate: yup.string().trim().default(''),
+          otherAdNameAddress: yup.string().trim().default(''),
+        })
+      )
+      .default([]),
     transactions: yup
       .array()
       .of(createPurchaseTransactionSchema(transactionType))

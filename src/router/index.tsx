@@ -59,6 +59,15 @@ const CreditRequestFundCreatePage = lazy(
 const CreditRequestFundEditPage = lazy(
   () => import('../pages/credit-request-fund/edit')
 );
+const AdvanceRefundListPage = lazy(
+  () => import('../pages/advance-refunds')
+);
+const AdvanceRefundCreatePage = lazy(
+  () => import('../pages/advance-refunds/create')
+);
+const AdvanceRefundDetailPage = lazy(
+  () => import('../pages/advance-refunds/detail')
+);
 
 const UserCreatePage = lazy(
   () => import('../pages/users/create/UserCreatePage')
@@ -1667,6 +1676,30 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <CreditRequestFundEditPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/advance-refunds',
+    element: (
+      <ProtectedLayout>
+        <AdvanceRefundListPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/advance-refunds/create',
+    element: (
+      <ProtectedLayout>
+        <AdvanceRefundCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/advance-refunds/:id',
+    element: (
+      <ProtectedLayout>
+        <AdvanceRefundDetailPage />
       </ProtectedLayout>
     ),
   },

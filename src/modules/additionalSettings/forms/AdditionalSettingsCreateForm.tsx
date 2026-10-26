@@ -83,7 +83,7 @@ const SubcategoryRowFields = ({
   }>;
   accountProfilesById: Map<string, IAccountProfile>;
 }) => {
-  const { control, setValue } =
+  const { control, setValue, getValues } =
     useFormContext<IAdditionalSettingCategoryFormValues>();
 
   const subcategoryCode = useWatch({
@@ -133,8 +133,12 @@ const SubcategoryRowFields = ({
         `subcategories.${index}.categoryType`,
         subcategoryDefinition.valueType
       );
+      const currentTitle = getValues(`subcategories.${index}.title`);
+      if (!currentTitle) {
+        setValue(`subcategories.${index}.title`, subcategoryDefinition.label);
+      }
     }
-  }, [index, subcategoryDefinition, setValue]);
+  }, [getValues, index, subcategoryDefinition, setValue]);
 
   useEffect(() => {
     if (!isTransactionNumbering || typeof subcategoryValue !== 'string') {

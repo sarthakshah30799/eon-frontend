@@ -22,3 +22,5 @@ export * from './surfacePanel';
 export * from './formFooter';
 export * from './select-entity';
 export * from './pageGrid';
+export * from './badge';
+export * from './breadcrumb';

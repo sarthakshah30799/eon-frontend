@@ -55,6 +55,15 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
     path: '/credit-request-fund/edit/:id',
     meta: { title: 'Credit Request Fund Details' },
   },
+  { path: '/advance-refunds', meta: { title: 'Advance Refunds' } },
+  {
+    path: '/advance-refunds/create',
+    meta: { title: 'Create Advance Refund' },
+  },
+  {
+    path: '/advance-refunds/:id',
+    meta: { title: 'Advance Refund Details' },
+  },
   { path: '/fake-currencies', meta: { title: 'Fake Currencies' } },
   { path: '/fake-currencies/create', meta: { title: 'Create Fake Currency' } },
   {

@@ -34,4 +34,7 @@ export const createEmptyAccountProfileFormValues =
     active: true,
     cmsBank: false,
     directRemittance: false,
+    visibleDuringRefund: false,
+    refundLimit: '',
+    branchIds: [],
   });

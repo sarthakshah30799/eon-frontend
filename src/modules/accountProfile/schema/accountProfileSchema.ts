@@ -36,5 +36,8 @@ export const accountProfileSchema = yup.object({
   active: yup.boolean().default(true),
   cmsBank: yup.boolean().default(false),
   directRemittance: yup.boolean().default(false),
+  visibleDuringRefund: yup.boolean().default(false),
+  refundLimit: yup.string().trim().optional().nullable(),
+  branchIds: yup.array().of(yup.string().required()).optional().default([]),
 });
 export default accountProfileSchema;

@@ -77,6 +77,25 @@ export interface IPurchaseTtRemittanceFormValues {
   miceReference: string;
 }
 
+export interface ITourPassengerFormRow {
+  lineNo: string;
+  passportNumber: string;
+  passportName: string;
+  placeOfIssue: string;
+  dateOfIssue: string;
+  dateOfExpiry: string;
+  panHolderRelationship: string;
+  travellerPanNumber: string;
+  panName: string;
+  travellerDob: string;
+  fcnCode: string;
+  fcnAmount: string;
+  contactNo: string;
+  remark: string;
+  otherAdExchangeDate: string;
+  otherAdNameAddress: string;
+}
+
 export interface IPurchaseFormValues {
   purchasePageType: PurchasePageType | null;
   branchId: string;
@@ -179,6 +198,7 @@ export interface IPurchaseFormValues {
   deliveryBoyUserCode: string;
   deliveryBoyUserName: string;
   number: string | null;
+  tourPassengers: ITourPassengerFormRow[];
   transactions: IPurchaseTransactionFormRow[];
   ttRemittance: IPurchaseTtRemittanceFormValues;
   additionalCharges: ITransactionAdditionalChargeFormRow[];
@@ -280,6 +300,7 @@ export interface IPurchaseSubmitPayload {
     tradeMode: TradeMode;
     remarks?: string | null;
     items: ICreateTransactionItemPayload[];
+    tourPassengers?: ITourPassengerFormRow[];
     documents: ICreateTransactionDocumentPayload[];
     additionalCharges: ICreateTransactionAdditionalChargePayload[];
     payments: ICreateTransactionPaymentPayload[];

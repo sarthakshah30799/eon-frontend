@@ -20,6 +20,7 @@ import ReportSalePurchaseView, {
   TourPaxReportView,
   OutstandingTransactionReportView,
   AgeingReportView,
+  TtReportView,
   ProductProfitReportView,
   SpecialReportView,
 } from '@/modules/reports/views';
@@ -108,6 +109,14 @@ const ReportsPage = () => {
       );
     case ReportPageTypeEnum.AGEING_REPORT:
       return <AgeingReportView key={`${slug}${location.search}`} />;
+    case ReportPageTypeEnum.INDUS_TT_REPORT:
+      return <TtReportView key={`${slug}${location.search}`} />;
+    case ReportPageTypeEnum.IDFC_TT_REPORT:
+      return <TtReportView layout="idfc" key={`${slug}${location.search}`} />;
+    case ReportPageTypeEnum.ICICI_TT_REPORT:
+      return <TtReportView layout="icici" key={`${slug}${location.search}`} />;
+    case ReportPageTypeEnum.YES_TT_REPORT:
+      return <TtReportView layout="yes" key={`${slug}${location.search}`} />;
     case ReportPageTypeEnum.SALE_PURCHASE:
     default:
       return <ReportSalePurchaseView key={`${slug}${location.search}`} />;

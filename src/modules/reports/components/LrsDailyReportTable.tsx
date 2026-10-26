@@ -29,25 +29,27 @@ export const LrsDailyReportTable = ({
 
   if (report.reportFormat === LrsDailyReportFormatEnum.CIMS_UPLOAD) {
     return (
-      <div className="overflow-x-auto rounded-md border border-slate-100">
-        <table className="min-w-full border-collapse text-[11px]">
-          <thead>
-            <tr className="bg-slate-50 text-left text-[10px] uppercase tracking-wider text-text-tertiary">
-              <th className="px-3 py-2 font-semibold">
-                {LRS_DAILY_REPORT_TEXT.columnHeading}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {report.uploadLines.map((line, index) => (
-              <tr key={`${index}-${line}`} className="border-t border-slate-50">
-                <td className="whitespace-nowrap px-3 py-1.5 font-mono text-text-primary">
-                  {line}
-                </td>
+      <div className="space-y-3">
+        <div className="overflow-x-auto rounded-md border border-slate-100">
+          <table className="min-w-full border-collapse text-[11px]">
+            <thead>
+              <tr className="bg-slate-50 text-left text-[10px] uppercase tracking-wider text-text-tertiary">
+                <th className="px-3 py-2 font-semibold">
+                  {LRS_DAILY_REPORT_TEXT.columnHeading}
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {report.uploadLines.map((line, index) => (
+                <tr key={`${index}-${line}`} className="border-t border-slate-50">
+                  <td className="whitespace-nowrap px-3 py-1.5 font-mono text-text-primary">
+                    {line}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     );
   }

@@ -42,6 +42,7 @@ import type {
 import { mapPassengerSnapshotToPurchaseFormValues } from '@/modules/passengers/utils/passengerAmlUtils';
 import { partyProfileApi, passengersApi } from '@/api';
 import type { IDealCoverRate } from '@/api/dealCoverRate';
+import { TOUR_PASSENGER_TEXT } from '../constants/tourPassengerConstants';
 import type { ITransactionPaymentDetailFormRow } from '@/components/forms/TransactionPaymentDetailsFieldArray/transactionPaymentDetailsTypes';
 import type {
   IPurchaseDocumentAttachment,
@@ -49,6 +50,7 @@ import type {
   IPurchasePricingData,
   IPurchaseTransactionFormRow,
   IPurchaseSubmitPayload,
+  ITourPassengerFormRow,
 } from '../types/purchaseTypes';
 import type { ITransactionEntity } from '@/modules/transactions';
 
@@ -555,6 +557,79 @@ export const createStaticLoadOptions =
     hasMore: false,
   });
 
+export const createEmptyTourPassengerRow = (
+  lineNo = 1
+): ITourPassengerFormRow => ({
+  lineNo: String(lineNo),
+  passportNumber: '',
+  passportName: '',
+  placeOfIssue: '',
+  dateOfIssue: '',
+  dateOfExpiry: '',
+  panHolderRelationship: '',
+  travellerPanNumber: '',
+  panName: '',
+  travellerDob: '',
+  fcnCode: '',
+  fcnAmount: '',
+  contactNo: '',
+  remark: '',
+  otherAdExchangeDate: '',
+  otherAdNameAddress: '',
+});
+
+export const formatTourPassengerTotals = (rows: ITourPassengerFormRow[]) => {
+  const totals = new Map<string, number>();
+  rows.forEach(row => {
+    const code = row.fcnCode.trim().toUpperCase();
+    const amount = Number(row.fcnAmount);
+    if (!code || !Number.isFinite(amount)) {
+      return;
+    }
+    totals.set(code, (totals.get(code) ?? 0) + amount);
+  });
+  const detail = [...totals.entries()]
+    .map(([code, amount]) => `${code} ${amount}`)
+    .join(', ');
+  return detail
+    ? `${TOUR_PASSENGER_TEXT.totalPrefix}: ${detail}`
+    : `${TOUR_PASSENGER_TEXT.totalPrefix}: 0`;
+};
+
+export const getTourPassengerQuantityError = (
+  values: IPurchaseFormValues
+): string | null => {
+  const rows = values.tourPassengers ?? [];
+  if (!rows.length || values.transactionType !== TransactionTypeEnum.SALE) {
+    return null;
+  }
+  const totals = new Map<string, number>();
+  for (let index = 0; index < rows.length; index += 1) {
+    const code = rows[index].fcnCode.trim().toUpperCase();
+    const amount = Number(rows[index].fcnAmount);
+    if (!code || !Number.isFinite(amount)) {
+      return `Tour passenger row ${index + 1} needs FCN CODE and FCN AMOUNT`;
+    }
+    totals.set(code, (totals.get(code) ?? 0) + amount);
+  }
+  const quantities = new Map<string, number>();
+  values.transactions.forEach(item => {
+    const code = item.currencyCode.trim().toUpperCase();
+    const quantity = Number(item.quantity);
+    if (!code || !Number.isFinite(quantity)) {
+      return;
+    }
+    quantities.set(code, (quantities.get(code) ?? 0) + quantity);
+  });
+  for (const [code, amount] of totals) {
+    const quantity = quantities.get(code) ?? 0;
+    if (Math.abs(quantity - amount) > 0.0000001) {
+      return `${code} tour passenger FCN AMOUNT ${amount} does not match the sale quantity ${quantity}`;
+    }
+  }
+  return null;
+};
+
 export const createEmptyPurchaseTransactionRow =
   (): IPurchaseTransactionFormRow => ({
     currencyId: '',
@@ -720,8 +795,9 @@ export const createEmptyPurchaseFormValues = (
   deliveryBoyUserId: '',
   deliveryBoyUserCode: '',
   deliveryBoyUserName: '',
-  number: '',
-  transactions: [createEmptyPurchaseTransactionRow()],
+    number: '',
+    tourPassengers: [],
+    transactions: [createEmptyPurchaseTransactionRow()],
   ttRemittance: createEmptyTtRemittanceValues(),
   additionalCharges: [],
   paymentDetails: [],
@@ -969,6 +1045,10 @@ export const mapPurchaseFormValuesToSubmitPayload = (
       transactionType: values.transactionType,
       tradeMode: values.tradeMode,
       remarks: null,
+      tourPassengers: (values.tourPassengers ?? []).map((row, index) => ({
+        ...row,
+        lineNo: row.lineNo || String(index + 1),
+      })),
       items: values.transactions.map(row => ({
         currencyId: row.currencyId,
         productId: row.productId,
@@ -1275,6 +1355,27 @@ export const mapPurchaseTransactionToFormValues = (
     deliveryBoyUserCode: '',
     deliveryBoyUserName: '',
     number: transaction.number ?? '',
+    tourPassengers: (transaction.tourPassengers ?? []).map((row, index) => ({
+      lineNo: String(row.lineNo ?? index + 1),
+      passportNumber: row.passportNumber ?? '',
+      passportName: row.passportName ?? '',
+      placeOfIssue: row.placeOfIssue ?? '',
+      dateOfIssue: String(row.dateOfIssue ?? '').slice(0, 10),
+      dateOfExpiry: String(row.dateOfExpiry ?? '').slice(0, 10),
+      panHolderRelationship: row.panHolderRelationship ?? '',
+      travellerPanNumber: row.travellerPanNumber ?? '',
+      panName: row.panName ?? '',
+      travellerDob: String(row.travellerDob ?? '').slice(0, 10),
+      fcnCode: row.fcnCode ?? '',
+      fcnAmount:
+        row.fcnAmount === null || row.fcnAmount === undefined
+          ? ''
+          : String(row.fcnAmount),
+      contactNo: row.contactNo ?? '',
+      remark: row.remark ?? '',
+      otherAdExchangeDate: String(row.otherAdExchangeDate ?? '').slice(0, 10),
+      otherAdNameAddress: row.otherAdNameAddress ?? '',
+    })),
     transactions: (transaction.items ?? []).map(item => ({
       currencyId: item.currencyId,
       currencyCode:

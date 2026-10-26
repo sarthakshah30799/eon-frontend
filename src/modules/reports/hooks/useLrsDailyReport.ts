@@ -29,6 +29,7 @@ export const useLrsDailyReport = () => {
       bankCode: filters.appliedFilters?.bankCode,
       includeCorporateTransactions:
         filters.appliedFilters?.includeCorporateTransactions,
+      showTourPaxBreakup: filters.appliedFilters?.showTourPaxBreakup,
     }),
     [filters.appliedFilters]
   );

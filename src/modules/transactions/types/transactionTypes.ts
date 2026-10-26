@@ -235,6 +235,26 @@ export interface ITransactionPricingRuleSnapshot {
   [key: string]: unknown;
 }
 
+export interface ITourPassengerEntity {
+  id: string;
+  lineNo: number;
+  passportNumber: string | null;
+  passportName: string | null;
+  placeOfIssue: string | null;
+  dateOfIssue: string | null;
+  dateOfExpiry: string | null;
+  panHolderRelationship: string | null;
+  travellerPanNumber: string | null;
+  panName: string | null;
+  travellerDob: string | null;
+  fcnCode: string | null;
+  fcnAmount: string | number | null;
+  contactNo: string | null;
+  remark: string | null;
+  otherAdExchangeDate: string | null;
+  otherAdNameAddress: string | null;
+}
+
 export interface ITransactionEntity {
   id: string;
   rootTransactionId: string | null;
@@ -307,6 +327,7 @@ export interface ITransactionEntity {
   tcsDeclarationAccepted: boolean | null;
   isProprietorship: boolean | null;
   items?: ITransactionItemEntity[];
+  tourPassengers?: ITourPassengerEntity[];
   /** Distinct product codes on items (list endpoints only). */
   productCodes?: string[];
   documents?: ITransactionDocumentEntity[];

@@ -34,6 +34,7 @@ import {
   PASSENGER_PASSPORT_LOOKUP_EXCLUDED_FIELDS,
 } from '../utils/passengerAmlUtils';
 import { PASSENGER_IDENTITY_TEXT } from '../constants/passengerConstants';
+import { TOUR_PASSENGER_TEXT } from '@/modules/purchase/constants/tourPassengerConstants';
 import {
   applyPassengerDetailsFormatErrors,
   applyPassengerTransactionDateOrderErrors,
@@ -52,6 +53,11 @@ interface PassengerAmlVerificationModalProps {
   selectedPartyProfile?: PassengerAmlPartyProfile | null;
   selectedPartyProfileLoading?: boolean;
   readOnly?: boolean;
+  showTourPassenger?: boolean;
+  tourPassengerCount?: number;
+  tourPassengerSummary?: string;
+  tourPassengerDialogOpen?: boolean;
+  onOpenTourPassengers?: () => void;
   onVerified: (value: IPassengerAmlVerifiedPayload) => void;
 }
 
@@ -225,6 +231,11 @@ export const PassengerAmlVerificationModal = ({
   selectedPartyProfile,
   selectedPartyProfileLoading = false,
   readOnly = false,
+  showTourPassenger = false,
+  tourPassengerCount = 0,
+  tourPassengerSummary = '',
+  tourPassengerDialogOpen = false,
+  onOpenTourPassengers,
   onVerified,
 }: PassengerAmlVerificationModalProps) => {
   const form = useFormContext<IPurchaseFormValues>();
@@ -1423,7 +1434,7 @@ export const PassengerAmlVerificationModal = ({
             : 'Capture the passenger details that will be stored on the transaction.'
       }
       size="2xl"
-      dismissible={!isDetailsSubmitting}
+      dismissible={!isDetailsSubmitting && !tourPassengerDialogOpen}
       footer={
         readOnly
           ? viewOnlyFooter
@@ -1468,6 +1479,7 @@ export const PassengerAmlVerificationModal = ({
           />
         )
       ) : (
+        <>
         <fieldset
           disabled={readOnly}
           className={
@@ -1543,6 +1555,27 @@ export const PassengerAmlVerificationModal = ({
             }
           />
         </fieldset>
+        {showTourPassenger ? (
+          <div className="mt-4 space-y-2">
+            <span className="relative inline-flex">
+              <Button
+                type="button"
+                onClick={() => onOpenTourPassengers?.()}
+              >
+                {TOUR_PASSENGER_TEXT.button}
+              </Button>
+              {tourPassengerCount ? (
+                <span className="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[11px] font-semibold text-white">
+                  {tourPassengerCount}
+                </span>
+              ) : null}
+            </span>
+            <p className="text-sm text-text-secondary">
+              {tourPassengerSummary}
+            </p>
+          </div>
+        ) : null}
+        </>
       )}
     </Modal>
   );

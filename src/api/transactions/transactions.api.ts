@@ -1,4 +1,5 @@
 import { apiClient } from '../api';
+import type { ITourPassengerFormRow } from '@/modules/purchase/types/purchaseTypes';
 import type {
   IApproveTransactionPayload,
   ICreateTransactionDraftPayload,
@@ -287,6 +288,24 @@ export const transactionsApi = {
     }
 
     return res.data;
+  },
+
+  parseTourPassengers: async (
+    file: File
+  ): Promise<
+    Array<Partial<ITourPassengerFormRow> & { lineNo?: string | number | null }>
+  > => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await apiClient.postFormData<
+      Array<Partial<ITourPassengerFormRow> & { lineNo?: string | number | null }>
+    >('/transactions/tour-passengers/parse', formData);
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    return res.data ?? [];
   },
 
   createDraft: async (

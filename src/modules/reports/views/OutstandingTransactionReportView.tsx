@@ -10,6 +10,7 @@ import {
 import { OUTSTANDING_TRANSACTION_REPORT_TEXT } from '../constants/outstandingTransactionReportConstants';
 import { useOutstandingTransactionReport } from '../hooks';
 import { ReportExportFormatEnum } from '../types';
+import { formatDateTime } from '@/utils';
 import { summarizeReportSelection } from '../utils';
 
 export const OutstandingTransactionReportView = () => {
@@ -49,10 +50,9 @@ export const OutstandingTransactionReportView = () => {
           {OUTSTANDING_TRANSACTION_REPORT_TEXT.appliedPrefix}:{' '}
           {reportState.appliedDateRangeLabel} |{' '}
           {OUTSTANDING_TRANSACTION_REPORT_TEXT.accountingDate}{' '}
-          {reportState.filters.appliedFilters.accountingDate
-            .split('-')
-            .reverse()
-            .join('/')}{' '}
+          {formatDateTime(
+            reportState.filters.appliedFilters.accountingDate
+          )}{' '}
           | {OUTSTANDING_TRANSACTION_REPORT_TEXT.branchHeading}{' '}
           {branchSummary.length
             ? branchSummary.join(', ')

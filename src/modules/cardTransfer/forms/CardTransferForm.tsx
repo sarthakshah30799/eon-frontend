@@ -257,7 +257,7 @@ const CardPicker = ({
       accessorKey: 'expirationDate',
       header: 'Expiration',
       cell: ({ row }) =>
-        formatDateTime(`${row.original.expirationDate}T00:00:00`, 'DD/MM/YYYY'),
+        formatDateTime(row.original.expirationDate, 'DD/MM/YYYY'),
     },
   ];
 

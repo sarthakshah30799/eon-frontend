@@ -7,7 +7,7 @@ import type {
   ICardStockReceiptItem,
 } from '@/api/cardStock';
 import type { CardTransferRequest } from '@/modules/cardTransfer/types';
-import { toDisplayDate } from '@/utils';
+import { formatDateTime } from '@/utils';
 import {
   CARD_STOCK_PRINT_RATE,
   CARD_STOCK_PRINT_TEXT,
@@ -38,13 +38,7 @@ const formatAmount = (value?: string | number | null, decimals = 2) => {
   return Number.isFinite(parsed) ? parsed.toFixed(decimals) : String(value);
 };
 
-const formatDate = (value?: string | Date | null) => {
-  if (!value) return '-';
-  if (value instanceof Date) {
-    return toDisplayDate(value.toISOString().slice(0, 10)) || '-';
-  }
-  return toDisplayDate(value) || '-';
-};
+const formatDate = (value?: string | Date | null) => formatDateTime(value);
 
 const joinAddress = (...parts: Array<string | null | undefined>) =>
   parts

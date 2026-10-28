@@ -241,10 +241,7 @@ export const VoucherListView = ({ type }: { type: VoucherType }) => {
         accessorKey: 'transactionDate',
         header: VOUCHER_LIST_TEXT.transactionDate,
         cell: ({ row }) =>
-          formatDateTime(
-            `${row.original.transactionDate?.slice(0, 10)}T00:00:00`,
-            'DD/MM/YYYY'
-          ),
+          formatDateTime(row.original.transactionDate?.slice(0, 10), 'DD/MM/YYYY'),
       },
       {
         id: 'party',

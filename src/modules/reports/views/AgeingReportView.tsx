@@ -7,6 +7,7 @@ import { AgeingReportFiltersSection, AgeingReportTable } from '../components';
 import { AGEING_REPORT_TEXT } from '../constants/ageingReportConstants';
 import { useAgeingReport } from '../hooks';
 import { ReportExportFormatEnum } from '../types';
+import { formatDateTime } from '@/utils';
 import { summarizeReportSelection } from '../utils';
 
 export const AgeingReportView = () => {
@@ -45,10 +46,9 @@ export const AgeingReportView = () => {
         <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-[11px] text-text-secondary">
           {AGEING_REPORT_TEXT.appliedPrefix}: {reportState.appliedDateRangeLabel}{' '}
           | {AGEING_REPORT_TEXT.asOn}{' '}
-          {reportState.filters.appliedFilters.dateRange.endDate
-            .split('-')
-            .reverse()
-            .join('/')}{' '}
+          {formatDateTime(
+            reportState.filters.appliedFilters.dateRange.endDate
+          )}{' '}
           | {AGEING_REPORT_TEXT.branchHeading}{' '}
           {branchSummary.length
             ? branchSummary.join(', ')

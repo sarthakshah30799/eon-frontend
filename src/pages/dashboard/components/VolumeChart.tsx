@@ -123,7 +123,13 @@ const VolumeChart = ({
               tickLine={false}
               axisLine={{ stroke: '#D0DAE8' }}
               tickFormatter={v => {
-                const d = new Date(v + 'T00:00:00');
+                // Build local calendar date from yyyy-MM-dd parts (no UTC parse).
+                const [year, month, day] = String(v)
+                  .slice(0, 10)
+                  .split('-')
+                  .map(Number);
+                if (!year || !month || !day) return String(v);
+                const d = new Date(year, month - 1, day);
                 return d.toLocaleDateString('en-US', {
                   weekday: 'short',
                   day: 'numeric',

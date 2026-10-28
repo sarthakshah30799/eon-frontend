@@ -1,6 +1,7 @@
 import type { ICompanyProfile } from '@/modules/companyProfile/types';
 import type { IBranchProfile } from '@/modules/branchProfile/types';
 import type { ITransactionReferenceSnapshot } from '@/modules/transactions';
+import { formatDateTime } from '@/utils';
 import type { ICurrencyTransfer } from '../types';
 
 type TransferPrintCopyType = 'CUSTOMER_COPY' | 'DUPLICATE_COPY';
@@ -22,31 +23,7 @@ const formatAmount = (value?: string | number | null, decimals = 2) => {
   return Number.isFinite(parsed) ? parsed.toFixed(decimals) : String(value);
 };
 
-const formatDate = (value?: string | Date | null) => {
-  if (!value) {
-    return '-';
-  }
-
-  const date = typeof value === 'string' ? new Date(value) : value;
-  if (Number.isNaN(date.getTime())) {
-    return '-';
-  }
-
-  return date.toLocaleDateString('en-GB');
-};
-
-const formatDateTime = (value?: string | Date | null) => {
-  if (!value) {
-    return '-';
-  }
-
-  const date = typeof value === 'string' ? new Date(value) : value;
-  if (Number.isNaN(date.getTime())) {
-    return '-';
-  }
-
-  return date.toLocaleString('en-GB');
-};
+const formatDate = (value?: string | Date | null) => formatDateTime(value);
 
 const units = [
   '',

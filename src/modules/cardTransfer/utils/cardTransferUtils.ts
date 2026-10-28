@@ -1,16 +1,17 @@
 import type { ICurrencyProfile } from '@/modules/currencyProfile/types';
 import type { IProductProfile } from '@/modules/productProfile/types';
+import { formatDateTime } from '@/utils';
+import {
+  filterCardStockCurrenciesByProduct,
+  validateCardStockProductCurrency,
+} from '@/modules/cardStock/utils/cardStockCurrencyUtils';
+import { CARD_TRANSFER_VALIDATION_TEXT } from '../constants/cardTransferConstants';
 import type {
   CardTransferCard,
   CardTransferFormValues,
   CardTransferItem,
   CardTransferRequest,
 } from '../types';
-import { CARD_TRANSFER_VALIDATION_TEXT } from '../constants/cardTransferConstants';
-import {
-  filterCardStockCurrenciesByProduct,
-  validateCardStockProductCurrency,
-} from '@/modules/cardStock/utils/cardStockCurrencyUtils';
 
 export const emptyTransferItem = (): CardTransferItem => ({
   currencyId: '',
@@ -32,8 +33,8 @@ export const emptyTransferForm = (): CardTransferFormValues => ({
 
 export const formatTransferDate = (value: string) => {
   if (!value) return '—';
-  const [year, month, day] = value.slice(0, 10).split('-');
-  return year && month && day ? `${day}/${month}/${year}` : value;
+  const formatted = formatDateTime(value.slice(0, 10));
+  return formatted === '-' ? value : formatted;
 };
 
 export const calculateItemAmount = (item: CardTransferItem) =>

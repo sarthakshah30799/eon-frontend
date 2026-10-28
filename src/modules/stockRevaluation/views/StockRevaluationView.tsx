@@ -8,6 +8,7 @@ import { counterProfileApi } from '@/api/counterProfile';
 import { useListAdditionalSettings } from '@/modules/additionalSettings/hooks';
 import { getAdditionalSettingTextValue } from '@/modules/additionalSettings/utils';
 import { downloadBlob } from '@/modules/reports/utils';
+import { formatDateTime } from '@/utils';
 import { useStockRevaluation } from '../hooks';
 import type {
   StockRevaluationFrequency,
@@ -15,8 +16,9 @@ import type {
 } from '@/api/stockRevaluation';
 
 const formatDate = (value: string) => {
-  const [year, month, day] = value.slice(0, 10).split('-');
-  return year && month && day ? `${day}/${month}/${year}` : value;
+  if (!value) return '';
+  const formatted = formatDateTime(value.slice(0, 10));
+  return formatted === '-' ? value : formatted;
 };
 
 const formatAmount = (value: string | number) => Number(value || 0).toFixed(2);

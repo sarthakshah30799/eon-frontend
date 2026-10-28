@@ -357,10 +357,7 @@ export const CreditRequestFundListView = () => {
         accessorKey: 'transactionDate',
         header: CREDIT_REQUEST_FUND_LABELS.transactionDate,
         cell: ({ row }) =>
-          formatDateTime(
-            `${row.original.transactionDate?.slice(0, 10)}T00:00:00`,
-            'DD/MM/YYYY'
-          ),
+          formatDateTime(row.original.transactionDate?.slice(0, 10), 'DD/MM/YYYY'),
       },
       {
         id: 'branch',

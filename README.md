@@ -714,6 +714,25 @@ variable will not update until the app is rebuilt.
 - Loading and error states
 - Optimistic updates
 
+## Date display convention
+
+All user-facing dates must go through the shared helpers in `src/utils/dateTimeUtils.ts` (exported from `@/utils`):
+
+| Helper                           | Use when                      | Empty value |
+| -------------------------------- | ----------------------------- | ----------- |
+| `formatDateTime(value, format?)` | Tables, prints, status labels | `-`         |
+| `toDisplayDate(value, format?)`  | Form labels / soft display    | `''`        |
+
+Rules:
+
+- Backend returns calendar dates as `yyyy-MM-dd` and timestamps as UTC ISO. Do not re-convert calendar dates on the backend for display.
+- Frontend owns display conversion:
+  - date-only → calendar `dd/mm/yyyy` (no `new Date('yyyy-MM-dd')`)
+  - timestamps → **browser local** timezone
+- Do not invent local `formatDate` helpers, `split('-').reverse().join('/')`, or `toLocaleDateString` for normal date display. Change formatting in `dateTimeUtils.ts` only so one place owns the behavior.
+- Date pickers may parse into a `Date` for control state via `parseDateInput`; render values back with the shared helpers.
+- Transaction / BOD punch dates default from policy context `transactionDate`, not the browser clock; UI format is always `dd/mm/yyyy`.
+
 ## 🐛 Troubleshooting
 
 ### Common Issues
@@ -722,6 +741,7 @@ variable will not update until the app is rebuilt.
 2. **Styling issues**: Verify Tailwind configuration and variants
 3. **Build failures**: Check file size limits and linting rules
 4. **API errors**: Verify environment variables and endpoint configuration
+5. **Date off by one day**: You likely parsed a `yyyy-MM-dd` with `new Date(dateOnly)` or formatted via UTC. Use `formatDateTime` / `toDisplayDate` instead.
 
 ### Debug Tips
 

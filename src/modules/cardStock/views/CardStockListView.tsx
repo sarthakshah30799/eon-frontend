@@ -38,10 +38,7 @@ export const CardStockListView = () => {
       accessorKey: 'receiptDate',
       header: 'Transaction Date',
       cell: ({ row }) =>
-        formatDateTime(
-          `${row.original.receiptDate?.slice(0, 10)}T00:00:00`,
-          'DD/MM/YYYY'
-        ),
+        formatDateTime(row.original.receiptDate?.slice(0, 10), 'DD/MM/YYYY'),
     },
     {
       accessorKey: 'issuerPartyProfileId',

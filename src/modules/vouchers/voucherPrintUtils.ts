@@ -6,7 +6,7 @@ import {
   toPrintBranch,
   toPrintCompany,
 } from '@/modules/transactions/utils/printSnapshotUtils';
-import { toDisplayDate } from '@/utils';
+import { formatDateTime } from '@/utils';
 import { VOUCHER_LABELS, VOUCHER_PRINT_TEXT } from './constants';
 import type { AccountingVoucher, VoucherType } from './types';
 
@@ -38,17 +38,7 @@ const formatAmount = (value?: string | number | null, decimals = 2) => {
   return Number.isFinite(parsed) ? parsed.toFixed(decimals) : String(value);
 };
 
-const formatDate = (value?: string | Date | null) => {
-  if (!value) {
-    return '-';
-  }
-
-  if (value instanceof Date) {
-    return toDisplayDate(value.toISOString().slice(0, 10)) || '-';
-  }
-
-  return toDisplayDate(value) || '-';
-};
+const formatDate = (value?: string | Date | null) => formatDateTime(value);
 
 const units = [
   '',

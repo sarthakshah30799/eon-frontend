@@ -18,6 +18,7 @@ import {
   useDownloadCardStockTemplate,
   usePreviewCardStockUpload,
 } from '../hooks';
+import { formatDateTime } from '@/utils';
 import type { ICardStockFormValues } from '../types';
 
 export const CardStockUploadSection = ({
@@ -88,7 +89,7 @@ export const CardStockUploadSection = ({
       header: 'Expiration (dd/mm/yyyy)',
       cell: ({ row }) =>
         row.original.expirationDate
-          ? row.original.expirationDate.split('-').reverse().join('/')
+          ? formatDateTime(row.original.expirationDate)
           : '',
     },
     { accessorKey: 'error', header: 'Validation' },

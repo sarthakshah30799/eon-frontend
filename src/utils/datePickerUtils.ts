@@ -30,6 +30,7 @@ export const maskDateInput = (value: string): string => {
   return `${day}/${month}/${year}`;
 };
 
+/** Parse user/API date strings into a local Date for date pickers only. */
 export const parseDateInput = (value: string): Date | null => {
   if (!value) {
     return null;
@@ -51,24 +52,4 @@ export const parseDateInput = (value: string): Date | null => {
 
   const directParsed = new Date(normalized);
   return Number.isNaN(directParsed.getTime()) ? null : directParsed;
-};
-
-export const toDisplayDate = (
-  value?: string | number | readonly string[] | null
-): string => {
-  if (value === undefined || value === null || value === '') {
-    return '';
-  }
-
-  const normalized = String(value).trim();
-  if (!normalized) {
-    return '';
-  }
-
-  if (/^\d{2}\/\d{2}\/\d{4}$/.test(normalized)) {
-    return normalized;
-  }
-
-  const parsed = parseDateInput(normalized);
-  return parsed ? formatDateDisplayInput(parsed) : normalized;
 };

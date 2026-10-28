@@ -7,7 +7,7 @@ import {
   type ITransactionTaxPreviewResponse,
   type ITransactionTcsPreviewResponse,
 } from '@/modules/transactions';
-import { toDisplayDate } from '@/utils';
+import { formatDateTime } from '@/utils';
 import {
   resolvePassengerDisplayName,
   shouldShowPassportPassengerNameOnDocument,
@@ -39,17 +39,7 @@ const formatAmount = (value?: string | null, decimals = 2) => {
   return Number.isFinite(parsed) ? parsed.toFixed(decimals) : value;
 };
 
-const formatDate = (value?: string | Date | null) => {
-  if (!value) {
-    return '-';
-  }
-
-  if (value instanceof Date) {
-    return toDisplayDate(value.toISOString().slice(0, 10)) || '-';
-  }
-
-  return toDisplayDate(value) || '-';
-};
+const formatDate = (value?: string | Date | null) => formatDateTime(value);
 
 const units = [
   '',

@@ -149,10 +149,7 @@ export const CardTransferListView = () => {
         accessorKey: 'transactionDate',
         header: 'Transaction Date',
         cell: ({ row }) =>
-          formatDateTime(
-            `${row.original.transactionDate}T00:00:00`,
-            'DD/MM/YYYY'
-          ),
+          formatDateTime(row.original.transactionDate, 'DD/MM/YYYY'),
       },
       {
         accessorKey: 'sourceBranchId',

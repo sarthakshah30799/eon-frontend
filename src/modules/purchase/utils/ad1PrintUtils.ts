@@ -1,7 +1,7 @@
 import type { ICompanyProfile } from '@/modules/companyProfile/types';
 import type { IBranchProfile } from '@/modules/branchProfile/types';
 import type { ITransactionAd1 } from '@/api/transactionAd1/transactionAd1.api';
-import { toDisplayDate } from '@/utils';
+import { formatDateTime } from '@/utils';
 import { AD1_PRINT_TEXT } from '../constants/ad1Constants';
 
 type Ad1PrintCopyType = 'CUSTOMER_COPY' | 'DUPLICATE_COPY';
@@ -14,15 +14,7 @@ const escapeHtml = (value: string) =>
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#39;');
 
-const formatDate = (value?: string | Date | null) => {
-  if (!value) {
-    return '-';
-  }
-  if (value instanceof Date) {
-    return toDisplayDate(value.toISOString().slice(0, 10)) || '-';
-  }
-  return toDisplayDate(value) || '-';
-};
+const formatDate = (value?: string | Date | null) => formatDateTime(value);
 
 const joinAddress = (...parts: Array<string | null | undefined>) =>
   parts

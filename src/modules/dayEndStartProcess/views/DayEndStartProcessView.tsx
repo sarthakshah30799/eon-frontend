@@ -19,6 +19,11 @@ import { useLoadBranchOptions } from '@/modules/branchProfile/hooks';
 type ChecklistAnswers = Record<string, string | boolean>;
 type DayEndAction = 'start' | 'end';
 
+const displayBusinessDate = (
+  value?: string | null,
+  fallback = 'the current business date'
+): string => (value ? formatDateTime(value, 'DD/MM/YYYY') : fallback);
+
 const createDefaultAnswers = (
   checklist: IPolicyChecklistItem[]
 ): ChecklistAnswers =>
@@ -206,7 +211,7 @@ const DayEndStartProcessForm = ({
         isPendingEod
           ? 'Complete the pending EOD before starting a new day.'
           : isClosedToday
-            ? `Day end is already completed for ${openBusinessDate || currentBusinessDate || 'today'}.`
+            ? `Day end is already completed for ${displayBusinessDate(openBusinessDate || currentBusinessDate, 'today')}.`
             : 'Day start is already completed for the open business date.'
       );
       return;
@@ -291,9 +296,7 @@ const DayEndStartProcessForm = ({
                 Business Date
               </div>
               <div className="mt-2 text-sm font-medium text-text-primary">
-                {currentBusinessDate
-                  ? formatDateTime(currentBusinessDate, 'DD/MM/YYYY')
-                  : 'Not available'}
+                {displayBusinessDate(currentBusinessDate, 'Not available')}
               </div>
             </div>
           </div>
@@ -341,9 +344,9 @@ const DayEndStartProcessForm = ({
             <div className="font-semibold">BOD Status</div>
             <div>
               {isPendingBod
-                ? `Day start pending for ${openBusinessDate || 'the current business date'}`
+                ? `Day start pending for ${displayBusinessDate(openBusinessDate)}`
                 : isClosedToday
-                  ? `Day closed for ${openBusinessDate || currentBusinessDate || 'today'}`
+                  ? `Day closed for ${displayBusinessDate(openBusinessDate || currentBusinessDate, 'today')}`
                   : hasBodCompleted
                     ? 'Day started'
                     : 'Day start pending'}
@@ -355,7 +358,7 @@ const DayEndStartProcessForm = ({
             <div className="font-semibold">EOD Status</div>
             <div>
               {isPendingEod
-                ? `Previous day ${openBusinessDate || 'the current business date'} is still open`
+                ? `Previous day ${displayBusinessDate(openBusinessDate)} is still open`
                 : hasEodPending
                   ? 'Previous day is still open'
                   : 'No pending EOD'}
@@ -366,13 +369,10 @@ const DayEndStartProcessForm = ({
               Transaction Date
             </div>
             <div>
-              {transactionDate
-                ? formatDateTime(transactionDate, 'DD/MM/YYYY')
-                : openBusinessDate
-                  ? formatDateTime(openBusinessDate, 'DD/MM/YYYY')
-                  : currentBusinessDate
-                    ? formatDateTime(currentBusinessDate, 'DD/MM/YYYY')
-                    : 'Not available'}
+              {displayBusinessDate(
+                transactionDate || openBusinessDate || currentBusinessDate,
+                'Not available'
+              )}
             </div>
           </div>
           <div className="rounded-lg border border-border-primary bg-surface-secondary px-4 py-3 text-sm text-text-secondary">
@@ -514,15 +514,13 @@ const DayEndStartProcessForm = ({
             <div className="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-800">
               {isPendingBod ? (
                 <p>
-                  Day start is pending for{' '}
-                  {openBusinessDate || 'the current business date'}. Please
-                  start the day before using transactions.
+                  Day start is pending for {displayBusinessDate(openBusinessDate)}.
+                  Please start the day before using transactions.
                 </p>
               ) : (
                 <p>
-                  EOD is pending for{' '}
-                  {openBusinessDate || 'the current business date'}. Please
-                  complete this day before starting the next day.
+                  EOD is pending for {displayBusinessDate(openBusinessDate)}.
+                  Please complete this day before starting the next day.
                 </p>
               )}
             </div>
@@ -530,8 +528,11 @@ const DayEndStartProcessForm = ({
             <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
               <p>
                 Day end is already completed for{' '}
-                {openBusinessDate || currentBusinessDate || 'today'}. You can
-                start again on the next working day.
+                {displayBusinessDate(
+                  openBusinessDate || currentBusinessDate,
+                  'today'
+                )}
+                . You can start again on the next working day.
               </p>
             </div>
           ) : null}

@@ -7,6 +7,7 @@ import {
 } from '@/components/ui';
 import type { IManualBook } from '@/api';
 import { PAGINATION_PAGE_SIZE_OPTIONS } from '@/constants/paginationConstants';
+import { formatDateTime } from '@/utils';
 import { ManualBillBookStatusEnum } from '../types';
 
 const resolveAssignedToLabel = (assignedTo: IManualBook['assignedTo']) => {
@@ -62,7 +63,9 @@ export const ManualBillBookTable = ({
         accessorKey: 'dispatchDate',
         header: 'Date',
         cell: ({ row }) => (
-          <span className="whitespace-nowrap">{row.original.dispatchDate}</span>
+          <span className="whitespace-nowrap">
+            {formatDateTime(row.original.dispatchDate)}
+          </span>
         ),
       },
       {

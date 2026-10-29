@@ -21,6 +21,7 @@ import {
   ADVANCE_REFUND_TEXT,
   ADVANCE_REFUND_TYPE_OPTIONS,
 } from '../constants';
+import { formatDateTime } from '@/utils';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'All Statuses' },
@@ -215,7 +216,7 @@ export const AdvanceRefundListView: React.FC = () => {
                   <td className="p-3 font-semibold text-text-primary">
                     {ar.number}
                   </td>
-                  <td className="p-3">{ar.transactionDate}</td>
+                  <td className="p-3">{formatDateTime(ar.transactionDate)}</td>
                   <td className="p-3">{ar.branchSnapshot?.name || '-'}</td>
                   <td className="p-3 max-w-[200px] truncate">
                     {ar.partyProfileSnapshot?.name || '-'}

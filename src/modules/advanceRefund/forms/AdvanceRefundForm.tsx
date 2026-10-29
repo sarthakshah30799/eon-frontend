@@ -707,7 +707,7 @@ export const AdvanceRefundForm: React.FC<AdvanceRefundFormProps> = ({
         accessorKey: 'receiptDate',
         header: 'Receipt Date',
         cell: ({ row }) =>
-          toDisplayDate(row.original.receiptDate) || row.original.receiptDate,
+          toDisplayDate(row.original.receiptDate) || '-',
       },
       {
         id: 'originalAmount',

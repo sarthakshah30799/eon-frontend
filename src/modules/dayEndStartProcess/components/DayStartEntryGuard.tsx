@@ -12,15 +12,6 @@ interface DayStartEntryGuardProps {
 
 const BLOCKED_WORKFLOW_STATES = new Set(['READY_TO_START', 'PENDING_BOD']);
 
-const formatBusinessDate = (value: string): string => {
-  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value.trim());
-  if (match) {
-    return `${match[3]}-${match[2]}-${match[1]}`;
-  }
-
-  return formatDateTime(value, BUSINESS_DATE_DISPLAY_FORMAT);
-};
-
 export const DayStartEntryGuard = ({ children }: DayStartEntryGuardProps) => {
   const navigate = useNavigate();
   const { isLoading, policyContext, user } = useAuth();
@@ -53,7 +44,7 @@ export const DayStartEntryGuard = ({ children }: DayStartEntryGuardProps) => {
   const openBusinessDate =
     policyContext?.openBusinessDate || currentBusinessDate;
   const displayDate = openBusinessDate
-    ? formatBusinessDate(openBusinessDate)
+    ? formatDateTime(openBusinessDate, BUSINESS_DATE_DISPLAY_FORMAT)
     : 'today';
 
   return (

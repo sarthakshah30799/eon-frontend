@@ -21,6 +21,7 @@ import {
   type ChequeBookReviewStatus,
 } from './types';
 import { useAuth } from '@/lib/AuthContext';
+import { formatDateTime } from '@/utils';
 
 const resolveAssignedToLabel = (assignedTo: IChequeBook['assignedTo']) => {
   if (assignedTo && typeof assignedTo === 'object') {
@@ -346,7 +347,7 @@ export const ChequeBookListView = () => {
                   Date
                 </span>
                 <span className="text-slate-800">
-                  {reviewBook?.dispatchDate}
+                  {formatDateTime(reviewBook?.dispatchDate)}
                 </span>
               </div>
               <div>

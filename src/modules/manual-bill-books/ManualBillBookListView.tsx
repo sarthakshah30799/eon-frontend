@@ -33,6 +33,7 @@ import { usePermission } from '@/hooks/usePermission';
 import { useDebounce } from '@/hooks';
 import { useAuth } from '@/lib/AuthContext';
 import { PAGINATION_DEFAULTS } from '@/constants/paginationConstants';
+import { formatDateTime } from '@/utils';
 
 const resolveAssignedToLabel = (assignedTo: IManualBook['assignedTo']) => {
   if (assignedTo && typeof assignedTo === 'object') {
@@ -563,7 +564,7 @@ export const ManualBillBookListView = () => {
                   Date
                 </span>
                 <span className="text-slate-800">
-                  {reviewBook.dispatchDate}
+                  {formatDateTime(reviewBook.dispatchDate)}
                 </span>
               </div>
               <div>

@@ -68,6 +68,15 @@ const AdvanceRefundCreatePage = lazy(
 const AdvanceRefundDetailPage = lazy(
   () => import('../pages/advance-refunds/detail')
 );
+const AdvanceAdjustmentListPage = lazy(
+  () => import('../pages/advance-adjustments')
+);
+const AdvanceAdjustmentCreatePage = lazy(
+  () => import('../pages/advance-adjustments/create')
+);
+const AdvanceAdjustmentDetailPage = lazy(
+  () => import('../pages/advance-adjustments/detail')
+);
 
 const UserCreatePage = lazy(
   () => import('../pages/users/create/UserCreatePage')
@@ -1700,6 +1709,30 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <AdvanceRefundDetailPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/advance-adjustments',
+    element: (
+      <ProtectedLayout>
+        <AdvanceAdjustmentListPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/advance-adjustments/create',
+    element: (
+      <ProtectedLayout>
+        <AdvanceAdjustmentCreatePage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/advance-adjustments/:id',
+    element: (
+      <ProtectedLayout>
+        <AdvanceAdjustmentDetailPage />
       </ProtectedLayout>
     ),
   },

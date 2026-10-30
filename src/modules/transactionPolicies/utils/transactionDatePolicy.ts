@@ -1,4 +1,5 @@
 import type { IPolicyContext } from '@/modules/auth/types';
+import { formatDateTime } from '@/utils';
 
 export interface TransactionDatePolicy {
   canPunchTransactions: boolean;
@@ -99,11 +100,17 @@ export const getTransactionDatePolicy = (
     : '';
 
   const helperText = lockedThroughDate
-    ? `Data locked through ${lockedThroughDate}. Transaction dates must be on or after ${
-        dataLockMinDate ? formatDateOnly(dataLockMinDate) : lockedThroughDate
+    ? `Data locked through ${formatDateTime(lockedThroughDate)}. Transaction dates must be on or after ${
+        dataLockMinDate
+          ? formatDateTime(formatDateOnly(dataLockMinDate))
+          : formatDateTime(lockedThroughDate)
       }.`
     : workflowState === 'PENDING_EOD'
-      ? `EOD is pending for ${openBusinessDate || 'the previous business date'}. Transactions must use that date.`
+      ? `EOD is pending for ${
+          openBusinessDate
+            ? formatDateTime(openBusinessDate)
+            : 'the previous business date'
+        }. Transactions must use that date.`
       : '';
 
   return {

@@ -18,15 +18,6 @@ const getLocalTodayDateOnly = (): string => {
   return `${year}-${month}-${day}`;
 };
 
-const formatBusinessDate = (value: string): string => {
-  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value.trim());
-  if (match) {
-    return `${match[3]}-${match[2]}-${match[1]}`;
-  }
-
-  return formatDateTime(value, BUSINESS_DATE_DISPLAY_FORMAT);
-};
-
 export const DayWorkPromptModal = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -69,7 +60,10 @@ export const DayWorkPromptModal = () => {
     return null;
   }
 
-  const displayDate = formatBusinessDate(openBusinessDate || today);
+  const displayDate = formatDateTime(
+    openBusinessDate || today,
+    BUSINESS_DATE_DISPLAY_FORMAT
+  );
   const isPendingEod = isPreviousDayEodPending;
 
   const title = isPendingEod ? 'Pending Day End' : 'Day Start Required';

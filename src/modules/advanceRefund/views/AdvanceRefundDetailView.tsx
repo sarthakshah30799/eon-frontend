@@ -22,6 +22,7 @@ import {
 } from '../types';
 import { ADVANCE_REFUND_TEXT } from '../constants';
 import { toast } from 'react-hot-toast';
+import { formatDateTime } from '@/utils';
 
 import { useQuery } from '@tanstack/react-query';
 import type { IAccountProfile } from '@/modules/accountProfile/types/accountProfileTypes';
@@ -127,8 +128,14 @@ export const AdvanceRefundDetailView: React.FC = () => {
               </Badge>
             </div>
             <p className="text-sm text-text-secondary mt-1">
-              Transaction Date: <span className="font-medium text-text-primary">{record.transactionDate}</span> | As-on Date:{' '}
-              <span className="font-medium text-text-primary">{record.asOnDate}</span>
+              Transaction Date:{' '}
+              <span className="font-medium text-text-primary">
+                {formatDateTime(record.transactionDate)}
+              </span>{' '}
+              | As-on Date:{' '}
+              <span className="font-medium text-text-primary">
+                {formatDateTime(record.asOnDate)}
+              </span>
             </p>
           </div>
 
@@ -178,7 +185,9 @@ export const AdvanceRefundDetailView: React.FC = () => {
               <dt className="text-text-secondary">PAN Name:</dt>
               <dd className="font-medium text-text-primary">{record.panName || '-'}</dd>
               <dt className="text-text-secondary">PAN DOB:</dt>
-              <dd className="font-medium text-text-primary">{record.panDob || '-'}</dd>
+              <dd className="font-medium text-text-primary">
+                {formatDateTime(record.panDob)}
+              </dd>
               <dt className="text-text-secondary">Narration:</dt>
               <dd className="font-medium text-text-primary col-span-2">
                 {record.narration}
@@ -282,7 +291,11 @@ export const AdvanceRefundDetailView: React.FC = () => {
                     <td className="p-3 font-medium text-text-primary">
                       {item.receiptVoucherSnapshot?.number || '-'}
                     </td>
-                    <td className="p-3">{item.receiptVoucherSnapshot?.transactionDate || '-'}</td>
+                    <td className="p-3">
+                      {formatDateTime(
+                        item.receiptVoucherSnapshot?.transactionDate
+                      )}
+                    </td>
                     <td className="p-3 text-right">
                       {Number(item.originalReceiptAmount).toLocaleString('en-IN', {
                         minimumFractionDigits: 2,

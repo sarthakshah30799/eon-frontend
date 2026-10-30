@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Table, type TableColumnDef, type TableToolbarFilter } from '@/components/ui';
 import type { PaginationControlsProps } from '@/components/ui';
 import type { IChequeBook } from '@/api';
+import { formatDateTime } from '@/utils';
 import { ChequeBookStatusEnum } from '../types';
 
 const resolveAssignedToLabel = (assignedTo: IChequeBook['assignedTo']) => {
@@ -41,7 +42,9 @@ export const ChequeBookTable = ({
         accessorKey: 'dispatchDate',
         header: 'Date',
         cell: ({ row }) => (
-          <span className="whitespace-nowrap">{row.original.dispatchDate}</span>
+          <span className="whitespace-nowrap">
+            {formatDateTime(row.original.dispatchDate)}
+          </span>
         ),
       },
       {

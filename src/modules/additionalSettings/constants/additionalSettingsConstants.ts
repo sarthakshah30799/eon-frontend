@@ -86,6 +86,7 @@ export const AdditionalSettingsCodeEnum = {
   AdviceVoucherNumberSeries: 'ADVICE_VOUCHER',
   CreditRequestFundNumberSeries: 'CREDIT_REQUEST_FUND',
   AdvanceRefundNumberSeries: 'ADVANCE_REFUND',
+  AdvanceAdjustmentNumberSeries: 'ADVANCE_ADJUSTMENT',
   FakeCurrencyRateEditable: 'FAKE_CURRENCY_RATE_EDITABLE',
   TransferRateEditable: 'TRANSFER_RATE_EDITABLE',
   FakeCurrency: 'FAKE_CURRENCY_SETTINGS',

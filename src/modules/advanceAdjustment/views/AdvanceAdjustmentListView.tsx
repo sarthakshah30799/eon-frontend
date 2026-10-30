@@ -1,0 +1,249 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  Button,
+  SurfacePanel,
+  Badge,
+  PaginationControls,
+  AsyncSelect,
+  DatePicker,
+  Input,
+} from '@/components/ui';
+import { useAuth } from '@/lib/AuthContext';
+import { useLoadBranchOptions } from '@/modules/branchProfile/hooks';
+import { toDisplayDate } from '@/utils';
+import { useAdvanceAdjustmentList } from '../hooks';
+import {
+  AdvanceAdjustmentStatus,
+  type AdvanceAdjustment,
+} from '../types';
+import { ADVANCE_ADJUSTMENT_TEXT } from '../constants';
+
+const STATUS_OPTIONS = [
+  { value: '', label: 'All Statuses' },
+  { value: AdvanceAdjustmentStatus.COMPLETED, label: 'Completed' },
+  { value: AdvanceAdjustmentStatus.DRAFT, label: 'Draft' },
+  { value: AdvanceAdjustmentStatus.CANCELLED, label: 'Cancelled' },
+];
+
+const getStatusBadge = (status: AdvanceAdjustmentStatus) => {
+  switch (status) {
+    case AdvanceAdjustmentStatus.COMPLETED:
+      return <Badge variant="success">Completed</Badge>;
+    case AdvanceAdjustmentStatus.CANCELLED:
+      return <Badge variant="error">Cancelled</Badge>;
+    default:
+      return <Badge variant="default">{status}</Badge>;
+  }
+};
+
+export const AdvanceAdjustmentListView: React.FC = () => {
+  const navigate = useNavigate();
+  const { user, activeBranchId } = useAuth();
+  const canSelectBranch = Boolean(user?.isHo || user?.isHoStaff);
+
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(15);
+
+  const [branchId, setBranchId] = useState(
+    canSelectBranch ? '' : activeBranchId || ''
+  );
+  const [status, setStatus] = useState<string>('');
+  const [dateFrom, setDateFrom] = useState<Date | null>(null);
+  const [dateTo, setDateTo] = useState<Date | null>(null);
+  const [search, setSearch] = useState<string>('');
+
+  const loadBranchOptions = useLoadBranchOptions({ activeOnly: true });
+
+  const { data: response, isLoading } = useAdvanceAdjustmentList({
+    limit: pageSize,
+    offset: (page - 1) * pageSize,
+    branchId: branchId || undefined,
+    status: (status as AdvanceAdjustmentStatus) || undefined,
+    dateFrom: dateFrom ? dateFrom.toISOString().slice(0, 10) : undefined,
+    dateTo: dateTo ? dateTo.toISOString().slice(0, 10) : undefined,
+    search: search || undefined,
+  });
+
+  const records = response?.data || [];
+  const total = response?.total || 0;
+
+  return (
+    <SurfacePanel className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-bold text-text-primary">
+            {ADVANCE_ADJUSTMENT_TEXT.TITLE}
+          </h1>
+          <p className="text-sm text-text-secondary">
+            Adjust outstanding sale bills against party advances.
+          </p>
+        </div>
+        <Button
+          variant="default"
+          onClick={() => navigate('/advance-adjustments/create')}
+        >
+          {ADVANCE_ADJUSTMENT_TEXT.CREATE_TITLE}
+        </Button>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 p-4 bg-surface-secondary rounded-lg border border-border-primary">
+        {canSelectBranch && (
+          <AsyncSelect
+            label="Branch"
+            placeholder="All Branches"
+            loadOptions={loadBranchOptions}
+            defaultOptions={true}
+            isClearable
+            value={
+              branchId ? { value: branchId, label: 'Selected Branch' } : null
+            }
+            onChange={val => {
+              const opt = val as { value: string; label: string } | null;
+              setBranchId(opt?.value || '');
+              setPage(1);
+            }}
+          />
+        )}
+        <AsyncSelect
+          label="Status"
+          loadOptions={async (input: string) => ({
+            options: STATUS_OPTIONS.filter(
+              o => !input || o.label.toLowerCase().includes(input.toLowerCase())
+            ),
+          })}
+          defaultOptions={STATUS_OPTIONS}
+          value={
+            status
+              ? STATUS_OPTIONS.find(o => o.value === status)
+              : { value: '', label: 'All Statuses' }
+          }
+          onChange={val => {
+            const opt = val as { value: string; label: string } | null;
+            setStatus(opt?.value || '');
+            setPage(1);
+          }}
+        />
+        <DatePicker
+          label="Date From"
+          placeholder="DD/MM/YYYY"
+          dateFormat="dd/MM/yyyy"
+          selected={dateFrom}
+          onChange={d => {
+            setDateFrom(d);
+            setPage(1);
+          }}
+        />
+        <DatePicker
+          label="Date To"
+          placeholder="DD/MM/YYYY"
+          dateFormat="dd/MM/yyyy"
+          selected={dateTo}
+          onChange={d => {
+            setDateTo(d);
+            setPage(1);
+          }}
+        />
+        <Input
+          label="Search"
+          placeholder="Number, Party, PAN..."
+          value={search}
+          onChange={e => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
+        />
+      </div>
+
+      <div className="overflow-x-auto border border-border-primary rounded-md">
+        <table className="w-full text-left text-sm border-collapse">
+          <thead className="bg-surface-secondary text-text-secondary text-xs uppercase border-b border-border-primary">
+            <tr>
+              <th className="p-3 font-semibold text-text-primary">Number</th>
+              <th className="p-3 font-semibold text-text-primary">Date</th>
+              <th className="p-3 font-semibold text-text-primary">Branch</th>
+              <th className="p-3 font-semibold text-text-primary">Party Name</th>
+              <th className="p-3 text-right font-semibold text-text-primary">
+                Total Amount (₹)
+              </th>
+              <th className="p-3 font-semibold text-text-primary">Status</th>
+              <th className="p-3 text-right font-semibold text-text-primary">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border-primary">
+            {isLoading ? (
+              <tr>
+                <td
+                  colSpan={7}
+                  className="text-center py-8 text-text-secondary"
+                >
+                  Loading advance adjustments...
+                </td>
+              </tr>
+            ) : records.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={7}
+                  className="text-center py-8 text-text-secondary"
+                >
+                  {ADVANCE_ADJUSTMENT_TEXT.NO_RECORDS}
+                </td>
+              </tr>
+            ) : (
+              records.map((row: AdvanceAdjustment) => (
+                <tr
+                  key={row.id}
+                  className="hover:bg-surface-secondary/50 transition-colors"
+                >
+                  <td className="p-3 font-semibold text-text-primary">
+                    {row.number}
+                  </td>
+                  <td className="p-3">
+                    {toDisplayDate(row.transactionDate) || row.transactionDate}
+                  </td>
+                  <td className="p-3">{row.branchSnapshot?.name || '-'}</td>
+                  <td className="p-3 max-w-[200px] truncate">
+                    {row.partyProfileSnapshot?.name || '-'}
+                  </td>
+                  <td className="p-3 text-right font-medium">
+                    {Number(row.totalAdjustmentAmount).toLocaleString('en-IN', {
+                      minimumFractionDigits: 2,
+                    })}
+                  </td>
+                  <td className="p-3">{getStatusBadge(row.status)}</td>
+                  <td className="p-3 text-right">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        navigate(`/advance-adjustments/${row.id}`)
+                      }
+                    >
+                      View
+                    </Button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {total > 0 && (
+        <PaginationControls
+          page={page}
+          pageSize={pageSize}
+          total={total}
+          totalPages={Math.ceil(total / pageSize)}
+          onPageChange={setPage}
+          onPageSizeChange={setPageSize}
+          itemLabel="adjustments"
+        />
+      )}
+    </SurfacePanel>
+  );
+};
+
+export default AdvanceAdjustmentListView;

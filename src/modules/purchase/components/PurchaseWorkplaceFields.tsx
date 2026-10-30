@@ -45,8 +45,16 @@ export const PurchaseWorkplaceFields = ({
   );
 
   const loadBranchOptions = useLoadBranchOptions({ activeOnly: true });
-  const { data: selectedBranch } = useGetBranchProfile(branchId || '');
-  const { data: counters = [], isLoading: isCountersLoading } = useQuery({
+  const {
+    data: selectedBranch,
+    isLoading: isSelectedBranchLoading,
+    isFetching: isSelectedBranchFetching,
+  } = useGetBranchProfile(branchId || '');
+  const {
+    data: counters = [],
+    isLoading: isCountersLoading,
+    isFetching: isCountersFetching,
+  } = useQuery({
     queryKey: ['counter-profiles-all', { activeOnly: true }],
     queryFn: () => counterProfileApi.getAllCounterProfiles({ activeOnly: true }),
     enabled: canEditWorkplace,
@@ -214,7 +222,12 @@ export const PurchaseWorkplaceFields = ({
         loadOptions={loadCounterOptions}
         defaultOptions={counterOptions}
         isLoading={
-          canEditWorkplace ? isCountersLoading : isActiveCounterLoading
+          canEditWorkplace
+            ? isCountersLoading ||
+              isCountersFetching ||
+              (Boolean(branchId) &&
+                (isSelectedBranchLoading || isSelectedBranchFetching))
+            : isActiveCounterLoading
         }
         disabled={disableSelection || (canEditWorkplace && !hasCounterOptions)}
       />

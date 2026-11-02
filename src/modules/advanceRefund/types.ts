@@ -112,9 +112,41 @@ export interface AdvanceRefund {
   paymentVoucherId: string | null;
   adviceVoucherId: string | null;
   hoPaymentVoucherId: string | null;
+  printCount: number;
+  printLogs?: AdvanceRefundPrintLog[];
   items: AdvanceRefundItem[];
   createdAt: string;
   updatedAt: string;
+}
+
+export type AdvanceRefundPrintCopyType = 'CUSTOMER_COPY' | 'DUPLICATE_COPY';
+
+export interface AdvanceRefundPrintLog {
+  id: string;
+  advanceRefundId: string;
+  copyType: AdvanceRefundPrintCopyType;
+  message: string;
+  metadata?: Record<string, unknown> | null;
+  performedById?: string | null;
+  performedByName?: string | null;
+  performedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface RecordAdvanceRefundPrintPayload {
+  copyType?: AdvanceRefundPrintCopyType;
+  recipientEmail?: string;
+  subject?: string;
+  text?: string;
+  html?: string;
+  sendEmail?: boolean;
+}
+
+export interface RecordAdvanceRefundPrintResponse {
+  message: string;
+  copyType: AdvanceRefundPrintCopyType;
+  printCount: number;
 }
 
 export interface AdvanceRefundItemFormValue {

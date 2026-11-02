@@ -6,6 +6,8 @@ import type {
   CreditRequestFund,
   CreditRequestFundFormValues,
   CreditRequestFundListQuery,
+  RecordCreditRequestFundPrintPayload,
+  RecordCreditRequestFundPrintResponse,
 } from '@/modules/creditRequestFund/types';
 
 const BASE = '/credit-request-fund';
@@ -111,6 +113,19 @@ export const creditRequestFundApi = {
     );
     if (response.error) throw new Error(response.error);
     if (!response.data) throw new Error('Failed to reject Credit Request Fund');
+    return response.data;
+  },
+  recordPrint: async (
+    id: string,
+    payload: RecordCreditRequestFundPrintPayload
+  ) => {
+    const response =
+      await apiClient.post<RecordCreditRequestFundPrintResponse>(
+        `${BASE}/${id}/print`,
+        payload
+      );
+    if (response.error) throw new Error(response.error);
+    if (!response.data) throw new Error('Failed to record print');
     return response.data;
   },
 };

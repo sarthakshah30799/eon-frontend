@@ -82,9 +82,43 @@ export interface AdvanceAdjustment {
   status: AdvanceAdjustmentStatus;
   totalAdjustmentAmount: string;
   narration: string;
+  printCount: number;
+  printLogs?: AdvanceAdjustmentPrintLog[];
   items: AdvanceAdjustmentItem[];
   createdAt: string;
   updatedAt: string;
+}
+
+export type AdvanceAdjustmentPrintCopyType =
+  | 'CUSTOMER_COPY'
+  | 'DUPLICATE_COPY';
+
+export interface AdvanceAdjustmentPrintLog {
+  id: string;
+  advanceAdjustmentId: string;
+  copyType: AdvanceAdjustmentPrintCopyType;
+  message: string;
+  metadata?: Record<string, unknown> | null;
+  performedById?: string | null;
+  performedByName?: string | null;
+  performedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface RecordAdvanceAdjustmentPrintPayload {
+  copyType?: AdvanceAdjustmentPrintCopyType;
+  recipientEmail?: string;
+  subject?: string;
+  text?: string;
+  html?: string;
+  sendEmail?: boolean;
+}
+
+export interface RecordAdvanceAdjustmentPrintResponse {
+  message: string;
+  copyType: AdvanceAdjustmentPrintCopyType;
+  printCount: number;
 }
 
 export interface AdvanceAdjustmentItemFormValue {

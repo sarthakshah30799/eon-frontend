@@ -13,14 +13,25 @@ import {
 } from '@/components/ui';
 import { useAuth } from '@/lib/AuthContext';
 import { accountProfileApi } from '@/api/accountProfile';
-import { useAdvanceRefund, useHonourAdvanceRefund } from '../hooks';
+import { useListCompanyProfiles } from '@/modules/companyProfile/hooks';
+import {
+  useAdvanceRefund,
+  useHonourAdvanceRefund,
+  useRecordAdvanceRefundPrint,
+} from '../hooks';
 import {
   AdvanceRefundStatus,
   AdvanceRefundType,
   AdvanceRefundPayoutSource,
   type AdvanceRefundItem,
 } from '../types';
-import { ADVANCE_REFUND_TEXT } from '../constants';
+import { ADVANCE_REFUND_PRINT_TEXT, ADVANCE_REFUND_TEXT } from '../constants';
+import {
+  buildAdvanceRefundPrintHtml,
+  getAdvanceRefundPrintCopyLabel,
+  getAdvanceRefundPrintCopyType,
+  openPrintWindow,
+} from '../utils/advanceRefundPrintUtils';
 import { toast } from 'react-hot-toast';
 import { formatDateTime } from '@/utils';
 
@@ -35,6 +46,12 @@ export const AdvanceRefundDetailView: React.FC = () => {
 
   const { data: record, isLoading, error } = useAdvanceRefund(id || '');
   const honourMutation = useHonourAdvanceRefund();
+  const recordPrintMutation = useRecordAdvanceRefundPrint();
+  const { data: companiesPage } = useListCompanyProfiles(
+    { limit: 1, offset: 0 },
+    record?.status === AdvanceRefundStatus.COMPLETED
+  );
+  const company = companiesPage?.data?.[0] ?? null;
 
   // Honour Modal state
   const [isHonourModalOpen, setIsHonourModalOpen] = useState(false);
@@ -43,6 +60,8 @@ export const AdvanceRefundDetailView: React.FC = () => {
   const [chequeDate, setChequeDate] = useState<Date | null>(null);
   const [drawnOn, setDrawnOn] = useState('');
   const [narration, setNarration] = useState('');
+  const [isPrinting, setIsPrinting] = useState(false);
+  const [hasPrintedOnce, setHasPrintedOnce] = useState(false);
 
   const { data: hoAccountsRes, isLoading: isAccountsLoading } = useQuery({
     queryKey: ['account-profiles', 'ho-payment-banks', isHonourModalOpen],
@@ -76,6 +95,52 @@ export const AdvanceRefundDetailView: React.FC = () => {
     });
 
     setIsHonourModalOpen(false);
+  };
+
+  const canPrint = record?.status === AdvanceRefundStatus.COMPLETED;
+  const printCopyType = getAdvanceRefundPrintCopyType(
+    hasPrintedOnce ? Math.max(record?.printCount ?? 0, 1) : record?.printCount
+  );
+
+  const handlePrintCopy = async () => {
+    if (!record?.id || !canPrint || isPrinting) {
+      return;
+    }
+
+    try {
+      setIsPrinting(true);
+      const copyType = getAdvanceRefundPrintCopyType(record.printCount);
+      const html = buildAdvanceRefundPrintHtml({
+        copyType,
+        record,
+        company,
+      });
+      await recordPrintMutation.mutateAsync({
+        id: record.id,
+        payload: {
+          copyType,
+          subject: `${record.number} - ${getAdvanceRefundPrintCopyLabel(copyType)}`,
+          text: `Printed ${getAdvanceRefundPrintCopyLabel(copyType).toLowerCase()} for advance refund ${record.number}.`,
+          html,
+          sendEmail: false,
+        },
+      });
+      openPrintWindow(html, ADVANCE_REFUND_PRINT_TEXT.popupBlocked);
+      setHasPrintedOnce(true);
+      toast.success(
+        ADVANCE_REFUND_PRINT_TEXT.printed(
+          getAdvanceRefundPrintCopyLabel(copyType)
+        )
+      );
+    } catch (printError) {
+      toast.error(
+        printError instanceof Error
+          ? printError.message
+          : ADVANCE_REFUND_PRINT_TEXT.printFailed
+      );
+    } finally {
+      setIsPrinting(false);
+    }
   };
 
   const breadcrumbItems = [
@@ -139,24 +204,63 @@ export const AdvanceRefundDetailView: React.FC = () => {
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
-            <Button variant="outline" onClick={() => navigate('/advance-refunds')}>
-              Back to List
-            </Button>
-            {record.status === AdvanceRefundStatus.PENDING_HO_APPROVAL && isHoUser && (
-              <Button
-                variant="default"
-                onClick={() => {
-                  setChequeNumber(record.chequeNumber || '');
-                  setChequeDate(record.chequeDate ? new Date(record.chequeDate) : null);
-                  setDrawnOn(record.drawnOn || '');
-                  setNarration(record.narration || '');
-                  setIsHonourModalOpen(true);
-                }}
-              >
-                Honour & Pay Refund
+          <div className="flex flex-col items-end gap-2">
+            <div className="flex items-center gap-3">
+              <Button variant="outline" onClick={() => navigate('/advance-refunds')}>
+                Back to List
               </Button>
+              {canPrint && (
+                <Button
+                  variant="default"
+                  onClick={() => {
+                    void handlePrintCopy();
+                  }}
+                  disabled={isPrinting || recordPrintMutation.isPending}
+                >
+                  {ADVANCE_REFUND_TEXT.PRINT_COPY}
+                </Button>
+              )}
+              {record.status === AdvanceRefundStatus.PENDING_HO_APPROVAL && isHoUser && (
+                <Button
+                  variant="default"
+                  onClick={() => {
+                    setChequeNumber(record.chequeNumber || '');
+                    setChequeDate(record.chequeDate ? new Date(record.chequeDate) : null);
+                    setDrawnOn(record.drawnOn || '');
+                    setNarration(record.narration || '');
+                    setIsHonourModalOpen(true);
+                  }}
+                >
+                  Honour & Pay Refund
+                </Button>
+              )}
+            </div>
+            {canPrint && (
+              <p className="text-xs text-text-secondary">
+                {printCopyType === 'DUPLICATE_COPY'
+                  ? ADVANCE_REFUND_TEXT.PRINT_DUPLICATE_HINT
+                  : ADVANCE_REFUND_TEXT.PRINT_ORIGINAL_HINT}
+              </p>
             )}
+            {(record.printLogs?.length ?? 0) > 0 ? (
+              <div className="max-w-sm text-right">
+                <p className="text-xs font-medium text-text-secondary">
+                  {ADVANCE_REFUND_TEXT.PRINT_HISTORY}
+                </p>
+                <ul className="mt-1 space-y-1 text-xs text-text-secondary">
+                  {record.printLogs?.map(log => (
+                    <li key={log.id}>
+                      {log.performedByName?.trim() ||
+                        ADVANCE_REFUND_TEXT.PRINTED_BY_UNKNOWN}
+                      {' · '}
+                      {getAdvanceRefundPrintCopyLabel(log.copyType)}
+                      {' · '}
+                      {formatDateTime(log.performedAt)}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
           </div>
         </div>
 

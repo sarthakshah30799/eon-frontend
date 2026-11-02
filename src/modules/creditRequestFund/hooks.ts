@@ -2,8 +2,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { creditRequestFundApi } from '@/api/creditRequestFund';
 import type {
+  CreditRequestFund,
   CreditRequestFundFormValues,
   CreditRequestFundListQuery,
+  RecordCreditRequestFundPrintPayload,
 } from './types';
 
 export const creditRequestFundKeys = {
@@ -142,6 +144,38 @@ export const useRejectCreditRequestFund = () => {
           ? error.message
           : 'Failed to reject Credit Request Fund'
       );
+    },
+  });
+};
+
+export const useRecordCreditRequestFundPrint = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: string;
+      payload: RecordCreditRequestFundPrintPayload;
+    }) => creditRequestFundApi.recordPrint(id, payload),
+    onSuccess: (data, variables) => {
+      queryClient.setQueryData<CreditRequestFund>(
+        creditRequestFundKeys.detail(variables.id),
+        current =>
+          current
+            ? {
+                ...current,
+                printCount:
+                  data?.printCount ?? (current.printCount ?? 0) + 1,
+              }
+            : current
+      );
+      void queryClient.invalidateQueries({
+        queryKey: creditRequestFundKeys.detail(variables.id),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: creditRequestFundKeys.all,
+      });
     },
   });
 };

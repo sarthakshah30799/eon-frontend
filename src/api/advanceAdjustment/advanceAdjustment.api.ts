@@ -8,6 +8,8 @@ import type {
   CreateAdvanceAdjustmentPayload,
   OutstandingSaleForAdjustment,
   OutstandingSalesParams,
+  RecordAdvanceAdjustmentPrintPayload,
+  RecordAdvanceAdjustmentPrintResponse,
 } from '@/modules/advanceAdjustment/types';
 
 const BASE = '/advance-adjustments';
@@ -47,5 +49,17 @@ export const advanceAdjustmentApi = {
       params.limit,
       params.offset
     );
+  },
+
+  recordPrint: async (
+    id: string,
+    payload: RecordAdvanceAdjustmentPrintPayload
+  ) => {
+    const response = await apiClient.post<RecordAdvanceAdjustmentPrintResponse>(
+      `${BASE}/${id}/print`,
+      payload
+    );
+    if (response.error) throw new Error(response.error);
+    return response.data;
   },
 };

@@ -55,6 +55,10 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
     path: '/credit-request-fund/edit/:id',
     meta: { title: 'Credit Request Fund Details' },
   },
+  {
+    path: '/bank-reconciliation',
+    meta: { title: 'Bank Reconciliation' },
+  },
   { path: '/advance-refunds', meta: { title: 'Advance Refunds' } },
   {
     path: '/advance-refunds/create',
@@ -81,6 +85,10 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
   },
   { path: '/reports/stock-revaluations', meta: { title: 'Stock Revaluation' } },
   { path: '/reports/bank-report', meta: { title: 'Bank Report' } },
+  {
+    path: '/reports/bank-reconciliation-report',
+    meta: { title: 'Bank Reconciliation Report' },
+  },
   { path: '/reports/cash-report', meta: { title: 'Cash Report' } },
   { path: '/reports/generate-ledger', meta: { title: 'Generate Ledger' } },
   {
@@ -146,6 +154,26 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
   {
     path: '/reports/ageing-report',
     meta: { title: 'Ageing Report' },
+  },
+  {
+    path: '/reports/afc-reconciliation-report',
+    meta: { title: 'AFC Reconciliation Report' },
+  },
+  {
+    path: '/reports/general-ledger-report',
+    meta: { title: 'General Ledger Report' },
+  },
+  {
+    path: '/reports/sub-ledger-report',
+    meta: { title: 'Sub Ledger Report' },
+  },
+  {
+    path: '/reports/trial-balance-report',
+    meta: { title: 'Trial Balance Report' },
+  },
+  {
+    path: '/reports/final-account-report',
+    meta: { title: 'Final Account Report' },
   },
   {
     path: '/reports/tt-report',

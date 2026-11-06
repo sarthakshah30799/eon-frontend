@@ -34,6 +34,7 @@ export const ReportPageTypeEnum = {
   SPECIAL: 'special-reports',
   CURRENCY_BALANCE: 'currency-balance-report',
   BANK_REPORT: 'bank-report',
+  BANK_RECONCILIATION_REPORT: 'bank-reconciliation-report',
   CASH_REPORT: 'cash-report',
   GENERATE_LEDGER: 'generate-ledger',
   CARD_UNSETTLED: 'card-unsettled-report',
@@ -52,6 +53,11 @@ export const ReportPageTypeEnum = {
   TOUR_PAX_REPORT: 'tour-pax-report',
   OUTSTANDING_TRANSACTION_REPORT: 'outstanding-transaction-report',
   AGEING_REPORT: 'ageing-report',
+  AFC_RECONCILIATION_REPORT: 'afc-reconciliation-report',
+  GENERAL_LEDGER_REPORT: 'general-ledger-report',
+  SUB_LEDGER_REPORT: 'sub-ledger-report',
+  TRIAL_BALANCE_REPORT: 'trial-balance-report',
+  FINAL_ACCOUNT_REPORT: 'final-account-report',
   INDUS_TT_REPORT: 'indus-tt-report',
   IDFC_TT_REPORT: 'idfc-tt-report',
   ICICI_TT_REPORT: 'icici-tt-report',
@@ -86,6 +92,7 @@ const REPORT_PAGE_TITLE_BY_TYPE: Record<ReportPageType, string> = {
   [ReportPageTypeEnum.SPECIAL]: 'Special Reports',
   [ReportPageTypeEnum.CURRENCY_BALANCE]: 'Currency Balance',
   [ReportPageTypeEnum.BANK_REPORT]: 'Bank Report',
+  [ReportPageTypeEnum.BANK_RECONCILIATION_REPORT]: 'Bank Reconciliation Report',
   [ReportPageTypeEnum.CASH_REPORT]: 'Cash Report',
   [ReportPageTypeEnum.GENERATE_LEDGER]: 'Generate Ledger',
   [ReportPageTypeEnum.CARD_UNSETTLED]: 'Unsettled Product Report',
@@ -106,6 +113,11 @@ const REPORT_PAGE_TITLE_BY_TYPE: Record<ReportPageType, string> = {
   [ReportPageTypeEnum.OUTSTANDING_TRANSACTION_REPORT]:
     'Outstanding Transaction Report',
   [ReportPageTypeEnum.AGEING_REPORT]: 'Ageing Report',
+  [ReportPageTypeEnum.AFC_RECONCILIATION_REPORT]: 'AFC Reconciliation Report',
+  [ReportPageTypeEnum.GENERAL_LEDGER_REPORT]: 'General Ledger Report',
+  [ReportPageTypeEnum.SUB_LEDGER_REPORT]: 'Sub Ledger Report',
+  [ReportPageTypeEnum.TRIAL_BALANCE_REPORT]: 'Trial Balance Report',
+  [ReportPageTypeEnum.FINAL_ACCOUNT_REPORT]: 'Final Account Report',
   [ReportPageTypeEnum.INDUS_TT_REPORT]: 'INDUS TT Report',
   [ReportPageTypeEnum.IDFC_TT_REPORT]: 'IDFC TT Report',
   [ReportPageTypeEnum.ICICI_TT_REPORT]: 'ICICI TT Report',
@@ -377,6 +389,46 @@ export interface IBankReportRequest {
   layout?: BankReportLayout;
   branchIds?: string[];
   accountIds?: string[];
+}
+
+export interface IBankReconciliationReportDetailRow {
+  srNo: string;
+  voucherNo: string;
+  date: string;
+  party: string;
+  remarks: string;
+  chequeNo: string;
+  chequeDate: string;
+  chequeAmount: string;
+  amount: string;
+}
+
+export interface IBankReconciliationReportSection {
+  branchId: string | null;
+  branchLabel: string;
+  accountId: string;
+  accountLabel: string;
+  bookBalance: string;
+  issuedTotal: string;
+  depositedTotal: string;
+  bankBalance: string;
+  issuedRows: IBankReconciliationReportDetailRow[];
+  depositedRows: IBankReconciliationReportDetailRow[];
+}
+
+export interface IBankReconciliationReportResponse {
+  columns: IBankReportColumn[];
+  layout: BankReportLayout;
+  sections: IBankReconciliationReportSection[];
+}
+
+export interface IBankReconciliationReportRequest {
+  startDate?: string;
+  endDate?: string;
+  layout?: BankReportLayout;
+  branchIds?: string[];
+  accountIds?: string[];
+  unclearedOnly?: boolean;
 }
 
 export const CashReportLayoutEnum = {
@@ -836,6 +888,199 @@ export interface IAgeingReportRequest {
   layout?: AgeingReportLayout;
   eefcFilter?: AgeingEefcFilter;
   scope?: AgeingScope;
+}
+
+export type AfcReconciliationReportLayout = 'detail' | 'summary';
+export type AfcReconciliationReportScope = 'branch' | 'consolidated';
+
+export interface IAfcReconciliationReportColumn {
+  key: string;
+  label: string;
+}
+
+export interface IAfcReconciliationReportRow {
+  lineKey: string;
+  rowType: 'BRANCH' | 'PARTY' | 'ITEM' | 'TOTAL';
+  [key: string]: string;
+}
+
+export interface IAfcReconciliationReportResponse {
+  startDate: string;
+  endDate: string;
+  accountingDate: string;
+  layout: AfcReconciliationReportLayout;
+  scope: AfcReconciliationReportScope;
+  message: string;
+  columns: IAfcReconciliationReportColumn[];
+  rows: IAfcReconciliationReportRow[];
+}
+
+export interface IAfcReconciliationReportRequest {
+  startDate?: string;
+  endDate?: string;
+  accountingDate?: string;
+  branchIds?: string[];
+  counterIds?: string[];
+  layout?: AfcReconciliationReportLayout;
+  scope?: AfcReconciliationReportScope;
+}
+
+export type GeneralLedgerReportLayout = 'detail' | 'summary';
+export type GeneralLedgerReportScope = 'branch' | 'consolidated';
+export type GeneralLedgerReportView = 'ledger' | 'columnar';
+
+export interface IGeneralLedgerReportColumn {
+  key: string;
+  label: string;
+}
+
+export interface IGeneralLedgerReportRow {
+  rowType: 'OPENING' | 'ITEM' | 'CLOSING' | 'TOTAL';
+  date: string;
+  docCode: string;
+  number: string;
+  subledger: string;
+  particulars: string;
+  debit: string;
+  credit: string;
+  runningTotal: string;
+  [key: string]: string;
+}
+
+export interface IGeneralLedgerReportSection {
+  branchId: string | null;
+  branchLabel: string;
+  accountId: string;
+  accountCode: string;
+  accountLabel: string;
+  openingBalance: string;
+  totalDebit: string;
+  totalCredit: string;
+  closingBalance: string;
+  rows: IGeneralLedgerReportRow[];
+}
+
+export interface IGeneralLedgerColumnarRow {
+  code: string;
+  accountId: string;
+  [key: string]: string;
+}
+
+export interface IGeneralLedgerReportResponse {
+  startDate: string;
+  endDate: string;
+  layout: GeneralLedgerReportLayout;
+  scope: GeneralLedgerReportScope;
+  view: GeneralLedgerReportView;
+  message: string;
+  columns: IGeneralLedgerReportColumn[];
+  sections: IGeneralLedgerReportSection[];
+  columnarColumns: IGeneralLedgerReportColumn[];
+  columnarRows: IGeneralLedgerColumnarRow[];
+}
+
+export interface IGeneralLedgerReportRequest {
+  startDate?: string;
+  endDate?: string;
+  branchIds?: string[];
+  accountIds?: string[];
+  layout?: GeneralLedgerReportLayout;
+  scope?: GeneralLedgerReportScope;
+  view?: GeneralLedgerReportView;
+  passengerName?: string;
+}
+
+export type TrialBalanceReportScope = 'branch' | 'consolidated';
+
+export type TrialBalanceReportRowType =
+  | 'BRANCH'
+  | 'TYPE'
+  | 'CODE'
+  | 'ACCOUNT'
+  | 'TOTAL';
+
+export interface ITrialBalanceReportColumn {
+  key: string;
+  label: string;
+}
+
+export interface ITrialBalanceReportRow {
+  rowType: TrialBalanceReportRowType;
+  brnCode: string;
+  code: string;
+  name: string;
+  openingDr: string;
+  openingCr: string;
+  transactionDebit: string;
+  transactionCredit: string;
+  closingDr: string;
+  closingCr: string;
+  [key: string]: string;
+}
+
+export interface ITrialBalanceReportResponse {
+  startDate: string;
+  endDate: string;
+  scope: TrialBalanceReportScope;
+  groupBy: boolean;
+  message: string;
+  columns: ITrialBalanceReportColumn[];
+  rows: ITrialBalanceReportRow[];
+}
+
+export interface ITrialBalanceReportRequest {
+  startDate?: string;
+  endDate?: string;
+  branchIds?: string[];
+  scope?: TrialBalanceReportScope;
+  groupBy?: boolean;
+}
+
+export type FinalAccountReportScope = 'branch' | 'consolidated';
+
+export type FinalAccountStatementType =
+  | 'trading'
+  | 'profit-and-loss'
+  | 'balance-sheet'
+  | 'merge-profit';
+
+export interface IFinalAccountReportColumn {
+  key: string;
+  label: string;
+}
+
+export interface IFinalAccountSideRow {
+  code: string;
+  name: string;
+  amount: string;
+}
+
+export interface IFinalAccountReportSection {
+  branchId: string | null;
+  branchLabel: string;
+  debitRows: IFinalAccountSideRow[];
+  creditRows: IFinalAccountSideRow[];
+  debitTotal: string;
+  creditTotal: string;
+}
+
+export interface IFinalAccountReportResponse {
+  startDate: string;
+  endDate: string;
+  scope: FinalAccountReportScope;
+  statementType: FinalAccountStatementType;
+  message: string;
+  debitColumns: IFinalAccountReportColumn[];
+  creditColumns: IFinalAccountReportColumn[];
+  sections: IFinalAccountReportSection[];
+}
+
+export interface IFinalAccountReportRequest {
+  startDate?: string;
+  endDate?: string;
+  branchIds?: string[];
+  scope?: FinalAccountReportScope;
+  statementType?: FinalAccountStatementType;
 }
 
 export interface ITourPaxReportRequest {

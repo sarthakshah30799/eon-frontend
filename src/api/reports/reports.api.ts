@@ -9,6 +9,8 @@ import type {
   ICurrencyBalanceReportResponse,
   IBankReportRequest,
   IBankReportResponse,
+  IBankReconciliationReportRequest,
+  IBankReconciliationReportResponse,
   ICashReportRequest,
   ICashReportResponse,
   IGenerateLedgerRequest,
@@ -44,6 +46,14 @@ import type {
   IOutstandingTransactionReportResponse,
   IAgeingReportRequest,
   IAgeingReportResponse,
+  IAfcReconciliationReportRequest,
+  IAfcReconciliationReportResponse,
+  IGeneralLedgerReportRequest,
+  IGeneralLedgerReportResponse,
+  ITrialBalanceReportRequest,
+  ITrialBalanceReportResponse,
+  IFinalAccountReportRequest,
+  IFinalAccountReportResponse,
   ITtReportRequest,
   ITtReportResponse,
   LrsDailyReportExportFormat,
@@ -369,6 +379,56 @@ export const reportsApi = {
     return {
       blob: res.data.blob,
       filename: res.data.filename || `bank-report.${format}`,
+    };
+  },
+
+  getBankReconciliationReport: async (
+    params: IBankReconciliationReportRequest
+  ): Promise<IBankReconciliationReportResponse> => {
+    const res = await apiClient.get<IBankReconciliationReportResponse>(
+      `/reports/bank-reconciliation-report${buildQueryString(params)}`
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      return {
+        columns: [],
+        layout: 'BRANCH_WISE',
+        sections: [],
+      };
+    }
+
+    return res.data;
+  },
+
+  downloadBankReconciliationReport: async (
+    params: IBankReconciliationReportRequest,
+    format: ReportExportFormat | 'pdf'
+  ): Promise<{ blob: Blob; filename?: string }> => {
+    const query = buildQueryString({
+      ...params,
+      format,
+    });
+
+    const res = await apiClient.getDownload(
+      `/reports/bank-reconciliation-report/export${query}`
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      throw new Error('Failed to download bank reconciliation report');
+    }
+
+    return {
+      blob: res.data.blob,
+      filename:
+        res.data.filename || `bank-reconciliation-report.${format}`,
     };
   },
 
@@ -1256,6 +1316,219 @@ export const reportsApi = {
     return {
       blob: res.data.blob,
       filename: res.data.filename || `ageing-report.${format}`,
+    };
+  },
+
+  getAfcReconciliationReport: async (
+    params: IAfcReconciliationReportRequest
+  ): Promise<IAfcReconciliationReportResponse> => {
+    const res = await apiClient.get<IAfcReconciliationReportResponse>(
+      `/reports/afc-reconciliation-report${buildQueryString(params)}`
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      return {
+        startDate: params.startDate ?? '',
+        endDate: params.endDate ?? '',
+        accountingDate: params.accountingDate ?? '',
+        layout: params.layout ?? 'detail',
+        scope: params.scope ?? 'branch',
+        message: '',
+        columns: [],
+        rows: [],
+      };
+    }
+
+    return res.data;
+  },
+
+  downloadAfcReconciliationReport: async (
+    params: IAfcReconciliationReportRequest,
+    format: ReportExportFormat
+  ): Promise<{ blob: Blob; filename?: string }> => {
+    const query = buildQueryString({
+      ...params,
+      format,
+    });
+    const res = await apiClient.getDownload(
+      `/reports/afc-reconciliation-report/export${query}`
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      throw new Error('Failed to download AFC Reconciliation Report');
+    }
+
+    return {
+      blob: res.data.blob,
+      filename: res.data.filename || `afc-reconciliation-report.${format}`,
+    };
+  },
+
+  getGeneralLedgerReport: async (
+    params: IGeneralLedgerReportRequest
+  ): Promise<IGeneralLedgerReportResponse> => {
+    const res = await apiClient.get<IGeneralLedgerReportResponse>(
+      `/reports/general-ledger-report${buildQueryString(params)}`
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      return {
+        startDate: params.startDate ?? '',
+        endDate: params.endDate ?? '',
+        layout: params.layout ?? 'detail',
+        scope: params.scope ?? 'branch',
+        view: params.view ?? 'ledger',
+        message: '',
+        columns: [],
+        sections: [],
+        columnarColumns: [],
+        columnarRows: [],
+      };
+    }
+
+    return res.data;
+  },
+
+  downloadGeneralLedgerReport: async (
+    params: IGeneralLedgerReportRequest,
+    format: ReportExportFormat
+  ): Promise<{ blob: Blob; filename?: string }> => {
+    const query = buildQueryString({
+      ...params,
+      format,
+    });
+    const res = await apiClient.getDownload(
+      `/reports/general-ledger-report/export${query}`
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      throw new Error('Failed to download General Ledger Report');
+    }
+
+    return {
+      blob: res.data.blob,
+      filename: res.data.filename || `general-ledger-report.${format}`,
+    };
+  },
+
+  getTrialBalanceReport: async (
+    params: ITrialBalanceReportRequest
+  ): Promise<ITrialBalanceReportResponse> => {
+    const res = await apiClient.get<ITrialBalanceReportResponse>(
+      `/reports/trial-balance-report${buildQueryString(params)}`
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      return {
+        startDate: params.startDate ?? '',
+        endDate: params.endDate ?? '',
+        scope: params.scope ?? 'branch',
+        groupBy: Boolean(params.groupBy),
+        message: '',
+        columns: [],
+        rows: [],
+      };
+    }
+
+    return res.data;
+  },
+
+  downloadTrialBalanceReport: async (
+    params: ITrialBalanceReportRequest,
+    format: ReportExportFormat
+  ): Promise<{ blob: Blob; filename?: string }> => {
+    const query = buildQueryString({
+      ...params,
+      format,
+    });
+    const res = await apiClient.getDownload(
+      `/reports/trial-balance-report/export${query}`
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      throw new Error('Failed to download Trial Balance Report');
+    }
+
+    return {
+      blob: res.data.blob,
+      filename: res.data.filename || `trial-balance-report.${format}`,
+    };
+  },
+
+  getFinalAccountReport: async (
+    params: IFinalAccountReportRequest
+  ): Promise<IFinalAccountReportResponse> => {
+    const res = await apiClient.get<IFinalAccountReportResponse>(
+      `/reports/final-account-report${buildQueryString(params)}`
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      return {
+        startDate: params.startDate ?? '',
+        endDate: params.endDate ?? '',
+        scope: params.scope ?? 'branch',
+        statementType: params.statementType ?? 'trading',
+        message: '',
+        debitColumns: [],
+        creditColumns: [],
+        sections: [],
+      };
+    }
+
+    return res.data;
+  },
+
+  downloadFinalAccountReport: async (
+    params: IFinalAccountReportRequest,
+    format: ReportExportFormat
+  ): Promise<{ blob: Blob; filename?: string }> => {
+    const query = buildQueryString({
+      ...params,
+      format,
+    });
+    const res = await apiClient.getDownload(
+      `/reports/final-account-report/export${query}`
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      throw new Error('Failed to download Final Account Report');
+    }
+
+    return {
+      blob: res.data.blob,
+      filename: res.data.filename || `final-account-report.${format}`,
     };
   },
 

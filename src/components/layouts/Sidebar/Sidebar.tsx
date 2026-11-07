@@ -106,6 +106,13 @@ const resolveMenuPath = (path?: string, basePath = '') => {
   if (!path) return undefined;
   if (!basePath) return path;
   if (path.startsWith(basePath)) return path;
+  // Leaf paths like `/bank-report` under `/reports` become `/reports/bank-report`.
+  // Already-rooted multi-segment paths (e.g. `/reports/afc-reconciliation-report`
+  // under a report subgroup) must stay absolute and not nest under the group path.
+  const segmentCount = path.split('/').filter(Boolean).length;
+  if (path.startsWith('/') && segmentCount > 1) {
+    return path;
+  }
   return `${basePath}${path.startsWith('/') ? path : `/${path}`}`;
 };
 

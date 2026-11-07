@@ -59,6 +59,9 @@ const CreditRequestFundCreatePage = lazy(
 const CreditRequestFundEditPage = lazy(
   () => import('../pages/credit-request-fund/edit')
 );
+const BankReconciliationPage = lazy(
+  () => import('../pages/bank-reconciliation')
+);
 const AdvanceRefundListPage = lazy(
   () => import('../pages/advance-refunds')
 );
@@ -1685,6 +1688,14 @@ const router = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <CreditRequestFundEditPage />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: '/bank-reconciliation',
+    element: (
+      <ProtectedLayout>
+        <BankReconciliationPage />
       </ProtectedLayout>
     ),
   },

@@ -1,6 +1,7 @@
 import { Navigate, useLocation, useParams } from 'react-router-dom';
 import ReportSalePurchaseView, {
   BankReportView,
+  BankReconciliationReportView,
   CashReportView,
   GenerateLedgerView,
   CardBlankStockReportView,
@@ -20,6 +21,11 @@ import ReportSalePurchaseView, {
   TourPaxReportView,
   OutstandingTransactionReportView,
   AgeingReportView,
+  AfcReconciliationReportView,
+  GeneralLedgerReportView,
+  SubLedgerReportView,
+  TrialBalanceReportView,
+  FinalAccountReportView,
   TtReportView,
   ProductProfitReportView,
   SpecialReportView,
@@ -69,6 +75,10 @@ const ReportsPage = () => {
       return <CurrencyBalanceReportView key={`${slug}${location.search}`} />;
     case ReportPageTypeEnum.BANK_REPORT:
       return <BankReportView key={`${slug}${location.search}`} />;
+    case ReportPageTypeEnum.BANK_RECONCILIATION_REPORT:
+      return (
+        <BankReconciliationReportView key={`${slug}${location.search}`} />
+      );
     case ReportPageTypeEnum.CASH_REPORT:
       return <CashReportView key={`${slug}${location.search}`} />;
     case ReportPageTypeEnum.GENERATE_LEDGER:
@@ -109,6 +119,16 @@ const ReportsPage = () => {
       );
     case ReportPageTypeEnum.AGEING_REPORT:
       return <AgeingReportView key={`${slug}${location.search}`} />;
+    case ReportPageTypeEnum.AFC_RECONCILIATION_REPORT:
+      return <AfcReconciliationReportView key={`${slug}${location.search}`} />;
+    case ReportPageTypeEnum.GENERAL_LEDGER_REPORT:
+      return <GeneralLedgerReportView key={`${slug}${location.search}`} />;
+    case ReportPageTypeEnum.SUB_LEDGER_REPORT:
+      return <SubLedgerReportView key={`${slug}${location.search}`} />;
+    case ReportPageTypeEnum.TRIAL_BALANCE_REPORT:
+      return <TrialBalanceReportView key={`${slug}${location.search}`} />;
+    case ReportPageTypeEnum.FINAL_ACCOUNT_REPORT:
+      return <FinalAccountReportView key={`${slug}${location.search}`} />;
     case ReportPageTypeEnum.INDUS_TT_REPORT:
       return <TtReportView key={`${slug}${location.search}`} />;
     case ReportPageTypeEnum.IDFC_TT_REPORT:

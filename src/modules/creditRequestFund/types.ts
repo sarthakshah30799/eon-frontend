@@ -71,7 +71,41 @@ export type CreditRequestFund = {
   requestingReceiptVoucherSnapshot?: CreditRequestFundSnapshot | null;
   requestingPaymentVoucherId?: string | null;
   requestingPaymentVoucherSnapshot?: CreditRequestFundSnapshot | null;
+  printCount?: number;
+  printLogs?: CreditRequestFundPrintLog[];
   items: CreditRequestFundItem[];
+};
+
+export type CreditRequestFundPrintCopyType =
+  | 'CUSTOMER_COPY'
+  | 'DUPLICATE_COPY';
+
+export type CreditRequestFundPrintLog = {
+  id: string;
+  creditRequestFundId: string;
+  copyType: CreditRequestFundPrintCopyType;
+  message: string;
+  metadata?: Record<string, unknown> | null;
+  performedById?: string | null;
+  performedByName?: string | null;
+  performedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type RecordCreditRequestFundPrintPayload = {
+  copyType?: CreditRequestFundPrintCopyType;
+  recipientEmail?: string;
+  subject?: string;
+  text?: string;
+  html?: string;
+  sendEmail?: boolean;
+};
+
+export type RecordCreditRequestFundPrintResponse = {
+  message: string;
+  copyType: CreditRequestFundPrintCopyType;
+  printCount: number;
 };
 
 export type CreditRequestFundFormItem = {

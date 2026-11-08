@@ -6,9 +6,11 @@ import {
   ADVANCE_ADJUSTMENT_TEXT,
 } from './constants';
 import type {
+  AdvanceAdjustment,
   AdvanceAdjustmentListQuery,
   CreateAdvanceAdjustmentPayload,
   OutstandingSalesParams,
+  RecordAdvanceAdjustmentPrintPayload,
 } from './types';
 
 export const useAdvanceAdjustmentList = (
@@ -68,6 +70,38 @@ export const useCreateAdvanceAdjustment = () => {
           ? error.message
           : 'Failed to create advance adjustment'
       );
+    },
+  });
+};
+
+export const useRecordAdvanceAdjustmentPrint = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: string;
+      payload: RecordAdvanceAdjustmentPrintPayload;
+    }) => advanceAdjustmentApi.recordPrint(id, payload),
+    onSuccess: (data, variables) => {
+      queryClient.setQueryData<AdvanceAdjustment>(
+        ADVANCE_ADJUSTMENT_QUERY_KEYS.detail(variables.id),
+        current =>
+          current
+            ? {
+                ...current,
+                printCount:
+                  data?.printCount ?? (current.printCount ?? 0) + 1,
+              }
+            : current
+      );
+      void queryClient.invalidateQueries({
+        queryKey: ADVANCE_ADJUSTMENT_QUERY_KEYS.detail(variables.id),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: ADVANCE_ADJUSTMENT_QUERY_KEYS.lists(),
+      });
     },
   });
 };

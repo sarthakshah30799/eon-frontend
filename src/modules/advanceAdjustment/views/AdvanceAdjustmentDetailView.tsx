@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Button,
@@ -7,16 +7,85 @@ import {
   Breadcrumb,
   Badge,
 } from '@/components/ui';
+import { useListCompanyProfiles } from '@/modules/companyProfile/hooks';
 import { formatDateTime, toDisplayDate } from '@/utils';
-import { useAdvanceAdjustment } from '../hooks';
+import { toast } from 'react-hot-toast';
+import {
+  useAdvanceAdjustment,
+  useRecordAdvanceAdjustmentPrint,
+} from '../hooks';
 import { AdvanceAdjustmentStatus, type AdvanceAdjustmentItem } from '../types';
-import { ADVANCE_ADJUSTMENT_TEXT } from '../constants';
+import {
+  ADVANCE_ADJUSTMENT_PRINT_TEXT,
+  ADVANCE_ADJUSTMENT_TEXT,
+} from '../constants';
+import {
+  buildAdvanceAdjustmentPrintHtml,
+  getAdvanceAdjustmentPrintCopyLabel,
+  getAdvanceAdjustmentPrintCopyType,
+  openPrintWindow,
+} from '../utils/advanceAdjustmentPrintUtils';
 
 export const AdvanceAdjustmentDetailView: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
   const { data: record, isLoading, error } = useAdvanceAdjustment(id || '');
+  const recordPrintMutation = useRecordAdvanceAdjustmentPrint();
+  const { data: companiesPage } = useListCompanyProfiles(
+    { limit: 1, offset: 0 },
+    record?.status === AdvanceAdjustmentStatus.COMPLETED
+  );
+  const company = companiesPage?.data?.[0] ?? null;
+
+  const [isPrinting, setIsPrinting] = useState(false);
+  const [hasPrintedOnce, setHasPrintedOnce] = useState(false);
+
+  const canPrint = record?.status === AdvanceAdjustmentStatus.COMPLETED;
+  const printCopyType = getAdvanceAdjustmentPrintCopyType(
+    hasPrintedOnce ? Math.max(record?.printCount ?? 0, 1) : record?.printCount
+  );
+
+  const handlePrintCopy = async () => {
+    if (!record?.id || !canPrint || isPrinting) {
+      return;
+    }
+
+    try {
+      setIsPrinting(true);
+      const copyType = getAdvanceAdjustmentPrintCopyType(record.printCount);
+      const html = buildAdvanceAdjustmentPrintHtml({
+        copyType,
+        record,
+        company,
+      });
+      await recordPrintMutation.mutateAsync({
+        id: record.id,
+        payload: {
+          copyType,
+          subject: `${record.number} - ${getAdvanceAdjustmentPrintCopyLabel(copyType)}`,
+          text: `Printed ${getAdvanceAdjustmentPrintCopyLabel(copyType).toLowerCase()} for advance adjustment ${record.number}.`,
+          html,
+          sendEmail: false,
+        },
+      });
+      openPrintWindow(html, ADVANCE_ADJUSTMENT_PRINT_TEXT.popupBlocked);
+      setHasPrintedOnce(true);
+      toast.success(
+        ADVANCE_ADJUSTMENT_PRINT_TEXT.printed(
+          getAdvanceAdjustmentPrintCopyLabel(copyType)
+        )
+      );
+    } catch (printError) {
+      toast.error(
+        printError instanceof Error
+          ? printError.message
+          : ADVANCE_ADJUSTMENT_PRINT_TEXT.printFailed
+      );
+    } finally {
+      setIsPrinting(false);
+    }
+  };
 
   const breadcrumbItems = [
     { label: 'Home', href: '/' },
@@ -80,12 +149,53 @@ export const AdvanceAdjustmentDetailView: React.FC = () => {
             </p>
           </div>
 
-          <Button
-            variant="outline"
-            onClick={() => navigate('/advance-adjustments')}
-          >
-            Back to List
-          </Button>
+          <div className="flex flex-col items-end gap-2">
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                onClick={() => navigate('/advance-adjustments')}
+              >
+                Back to List
+              </Button>
+              {canPrint && (
+                <Button
+                  variant="default"
+                  onClick={() => {
+                    void handlePrintCopy();
+                  }}
+                  disabled={isPrinting || recordPrintMutation.isPending}
+                >
+                  {ADVANCE_ADJUSTMENT_TEXT.PRINT_COPY}
+                </Button>
+              )}
+            </div>
+            {canPrint && (
+              <p className="text-xs text-text-secondary">
+                {printCopyType === 'DUPLICATE_COPY'
+                  ? ADVANCE_ADJUSTMENT_TEXT.PRINT_DUPLICATE_HINT
+                  : ADVANCE_ADJUSTMENT_TEXT.PRINT_ORIGINAL_HINT}
+              </p>
+            )}
+            {(record.printLogs?.length ?? 0) > 0 ? (
+              <div className="max-w-sm text-right">
+                <p className="text-xs font-medium text-text-secondary">
+                  {ADVANCE_ADJUSTMENT_TEXT.PRINT_HISTORY}
+                </p>
+                <ul className="mt-1 space-y-1 text-xs text-text-secondary">
+                  {record.printLogs?.map(log => (
+                    <li key={log.id}>
+                      {log.performedByName?.trim() ||
+                        ADVANCE_ADJUSTMENT_TEXT.PRINTED_BY_UNKNOWN}
+                      {' · '}
+                      {getAdvanceAdjustmentPrintCopyLabel(log.copyType)}
+                      {' · '}
+                      {formatDateTime(log.performedAt)}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </div>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
@@ -162,18 +272,20 @@ export const AdvanceAdjustmentDetailView: React.FC = () => {
                     className="border-t border-border-primary"
                   >
                     <td className="px-4 py-3">{item.lineNo}</td>
-                    <td className="px-4 py-3 font-medium">
-                      {item.transactionSnapshot?.number || item.transactionId}
+                    <td className="px-4 py-3">
+                      {item.transactionSnapshot?.number || '-'}
                     </td>
                     <td className="px-4 py-3">
                       {toDisplayDate(
-                        String(item.transactionSnapshot?.transactionDate || '')
+                        item.transactionSnapshot?.transactionDate
                       ) ||
                         item.transactionSnapshot?.transactionDate ||
                         '-'}
                     </td>
                     <td className="px-4 py-3">
-                      {item.transactionSnapshot?.slug || '-'}
+                      {item.transactionSnapshot?.slug ||
+                        item.transactionSnapshot?.transactionType ||
+                        '-'}
                     </td>
                     <td className="px-4 py-3 text-right">
                       {Number(item.finalAmount).toLocaleString('en-IN', {
@@ -185,13 +297,23 @@ export const AdvanceAdjustmentDetailView: React.FC = () => {
                         minimumFractionDigits: 2,
                       })}
                     </td>
-                    <td className="px-4 py-3 text-right font-medium">
+                    <td className="px-4 py-3 text-right">
                       {Number(item.adjustmentAmount).toLocaleString('en-IN', {
                         minimumFractionDigits: 2,
                       })}
                     </td>
                   </tr>
                 ))}
+                {!(record.items || []).length && (
+                  <tr>
+                    <td
+                      colSpan={7}
+                      className="px-4 py-6 text-center text-text-secondary"
+                    >
+                      {ADVANCE_ADJUSTMENT_TEXT.EMPTY_ITEMS}
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

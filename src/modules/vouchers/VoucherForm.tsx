@@ -26,6 +26,7 @@ import { useCategoryOptions } from '@/hooks';
 import { PartyProfileTypeEnum } from '@/modules/partyProfiles/types/partyProfileTypes';
 import { AccountProfileLedgerLabelEnum } from '@/modules/accountProfile';
 import { PurchaseWorkplaceFields } from '@/modules/purchase/components/PurchaseWorkplaceFields';
+import { useAuth } from '@/lib/AuthContext';
 import type { ICompanyProfile } from '@/modules/companyProfile/types';
 import type {
   AccountingVoucher,
@@ -62,6 +63,7 @@ import {
   isVoucherPrintableType,
 } from './voucherPrintUtils';
 import { openPrintWindow } from '@/modules/transactions/utils/printSnapshotUtils';
+import { formatDateTime } from '@/utils';
 import {
   formatVoucherDateInput,
   getVoucherItemTypeValueById,
@@ -442,6 +444,7 @@ const VoucherFields = ({
   | 'honourPreviewNote'
 >) => {
   const form = useFormContext<VoucherFormValues>();
+  const { user } = useAuth();
   const [hasPrintedOnce, setHasPrintedOnce] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
   const [outstandingModalIndex, setOutstandingModalIndex] = useState<
@@ -1193,6 +1196,7 @@ const VoucherFields = ({
         copyType,
         voucher,
         company: company ?? null,
+        preparedByName: user?.name?.trim() || null,
       });
       await recordVoucherPrint({
         id: voucher.id,
@@ -1957,6 +1961,34 @@ const VoucherFields = ({
               ? VOUCHER_PRINT_TEXT.preparing
               : `${VOUCHER_PRINT_TEXT.printCopy} (${getVoucherPrintCopyLabel(nextCopyType)})`}
           </Button>
+          {(voucher?.logs?.filter(
+            log => log.action === VoucherLogActionEnum.PRINT
+          ).length ?? 0) > 0 ? (
+            <div>
+              <p className="text-xs font-medium text-text-secondary">
+                {VOUCHER_PRINT_TEXT.printHistory}
+              </p>
+              <ul className="mt-1 space-y-1 text-xs text-text-secondary">
+                {voucher?.logs
+                  ?.filter(log => log.action === VoucherLogActionEnum.PRINT)
+                  .map(log => (
+                    <li key={log.id}>
+                      {log.performedByName?.trim() ||
+                        VOUCHER_PRINT_TEXT.printedByUnknown}
+                      {' · '}
+                      {getVoucherPrintCopyLabel(
+                        (log.metadata?.copyType as
+                          | 'CUSTOMER_COPY'
+                          | 'DUPLICATE_COPY'
+                          | undefined) ?? 'CUSTOMER_COPY'
+                      )}
+                      {' · '}
+                      {formatDateTime(log.performedAt)}
+                    </li>
+                  ))}
+              </ul>
+            </div>
+          ) : null}
         </CardSection>
       ) : null}
     </div>

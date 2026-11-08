@@ -9,6 +9,8 @@ import type {
   AvailableAdvancesParams,
   CreateAdvanceRefundPayload,
   HonourAdvanceRefundPayload,
+  RecordAdvanceRefundPrintPayload,
+  RecordAdvanceRefundPrintResponse,
 } from '@/modules/advanceRefund/types';
 
 const BASE = '/advance-refunds';
@@ -53,5 +55,14 @@ export const advanceRefundApi = {
     );
     if (response.error) throw new Error(response.error);
     return Array.isArray(response.data) ? response.data : [];
+  },
+
+  recordPrint: async (id: string, payload: RecordAdvanceRefundPrintPayload) => {
+    const response = await apiClient.post<RecordAdvanceRefundPrintResponse>(
+      `${BASE}/${id}/print`,
+      payload
+    );
+    if (response.error) throw new Error(response.error);
+    return response.data;
   },
 };

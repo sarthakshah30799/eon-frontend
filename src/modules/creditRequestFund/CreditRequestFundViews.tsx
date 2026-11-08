@@ -22,11 +22,13 @@ import {
 } from '@/modules/branchProfile/hooks';
 import { useListPartyProfiles } from '@/modules/partyProfiles/hooks';
 import { PartyProfileTypeEnum } from '@/modules/partyProfiles/types/partyProfileTypes';
+import { useListCompanyProfiles } from '@/modules/companyProfile/hooks';
 import { paymentMethodForVoucherAccountMode } from '@/modules/vouchers/utils';
 import { creditRequestFundApi } from '@/api/creditRequestFund';
 import {
   CREDIT_REQUEST_FUND_LABELS,
   CREDIT_REQUEST_FUND_PATHS,
+  CREDIT_REQUEST_FUND_PRINT_TEXT,
   CREDIT_REQUEST_FUND_STATUS,
   CREDIT_REQUEST_FUND_STATUS_OPTIONS,
   type CreditRequestFundStatus,
@@ -35,9 +37,16 @@ import {
   CreditRequestFundForm,
 } from './CreditRequestFundForm';
 import {
+  buildCreditRequestFundPrintHtml,
+  getCreditRequestFundPrintCopyLabel,
+  getCreditRequestFundPrintCopyType,
+  openPrintWindow,
+} from './utils/creditRequestFundPrintUtils';
+import {
   useApproveCreditRequestFund,
   useCancelCreditRequestFund,
   useCreateCreditRequestFund,
+  useRecordCreditRequestFundPrint,
   useCreditRequestFund,
   useRejectCreditRequestFund,
   useUpdateCreditRequestFund,
@@ -651,7 +660,15 @@ export const CreditRequestFundEditView = () => {
   const approveMutation = useApproveCreditRequestFund();
   const rejectMutation = useRejectCreditRequestFund();
   const cancelMutation = useCancelCreditRequestFund();
+  const recordPrintMutation = useRecordCreditRequestFundPrint();
+  const { data: companiesPage } = useListCompanyProfiles(
+    { limit: 1, offset: 0 },
+    data?.status === CREDIT_REQUEST_FUND_STATUS.APPROVE
+  );
+  const company = companiesPage?.data?.[0] ?? null;
   const [rejectOpen, setRejectOpen] = useState(false);
+  const [isPrinting, setIsPrinting] = useState(false);
+  const [hasPrintedOnce, setHasPrintedOnce] = useState(false);
 
   const isPrivileged = Boolean(
     user?.isAdmin ||
@@ -694,9 +711,102 @@ export const CreditRequestFundEditView = () => {
       : CREDIT_REQUEST_FUND_LABELS.pendingReadonly;
   }, [canEdit, data]);
 
+  const canPrint = data?.status === CREDIT_REQUEST_FUND_STATUS.APPROVE;
+  const printCopyType = getCreditRequestFundPrintCopyType(
+    hasPrintedOnce ? Math.max(data?.printCount ?? 0, 1) : data?.printCount
+  );
+
+  const handlePrintCopy = async () => {
+    if (!data?.id || !canPrint || isPrinting) {
+      return;
+    }
+    try {
+      setIsPrinting(true);
+      const copyType = getCreditRequestFundPrintCopyType(data.printCount);
+      const html = buildCreditRequestFundPrintHtml({
+        copyType,
+        record: data,
+        company,
+      });
+      await recordPrintMutation.mutateAsync({
+        id: data.id,
+        payload: {
+          copyType,
+          subject: `${data.number} - ${getCreditRequestFundPrintCopyLabel(copyType)}`,
+          text: `Printed ${getCreditRequestFundPrintCopyLabel(copyType).toLowerCase()} for credit request fund ${data.number}.`,
+          html,
+          sendEmail: false,
+        },
+      });
+      openPrintWindow(html, CREDIT_REQUEST_FUND_PRINT_TEXT.popupBlocked);
+      setHasPrintedOnce(true);
+      toast.success(
+        CREDIT_REQUEST_FUND_PRINT_TEXT.printed(
+          getCreditRequestFundPrintCopyLabel(copyType)
+        )
+      );
+    } catch (printError) {
+      toast.error(
+        printError instanceof Error
+          ? printError.message
+          : CREDIT_REQUEST_FUND_PRINT_TEXT.printFailed
+      );
+    } finally {
+      setIsPrinting(false);
+    }
+  };
+
   const statusActions = useMemo(() => {
-    if (!data || !isPending) return null;
+    if (!data) return null;
     const actions: ReactNode[] = [];
+    if (canPrint) {
+      actions.push(
+        <Button
+          key="print"
+          type="button"
+          variant="outline"
+          disabled={isPrinting || recordPrintMutation.isPending}
+          onClick={() => {
+            void handlePrintCopy();
+          }}
+        >
+          {CREDIT_REQUEST_FUND_PRINT_TEXT.printCopy}
+        </Button>
+      );
+    }
+    if (!isPending) {
+      return actions.length ? (
+        <div className="flex flex-col items-end gap-1">
+          <div className="flex flex-wrap gap-2">{actions}</div>
+          {canPrint ? (
+            <p className="text-xs text-text-secondary">
+              {printCopyType === 'DUPLICATE_COPY'
+                ? CREDIT_REQUEST_FUND_PRINT_TEXT.duplicateHint
+                : CREDIT_REQUEST_FUND_PRINT_TEXT.originalHint}
+            </p>
+          ) : null}
+          {(data.printLogs?.length ?? 0) > 0 ? (
+            <div className="max-w-sm text-right">
+              <p className="text-xs font-medium text-text-secondary">
+                {CREDIT_REQUEST_FUND_PRINT_TEXT.printHistory}
+              </p>
+              <ul className="mt-1 space-y-1 text-xs text-text-secondary">
+                {data.printLogs?.map(log => (
+                  <li key={log.id}>
+                    {log.performedByName?.trim() ||
+                      CREDIT_REQUEST_FUND_PRINT_TEXT.printedByUnknown}
+                    {' · '}
+                    {getCreditRequestFundPrintCopyLabel(log.copyType)}
+                    {' · '}
+                    {formatDateTime(log.performedAt)}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+        </div>
+      ) : null;
+    }
     if (canApproveReject) {
       actions.push(
         <Button
@@ -753,11 +863,16 @@ export const CreditRequestFundEditView = () => {
     approveMutation,
     canApproveReject,
     canCancel,
+    canPrint,
     cancelMutation,
     data,
     isPending,
+    isPrinting,
     policy.defaultTransactionDate,
+    printCopyType,
+    recordPrintMutation.isPending,
     rejectMutation.isPending,
+    company,
   ]);
 
   if (isLoading) {

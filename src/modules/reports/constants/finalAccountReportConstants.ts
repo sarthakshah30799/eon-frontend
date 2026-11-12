@@ -10,7 +10,6 @@ export const FinalAccountStatementTypeEnum = {
   TRADING: 'trading',
   PROFIT_AND_LOSS: 'profit-and-loss',
   BALANCE_SHEET: 'balance-sheet',
-  MERGE_PROFIT: 'merge-profit',
 } as const;
 
 export type FinalAccountStatementType =
@@ -19,16 +18,19 @@ export type FinalAccountStatementType =
 export const FINAL_ACCOUNT_REPORT_TEXT = {
   title: 'Final Account Report',
   description:
-    'Trading, Profit & Loss, Balance Sheet, and Merge Profit statements by branch or consolidated.',
+    'Trading, Profit & Loss, and Balance Sheet statements by branch or consolidated.',
   branchHeading: 'Branch',
   scopeHeading: 'Scope',
   statementHeading: 'Statement',
+  mergeProfitHeading: 'Merge Profit',
   branchScope: 'Branch',
   consolidated: 'Consolidated',
   trading: 'Trading',
   profitAndLoss: 'Profit And Loss',
   balanceSheet: 'Balance Sheet',
   mergeProfit: 'Merge Profit',
+  mergeProfitYes: 'Yes',
+  mergeProfitNo: 'No',
   view: 'View',
   reset: 'Reset',
   appliedPrefix: 'Showing',

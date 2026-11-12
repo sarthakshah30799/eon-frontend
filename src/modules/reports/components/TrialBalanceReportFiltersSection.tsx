@@ -69,7 +69,7 @@ export const TrialBalanceReportFiltersSection = ({
       onToggleAll={filters.toggleAllBranches}
       emptyMessage="No branch options available."
     />
-    <div className="grid gap-3 lg:grid-cols-2">
+    <div className="grid gap-3 lg:grid-cols-3">
       <div className="space-y-2 rounded-md border border-slate-200 p-3">
         <div className="text-[10px] font-semibold uppercase tracking-wider text-text-tertiary">
           {TRIAL_BALANCE_REPORT_TEXT.scopeHeading}
@@ -91,6 +91,18 @@ export const TrialBalanceReportFiltersSection = ({
           onChange={checked => filters.setGroupBy(Boolean(checked))}
         >
           {TRIAL_BALANCE_REPORT_TEXT.groupByLabel}
+        </Checkbox>
+      </div>
+      <div className="space-y-2 rounded-md border border-slate-200 p-3">
+        <div className="text-[10px] font-semibold uppercase tracking-wider text-text-tertiary">
+          {TRIAL_BALANCE_REPORT_TEXT.mergeProfitHeading}
+        </div>
+        <Checkbox
+          id="trial-balance-merge-profit"
+          checked={filters.mergeProfit}
+          onChange={checked => filters.setMergeProfit(Boolean(checked))}
+        >
+          {TRIAL_BALANCE_REPORT_TEXT.mergeProfit}
         </Checkbox>
       </div>
     </div>

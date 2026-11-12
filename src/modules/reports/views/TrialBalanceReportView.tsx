@@ -55,7 +55,9 @@ export const TrialBalanceReportView = () => {
           | {TRIAL_BALANCE_REPORT_TEXT.scopeHeading}{' '}
           {reportState.filters.scopeLabel} |{' '}
           {TRIAL_BALANCE_REPORT_TEXT.groupByHeading}{' '}
-          {reportState.filters.groupByLabel}
+          {reportState.filters.groupByLabel} |{' '}
+          {TRIAL_BALANCE_REPORT_TEXT.mergeProfitHeading}{' '}
+          {reportState.filters.mergeProfitLabel}
         </div>
       )}
       {reportState.filters.appliedFilters && (

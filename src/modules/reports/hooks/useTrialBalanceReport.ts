@@ -20,12 +20,25 @@ export const useTrialBalanceReport = () => {
       branchIds: filters.appliedFilters?.branchIds ?? [],
       scope: filters.appliedFilters?.scope,
       groupBy: filters.appliedFilters?.groupBy,
+      mergeProfit: filters.appliedFilters?.mergeProfit ?? false,
     }),
     [filters.appliedFilters]
   );
   const reportQuery = useQuery<ITrialBalanceReportResponse>({
-    queryKey: ['trial-balance-report', filters.appliedFilters],
-    enabled: Boolean(filters.appliedFilters),
+    queryKey: [
+      'trial-balance-report',
+      requestParams.startDate,
+      requestParams.endDate,
+      requestParams.branchIds,
+      requestParams.scope,
+      requestParams.groupBy,
+      requestParams.mergeProfit,
+    ],
+    enabled: Boolean(
+      filters.appliedFilters &&
+        requestParams.startDate &&
+        requestParams.endDate
+    ),
     queryFn: async () => reportsApi.getTrialBalanceReport(requestParams),
   });
   const downloadReport = useCallback(async () => {

@@ -14,6 +14,8 @@ export const TRIAL_BALANCE_REPORT_TEXT = {
   scopeHeading: 'Scope',
   groupByHeading: 'Group by',
   groupByLabel: 'Group by financial type and code',
+  mergeProfitHeading: 'Merge Profit',
+  mergeProfit: 'Merge Profit',
   branchScope: 'Branch',
   consolidated: 'Consolidated',
   view: 'View',

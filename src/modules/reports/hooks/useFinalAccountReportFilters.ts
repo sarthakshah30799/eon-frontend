@@ -25,8 +25,10 @@ import {
 import {
   buildSearchParams,
   readDateRangeSearchParams,
+  readSearchParamBoolean,
   readSearchParamList,
   readSearchParamValue,
+  setSearchParamBoolean,
   setSearchParamList,
   setSearchParamValue,
 } from '../utils/reportSearchParams';
@@ -36,11 +38,13 @@ export interface FinalAccountReportFiltersState {
   branchIds: string[];
   scope: FinalAccountReportScope;
   statementType: FinalAccountStatementType;
+  mergeProfit: boolean;
   branchOptions: IReportSelectOption[];
   branchAllSelected: boolean;
   setDateRange: (value: IReportDateRange) => void;
   setScope: (value: FinalAccountReportScope) => void;
   setStatementType: (value: FinalAccountStatementType) => void;
+  setMergeProfit: (value: boolean) => void;
   toggleBranch: (id: string, checked: boolean) => void;
   toggleAllBranches: (checked: boolean) => void;
   resetFilters: () => void;
@@ -50,11 +54,13 @@ export interface FinalAccountReportFiltersState {
     branchIds: string[];
     scope: FinalAccountReportScope;
     statementType: FinalAccountStatementType;
+    mergeProfit: boolean;
   } | null;
   appliedDateRangeLabel: string;
   canView: boolean;
   scopeLabel: string;
   statementLabel: string;
+  mergeProfitLabel: string;
 }
 
 const toOption = (id: string, label: string): IReportSelectOption => ({
@@ -74,9 +80,6 @@ const parseStatementType = (value: string): FinalAccountStatementType => {
   if (value === FinalAccountStatementTypeEnum.BALANCE_SHEET) {
     return FinalAccountStatementTypeEnum.BALANCE_SHEET;
   }
-  if (value === FinalAccountStatementTypeEnum.MERGE_PROFIT) {
-    return FinalAccountStatementTypeEnum.MERGE_PROFIT;
-  }
   return FinalAccountStatementTypeEnum.TRADING;
 };
 
@@ -91,12 +94,15 @@ const statementLabel = (value: FinalAccountStatementType) => {
       return FINAL_ACCOUNT_REPORT_TEXT.profitAndLoss;
     case FinalAccountStatementTypeEnum.BALANCE_SHEET:
       return FINAL_ACCOUNT_REPORT_TEXT.balanceSheet;
-    case FinalAccountStatementTypeEnum.MERGE_PROFIT:
-      return FINAL_ACCOUNT_REPORT_TEXT.mergeProfit;
     default:
       return FINAL_ACCOUNT_REPORT_TEXT.trading;
   }
 };
+
+const mergeProfitLabel = (value: boolean) =>
+  value
+    ? FINAL_ACCOUNT_REPORT_TEXT.mergeProfitYes
+    : FINAL_ACCOUNT_REPORT_TEXT.mergeProfitNo;
 
 export const useFinalAccountReportFilters =
   (): FinalAccountReportFiltersState => {
@@ -124,6 +130,7 @@ export const useFinalAccountReportFilters =
         statementType: parseStatementType(
           readSearchParamValue(parsedSearchParams, 'statementType')
         ),
+        mergeProfit: readSearchParamBoolean(parsedSearchParams, 'mergeProfit'),
       };
     }, [parsedSearchParams]);
 
@@ -131,6 +138,7 @@ export const useFinalAccountReportFilters =
     const [branchIds, setBranchIds] = useState(hydrated.branchIds);
     const [scope, setScope] = useState(hydrated.scope);
     const [statementType, setStatementType] = useState(hydrated.statementType);
+    const [mergeProfit, setMergeProfit] = useState(hydrated.mergeProfit);
     const [appliedFilters, setAppliedFilters] = useState<
       FinalAccountReportFiltersState['appliedFilters']
     >(searchParamsKey ? hydrated : null);
@@ -165,6 +173,7 @@ export const useFinalAccountReportFilters =
       setBranchIds([]);
       setScope(FinalAccountReportScopeEnum.BRANCH);
       setStatementType(FinalAccountStatementTypeEnum.TRADING);
+      setMergeProfit(false);
       setAppliedFilters(null);
       setSearchParams(new URLSearchParams(), { replace: true });
     };
@@ -184,6 +193,7 @@ export const useFinalAccountReportFilters =
         branchIds: effectiveBranchIds,
         scope,
         statementType,
+        mergeProfit,
       };
       setAppliedFilters(nextApplied);
       setSearchParams(
@@ -194,6 +204,7 @@ export const useFinalAccountReportFilters =
           setSearchParamList(next, 'branchIds', effectiveBranchIds);
           setSearchParamValue(next, 'scope', scope);
           setSearchParamValue(next, 'statementType', statementType);
+          setSearchParamBoolean(next, 'mergeProfit', mergeProfit);
         }),
         { replace: true }
       );
@@ -204,6 +215,7 @@ export const useFinalAccountReportFilters =
       branchIds: selectedBranchIds,
       scope,
       statementType,
+      mergeProfit,
       branchOptions,
       branchAllSelected:
         branchOptions.length > 0 &&
@@ -211,6 +223,7 @@ export const useFinalAccountReportFilters =
       setDateRange,
       setScope,
       setStatementType,
+      setMergeProfit,
       toggleBranch: (id, checked) => {
         setBranchIds(current => toggleId(current, id, checked));
       },
@@ -227,6 +240,9 @@ export const useFinalAccountReportFilters =
       scopeLabel: scopeLabel(appliedFilters?.scope ?? scope),
       statementLabel: statementLabel(
         appliedFilters?.statementType ?? statementType
+      ),
+      mergeProfitLabel: mergeProfitLabel(
+        appliedFilters?.mergeProfit ?? mergeProfit
       ),
     };
   };

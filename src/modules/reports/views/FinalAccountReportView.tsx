@@ -55,7 +55,9 @@ export const FinalAccountReportView = () => {
           | {FINAL_ACCOUNT_REPORT_TEXT.statementHeading}{' '}
           {reportState.filters.statementLabel} |{' '}
           {FINAL_ACCOUNT_REPORT_TEXT.scopeHeading}{' '}
-          {reportState.filters.scopeLabel}
+          {reportState.filters.scopeLabel} |{' '}
+          {FINAL_ACCOUNT_REPORT_TEXT.mergeProfitHeading}{' '}
+          {reportState.filters.mergeProfitLabel}
         </div>
       )}
       {reportState.filters.appliedFilters && (

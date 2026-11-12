@@ -1023,6 +1023,7 @@ export interface ITrialBalanceReportResponse {
   endDate: string;
   scope: TrialBalanceReportScope;
   groupBy: boolean;
+  mergeProfit?: boolean;
   message: string;
   columns: ITrialBalanceReportColumn[];
   rows: ITrialBalanceReportRow[];
@@ -1034,6 +1035,7 @@ export interface ITrialBalanceReportRequest {
   branchIds?: string[];
   scope?: TrialBalanceReportScope;
   groupBy?: boolean;
+  mergeProfit?: boolean;
 }
 
 export type FinalAccountReportScope = 'branch' | 'consolidated';
@@ -1041,8 +1043,7 @@ export type FinalAccountReportScope = 'branch' | 'consolidated';
 export type FinalAccountStatementType =
   | 'trading'
   | 'profit-and-loss'
-  | 'balance-sheet'
-  | 'merge-profit';
+  | 'balance-sheet';
 
 export interface IFinalAccountReportColumn {
   key: string;
@@ -1069,6 +1070,7 @@ export interface IFinalAccountReportResponse {
   endDate: string;
   scope: FinalAccountReportScope;
   statementType: FinalAccountStatementType;
+  mergeProfit?: boolean;
   message: string;
   debitColumns: IFinalAccountReportColumn[];
   creditColumns: IFinalAccountReportColumn[];
@@ -1081,6 +1083,7 @@ export interface IFinalAccountReportRequest {
   branchIds?: string[];
   scope?: FinalAccountReportScope;
   statementType?: FinalAccountStatementType;
+  mergeProfit?: boolean;
 }
 
 export interface ITourPaxReportRequest {

@@ -90,6 +90,7 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
     meta: { title: 'Bank Reconciliation Report' },
   },
   { path: '/reports/cash-report', meta: { title: 'Cash Report' } },
+  { path: '/reports/cash-flow-report', meta: { title: 'Cash Flow Report' } },
   { path: '/reports/generate-ledger', meta: { title: 'Generate Ledger' } },
   {
     path: '/reports/card-unsettled-report',

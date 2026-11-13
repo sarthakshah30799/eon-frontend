@@ -36,6 +36,7 @@ export const ReportPageTypeEnum = {
   BANK_REPORT: 'bank-report',
   BANK_RECONCILIATION_REPORT: 'bank-reconciliation-report',
   CASH_REPORT: 'cash-report',
+  CASH_FLOW_REPORT: 'cash-flow-report',
   GENERATE_LEDGER: 'generate-ledger',
   CARD_UNSETTLED: 'card-unsettled-report',
   CARD_SETTLED: 'card-settled-report',
@@ -94,6 +95,7 @@ const REPORT_PAGE_TITLE_BY_TYPE: Record<ReportPageType, string> = {
   [ReportPageTypeEnum.BANK_REPORT]: 'Bank Report',
   [ReportPageTypeEnum.BANK_RECONCILIATION_REPORT]: 'Bank Reconciliation Report',
   [ReportPageTypeEnum.CASH_REPORT]: 'Cash Report',
+  [ReportPageTypeEnum.CASH_FLOW_REPORT]: 'Cash Flow Report',
   [ReportPageTypeEnum.GENERATE_LEDGER]: 'Generate Ledger',
   [ReportPageTypeEnum.CARD_UNSETTLED]: 'Unsettled Product Report',
   [ReportPageTypeEnum.CARD_SETTLED]: 'Settled Product Report',
@@ -480,6 +482,59 @@ export interface ICashReportRequest {
   layout?: CashReportLayout;
   branchIds?: string[];
   accountIds?: string[];
+}
+
+export type CashFlowReportScope = 'branch' | 'consolidated';
+
+export interface ICashFlowReportColumn {
+  key: string;
+  label: string;
+}
+
+export interface ICashFlowReportLine {
+  description: string;
+  bank: string;
+  cash: string;
+  total: string;
+}
+
+export interface ICashFlowReportAmountTriple {
+  bank: string;
+  cash: string;
+  total: string;
+}
+
+export interface ICashFlowReportSectionBlock {
+  lines: ICashFlowReportLine[];
+  total: ICashFlowReportAmountTriple;
+}
+
+export interface ICashFlowReportSection {
+  branchId: string | null;
+  branchLabel: string;
+  opening: ICashFlowReportAmountTriple;
+  additions: ICashFlowReportSectionBlock;
+  interBranch: ICashFlowReportSectionBlock;
+  deductions: ICashFlowReportSectionBlock;
+  closing: ICashFlowReportAmountTriple;
+}
+
+export interface ICashFlowReportResponse {
+  startDate: string;
+  endDate: string;
+  scope: CashFlowReportScope;
+  message: string;
+  columns: ICashFlowReportColumn[];
+  sections: ICashFlowReportSection[];
+}
+
+export interface ICashFlowReportRequest {
+  startDate?: string;
+  endDate?: string;
+  branchIds?: string[];
+  accountIds?: string[];
+  counterIds?: string[];
+  scope?: CashFlowReportScope;
 }
 
 export const GenerateLedgerLayoutEnum = {

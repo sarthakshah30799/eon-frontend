@@ -14,6 +14,8 @@ export { default as BankReconciliationReportFiltersSection } from './BankReconci
 export { default as BankReconciliationReportTable } from './BankReconciliationReportTable';
 export { default as CashReportFiltersSection } from './CashReportFiltersSection';
 export { default as CashReportTable } from './CashReportTable';
+export { default as CashFlowReportFiltersSection } from './CashFlowReportFiltersSection';
+export { default as CashFlowReportTable } from './CashFlowReportTable';
 export { default as GenerateLedgerFiltersSection } from './GenerateLedgerFiltersSection';
 export { default as GenerateLedgerTable } from './GenerateLedgerTable';
 export { default as ProductSettlementReportFiltersSection } from './ProductSettlementReportFiltersSection';

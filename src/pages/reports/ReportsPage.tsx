@@ -3,6 +3,7 @@ import ReportSalePurchaseView, {
   BankReportView,
   BankReconciliationReportView,
   CashReportView,
+  CashFlowReportView,
   GenerateLedgerView,
   CardBlankStockReportView,
   CardSettledReportView,
@@ -81,6 +82,8 @@ const ReportsPage = () => {
       );
     case ReportPageTypeEnum.CASH_REPORT:
       return <CashReportView key={`${slug}${location.search}`} />;
+    case ReportPageTypeEnum.CASH_FLOW_REPORT:
+      return <CashFlowReportView key={slug} />;
     case ReportPageTypeEnum.GENERATE_LEDGER:
       return <GenerateLedgerView key={`${slug}${location.search}`} />;
     case ReportPageTypeEnum.PRODUCT_PROFIT:

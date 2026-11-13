@@ -13,6 +13,8 @@ import type {
   IBankReconciliationReportResponse,
   ICashReportRequest,
   ICashReportResponse,
+  ICashFlowReportRequest,
+  ICashFlowReportResponse,
   IGenerateLedgerRequest,
   IGenerateLedgerResponse,
   IProductProfitReportRequest,
@@ -204,6 +206,31 @@ export const reportsApi = {
       return {
         columns: [],
         layout: 'BRANCH_WISE',
+        sections: [],
+      };
+    }
+
+    return res.data;
+  },
+
+  getCashFlowReport: async (
+    params: ICashFlowReportRequest
+  ): Promise<ICashFlowReportResponse> => {
+    const res = await apiClient.get<ICashFlowReportResponse>(
+      `/reports/cash-flow-report${buildQueryString(params)}`
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      return {
+        startDate: params.startDate ?? '',
+        endDate: params.endDate ?? '',
+        scope: params.scope ?? 'branch',
+        message: '',
+        columns: [],
         sections: [],
       };
     }
@@ -456,6 +483,33 @@ export const reportsApi = {
     return {
       blob: res.data.blob,
       filename: res.data.filename || `cash-report.${format}`,
+    };
+  },
+
+  downloadCashFlowReport: async (
+    params: ICashFlowReportRequest,
+    format: ReportExportFormat
+  ): Promise<{ blob: Blob; filename?: string }> => {
+    const query = buildQueryString({
+      ...params,
+      format,
+    });
+
+    const res = await apiClient.getDownload(
+      `/reports/cash-flow-report/export${query}`
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      throw new Error('Failed to download Cash Flow Report');
+    }
+
+    return {
+      blob: res.data.blob,
+      filename: res.data.filename || `cash-flow-report.${format}`,
     };
   },
 

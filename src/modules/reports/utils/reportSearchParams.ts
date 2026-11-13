@@ -108,6 +108,15 @@ export const readDateRangeSearchParams = (
   const startDate = readSearchParamValue(searchParams, 'startDate');
   const endDate = readSearchParamValue(searchParams, 'endDate');
 
+  // Prefer explicit URL dates so View/remount keeps the range the user applied.
+  if (startDate && endDate) {
+    return {
+      preset,
+      startDate,
+      endDate,
+    };
+  }
+
   if (preset === ReportDatePresetEnum.CUSTOM) {
     const fallback = buildReportDateRange(ReportDatePresetEnum.CUSTOM);
     return {

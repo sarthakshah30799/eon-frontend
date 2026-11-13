@@ -23,8 +23,10 @@ import {
 import {
   buildSearchParams,
   readDateRangeSearchParams,
+  readSearchParamBoolean,
   readSearchParamList,
   readSearchParamValue,
+  setSearchParamBoolean,
   setSearchParamList,
   setSearchParamValue,
 } from '../utils/reportSearchParams';
@@ -34,11 +36,13 @@ export interface TrialBalanceReportFiltersState {
   branchIds: string[];
   scope: TrialBalanceReportScope;
   groupBy: boolean;
+  mergeProfit: boolean;
   branchOptions: IReportSelectOption[];
   branchAllSelected: boolean;
   setDateRange: (value: IReportDateRange) => void;
   setScope: (value: TrialBalanceReportScope) => void;
   setGroupBy: (value: boolean) => void;
+  setMergeProfit: (value: boolean) => void;
   toggleBranch: (id: string, checked: boolean) => void;
   toggleAllBranches: (checked: boolean) => void;
   resetFilters: () => void;
@@ -48,11 +52,13 @@ export interface TrialBalanceReportFiltersState {
     branchIds: string[];
     scope: TrialBalanceReportScope;
     groupBy: boolean;
+    mergeProfit: boolean;
   } | null;
   appliedDateRangeLabel: string;
   canView: boolean;
   scopeLabel: string;
   groupByLabel: string;
+  mergeProfitLabel: string;
 }
 
 const toOption = (id: string, label: string): IReportSelectOption => ({
@@ -72,6 +78,9 @@ const scopeLabel = (value: TrialBalanceReportScope) =>
   value === TrialBalanceReportScopeEnum.CONSOLIDATED
     ? TRIAL_BALANCE_REPORT_TEXT.consolidated
     : TRIAL_BALANCE_REPORT_TEXT.branchScope;
+
+const yesNoLabel = (value: boolean) =>
+  value ? TRIAL_BALANCE_REPORT_TEXT.yes : TRIAL_BALANCE_REPORT_TEXT.no;
 
 export const useTrialBalanceReportFilters =
   (): TrialBalanceReportFiltersState => {
@@ -99,6 +108,7 @@ export const useTrialBalanceReportFilters =
         groupBy: parseGroupBy(
           readSearchParamValue(parsedSearchParams, 'groupBy')
         ),
+        mergeProfit: readSearchParamBoolean(parsedSearchParams, 'mergeProfit'),
       };
     }, [parsedSearchParams]);
 
@@ -106,6 +116,7 @@ export const useTrialBalanceReportFilters =
     const [branchIds, setBranchIds] = useState(hydrated.branchIds);
     const [scope, setScope] = useState(hydrated.scope);
     const [groupBy, setGroupBy] = useState(hydrated.groupBy);
+    const [mergeProfit, setMergeProfit] = useState(hydrated.mergeProfit);
     const [appliedFilters, setAppliedFilters] = useState<
       TrialBalanceReportFiltersState['appliedFilters']
     >(searchParamsKey ? hydrated : null);
@@ -140,6 +151,7 @@ export const useTrialBalanceReportFilters =
       setBranchIds([]);
       setScope(TrialBalanceReportScopeEnum.BRANCH);
       setGroupBy(false);
+      setMergeProfit(false);
       setAppliedFilters(null);
       setSearchParams(new URLSearchParams(), { replace: true });
     };
@@ -159,6 +171,7 @@ export const useTrialBalanceReportFilters =
         branchIds: effectiveBranchIds,
         scope,
         groupBy,
+        mergeProfit,
       };
       setAppliedFilters(nextApplied);
       setSearchParams(
@@ -169,6 +182,7 @@ export const useTrialBalanceReportFilters =
           setSearchParamList(next, 'branchIds', effectiveBranchIds);
           setSearchParamValue(next, 'scope', scope);
           setSearchParamValue(next, 'groupBy', groupBy ? 'true' : 'false');
+          setSearchParamBoolean(next, 'mergeProfit', mergeProfit);
         }),
         { replace: true }
       );
@@ -179,6 +193,7 @@ export const useTrialBalanceReportFilters =
       branchIds: selectedBranchIds,
       scope,
       groupBy,
+      mergeProfit,
       branchOptions,
       branchAllSelected:
         branchOptions.length > 0 &&
@@ -186,6 +201,7 @@ export const useTrialBalanceReportFilters =
       setDateRange,
       setScope,
       setGroupBy,
+      setMergeProfit,
       toggleBranch: (id, checked) => {
         setBranchIds(current => toggleId(current, id, checked));
       },
@@ -200,8 +216,9 @@ export const useTrialBalanceReportFilters =
         : '',
       canView: Boolean(dateRange.startDate && dateRange.endDate),
       scopeLabel: scopeLabel(appliedFilters?.scope ?? scope),
-      groupByLabel: (appliedFilters?.groupBy ?? groupBy)
-        ? TRIAL_BALANCE_REPORT_TEXT.yes
-        : TRIAL_BALANCE_REPORT_TEXT.no,
+      groupByLabel: yesNoLabel(appliedFilters?.groupBy ?? groupBy),
+      mergeProfitLabel: yesNoLabel(
+        appliedFilters?.mergeProfit ?? mergeProfit
+      ),
     };
   };

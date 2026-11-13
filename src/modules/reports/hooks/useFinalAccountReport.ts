@@ -20,12 +20,25 @@ export const useFinalAccountReport = () => {
       branchIds: filters.appliedFilters?.branchIds ?? [],
       scope: filters.appliedFilters?.scope,
       statementType: filters.appliedFilters?.statementType,
+      mergeProfit: filters.appliedFilters?.mergeProfit ?? false,
     }),
     [filters.appliedFilters]
   );
   const reportQuery = useQuery<IFinalAccountReportResponse>({
-    queryKey: ['final-account-report', filters.appliedFilters],
-    enabled: Boolean(filters.appliedFilters),
+    queryKey: [
+      'final-account-report',
+      requestParams.startDate,
+      requestParams.endDate,
+      requestParams.branchIds,
+      requestParams.scope,
+      requestParams.statementType,
+      requestParams.mergeProfit,
+    ],
+    enabled: Boolean(
+      filters.appliedFilters &&
+        requestParams.startDate &&
+        requestParams.endDate
+    ),
     queryFn: async () => reportsApi.getFinalAccountReport(requestParams),
   });
   const downloadReport = useCallback(async () => {

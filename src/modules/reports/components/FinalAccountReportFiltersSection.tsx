@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui';
+import { Button, Checkbox } from '@/components/ui';
 import {
   FINAL_ACCOUNT_REPORT_TEXT,
   FinalAccountReportScopeEnum,
@@ -35,10 +35,6 @@ const statementOptions = [
   {
     id: FinalAccountStatementTypeEnum.BALANCE_SHEET,
     label: FINAL_ACCOUNT_REPORT_TEXT.balanceSheet,
-  },
-  {
-    id: FinalAccountStatementTypeEnum.MERGE_PROFIT,
-    label: FINAL_ACCOUNT_REPORT_TEXT.mergeProfit,
   },
 ] as const;
 
@@ -89,7 +85,7 @@ export const FinalAccountReportFiltersSection = ({
       onToggleAll={filters.toggleAllBranches}
       emptyMessage="No branch options available."
     />
-    <div className="grid gap-3 lg:grid-cols-2">
+    <div className="grid gap-3 lg:grid-cols-3">
       <div className="space-y-2 rounded-md border border-slate-200 p-3">
         <div className="text-[10px] font-semibold uppercase tracking-wider text-text-tertiary">
           {FINAL_ACCOUNT_REPORT_TEXT.statementHeading}
@@ -111,6 +107,18 @@ export const FinalAccountReportFiltersSection = ({
           options={scopeOptions}
           onChange={filters.setScope}
         />
+      </div>
+      <div className="space-y-2 rounded-md border border-slate-200 p-3">
+        <div className="text-[10px] font-semibold uppercase tracking-wider text-text-tertiary">
+          {FINAL_ACCOUNT_REPORT_TEXT.mergeProfitHeading}
+        </div>
+        <Checkbox
+          id="final-account-merge-profit"
+          checked={filters.mergeProfit}
+          onChange={checked => filters.setMergeProfit(Boolean(checked))}
+        >
+          {FINAL_ACCOUNT_REPORT_TEXT.mergeProfit}
+        </Checkbox>
       </div>
     </div>
     <div className="flex flex-wrap items-center gap-2">

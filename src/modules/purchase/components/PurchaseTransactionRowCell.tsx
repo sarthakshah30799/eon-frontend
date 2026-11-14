@@ -264,6 +264,20 @@ export const PurchaseTransactionRowCell = ({
   });
   const baseSaleRate = Number(baseSaleRateQuery.data?.baseSaleRate ?? 0);
 
+  useEffect(() => {
+    if (!isEmPurchase || !currencyId) return;
+    const rateNum = Number(rateValue);
+    const rateField = fieldPath('rate');
+    if (baseSaleRate > 0 && Number.isFinite(rateNum) && rateNum > baseSaleRate) {
+      form.setError(rateField, {
+        type: 'base-sale-rate',
+        message: 'Rate cannot exceed base sale price',
+      });
+    } else if (form.getFieldState(rateField).error?.type === 'base-sale-rate') {
+      form.clearErrors(rateField);
+    }
+  }, [baseSaleRate, currencyId, fieldPath, form, isEmPurchase, rateValue]);
+
   const selectedProductCurrencyRule = useMemo(
     () =>
       (pricingData.productCurrencyRates ?? []).find(

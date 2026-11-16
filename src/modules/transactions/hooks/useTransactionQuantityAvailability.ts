@@ -8,6 +8,7 @@ interface UseTransactionQuantityAvailabilityParams {
   currencyId?: string;
   productId?: string;
   excludeTransactionId?: string;
+  excludeTransferId?: string;
   enabled?: boolean;
   queryKeyPrefix: string;
 }
@@ -18,6 +19,7 @@ export const useTransactionQuantityAvailability = ({
   currencyId,
   productId,
   excludeTransactionId,
+  excludeTransferId,
   enabled = true,
   queryKeyPrefix,
 }: UseTransactionQuantityAvailabilityParams) => {
@@ -29,6 +31,7 @@ export const useTransactionQuantityAvailability = ({
       currencyId,
       productId,
       excludeTransactionId ?? '',
+      excludeTransferId ?? '',
     ],
     queryFn: () =>
       transactionsApi.getQuantityAvailability({
@@ -37,6 +40,7 @@ export const useTransactionQuantityAvailability = ({
         currencyId: currencyId ?? '',
         productId: productId ?? '',
         excludeTransactionId,
+        excludeTransferId,
       }),
     enabled: Boolean(
       enabled && branchId && counterId && currencyId && productId

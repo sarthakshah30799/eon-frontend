@@ -4,6 +4,7 @@ export { default as BankReportView } from './BankReportView';
 export { default as BankReconciliationReportView } from './BankReconciliationReportView';
 export { default as CashReportView } from './CashReportView';
 export { default as CashFlowReportView } from './CashFlowReportView';
+export { default as CashLedgerReportView } from './CashLedgerReportView';
 export { default as GenerateLedgerView } from './GenerateLedgerView';
 export { default as ProductProfitReportView } from './ProductProfitReportView';
 export { default as SpecialReportView } from './SpecialReportView';

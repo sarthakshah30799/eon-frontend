@@ -15,6 +15,8 @@ import type {
   ICashReportResponse,
   ICashFlowReportRequest,
   ICashFlowReportResponse,
+  ICashLedgerReportRequest,
+  ICashLedgerReportResponse,
   IGenerateLedgerRequest,
   IGenerateLedgerResponse,
   IProductProfitReportRequest,
@@ -232,6 +234,33 @@ export const reportsApi = {
         message: '',
         columns: [],
         sections: [],
+      };
+    }
+
+    return res.data;
+  },
+
+  getCashLedgerReport: async (
+    params: ICashLedgerReportRequest
+  ): Promise<ICashLedgerReportResponse> => {
+    const res = await apiClient.get<ICashLedgerReportResponse>(
+      `/reports/cash-ledger-report${buildQueryString(params)}`
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      return {
+        startDate: params.startDate ?? '',
+        endDate: params.endDate ?? '',
+        scope: params.scope ?? 'branch',
+        layout: params.layout ?? 'LEDGER',
+        message: '',
+        columns: [],
+        branches: [],
+        rows: [],
       };
     }
 
@@ -510,6 +539,33 @@ export const reportsApi = {
     return {
       blob: res.data.blob,
       filename: res.data.filename || `cash-flow-report.${format}`,
+    };
+  },
+
+  downloadCashLedgerReport: async (
+    params: ICashLedgerReportRequest,
+    format: ReportExportFormat
+  ): Promise<{ blob: Blob; filename?: string }> => {
+    const query = buildQueryString({
+      ...params,
+      format,
+    });
+
+    const res = await apiClient.getDownload(
+      `/reports/cash-ledger-report/export${query}`
+    );
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
+    if (!res.data) {
+      throw new Error('Failed to download Cash Ledger Report');
+    }
+
+    return {
+      blob: res.data.blob,
+      filename: res.data.filename || `cash-ledger-report.${format}`,
     };
   },
 

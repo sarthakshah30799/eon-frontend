@@ -60,4 +60,24 @@ export const advanceAdjustmentApi = {
     if (response.error) throw new Error(response.error);
     return Array.isArray(response.data) ? response.data : [];
   },
+
+  recordPrint: async (
+    id: string,
+    payload: {
+      copyType?: string;
+      sendEmail?: boolean;
+      subject?: string;
+      text?: string;
+      html?: string;
+    } = {}
+  ) => {
+    const response = await apiClient.post<{
+      message: string;
+      copyType: string;
+      printCount: number;
+    }>(`${BASE}/${id}/print`, payload);
+    if (response.error) throw new Error(response.error);
+    if (!response.data) throw new Error('Failed to record advance adjustment print');
+    return response.data;
+  },
 };

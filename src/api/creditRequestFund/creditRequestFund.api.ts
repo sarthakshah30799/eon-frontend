@@ -113,4 +113,24 @@ export const creditRequestFundApi = {
     if (!response.data) throw new Error('Failed to reject Credit Request Fund');
     return response.data;
   },
+  recordPrint: async (
+    id: string,
+    payload: {
+      copyType?: 'CUSTOMER_COPY' | 'DUPLICATE_COPY';
+      recipientEmail?: string;
+      subject?: string;
+      text?: string;
+      html?: string;
+      sendEmail?: boolean;
+    } = {}
+  ) => {
+    const response = await apiClient.post<{
+      message: string;
+      copyType: string;
+      printCount: number;
+    }>(`${BASE}/${id}/print`, payload);
+    if (response.error) throw new Error(response.error);
+    if (!response.data) throw new Error('Failed to record Credit Request Fund print');
+    return response.data;
+  },
 };

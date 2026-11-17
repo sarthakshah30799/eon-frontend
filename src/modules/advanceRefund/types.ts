@@ -49,6 +49,7 @@ export interface AvailableAdvanceReceipt {
   originalAmount: string;
   consumedBillsAmount: string;
   consumedRefundsAmount: string;
+  consumedAdjustmentsAmount?: string;
   consumedAmount: string;
   availableAmount: string;
 }
@@ -112,6 +113,7 @@ export interface AdvanceRefund {
   paymentVoucherId: string | null;
   adviceVoucherId: string | null;
   hoPaymentVoucherId: string | null;
+  printCount?: number;
   items: AdvanceRefundItem[];
   createdAt: string;
   updatedAt: string;

@@ -85,6 +85,7 @@ export interface AdvanceAdjustment {
   receiptVoucherId: string;
   receiptVoucherSnapshot: AdvanceAdjustmentSnapshot | null;
   journalVoucherId: string;
+  printCount?: number;
   items: AdvanceAdjustmentItem[];
   createdAt: string;
   updatedAt: string;

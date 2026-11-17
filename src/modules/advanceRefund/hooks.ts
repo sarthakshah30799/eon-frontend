@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { advanceRefundApi } from '@/api/advanceRefund/advanceRefund.api';
+import { ADVANCE_ADJUSTMENT_QUERY_KEYS } from '@/modules/advanceAdjustment/constants';
 import { ADVANCE_REFUND_QUERY_KEYS, ADVANCE_REFUND_TEXT } from './constants';
 import type {
   AdvanceRefundListQuery,
@@ -54,6 +55,9 @@ export const useCreateAdvanceRefund = () => {
       void queryClient.invalidateQueries({
         queryKey: ADVANCE_REFUND_QUERY_KEYS.all,
       });
+      void queryClient.invalidateQueries({
+        queryKey: ADVANCE_ADJUSTMENT_QUERY_KEYS.all,
+      });
       toast.success(ADVANCE_REFUND_TEXT.SUCCESS_CREATED);
     },
     onError: (error: unknown) => {
@@ -82,6 +86,9 @@ export const useHonourAdvanceRefund = () => {
       });
       void queryClient.invalidateQueries({
         queryKey: ADVANCE_REFUND_QUERY_KEYS.detail(variables.id),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: ADVANCE_ADJUSTMENT_QUERY_KEYS.all,
       });
       toast.success(ADVANCE_REFUND_TEXT.SUCCESS_HONOURED);
     },

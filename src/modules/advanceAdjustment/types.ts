@@ -82,6 +82,9 @@ export interface AdvanceAdjustment {
   status: AdvanceAdjustmentStatus;
   totalAdjustmentAmount: string;
   narration: string;
+  receiptVoucherId: string;
+  receiptVoucherSnapshot: AdvanceAdjustmentSnapshot | null;
+  journalVoucherId: string;
   items: AdvanceAdjustmentItem[];
   createdAt: string;
   updatedAt: string;
@@ -108,6 +111,11 @@ export interface AdvanceAdjustmentFormValues {
   panNumber: string;
   panName: string;
   panDob: string;
+  receiptVoucherId: string;
+  /** Read-only display: sum of selected sale adjustments */
+  adjustmentAmount: string;
+  /** Read-only display: selected receipt available − adjustment amount */
+  balanceAmount: string;
   narration: string;
   items: AdvanceAdjustmentItemFormValue[];
 }
@@ -118,6 +126,7 @@ export interface CreateAdvanceAdjustmentPayload {
   transactionDate: string;
   asOnDate: string;
   partyProfileId: string;
+  receiptVoucherId: string;
   panNumber?: string;
   panName?: string;
   panDob?: string;

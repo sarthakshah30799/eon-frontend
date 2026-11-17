@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { advanceAdjustmentApi } from '@/api/advanceAdjustment/advanceAdjustment.api';
+import { ADVANCE_REFUND_QUERY_KEYS } from '@/modules/advanceRefund/constants';
+import type { AvailableAdvancesParams } from '@/modules/advanceRefund/types';
 import {
   ADVANCE_ADJUSTMENT_QUERY_KEYS,
   ADVANCE_ADJUSTMENT_TEXT,
@@ -51,6 +53,31 @@ export const useOutstandingSales = (
       ),
   });
 
+export const useAvailableAdvancesForAdjustment = (
+  params: Partial<AvailableAdvancesParams> & { enabled?: boolean }
+) =>
+  useQuery({
+    queryKey: ADVANCE_ADJUSTMENT_QUERY_KEYS.availableAdvances(params),
+    queryFn: () =>
+      advanceAdjustmentApi.getAvailableAdvances({
+        panNumber: params.panNumber!,
+        branchId: params.branchId!,
+        asOnDate: params.asOnDate,
+        partyProfileId: params.partyProfileId,
+        search: params.search,
+      }),
+    enabled:
+      params.enabled ??
+      Boolean(
+        params.panNumber &&
+          params.panNumber.trim().length === 10 &&
+          params.branchId &&
+          params.asOnDate
+      ),
+    staleTime: 0,
+    refetchOnMount: 'always',
+  });
+
 export const useCreateAdvanceAdjustment = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -59,6 +86,9 @@ export const useCreateAdvanceAdjustment = () => {
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: ADVANCE_ADJUSTMENT_QUERY_KEYS.all,
+      });
+      void queryClient.invalidateQueries({
+        queryKey: ADVANCE_REFUND_QUERY_KEYS.all,
       });
       toast.success(ADVANCE_ADJUSTMENT_TEXT.SUCCESS_CREATED);
     },

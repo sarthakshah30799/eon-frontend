@@ -10,13 +10,20 @@ import {
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { useQuery } from '@tanstack/react-query';
-import { Button, CardSection, Checkbox } from '@/components/ui';
+import {
+  Button,
+  CardSection,
+  Checkbox,
+  type AsyncSelectOption,
+  type AsyncSelectResponse,
+} from '@/components/ui';
 import { Table, type TableColumnDef } from '@/components/ui/table';
 import {
   FormFieldInput,
   FormFieldCheckbox,
   FormFieldDatePicker,
   FormFieldCategoryOption,
+  FormFieldSelect,
 } from '@/components/forms';
 import { CategoryOptionCodeEnum } from '@/types/categoryOptionTypes';
 import { useAuth } from '@/lib/AuthContext';
@@ -35,8 +42,12 @@ import { isVoucherIndividualSelection } from '@/modules/vouchers/utils';
 import { transactionPoliciesApi } from '@/api/transactionPolicies';
 import { getTransactionDatePolicy } from '@/modules/transactionPolicies/utils/transactionDatePolicy';
 import { toDisplayDate } from '@/utils';
-import { useAvailableAdvances } from '@/modules/advanceRefund/hooks';
-import { useOutstandingSales } from '../hooks';
+import type { AvailableAdvanceReceipt } from '@/modules/advanceRefund/types';
+import {
+  useAvailableAdvancesForAdjustment,
+  useOutstandingSales,
+} from '../hooks';
+import { ADVANCE_ADJUSTMENT_TEXT } from '../constants';
 import type {
   AdvanceAdjustmentFormValues,
   AdvanceAdjustmentItemFormValue,
@@ -46,6 +57,24 @@ import type {
 import { toast } from 'react-hot-toast';
 
 const EMPTY_SALES: OutstandingSaleForAdjustment[] = [];
+const EMPTY_ADVANCES: AvailableAdvanceReceipt[] = [];
+
+const moneyDisplay = (value: number) =>
+  value.toLocaleString('en-IN', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
+const optionFilter =
+  (options: AsyncSelectOption[]) =>
+  async (search: string): Promise<AsyncSelectResponse> => ({
+    options: search
+      ? options.filter(opt =>
+          opt.label.toLowerCase().includes(search.toLowerCase())
+        )
+      : options,
+    hasMore: false,
+  });
 
 const schema = yup.object().shape({
   branchId: yup.string().required('Branch is required'),
@@ -68,6 +97,7 @@ const schema = yup.object().shape({
     ),
   panName: yup.string().optional(),
   panDob: yup.string().optional(),
+  receiptVoucherId: yup.string().uuid().required('Advance receipt is required'),
   narration: yup.string().trim().required('Narration is required'),
 });
 
@@ -166,17 +196,19 @@ const AdvanceAdjustmentSummaryCard: React.FC<{ totalCount: number }> = ({
 }) => {
   const form = useFormContext<AdvanceAdjustmentFormValues>();
   const watchedItems = useWatch({ control: form.control, name: 'items' });
+  const adjustmentAmount = useWatch({
+    control: form.control,
+    name: 'adjustmentAmount',
+  });
+  const balanceAmount = useWatch({
+    control: form.control,
+    name: 'balanceAmount',
+  });
 
   const selectedCount = (watchedItems || []).filter(i => i.selected).length;
-  const totalAdjustmentAmount = useMemo(() => {
-    const items = watchedItems || [];
-    return items
-      .filter(i => i.selected)
-      .reduce((acc, curr) => acc + (parseFloat(curr.adjustmentAmount) || 0), 0);
-  }, [watchedItems]);
 
   return (
-    <div className="flex justify-between items-center p-4 bg-surface-secondary rounded-md border border-border-primary">
+    <div className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center p-4 bg-surface-secondary rounded-md border border-border-primary">
       <div className="text-sm text-text-secondary">
         Selected Sales:{' '}
         <span className="font-semibold text-text-primary">
@@ -184,14 +216,19 @@ const AdvanceAdjustmentSummaryCard: React.FC<{ totalCount: number }> = ({
         </span>{' '}
         of {totalCount}
       </div>
-      <div className="text-base font-bold text-text-primary">
-        Total Adjustment Amount:{' '}
-        <span className="text-primary-600 ml-2">
-          ₹
-          {totalAdjustmentAmount.toLocaleString('en-IN', {
-            minimumFractionDigits: 2,
-          })}
-        </span>
+      <div className="flex flex-col sm:items-end gap-1 text-sm">
+        <div className="font-semibold text-text-primary">
+          {ADVANCE_ADJUSTMENT_TEXT.ADJUSTMENT_AMOUNT_LABEL}:{' '}
+          <span className="text-primary-600">
+            ₹{moneyDisplay(parseFloat(adjustmentAmount || '0') || 0)}
+          </span>
+        </div>
+        <div className="font-semibold text-text-primary">
+          {ADVANCE_ADJUSTMENT_TEXT.BALANCE_AMOUNT_LABEL}:{' '}
+          <span className="text-primary-600">
+            ₹{moneyDisplay(parseFloat(balanceAmount || '0') || 0)}
+          </span>
+        </div>
       </div>
     </div>
   );
@@ -203,6 +240,10 @@ const AdvanceAdjustmentSubmitButton: React.FC<{
 }> = ({ isSubmitting, onCancel }) => {
   const form = useFormContext<AdvanceAdjustmentFormValues>();
   const watchedItems = useWatch({ control: form.control, name: 'items' });
+  const receiptVoucherId = useWatch({
+    control: form.control,
+    name: 'receiptVoucherId',
+  });
   const totalAdjustmentAmount = useMemo(() => {
     const items = watchedItems || [];
     return items
@@ -226,7 +267,9 @@ const AdvanceAdjustmentSubmitButton: React.FC<{
         type="submit"
         variant="default"
         loading={isSubmitting}
-        disabled={isSubmitting || totalAdjustmentAmount <= 0}
+        disabled={
+          isSubmitting || totalAdjustmentAmount <= 0 || !receiptVoucherId
+        }
       >
         Submit Advance Adjustment
       </Button>
@@ -261,6 +304,9 @@ export const AdvanceAdjustmentForm: React.FC<AdvanceAdjustmentFormProps> = ({
       panNumber: '',
       panName: '',
       panDob: '',
+      receiptVoucherId: '',
+      adjustmentAmount: '0.00',
+      balanceAmount: '0.00',
       narration: '',
       items: [],
     },
@@ -308,6 +354,7 @@ export const AdvanceAdjustmentForm: React.FC<AdvanceAdjustmentFormProps> = ({
         shouldDirty: true,
         shouldValidate: true,
       });
+      setValue('receiptVoucherId', '', { shouldDirty: true });
       setSelectedPartyProfile(null);
     }
     lastBranchIdRef.current = watchedBranchId || '';
@@ -323,10 +370,19 @@ export const AdvanceAdjustmentForm: React.FC<AdvanceAdjustmentFormProps> = ({
         shouldDirty: true,
         shouldValidate: true,
       });
+      setValue('receiptVoucherId', '', { shouldDirty: true });
       setSelectedPartyProfile(null);
     }
     lastPartyTypeOptionIdRef.current = watchedPartyTypeOptionId || '';
   }, [watchedPartyTypeOptionId, setValue]);
+
+  const lastPartyIdRef = useRef(watchedPartyId || '');
+  useEffect(() => {
+    if (lastPartyIdRef.current && lastPartyIdRef.current !== watchedPartyId) {
+      setValue('receiptVoucherId', '', { shouldDirty: true });
+    }
+    lastPartyIdRef.current = watchedPartyId || '';
+  }, [watchedPartyId, setValue]);
 
   const {
     targetPartyTypes,
@@ -410,8 +466,10 @@ export const AdvanceAdjustmentForm: React.FC<AdvanceAdjustmentFormProps> = ({
   const isPanComplete = debouncedPanNumber.length === 10;
   const isPanFormatValid = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(debouncedPanNumber);
 
-  // Same as Advance Refund: fill blank panName / panDob from receipts for this PAN.
-  const { data: availableAdvancesData } = useAvailableAdvances({
+  const {
+    data: availableAdvancesData,
+    isLoading: isAdvancesLoading,
+  } = useAvailableAdvancesForAdjustment({
     panNumber: debouncedPanNumber,
     branchId: watchedBranchId,
     asOnDate: watchedAsOnDate,
@@ -424,14 +482,60 @@ export const AdvanceAdjustmentForm: React.FC<AdvanceAdjustmentFormProps> = ({
     ),
   });
 
+  const availableAdvances = availableAdvancesData ?? EMPTY_ADVANCES;
+
+  const receiptOptions = useMemo<AsyncSelectOption[]>(
+    () =>
+      availableAdvances.map(adv => ({
+        value: adv.id,
+        label: `${adv.number} | ${toDisplayDate(adv.transactionDate) || adv.transactionDate} | Avail ₹${moneyDisplay(Number(adv.availableAmount || 0))}`,
+      })),
+    [availableAdvances]
+  );
+
+  const watchedReceiptVoucherId = useWatch({
+    control,
+    name: 'receiptVoucherId',
+  });
+  const watchedItems = useWatch({ control, name: 'items' });
+
+  const selectedReceipt = useMemo(
+    () => availableAdvances.find(adv => adv.id === watchedReceiptVoucherId),
+    [availableAdvances, watchedReceiptVoucherId]
+  );
+
+  const totalAdjustmentAmount = useMemo(() => {
+    return (watchedItems || [])
+      .filter(i => i.selected)
+      .reduce((acc, curr) => acc + (parseFloat(curr.adjustmentAmount) || 0), 0);
+  }, [watchedItems]);
+
+  useEffect(() => {
+    const available = Number(selectedReceipt?.availableAmount ?? 0);
+    const adjustment = totalAdjustmentAmount;
+    const balance = available - adjustment;
+    setValue('adjustmentAmount', adjustment.toFixed(2), { shouldDirty: false });
+    setValue('balanceAmount', balance.toFixed(2), { shouldDirty: false });
+  }, [selectedReceipt, totalAdjustmentAmount, setValue]);
+
   const lastSyncedPanMetaRef = useRef<string>('');
   useEffect(() => {
-    const availableAdvances = availableAdvancesData ?? [];
     if (availableAdvances.length === 0) return;
 
     const signature = availableAdvances.map(a => a.id).join('|');
     if (signature === lastSyncedPanMetaRef.current) return;
     lastSyncedPanMetaRef.current = signature;
+
+    const currentReceiptId = getValues('receiptVoucherId');
+    if (
+      currentReceiptId &&
+      !availableAdvances.some(adv => adv.id === currentReceiptId)
+    ) {
+      setValue('receiptVoucherId', '', {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    }
 
     const currentName = getValues('panName');
     if (!currentName || !currentName.trim()) {
@@ -450,7 +554,13 @@ export const AdvanceAdjustmentForm: React.FC<AdvanceAdjustmentFormProps> = ({
         });
       }
     }
-  }, [availableAdvancesData, getValues, setValue]);
+  }, [availableAdvances, getValues, setValue]);
+
+  useEffect(() => {
+    if (!isPanComplete || !isPanFormatValid) {
+      setValue('receiptVoucherId', '', { shouldDirty: true });
+    }
+  }, [isPanComplete, isPanFormatValid, setValue]);
 
   const { data: outstandingSalesResponse, isLoading: isSalesLoading } =
     useOutstandingSales({
@@ -601,12 +711,18 @@ export const AdvanceAdjustmentForm: React.FC<AdvanceAdjustmentFormProps> = ({
   );
 
   const onFormSubmit = async (values: AdvanceAdjustmentFormValues) => {
+    if (!values.receiptVoucherId) {
+      toast.error('Please select an advance receipt to adjust against');
+      return;
+    }
+
     const selectedRows = (values.items || []).filter(i => i.selected);
     if (selectedRows.length === 0) {
       toast.error('Please select at least one outstanding sale to adjust');
       return;
     }
 
+    let totalAdjust = 0;
     for (const row of selectedRows) {
       const adjustNum = parseFloat(row.adjustmentAmount);
       const outstandingNum = parseFloat(row.outstandingAmount);
@@ -620,6 +736,15 @@ export const AdvanceAdjustmentForm: React.FC<AdvanceAdjustmentFormProps> = ({
         );
         return;
       }
+      totalAdjust += adjustNum;
+    }
+
+    const available = Number(selectedReceipt?.availableAmount ?? 0);
+    if (selectedReceipt && totalAdjust > available + 0.0001) {
+      toast.error(
+        `Total adjustment exceeds available advance on receipt ${selectedReceipt.number} (₹${selectedReceipt.availableAmount})`
+      );
+      return;
     }
 
     const payload: CreateAdvanceAdjustmentPayload = {
@@ -628,6 +753,7 @@ export const AdvanceAdjustmentForm: React.FC<AdvanceAdjustmentFormProps> = ({
       transactionDate: values.transactionDate,
       asOnDate: values.asOnDate,
       partyProfileId: values.partyProfileId,
+      receiptVoucherId: values.receiptVoucherId,
       panNumber: values.panNumber
         ? values.panNumber.trim().toUpperCase()
         : undefined,
@@ -738,6 +864,56 @@ export const AdvanceAdjustmentForm: React.FC<AdvanceAdjustmentFormProps> = ({
               label="PAN DOB / Inc. Date"
               placeholder="DD/MM/YYYY"
               disabled={!isIndividual && Boolean(activeParty?.panDob)}
+            />
+          </div>
+        </CardSection>
+
+        <CardSection heading={ADVANCE_ADJUSTMENT_TEXT.RECEIPT_SECTION}>
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="md:col-span-1">
+              <FormFieldSelect
+                name="receiptVoucherId"
+                label={ADVANCE_ADJUSTMENT_TEXT.RECEIPT_LABEL}
+                placeholder={
+                  !isPanComplete || !isPanFormatValid
+                    ? 'Enter a valid PAN to load receipts'
+                    : isAdvancesLoading
+                      ? 'Loading advance receipts...'
+                      : receiptOptions.length === 0
+                        ? 'No available advance receipts'
+                        : 'Select advance receipt'
+                }
+                loadOptions={optionFilter(receiptOptions)}
+                defaultOptions={receiptOptions}
+                isLoading={isAdvancesLoading}
+                disabled={
+                  !isPanComplete ||
+                  !isPanFormatValid ||
+                  receiptOptions.length === 0
+                }
+              />
+              {selectedReceipt ? (
+                <p className="text-xs text-text-secondary mt-1">
+                  Available on receipt: ₹
+                  {moneyDisplay(Number(selectedReceipt.availableAmount || 0))}
+                </p>
+              ) : (
+                <p className="text-xs text-text-secondary mt-1">
+                  Receipts load by PAN and branch as of the as-on date.
+                </p>
+              )}
+            </div>
+            <FormFieldInput
+              name="adjustmentAmount"
+              label={ADVANCE_ADJUSTMENT_TEXT.ADJUSTMENT_AMOUNT_LABEL}
+              disabled
+              valueTransform="none"
+            />
+            <FormFieldInput
+              name="balanceAmount"
+              label={ADVANCE_ADJUSTMENT_TEXT.BALANCE_AMOUNT_LABEL}
+              disabled
+              valueTransform="none"
             />
           </div>
         </CardSection>

@@ -9,6 +9,10 @@ import type {
   OutstandingSaleForAdjustment,
   OutstandingSalesParams,
 } from '@/modules/advanceAdjustment/types';
+import type {
+  AvailableAdvanceReceipt,
+  AvailableAdvancesParams,
+} from '@/modules/advanceRefund/types';
 
 const BASE = '/advance-adjustments';
 
@@ -47,5 +51,13 @@ export const advanceAdjustmentApi = {
       params.limit,
       params.offset
     );
+  },
+
+  getAvailableAdvances: async (params: AvailableAdvancesParams) => {
+    const response = await apiClient.get<AvailableAdvanceReceipt[]>(
+      `${BASE}/available-advances${buildQueryString(params)}`
+    );
+    if (response.error) throw new Error(response.error);
+    return Array.isArray(response.data) ? response.data : [];
   },
 };

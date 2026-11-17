@@ -68,7 +68,6 @@ export const advanceRefundApi = {
     const response = await apiClient.post<{
       message: string;
       copyType: string;
-      printCount: number;
     }>(`${BASE}/${id}/print`, payload);
     if (response.error) throw new Error(response.error);
     if (!response.data) throw new Error('Failed to record advance refund print');

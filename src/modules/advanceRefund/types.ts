@@ -113,7 +113,6 @@ export interface AdvanceRefund {
   paymentVoucherId: string | null;
   adviceVoucherId: string | null;
   hoPaymentVoucherId: string | null;
-  printCount?: number;
   items: AdvanceRefundItem[];
   createdAt: string;
   updatedAt: string;

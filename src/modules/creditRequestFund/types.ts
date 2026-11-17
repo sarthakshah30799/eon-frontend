@@ -71,7 +71,6 @@ export type CreditRequestFund = {
   requestingReceiptVoucherSnapshot?: CreditRequestFundSnapshot | null;
   requestingPaymentVoucherId?: string | null;
   requestingPaymentVoucherSnapshot?: CreditRequestFundSnapshot | null;
-  printCount?: number;
   items: CreditRequestFundItem[];
 };
 

@@ -196,6 +196,10 @@ const createPurchaseTransactionSchema = (transactionType: TransactionType) =>
             return true;
           }
           const code = this.parent.productCode;
+          // TT punches against deal cover + issuer, not CARD stock.
+          if (isTtProductCode(code)) {
+            return true;
+          }
           if (
             isCardProductCode(code) ||
             isSurrenderBuyingProduct({

@@ -113,10 +113,13 @@ export const hasSurrenderIssuerLinks = (product: SurrenderProductLike) => {
 export const hasSurrenderIssuerPath = hasSurrenderIssuerLinks;
 
 /**
- * Surrender product from Product Profile (data-driven, no product-code list):
+ * Surrender product from Product Profile (data-driven):
  * blank stock off + linked issuers + retail buying + bulk selling.
+ * TT uses issuer + deal cover, never CARD/EM unit selection.
  */
 export const isSurrenderMenuProduct = (product: SurrenderProductLike) =>
+  !isTtProductCode(product.productCode) &&
+  !isCardProductCode(product.productCode) &&
   product.maintainBlankStockOfProduct === false &&
   hasSurrenderIssuerLinks(product) &&
   product.availableInRetailBuying === true &&

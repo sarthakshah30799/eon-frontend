@@ -30,6 +30,7 @@ export interface VoucherLog {
   message: string;
   metadata?: Record<string, unknown> | null;
   performedById?: string | null;
+  performedByName?: string | null;
   performedAt?: string;
   createdAt?: string;
 }

@@ -6,6 +6,8 @@ import type {
   CreditRequestFund,
   CreditRequestFundFormValues,
   CreditRequestFundListQuery,
+  RecordCreditRequestFundPrintPayload,
+  RecordCreditRequestFundPrintResponse,
 } from '@/modules/creditRequestFund/types';
 
 const BASE = '/credit-request-fund';
@@ -101,7 +103,8 @@ export const creditRequestFundApi = {
       transactionDate ? { transactionDate } : {}
     );
     if (response.error) throw new Error(response.error);
-    if (!response.data) throw new Error('Failed to approve Credit Request Fund');
+    if (!response.data)
+      throw new Error('Failed to approve Credit Request Fund');
     return response.data;
   },
   reject: async (id: string, remarks: string) => {
@@ -115,21 +118,16 @@ export const creditRequestFundApi = {
   },
   recordPrint: async (
     id: string,
-    payload: {
-      copyType?: 'CUSTOMER_COPY' | 'DUPLICATE_COPY';
-      recipientEmail?: string;
-      subject?: string;
-      text?: string;
-      html?: string;
-      sendEmail?: boolean;
-    } = {}
+    payload: RecordCreditRequestFundPrintPayload = {}
   ) => {
-    const response = await apiClient.post<{
-      message: string;
-      copyType: string;
-    }>(`${BASE}/${id}/print`, payload);
+    const response =
+      await apiClient.post<RecordCreditRequestFundPrintResponse>(
+        `${BASE}/${id}/print`,
+        payload
+      );
     if (response.error) throw new Error(response.error);
-    if (!response.data) throw new Error('Failed to record Credit Request Fund print');
+    if (!response.data)
+      throw new Error('Failed to record Credit Request Fund print');
     return response.data;
   },
 };

@@ -8,6 +8,8 @@ import type {
   CreateAdvanceAdjustmentPayload,
   OutstandingSaleForAdjustment,
   OutstandingSalesParams,
+  RecordAdvanceAdjustmentPrintPayload,
+  RecordAdvanceAdjustmentPrintResponse,
 } from '@/modules/advanceAdjustment/types';
 import type {
   AvailableAdvanceReceipt,
@@ -63,20 +65,15 @@ export const advanceAdjustmentApi = {
 
   recordPrint: async (
     id: string,
-    payload: {
-      copyType?: string;
-      sendEmail?: boolean;
-      subject?: string;
-      text?: string;
-      html?: string;
-    } = {}
+    payload: RecordAdvanceAdjustmentPrintPayload = {}
   ) => {
-    const response = await apiClient.post<{
-      message: string;
-      copyType: string;
-    }>(`${BASE}/${id}/print`, payload);
+    const response = await apiClient.post<RecordAdvanceAdjustmentPrintResponse>(
+      `${BASE}/${id}/print`,
+      payload
+    );
     if (response.error) throw new Error(response.error);
-    if (!response.data) throw new Error('Failed to record advance adjustment print');
+    if (!response.data)
+      throw new Error('Failed to record advance adjustment print');
     return response.data;
   },
 };

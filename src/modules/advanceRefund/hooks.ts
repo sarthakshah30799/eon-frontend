@@ -4,10 +4,12 @@ import { advanceRefundApi } from '@/api/advanceRefund/advanceRefund.api';
 import { ADVANCE_ADJUSTMENT_QUERY_KEYS } from '@/modules/advanceAdjustment/constants';
 import { ADVANCE_REFUND_QUERY_KEYS, ADVANCE_REFUND_TEXT } from './constants';
 import type {
+  AdvanceRefund,
   AdvanceRefundListQuery,
   AvailableAdvancesParams,
   CreateAdvanceRefundPayload,
   HonourAdvanceRefundPayload,
+  RecordAdvanceRefundPrintPayload,
 } from './types';
 
 export const useAdvanceRefundList = (params: AdvanceRefundListQuery = {}) =>
@@ -98,6 +100,38 @@ export const useHonourAdvanceRefund = () => {
           ? error.message
           : 'Failed to honour advance refund'
       );
+    },
+  });
+};
+
+export const useRecordAdvanceRefundPrint = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: string;
+      payload: RecordAdvanceRefundPrintPayload;
+    }) => advanceRefundApi.recordPrint(id, payload),
+    onSuccess: (data, variables) => {
+      queryClient.setQueryData<AdvanceRefund>(
+        ADVANCE_REFUND_QUERY_KEYS.detail(variables.id),
+        current =>
+          current
+            ? {
+                ...current,
+                printCount:
+                  data?.printCount ?? (current.printCount ?? 0) + 1,
+              }
+            : current
+      );
+      void queryClient.invalidateQueries({
+        queryKey: ADVANCE_REFUND_QUERY_KEYS.detail(variables.id),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: ADVANCE_REFUND_QUERY_KEYS.lists(),
+      });
     },
   });
 };

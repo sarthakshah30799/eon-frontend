@@ -949,5 +949,7 @@ export interface ITransactionQuantityAvailability {
   productId: string;
   purchasedQuantity: string;
   soldQuantity: string;
+  draftSaleQuantity?: string;
+  heldTransferQuantity?: string;
   availableQuantity: string;
 }

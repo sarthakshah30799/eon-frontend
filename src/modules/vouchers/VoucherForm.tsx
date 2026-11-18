@@ -26,6 +26,7 @@ import { useCategoryOptions } from '@/hooks';
 import { PartyProfileTypeEnum } from '@/modules/partyProfiles/types/partyProfileTypes';
 import { AccountProfileLedgerLabelEnum } from '@/modules/accountProfile';
 import { PurchaseWorkplaceFields } from '@/modules/purchase/components/PurchaseWorkplaceFields';
+import { useAuth } from '@/lib/AuthContext';
 import type { ICompanyProfile } from '@/modules/companyProfile/types';
 import type {
   AccountingVoucher,
@@ -62,6 +63,7 @@ import {
   isVoucherPrintableType,
 } from './voucherPrintUtils';
 import { openPrintWindow } from '@/modules/transactions/utils/printSnapshotUtils';
+import { formatDateTime } from '@/utils';
 import {
   formatVoucherDateInput,
   getVoucherItemTypeValueById,
@@ -442,6 +444,7 @@ const VoucherFields = ({
   | 'honourPreviewNote'
 >) => {
   const form = useFormContext<VoucherFormValues>();
+  const { user } = useAuth();
   const [hasPrintedOnce, setHasPrintedOnce] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
   const [outstandingModalIndex, setOutstandingModalIndex] = useState<
@@ -567,6 +570,11 @@ const VoucherFields = ({
   const { data: headerAccountResponse } = useListAccountProfiles({
     active: true,
     limit: 100,
+    ...(mode === 'CASH'
+      ? { accountType: 'CASH_LEDGER' }
+      : mode === 'BANK_CHEQUE'
+        ? { accountType: 'BANK_LEDGER' }
+        : {}),
   });
   const { data: additionalSettings = [] } = useListAdditionalSettings();
   const handlingFeeControlAccountId = useMemo(
@@ -653,10 +661,16 @@ const VoucherFields = ({
             .toUpperCase()
         );
         if (mode === 'CASH')
-          return ledgerTypes.includes(AccountProfileLedgerLabelEnum.CashLedger);
+          return (
+            ledgerTypes.includes(AccountProfileLedgerLabelEnum.CashLedger) ||
+            ledgerTypes.includes('CASH_LEDGER')
+          );
         if (mode === 'BANK_CHEQUE')
-          return ledgerTypes.includes(AccountProfileLedgerLabelEnum.BankLedger);
-        return true;
+          return (
+            ledgerTypes.includes(AccountProfileLedgerLabelEnum.BankLedger) ||
+            ledgerTypes.includes('BANK_LEDGER')
+          );
+        return false;
       }),
     [allHeaderAccounts, mode]
   );
@@ -1034,7 +1048,7 @@ const VoucherFields = ({
   const createEmptyVoucherItem = (): VoucherFormValues['items'][number] => ({
     itemTypeOptionId: '',
     itemTypeValue: '',
-    subledgerPartyProfileId: '',
+    subledgerPartyProfileId: partyProfileId ?? '',
     accountId: '',
     accountName: '',
     direction: 'DEBIT',
@@ -1193,6 +1207,7 @@ const VoucherFields = ({
         copyType,
         voucher,
         company: company ?? null,
+        preparedByName: user?.name?.trim() || null,
       });
       await recordVoucherPrint({
         id: voucher.id,
@@ -1597,6 +1612,13 @@ const VoucherFields = ({
                       ? DEPOSIT_WITHDRAWAL_TEXT.withdrawalFrom
                       : DEPOSIT_WITHDRAWAL_TEXT.handlingFee;
                 const isFeeRow = index === 2;
+                const otherIndex = index === 0 ? 1 : index === 1 ? 0 : -1;
+                const otherAccountId =
+                  otherIndex >= 0 ? watchedItems?.[otherIndex]?.accountId : null;
+                const filteredAccountOptions =
+                  type === 'DEPOSIT_WITHDRAWAL' && otherAccountId
+                    ? accountOptions.filter(option => option.value !== otherAccountId)
+                    : accountOptions;
                 return (
                   <div
                     key={field.id}
@@ -1630,8 +1652,8 @@ const VoucherFields = ({
                       ) : (
                         <FormFieldSelect
                           name={`items.${index}.accountId`}
-                          loadOptions={optionFilter(accountOptions)}
-                          defaultOptions={accountOptions}
+                          loadOptions={optionFilter(filteredAccountOptions)}
+                          defaultOptions={filteredAccountOptions}
                           isLoading={accountsLoading}
                           placeholder="Account Code"
                           aria-label="Account Code"
@@ -1957,6 +1979,34 @@ const VoucherFields = ({
               ? VOUCHER_PRINT_TEXT.preparing
               : `${VOUCHER_PRINT_TEXT.printCopy} (${getVoucherPrintCopyLabel(nextCopyType)})`}
           </Button>
+          {(voucher?.logs?.filter(
+            log => log.action === VoucherLogActionEnum.PRINT
+          ).length ?? 0) > 0 ? (
+            <div>
+              <p className="text-xs font-medium text-text-secondary">
+                {VOUCHER_PRINT_TEXT.printHistory}
+              </p>
+              <ul className="mt-1 space-y-1 text-xs text-text-secondary">
+                {voucher?.logs
+                  ?.filter(log => log.action === VoucherLogActionEnum.PRINT)
+                  .map(log => (
+                    <li key={log.id}>
+                      {log.performedByName?.trim() ||
+                        VOUCHER_PRINT_TEXT.printedByUnknown}
+                      {' · '}
+                      {getVoucherPrintCopyLabel(
+                        (log.metadata?.copyType as
+                          | 'CUSTOMER_COPY'
+                          | 'DUPLICATE_COPY'
+                          | undefined) ?? 'CUSTOMER_COPY'
+                      )}
+                      {' · '}
+                      {formatDateTime(log.performedAt)}
+                    </li>
+                  ))}
+              </ul>
+            </div>
+          ) : null}
         </CardSection>
       ) : null}
     </div>

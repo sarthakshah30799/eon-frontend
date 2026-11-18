@@ -264,6 +264,20 @@ export const PurchaseTransactionRowCell = ({
   });
   const baseSaleRate = Number(baseSaleRateQuery.data?.baseSaleRate ?? 0);
 
+  useEffect(() => {
+    if (!isEmPurchase || !currencyId) return;
+    const rateNum = Number(rateValue);
+    const rateField = fieldPath('rate');
+    if (baseSaleRate > 0 && Number.isFinite(rateNum) && rateNum > baseSaleRate) {
+      form.setError(rateField, {
+        type: 'base-sale-rate',
+        message: 'Rate cannot exceed base sale price',
+      });
+    } else if (form.getFieldState(rateField).error?.type === 'base-sale-rate') {
+      form.clearErrors(rateField);
+    }
+  }, [baseSaleRate, currencyId, fieldPath, form, isEmPurchase, rateValue]);
+
   const selectedProductCurrencyRule = useMemo(
     () =>
       (pricingData.productCurrencyRates ?? []).find(
@@ -696,18 +710,18 @@ export const PurchaseTransactionRowCell = ({
     );
     const quantityFieldState = form.getFieldState(fieldName);
 
-    if (
-      !hasCurrencyProductSelection ||
-      transactionType !== TransactionTypeEnum.SALE ||
-      skipsCurrencyStockCheck
-    ) {
-      if (quantityFieldState.error?.type === availabilityErrorType) {
-        form.clearErrors(fieldName);
-      }
-      return;
-    }
+    const isTransferMode = Boolean(useCounterHoldCostRate);
+    const rawFormValues = form.getValues() as unknown as Record<string, unknown>;
+    const isFakeCurrencyMode =
+      form.getValues('purchasePageType') === 'FAKE_CURRENCY' ||
+      rawFormValues?.['slug'] === 'FAKE_CURRENCY';
+    const shouldValidateCounterStock =
+      (transactionType === TransactionTypeEnum.SALE ||
+        isTransferMode ||
+        isFakeCurrencyMode) &&
+      !skipsCurrencyStockCheck;
 
-    if (!quantityFieldState.isDirty) {
+    if (!hasCurrencyProductSelection || !shouldValidateCounterStock) {
       if (quantityFieldState.error?.type === availabilityErrorType) {
         form.clearErrors(fieldName);
       }
@@ -744,6 +758,7 @@ export const PurchaseTransactionRowCell = ({
     quantityAvailability?.availableQuantity,
     rowIndex,
     transactionType,
+    useCounterHoldCostRate,
   ]);
 
   useEffect(() => {
@@ -936,6 +951,16 @@ export const PurchaseTransactionRowCell = ({
                 quantityAvailability?.soldQuantity,
                 PURCHASE_RATE_DECIMALS
               )}
+              {Number(quantityAvailability?.heldTransferQuantity ?? 0) > 0 ? (
+                <>
+                  {' '}
+                  <b>Held:</b>{' '}
+                  {formatPurchaseDecimal(
+                    quantityAvailability?.heldTransferQuantity,
+                    PURCHASE_RATE_DECIMALS
+                  )}
+                </>
+              ) : null}
             </>
           )
         ) : null

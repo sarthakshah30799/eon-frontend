@@ -90,6 +90,7 @@ export const transactionsApi = {
     currencyId: string;
     productId: string;
     excludeTransactionId?: string;
+    excludeTransferId?: string;
   }): Promise<ITransactionQuantityAvailability> => {
     const query = new URLSearchParams();
     query.set('branchId', params.branchId);
@@ -99,6 +100,9 @@ export const transactionsApi = {
 
     if (params.excludeTransactionId) {
       query.set('excludeTransactionId', params.excludeTransactionId);
+    }
+    if (params.excludeTransferId) {
+      query.set('excludeTransferId', params.excludeTransferId);
     }
 
     const res = await apiClient.get<ITransactionQuantityAvailability>(

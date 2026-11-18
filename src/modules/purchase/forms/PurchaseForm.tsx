@@ -578,6 +578,36 @@ const PurchaseFormBody = ({
     purchaseRuleTransactions,
     purchaseRuleAdditionalCharges,
   ] = purchaseRuleWatchValues;
+
+  useEffect(() => {
+    if (
+      !purchaseRulePassengerInfoCaptured ||
+      !purchaseRulePassportExpiryDate ||
+      !transactionDate
+    ) {
+      return;
+    }
+    const expiryDate = new Date(purchaseRulePassportExpiryDate);
+    const txDate = new Date(transactionDate);
+    if (!Number.isNaN(expiryDate.getTime()) && !Number.isNaN(txDate.getTime())) {
+      const minExpiry = new Date(txDate);
+      minExpiry.setUTCMonth(minExpiry.getUTCMonth() + 3);
+      if (expiryDate <= minExpiry) {
+        form.setValue('passengerInfoCaptured', false, {
+          shouldDirty: true,
+          shouldValidate: true,
+        });
+        toast.error(
+          'Transaction date changed: Passenger passport must be valid for more than 3 months after transaction date. Please re-verify passenger.'
+        );
+      }
+    }
+  }, [
+    form,
+    purchaseRulePassengerInfoCaptured,
+    purchaseRulePassportExpiryDate,
+    transactionDate,
+  ]);
   const purchaseRulePaymentSignature = useMemo(
     () =>
       (paymentDetails ?? [])

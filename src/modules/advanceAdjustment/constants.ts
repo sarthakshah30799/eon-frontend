@@ -8,6 +8,12 @@ export const ADVANCE_ADJUSTMENT_QUERY_KEYS = {
     [...ADVANCE_ADJUSTMENT_QUERY_KEYS.details(), id] as const,
   outstandingSales: (params?: unknown) =>
     [...ADVANCE_ADJUSTMENT_QUERY_KEYS.all, 'outstanding-sales', params] as const,
+  availableAdvances: (params?: unknown) =>
+    [
+      ...ADVANCE_ADJUSTMENT_QUERY_KEYS.all,
+      'available-advances',
+      params,
+    ] as const,
 };
 
 export const ADVANCE_ADJUSTMENT_TEXT = {
@@ -20,6 +26,10 @@ export const ADVANCE_ADJUSTMENT_TEXT = {
   EMPTY_ITEMS: 'No outstanding sales selected for adjustment',
   NO_RECORDS: 'No advance adjustments found',
   SUCCESS_CREATED: 'Advance adjustment created successfully',
+  RECEIPT_LABEL: 'Advance Receipt',
+  ADJUSTMENT_AMOUNT_LABEL: 'Adjustment Amount',
+  BALANCE_AMOUNT_LABEL: 'Balance Amount',
+  RECEIPT_SECTION: 'Advance Receipt & Amounts',
   PRINT_COPY: 'Print Copy',
   PRINT_ORIGINAL_HINT: 'Next print will be Original Copy',
   PRINT_DUPLICATE_HINT: 'Next print will be Duplicate Copy',

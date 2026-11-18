@@ -82,7 +82,10 @@ export interface AdvanceAdjustment {
   status: AdvanceAdjustmentStatus;
   totalAdjustmentAmount: string;
   narration: string;
-  printCount: number;
+  receiptVoucherId: string;
+  receiptVoucherSnapshot: AdvanceAdjustmentSnapshot | null;
+  journalVoucherId: string;
+  printCount?: number;
   printLogs?: AdvanceAdjustmentPrintLog[];
   items: AdvanceAdjustmentItem[];
   createdAt: string;
@@ -118,7 +121,7 @@ export interface RecordAdvanceAdjustmentPrintPayload {
 export interface RecordAdvanceAdjustmentPrintResponse {
   message: string;
   copyType: AdvanceAdjustmentPrintCopyType;
-  printCount: number;
+  printCount?: number;
 }
 
 export interface AdvanceAdjustmentItemFormValue {
@@ -142,6 +145,11 @@ export interface AdvanceAdjustmentFormValues {
   panNumber: string;
   panName: string;
   panDob: string;
+  receiptVoucherId: string;
+  /** Read-only display: sum of selected sale adjustments */
+  adjustmentAmount: string;
+  /** Read-only display: selected receipt available − adjustment amount */
+  balanceAmount: string;
   narration: string;
   items: AdvanceAdjustmentItemFormValue[];
 }
@@ -152,6 +160,7 @@ export interface CreateAdvanceAdjustmentPayload {
   transactionDate: string;
   asOnDate: string;
   partyProfileId: string;
+  receiptVoucherId: string;
   panNumber?: string;
   panName?: string;
   panDob?: string;

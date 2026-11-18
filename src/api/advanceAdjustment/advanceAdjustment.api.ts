@@ -11,6 +11,10 @@ import type {
   RecordAdvanceAdjustmentPrintPayload,
   RecordAdvanceAdjustmentPrintResponse,
 } from '@/modules/advanceAdjustment/types';
+import type {
+  AvailableAdvanceReceipt,
+  AvailableAdvancesParams,
+} from '@/modules/advanceRefund/types';
 
 const BASE = '/advance-adjustments';
 
@@ -51,15 +55,25 @@ export const advanceAdjustmentApi = {
     );
   },
 
+  getAvailableAdvances: async (params: AvailableAdvancesParams) => {
+    const response = await apiClient.get<AvailableAdvanceReceipt[]>(
+      `${BASE}/available-advances${buildQueryString(params)}`
+    );
+    if (response.error) throw new Error(response.error);
+    return Array.isArray(response.data) ? response.data : [];
+  },
+
   recordPrint: async (
     id: string,
-    payload: RecordAdvanceAdjustmentPrintPayload
+    payload: RecordAdvanceAdjustmentPrintPayload = {}
   ) => {
     const response = await apiClient.post<RecordAdvanceAdjustmentPrintResponse>(
       `${BASE}/${id}/print`,
       payload
     );
     if (response.error) throw new Error(response.error);
+    if (!response.data)
+      throw new Error('Failed to record advance adjustment print');
     return response.data;
   },
 };

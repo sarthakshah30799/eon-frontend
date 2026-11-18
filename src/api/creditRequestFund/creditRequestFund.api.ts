@@ -103,7 +103,8 @@ export const creditRequestFundApi = {
       transactionDate ? { transactionDate } : {}
     );
     if (response.error) throw new Error(response.error);
-    if (!response.data) throw new Error('Failed to approve Credit Request Fund');
+    if (!response.data)
+      throw new Error('Failed to approve Credit Request Fund');
     return response.data;
   },
   reject: async (id: string, remarks: string) => {
@@ -117,7 +118,7 @@ export const creditRequestFundApi = {
   },
   recordPrint: async (
     id: string,
-    payload: RecordCreditRequestFundPrintPayload
+    payload: RecordCreditRequestFundPrintPayload = {}
   ) => {
     const response =
       await apiClient.post<RecordCreditRequestFundPrintResponse>(
@@ -125,7 +126,8 @@ export const creditRequestFundApi = {
         payload
       );
     if (response.error) throw new Error(response.error);
-    if (!response.data) throw new Error('Failed to record print');
+    if (!response.data)
+      throw new Error('Failed to record Credit Request Fund print');
     return response.data;
   },
 };

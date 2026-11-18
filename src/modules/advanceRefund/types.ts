@@ -49,6 +49,7 @@ export interface AvailableAdvanceReceipt {
   originalAmount: string;
   consumedBillsAmount: string;
   consumedRefundsAmount: string;
+  consumedAdjustmentsAmount?: string;
   consumedAmount: string;
   availableAmount: string;
 }

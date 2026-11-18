@@ -226,6 +226,16 @@ export const AdvanceAdjustmentDetailView: React.FC = () => {
               <dd className="font-medium text-text-primary">
                 {record.panName || '-'}
               </dd>
+              <dt className="text-text-secondary">Advance Receipt:</dt>
+              <dd className="font-medium text-text-primary">
+                {record.receiptVoucherSnapshot?.number ||
+                  record.receiptVoucherId ||
+                  '-'}
+              </dd>
+              <dt className="text-text-secondary">Journal Voucher:</dt>
+              <dd className="font-medium text-text-primary">
+                {record.journalVoucherId || '-'}
+              </dd>
               <dt className="text-text-secondary">Total Amount:</dt>
               <dd className="font-medium text-text-primary">
                 ₹

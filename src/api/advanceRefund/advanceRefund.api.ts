@@ -57,12 +57,17 @@ export const advanceRefundApi = {
     return Array.isArray(response.data) ? response.data : [];
   },
 
-  recordPrint: async (id: string, payload: RecordAdvanceRefundPrintPayload) => {
+  recordPrint: async (
+    id: string,
+    payload: RecordAdvanceRefundPrintPayload = {}
+  ) => {
     const response = await apiClient.post<RecordAdvanceRefundPrintResponse>(
       `${BASE}/${id}/print`,
       payload
     );
     if (response.error) throw new Error(response.error);
+    if (!response.data)
+      throw new Error('Failed to record advance refund print');
     return response.data;
   },
 };

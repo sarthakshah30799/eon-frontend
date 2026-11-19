@@ -37,7 +37,6 @@ export const ReportPageTypeEnum = {
   BANK_RECONCILIATION_REPORT: 'bank-reconciliation-report',
   CASH_REPORT: 'cash-report',
   CASH_FLOW_REPORT: 'cash-flow-report',
-  CASH_LEDGER_REPORT: 'cash-ledger-report',
   GENERATE_LEDGER: 'generate-ledger',
   CARD_UNSETTLED: 'card-unsettled-report',
   CARD_SETTLED: 'card-settled-report',
@@ -60,6 +59,7 @@ export const ReportPageTypeEnum = {
   SUB_LEDGER_REPORT: 'sub-ledger-report',
   TRIAL_BALANCE_REPORT: 'trial-balance-report',
   FINAL_ACCOUNT_REPORT: 'final-account-report',
+  TRADING_SUMMARY_REPORT: 'trading-summary-report',
   INDUS_TT_REPORT: 'indus-tt-report',
   IDFC_TT_REPORT: 'idfc-tt-report',
   ICICI_TT_REPORT: 'icici-tt-report',
@@ -75,6 +75,7 @@ const REPORT_PAGE_SLUG_ALIASES: Partial<Record<string, ReportPageType>> = {
   'special-report': ReportPageTypeEnum.SPECIAL,
   'currency-balance': ReportPageTypeEnum.CURRENCY_BALANCE,
   'tt-report': ReportPageTypeEnum.INDUS_TT_REPORT,
+  'cash-ledger-report': ReportPageTypeEnum.CASH_REPORT,
 };
 
 export const getReportPageCanonicalSlug = (
@@ -97,7 +98,6 @@ const REPORT_PAGE_TITLE_BY_TYPE: Record<ReportPageType, string> = {
   [ReportPageTypeEnum.BANK_RECONCILIATION_REPORT]: 'Bank Reconciliation Report',
   [ReportPageTypeEnum.CASH_REPORT]: 'Cash Report',
   [ReportPageTypeEnum.CASH_FLOW_REPORT]: 'Cash Flow Report',
-  [ReportPageTypeEnum.CASH_LEDGER_REPORT]: 'Cash Ledger Report',
   [ReportPageTypeEnum.GENERATE_LEDGER]: 'Generate Ledger',
   [ReportPageTypeEnum.CARD_UNSETTLED]: 'Unsettled Product Report',
   [ReportPageTypeEnum.CARD_SETTLED]: 'Settled Product Report',
@@ -122,6 +122,7 @@ const REPORT_PAGE_TITLE_BY_TYPE: Record<ReportPageType, string> = {
   [ReportPageTypeEnum.SUB_LEDGER_REPORT]: 'Sub Ledger Report',
   [ReportPageTypeEnum.TRIAL_BALANCE_REPORT]: 'Trial Balance Report',
   [ReportPageTypeEnum.FINAL_ACCOUNT_REPORT]: 'Final Account Report',
+  [ReportPageTypeEnum.TRADING_SUMMARY_REPORT]: 'Trading Summary Report',
   [ReportPageTypeEnum.INDUS_TT_REPORT]: 'INDUS TT Report',
   [ReportPageTypeEnum.IDFC_TT_REPORT]: 'IDFC TT Report',
   [ReportPageTypeEnum.ICICI_TT_REPORT]: 'ICICI TT Report',
@@ -391,8 +392,10 @@ export interface IBankReportRequest {
   startDate?: string;
   endDate?: string;
   layout?: BankReportLayout;
+  scope?: 'branch' | 'consolidated';
   branchIds?: string[];
   accountIds?: string[];
+  counterIds?: string[];
 }
 
 export interface IBankReconciliationReportDetailRow {
@@ -435,9 +438,11 @@ export interface IBankReconciliationReportRequest {
   unclearedOnly?: boolean;
 }
 
+export type CashReportScope = 'branch' | 'consolidated';
+
 export const CashReportLayoutEnum = {
-  BRANCH_WISE: 'BRANCH_WISE',
-  CONSOLIDATED: 'CONSOLIDATED',
+  LEDGER: 'LEDGER',
+  COLUMNAR: 'COLUMNAR',
 } as const;
 
 export type CashReportLayout =
@@ -460,9 +465,7 @@ export interface ICashReportRow {
   runningBalance: string;
 }
 
-export interface ICashReportSection {
-  branchId: string | null;
-  branchLabel: string;
+export interface ICashReportAccount {
   accountId: string;
   accountLabel: string;
   openingBalance: string;
@@ -472,18 +475,45 @@ export interface ICashReportSection {
   rows: ICashReportRow[];
 }
 
+export interface ICashReportBranchSummary {
+  openingBalance: string;
+  totalReceipts: string;
+  totalPayments: string;
+  closingBalance: string;
+}
+
+export interface ICashReportBranch {
+  branchId: string | null;
+  branchLabel: string;
+  accounts: ICashReportAccount[];
+  summary: ICashReportBranchSummary;
+}
+
+export interface ICashReportColumnarRow {
+  accountId: string;
+  code: string;
+  values: Record<string, string>;
+}
+
 export interface ICashReportResponse {
-  columns: ICashReportColumn[];
+  startDate: string;
+  endDate: string;
+  scope: CashReportScope;
   layout: CashReportLayout;
-  sections: ICashReportSection[];
+  message: string;
+  columns: ICashReportColumn[];
+  branches: ICashReportBranch[];
+  rows: ICashReportColumnarRow[];
 }
 
 export interface ICashReportRequest {
   startDate?: string;
   endDate?: string;
-  layout?: CashReportLayout;
   branchIds?: string[];
   accountIds?: string[];
+  counterIds?: string[];
+  scope?: CashReportScope;
+  layout?: CashReportLayout;
 }
 
 export type CashFlowReportScope = 'branch' | 'consolidated';
@@ -537,84 +567,6 @@ export interface ICashFlowReportRequest {
   accountIds?: string[];
   counterIds?: string[];
   scope?: CashFlowReportScope;
-}
-
-export type CashLedgerReportScope = 'branch' | 'consolidated';
-
-export const CashLedgerReportLayoutEnum = {
-  LEDGER: 'LEDGER',
-  COLUMNAR: 'COLUMNAR',
-} as const;
-
-export type CashLedgerReportLayout =
-  (typeof CashLedgerReportLayoutEnum)[keyof typeof CashLedgerReportLayoutEnum];
-
-export interface ICashLedgerReportColumn {
-  key: string;
-  label: string;
-}
-
-export interface ICashLedgerReportRow {
-  transactionType: string;
-  date: string;
-  type: string;
-  number: string;
-  party: string;
-  narration: string;
-  receipts: string;
-  payments: string;
-  runningBalance: string;
-}
-
-export interface ICashLedgerReportAccount {
-  accountId: string;
-  accountLabel: string;
-  openingBalance: string;
-  totalReceipts: string;
-  totalPayments: string;
-  closingBalance: string;
-  rows: ICashLedgerReportRow[];
-}
-
-export interface ICashLedgerReportBranchSummary {
-  openingBalance: string;
-  totalReceipts: string;
-  totalPayments: string;
-  closingBalance: string;
-}
-
-export interface ICashLedgerReportBranch {
-  branchId: string | null;
-  branchLabel: string;
-  accounts: ICashLedgerReportAccount[];
-  summary: ICashLedgerReportBranchSummary;
-}
-
-export interface ICashLedgerReportColumnarRow {
-  accountId: string;
-  code: string;
-  values: Record<string, string>;
-}
-
-export interface ICashLedgerReportResponse {
-  startDate: string;
-  endDate: string;
-  scope: CashLedgerReportScope;
-  layout: CashLedgerReportLayout;
-  message: string;
-  columns: ICashLedgerReportColumn[];
-  branches: ICashLedgerReportBranch[];
-  rows: ICashLedgerReportColumnarRow[];
-}
-
-export interface ICashLedgerReportRequest {
-  startDate?: string;
-  endDate?: string;
-  branchIds?: string[];
-  accountIds?: string[];
-  counterIds?: string[];
-  scope?: CashLedgerReportScope;
-  layout?: CashLedgerReportLayout;
 }
 
 export const GenerateLedgerLayoutEnum = {
@@ -1219,6 +1171,47 @@ export interface IFinalAccountReportRequest {
   scope?: FinalAccountReportScope;
   statementType?: FinalAccountStatementType;
   mergeProfit?: boolean;
+}
+
+export type TradingSummaryReportScope = 'branch' | 'consolidated';
+export type TradingSummaryDiffFilter = 'has_diff' | 'no_diff';
+
+export interface ITradingSummaryReportColumn {
+  key: string;
+  label: string;
+}
+
+export interface ITradingSummaryReportRow {
+  product: string;
+  opening: string;
+  purchase: string;
+  sales: string;
+  closing: string;
+  diff: string;
+}
+
+export interface ITradingSummaryReportSection {
+  branchId: string | null;
+  branchLabel: string;
+  rows: ITradingSummaryReportRow[];
+}
+
+export interface ITradingSummaryReportResponse {
+  startDate: string;
+  endDate: string;
+  scope: TradingSummaryReportScope;
+  diffFilter?: TradingSummaryDiffFilter;
+  message: string;
+  columns: ITradingSummaryReportColumn[];
+  sections: ITradingSummaryReportSection[];
+}
+
+export interface ITradingSummaryReportRequest {
+  startDate?: string;
+  endDate?: string;
+  branchIds?: string[];
+  scope?: TradingSummaryReportScope;
+  diffFilter?: TradingSummaryDiffFilter;
 }
 
 export interface ITourPaxReportRequest {

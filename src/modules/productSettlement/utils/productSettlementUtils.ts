@@ -69,14 +69,19 @@ export const resolveSettlementType = (item: {
   const explicit = String(item.type ?? '').trim().toUpperCase();
   if (
     explicit === ProductSettlementType.CARD ||
-    explicit === ProductSettlementType.TT
+    explicit === ProductSettlementType.TT ||
+    explicit === ProductSettlementType.TP
   ) {
     return explicit;
   }
   const code = resolveProductCode(item).toUpperCase();
-  return code === ProductSettlementType.TT
-    ? ProductSettlementType.TT
-    : ProductSettlementType.CARD;
+  if (code === ProductSettlementType.TT) {
+    return ProductSettlementType.TT;
+  }
+  if (code === ProductSettlementType.TP) {
+    return ProductSettlementType.TP;
+  }
+  return ProductSettlementType.CARD;
 };
 
 /** CARD uses masked number; TT uses synthetic series as the card-number column. */
@@ -91,7 +96,7 @@ export const displayCardNumber = (item: {
   } | null;
 }) => {
   const type = resolveSettlementType(item);
-  if (type === ProductSettlementType.TT) {
+  if (type === ProductSettlementType.TT || type === ProductSettlementType.TP) {
     return item.series?.trim() || '-';
   }
   return item.maskedCardNumber?.trim() || '-';
@@ -113,10 +118,10 @@ export const toFormItem = (
     productCode: resolveProductCode(item),
     series,
     kitNumber: item.kitNumber ?? '',
-    // TT shows synthetic series in the card-number column.
+    // TT / TP show series or placeholder in the card-number column.
     maskedCardNumber:
-      type === ProductSettlementType.TT
-        ? series
+      type === ProductSettlementType.TT || type === ProductSettlementType.TP
+        ? (series.trim() || '-')
         : (item.maskedCardNumber ?? ''),
     denomination: item.denomination,
     saleKind: item.saleKind ?? '',

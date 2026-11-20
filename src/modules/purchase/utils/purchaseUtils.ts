@@ -13,14 +13,14 @@ import {
   TransactionTypeProfileEnum,
   coerceTransactionPaymentMethod,
   isNonChequeBankPaymentMethod,
-} from '@/modules/transactions';
-import type { TradeMode, TransactionType } from '@/modules/transactions';
+} from '@/modules/transactions/types';
+import type { TradeMode, TransactionType } from '@/modules/transactions/types';
 import {
   buildCurrencyRateComparisonPreview,
   getCurrencyPricingGroup,
   getLatestRateForCurrency,
 } from '@/modules/currencyRates/utils/currencyRatesUtils';
-import type { ITransactionReferenceSnapshot } from '@/modules/transactions';
+import type { ITransactionReferenceSnapshot } from '@/modules/transactions/types';
 import type { IBranchProfile } from '@/modules/branchProfile/types';
 import {
   getPurchasePageEntityType,
@@ -52,7 +52,7 @@ import type {
   IPurchaseSubmitPayload,
   ITourPassengerFormRow,
 } from '../types/purchaseTypes';
-import type { ITransactionEntity } from '@/modules/transactions';
+import type { ITransactionEntity } from '@/modules/transactions/types';
 
 const EMPTY_MARGIN: ICurrencyRateMargin = {
   marginType: '',
@@ -92,6 +92,11 @@ export const TT_PRODUCT_CODE = 'TT';
 export const isTtProductCode = (productCode?: string | null) =>
   String(productCode ?? '').toUpperCase() === TT_PRODUCT_CODE;
 
+export const TP_PRODUCT_CODE = 'TP';
+
+export const isTpProductCode = (productCode?: string | null) =>
+  String(productCode ?? '').toUpperCase() === TP_PRODUCT_CODE;
+
 export type SurrenderProductLike = {
   productCode?: string | null;
   maintainBlankStockOfProduct?: boolean | null;
@@ -113,10 +118,13 @@ export const hasSurrenderIssuerLinks = (product: SurrenderProductLike) => {
 export const hasSurrenderIssuerPath = hasSurrenderIssuerLinks;
 
 /**
- * Surrender product from Product Profile (data-driven, no product-code list):
+ * Surrender product from Product Profile (data-driven):
  * blank stock off + linked issuers + retail buying + bulk selling.
+ * TT uses issuer + deal cover, never CARD/EM unit selection.
  */
 export const isSurrenderMenuProduct = (product: SurrenderProductLike) =>
+  !isTtProductCode(product.productCode) &&
+  !isCardProductCode(product.productCode) &&
   product.maintainBlankStockOfProduct === false &&
   hasSurrenderIssuerLinks(product) &&
   product.availableInRetailBuying === true &&
@@ -148,6 +156,8 @@ export const PURCHASE_TRANSACTION_TEXT = {
     'Select an issuer and eligible card before entering the denomination.',
   emSurrenderHint:
     'Select a sold CC/CM card. Enter FE amount and rate (must not exceed base sale price). Auto-surrender queues Branch→HO.',
+  tpSurrenderHint:
+    'Travellers cheques will be queued for Head Office surrender and collection.',
   emBulkSaleHint:
     'Select a reserved EM unit first. FE Amount is taken from the unit and cannot be edited.',
   feAmountMustMatchEmUnit:

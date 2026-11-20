@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useMemo, useState } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
+import { useQuery } from '@tanstack/react-query';
 import { CardSection } from '@/components/ui';
 import {
   Form,
@@ -21,6 +22,7 @@ import { currencyRatesApi } from '@/api/currencyRates/currencyRates.api';
 import { partyProfileApi } from '@/api/partyProfile';
 import { accountProfileApi } from '@/api/accountProfile';
 import { productProfileApi } from '@/api/productProfile/productProfile.api';
+import { transactionPoliciesApi } from '@/api/transactionPolicies';
 import {
   PartyProfileCommissionTypeEnum,
   type PartyProfileCommissionType,
@@ -58,13 +60,37 @@ export const AD1Form = ({
   submitLabel = 'Save',
   enforceTransactionDatePolicy = true,
 }: AD1FormProps) => {
-  const { policyContext } = useAuth();
+  const { user, activeBranchId, policyContext } = useAuth();
+  const canSelectWorkplace = Boolean(
+    user?.isAdmin || user?.isHo || user?.isHoStaff
+  );
+  const [selectedBranchId, setSelectedBranchId] = useState(
+    () => String(defaultValues.branchId ?? '').trim()
+  );
+  const selectedBranchPolicy = useQuery({
+    queryKey: ['ad1', 'transaction-date-policy', selectedBranchId],
+    queryFn: () => transactionPoliciesApi.getPolicyContext(selectedBranchId),
+    enabled: canSelectWorkplace && Boolean(selectedBranchId),
+  });
+  const selectedPolicyContext = canSelectWorkplace
+    ? (selectedBranchPolicy.data ??
+      (selectedBranchId === activeBranchId ? policyContext : null))
+    : policyContext;
   const transactionDatePolicy = useMemo(
-    () => getTransactionDatePolicy(policyContext),
-    [policyContext]
+    () => getTransactionDatePolicy(selectedPolicyContext),
+    [selectedPolicyContext]
   );
   const shouldEnforceTransactionDatePolicy =
     enforceTransactionDatePolicy && !readOnly;
+  const isBranchPolicyLoading =
+    canSelectWorkplace &&
+    Boolean(selectedBranchId) &&
+    (selectedBranchPolicy.isPending || selectedBranchPolicy.isFetching);
+  const isTransactionDateBlocked =
+    shouldEnforceTransactionDatePolicy &&
+    ((canSelectWorkplace && !selectedBranchId) ||
+      isBranchPolicyLoading ||
+      !transactionDatePolicy.canPunchTransactions);
 
   return (
     <Form<IAd1FormValues>
@@ -79,14 +105,13 @@ export const AD1Form = ({
         onBackClick: onCancel,
         onCancel,
         showSubmit: !readOnly,
-        isSubmitDisabled:
-          shouldEnforceTransactionDatePolicy &&
-          !transactionDatePolicy.canPunchTransactions,
+        isSubmitDisabled: isTransactionDateBlocked,
       }}
     >
       <AD1FormBody
         readOnly={readOnly}
         allowWorkplaceSelection={allowWorkplaceSelection}
+        onBranchChange={setSelectedBranchId}
         transactionDatePolicy={transactionDatePolicy}
       />
     </Form>
@@ -96,12 +121,14 @@ export const AD1Form = ({
 interface AD1FormBodyProps {
   readOnly: boolean;
   allowWorkplaceSelection: boolean;
+  onBranchChange?: (branchId: string) => void;
   transactionDatePolicy: ReturnType<typeof getTransactionDatePolicy>;
 }
 
 const AD1FormBody = ({
   readOnly,
   allowWorkplaceSelection,
+  onBranchChange,
   transactionDatePolicy,
 }: AD1FormBodyProps) => {
   const form = useFormContext<IAd1FormValues>();
@@ -352,6 +379,31 @@ const AD1FormBody = ({
       prevTypeRef.current = transactionType;
     }
   }, [transactionType, setValue]);
+
+  useEffect(() => {
+    onBranchChange?.(String(branchId ?? '').trim());
+  }, [branchId, onBranchChange]);
+
+  useEffect(() => {
+    if (readOnly) {
+      return;
+    }
+
+    const nextDate = transactionDatePolicy.defaultTransactionDate;
+    if (!nextDate) {
+      return;
+    }
+
+    const currentDate = String(form.getValues('transactionDate') ?? '').trim();
+    if (currentDate === nextDate) {
+      return;
+    }
+
+    setValue('transactionDate', nextDate, {
+      shouldDirty: false,
+      shouldValidate: true,
+    });
+  }, [form, readOnly, setValue, transactionDatePolicy.defaultTransactionDate]);
 
   // Reset Agent if Branch changes
   const prevBranchRef = useRef(branchId);

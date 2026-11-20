@@ -4,7 +4,6 @@ import ReportSalePurchaseView, {
   BankReconciliationReportView,
   CashReportView,
   CashFlowReportView,
-  CashLedgerReportView,
   GenerateLedgerView,
   CardBlankStockReportView,
   CardSettledReportView,
@@ -28,6 +27,7 @@ import ReportSalePurchaseView, {
   SubLedgerReportView,
   TrialBalanceReportView,
   FinalAccountReportView,
+  TradingSummaryReportView,
   TtReportView,
   ProductProfitReportView,
   SpecialReportView,
@@ -85,8 +85,6 @@ const ReportsPage = () => {
       return <CashReportView key={`${slug}${location.search}`} />;
     case ReportPageTypeEnum.CASH_FLOW_REPORT:
       return <CashFlowReportView key={slug} />;
-    case ReportPageTypeEnum.CASH_LEDGER_REPORT:
-      return <CashLedgerReportView key={slug} />;
     case ReportPageTypeEnum.GENERATE_LEDGER:
       return <GenerateLedgerView key={`${slug}${location.search}`} />;
     case ReportPageTypeEnum.PRODUCT_PROFIT:
@@ -137,6 +135,8 @@ const ReportsPage = () => {
       // Stable key: remounting on every search change discarded applied filter
       // state and re-hydrated dates from preset, so View looked filter-insensitive.
       return <FinalAccountReportView key={slug} />;
+    case ReportPageTypeEnum.TRADING_SUMMARY_REPORT:
+      return <TradingSummaryReportView key={slug} />;
     case ReportPageTypeEnum.INDUS_TT_REPORT:
       return <TtReportView key={`${slug}${location.search}`} />;
     case ReportPageTypeEnum.IDFC_TT_REPORT:

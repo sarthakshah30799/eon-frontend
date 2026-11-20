@@ -6,13 +6,13 @@ import {
   TransactionPartyProfileTypeEnum,
   isChequeFamilyPaymentMethod,
   isNonChequeBankPaymentMethod,
-} from '@/modules/transactions';
-import type { TransactionType } from '@/modules/transactions';
+} from '@/modules/transactions/types';
+import type { TransactionType } from '@/modules/transactions/types';
 import {
   isCorporateIndividualPurchasePage,
   type PurchasePageType,
 } from '@/pages/purchase/[slug]/purchasePage.enum';
-import { TradeModeEnum } from '@/modules/transactions';
+import { TradeModeEnum } from '@/modules/transactions/types';
 import { PurposeRateTypeEnum } from '@/modules/purpose/types/purposeTypes';
 import {
   PassengerEntityTypeEnum,
@@ -43,6 +43,7 @@ import {
   isSurrenderBuyingProduct,
   isSurrenderBulkSaleProduct,
   isTtProductCode,
+  isTpProductCode,
   isTtRemittanceComplete,
   PURCHASE_TRANSACTION_TEXT,
   shouldValidatePaymentDetailRow,
@@ -86,7 +87,7 @@ const signedDecimalStringSchema = yup
     return /^-?\d+(\.\d+)?$/.test(value);
   });
 
-const createPurchaseTransactionSchema = (transactionType: TransactionType) =>
+export const createPurchaseTransactionSchema = (transactionType: TransactionType) =>
   yup.object({
     currencyId: yup.string().trim().required('Currency is required'),
     currencyCode: yup.string().trim().default(''),
@@ -114,16 +115,17 @@ const createPurchaseTransactionSchema = (transactionType: TransactionType) =>
             hasIssuerLinks: true,
           });
         const isTtRow = isTtProductCode(this.parent.productCode);
+        const isTpRow = isTpProductCode(this.parent.productCode);
         if (!String(value ?? '').trim()) {
           return this.createError({
             message:
-              isCardSale || isTtRow || isSurrenderRow
+              isCardSale || isTtRow || isSurrenderRow || isTpRow
                 ? PURCHASE_TRANSACTION_TEXT.feAmountRequired
                 : PURCHASE_TRANSACTION_TEXT.quantityRequired,
           });
         }
 
-        if (isCardSale || isSurrenderRow) {
+        if (isCardSale || isSurrenderRow || isTpRow) {
           const amount = Number(value);
           if (!Number.isFinite(amount) || amount <= 0) {
             return this.createError({
@@ -196,6 +198,10 @@ const createPurchaseTransactionSchema = (transactionType: TransactionType) =>
             return true;
           }
           const code = this.parent.productCode;
+          // TT punches against deal cover + issuer; TP uses issuer + direct FE amount, not CARD stock.
+          if (isTtProductCode(code) || isTpProductCode(code)) {
+            return true;
+          }
           if (
             isCardProductCode(code) ||
             isSurrenderBuyingProduct({
@@ -234,6 +240,7 @@ const createPurchaseTransactionSchema = (transactionType: TransactionType) =>
           const needsIssuer =
             isCardProductCode(code) ||
             isTtProductCode(code) ||
+            isTpProductCode(code) ||
             isSurrenderBuyingProduct({
               productCode: code,
               maintainBlankStockOfProduct:

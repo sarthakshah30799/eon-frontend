@@ -83,6 +83,7 @@ import {
 import { PURCHASE_PREVIEW_TEXT, PURCHASE_RULE_TEXT, PURCHASE_CREDIT_TEXT } from '../constants/purchaseConstants';
 import { TOUR_PASSENGER_TEXT } from '../constants/tourPassengerConstants';
 import { getTransactionDatePolicy } from '@/modules/transactionPolicies/utils/transactionDatePolicy';
+import { transactionPoliciesApi } from '@/api/transactionPolicies';
 import {
   TransactionLogActionEnum,
   TransactionPartyProfileTypeEnum,
@@ -184,6 +185,7 @@ interface PurchaseFormBodyProps {
     referenceCurrencyCode: string;
   }) => void;
   onTransactionPreviewLoadingChange: (isLoading: boolean) => void;
+  onBranchChange?: (branchId: string) => void;
   transactionDatePolicy: ReturnType<typeof getTransactionDatePolicy>;
 }
 
@@ -210,6 +212,7 @@ const PurchaseFormBody = ({
   onCreditBlockChange,
   onPurchaseRuleMetaChange,
   onTransactionPreviewLoadingChange,
+  onBranchChange,
   transactionDatePolicy,
 }: PurchaseFormBodyProps) => {
   void _branchCode;
@@ -294,6 +297,26 @@ const PurchaseFormBody = ({
   const hasBranch = Boolean(resolvedBranchId?.trim());
   const showPartyBlock = hasBranch || Boolean(savedTransaction);
   const previousBranchIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    onBranchChange?.(resolvedBranchId?.trim() || '');
+  }, [onBranchChange, resolvedBranchId]);
+
+  useEffect(() => {
+    if (isReadOnly) {
+      return;
+    }
+
+    const nextDate = transactionDatePolicy.defaultTransactionDate;
+    if (!nextDate || form.getValues('transactionDate') === nextDate) {
+      return;
+    }
+
+    form.setValue('transactionDate', nextDate, {
+      shouldDirty: false,
+      shouldValidate: true,
+    });
+  }, [form, isReadOnly, transactionDatePolicy.defaultTransactionDate]);
 
   useEffect(() => {
     const nextBranchId = resolvedBranchId?.trim() || '';
@@ -2221,7 +2244,13 @@ export const PurchaseForm = ({
   onCancel,
   submitLabel = 'Save Draft',
 }: PurchaseFormProps) => {
-  const { policyContext } = useAuth();
+  const { user, activeBranchId, policyContext } = useAuth();
+  const canSelectWorkplace = Boolean(
+    user?.isAdmin || user?.isHo || user?.isHoStaff
+  );
+  const [selectedBranchId, setSelectedBranchId] = useState(
+    () => String(defaultValues.branchId ?? '').trim()
+  );
   const [draftDocuments, setDraftDocuments] = useState<
     Record<string, File | null>
   >({});
@@ -2240,10 +2269,27 @@ export const PurchaseForm = ({
   const [isCdfModalOpen, setIsCdfModalOpen] = useState(false);
   const [cdfDeclarationValues, setCdfDeclarationValues] =
     useState<IPurchaseCdfDeclarationValues | null>(null);
+  const selectedBranchPolicy = useQuery({
+    queryKey: ['purchase', 'transaction-date-policy', selectedBranchId],
+    queryFn: () => transactionPoliciesApi.getPolicyContext(selectedBranchId),
+    enabled: canSelectWorkplace && Boolean(selectedBranchId),
+  });
+  const selectedPolicyContext = canSelectWorkplace
+    ? (selectedBranchPolicy.data ??
+      (selectedBranchId === activeBranchId ? policyContext : null))
+    : policyContext;
   const transactionDatePolicy = useMemo(
-    () => getTransactionDatePolicy(policyContext),
-    [policyContext]
+    () => getTransactionDatePolicy(selectedPolicyContext),
+    [selectedPolicyContext]
   );
+  const isBranchPolicyLoading =
+    canSelectWorkplace &&
+    Boolean(selectedBranchId) &&
+    (selectedBranchPolicy.isPending || selectedBranchPolicy.isFetching);
+  const isTransactionDateBlocked =
+    (canSelectWorkplace && !selectedBranchId) ||
+    isBranchPolicyLoading ||
+    !transactionDatePolicy.canPunchTransactions;
 
   const requiresCdfDeclaration = Boolean(purchaseRuleMeta.requiresCdf);
   const hasCdfDeclaration = Boolean(cdfDeclarationValues);
@@ -2322,8 +2368,15 @@ export const PurchaseForm = ({
   const submitMessage = useMemo(() => {
     const messages: string[] = [];
 
-    if (!transactionDatePolicy.canPunchTransactions) {
-      messages.push(PURCHASE_RULE_TEXT.cannotPunchTransactions);
+    if (
+      selectedBranchId &&
+      !isBranchPolicyLoading &&
+      !transactionDatePolicy.canPunchTransactions
+    ) {
+      messages.push(
+        transactionDatePolicy.helperText ||
+          PURCHASE_RULE_TEXT.cannotPunchTransactions
+      );
     }
 
     if (isTransactionPreviewLoading) {
@@ -2355,6 +2408,7 @@ export const PurchaseForm = ({
     return messages.join(' ');
   }, [
     hasCdfDeclaration,
+    isBranchPolicyLoading,
     isCreditBlocked,
     isPurchaseRuleBlocked,
     isTransactionPreviewLoading,
@@ -2363,7 +2417,9 @@ export const PurchaseForm = ({
     purchaseRuleMeta.cdfThresholdAmount,
     purchaseRuleMeta.referenceCurrencyCode,
     requiresCdfDeclaration,
+    selectedBranchId,
     transactionDatePolicy.canPunchTransactions,
+    transactionDatePolicy.helperText,
   ]);
 
   const cdfFooterAction =
@@ -2408,7 +2464,7 @@ export const PurchaseForm = ({
           isPurchaseRuleBlocked ||
           isCreditBlocked ||
           isTransactionPreviewLoading ||
-          !transactionDatePolicy.canPunchTransactions ||
+          isTransactionDateBlocked ||
           (requiresCdfDeclaration && !hasCdfDeclaration),
         submitMessage: submitMessage || undefined,
       }}
@@ -2436,6 +2492,7 @@ export const PurchaseForm = ({
         onCreditBlockChange={setIsCreditBlocked}
         onPurchaseRuleMetaChange={setPurchaseRuleMeta}
         onTransactionPreviewLoadingChange={setIsTransactionPreviewLoading}
+        onBranchChange={setSelectedBranchId}
         transactionDatePolicy={transactionDatePolicy}
       />
 

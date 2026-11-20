@@ -29,6 +29,7 @@ import {
   isSurrenderBulkSaleProduct,
   isMultiCurrencyCardProduct,
   isTtProductCode,
+  isTpProductCode,
   getTradableActiveCurrencyIds,
   PURCHASE_TRANSACTION_TEXT,
   resolveAgentCommissionRule,
@@ -221,6 +222,7 @@ export const PurchaseTransactionRowCell = ({
   );
   const isCardProduct = isCardProductCode(selectedProduct?.productCode);
   const isTtProduct = isTtProductCode(selectedProduct?.productCode);
+  const isTpProduct = isTpProductCode(selectedProduct?.productCode);
   const hasLinkedIssuers =
     (selectedProduct?.issuerProfileIds?.length ?? 0) > 0;
   const isEmPurchase = isSurrenderBuyingProduct({
@@ -230,6 +232,8 @@ export const PurchaseTransactionRowCell = ({
     availableInBulkSelling: selectedProduct?.availableInBulkSelling,
     issuerProfileIds: selectedProduct?.issuerProfileIds,
   }) && transactionType === TransactionTypeEnum.PURCHASE;
+  const isTpPurchase =
+    isTpProduct && transactionType === TransactionTypeEnum.PURCHASE;
   const isEmBulkSale =
     isSurrenderBulkSaleProduct({
       productCode: selectedProduct?.productCode,
@@ -240,7 +244,7 @@ export const PurchaseTransactionRowCell = ({
     }) && transactionType === TransactionTypeEnum.SALE;
   const showIssuerField =
     hasLinkedIssuers &&
-    (isCardProduct || isTtProduct || isEmPurchase || isEmBulkSale);
+    (isCardProduct || isTtProduct || isEmPurchase || isEmBulkSale || isTpProduct);
   const showCardField =
     hasLinkedIssuers && (isCardProduct || isEmPurchase || isEmBulkSale);
   const isMultiCurrencyCard = isMultiCurrencyCardProduct(
@@ -1048,7 +1052,11 @@ export const PurchaseTransactionRowCell = ({
           <FormFieldInput
             name={fieldPath('quantity')}
             label={
-              isSaleCardProduct || isTtProduct || isEmPurchase || isEmBulkSale
+              isSaleCardProduct ||
+              isTtProduct ||
+              isEmPurchase ||
+              isEmBulkSale ||
+              isTpProduct
                 ? PURCHASE_TRANSACTION_TEXT.feAmountLabel
                 : isCardProduct
                   ? PURCHASE_TRANSACTION_TEXT.denominationLabel
@@ -1221,7 +1229,7 @@ export const PurchaseTransactionRowCell = ({
           </span>
         </div>
       ) : null}
-      {isEmPurchase ? (
+      {isEmPurchase || isTpPurchase ? (
         <div className="mt-2 flex items-center gap-4 px-1">
           <FormFieldCheckbox
             name={fieldPath('autoSurrender')}
@@ -1229,7 +1237,9 @@ export const PurchaseTransactionRowCell = ({
             disabled={disabled}
           />
           <span className="text-xs text-text-tertiary">
-            {PURCHASE_TRANSACTION_TEXT.emSurrenderHint}
+            {isTpPurchase
+              ? PURCHASE_TRANSACTION_TEXT.tpSurrenderHint
+              : PURCHASE_TRANSACTION_TEXT.emSurrenderHint}
           </span>
         </div>
       ) : null}

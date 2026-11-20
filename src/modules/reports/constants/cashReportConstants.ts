@@ -1,13 +1,13 @@
-export const CashLedgerReportScopeEnum = {
+export const CashReportScopeEnum = {
   BRANCH: 'branch',
   CONSOLIDATED: 'consolidated',
 } as const;
 
-export type CashLedgerReportScope =
-  (typeof CashLedgerReportScopeEnum)[keyof typeof CashLedgerReportScopeEnum];
+export type CashReportScope =
+  (typeof CashReportScopeEnum)[keyof typeof CashReportScopeEnum];
 
-export const CASH_LEDGER_REPORT_TEXT = {
-  title: 'Cash Ledger Report',
+export const CASH_REPORT_TEXT = {
+  title: 'Cash Report',
   description:
     'Cash-book style ledger by cash accounts linked to selected branches, with opening, receipts, payments, closing, and a per-branch Summary of Cash. Columnar view shows closing balances by account code across branches.',
   branchHeading: 'Branch',

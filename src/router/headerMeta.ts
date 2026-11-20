@@ -91,7 +91,6 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
   },
   { path: '/reports/cash-report', meta: { title: 'Cash Report' } },
   { path: '/reports/cash-flow-report', meta: { title: 'Cash Flow Report' } },
-  { path: '/reports/cash-ledger-report', meta: { title: 'Cash Ledger Report' } },
   { path: '/reports/generate-ledger', meta: { title: 'Generate Ledger' } },
   {
     path: '/reports/card-unsettled-report',
@@ -176,6 +175,10 @@ const HEADER_ROUTES: Array<{ path: string; meta: HeaderMeta }> = [
   {
     path: '/reports/final-account-report',
     meta: { title: 'Final Account Report' },
+  },
+  {
+    path: '/reports/trading-summary-report',
+    meta: { title: 'Trading Summary Report' },
   },
   {
     path: '/reports/tt-report',

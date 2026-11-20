@@ -27,7 +27,11 @@ import {
 import { productProfileApi } from '@/api/productProfile';
 import { pageToOffset, toAsyncSelectPage } from '@/utils/paginatedList';
 import { useQueryClient } from '@tanstack/react-query';
-import { isSurrenderBuyingProduct, isSurrenderMenuProduct } from '@/modules/purchase/utils/purchaseUtils';
+import {
+  isSurrenderBuyingProduct,
+  isSurrenderMenuProduct,
+  isTpProductCode,
+} from '@/modules/purchase/utils/purchaseUtils';
 import {
   PRODUCT_SETTLEMENT_STATUS_OPTIONS,
   PRODUCT_SETTLEMENT_TEXT,
@@ -93,7 +97,8 @@ export const ProductSettlementListView = ({
       });
       const products = (response.data ?? []).filter(product =>
         isSurrender
-          ? isSurrenderBuyingProduct(product)
+          ? isSurrenderBuyingProduct(product) ||
+            isTpProductCode(product.productCode)
           : !isSurrenderMenuProduct(product)
       );
       return toAsyncSelectPage({ ...response, data: products }, product => ({

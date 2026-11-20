@@ -7,42 +7,50 @@ import {
   BankReportFiltersSection,
   BankReportTable,
 } from '../components';
+import { BANK_REPORT_TEXT } from '../constants/bankReportConstants';
 import { useBankReport } from '../hooks';
-import { BankReportLayoutEnum, ReportExportFormatEnum } from '../types';
+import { ReportExportFormatEnum } from '../types';
 import { summarizeReportSelection } from '../utils';
 
 export const BankReportView = () => {
   const { user } = useAuth();
-  const report = useBankReport();
-  const canView = Boolean(user);
+  const reportState = useBankReport();
 
-  const currentSummary = useMemo(() => {
-    const branchLabels = summarizeReportSelection(
-      report.filters.branchIds,
-      report.filters.branchOptions
-    );
-    const accountLabels = summarizeReportSelection(
-      report.filters.accountIds,
-      report.filters.accountOptions
-    );
+  const branchSummary = useMemo(
+    () =>
+      summarizeReportSelection(
+        reportState.filters.appliedFilters?.branchIds ?? [],
+        reportState.filters.branchOptions
+      ),
+    [
+      reportState.filters.appliedFilters?.branchIds,
+      reportState.filters.branchOptions,
+    ]
+  );
+  const accountSummary = useMemo(
+    () =>
+      summarizeReportSelection(
+        reportState.filters.appliedFilters?.accountIds ?? [],
+        reportState.filters.accountOptions
+      ),
+    [
+      reportState.filters.appliedFilters?.accountIds,
+      reportState.filters.accountOptions,
+    ]
+  );
+  const counterSummary = useMemo(
+    () =>
+      summarizeReportSelection(
+        reportState.filters.appliedFilters?.counterIds ?? [],
+        reportState.filters.counterOptions
+      ),
+    [
+      reportState.filters.appliedFilters?.counterIds,
+      reportState.filters.counterOptions,
+    ]
+  );
 
-    return {
-      branches: branchLabels,
-      accounts: accountLabels,
-      layout:
-        report.filters.layout === BankReportLayoutEnum.CONSOLIDATED
-          ? 'Consolidated'
-          : 'Branch wise',
-    };
-  }, [
-    report.filters.accountIds,
-    report.filters.accountOptions,
-    report.filters.branchIds,
-    report.filters.branchOptions,
-    report.filters.layout,
-  ]);
-
-  if (!canView) {
+  if (!user) {
     return (
       <AccessDeniedState message={PAGE_STATUS_TEXTS.ACCESS_DENIED_MESSAGE} />
     );
@@ -52,82 +60,103 @@ export const BankReportView = () => {
     <div className="space-y-3">
       <div className="space-y-1">
         <h1 className="text-lg font-semibold tracking-tight text-text-primary">
-          Bank Report
+          {BANK_REPORT_TEXT.title}
         </h1>
         <p className="max-w-3xl text-[11px] text-text-secondary">
-          Bank ledger movements from receipt/payment/deposit-withdrawal
-          vouchers and purchase/sale bank payments, with opening and running
-          balance plus CSV/XLSX export.
+          {BANK_REPORT_TEXT.description}
         </p>
       </div>
 
-      <BankReportFiltersSection filters={report.filters} />
+      <BankReportFiltersSection filters={reportState.filters} />
 
-      {report.filters.appliedFilters && (
+      {reportState.filters.appliedFilters && (
         <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-[11px] text-text-secondary">
-          Applied: {report.appliedDateRangeLabel} | Layout{' '}
-          {currentSummary.layout} | Branches{' '}
-          {currentSummary.branches.length
-            ? currentSummary.branches.join(', ')
-            : 'All'}{' '}
-          | Accounts{' '}
-          {currentSummary.accounts.length
-            ? currentSummary.accounts.join(', ')
-            : 'All'}
+          {BANK_REPORT_TEXT.appliedPrefix}: {reportState.appliedDateRangeLabel}{' '}
+          | {BANK_REPORT_TEXT.branchHeading}{' '}
+          {branchSummary.length
+            ? branchSummary.join(', ')
+            : BANK_REPORT_TEXT.all}{' '}
+          | {BANK_REPORT_TEXT.accountHeading}{' '}
+          {accountSummary.length
+            ? accountSummary.join(', ')
+            : BANK_REPORT_TEXT.all}{' '}
+          | {BANK_REPORT_TEXT.counterHeading}{' '}
+          {counterSummary.length
+            ? counterSummary.join(', ')
+            : BANK_REPORT_TEXT.all}{' '}
+          | {BANK_REPORT_TEXT.scopeHeading} {reportState.filters.scopeLabel} |{' '}
+          {BANK_REPORT_TEXT.layoutHeading} {reportState.filters.layoutLabel}
         </div>
       )}
 
-      {report.filters.appliedFilters && (
+      {reportState.filters.appliedFilters && (
         <section className="space-y-3 rounded-xl border border-border-primary bg-white p-3 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="space-y-0.5">
-              <h2 className="text-sm font-semibold text-text-primary">
-                Report View
-              </h2>
-              <p className="text-[11px] text-text-secondary">
-                First and last transaction rows are opening and closing
-                balance. Summary totals follow each section. Lines are ordered
-                by transaction date then created at.
-              </p>
-            </div>
+            <h2 className="text-sm font-semibold text-text-primary">
+              {BANK_REPORT_TEXT.reportViewTitle}
+            </h2>
             <div className="flex flex-wrap items-center gap-2">
-              <select
-                className="rounded-md border border-border-primary bg-white px-2 py-1 text-[11px]"
-                value={report.exportFormat}
-                onChange={event =>
-                  report.setExportFormat(
-                    event.target.value === ReportExportFormatEnum.CSV
-                      ? ReportExportFormatEnum.CSV
-                      : ReportExportFormatEnum.XLSX
-                  )
-                }
-              >
-                <option value={ReportExportFormatEnum.XLSX}>Excel</option>
-                <option value={ReportExportFormatEnum.CSV}>CSV</option>
-              </select>
+              <div className="flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 p-1">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={
+                    reportState.exportFormat === ReportExportFormatEnum.XLSX
+                      ? 'default'
+                      : 'outline'
+                  }
+                  className="h-7 rounded-full px-3 text-[11px]"
+                  onClick={() =>
+                    reportState.setExportFormat(ReportExportFormatEnum.XLSX)
+                  }
+                >
+                  {BANK_REPORT_TEXT.xlsx}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={
+                    reportState.exportFormat === ReportExportFormatEnum.CSV
+                      ? 'default'
+                      : 'outline'
+                  }
+                  className="h-7 rounded-full px-3 text-[11px]"
+                  onClick={() =>
+                    reportState.setExportFormat(ReportExportFormatEnum.CSV)
+                  }
+                >
+                  {BANK_REPORT_TEXT.csv}
+                </Button>
+              </div>
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => void report.downloadReport()}
-                disabled={
-                  report.isLoadingReport || report.isFetchingReport
-                }
+                className="h-8 px-3 text-xs"
+                onClick={() => {
+                  void reportState.downloadReport();
+                }}
+                disabled={!reportState.isReady || reportState.isLoadingReport}
               >
-                Export
+                {BANK_REPORT_TEXT.download}
               </Button>
             </div>
           </div>
 
-          {report.reportError && (
+          {reportState.reportError && (
             <div className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-[11px] text-rose-700">
-              Failed to load report data. Please try again.
+              {BANK_REPORT_TEXT.loadError}
             </div>
           )}
 
           <BankReportTable
-            columns={report.reportColumns}
-            sections={report.reportSections}
-            loading={report.isLoadingReport || report.isFetchingReport}
+            columns={reportState.reportColumns}
+            sections={reportState.reportSections}
+            viewLayout={reportState.viewLayout}
+            startDate={reportState.filters.appliedFilters.dateRange.startDate}
+            endDate={reportState.filters.appliedFilters.dateRange.endDate}
+            loading={
+              reportState.isLoadingReport || reportState.isFetchingReport
+            }
           />
         </section>
       )}

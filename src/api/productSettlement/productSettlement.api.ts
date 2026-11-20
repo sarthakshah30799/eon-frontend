@@ -105,6 +105,12 @@ export interface ProductUnsettledItem {
   settlementAmount: string;
   branchId: string;
   branchSnapshot: CardStockSnapshot;
+  hoBranchId?: string | null;
+  hoBranchSnapshot?: CardStockSnapshot | null;
+  dealCoverId?: string | null;
+  transactionId?: string | null;
+  transactionItemId?: string | null;
+  buyRateSnapshot?: Record<string, unknown> | null;
   issuerPartyProfileId: string;
   issuerPartyProfileSnapshot: CardStockSnapshot;
   currencyId: string;

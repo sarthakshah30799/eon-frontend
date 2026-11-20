@@ -18,16 +18,31 @@ export const useCashReport = () => {
     () => ({
       startDate: filters.appliedFilters?.dateRange.startDate,
       endDate: filters.appliedFilters?.dateRange.endDate,
-      layout: filters.appliedFilters?.layout,
       branchIds: filters.appliedFilters?.branchIds ?? [],
       accountIds: filters.appliedFilters?.accountIds ?? [],
+      counterIds: filters.appliedFilters?.counterIds ?? [],
+      scope: filters.appliedFilters?.scope,
+      layout: filters.appliedFilters?.layout,
     }),
     [filters.appliedFilters]
   );
 
   const reportQuery = useQuery<ICashReportResponse>({
-    queryKey: ['cash-report', filters.appliedFilters],
-    enabled: Boolean(filters.appliedFilters),
+    queryKey: [
+      'cash-report',
+      requestParams.startDate,
+      requestParams.endDate,
+      requestParams.branchIds,
+      requestParams.accountIds,
+      requestParams.counterIds,
+      requestParams.scope,
+      requestParams.layout,
+    ],
+    enabled: Boolean(
+      filters.appliedFilters &&
+        requestParams.startDate &&
+        requestParams.endDate
+    ),
     queryFn: async () => reportsApi.getCashReport(requestParams),
   });
 
@@ -35,12 +50,10 @@ export const useCashReport = () => {
     if (!filters.appliedFilters) {
       return;
     }
-
     const payload = await reportsApi.downloadCashReport(
       requestParams,
       exportFormat
     );
-
     downloadBlob(payload.blob, payload.filename || 'cash-report.xlsx');
   }, [exportFormat, filters.appliedFilters, requestParams]);
 
@@ -48,9 +61,7 @@ export const useCashReport = () => {
     filters,
     exportFormat,
     setExportFormat,
-    reportColumns: reportQuery.data?.columns ?? [],
-    reportSections: reportQuery.data?.sections ?? [],
-    reportLayout: reportQuery.data?.layout,
+    report: reportQuery.data ?? null,
     isLoadingReport: reportQuery.isLoading,
     isFetchingReport: reportQuery.isFetching,
     reportError: reportQuery.error,

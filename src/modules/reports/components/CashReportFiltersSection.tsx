@@ -1,6 +1,10 @@
 import { Button } from '@/components/ui';
-import { CashReportLayoutEnum } from '../types';
+import {
+  CASH_REPORT_TEXT,
+  CashReportScopeEnum,
+} from '../constants/cashReportConstants';
 import type { CashReportFiltersState } from '../hooks/useCashReportFilters';
+import { CashReportLayoutEnum } from '../types';
 import CheckboxFilterGroup from './CheckboxFilterGroup';
 import ReportDatePresetFilter from './ReportDatePresetFilter';
 
@@ -8,13 +12,46 @@ interface CashReportFiltersSectionProps {
   filters: CashReportFiltersState;
 }
 
-const buildSelectionDescription = (count: number, total: number) => {
-  if (total === 0) {
-    return 'No options available';
-  }
+const scopeOptions = [
+  {
+    id: CashReportScopeEnum.BRANCH,
+    label: CASH_REPORT_TEXT.branchScope,
+  },
+  {
+    id: CashReportScopeEnum.CONSOLIDATED,
+    label: CASH_REPORT_TEXT.consolidated,
+  },
+] as const;
 
-  return `${count} of ${total} selected`;
-};
+const RadioList = <T extends string>({
+  name,
+  value,
+  options,
+  onChange,
+}: {
+  name: string;
+  value: T;
+  options: ReadonlyArray<{ id: T; label: string }>;
+  onChange: (value: T) => void;
+}) => (
+  <div className="space-y-2">
+    {options.map(option => (
+      <label
+        key={option.id}
+        className="flex items-center gap-2 text-[12px] text-text-primary"
+      >
+        <input
+          type="radio"
+          name={name}
+          className="h-4 w-4 border-border-secondary text-primary-600"
+          checked={value === option.id}
+          onChange={() => onChange(option.id)}
+        />
+        <span>{option.label}</span>
+      </label>
+    ))}
+  </div>
+);
 
 export const CashReportFiltersSection = ({
   filters,
@@ -23,90 +60,82 @@ export const CashReportFiltersSection = ({
     <section className="space-y-3 rounded-xl border border-border-primary bg-white p-3 shadow-sm">
       <ReportDatePresetFilter
         value={filters.dateRange}
-        onChange={nextValue => filters.setDateRange(nextValue)}
+        onChange={filters.setDateRange}
       />
-
-      <div className="flex flex-wrap gap-2">
-        <Button
-          type="button"
-          size="sm"
-          variant={
-            filters.layout === CashReportLayoutEnum.BRANCH_WISE
-              ? 'default'
-              : 'outline'
-          }
-          onClick={() => filters.setLayout(CashReportLayoutEnum.BRANCH_WISE)}
-        >
-          Branch wise
-        </Button>
-        <Button
-          type="button"
-          size="sm"
-          variant={
-            filters.layout === CashReportLayoutEnum.CONSOLIDATED
-              ? 'default'
-              : 'outline'
-          }
-          onClick={() => filters.setLayout(CashReportLayoutEnum.CONSOLIDATED)}
-        >
-          Consolidated
-        </Button>
-      </div>
-
-      <div className="grid gap-3 xl:grid-cols-2">
+      <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
         <CheckboxFilterGroup
-          heading="Branch"
+          heading={CASH_REPORT_TEXT.branchHeading}
           options={filters.branchOptions}
           selectedIds={filters.branchIds}
           allSelected={filters.branchAllSelected}
           onToggle={filters.toggleBranch}
           onToggleAll={filters.toggleAllBranches}
           emptyMessage="No branch options available."
-          helperText={buildSelectionDescription(
-            filters.branchIds.length,
-            filters.branchOptions.length
-          )}
         />
-
         <CheckboxFilterGroup
-          heading="Cash Account"
+          heading={CASH_REPORT_TEXT.accountHeading}
           options={filters.accountOptions}
           selectedIds={filters.accountIds}
           allSelected={filters.accountAllSelected}
           onToggle={filters.toggleAccount}
           onToggleAll={filters.toggleAllAccounts}
           emptyMessage="No cash ledger accounts available."
-          helperText={buildSelectionDescription(
-            filters.accountIds.length,
-            filters.accountOptions.length
-          )}
-          isLoading={filters.isAccountsLoading}
           hasMore={filters.hasMoreAccounts}
-          isFetchingMore={filters.isAccountsFetchingMore}
           onLoadMore={filters.loadMoreAccounts}
+          isLoading={filters.isAccountsLoading}
+          isFetchingMore={filters.isAccountsFetchingMore}
+        />
+        <CheckboxFilterGroup
+          heading={CASH_REPORT_TEXT.counterHeading}
+          options={filters.counterOptions}
+          selectedIds={filters.counterIds}
+          allSelected={filters.counterAllSelected}
+          onToggle={filters.toggleCounter}
+          onToggleAll={filters.toggleAllCounters}
+          emptyMessage="No counter options available."
         />
       </div>
-
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-2">
-        <div className="text-[11px] text-text-secondary">
-          Leave branch or account unselected to include all allowed options.
+      <div className="max-w-sm space-y-2 rounded-md border border-slate-200 p-3">
+        <div className="text-[10px] font-semibold uppercase tracking-wider text-text-tertiary">
+          {CASH_REPORT_TEXT.scopeHeading}
         </div>
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={filters.resetFilters}
-          >
-            Reset
-          </Button>
-          <Button
-            type="button"
-            onClick={filters.handleView}
-            disabled={!filters.canView}
-          >
-            View
-          </Button>
-        </div>
+        <RadioList
+          name="cash-report-scope"
+          value={filters.scope}
+          options={scopeOptions}
+          onChange={filters.setScope}
+        />
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          type="button"
+          className="h-8 px-3 text-xs"
+          onClick={() =>
+            filters.handleView(CashReportLayoutEnum.LEDGER)
+          }
+          disabled={!filters.canView}
+        >
+          {CASH_REPORT_TEXT.view}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          className="h-8 px-3 text-xs"
+          onClick={() =>
+            filters.handleView(CashReportLayoutEnum.COLUMNAR)
+          }
+          disabled={!filters.canView}
+        >
+          {CASH_REPORT_TEXT.viewColumnar}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          className="h-8 px-3 text-xs"
+          onClick={filters.resetFilters}
+        >
+          {CASH_REPORT_TEXT.reset}
+        </Button>
       </div>
     </section>
   );

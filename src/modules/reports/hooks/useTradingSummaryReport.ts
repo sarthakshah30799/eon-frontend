@@ -3,13 +3,13 @@ import { useQuery } from '@tanstack/react-query';
 import { reportsApi } from '@/api';
 import {
   ReportExportFormatEnum,
-  type ICashLedgerReportResponse,
+  type ITradingSummaryReportResponse,
 } from '../types';
 import { downloadBlob } from '../utils';
-import { useCashLedgerReportFilters } from './useCashLedgerReportFilters';
+import { useTradingSummaryReportFilters } from './useTradingSummaryReportFilters';
 
-export const useCashLedgerReport = () => {
-  const filters = useCashLedgerReportFilters();
+export const useTradingSummaryReport = () => {
+  const filters = useTradingSummaryReportFilters();
   const [exportFormat, setExportFormat] = useState<
     typeof ReportExportFormatEnum.CSV | typeof ReportExportFormatEnum.XLSX
   >(ReportExportFormatEnum.XLSX);
@@ -19,42 +19,41 @@ export const useCashLedgerReport = () => {
       startDate: filters.appliedFilters?.dateRange.startDate,
       endDate: filters.appliedFilters?.dateRange.endDate,
       branchIds: filters.appliedFilters?.branchIds ?? [],
-      accountIds: filters.appliedFilters?.accountIds ?? [],
-      counterIds: filters.appliedFilters?.counterIds ?? [],
       scope: filters.appliedFilters?.scope,
-      layout: filters.appliedFilters?.layout,
+      diffFilter: filters.appliedFilters?.diffFilter,
     }),
     [filters.appliedFilters]
   );
 
-  const reportQuery = useQuery<ICashLedgerReportResponse>({
+  const reportQuery = useQuery<ITradingSummaryReportResponse>({
     queryKey: [
-      'cash-ledger-report',
+      'trading-summary-report',
       requestParams.startDate,
       requestParams.endDate,
       requestParams.branchIds,
-      requestParams.accountIds,
-      requestParams.counterIds,
       requestParams.scope,
-      requestParams.layout,
+      requestParams.diffFilter,
     ],
     enabled: Boolean(
       filters.appliedFilters &&
         requestParams.startDate &&
         requestParams.endDate
     ),
-    queryFn: async () => reportsApi.getCashLedgerReport(requestParams),
+    queryFn: async () => reportsApi.getTradingSummaryReport(requestParams),
   });
 
   const downloadReport = useCallback(async () => {
     if (!filters.appliedFilters) {
       return;
     }
-    const payload = await reportsApi.downloadCashLedgerReport(
+    const payload = await reportsApi.downloadTradingSummaryReport(
       requestParams,
       exportFormat
     );
-    downloadBlob(payload.blob, payload.filename || 'cash-ledger-report.xlsx');
+    downloadBlob(
+      payload.blob,
+      payload.filename || 'trading-summary-report.xlsx'
+    );
   }, [exportFormat, filters.appliedFilters, requestParams]);
 
   return {
@@ -71,4 +70,4 @@ export const useCashLedgerReport = () => {
   };
 };
 
-export default useCashLedgerReport;
+export default useTradingSummaryReport;

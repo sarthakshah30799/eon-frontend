@@ -4,17 +4,17 @@ import { AccessDeniedState } from '@/components/ui/access-denied-state';
 import { PAGE_STATUS_TEXTS } from '@/constants';
 import { useAuth } from '@/lib/AuthContext';
 import {
-  CashLedgerReportFiltersSection,
-  CashLedgerReportTable,
+  TradingSummaryReportFiltersSection,
+  TradingSummaryReportTable,
 } from '../components';
-import { CASH_LEDGER_REPORT_TEXT } from '../constants/cashLedgerReportConstants';
-import { useCashLedgerReport } from '../hooks';
+import { TRADING_SUMMARY_REPORT_TEXT } from '../constants/tradingSummaryReportConstants';
+import { useTradingSummaryReport } from '../hooks';
 import { ReportExportFormatEnum } from '../types';
 import { summarizeReportSelection } from '../utils';
 
-export const CashLedgerReportView = () => {
+export const TradingSummaryReportView = () => {
   const { user } = useAuth();
-  const reportState = useCashLedgerReport();
+  const reportState = useTradingSummaryReport();
 
   const branchSummary = useMemo(
     () =>
@@ -25,28 +25,6 @@ export const CashLedgerReportView = () => {
     [
       reportState.filters.appliedFilters?.branchIds,
       reportState.filters.branchOptions,
-    ]
-  );
-  const accountSummary = useMemo(
-    () =>
-      summarizeReportSelection(
-        reportState.filters.appliedFilters?.accountIds ?? [],
-        reportState.filters.accountOptions
-      ),
-    [
-      reportState.filters.appliedFilters?.accountIds,
-      reportState.filters.accountOptions,
-    ]
-  );
-  const counterSummary = useMemo(
-    () =>
-      summarizeReportSelection(
-        reportState.filters.appliedFilters?.counterIds ?? [],
-        reportState.filters.counterOptions
-      ),
-    [
-      reportState.filters.appliedFilters?.counterIds,
-      reportState.filters.counterOptions,
     ]
   );
 
@@ -60,40 +38,35 @@ export const CashLedgerReportView = () => {
     <div className="space-y-3">
       <div className="space-y-1">
         <h1 className="text-lg font-semibold tracking-tight text-text-primary">
-          {CASH_LEDGER_REPORT_TEXT.title}
+          {TRADING_SUMMARY_REPORT_TEXT.title}
         </h1>
         <p className="max-w-3xl text-[11px] text-text-secondary">
-          {CASH_LEDGER_REPORT_TEXT.description}
+          {TRADING_SUMMARY_REPORT_TEXT.description}
         </p>
       </div>
-      <CashLedgerReportFiltersSection filters={reportState.filters} />
+
+      <TradingSummaryReportFiltersSection filters={reportState.filters} />
+
       {reportState.filters.appliedFilters && (
         <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-[11px] text-text-secondary">
-          {CASH_LEDGER_REPORT_TEXT.appliedPrefix}:{' '}
+          {TRADING_SUMMARY_REPORT_TEXT.appliedPrefix}:{' '}
           {reportState.appliedDateRangeLabel} |{' '}
-          {CASH_LEDGER_REPORT_TEXT.branchHeading}{' '}
+          {TRADING_SUMMARY_REPORT_TEXT.branchHeading}{' '}
           {branchSummary.length
             ? branchSummary.join(', ')
-            : CASH_LEDGER_REPORT_TEXT.all}{' '}
-          | {CASH_LEDGER_REPORT_TEXT.accountHeading}{' '}
-          {accountSummary.length
-            ? accountSummary.join(', ')
-            : CASH_LEDGER_REPORT_TEXT.all}{' '}
-          | {CASH_LEDGER_REPORT_TEXT.counterHeading}{' '}
-          {counterSummary.length
-            ? counterSummary.join(', ')
-            : CASH_LEDGER_REPORT_TEXT.all}{' '}
-          | {CASH_LEDGER_REPORT_TEXT.scopeHeading}{' '}
+            : TRADING_SUMMARY_REPORT_TEXT.all}{' '}
+          | {TRADING_SUMMARY_REPORT_TEXT.scopeHeading}{' '}
           {reportState.filters.scopeLabel} |{' '}
-          {CASH_LEDGER_REPORT_TEXT.layoutHeading}{' '}
-          {reportState.filters.layoutLabel}
+          {TRADING_SUMMARY_REPORT_TEXT.differenceHeading}{' '}
+          {reportState.filters.diffFilterLabel}
         </div>
       )}
+
       {reportState.filters.appliedFilters && (
         <section className="space-y-3 rounded-xl border border-border-primary bg-white p-3 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-sm font-semibold text-text-primary">
-              {CASH_LEDGER_REPORT_TEXT.reportViewTitle}
+              {TRADING_SUMMARY_REPORT_TEXT.reportViewTitle}
             </h2>
             <div className="flex flex-wrap items-center gap-2">
               <div className="flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 p-1">
@@ -110,7 +83,7 @@ export const CashLedgerReportView = () => {
                     reportState.setExportFormat(ReportExportFormatEnum.XLSX)
                   }
                 >
-                  {CASH_LEDGER_REPORT_TEXT.xlsx}
+                  {TRADING_SUMMARY_REPORT_TEXT.xlsx}
                 </Button>
                 <Button
                   type="button"
@@ -125,7 +98,7 @@ export const CashLedgerReportView = () => {
                     reportState.setExportFormat(ReportExportFormatEnum.CSV)
                   }
                 >
-                  {CASH_LEDGER_REPORT_TEXT.csv}
+                  {TRADING_SUMMARY_REPORT_TEXT.csv}
                 </Button>
               </div>
               <Button
@@ -137,16 +110,18 @@ export const CashLedgerReportView = () => {
                 }}
                 disabled={!reportState.isReady || reportState.isLoadingReport}
               >
-                {CASH_LEDGER_REPORT_TEXT.download}
+                {TRADING_SUMMARY_REPORT_TEXT.download}
               </Button>
             </div>
           </div>
+
           {reportState.reportError && (
             <div className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-[11px] text-rose-700">
-              {CASH_LEDGER_REPORT_TEXT.loadError}
+              {TRADING_SUMMARY_REPORT_TEXT.loadError}
             </div>
           )}
-          <CashLedgerReportTable
+
+          <TradingSummaryReportTable
             report={reportState.report}
             loading={
               reportState.isLoadingReport || reportState.isFetchingReport
@@ -158,4 +133,4 @@ export const CashLedgerReportView = () => {
   );
 };
 
-export default CashLedgerReportView;
+export default TradingSummaryReportView;

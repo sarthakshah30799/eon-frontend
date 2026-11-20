@@ -10,6 +10,7 @@ import { fetchAllMatching, normalizePaginatedResponse } from '@/utils/paginatedL
 export const ProductSettlementType = {
   CARD: 'CARD',
   TT: 'TT',
+  TP: 'TP',
 } as const;
 
 export type ProductSettlementType =

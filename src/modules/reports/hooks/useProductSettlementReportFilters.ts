@@ -6,7 +6,7 @@ import { branchProfileApi, partyProfileApi } from '@/api';
 import { useListCurrencyProfiles } from '@/modules/currencyProfile/hooks';
 import { PartyProfileTypeEnum } from '@/modules/partyProfiles/types';
 import { useListProductProfiles } from '@/modules/productProfile/hooks';
-import { isCardProductCode, isSurrenderMenuProduct, isTtProductCode } from '@/modules/purchase/utils/purchaseUtils';
+import { isCardProductCode, isSurrenderMenuProduct, isTpProductCode, isTtProductCode } from '@/modules/purchase/utils/purchaseUtils';
 import {
   buildReportDateRange,
   formatReportDateRangeLabel,
@@ -175,6 +175,7 @@ export const useProductSettlementReportFilters = (options?: {
             return (
               isCardProductCode(product.productCode) ||
               isTtProductCode(product.productCode) ||
+              isTpProductCode(product.productCode) ||
               isSurrenderMenuProduct(product)
             );
           })

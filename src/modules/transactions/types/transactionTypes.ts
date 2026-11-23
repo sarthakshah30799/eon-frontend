@@ -601,8 +601,10 @@ export interface ITransactionTaxPreviewRequest {
   transactionType: TransactionType;
   branchId?: string | null;
   branchSnapshot?: ITransactionReferenceSnapshot | null;
+  branchStateName?: string | null;
   partyProfileId?: string | null;
   partyProfileSnapshot?: ITransactionReferenceSnapshot | null;
+  partyStateName?: string | null;
   partyProfileApplyTax?: boolean;
   taxRatePercent: string;
   items: Array<{

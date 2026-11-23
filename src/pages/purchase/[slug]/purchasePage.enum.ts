@@ -41,6 +41,12 @@ const PURCHASE_PAGE_TYPE_BY_SLUG: Record<string, PurchasePageType> = {
   'sell-foreign': TransactionTypeProfileEnum.SALE_FOREIGN,
   'sale-misc': TransactionTypeProfileEnum.SALE_MISC,
   'sell-misc': TransactionTypeProfileEnum.SALE_MISC,
+  'card-issuer': TransactionTypeProfileEnum.SALE_MISC,
+  'sell-card-issuer': TransactionTypeProfileEnum.SALE_MISC,
+  'sale-card-issuer': TransactionTypeProfileEnum.SALE_MISC,
+  issuer: TransactionTypeProfileEnum.SALE_MISC,
+  'sell-issuer': TransactionTypeProfileEnum.SALE_MISC,
+  'sale-issuer': TransactionTypeProfileEnum.SALE_MISC,
   'sale-franchise': TransactionTypeProfileEnum.SALE_FRANCHISE,
   'sell-franchise': TransactionTypeProfileEnum.SALE_FRANCHISE,
   rmc: TransactionTypeProfileEnum.PURCHASE_RMC,
@@ -118,7 +124,10 @@ const PURCHASE_PAGE_CONFIG_BY_TYPE: Record<
   },
   [TransactionTypeProfileEnum.SALE_MISC]: {
     title: 'Sell To Misc',
-    partyProfileTypes: [PartyProfileTypeEnum.MISC_PROFILE],
+    partyProfileTypes: [
+      PartyProfileTypeEnum.MISC_PROFILE,
+      PartyProfileTypeEnum.CARD_ISSUER_PROFILE,
+    ],
   },
   [TransactionTypeProfileEnum.SALE_FRANCHISE]: {
     title: 'Sell To Franchise',
@@ -138,7 +147,10 @@ const PURCHASE_PAGE_CONFIG_BY_TYPE: Record<
   },
   [TransactionTypeProfileEnum.PURCHASE_MISC]: {
     title: 'Purchase From Misc',
-    partyProfileTypes: [PartyProfileTypeEnum.MISC_PROFILE],
+    partyProfileTypes: [
+      PartyProfileTypeEnum.MISC_PROFILE,
+      PartyProfileTypeEnum.CARD_ISSUER_PROFILE,
+    ],
   },
   [TransactionTypeProfileEnum.PURCHASE_FRANCHISE]: {
     title: 'Purchase From Franchise',
@@ -184,12 +196,22 @@ export const getPurchasePageTypeFromPath = (
       forex: TransactionTypeProfileEnum.SALE_FOREX,
       foreign: TransactionTypeProfileEnum.SALE_FOREIGN,
       misc: TransactionTypeProfileEnum.SALE_MISC,
+      'card-issuer': TransactionTypeProfileEnum.SALE_MISC,
+      issuer: TransactionTypeProfileEnum.SALE_MISC,
       franchise: TransactionTypeProfileEnum.SALE_FRANCHISE,
     };
     if (sellStrippedMap[normalizedSlug]) {
       return sellStrippedMap[normalizedSlug];
     }
     // backward compat: keep prefixed variants working under /sell
+    if (
+      normalizedSlug === 'sale-card-issuer' ||
+      normalizedSlug === 'sell-card-issuer' ||
+      normalizedSlug === 'sale-issuer' ||
+      normalizedSlug === 'sell-issuer'
+    ) {
+      return TransactionTypeProfileEnum.SALE_MISC;
+    }
     if (
       normalizedSlug === 'sale-ffmc-ads' ||
       normalizedSlug === 'sell-ffmc-ads'

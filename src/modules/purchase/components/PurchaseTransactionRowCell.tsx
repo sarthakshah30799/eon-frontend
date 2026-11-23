@@ -7,7 +7,9 @@ import {
 } from '@/components/forms';
 import {
   TradeModeEnum,
+  TransactionPartyProfileTypeEnum,
   TransactionTypeEnum,
+  TransactionTypeProfileEnum,
 } from '@/modules/transactions';
 import type {
   IPurchaseFormValues,
@@ -212,6 +214,22 @@ export const PurchaseTransactionRowCell = ({
     control: form.control,
     name: fieldPath('pricingRuleSnapshot'),
   }) as Record<string, unknown> | null;
+  const headerPartyProfileId = useWatch({
+    control: form.control,
+    name: 'partyProfileId',
+  });
+  const headerPartyProfileCode = useWatch({
+    control: form.control,
+    name: 'partyProfileCode',
+  });
+  const headerPartyProfileName = useWatch({
+    control: form.control,
+    name: 'partyProfileName',
+  });
+  const headerTransactionPartyProfileType = useWatch({
+    control: form.control,
+    name: 'transactionPartyProfileType',
+  });
 
   const selectedProduct = useMemo(
     () =>
@@ -243,10 +261,13 @@ export const PurchaseTransactionRowCell = ({
       issuerProfileIds: selectedProduct?.issuerProfileIds,
     }) && transactionType === TransactionTypeEnum.SALE;
   const showIssuerField =
-    hasLinkedIssuers &&
-    (isCardProduct || isTtProduct || isEmPurchase || isEmBulkSale || isTpProduct);
+    isTpProduct ||
+    (hasLinkedIssuers &&
+      (isCardProduct || isTtProduct || isEmPurchase || isEmBulkSale));
   const showCardField =
-    hasLinkedIssuers && (isCardProduct || isEmPurchase || isEmBulkSale);
+    !isTpProduct &&
+    hasLinkedIssuers &&
+    (isCardProduct || isEmPurchase || isEmBulkSale);
   const isMultiCurrencyCard = isMultiCurrencyCardProduct(
     selectedProduct?.productCode
   );
@@ -259,7 +280,8 @@ export const PurchaseTransactionRowCell = ({
     isTtProduct ||
     isTtDealLocked ||
     isEmPurchase ||
-    isEmBulkSale;
+    isEmBulkSale ||
+    (isTpProduct && transactionType === TransactionTypeEnum.PURCHASE);
 
   const baseSaleRateQuery = useQuery({
     queryKey: ['card-stock', 'base-sale-rate', currencyId],
@@ -558,7 +580,7 @@ export const PurchaseTransactionRowCell = ({
     const nextMaintainBlankStock =
       selectedProduct?.maintainBlankStockOfProduct !== false;
     const nextHasIssuerLinks =
-      (selectedProduct?.issuerProfileIds?.length ?? 0) > 0;
+      isTpProduct || (selectedProduct?.issuerProfileIds?.length ?? 0) > 0;
     const currentProductCode = normalizeValue(
       form.getValues(fieldPath('productCode'))
     );
@@ -637,6 +659,51 @@ export const PurchaseTransactionRowCell = ({
       }
     }
   }, [fieldPath, form, selectedProduct]);
+
+  useEffect(() => {
+    const isIssuerOrMiscSale =
+      purchasePageType === TransactionTypeProfileEnum.SALE_MISC ||
+      headerTransactionPartyProfileType ===
+        TransactionPartyProfileTypeEnum.MISC;
+
+    if (
+      transactionType === TransactionTypeEnum.SALE &&
+      isIssuerOrMiscSale &&
+      headerPartyProfileId &&
+      (isTpProduct || isCardProduct || isEmBulkSale)
+    ) {
+      const currentIssuerId = normalizeValue(
+        form.getValues(fieldPath('issuerPartyProfileId'))
+      );
+      if (!currentIssuerId) {
+        form.setValue(fieldPath('issuerPartyProfileId'), headerPartyProfileId, {
+          shouldDirty: false,
+          shouldValidate: true,
+        });
+        form.setValue(
+          fieldPath('issuerPartyProfileSnapshot'),
+          {
+            id: headerPartyProfileId,
+            code: headerPartyProfileCode || '',
+            name: headerPartyProfileName || '',
+          },
+          { shouldDirty: false }
+        );
+      }
+    }
+  }, [
+    fieldPath,
+    form,
+    headerPartyProfileCode,
+    headerPartyProfileId,
+    headerPartyProfileName,
+    headerTransactionPartyProfileType,
+    isCardProduct,
+    isEmBulkSale,
+    isTpProduct,
+    purchasePageType,
+    transactionType,
+  ]);
 
   useEffect(() => {
     const fieldName = fieldPath('rate');
@@ -1260,15 +1327,27 @@ export const PurchaseTransactionRowCell = ({
       <SelectPartyProfiles
         open={issuerPickerOpen}
         types={PartyProfileTypeEnum.CARD_ISSUER_PROFILE}
-        allowedProfileIds={selectedProduct?.issuerProfileIds}
+        allowedProfileIds={
+          selectedProduct?.issuerProfileIds?.length
+            ? selectedProduct.issuerProfileIds
+            : undefined
+        }
         queryParams={branchId ? { branchId } : undefined}
         selectable
         multiple={false}
-        title={isTtProduct ? 'Select TT issuer' : 'Select CARD issuer'}
+        title={
+          isTtProduct
+            ? 'Select TT issuer'
+            : isTpProduct
+              ? 'Select TP issuer'
+              : 'Select CARD issuer'
+        }
         description={
           isTtProduct
             ? 'Select an approved active issuer linked to this TT product.'
-            : 'Select an approved active CARD issuer linked to this CARD product.'
+            : isTpProduct
+              ? 'Select an approved active issuer linked to this TP product.'
+              : 'Select an approved active CARD issuer linked to this CARD product.'
         }
         onClose={() => setIssuerPickerOpen(false)}
         onContinue={(profiles: IPartyProfile[]) => {

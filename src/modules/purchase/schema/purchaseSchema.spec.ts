@@ -5,7 +5,11 @@ import {
   createPurchaseTransactionSchema,
 } from './purchaseSchema';
 import { TransactionTypeEnum } from '@/modules/transactions/types';
-import { PURCHASE_TRANSACTION_TEXT } from '../utils/purchaseUtils';
+import {
+  PURCHASE_TRANSACTION_TEXT,
+  isSurrenderBuyingProduct,
+  isSurrenderMenuProduct,
+} from '../utils/purchaseUtils';
 
 describe('Purchase & Sale Schema: TT Remittance vs CARD Stock Validation', () => {
   const itemSchema = createPurchaseTransactionSchema(TransactionTypeEnum.SALE);
@@ -293,5 +297,19 @@ describe('Purchase & Sale Schema: TT Remittance vs CARD Stock Validation', () =>
         return true;
       }
     );
+  });
+
+  it('strictly excludes Travellers Cheque (TP) from isSurrenderMenuProduct and isSurrenderBuyingProduct', () => {
+    const tpProduct = {
+      productCode: 'TP',
+      maintainBlankStockOfProduct: false,
+      hasIssuerLinks: true,
+      issuerProfileIds: ['11111111-1111-1111-1111-111111111111'],
+      availableInRetailBuying: true,
+      availableInBulkSelling: true,
+    };
+
+    assert.equal(isSurrenderMenuProduct(tpProduct), false);
+    assert.equal(isSurrenderBuyingProduct(tpProduct), false);
   });
 });

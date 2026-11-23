@@ -125,6 +125,7 @@ export const hasSurrenderIssuerPath = hasSurrenderIssuerLinks;
 export const isSurrenderMenuProduct = (product: SurrenderProductLike) =>
   !isTtProductCode(product.productCode) &&
   !isCardProductCode(product.productCode) &&
+  !isTpProductCode(product.productCode) &&
   product.maintainBlankStockOfProduct === false &&
   hasSurrenderIssuerLinks(product) &&
   product.availableInRetailBuying === true &&

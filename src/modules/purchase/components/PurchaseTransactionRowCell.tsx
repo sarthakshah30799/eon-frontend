@@ -41,7 +41,10 @@ import {
 import { EntityPickerField } from './EntityPickerField';
 import type { AsyncSelectResponse } from '@/components/ui';
 import type { IPartyProfileCommissionRule } from '@/modules/partyProfiles/types';
-import { usePurchaseQuantityAvailability } from '../hooks';
+import {
+  usePurchaseQuantityAvailability,
+  useTpSettlementAvailability,
+} from '../hooks';
 import { TransactionItemRowShell } from '@/components/forms/TransactionItemsFieldArray/TransactionItemRowShell';
 import { useAverageSellPrice } from '@/modules/transactions/hooks/useAverageSellPrice';
 import { useCounterHoldCost } from '@/modules/transactions/hooks/useCounterHoldCost';
@@ -274,14 +277,15 @@ export const PurchaseTransactionRowCell = ({
   const isSaleCardProduct =
     isCardProduct && transactionType === TransactionTypeEnum.SALE;
   const isTtDealLocked = Boolean(dealCoverId);
-  /** TT punches against a deal cover, not branch currency stock (same exclusion as CARD). */
+  const isTpSale = isTpProduct && transactionType === TransactionTypeEnum.SALE;
+  /** TT punches against a deal cover, not branch currency stock (same exclusion as CARD). TP sale validates against HO settlement inventory. */
   const skipsCurrencyStockCheck =
     isSaleCardProduct ||
     isTtProduct ||
     isTtDealLocked ||
     isEmPurchase ||
     isEmBulkSale ||
-    (isTpProduct && transactionType === TransactionTypeEnum.PURCHASE);
+    isTpProduct;
 
   const baseSaleRateQuery = useQuery({
     queryKey: ['card-stock', 'base-sale-rate', currencyId],
@@ -377,6 +381,17 @@ export const PurchaseTransactionRowCell = ({
     queryKeyPrefix: 'transaction-quantity-availability',
   });
   const quantityAvailability = quantityAvailabilityQuery.data ?? null;
+
+  const effectiveTpIssuerId = String(
+    issuerPartyProfileId || headerPartyProfileId || ''
+  ).trim();
+  const tpAvailabilityQuery = useTpSettlementAvailability({
+    currencyId: String(currencyId || ''),
+    issuerPartyProfileId: effectiveTpIssuerId || undefined,
+    hoBranchId: String(branchId || ''),
+    enabled: isTpSale && Boolean(currencyId),
+  });
+  const tpAvailability = tpAvailabilityQuery.data ?? null;
   const agentCommissionRule = useMemo(
     () =>
       resolveAgentCommissionRule(
@@ -443,6 +458,20 @@ export const PurchaseTransactionRowCell = ({
     ]
   );
   const hasCurrencyProductSelection = Boolean(currencyId && productId);
+  const tpAvailabilityHelpText = useMemo(() => {
+    if (!isTpSale || !hasCurrencyProductSelection) return '';
+    if (tpAvailabilityQuery.isLoading) return 'Checking accepted TP...';
+    const availNum = Number(tpAvailability?.availableQuantity ?? 0);
+    if (availNum > 0) {
+      return `Avail: ${formatPurchaseDecimal(tpAvailability?.availableQuantity, PURCHASE_RATE_DECIMALS)}`;
+    }
+    return 'No accepted TP cheques';
+  }, [
+    hasCurrencyProductSelection,
+    isTpSale,
+    tpAvailability?.availableQuantity,
+    tpAvailabilityQuery.isLoading,
+  ]);
   const holdCostRateValue = Number(
     counterHoldCostQuery.data?.holdCostRate ?? 0
   );
@@ -467,6 +496,7 @@ export const PurchaseTransactionRowCell = ({
   const sideMaxRate = selectedSideCurrencyRule?.maxRate ?? '';
   const hasSideRange = Boolean(sideMinRate || sideMaxRate);
   const availabilityErrorType = 'available-quantity-exceeded';
+  const tpAvailabilityErrorType = 'tp-available-quantity-exceeded';
   const lastAutoFilledRateRef = useRef({
     selectionKey: '',
     value: '',
@@ -833,6 +863,48 @@ export const PurchaseTransactionRowCell = ({
   ]);
 
   useEffect(() => {
+    const fieldName = fieldPath('quantity');
+    const currentQuantity = Number(String(quantity ?? '').trim() || 0);
+    const availableTp = Number(
+      String(tpAvailability?.availableQuantity ?? '').trim() || 0
+    );
+    const quantityFieldState = form.getFieldState(fieldName);
+
+    if (!isTpSale || !hasCurrencyProductSelection) {
+      if (quantityFieldState.error?.type === tpAvailabilityErrorType) {
+        form.clearErrors(fieldName);
+      }
+      return;
+    }
+
+    if (!Number.isFinite(currentQuantity) || currentQuantity <= 0) {
+      if (quantityFieldState.error?.type === tpAvailabilityErrorType) {
+        form.clearErrors(fieldName);
+      }
+      return;
+    }
+
+    if (currentQuantity > availableTp) {
+      form.setError(fieldName, {
+        type: tpAvailabilityErrorType,
+        message: `Available accepted cheques exceeded (Available: ${formatPurchaseDecimal(availableTp, PURCHASE_RATE_DECIMALS)})`,
+      });
+      return;
+    }
+
+    if (quantityFieldState.error?.type === tpAvailabilityErrorType) {
+      form.clearErrors(fieldName);
+    }
+  }, [
+    fieldPath,
+    form,
+    hasCurrencyProductSelection,
+    isTpSale,
+    quantity,
+    tpAvailability?.availableQuantity,
+  ]);
+
+  useEffect(() => {
     const fieldName = fieldPath('total');
     const currentTotal = normalizeValue(form.getValues(fieldName));
 
@@ -1002,7 +1074,23 @@ export const PurchaseTransactionRowCell = ({
     <TransactionItemRowShell
       title={`Transaction Item ${rowIndex + 1}`}
       availabilityText={
-        hasCurrencyProductSelection && !skipsCurrencyStockCheck ? (
+        isTpSale && hasCurrencyProductSelection ? (
+          tpAvailabilityQuery.isLoading ? (
+            'Checking accepted TP...'
+          ) : Number(tpAvailability?.availableQuantity ?? 0) > 0 ? (
+            <>
+              <b>Available accepted TP:</b>{' '}
+              {formatPurchaseDecimal(
+                tpAvailability?.availableQuantity,
+                PURCHASE_RATE_DECIMALS
+              )}{' '}
+              ({tpAvailability?.itemCount ?? 0}{' '}
+              {tpAvailability?.itemCount === 1 ? 'item' : 'items'})
+            </>
+          ) : (
+            'No accepted TP cheques awaiting settlement'
+          )
+        ) : hasCurrencyProductSelection && !skipsCurrencyStockCheck ? (
           quantityAvailabilityQuery.isLoading ? (
             'Checking available quantity...'
           ) : (
@@ -1138,6 +1226,14 @@ export const PurchaseTransactionRowCell = ({
             readOnly={isEmBulkSale}
             classes={{ container: 'w-full' }}
           />
+          {tpAvailabilityHelpText ? (
+            <div
+              className="mt-1 text-[11px] text-text-tertiary truncate"
+              title={tpAvailabilityHelpText}
+            >
+              {tpAvailabilityHelpText}
+            </div>
+          ) : null}
         </div>
         {isTtProduct ? (
           <div className="min-w-0 basis-full sm:basis-[48%] md:basis-[22%] lg:basis-0 lg:flex-1 lg:min-w-0 lg:max-w-[120px] xl:max-w-[145px] min-[1464px]:max-w-[170px]">

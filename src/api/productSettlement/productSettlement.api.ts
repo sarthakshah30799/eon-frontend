@@ -134,6 +134,17 @@ export interface ProductSettlementDocumentFilters extends IOffsetPaginationParam
   dateTo?: string;
 }
 
+export interface TpAvailabilityParams {
+  currencyId: string;
+  issuerPartyProfileId?: string;
+  hoBranchId?: string;
+}
+
+export interface TpAvailabilityResponse {
+  availableQuantity: string;
+  itemCount: number;
+}
+
 export interface CreateProductSettlementDocumentPayload {
   kind: ProductSettlementDocumentKind;
   issuerPartyProfileId: string;
@@ -246,6 +257,17 @@ export const productSettlementApi = {
     );
     if (response.error || !response.data)
       throw new Error(response.error || 'Failed to cancel product settlement');
+    return response.data;
+  },
+
+  getTpAvailability: async (
+    params: TpAvailabilityParams
+  ): Promise<TpAvailabilityResponse> => {
+    const response = await apiClient.get<TpAvailabilityResponse>(
+      `${basePath}/tp-availability${queryString(params)}`
+    );
+    if (response.error || !response.data)
+      throw new Error(response.error || 'Failed to fetch TP availability');
     return response.data;
   },
 };

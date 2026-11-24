@@ -382,9 +382,7 @@ export const PurchaseTransactionRowCell = ({
   });
   const quantityAvailability = quantityAvailabilityQuery.data ?? null;
 
-  const effectiveTpIssuerId = String(
-    issuerPartyProfileId || headerPartyProfileId || ''
-  ).trim();
+  const effectiveTpIssuerId = String(issuerPartyProfileId || '').trim();
   const tpAvailabilityQuery = useTpSettlementAvailability({
     currencyId: String(currencyId || ''),
     issuerPartyProfileId: effectiveTpIssuerId || undefined,
@@ -700,7 +698,7 @@ export const PurchaseTransactionRowCell = ({
       transactionType === TransactionTypeEnum.SALE &&
       isIssuerOrMiscSale &&
       headerPartyProfileId &&
-      (isTpProduct || isCardProduct || isEmBulkSale)
+      (isCardProduct || isEmBulkSale)
     ) {
       const currentIssuerId = normalizeValue(
         form.getValues(fieldPath('issuerPartyProfileId'))
@@ -1079,16 +1077,19 @@ export const PurchaseTransactionRowCell = ({
             'Checking accepted TP...'
           ) : Number(tpAvailability?.availableQuantity ?? 0) > 0 ? (
             <>
-              <b>Available accepted TP:</b>{' '}
+              <b>Available accepted TP{effectiveTpIssuerId ? '' : ' (all issuers)'}:</b>{' '}
               {formatPurchaseDecimal(
                 tpAvailability?.availableQuantity,
                 PURCHASE_RATE_DECIMALS
               )}{' '}
               ({tpAvailability?.itemCount ?? 0}{' '}
               {tpAvailability?.itemCount === 1 ? 'item' : 'items'})
+              {!effectiveTpIssuerId ? ' — Select issuer to allocate' : ''}
             </>
           ) : (
-            'No accepted TP cheques awaiting settlement'
+            effectiveTpIssuerId
+              ? 'No accepted TP cheques for selected issuer awaiting settlement'
+              : 'No accepted TP cheques awaiting settlement in this branch'
           )
         ) : hasCurrencyProductSelection && !skipsCurrencyStockCheck ? (
           quantityAvailabilityQuery.isLoading ? (

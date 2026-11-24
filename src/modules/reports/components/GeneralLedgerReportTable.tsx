@@ -1,6 +1,6 @@
 import { GENERAL_LEDGER_REPORT_TEXT } from '../constants/generalLedgerReportConstants';
 import type { IGeneralLedgerReportResponse } from '../types';
-import { formatDateTime } from '@/utils';
+import { formatReportCellValue } from '../utils';
 
 interface GeneralLedgerReportTableProps {
   report: IGeneralLedgerReportResponse | null;
@@ -79,9 +79,10 @@ export const GeneralLedgerReportTable = ({
                             : '',
                         ].join(' ')}
                       >
-                        {column.key === 'date' && row.date
-                          ? formatDateTime(row.date)
-                          : (row[column.key] ?? '')}
+                        {formatReportCellValue(
+                          column.key,
+                          row[column.key] ?? ''
+                        )}
                       </td>
                     ))}
                   </tr>

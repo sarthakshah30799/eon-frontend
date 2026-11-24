@@ -133,3 +133,60 @@ export const formatReportDateRangeLabel = (range: IReportDateRange) => {
   const fmt = (dateStr: string) => formatDateTime(dateStr || null);
   return `${fmt(range.startDate)} to ${fmt(range.endDate)}`;
 };
+
+const REPORT_DATE_COLUMN_KEYS = new Set([
+  'date',
+  'chequeDate',
+  'createdAt',
+  'paymentDate',
+  'settlementDate',
+  'dateOfRemittance',
+  'appointmentDate',
+  'accountingDate',
+  'tranDate',
+  'valueDate',
+  'dob',
+  'panHolderDob',
+  'lockedThroughDate',
+]);
+
+/**
+ * True when a report table column should render as DD/MM/YYYY.
+ */
+export const isReportDateColumnKey = (key: string) =>
+  REPORT_DATE_COLUMN_KEYS.has(key);
+
+/**
+ * Normalize report cell dates to transaction display format (DD/MM/YYYY).
+ * Passes through existing DD/MM/YYYY; converts DD-MM-YYYY; formats yyyy-MM-dd / ISO via shared helper.
+ */
+export const formatReportDateValue = (value?: string | null) => {
+  if (value === undefined || value === null) {
+    return '';
+  }
+  const trimmed = String(value).trim();
+  if (!trimmed) {
+    return '';
+  }
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(trimmed)) {
+    return trimmed;
+  }
+  const hyphenDisplay = trimmed.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+  if (hyphenDisplay) {
+    const [, day, month, year] = hyphenDisplay;
+    return `${day}/${month}/${year}`;
+  }
+  const formatted = formatDateTime(trimmed);
+  return formatted === '-' ? '' : formatted;
+};
+
+export const formatReportCellValue = (key: string, value: unknown) => {
+  if (value === undefined || value === null) {
+    return '';
+  }
+  const text = String(value);
+  if (!isReportDateColumnKey(key)) {
+    return text;
+  }
+  return formatReportDateValue(text);
+};

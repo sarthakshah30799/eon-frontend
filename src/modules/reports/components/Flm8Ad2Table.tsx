@@ -1,5 +1,6 @@
 import { FLM8_AD2_TEXT } from '../constants/flm8Ad2Constants';
 import type { IFlm8Ad2Response, IFlm8Ad2Row } from '../types';
+import { formatReportCellValue } from '../utils';
 
 interface Flm8Ad2TableProps {
   report: IFlm8Ad2Response | null;
@@ -101,7 +102,7 @@ export const Flm8Ad2Table = ({ report, loading }: Flm8Ad2TableProps) => {
                       : '',
                   ].join(' ')}
                 >
-                  {row[column.key] ?? ''}
+                  {formatReportCellValue(column.key, row[column.key] ?? '')}
                 </td>
               ))}
             </tr>

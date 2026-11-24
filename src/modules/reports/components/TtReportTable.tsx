@@ -1,5 +1,6 @@
 import { TT_REPORT_TEXT } from '../constants/ttReportConstants';
 import type { ITtReportResponse } from '../types';
+import { formatReportCellValue } from '../utils';
 
 interface TtReportTableProps {
   report: ITtReportResponse | null;
@@ -46,7 +47,7 @@ export const TtReportTable = ({ report, loading }: TtReportTableProps) => {
                   key={column.key}
                   className="whitespace-nowrap border border-slate-100 px-2 py-1.5 text-[11px] text-text-primary"
                 >
-                  {row[column.key] || ''}
+                  {formatReportCellValue(column.key, row[column.key] || '')}
                 </td>
               ))}
             </tr>

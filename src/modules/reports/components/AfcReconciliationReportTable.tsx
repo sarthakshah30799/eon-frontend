@@ -1,5 +1,6 @@
 import { AFC_RECONCILIATION_REPORT_TEXT } from '../constants/afcReconciliationReportConstants';
 import type { IAfcReconciliationReportResponse } from '../types';
+import { formatReportCellValue } from '../utils';
 
 interface AfcReconciliationReportTableProps {
   report: IAfcReconciliationReportResponse | null;
@@ -65,7 +66,7 @@ export const AfcReconciliationReportTable = ({
                     amountKeys.has(column.key) ? 'text-right tabular-nums' : '',
                   ].join(' ')}
                 >
-                  {row[column.key] ?? ''}
+                  {formatReportCellValue(column.key, row[column.key] ?? '')}
                 </td>
               ))}
             </tr>

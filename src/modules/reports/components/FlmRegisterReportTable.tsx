@@ -3,6 +3,7 @@ import {
   type FlmReportLayout,
 } from '../constants/flmReportLayoutConstants';
 import type { IFlm3PurchaseFromPublicResponse } from '../types';
+import { formatReportCellValue } from '../utils';
 
 interface FlmRegisterReportTableProps {
   report: IFlm3PurchaseFromPublicResponse | null;
@@ -55,7 +56,10 @@ const renderTable = (
             }
           >
             {columns.map(column => {
-              const value = row[column.key] ?? '';
+              const value = formatReportCellValue(
+                column.key,
+                row[column.key] ?? ''
+              );
               const isNumeric = NUMERIC_KEYS.has(column.key);
               return (
                 <td

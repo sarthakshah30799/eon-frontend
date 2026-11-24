@@ -3,6 +3,7 @@ import {
   LrsDailyReportFormatEnum,
   type ILrsDailyReportResponse,
 } from '../types';
+import { formatReportCellValue } from '../utils';
 
 interface LrsDailyReportTableProps {
   report: ILrsDailyReportResponse | null;
@@ -93,7 +94,10 @@ export const LrsDailyReportTable = ({
                           : 'text-left',
                       ].join(' ')}
                     >
-                      {row[column.key as keyof typeof row]}
+                      {formatReportCellValue(
+                        column.key,
+                        row[column.key as keyof typeof row]
+                      )}
                     </td>
                   ))}
                 </tr>

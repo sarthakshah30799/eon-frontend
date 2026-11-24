@@ -1,5 +1,6 @@
 import { OUTSTANDING_TRANSACTION_REPORT_TEXT } from '../constants/outstandingTransactionReportConstants';
 import type { IOutstandingTransactionReportResponse } from '../types';
+import { formatReportCellValue } from '../utils';
 
 interface OutstandingTransactionReportTableProps {
   report: IOutstandingTransactionReportResponse | null;
@@ -65,7 +66,7 @@ export const OutstandingTransactionReportTable = ({
                     amountKeys.has(column.key) ? 'text-right tabular-nums' : '',
                   ].join(' ')}
                 >
-                  {row[column.key] ?? ''}
+                  {formatReportCellValue(column.key, row[column.key] ?? '')}
                 </td>
               ))}
             </tr>

@@ -1,4 +1,5 @@
 import { toDisplayDate } from '@/utils';
+import { formatReportCellValue } from '../utils';
 import {
   BANK_REPORT_TEXT,
   BankReportViewLayoutEnum,
@@ -204,8 +205,10 @@ const BankReportLedgerTable = ({
                     }
                   >
                     {columns.map(column => {
-                      const value =
-                        row[column.key as keyof IBankReportRow] ?? '';
+                      const value = formatReportCellValue(
+                        column.key,
+                        row[column.key as keyof IBankReportRow] ?? ''
+                      );
                       return (
                         <td
                           key={column.key}

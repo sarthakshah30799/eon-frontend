@@ -2,6 +2,7 @@ import type {
   ISalePurchaseReportColumn,
   ISalePurchaseReportRow,
 } from '../types';
+import { formatReportCellValue } from '../utils';
 
 interface SalePurchaseReportTableProps {
   columns: ISalePurchaseReportColumn[];
@@ -114,7 +115,10 @@ export const SalePurchaseReportTable = ({
                   </td>
                 ) : (
                   columns.map(column => {
-                    const value = row[column.key] ?? '';
+                    const value = formatReportCellValue(
+                      column.key,
+                      row[column.key] ?? ''
+                    );
                     return (
                       <td
                         key={column.key}

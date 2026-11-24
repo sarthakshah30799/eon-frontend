@@ -5,6 +5,7 @@ import type {
   IGenerateLedgerSection,
 } from '../types';
 import { GenerateLedgerLayoutEnum } from '../types';
+import { formatReportCellValue } from '../utils';
 
 interface GenerateLedgerTableProps {
   columns: IGenerateLedgerColumn[];
@@ -100,7 +101,10 @@ const SectionTable = ({
               }
             >
               {columns.map(column => {
-                const value = row[column.key as keyof IGenerateLedgerRow] ?? '';
+                const value = formatReportCellValue(
+                  column.key,
+                  row[column.key as keyof IGenerateLedgerRow] ?? ''
+                );
                 return (
                   <td
                     key={column.key}

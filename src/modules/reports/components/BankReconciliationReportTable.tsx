@@ -1,4 +1,3 @@
-import { formatDateTime } from '@/utils';
 import {
   BANK_RECONCILIATION_REPORT_TEXT,
   getBankReconciliationSectionLabels,
@@ -8,6 +7,7 @@ import type {
   IBankReconciliationReportSection,
   IBankReportColumn,
 } from '../types';
+import { formatReportCellValue } from '../utils';
 
 interface BankReconciliationReportTableProps {
   columns: IBankReportColumn[];
@@ -17,10 +17,6 @@ interface BankReconciliationReportTableProps {
 }
 
 const NUMERIC_KEYS = new Set(['chequeAmount', 'amount']);
-
-const DateCell = ({ value }: { value: string }) => (
-  <span>{value ? formatDateTime(value) : '-'}</span>
-);
 
 const SummaryRow = ({
   label,
@@ -55,9 +51,10 @@ const DetailRows = ({
         className="bg-white"
       >
         {columns.map(column => {
-          const value =
-            row[column.key as keyof IBankReconciliationReportDetailRow];
-          const isDate = column.key === 'date' || column.key === 'chequeDate';
+          const value = formatReportCellValue(
+            column.key,
+            row[column.key as keyof IBankReconciliationReportDetailRow] ?? ''
+          );
           return (
             <td
               key={column.key}
@@ -68,11 +65,7 @@ const DetailRows = ({
                   : 'text-left',
               ].join(' ')}
             >
-              {isDate ? (
-                <DateCell value={String(value ?? '')} />
-              ) : (
-                value || '-'
-              )}
+              {value || '-'}
             </td>
           );
         })}

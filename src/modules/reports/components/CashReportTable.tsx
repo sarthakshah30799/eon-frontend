@@ -1,4 +1,5 @@
 import { toDisplayDate } from '@/utils';
+import { formatReportDateValue } from '../utils';
 import { CASH_REPORT_TEXT } from '../constants/cashReportConstants';
 import type {
   ICashReportAccount,
@@ -310,7 +311,7 @@ const CashReportDetailTable = ({
               {!row.isHeader && (
                 <>
                   <td className="whitespace-nowrap border border-slate-100 px-2 py-1.5 text-[11px] align-top">
-                    {row.date}
+                    {formatReportDateValue(row.date)}
                   </td>
                   <td className="whitespace-nowrap border border-slate-100 px-2 py-1.5 text-[11px] align-top">
                     {row.type}

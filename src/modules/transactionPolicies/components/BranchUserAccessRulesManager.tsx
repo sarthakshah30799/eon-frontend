@@ -8,6 +8,7 @@ import {
   type AsyncSelectOption,
 } from '@/components/ui';
 import { TABLE_ACTIONS_CELL_CLASSNAME } from '@/components/ui/table';
+import { formatDateInput, parseDateInput, toDisplayDate } from '@/utils';
 import { SelectUserProfiles } from '@/modules/userProfile/components';
 import { useLoadBranchOptions } from '@/modules/branchProfile/hooks';
 import type { IUserProfile } from '@/modules/userProfile/types';
@@ -71,8 +72,16 @@ export const BranchUserAccessRulesManager = ({
 
     if (showDateRange) {
       nextColumns.push(
-        { accessorKey: 'fromDate', header: 'From Date' },
-        { accessorKey: 'toDate', header: 'To Date' }
+        {
+          accessorKey: 'fromDate',
+          header: 'From Date',
+          cell: ({ row }) => toDisplayDate(row.original.fromDate),
+        },
+        {
+          accessorKey: 'toDate',
+          header: 'To Date',
+          cell: ({ row }) => toDisplayDate(row.original.toDate),
+        }
       );
     }
 
@@ -180,23 +189,17 @@ export const BranchUserAccessRulesManager = ({
                 <DatePicker
                   label="From Date"
                   disabled={isSubmitting}
-                  selected={fromDate ? new Date(`${fromDate}T00:00:00`) : null}
+                  selected={parseDateInput(fromDate)}
                   onChange={date => {
-                    const nextValue = date
-                      ? date.toISOString().slice(0, 10)
-                      : '';
-                    setFromDate(nextValue);
+                    setFromDate(date ? formatDateInput(date) : '');
                   }}
                 />
                 <DatePicker
                   label="To Date"
                   disabled={isSubmitting}
-                  selected={toDate ? new Date(`${toDate}T00:00:00`) : null}
+                  selected={parseDateInput(toDate)}
                   onChange={date => {
-                    const nextValue = date
-                      ? date.toISOString().slice(0, 10)
-                      : '';
-                    setToDate(nextValue);
+                    setToDate(date ? formatDateInput(date) : '');
                   }}
                 />
               </div>

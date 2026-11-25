@@ -37,6 +37,10 @@ export const VOUCHER_FORM_TEXT = {
   paymentMode: 'Payment Mode',
   electronicPaymentHint:
     'Cheque number is not required for bank payment modes.',
+  bankDate: 'Bank Date',
+  dishonor: 'Dishonor',
+  reversalNumber: 'Reversal Number',
+  reversalRequired: 'Reversal number is required when dishonor is selected',
 } as const;
 
 export const DEPOSIT_WITHDRAWAL_TEXT = {

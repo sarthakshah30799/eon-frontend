@@ -38,8 +38,13 @@ export const useClearBankReconciliation = () => {
     mutationFn: (payload: IBankReconciliationClearPayload) =>
       bankReconciliationApi.clear(payload),
     onSuccess: result => {
+      const counterpartCount = Number(result.createdCounterpartCount ?? 0);
+      const counterpartSuffix =
+        counterpartCount > 0
+          ? `; ${counterpartCount} ${BANK_RECONCILIATION_TEXT.SUCCESS_COUNTERPARTS}`
+          : '';
       toast.success(
-        `${BANK_RECONCILIATION_TEXT.SUCCESS_SAVED} (${result.updated})`
+        `${BANK_RECONCILIATION_TEXT.SUCCESS_SAVED} (${result.updated})${counterpartSuffix}`
       );
       void queryClient.invalidateQueries({
         queryKey: BANK_RECONCILIATION_QUERY_KEYS.all,

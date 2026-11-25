@@ -13,6 +13,7 @@ import {
 import {
   Form,
   FormFieldCategoryOption,
+  FormFieldCheckbox,
   FormFieldDatePicker,
   FormFieldInput,
   FormFieldSelect,
@@ -233,6 +234,18 @@ const voucherSchema = (type: VoucherType) => {
           .oneOf(['', ...Object.values(TransactionPaymentMethodEnum)])
           .default(''),
     }),
+    bankDate: yup.string().trim().optional().nullable(),
+    isDishonored: yup.boolean().default(false),
+    reversalNumber: yup
+      .string()
+      .trim()
+      .default('')
+      .when('isDishonored', {
+        is: true,
+        then: schema =>
+          schema.required(VOUCHER_FORM_TEXT.reversalRequired),
+        otherwise: schema => schema.default(''),
+      }),
     narration: yup.string().trim().required('Narration is required'),
     items: depositWithdrawal
       ? yup
@@ -456,6 +469,12 @@ const VoucherFields = ({
     control: form.control,
     name: 'paymentMethod',
   });
+  const isDishonored = Boolean(
+    useWatch({
+      control: form.control,
+      name: 'isDishonored',
+    })
+  );
   const accountTypeOptionId = useWatch({
     control: form.control,
     name: 'accountTypeOptionId',
@@ -879,6 +898,9 @@ const VoucherFields = ({
       form.setValue('chequeDate', '', { shouldValidate: true });
       form.setValue('chequeBranch', '', { shouldValidate: true });
       form.setValue('drawnOn', '', { shouldValidate: true });
+      form.setValue('bankDate', '', { shouldValidate: true });
+      form.setValue('isDishonored', false, { shouldValidate: true });
+      form.setValue('reversalNumber', '', { shouldValidate: true });
     }
     previousElectronicRef.current = isBankNonCheque;
   }, [form, isBankNonCheque, isCashPaymentMode, mode, readOnly]);
@@ -1266,6 +1288,24 @@ const VoucherFields = ({
               dateFormat="dd/MM/yyyy"
               disabled={readOnly}
             />
+            <FormFieldDatePicker
+              name="bankDate"
+              label={VOUCHER_FORM_TEXT.bankDate}
+              dateFormat="dd/MM/yyyy"
+              disabled={readOnly}
+            />
+            <div className="flex items-end">
+              <FormFieldCheckbox
+                name="isDishonored"
+                label={VOUCHER_FORM_TEXT.dishonor}
+                disabled={readOnly}
+              />
+            </div>
+            <FormFieldInput
+              name="reversalNumber"
+              label={VOUCHER_FORM_TEXT.reversalNumber}
+              disabled={readOnly || !isDishonored}
+            />
           </div>
         ) : null}
         {isAdviceType(type) ? (
@@ -1388,6 +1428,28 @@ const VoucherFields = ({
                     label="Drawn On"
                     disabled={readOnly || isCashPaymentMode}
                   />
+                  {!isCashPaymentMode ? (
+                    <>
+                      <FormFieldDatePicker
+                        name="bankDate"
+                        label={VOUCHER_FORM_TEXT.bankDate}
+                        dateFormat="dd/MM/yyyy"
+                        disabled={readOnly}
+                      />
+                      <div className="flex items-end">
+                        <FormFieldCheckbox
+                          name="isDishonored"
+                          label={VOUCHER_FORM_TEXT.dishonor}
+                          disabled={readOnly}
+                        />
+                      </div>
+                      <FormFieldInput
+                        name="reversalNumber"
+                        label={VOUCHER_FORM_TEXT.reversalNumber}
+                        disabled={readOnly || !isDishonored}
+                      />
+                    </>
+                  ) : null}
                 </div>
                 {isBankNonCheque ? (
                   <p className="mt-2 text-xs text-text-tertiary">

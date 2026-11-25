@@ -367,6 +367,27 @@ const createPaymentDetailSchema = (transactionType: TransactionType) =>
     drawnOn: yup.string().trim().default(''),
     amount: decimalStringSchema.required('Amount is required'),
     remarks: yup.string().trim().default(''),
+    bankDate: yup
+      .string()
+      .trim()
+      .default('')
+      .when('paymentMethod', {
+        is: (paymentMethod: string) =>
+          isChequeFamilyPaymentMethod(paymentMethod),
+        then: schema => schema,
+        otherwise: schema => schema.default(''),
+      }),
+    isDishonored: yup.boolean().default(false),
+    reversalNumber: yup
+      .string()
+      .trim()
+      .default('')
+      .when('isDishonored', {
+        is: true,
+        then: schema =>
+          schema.required(TRANSACTION_PAYMENT_TEXT.reversalRequired),
+        otherwise: schema => schema.default(''),
+      }),
   });
 
 const manualBookReferenceTypeSchema = yup

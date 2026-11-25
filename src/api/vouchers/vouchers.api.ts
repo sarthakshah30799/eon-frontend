@@ -125,6 +125,11 @@ export const vouchersApi = {
           ? {
               chequeNumber: values.chequeNumber,
               chequeDate: values.chequeDate,
+              bankDate: values.bankDate || undefined,
+              isDishonored: Boolean(values.isDishonored) || undefined,
+              reversalNumber: values.isDishonored
+                ? values.reversalNumber || undefined
+                : undefined,
             }
           : type === 'ADVICE'
             ? {
@@ -148,6 +153,11 @@ export const vouchersApi = {
                 chequeBranch: values.chequeBranch || undefined,
                 drawnOn: values.drawnOn || undefined,
                 paymentMethod: values.paymentMethod,
+                bankDate: values.bankDate || undefined,
+                isDishonored: Boolean(values.isDishonored) || undefined,
+                reversalNumber: values.isDishonored
+                  ? values.reversalNumber || undefined
+                  : undefined,
               }),
     };
     const response = await apiClient.post<AccountingVoucher>(

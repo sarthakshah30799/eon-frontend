@@ -529,6 +529,10 @@ export interface ITransactionPaymentEntity {
   drawnOn: string | null;
   amount: string;
   remarks: string | null;
+  bankDate?: string | null;
+  isDishonored?: boolean;
+  reversalNumber?: string | null;
+  clearanceCounterpartVoucherId?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -850,6 +854,9 @@ export interface ICreateTransactionPaymentPayload {
   chequePageSnapshot?: Record<string, unknown> | null;
   amount: string;
   remarks?: string | null;
+  bankDate?: string | null;
+  isDishonored?: boolean | null;
+  reversalNumber?: string | null;
 }
 
 export interface ICreateTransactionPayload {

@@ -9,6 +9,7 @@ import { TrashIcon, PlusIcon } from '@heroicons/react/24/outline';
 import type { AsyncSelectResponse } from '@/components/ui';
 import { Button, CardSection, Label } from '@/components/ui';
 import {
+  FormFieldCheckbox,
   FormFieldDatePicker,
   FormFieldInput,
   FormFieldSelect,
@@ -231,6 +232,12 @@ const PaymentDetailRow = ({
     control: form.control,
     name: `${arrayName}.${index}.accountId`,
   });
+  const isDishonored = Boolean(
+    useWatch({
+      control: form.control,
+      name: `${arrayName}.${index}.isDishonored`,
+    })
+  );
 
   const [pageOptions, setPageOptions] = useState<IChequeBookPageTracking[]>([]);
   const [isLoadingPages, setIsLoadingPages] = useState(false);
@@ -948,6 +955,35 @@ const PaymentDetailRow = ({
             disabled={chequeDetailDisabled}
           />
         </div>
+
+        {!isCash ? (
+          <>
+            <div className="min-w-0 md:col-span-2 xl:col-span-1">
+              <FormFieldDatePicker
+                name={`${arrayName}.${index}.bankDate`}
+                label={TRANSACTION_PAYMENT_TEXT.bankDate}
+                disabled={disabled || settlementSource === 'ADVANCE'}
+              />
+            </div>
+            <div className="flex min-w-0 items-end md:col-span-2 xl:col-span-1">
+              <FormFieldCheckbox
+                name={`${arrayName}.${index}.isDishonored`}
+                label={TRANSACTION_PAYMENT_TEXT.dishonor}
+                disabled={disabled || settlementSource === 'ADVANCE'}
+              />
+            </div>
+            <div className="min-w-0 md:col-span-2 xl:col-span-1">
+              <FormFieldInput
+                name={`${arrayName}.${index}.reversalNumber`}
+                label={TRANSACTION_PAYMENT_TEXT.reversalNumber}
+                placeholder={TRANSACTION_PAYMENT_TEXT.reversalNumber}
+                disabled={
+                  disabled || settlementSource === 'ADVANCE' || !isDishonored
+                }
+              />
+            </div>
+          </>
+        ) : null}
 
         <div className="md:col-span-2 xl:col-span-1">
           <FormFieldInput

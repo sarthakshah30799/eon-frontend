@@ -84,6 +84,8 @@ export interface IBankReconciliationClearPayload {
 
 export interface IBankReconciliationClearResult {
   updated: number;
+  createdCounterpartCount?: number;
+  createdCounterpartIds?: string[];
 }
 
 export interface IBankReconciliationEditableRow extends IBankReconciliationRow {

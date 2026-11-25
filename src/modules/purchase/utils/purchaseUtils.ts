@@ -12,6 +12,7 @@ import {
   TransactionTypeEnum,
   TransactionTypeProfileEnum,
   coerceTransactionPaymentMethod,
+  isChequeFamilyPaymentMethod,
   isNonChequeBankPaymentMethod,
 } from '@/modules/transactions/types';
 import type { TradeMode, TransactionType } from '@/modules/transactions/types';
@@ -833,6 +834,9 @@ export const createEmptyPurchasePaymentRow = (
     drawnOn: string;
     amount: string;
     remarks: string;
+    bankDate: string;
+    isDishonored: boolean;
+    reversalNumber: string;
   }> = {}
 ) => ({
   settlementSource: overrides.settlementSource ?? 'NORMAL',
@@ -852,6 +856,9 @@ export const createEmptyPurchasePaymentRow = (
   drawnOn: overrides.drawnOn ?? '',
   amount: overrides.amount ?? '',
   remarks: overrides.remarks ?? '',
+  bankDate: overrides.bankDate ?? '',
+  isDishonored: overrides.isDishonored ?? false,
+  reversalNumber: overrides.reversalNumber ?? '',
 });
 
 export const shouldValidatePaymentDetailRow = (
@@ -933,6 +940,16 @@ export const mapPaymentDetailsToSubmitPayload = (
             : null,
         amount: row.amount,
         remarks: null,
+        bankDate: isChequeFamilyPaymentMethod(paymentMethod)
+          ? row.bankDate || null
+          : null,
+        isDishonored: isChequeFamilyPaymentMethod(paymentMethod)
+          ? Boolean(row.isDishonored)
+          : false,
+        reversalNumber:
+          isChequeFamilyPaymentMethod(paymentMethod) && row.isDishonored
+            ? row.reversalNumber || null
+            : null,
       };
     });
 
@@ -1515,6 +1532,9 @@ export const mapPurchaseTransactionToFormValues = (
       chequePageId: payment.chequePageId ?? '',
       chequePageSnapshot: payment.chequePageSnapshot ?? null,
       remarks: payment.remarks ?? '',
+      bankDate: payment.bankDate ?? '',
+      isDishonored: Boolean(payment.isDishonored),
+      reversalNumber: payment.reversalNumber ?? '',
     })),
   };
 };

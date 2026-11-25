@@ -102,6 +102,9 @@ export interface VoucherFormValues {
   chequeBranch: string;
   drawnOn: string;
   paymentMethod: string;
+  bankDate: string;
+  isDishonored: boolean;
+  reversalNumber: string;
   remarkOptionId: string;
   remarkName: string;
   narration: string;

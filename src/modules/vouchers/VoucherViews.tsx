@@ -80,6 +80,9 @@ const emptyValues = (
   chequeBranch: '',
   drawnOn: '',
   paymentMethod: '',
+  bankDate: '',
+  isDishonored: false,
+  reversalNumber: '',
   remarkOptionId: '',
   remarkName: '',
   narration: '',
@@ -145,6 +148,9 @@ const fromEntity = (
     paymentMethod:
       voucher.paymentMethod ||
       paymentMethodForVoucherAccountMode(voucher.accountMode),
+    bankDate: voucher.bankDate ?? '',
+    isDishonored: Boolean(voucher.isDishonored),
+    reversalNumber: voucher.reversalNumber ?? '',
     remarkOptionId: voucher.remarkOptionId,
     remarkName:
       voucher.remarkSnapshot?.label ?? voucher.remarkSnapshot?.name ?? '',

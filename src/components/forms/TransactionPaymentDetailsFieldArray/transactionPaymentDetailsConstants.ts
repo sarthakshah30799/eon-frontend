@@ -21,6 +21,10 @@ export const TRANSACTION_PAYMENT_TEXT = {
     'Cheque details are not required for bank payment modes.',
   electronicNotAllowedForAdvance:
     'Bank payment modes are not allowed for advance settlement',
+  bankDate: 'Bank Date',
+  dishonor: 'Dishonor',
+  reversalNumber: 'Reversal Number',
+  reversalRequired: 'Reversal number is required when dishonor is selected',
 } as const;
 
 export const SETTLEMENT_SOURCE_OPTIONS = [

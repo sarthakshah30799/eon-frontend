@@ -16,4 +16,7 @@ export interface ITransactionPaymentDetailFormRow {
   drawnOn: string;
   amount: string;
   remarks?: string;
+  bankDate?: string;
+  isDishonored?: boolean;
+  reversalNumber?: string;
 }

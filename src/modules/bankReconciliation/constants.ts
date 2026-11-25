@@ -28,6 +28,7 @@ export const BANK_RECONCILIATION_TEXT = {
   REVERSAL_REQUIRED: 'Reversal number is required when Dishonor is checked',
   SELECT_REQUIRED: 'Select at least one row to save',
   SUCCESS_SAVED: 'Bank reconciliation saved successfully',
+  SUCCESS_COUNTERPARTS: 'counterpart voucher(s) created',
   SAVE_FAILED: 'Failed to save bank reconciliation',
   PROCESS_FAILED: 'Failed to load bank reconciliation rows',
   COL_SELECT: 'Select',

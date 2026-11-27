@@ -63,9 +63,9 @@ export const OUTSTANDING_BILL_TEXT = {
     itemTypeLabel
       ? `${count} outstanding bill${count === 1 ? '' : 's'} for ${itemTypeLabel}. Select one or more to settle.`
       : `${count} outstanding bill${count === 1 ? '' : 's'} for this party. Select one or more to settle.`,
-  empty: 'No outstanding bills found for this party, branch, and bill type.',
+  empty: 'No outstanding bills found for this PAN and bill type.',
   missingContext:
-    'Select party, branch, counter, transaction date, and bill type before choosing outstanding bills.',
+    'Select party, PAN, branch, counter, transaction date, and bill type before choosing outstanding bills.',
   searchPlaceholder: 'Search bill number',
   number: 'Bill No',
   date: 'Date',

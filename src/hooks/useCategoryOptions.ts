@@ -142,6 +142,7 @@ export const useCategoryOptions = (
   );
 
   return {
+    options: query.data ?? [],
     defaultOptions: useMemo(
       () =>
         (query.data ?? []).map(opt => toAsyncSelectOption(opt, useValueAsId)),

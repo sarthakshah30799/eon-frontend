@@ -49,6 +49,7 @@ export const DEAL_COVER_RATE_TEXT = {
   selectPartyType: 'Select party type',
   party: 'Party Profile',
   selectParty: 'Select party profile',
+  selectPartyNeedsBranch: 'Select branch first to load sell-enabled parties',
   marketingExecutive: 'Marketing Executive',
   selectMarketingExecutive: 'Select marketing executive',
   purpose: 'Purpose',

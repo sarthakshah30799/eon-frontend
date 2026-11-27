@@ -56,6 +56,7 @@ export const useAvailableAdvances = (
 export type OutstandingBillQueryParams = {
   partyProfileId: string;
   slug: string;
+  panNumber: string;
   branchId: string;
   counterId: string;
   transactionDate: string;
@@ -63,6 +64,9 @@ export type OutstandingBillQueryParams = {
   limit?: number;
   offset?: number;
 };
+
+const isValidOutstandingPan = (value?: string | null) =>
+  /^[A-Z]{5}[0-9]{4}[A-Z]$/i.test(String(value ?? '').trim());
 
 export const useOutstandingBills = (
   type: 'RECEIPT' | 'PAYMENT' | 'ADVICE',
@@ -77,6 +81,7 @@ export const useOutstandingBills = (
       Boolean(
         params.partyProfileId &&
         params.slug &&
+        isValidOutstandingPan(params.panNumber) &&
         params.branchId &&
         params.counterId &&
         params.transactionDate

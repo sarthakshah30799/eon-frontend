@@ -487,6 +487,10 @@ const VoucherFields = ({
     control: form.control,
     name: 'partyProfileId',
   });
+  const panNumber = useWatch({
+    control: form.control,
+    name: 'panNumber',
+  });
   const headerAccountId = useWatch({
     control: form.control,
     name: 'headerAccountId',
@@ -558,9 +562,10 @@ const VoucherFields = ({
   const isBankNonCheque = isNonChequeBankPaymentMethod(paymentMethod);
   const isCashPaymentMode =
     paymentMethod === TransactionPaymentMethodEnum.CASH;
-  const accountTypeOptions = useCategoryOptions(
-    CategoryOptionCodeEnum.VoucherAccountType
-  ).defaultOptions;
+  const {
+    options: accountTypeCategoryOptions,
+    defaultOptions: accountTypeOptions,
+  } = useCategoryOptions(CategoryOptionCodeEnum.VoucherAccountType);
   const entityTypeOptions = useCategoryOptions(
     CategoryOptionCodeEnum.EntityType
   ).defaultOptions;
@@ -841,12 +846,22 @@ const VoucherFields = ({
     resetPanVerification();
   }, [form, itemTypeCategoryOptions, readOnly, resetPanVerification, selectedParty]);
   useEffect(() => {
-    const selected = accountTypeOptions.find(
+    // accountTypeOptionId stores the category option UUID; mode must use
+    // the option's business value/label (e.g. BANK_CHEQUE), not the UUID.
+    const selectedCategory = accountTypeCategoryOptions.find(
+      option => String(option.id) === String(accountTypeOptionId)
+    );
+    const selectedOption = accountTypeOptions.find(
       option => String(option.value) === String(accountTypeOptionId)
     );
-    if (!selected) return;
+    if (!selectedCategory && !selectedOption) return;
     const nextMode = modeFromAccountTypeValue(
-      String(selected.value ?? selected.label ?? '')
+      String(
+        selectedCategory?.value ??
+          selectedCategory?.label ??
+          selectedOption?.label ??
+          ''
+      )
     );
     if (nextMode === mode) return;
     form.setValue('accountMode', nextMode);
@@ -863,7 +878,13 @@ const VoucherFields = ({
       form.setValue('chequeBranch', '');
       form.setValue('drawnOn', '');
     }
-  }, [accountTypeOptionId, accountTypeOptions, form, mode]);
+  }, [
+    accountTypeCategoryOptions,
+    accountTypeOptionId,
+    accountTypeOptions,
+    form,
+    mode,
+  ]);
   useEffect(() => {
     if (readOnly || !isPartyVoucherType(type) || !mode) return;
     if (mode === 'BANK_CHEQUE') {
@@ -2007,6 +2028,9 @@ const VoucherFields = ({
           params={{
             partyProfileId: partyProfileId ?? '',
             slug: outstandingModalItemTypeValue,
+            panNumber: String(panNumber ?? '')
+              .trim()
+              .toUpperCase(),
             branchId: branchId ?? '',
             counterId: counterId ?? '',
             transactionDate: transactionDate ?? '',

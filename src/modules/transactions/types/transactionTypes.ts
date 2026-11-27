@@ -761,6 +761,9 @@ export interface ICreditPreviewRequest {
   payableAmount: number;
   payments?: Array<{ amount?: string | number | null }>;
   excludeTransactionId?: string | null;
+  /** Prefer passenger id for outstanding scope; else PAN; else outstanding = 0. */
+  passengerId?: string | null;
+  panNumber?: string | null;
 }
 
 export interface ICreditPreviewResponse {

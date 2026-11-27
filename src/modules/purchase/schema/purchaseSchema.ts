@@ -1096,7 +1096,8 @@ export const createPurchaseFormSchema = (
     paymentDetails: yup
       .array()
       .default([])
-      .of(createPaymentDetailSchema(transactionType))
+      // Payment details are optional for all sale/purchase flows. Only validate
+      // rows the user actually filled (account/advance selected).
       .test(
         'optional-payment-rows',
         'Invalid payment detail',

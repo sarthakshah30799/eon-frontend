@@ -4,7 +4,7 @@ import { EntityPickerField } from '@/modules/purchase/components/EntityPickerFie
 import { formatPurchaseEntityLabel } from '@/modules/purchase/utils/purchaseUtils';
 import { SelectPartyProfiles } from './SelectPartyProfiles';
 import { useGetPartyProfile } from '../hooks';
-import type { PartyProfileType } from '../types';
+import type { IPartyProfileListQuery, PartyProfileType } from '../types';
 
 interface FormFieldPartyProfileSelectProps {
   name: string;
@@ -13,6 +13,7 @@ interface FormFieldPartyProfileSelectProps {
   placeholder?: string;
   disabled?: boolean;
   helperText?: string;
+  queryParams?: Omit<IPartyProfileListQuery, 'limit' | 'offset' | 'search'>;
 }
 
 export const FormFieldPartyProfileSelect = ({
@@ -22,6 +23,7 @@ export const FormFieldPartyProfileSelect = ({
   placeholder = 'Select party profile',
   disabled = false,
   helperText,
+  queryParams,
 }: FormFieldPartyProfileSelectProps) => {
   const form = useFormContext<Record<string, string | undefined>>();
   const [open, setOpen] = useState(false);
@@ -60,6 +62,7 @@ export const FormFieldPartyProfileSelect = ({
         types={types}
         selectable
         multiple={false}
+        queryParams={queryParams}
         title={label}
         description={`Choose a ${label.toLowerCase()}.`}
         initialSelectedProfiles={selectedProfile ? [selectedProfile] : []}

@@ -264,6 +264,10 @@ const PurchaseFormBody = ({
     control: form.control,
     name: 'passengerId',
   });
+  const panNumber = useWatch({
+    control: form.control,
+    name: 'panNumber',
+  });
   const transactions = useWatch({
     control: form.control,
     name: 'transactions',
@@ -1238,6 +1242,12 @@ const PurchaseFormBody = ({
       return null;
     }
 
+    const resolvedPassengerId = String(passengerId ?? '').trim() || null;
+    const resolvedPanNumber = String(panNumber ?? '')
+      .trim()
+      .toUpperCase();
+    const hasValidPan = /^[A-Z]{5}[0-9]{4}[A-Z]$/.test(resolvedPanNumber);
+
     return {
       partyProfileId: String(partyProfileId),
       transactionType,
@@ -1246,9 +1256,17 @@ const PurchaseFormBody = ({
       payments: (paymentDetails ?? []).map(row => ({
         amount: row?.amount ?? null,
       })),
+      passengerId: resolvedPassengerId,
+      panNumber: resolvedPassengerId
+        ? null
+        : hasValidPan
+          ? resolvedPanNumber
+          : null,
     };
   }, [
+    panNumber,
     partyProfileId,
+    passengerId,
     paymentDetails,
     totalPayableAmount,
     transactionDate,
@@ -2006,11 +2024,7 @@ const PurchaseFormBody = ({
         }
         disabled={isReadOnly}
         title="Payment Details"
-        description={
-          isCombinedPartyProfilePage
-            ? 'Store how this transaction will be settled. At least one payment detail is required for corporate/individual transactions.'
-            : 'Store how this transaction will be settled. Payment details are optional for this transaction type.'
-        }
+        description="Store how this transaction will be settled. Payment details are optional."
       />
 
       {isPurchaseTransaction &&

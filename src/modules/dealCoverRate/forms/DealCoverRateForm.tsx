@@ -311,10 +311,19 @@ const DealCoverRateFormFields = ({
   const references = useDealCoverReferences();
   const purposeId = useWatch({ control: form.control, name: 'purposeId' });
   const productId = useWatch({ control: form.control, name: 'productId' });
+  const branchId = useWatch({ control: form.control, name: 'branchId' });
   const partyProfileType = useWatch({
     control: form.control,
     name: 'partyProfileType',
   });
+  const partyQueryParams = useMemo(
+    () => ({
+      sale: true as const,
+      activeOnly: true as const,
+      ...(branchId ? { branchId } : {}),
+    }),
+    [branchId]
+  );
 
   const purposeQuery = useQuery({
     queryKey: ['deal-cover-rate', 'purpose-detail', purposeId],
@@ -358,6 +367,20 @@ const DealCoverRateFormFields = ({
     }
   }, [form, liveIssuerOptions, readOnly]);
 
+  const previousBranchIdRef = useRef(branchId);
+  useEffect(() => {
+    if (readOnly) return;
+    if (previousBranchIdRef.current === branchId) return;
+    previousBranchIdRef.current = branchId;
+    form.setValue('partyProfileId', '', { shouldValidate: true });
+    form.setValue('passengerId', '');
+    form.setValue('passengerName', '');
+    form.setValue('passengerPan', '');
+    form.setValue('passengerPanHolder', '');
+    form.setValue('passengerPanDob', '');
+    form.setValue('passengerPassport', '');
+  }, [branchId, form, readOnly]);
+
   const previousPurposeIdRef = useRef(purposeId);
   useEffect(() => {
     if (readOnly) return;
@@ -395,6 +418,15 @@ const DealCoverRateFormFields = ({
               defaultOptions={true}
               isLoading={branchesLoading}
               disabled={readOnly}
+              onValueChange={() => {
+                form.setValue('partyProfileId', '', { shouldValidate: true });
+                form.setValue('passengerId', '');
+                form.setValue('passengerName', '');
+                form.setValue('passengerPan', '');
+                form.setValue('passengerPanHolder', '');
+                form.setValue('passengerPanDob', '');
+                form.setValue('passengerPassport', '');
+              }}
             />
           ) : (
             <div>
@@ -465,8 +497,16 @@ const DealCoverRateFormFields = ({
               (partyProfileType as PartyProfileType) ||
               PartyProfileTypeEnum.CORPORATE_CLIENT
             }
-            placeholder={DEAL_COVER_RATE_TEXT.selectParty}
-            disabled={readOnly || !partyProfileType}
+            placeholder={
+              branchId
+                ? DEAL_COVER_RATE_TEXT.selectParty
+                : DEAL_COVER_RATE_TEXT.selectPartyNeedsBranch
+            }
+            queryParams={partyQueryParams}
+            disabled={readOnly || !partyProfileType || !branchId}
+            helperText={
+              !branchId ? DEAL_COVER_RATE_TEXT.selectPartyNeedsBranch : undefined
+            }
           />
           <FormFieldPartyProfileSelect
             name="marketingExecutiveId"

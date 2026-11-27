@@ -124,6 +124,7 @@ export const SelectOutstandingBills = ({
   const canLoad = Boolean(
     params.partyProfileId &&
     params.slug &&
+    /^[A-Z]{5}[0-9]{4}[A-Z]$/i.test(String(params.panNumber ?? '').trim()) &&
     params.branchId &&
     params.counterId &&
     params.transactionDate
@@ -134,6 +135,7 @@ export const SelectOutstandingBills = ({
     debouncedSearch,
     params.partyProfileId,
     params.slug,
+    params.panNumber,
     params.branchId,
     params.counterId,
     params.transactionDate,

@@ -206,6 +206,7 @@ export const vouchersApi = {
     params: {
       partyProfileId: string;
       slug: string;
+      panNumber: string;
       branchId: string;
       counterId: string;
       transactionDate: string;
